@@ -1,6 +1,6 @@
 | Windows | Linux | OS X
 | :---- | :------ | :---- |
-[![Windows build status][1]][2] | [![Linux build status][3]][4] | [![OS X build status][5]][6] |
+[![Windows build status][1]][2] | [![Linux build status][3]][4] | [![OS X build status][5]][6] | 
 
 [1]: https://ci.appveyor.com/api/projects/status/451tv98n7xvxm5ol/branch/master?svg=true
 [2]: https://ci.appveyor.com/project/stratis/stratisbitcoinfullnode
