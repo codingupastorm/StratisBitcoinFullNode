@@ -57,7 +57,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Networks
                 consensusFactory: consensusFactory,
                 consensusOptions: consensusOptions,
                 coinType: 1,
-                hashGenesisBlock: genesis.Header.GetHash(),
+                hashGenesisBlock: genesis.GetHash(),
                 subsidyHalvingInterval: 210_000,
                 majorityEnforceBlockUpgrade: 51,
                 majorityRejectBlockOutdated: 75,
