@@ -62,6 +62,8 @@ namespace Stratis.SmartContracts
         /// </summary>
         private readonly ISmartContractState smartContractState;
 
+        private readonly IContractLogger contractLogger;
+
         protected SmartContract(ISmartContractState smartContractState)
         {
             CultureInfo.CurrentCulture = new CultureInfo("en-US");
@@ -130,6 +132,11 @@ namespace Stratis.SmartContracts
         {
             if (!condition)
                 throw new SmartContractAssertException(message);
+        }
+
+        protected void Log<T>(T toLog) where T : struct
+        {
+            this.contractLogger.Log(toLog);
         }
     }
 }
