@@ -19,7 +19,7 @@ using Stratis.SmartContracts.Core.Util;
 
 namespace Stratis.Bitcoin.Features.SmartContracts
 {
-    public sealed class SmartContractBlockDefinition : BlockDefinition
+    public class SmartContractBlockDefinition : BlockDefinition
     {
         private uint160 coinbaseAddress;
         private readonly ICoinView coinView;
