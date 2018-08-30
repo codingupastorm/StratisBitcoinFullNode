@@ -13,8 +13,10 @@ using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.SmartContracts.Networks;
 using Stratis.Bitcoin.Utilities;
+using Stratis.SmartContracts;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.State;
+using Stratis.SmartContracts.Executor.Reflection;
 using Xunit;
 using Block = NBitcoin.Block;
 
@@ -57,18 +59,25 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
 
         // NOTE: Everything here is adapted from PowBlockAssemblerTest for speed.
 
+        // TODO: 
+        // - Use a test value for minerSettings.BlockDefinitionOptions.BlockMaxSize.
+        // - Insert 1 SC transaction so there is a refund.
+        // - Insert another SC transaction but ensure it doesn't get added when total size including refund goes over max.
+
         [Fact]
         public void AddTransactions_Until_BlockSize()
         {
             ConcurrentChain chain = GenerateChainWithHeight(5, this.network, this.key);
             this.consensusLoop.Setup(c => c.Tip).Returns(chain.GetBlock(5));
+            this.minerSettings.SetupGet(x => x.BlockDefinitionOptions).Returns(new BlockDefinitionOptions(1_000, 1_000));
 
-            const int numTxs = 10_000;
+            const int numTxs = 2;
 
             Transaction[] txs = new Transaction[numTxs];
             for(int i=0; i< numTxs; i++)
             {
-                txs[i] = CreateTransaction(this.network, this.key, 5, new Money(400 * 1000 * 1000), new Key(), new uint256(124124));
+                SmartContractCarrier scCarrier = SmartContractCarrier.CallContract(1, new uint160( (ulong) i), "Test", 1, (Gas) 10_000);
+                txs[i] = CreateScTransaction(this.network, this.key, 5, new Money(400 * 1000 * 1000), new Script(scCarrier.Serialize()), new uint256(124124));
             }
 
             var txFee = new Money(1000);
@@ -146,10 +155,18 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
 
         private static Transaction CreateTransaction(Network network, Key inkey, int height, Money amount, Key outKey, uint256 prevOutHash)
         {
-            var coinbase = new Transaction();
-            coinbase.AddInput(new TxIn(new OutPoint(prevOutHash, 1), inkey.ScriptPubKey));
-            coinbase.AddOutput(new TxOut(amount, outKey));
-            return coinbase;
+            var tx = new Transaction();
+            tx.AddInput(new TxIn(new OutPoint(prevOutHash, 1), inkey.ScriptPubKey));
+            tx.AddOutput(new TxOut(amount, outKey));
+            return tx;
+        }
+
+        private static Transaction CreateScTransaction(Network network, Key inkey, int height, Money amount, Script script, uint256 prevOutHash)
+        {
+            var tx = new Transaction();
+            tx.AddInput(new TxIn(new OutPoint(prevOutHash, 1), inkey.ScriptPubKey));
+            tx.AddOutput(new TxOut(amount, script));
+            return tx;
         }
 
         private TxMempoolEntry[] SetupTxMempool(ConcurrentChain chain, Money txFee, params Transaction[] transactions)
