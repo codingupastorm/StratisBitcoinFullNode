@@ -41,6 +41,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
         public SmartContractBlockDefinitionTests()
         {
             this.coinView = new Mock<ICoinView>();
+            this.coinView.Setup(x=>x.FetchCoinsAsync(It.IsAny<uint256[]>(), default(System.Threading.CancellationToken))).Returns()
             this.consensusLoop = new Mock<IConsensusLoop>();
             this.consensusRules = new Mock<IConsensusRules>();
             this.txMempool = new Mock<ITxMempool>();
@@ -69,7 +70,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
         {
             ConcurrentChain chain = GenerateChainWithHeight(5, this.network, this.key);
             this.consensusLoop.Setup(c => c.Tip).Returns(chain.GetBlock(5));
-            this.minerSettings.SetupGet(x => x.BlockDefinitionOptions).Returns(new BlockDefinitionOptions(1_000, 1_000));
+            this.minerSettings.SetupGet(x => x.BlockDefinitionOptions).Returns(new BlockDefinitionOptions(1_500, 1_500));
 
             const int numTxs = 2;
 
