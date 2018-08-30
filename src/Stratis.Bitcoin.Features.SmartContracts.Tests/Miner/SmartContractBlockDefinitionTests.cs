@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.Consensus.CoinViews;
@@ -92,8 +91,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
             this.stateRoot.Setup(x => x.GetSnapshotTo(It.IsAny<byte[]>())).Returns(nestedStateRoot.Object);
         }
 
-        // NOTE: Everything here is adapted from PowBlockAssemblerTest for speed.
-
         // TODO: 
         // - Use a test value for minerSettings.BlockDefinitionOptions.BlockMaxSize.
         // - Insert 1 SC transaction so there is a refund.
@@ -133,16 +130,13 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
 
             var blockTemplate = scBlockDefinition.Build(chain.Tip, new Key().ScriptPubKey);
 
-            //(Block Block, int Selected, int Updated) result = blockDefinition.AddTransactions();
-
-            //Assert.NotEmpty(result.Block.Transactions);
-
-            ////Assert.Equal(transaction.ToHex(), result.Block.Transactions[0].ToHex());
-            //Assert.Equal(1, result.Selected);
-            //Assert.Equal(0, result.Updated);
         }
 
-        private static ConcurrentChain GenerateChainWithHeightAndActivatedBip9(int blockAmount, Network network, Key key, BIP9DeploymentsParameters parameter, Target bits = null)
+        /*
+         *Below ripped from PowBlockAssemblerTests.cs for speed. 
+         */
+
+        private static ConcurrentChain GenerateChainWithHeight(int blockAmount, Network network, Key key)
         {
             var chain = new ConcurrentChain(network);
             uint nonce = RandomUtils.GetUInt32();
@@ -158,18 +152,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
                 block.Header.HashPrevBlock = prevBlockHash;
                 block.Header.Nonce = nonce;
 
-                if (bits != null)
-                {
-                    block.Header.Bits = bits;
-                }
-
-                if (parameter != null)
-                {
-                    uint version = ThresholdConditionCache.VersionbitsTopBits;
-                    version |= ((uint)1) << parameter.Bit;
-                    block.Header.Version = (int)version;
-                }
-
                 chain.SetTip(block.Header);
                 prevBlockHash = block.GetHash();
             }
@@ -183,19 +165,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
             coinbase.AddInput(TxIn.CreateCoinbase(height));
             coinbase.AddOutput(new TxOut(network.GetReward(height), key.ScriptPubKey));
             return coinbase;
-        }
-
-        private static ConcurrentChain GenerateChainWithHeight(int blockAmount, Network network, Key key, Target bits = null)
-        {
-            return GenerateChainWithHeightAndActivatedBip9(blockAmount, network, key, null, bits);
-        }
-
-        private static Transaction CreateTransaction(Network network, Key inkey, int height, Money amount, Key outKey, uint256 prevOutHash)
-        {
-            var tx = new Transaction();
-            tx.AddInput(new TxIn(new OutPoint(prevOutHash, 1), inkey.ScriptPubKey));
-            tx.AddOutput(new TxOut(amount, outKey));
-            return tx;
         }
 
         private static Transaction CreateScTransaction(Network network, Key inkey, int height, Money amount, Script script, uint256 prevOutHash)
@@ -231,37 +200,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
 
             return resultingTransactionEntries.ToArray();
         }
-
-        /// <summary>
-        /// Why are we making classes like this :( 
-        /// </summary>
-        private class ScTestBlockDefinition : SmartContractBlockDefinition
-        {
-            public ScTestBlockDefinition(
-                ICoinView coinView,
-                IConsensusLoop consensusLoop,
-                IDateTimeProvider dateTimeProvider,
-                ISmartContractExecutorFactory executorFactory,
-                ILoggerFactory loggerFactory,
-                ITxMempool mempool,
-                MempoolSchedulerLock mempoolLock,
-                MinerSettings minerSettings,
-                Network network,
-                ISenderRetriever senderRetriever,
-                IContractStateRoot stateRoot)
-                : base(coinView, consensusLoop, dateTimeProvider, executorFactory, loggerFactory, mempool, mempoolLock, minerSettings, network, senderRetriever, stateRoot)
-            {
-                this.block = this.BlockTemplate.Block;
-            }
-
-            public (Block Block, int Selected, int Updated) AddTransactions()
-            {
-                int selected;
-                int updated;
-                base.AddTransactions(out selected, out updated);
-
-                return (this.block, selected, updated);
-            }
-        }
+        
     }
 }
