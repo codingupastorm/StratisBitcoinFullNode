@@ -28,8 +28,8 @@ namespace Stratis.Bitcoin.Features.SmartContracts
         private readonly List<TxOut> refundOutputs;
         private readonly List<Receipt> receipts;
         private readonly ISenderRetriever senderRetriever;
-        private readonly ContractStateRepositoryRoot stateRoot;
-        private ContractStateRepositoryRoot stateSnapshot;
+        private readonly IContractStateRoot stateRoot;
+        private IContractStateRoot stateSnapshot;
 
         public SmartContractBlockDefinition(
             ICoinView coinView,
@@ -42,7 +42,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts
             MinerSettings minerSettings,
             Network network,
             ISenderRetriever senderRetriever,
-            ContractStateRepositoryRoot stateRoot)
+            IContractStateRoot stateRoot)
             : base(consensusLoop, dateTimeProvider, loggerFactory, mempool, mempoolLock, minerSettings, network)
         {
             this.coinView = coinView;

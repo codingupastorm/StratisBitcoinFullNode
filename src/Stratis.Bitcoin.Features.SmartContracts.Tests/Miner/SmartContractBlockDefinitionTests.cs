@@ -38,7 +38,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
         private readonly Mock<MinerSettings> minerSettings;
         private readonly Network network;
         private readonly Mock<ISenderRetriever> senderRetriever;
-        private readonly Mock<ContractStateRepositoryRoot> stateRoot;
+        private readonly Mock<IContractStateRoot> stateRoot;
         private readonly Key key;
 
         public SmartContractBlockDefinitionTests()
@@ -50,6 +50,10 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
             var headerVersionRule = new Mock<HeaderVersionRule>();
             headerVersionRule.Setup(x => x.ComputeBlockVersion(It.IsAny<ChainedHeader>()));
             this.consensusRules.Setup(x => x.GetRule<HeaderVersionRule>()).Returns(headerVersionRule.Object);
+            var coinViewRule = new Mock<CoinViewRule>();
+            coinViewRule.Setup(x => x.GetProofOfWorkReward(It.IsAny<int>())).Returns(50 * Money.COIN);
+            coinViewRule.Setup(x => x.GetBlockWeight(It.IsAny<Block>())).Returns(0);
+            this.consensusRules.Setup(x => x.GetRule<CoinViewRule>()).Returns(coinViewRule.Object);
             this.consensusLoop = new Mock<IConsensusLoop>();
             this.consensusLoop.Setup(x=> x.ConsensusRules).Returns(this.consensusRules.Object);
 
@@ -63,7 +67,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
                 
             });
             this.executorFactory = new Mock<ISmartContractExecutorFactory>();
-            this.executorFactory.Setup(x => x.CreateExecutor(It.IsAny<IContractStateRepository>(), It.IsAny<ISmartContractTransactionContext>())).Returns(executor.Object);
+            this.executorFactory.Setup(x => x.CreateExecutor(It.IsAny<IContractState>(), It.IsAny<ISmartContractTransactionContext>())).Returns(executor.Object);
 
             this.loggerFactory = new Mock<ILoggerFactory>();
             this.loggerFactory.Setup(l => l.CreateLogger(It.IsAny<string>()))
@@ -82,8 +86,9 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
             this.senderRetriever.Setup(x => x.GetSender(It.IsAny<Transaction>(), It.IsAny<ICoinView>(), It.IsAny<IList<Transaction>>())).Returns(GetSenderResult.CreateSuccess(new uint160(0)));
             this.senderRetriever.Setup(x => x.GetAddressFromScript(It.IsAny<Script>())).Returns(GetSenderResult.CreateSuccess(new uint160(0)));
 
-            var nestedStateRoot = new Mock<ContractStateRepositoryRoot>();
-            this.stateRoot = new Mock<ContractStateRepositoryRoot>();
+            var nestedStateRoot = new Mock<IContractStateRoot>();
+            nestedStateRoot.SetupGet(x => x.Root).Returns(new byte[32]);
+            this.stateRoot = new Mock<IContractStateRoot>();
             this.stateRoot.Setup(x => x.GetSnapshotTo(It.IsAny<byte[]>())).Returns(nestedStateRoot.Object);
         }
 
@@ -243,7 +248,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
                 MinerSettings minerSettings,
                 Network network,
                 ISenderRetriever senderRetriever,
-                ContractStateRepositoryRoot stateRoot)
+                IContractStateRoot stateRoot)
                 : base(coinView, consensusLoop, dateTimeProvider, executorFactory, loggerFactory, mempool, mempoolLock, minerSettings, network, senderRetriever, stateRoot)
             {
                 this.block = this.BlockTemplate.Block;

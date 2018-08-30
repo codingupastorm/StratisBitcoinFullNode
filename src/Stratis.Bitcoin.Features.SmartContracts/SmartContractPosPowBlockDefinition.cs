@@ -39,9 +39,9 @@ namespace Stratis.Bitcoin.Features.SmartContracts
         private readonly ISmartContractExecutorFactory executorFactory;
         private readonly List<TxOut> refundOutputs = new List<TxOut>();
         private readonly List<Receipt> receipts = new List<Receipt>();
-        private readonly ContractStateRepositoryRoot stateRoot;
-        private ContractStateRepositoryRoot stateSnapshot;
         private ISenderRetriever senderRetriever;
+        private readonly IContractStateRoot stateRoot;
+        private IContractStateRoot stateSnapshot;
 
         public SmartContractPosPowBlockDefinition(
             ICoinView coinView,
@@ -56,7 +56,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts
             ISenderRetriever senderRetriever,
             IStakeChain stakeChain,
             IStakeValidator stakeValidator,
-            ContractStateRepositoryRoot stateRoot)
+            IContractStateRoot stateRoot)
             : base(consensusLoop, dateTimeProvider, loggerFactory, mempool, mempoolLock, minerSettings, network)
         {
             this.coinView = coinView;
