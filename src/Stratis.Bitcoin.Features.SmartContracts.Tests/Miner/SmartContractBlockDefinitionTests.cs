@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
+using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.Consensus.CoinViews;
@@ -34,7 +35,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
         private readonly Mock<ILoggerFactory> loggerFactory;
         private RuleContext callbackRuleContext;
         private readonly Money powReward;
-        private readonly Mock<MinerSettings> minerSettings;
+        private readonly MinerSettings minerSettings;
         private readonly Network network;
         private readonly Mock<ISenderRetriever> senderRetriever;
         private readonly Mock<IContractStateRoot> stateRoot;
@@ -47,11 +48,11 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
             this.consensusRules = new Mock<IConsensusRules>();
 
             var headerVersionRule = new Mock<HeaderVersionRule>();
-            headerVersionRule.Setup(x => x.ComputeBlockVersion(It.IsAny<ChainedHeader>()));
+            //headerVersionRule.Setup(x => x.ComputeBlockVersion(It.IsAny<ChainedHeader>()));
             this.consensusRules.Setup(x => x.GetRule<HeaderVersionRule>()).Returns(headerVersionRule.Object);
             var coinViewRule = new Mock<CoinViewRule>();
             coinViewRule.Setup(x => x.GetProofOfWorkReward(It.IsAny<int>())).Returns(50 * Money.COIN);
-            coinViewRule.Setup(x => x.GetBlockWeight(It.IsAny<Block>())).Returns(0);
+            //coinViewRule.Setup(x => x.GetBlockWeight(It.IsAny<Block>())).Returns(0);
             this.consensusRules.Setup(x => x.GetRule<CoinViewRule>()).Returns(coinViewRule.Object);
             this.consensusLoop = new Mock<IConsensusLoop>();
             this.consensusLoop.Setup(x=> x.ConsensusRules).Returns(this.consensusRules.Object);
@@ -77,7 +78,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
             this.network = new SmartContractsRegTest();
             this.network.Consensus.Rules = new FullNodeBuilderConsensusExtension.PowConsensusRulesRegistration().GetRules();
 
-            this.minerSettings = new Mock<MinerSettings>();
+            this.minerSettings = new MinerSettings(new NodeSettings(this.network));
 
             this.key = new Key();
 
@@ -101,7 +102,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
         {
             ConcurrentChain chain = GenerateChainWithHeight(5, this.network, this.key);
             this.consensusLoop.Setup(c => c.Tip).Returns(chain.GetBlock(5));
-            this.minerSettings.SetupGet(x => x.BlockDefinitionOptions).Returns(new BlockDefinitionOptions(1_500, 1_500));
 
             const int numTxs = 2;
 
@@ -123,7 +123,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
                 this.loggerFactory.Object,
                 this.txMempool.Object,
                 new MempoolSchedulerLock(),
-                this.minerSettings.Object,
+                this.minerSettings,
                 this.network,
                 this.senderRetriever.Object,
                 this.stateRoot.Object);

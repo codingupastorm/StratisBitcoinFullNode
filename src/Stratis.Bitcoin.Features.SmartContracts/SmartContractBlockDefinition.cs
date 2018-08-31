@@ -90,7 +90,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts
                 if (result.Refunds.Any())
                 {
                     // TODO: Do some accounting about block weight when TxOuts are added.
-                    result.Refunds[0].GetSerializedSize()
+                    //result.Refunds[0].GetSerializedSize()
                     this.refundOutputs.AddRange(result.Refunds);
                     this.logger.LogTrace("{0} refunds were added.", result.Refunds.Count);
                 }

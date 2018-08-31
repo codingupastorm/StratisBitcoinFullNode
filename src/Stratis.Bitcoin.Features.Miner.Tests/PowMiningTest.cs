@@ -52,6 +52,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
             this.mempool.SetupGet(mp => mp.MapTx).Returns(new TxMempool.IndexedTransactionSet());
 
             this.minerSettings = new Mock<MinerSettings>();
+            this.minerSettings.CallBase = true;
 
             this.chain = fixture.Chain;
 
