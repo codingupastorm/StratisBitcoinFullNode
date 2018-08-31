@@ -48,11 +48,11 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Miner
             this.consensusRules = new Mock<IConsensusRules>();
 
             var headerVersionRule = new Mock<HeaderVersionRule>();
-            //headerVersionRule.Setup(x => x.ComputeBlockVersion(It.IsAny<ChainedHeader>()));
+            headerVersionRule.Setup(x => x.ComputeBlockVersion(It.IsAny<ChainedHeader>()));
             this.consensusRules.Setup(x => x.GetRule<HeaderVersionRule>()).Returns(headerVersionRule.Object);
             var coinViewRule = new Mock<CoinViewRule>();
             coinViewRule.Setup(x => x.GetProofOfWorkReward(It.IsAny<int>())).Returns(50 * Money.COIN);
-            //coinViewRule.Setup(x => x.GetBlockWeight(It.IsAny<Block>())).Returns(0);
+            coinViewRule.Setup(x => x.GetBlockWeight(It.IsAny<Block>())).Returns(0);
             this.consensusRules.Setup(x => x.GetRule<CoinViewRule>()).Returns(coinViewRule.Object);
             this.consensusLoop = new Mock<IConsensusLoop>();
             this.consensusLoop.Setup(x=> x.ConsensusRules).Returns(this.consensusRules.Object);
