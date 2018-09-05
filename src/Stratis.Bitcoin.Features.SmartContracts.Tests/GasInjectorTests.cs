@@ -8,6 +8,7 @@ using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Executor.Reflection;
 using Stratis.SmartContracts.Executor.Reflection.Compilation;
+using Unbreakable;
 using Xunit;
 
 namespace Stratis.Bitcoin.Features.SmartContracts.Tests
@@ -253,6 +254,19 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
 
             Assert.Null(result.ExecutionException);
             Assert.True(result.GasConsumed > 0);
+        }
+
+        [Fact]
+        public void Test_AssemblyGuard()
+        {
+            SmartContractCompilationResult compilationResult = SmartContractCompiler.CompileFile("SmartContracts/Recursion.cs");
+            Assert.True(compilationResult.Success);
+
+            byte[] originalAssemblyBytes = compilationResult.Compilation;
+
+            var newMemStream = new MemoryStream();
+
+            AssemblyGuard.Rewrite(new MemoryStream(originalAssemblyBytes), newMemStream);
         }
     }
 }
