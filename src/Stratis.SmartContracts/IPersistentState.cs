@@ -52,5 +52,10 @@
         void SetSByte(string key, sbyte value);
 
         void SetStruct<T>(string key, T value) where T : struct;
+
+        /// <summary>
+        /// Wipes the value at a given key, setting the bytes to null.
+        /// </summary>
+        void Clear(string key);
     }
 }

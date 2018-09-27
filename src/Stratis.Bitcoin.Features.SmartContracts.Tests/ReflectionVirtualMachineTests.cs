@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using System.Text;
+using Moq;
 using NBitcoin;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.Core;
@@ -77,6 +78,29 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
 
             Assert.Null(result.ErrorMessage);
             Assert.Equal(methodParameters[0], result.Result);
+        }
+
+        [Fact]
+        public void VM_ExecuteContract_ClearStorage()
+        {
+            ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/ClearStorage.cs");
+            Assert.True(compilationResult.Success);
+
+            byte[] contractExecutionCode = compilationResult.Compilation;
+            var callData = new MethodCall(nameof(ClearStorage.ClearKey), new object[] { });
+
+            // Set a value to be cleared
+            this.state.SetStorageValue(this.contractState.Message.ContractAddress.ToUint160(this.network), Encoding.UTF8.GetBytes(ClearStorage.KeyToClear), new byte[]{1,2,3});
+
+            VmExecutionResult result = this.vm.ExecuteMethod(this.contractState,
+                callData,
+                contractExecutionCode, nameof(ClearStorage));
+
+            Assert.Null(result.ErrorMessage);
+            byte[] stored = this.state.GetStorageValue(
+                this.contractState.Message.ContractAddress.ToUint160(this.network),
+                Encoding.UTF8.GetBytes(ClearStorage.KeyToClear));
+            Assert.Null(this.state.GetStorageValue(this.contractState.Message.ContractAddress.ToUint160(this.network), Encoding.UTF8.GetBytes(ClearStorage.KeyToClear)));
         }
 
         [Fact]

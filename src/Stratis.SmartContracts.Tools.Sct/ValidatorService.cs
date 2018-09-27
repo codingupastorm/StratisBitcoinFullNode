@@ -238,5 +238,9 @@ namespace Stratis.SmartContracts.Tools.Sct
         public void SetSByte(string key, sbyte value)
         {
         }
+
+        public void Clear(string key)
+        {
+        }
     }
 }

@@ -162,5 +162,10 @@ namespace Stratis.SmartContracts.Executor.Reflection
         {
             this.SetObject(key, value);
         }
+
+        public void Clear(string key)
+        {
+            this.SetObject<byte[]>(key, null);
+        }
     }
 }

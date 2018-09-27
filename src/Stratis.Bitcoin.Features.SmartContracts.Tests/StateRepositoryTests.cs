@@ -234,5 +234,18 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
             txTrack.Commit();
             Assert.Equal(cat, repository.GetStorageValue(testAddress, dog));
         }
+
+        [Fact]
+        public void RetrievingNullValues()
+        {
+            ISource<byte[], byte[]> stateDB = new NoDeleteSource<byte[], byte[]>(new MemoryDictionarySource());
+            IStateRepositoryRoot repo = new StateRepositoryRoot(stateDB);
+
+            uint160 address = new uint160(0);
+
+            Assert.Null(repo.GetStorageValue(address, new byte[1]));
+            repo.CreateAccount(address);
+            Assert.Null(repo.GetStorageValue(address, new byte[1]));
+        }
     }
 }

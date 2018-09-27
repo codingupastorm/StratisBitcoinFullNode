@@ -38,6 +38,13 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
         }
 
         [Fact]
+        public void PersistentState_NullsComeBackNull()
+        {
+            TestType<byte[]>(null);
+            TestType<string>(null);
+        }
+
+        [Fact]
         public void PersistentState_CanSerializeDeserializeArrayOfAllPrimitives()
         {
             TestType<Address[]>(new Address[] { new uint160(123456).ToAddress(this.network), new uint160(1234567).ToAddress(this.network) });

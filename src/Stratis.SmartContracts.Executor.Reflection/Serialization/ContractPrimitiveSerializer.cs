@@ -24,6 +24,7 @@ namespace Stratis.SmartContracts.Executor.Reflection.Serialization
 
         public byte[] Serialize(object o)
         {
+            // TODO: Thursday Jordan thinks this should return null.
             if (o is null)
                 return new byte[0];
 

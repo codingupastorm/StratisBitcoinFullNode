@@ -264,5 +264,10 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests
         {
             this.SetObject(key, value);
         }
+
+        public void Clear(string key)
+        {
+            this.SetObject<byte[]>(key, null);
+        }
     }
 }
