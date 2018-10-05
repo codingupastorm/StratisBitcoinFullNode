@@ -51,7 +51,8 @@ namespace Stratis.Bitcoin.Features.SmartContracts
 
             this.feeTxRules = new List<ISmartContractMempoolRule>()
             {
-                new SmartContractFormatRule(callDataSerializer)
+                new SmartContractFormatRule(callDataSerializer),
+                new CanGetSenderRule()
             };
         }
 

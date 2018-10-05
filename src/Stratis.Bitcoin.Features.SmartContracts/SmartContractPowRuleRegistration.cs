@@ -4,6 +4,9 @@ using NBitcoin.Rules;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.SmartContracts.Consensus.Rules;
+using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
+using Stratis.SmartContracts.Executor.Reflection;
+using Stratis.SmartContracts.Executor.Reflection.Serialization;
 
 namespace Stratis.Bitcoin.Features.SmartContracts
 {
@@ -46,8 +49,10 @@ namespace Stratis.Bitcoin.Features.SmartContracts
                 new SetActivationDeploymentsFullValidationRule(),
 
                 new SmartContractLoadCoinviewRule(),
+                new SmartContractFormatRule(new CallDataSerializer(new MethodParameterStringSerializer())),
                 new TransactionDuplicationActivationRule(), // implements BIP30
                 new TxOutSmartContractExecRule(),
+                new CanGetSenderRule(),
                 new OpSpendRule(),
                 new SmartContractPowCoinviewRule(), // implements BIP68, MaxSigOps and BlockReward 
                 new SmartContractSaveCoinviewRule()
