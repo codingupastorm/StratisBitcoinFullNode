@@ -49,7 +49,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts
                 new SetActivationDeploymentsFullValidationRule(),
 
                 new SmartContractLoadCoinviewRule(),
-                new SmartContractFormatRule(new CallDataSerializer(new MethodParameterStringSerializer())),
+                //new SmartContractFormatRule(new CallDataSerializer(new MethodParameterStringSerializer())),
                 new TransactionDuplicationActivationRule(), // implements BIP30
                 new TxOutSmartContractExecRule(),
                 new CanGetSenderRule(),

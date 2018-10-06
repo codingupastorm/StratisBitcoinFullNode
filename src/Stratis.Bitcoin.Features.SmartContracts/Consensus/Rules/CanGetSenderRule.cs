@@ -24,24 +24,31 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Consensus.Rules
 
             foreach (Transaction transaction in block.Transactions)
             {
-                CheckTransaction(transaction, this.PowParent.UtxoSet, processedTxs);
+                CheckTransactionInsideBlock(transaction, this.PowParent.UtxoSet, processedTxs);
                 processedTxs.Add(transaction);
             }
 
             return Task.CompletedTask;
         }
 
-        public void CheckTransaction(MempoolValidationContext context)
-        {
-            CheckTransaction(context.Transaction, context.View, null);
-        }
-
-        private void CheckTransaction(Transaction transaction, ICoinView coinView, IList<Transaction> blockTxs)
+        private void CheckTransactionInsideBlock(Transaction transaction, ICoinView coinView, IList<Transaction> blockTxs)
         {
             // If wanting to execute a contract, we must be able to get the sender.
             if (transaction.Outputs.Any(x => x.ScriptPubKey.IsSmartContractExec()))
             {
                 GetSenderResult result = new SenderRetriever().GetSender(transaction, coinView, blockTxs);
+                if (!result.Success)
+                    new ConsensusError("cant-get-sender", "smart contract output without a P2PKH as the first input to the tx.").Throw();
+            }
+        }
+
+        public void CheckTransaction(MempoolValidationContext context)
+        {
+            // If wanting to execute a contract, we must be able to get the sender.
+            if (context.Transaction.Outputs.Any(x => x.ScriptPubKey.IsSmartContractExec()))
+            {
+                // TODO: Task / await here.
+                GetSenderResult result = new SenderRetriever().GetSender(context.Transaction, context.View).Result;
                 if (!result.Success)
                     new ConsensusError("cant-get-sender", "smart contract output without a P2PKH as the first input to the tx.").Throw();
             }
