@@ -95,12 +95,6 @@ namespace NBitcoin
 
         #endregion
 
-        /// <summary>Populates stream with items that will be used during hash calculation.</summary>
-        protected virtual void ReadWriteHashingStream(BitcoinStream stream)
-        {
-            this.ReadWrite(stream);
-        }
-
         /// <summary>
         /// Generates the hash of a <see cref="BlockHeader"/> or uses cached one.
         /// </summary>
@@ -116,11 +110,7 @@ namespace NBitcoin
             if (hash != null)
                 return hash;
 
-            using (var hs = new HashStream())
-            {
-                this.ReadWriteHashingStream(new BitcoinStream(hs, true));
-                hash = hs.GetHash();
-            }
+            hash = this.CalculateHash();
 
             hashes = this.hashes;
             if (hashes != null)
@@ -129,6 +119,18 @@ namespace NBitcoin
             }
 
             return hash;
+        }
+
+        /// <summary>Calculates the hash of a <see cref="BlockHeader"/>.</summary>
+        protected virtual uint256 CalculateHash()
+        {
+            using (var hs = new HashStream())
+            {
+                this.ReadWrite(new BitcoinStream(hs, true));
+                uint256 hash = hs.GetHash();
+
+                return hash;
+            }
         }
 
         /// <summary>
