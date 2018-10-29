@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using NBitcoin;
+using Stratis.Bitcoin.Features.PoA.IntegrationTests.Tools;
 using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
@@ -18,6 +19,8 @@ namespace Stratis.SmartContracts.IntegrationTests.PoA.MockChain
         private readonly SmartContractNodeBuilder builder;
 
         protected readonly MockChainNode[] nodes;
+
+        protected int chainHeight;
 
         /// <summary>
         /// Nodes on this network.
@@ -38,6 +41,7 @@ namespace Stratis.SmartContracts.IntegrationTests.PoA.MockChain
             this.nodes = new MockChainNode[numNodes];
             var network = new SmartContractsPoARegTest();
             this.Network = network;
+            this.chainHeight = 0;
             for (int i = 0; i < numNodes; i++)
             {
                 CoreNode node = this.builder.CreateSmartContractPoANode(network.FederationKeys[i]);
@@ -74,6 +78,19 @@ namespace Stratis.SmartContracts.IntegrationTests.PoA.MockChain
         public void Dispose()
         {
             this.builder.Dispose();
+        }
+
+        public void MineBlocks(int num)
+        {
+            int currentHeight = this.nodes[0].CoreNode.GetTip().Height;
+
+            for (int i = 0; i < num; i++)
+            {
+                this.builder.PoATimeProvider.NextSpacing();
+            }
+
+            TestHelper.WaitLoop(() => this.nodes[0].CoreNode.GetTip().Height == currentHeight + num);
+            WaitForAllNodesToSync();
         }
     }
 }

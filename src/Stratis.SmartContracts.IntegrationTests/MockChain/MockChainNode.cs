@@ -102,7 +102,7 @@ namespace Stratis.SmartContracts.IntegrationTests.MockChain
         }
 
         /// <summary>
-        /// Mine the given number of blocks. The block reward will go to this node's MinerAddress.
+        /// Mine the given number of blocks. The block reward will go to this node's MinerAddress. Invalid on PoA - nodes are always mining.
         /// </summary>
         public void MineBlocks(int amountOfBlocks)
         {

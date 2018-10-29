@@ -35,18 +35,19 @@ namespace Stratis.SmartContracts.Networks
 
             this.Genesis = genesisBlock;
 
+            // Tests all currently use 2 nodes so for easiest spacing keep only 2 keys
             this.FederationKeys = new Key[]
             {
                 new Mnemonic("lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom").DeriveExtKey().PrivateKey,
                 new Mnemonic("idle power swim wash diesel blouse photo among eager reward govern menu").DeriveExtKey().PrivateKey,
-                new Mnemonic("high neither night category fly wasp inner kitchen phone current skate hair").DeriveExtKey().PrivateKey
+                //new Mnemonic("high neither night category fly wasp inner kitchen phone current skate hair").DeriveExtKey().PrivateKey
             };
 
             var federationPubKeys = new List<PubKey>
             {
                 this.FederationKeys[0].PubKey, // 029528e83f065153d7fa655e73a07fc96fc759162f1e2c8936fa592f2942f39af0
                 this.FederationKeys[1].PubKey, // 03b539807c64abafb2d14c52a0d1858cc29d7c7fad0598f92a1274789c18d74d2d
-                this.FederationKeys[2].PubKey  // 02d6792cf941b68edd1e9056653573917cbaf974d46e9eeb9801d6fcedf846477a
+                //this.FederationKeys[2].PubKey  // 02d6792cf941b68edd1e9056653573917cbaf974d46e9eeb9801d6fcedf846477a
             };
 
             var consensusOptions = new PoAConsensusOptions(
