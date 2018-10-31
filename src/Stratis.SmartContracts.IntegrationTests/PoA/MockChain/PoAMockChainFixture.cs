@@ -16,7 +16,12 @@ namespace Stratis.SmartContracts.IntegrationTests.PoA.MockChain
             var node2 = this.Chain.Nodes[1];
 
             // node1 gets premine
-            TestHelper.WaitLoop(() => node1.CoreNode.GetTip().Height >= this.Chain.Network.Consensus.PremineHeight + this.Chain.Network.Consensus.CoinbaseMaturity + 1);
+            TestHelper.WaitLoop(() =>
+            {
+                int cheight = node1.CoreNode.GetTip().Height;
+
+                return node1.CoreNode.GetTip().Height >= this.Chain.Network.Consensus.PremineHeight + this.Chain.Network.Consensus.CoinbaseMaturity + 1;
+            });
             this.Chain.WaitForAllNodesToSync();
             Assert.Equal(this.Chain.Network.Consensus.PremineReward.Satoshi, (long)node1.WalletSpendableBalance);
 

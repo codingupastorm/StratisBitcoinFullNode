@@ -52,8 +52,8 @@ namespace Stratis.SmartContracts.IntegrationTests.PoA.MockChain
                 this.nodes[i] = new MockChainNode(node, this);
             }
 
-            // Only enable on one for now. Having 2 nodes affecting the same EditableDateTimeProvider is too unpredictable.
-            this.nodes[0].CoreNode.EnableFastMining();
+            //// Only enable on one for now. Having 2 nodes affecting the same EditableDateTimeProvider is too unpredictable.
+            //this.nodes[0].CoreNode.EnableFastMining();
         }
 
         /// <summary>
