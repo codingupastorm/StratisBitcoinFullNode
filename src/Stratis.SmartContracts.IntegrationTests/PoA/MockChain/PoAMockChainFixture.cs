@@ -1,6 +1,7 @@
 ﻿using System;
 using NBitcoin;
 using Stratis.Bitcoin.IntegrationTests.Common;
+using Stratis.SmartContracts.IntegrationTests.MockChain;
 using Xunit;
 
 namespace Stratis.SmartContracts.IntegrationTests.PoA.MockChain
@@ -15,20 +16,32 @@ namespace Stratis.SmartContracts.IntegrationTests.PoA.MockChain
             var node1 = this.Chain.Nodes[0];
             var node2 = this.Chain.Nodes[1];
 
-            // node1 gets premine
-            TestHelper.WaitLoop(() =>
-            {
-                int cheight = node1.CoreNode.GetTip().Height;
+            TestHelper.WaitLoop(
+                () =>
+                {
+                    int aHeight = node1.CoreNode.GetTip().Height;
 
-                return node1.CoreNode.GetTip().Height >= this.Chain.Network.Consensus.PremineHeight + this.Chain.Network.Consensus.CoinbaseMaturity + 1;
-            });
+                    return node1.CoreNode.GetTip().Height >= this.Chain.Network.Consensus.PremineHeight +
+                           this.Chain.Network.Consensus.CoinbaseMaturity + 1;
+                });
             this.Chain.WaitForAllNodesToSync();
-            Assert.Equal(this.Chain.Network.Consensus.PremineReward.Satoshi, (long)node1.WalletSpendableBalance);
 
-            // node2 gets a big payout from node1
-            int currentHeight = node1.CoreNode.GetTip().Height;
-            node1.SendTransaction(node2.MinerAddress.ScriptPubKey,new Money(this.Chain.Network.Consensus.PremineReward.Satoshi / 2, MoneyUnit.Satoshi));
-            TestHelper.WaitLoop(() => node1.CoreNode.GetTip().Height >= currentHeight + 1);
+            // Send half to other from whoever received premine
+            if ((long) node1.WalletSpendableBalance == this.Chain.Network.Consensus.PremineReward.Satoshi)
+            {
+                PayHalfPremine(node1, node2);
+            }
+            else
+            {
+                PayHalfPremine(node2, node1);
+            }
+        }
+
+        private void PayHalfPremine(MockChainNode from, MockChainNode to)
+        {
+            int currentHeight = from.CoreNode.GetTip().Height;
+            from.SendTransaction(to.MinerAddress.ScriptPubKey, new Money(this.Chain.Network.Consensus.PremineReward.Satoshi / 2, MoneyUnit.Satoshi));
+            TestHelper.WaitLoop(() => from.CoreNode.GetTip().Height >= currentHeight + 1);
             this.Chain.WaitForAllNodesToSync();
         }
 

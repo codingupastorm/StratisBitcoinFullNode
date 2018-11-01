@@ -401,7 +401,7 @@ namespace Stratis.SmartContracts.IntegrationTests.PoA
                 response.NewContractAddress,
                 amount);
             this.node2.WaitMempoolCount(1);
-            this.node2.MineBlocks(1);
+            this.node2.WaitForBlocksToBeMined(1);
 
             // Stored balance in PersistentState should be only that which was sent
             byte[] saved = this.node1.GetStorageValue(contractAddress.ToBase58Address(this.mockChain.Network), "Balance");
