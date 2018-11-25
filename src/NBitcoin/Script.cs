@@ -174,6 +174,7 @@ namespace NBitcoin
         /// Only the output with the same index as this input is signed
         /// </summary>
         Single = 3,
+        ForkId = 0x40,
         /// <summary>
         /// If set, no inputs, except this, are part of the signature
         /// </summary>

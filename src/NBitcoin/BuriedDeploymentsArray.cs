@@ -33,6 +33,7 @@ namespace NBitcoin
         /// <summary>
         /// Strict DER signature.
         /// </summary>
-        BIP66
+        BIP66,
+        CashHardFork
     }
 }
