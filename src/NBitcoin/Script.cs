@@ -123,6 +123,8 @@ namespace NBitcoin
         /// </summary>
         CheckColdStakeVerify = (1U << 31),
 
+        ForkId = 0x40,
+
         /// <summary>
         /// Mandatory script verification flags that all new blocks must comply with for
         /// them to be valid. (but old blocks may not comply with) Currently just P2SH,
@@ -132,7 +134,9 @@ namespace NBitcoin
         /// Failing one of these tests may trigger a DoS ban - see CheckInputs() for
         /// details.
         /// </summary>
-        Mandatory = P2SH,
+        Mandatory = 
+            P2SH
+          | ForkId,
 
         /// <summary>
         /// Standard script verification flags that standard transactions will comply
@@ -174,7 +178,6 @@ namespace NBitcoin
         /// Only the output with the same index as this input is signed
         /// </summary>
         Single = 3,
-        ForkId = 0x40,
         /// <summary>
         /// If set, no inputs, except this, are part of the signature
         /// </summary>

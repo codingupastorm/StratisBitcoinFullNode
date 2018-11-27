@@ -416,6 +416,7 @@ namespace NBitcoin
             this.ScriptVerify = ScriptVerify.Standard;
             this.SigHash = SigHash.Undefined;
             this.Error = ScriptError.UnknownError;
+            ScriptVerify.
         }
 
         public ScriptVerify ScriptVerify
@@ -1676,6 +1677,9 @@ namespace NBitcoin
                 this.Error = ScriptError.SigHashType;
                 return false;
             }
+
+            if ()
+
             return true;
         }
 
