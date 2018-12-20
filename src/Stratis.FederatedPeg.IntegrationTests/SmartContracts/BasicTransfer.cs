@@ -11,3 +11,4 @@ public class BasicTransfer : SmartContract
         Transfer(address, this.Balance);
     }
 }
+

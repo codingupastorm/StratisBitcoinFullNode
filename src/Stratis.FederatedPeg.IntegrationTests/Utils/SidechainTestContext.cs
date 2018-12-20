@@ -11,10 +11,6 @@ using Flurl;
 using Flurl.Http;
 using NBitcoin;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Stratis.Bitcoin.Features.SmartContracts;
-using Stratis.Bitcoin.Features.SmartContracts.Models;
-using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
@@ -23,9 +19,7 @@ using Stratis.Bitcoin.Networks;
 using Stratis.FederatedPeg.Features.FederationGateway;
 using Stratis.FederatedPeg.Features.FederationGateway.Models;
 using Stratis.Sidechains.Networks;
-using Stratis.SmartContracts.CLR;
-using Stratis.SmartContracts.Core;
-using Stratis.SmartContracts.Core.State;
+
 namespace Stratis.FederatedPeg.IntegrationTests.Utils
 {
     public class SidechainTestContext : IDisposable
@@ -75,7 +69,7 @@ namespace Stratis.FederatedPeg.IntegrationTests.Utils
             this.mnemonics = this.SideChainNetwork.FederationMnemonics;
             this.pubKeysByMnemonic = this.mnemonics.ToDictionary(m => m, m => m.DeriveExtKey().PrivateKey.PubKey);
 
-            this.scriptAndAddresses = this.GenerateScriptAndAddresses(this.MainChainNetwork, this.SideChainNetwork, 2, this.pubKeysByMnemonic);
+            this.scriptAndAddresses = FederatedPegTestHelper.GenerateScriptAndAddresses(this.MainChainNetwork, this.SideChainNetwork, 2, this.pubKeysByMnemonic);
 
             this.chains = new[] { "mainchain", "sidechain" }.ToList();
 
@@ -123,15 +117,6 @@ namespace Stratis.FederatedPeg.IntegrationTests.Utils
             };
 
             this.ApplyConfigParametersToNodes();
-        }
-
-        public (Script payToMultiSig, BitcoinAddress sidechainMultisigAddress, BitcoinAddress mainchainMultisigAddress)
-            GenerateScriptAndAddresses(Network mainchainNetwork, Network sidechainNetwork, int quorum, Dictionary<Mnemonic, PubKey> pubKeysByMnemonic)
-        {
-            Script payToMultiSig = PayToMultiSigTemplate.Instance.GenerateScriptPubKey(quorum, pubKeysByMnemonic.Values.ToArray());
-            BitcoinAddress sidechainMultisigAddress = payToMultiSig.Hash.GetAddress(sidechainNetwork);
-            BitcoinAddress mainchainMultisigAddress = payToMultiSig.Hash.GetAddress(mainchainNetwork);
-            return (payToMultiSig, sidechainMultisigAddress, mainchainMultisigAddress);
         }
 
         public void StartAndConnectNodes()
@@ -229,15 +214,6 @@ namespace Stratis.FederatedPeg.IntegrationTests.Utils
         }
 
         /// <summary>
-        /// Get balance of the local wallet.
-        /// </summary>
-        public Money GetBalance(CoreNode node)
-        {
-            IEnumerable<Bitcoin.Features.Wallet.UnspentOutputReference> spendableOutputs = node.FullNode.WalletManager().GetSpendableTransactionsInWallet(WalletName);
-            return spendableOutputs.Sum(x => x.Transaction.Amount);
-        }
-
-        /// <summary>
         /// Helper method to build and send a deposit transaction to the federation on the main chain.
         /// </summary>
         public async Task DepositToSideChain(CoreNode node, decimal amount, string sidechainDepositAddress)
@@ -304,130 +280,62 @@ namespace Stratis.FederatedPeg.IntegrationTests.Utils
                 });
         }
 
-        public async Task<string> SendCreateContractTransaction(CoreNode node,
-            byte[] contractCode,
-            double amount,
-            string sender,
-            string[] parameters = null,
-            ulong gasLimit = SmartContractFormatRule.GasLimitMaximum / 2, // half of maximum
-            ulong gasPrice = SmartContractMempoolValidator.MinGasPrice,
-            double feeAmount = 0.01)
-        {
-            HttpResponseMessage createContractResponse = await $"http://localhost:{node.ApiPort}/api"
-                .AppendPathSegment("SmartContracts/build-and-send-create")
-                .PostJsonAsync(new
-                {
-                    amount = amount.ToString(),
-                    accountName = WalletAccount,
-                    contractCode = contractCode.ToHexString(),
-                    feeAmount = feeAmount.ToString(),
-                    gasLimit = gasLimit,
-                    gasPrice = gasPrice,
-                    parameters = parameters,
-                    password = WalletPassword,
-                    Sender = sender,
-                    walletName = WalletName
-                });
-
-            string result = await createContractResponse.Content.ReadAsStringAsync();
-            return JObject.Parse(result)["newContractAddress"].ToString();
-        }
-
-        public string GetUnusedAddress(CoreNode node)
-        {
-            return node.FullNode.WalletManager().GetUnusedAddress(new WalletAccountReference(WalletName, WalletAccount)).Address;
-        }
-
-        public IList<AddressBalance> GetAddressBalances(CoreNode node)
-        {
-            IEnumerable<IGrouping<HdAddress, UnspentOutputReference>> allSpendable = node.FullNode.WalletManager().GetSpendableTransactionsInWallet(WalletName).GroupBy(x => x.Address);
-            var result = new List<AddressBalance>();
-            foreach (IGrouping<HdAddress, UnspentOutputReference> grouping in allSpendable)
-            {
-                result.Add(new AddressBalance
-                {
-                    Address = grouping.Key.Address,
-                    Balance = grouping.Sum(x => x.Transaction.SpendableAmount(false))
-                });
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// Note this is only going to work on smart contract enabled (aka sidechain) nodes
-        /// </summary>
-        public byte[] GetContractCode(CoreNode node, string address)
-        {
-            IStateRepositoryRoot stateRoot = node.FullNode.NodeService<IStateRepositoryRoot>();
-            return stateRoot.GetCode(address.ToUint160(this.SideChainNetwork));
-        }
-
         private void ApplyFederationIPs(CoreNode fed1, CoreNode fed2, CoreNode fed3)
         {
             string fedIps = $"{fed1.Endpoint},{fed2.Endpoint},{fed3.Endpoint}";
 
-            this.AppendToConfig(fed1, $"{FederationGatewaySettings.FederationIpsParam}={fedIps}");
-            this.AppendToConfig(fed2, $"{FederationGatewaySettings.FederationIpsParam}={fedIps}");
-            this.AppendToConfig(fed3, $"{FederationGatewaySettings.FederationIpsParam}={fedIps}");
+            fed1.AppendToConfig($"{FederationGatewaySettings.FederationIpsParam}={fedIps}");
+            fed2.AppendToConfig($"{FederationGatewaySettings.FederationIpsParam}={fedIps}");
+            fed3.AppendToConfig($"{FederationGatewaySettings.FederationIpsParam}={fedIps}");
         }
-
 
         private void ApplyCounterChainAPIPort(CoreNode fromNode, CoreNode toNode)
         {
-            this.AppendToConfig(fromNode, $"{FederationGatewaySettings.CounterChainApiPortParam}={toNode.ApiPort.ToString()}");
-            this.AppendToConfig(toNode, $"{FederationGatewaySettings.CounterChainApiPortParam}={fromNode.ApiPort.ToString()}");
-        }
-
-        private void AppendToConfig(CoreNode node, string configKeyValueItem)
-        {
-            using (StreamWriter sw = File.AppendText(node.Config))
-            {
-                sw.WriteLine(configKeyValueItem);
-            }
+            fromNode.AppendToConfig($"{FederationGatewaySettings.CounterChainApiPortParam}={toNode.ApiPort.ToString()}");
+            toNode.AppendToConfig($"{FederationGatewaySettings.CounterChainApiPortParam}={fromNode.ApiPort.ToString()}");
         }
 
         private void ApplyConfigParametersToNodes()
         {
-            this.AppendToConfig(this.FedSide1, $"{ConfigSideChain}=1");
-            this.AppendToConfig(this.FedSide2, $"{ConfigSideChain}=1");
-            this.AppendToConfig(this.FedSide3, $"{ConfigSideChain}=1");
+            this.FedSide1.AppendToConfig($"{ConfigSideChain}=1");
+            this.FedSide2.AppendToConfig($"{ConfigSideChain}=1");
+            this.FedSide3.AppendToConfig($"{ConfigSideChain}=1");
 
-            this.AppendToConfig(this.FedMain1, $"{ConfigMainChain}=1");
-            this.AppendToConfig(this.FedMain2, $"{ConfigMainChain}=1");
-            this.AppendToConfig(this.FedMain3, $"{ConfigMainChain}=1");
+            this.FedMain1.AppendToConfig($"{ConfigMainChain}=1");
+            this.FedMain2.AppendToConfig($"{ConfigMainChain}=1");
+            this.FedMain3.AppendToConfig($"{ConfigMainChain}=1");
 
-            this.AppendToConfig(this.FedSide1, $"mindepositconfirmations=5");
-            this.AppendToConfig(this.FedSide2, $"mindepositconfirmations=5");
-            this.AppendToConfig(this.FedSide3, $"mindepositconfirmations=5");
+            this.FedSide1.AppendToConfig($"mindepositconfirmations=5");
+            this.FedSide2.AppendToConfig($"mindepositconfirmations=5");
+            this.FedSide3.AppendToConfig($"mindepositconfirmations=5");
 
-            this.AppendToConfig(this.FedMain1, $"mindepositconfirmations=5");
-            this.AppendToConfig(this.FedMain2, $"mindepositconfirmations=5");
-            this.AppendToConfig(this.FedMain3, $"mindepositconfirmations=5");
+            this.FedMain1.AppendToConfig($"mindepositconfirmations=5");
+            this.FedMain2.AppendToConfig($"mindepositconfirmations=5");
+            this.FedMain3.AppendToConfig($"mindepositconfirmations=5");
 
-            this.AppendToConfig(this.FedSide1, $"mincoinmaturity=5");
-            this.AppendToConfig(this.FedSide2, $"mincoinmaturity=5");
-            this.AppendToConfig(this.FedSide3, $"mincoinmaturity=5");
+            this.FedSide1.AppendToConfig($"mincoinmaturity=5");
+            this.FedSide2.AppendToConfig($"mincoinmaturity=5");
+            this.FedSide3.AppendToConfig($"mincoinmaturity=5");
 
-            this.AppendToConfig(this.FedMain1, $"mincoinmaturity=5");
-            this.AppendToConfig(this.FedMain2, $"mincoinmaturity=5");
-            this.AppendToConfig(this.FedMain3, $"mincoinmaturity=5");
+            this.FedMain1.AppendToConfig($"mincoinmaturity=5");
+            this.FedMain2.AppendToConfig($"mincoinmaturity=5");
+            this.FedMain3.AppendToConfig($"mincoinmaturity=5");
 
-            this.AppendToConfig(this.FedSide1, $"{FederationGatewaySettings.RedeemScriptParam}={this.scriptAndAddresses.payToMultiSig.ToString()}");
-            this.AppendToConfig(this.FedSide2, $"{FederationGatewaySettings.RedeemScriptParam}={this.scriptAndAddresses.payToMultiSig.ToString()}");
-            this.AppendToConfig(this.FedSide3, $"{FederationGatewaySettings.RedeemScriptParam}={this.scriptAndAddresses.payToMultiSig.ToString()}");
+            this.FedSide1.AppendToConfig($"{FederationGatewaySettings.RedeemScriptParam}={this.scriptAndAddresses.payToMultiSig.ToString()}");
+            this.FedSide2.AppendToConfig($"{FederationGatewaySettings.RedeemScriptParam}={this.scriptAndAddresses.payToMultiSig.ToString()}");
+            this.FedSide3.AppendToConfig($"{FederationGatewaySettings.RedeemScriptParam}={this.scriptAndAddresses.payToMultiSig.ToString()}");
 
-            this.AppendToConfig(this.FedMain1, $"{FederationGatewaySettings.RedeemScriptParam}={this.scriptAndAddresses.payToMultiSig.ToString()}");
-            this.AppendToConfig(this.FedMain2, $"{FederationGatewaySettings.RedeemScriptParam}={this.scriptAndAddresses.payToMultiSig.ToString()}");
-            this.AppendToConfig(this.FedMain3, $"{FederationGatewaySettings.RedeemScriptParam}={this.scriptAndAddresses.payToMultiSig.ToString()}");
+            this.FedMain1.AppendToConfig($"{FederationGatewaySettings.RedeemScriptParam}={this.scriptAndAddresses.payToMultiSig.ToString()}");
+            this.FedMain2.AppendToConfig($"{FederationGatewaySettings.RedeemScriptParam}={this.scriptAndAddresses.payToMultiSig.ToString()}");
+            this.FedMain3.AppendToConfig($"{FederationGatewaySettings.RedeemScriptParam}={this.scriptAndAddresses.payToMultiSig.ToString()}");
 
-            this.AppendToConfig(this.FedSide1, $"{FederationGatewaySettings.PublicKeyParam}={this.pubKeysByMnemonic[this.mnemonics[0]].ToString()}");
-            this.AppendToConfig(this.FedSide2, $"{FederationGatewaySettings.PublicKeyParam}={this.pubKeysByMnemonic[this.mnemonics[1]].ToString()}");
-            this.AppendToConfig(this.FedSide3, $"{FederationGatewaySettings.PublicKeyParam}={this.pubKeysByMnemonic[this.mnemonics[2]].ToString()}");
+            this.FedSide1.AppendToConfig($"{FederationGatewaySettings.PublicKeyParam}={this.pubKeysByMnemonic[this.mnemonics[0]].ToString()}");
+            this.FedSide2.AppendToConfig($"{FederationGatewaySettings.PublicKeyParam}={this.pubKeysByMnemonic[this.mnemonics[1]].ToString()}");
+            this.FedSide3.AppendToConfig($"{FederationGatewaySettings.PublicKeyParam}={this.pubKeysByMnemonic[this.mnemonics[2]].ToString()}");
 
-            this.AppendToConfig(this.FedMain1, $"{FederationGatewaySettings.PublicKeyParam}={this.pubKeysByMnemonic[this.mnemonics[0]].ToString()}");
-            this.AppendToConfig(this.FedMain2, $"{FederationGatewaySettings.PublicKeyParam}={this.pubKeysByMnemonic[this.mnemonics[1]].ToString()}");
-            this.AppendToConfig(this.FedMain3, $"{FederationGatewaySettings.PublicKeyParam}={this.pubKeysByMnemonic[this.mnemonics[2]].ToString()}");
+            this.FedMain1.AppendToConfig($"{FederationGatewaySettings.PublicKeyParam}={this.pubKeysByMnemonic[this.mnemonics[0]].ToString()}");
+            this.FedMain2.AppendToConfig($"{FederationGatewaySettings.PublicKeyParam}={this.pubKeysByMnemonic[this.mnemonics[1]].ToString()}");
+            this.FedMain3.AppendToConfig($"{FederationGatewaySettings.PublicKeyParam}={this.pubKeysByMnemonic[this.mnemonics[2]].ToString()}");
 
             this.ApplyFederationIPs(this.FedMain1, this.FedMain2, this.FedMain3);
             this.ApplyFederationIPs(this.FedSide1, this.FedSide2, this.FedSide3);

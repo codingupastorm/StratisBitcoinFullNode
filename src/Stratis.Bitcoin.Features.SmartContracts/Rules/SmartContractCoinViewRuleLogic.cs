@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
+using DBreeze.Utils;
 using NBitcoin;
 using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.Consensus;
@@ -55,6 +56,16 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Rules
             this.mutableStateRepository = this.ContractCoinviewRule.OriginalStateRoot.GetSnapshotTo(blockRoot);
 
             await baseRunAsync(context);
+
+            byte[] mutableStateRoot = this.mutableStateRepository.Root;
+            uint256 mutableStateRootUint = new uint256(mutableStateRoot);
+
+            uint256 expectedRootUint = ((ISmartContractBlockHeader) block.Header).HashStateRoot;
+            byte[] expectedRoot = expectedRootUint.ToBytes();
+
+            byte[] originalRoot = this.ContractCoinviewRule.OriginalStateRoot.Root;
+            uint256 originalRootUint = new uint256(originalRoot);
+
 
             if (new uint256(this.mutableStateRepository.Root) != ((ISmartContractBlockHeader)block.Header).HashStateRoot)
                 SmartContractConsensusErrors.UnequalStateRoots.Throw();
