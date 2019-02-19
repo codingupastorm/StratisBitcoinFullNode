@@ -89,10 +89,10 @@ namespace Stratis.Bitcoin.Features.PoA
 
             this.federationManager.Initialize();
 
-            if (((PoAConsensusOptions)this.network.Consensus.Options).VotingEnabled)
-            {
-                this.votingManager.Initialize();
-            }
+            //if (((PoAConsensusOptions)this.network.Consensus.Options).VotingEnabled)
+            //{
+            //    this.votingManager.Initialize();
+            //}
 
             if (this.federationManager.IsFederationMember)
             {
@@ -108,7 +108,7 @@ namespace Stratis.Bitcoin.Features.PoA
         {
             this.miner.Dispose();
 
-            this.votingManager.Dispose();
+            //this.votingManager.Dispose();
         }
     }
 
