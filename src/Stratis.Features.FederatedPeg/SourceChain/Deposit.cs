@@ -6,7 +6,7 @@ namespace Stratis.Features.FederatedPeg.SourceChain
 {
     public class Deposit : IDeposit, IBitcoinSerializable
     {
-        // TODO: Use a separate object in the DepositRepository.
+        // TODO: Use a separate object in the TransferRepository.
 
         /// <summary>
         /// Needed for deserialization.

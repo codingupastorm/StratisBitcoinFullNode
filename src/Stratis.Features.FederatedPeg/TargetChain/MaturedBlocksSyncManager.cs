@@ -12,7 +12,7 @@ namespace Stratis.Features.FederatedPeg.TargetChain
     /// <inheritdoc cref="IMaturedBlocksSyncManager"/>
     public class MaturedBlocksSyncManager : IMaturedBlocksSyncManager
     {
-        private readonly IDepositRepository depositRepository;
+        private readonly ITransferRepository transferRepository;
 
         private readonly IFederationGatewayClient federationGatewayClient;
 
@@ -32,9 +32,9 @@ namespace Stratis.Features.FederatedPeg.TargetChain
         /// <remarks>Needed to give other node some time to start before bombing it with requests.</remarks>
         private const int InitializationDelayMs = 10_000;
 
-        public MaturedBlocksSyncManager(IDepositRepository depositStore, IFederationGatewayClient federationGatewayClient, ILoggerFactory loggerFactory)
+        public MaturedBlocksSyncManager(ITransferRepository transferRepository, IFederationGatewayClient federationGatewayClient, ILoggerFactory loggerFactory)
         {
-            this.depositRepository = depositStore;
+            this.transferRepository = transferRepository;
             this.federationGatewayClient = federationGatewayClient;
 
             this.cancellation = new CancellationTokenSource();
@@ -82,7 +82,7 @@ namespace Stratis.Features.FederatedPeg.TargetChain
         {
             // TODO investigate if we can ask for blocks that are reorgable. If so it's a problem and an attack vector.
             int blocksToRequest = MaxBlocksToRequest;
-            int blockToStartFrom = this.depositRepository.GetSyncedBlockNumber();
+            int blockToStartFrom = this.transferRepository.GetSyncedBlockNumber();
 
             var model = new MaturedBlockRequestModel(blockToStartFrom, blocksToRequest);
 
@@ -97,7 +97,7 @@ namespace Stratis.Features.FederatedPeg.TargetChain
                 }
 
                 // We found new deposits. Add them to the store.
-                bool success = this.depositRepository.SaveDeposits(matureBlockDeposits);
+                bool success = this.transferRepository.SaveDeposits(matureBlockDeposits);
 
                 // All were pushed, so no delay needed, just get more!
                 if (success)

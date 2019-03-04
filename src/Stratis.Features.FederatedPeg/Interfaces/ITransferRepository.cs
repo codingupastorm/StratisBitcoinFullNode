@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using NBitcoin;
 using Stratis.Features.FederatedPeg.Models;
-using Stratis.Features.FederatedPeg.SourceChain;
+using Stratis.Features.FederatedPeg.TargetChain;
 
 namespace Stratis.Features.FederatedPeg.Interfaces
 {
-    public interface IDepositRepository
+    public interface ITransferRepository
     {
         /// <summary>
         /// Get the highest block number we know about deposits for.
@@ -20,6 +20,11 @@ namespace Stratis.Features.FederatedPeg.Interfaces
         /// <summary>
         /// Get the saved deposit for a given transaction id.
         /// </summary>
-        Deposit GetDeposit(uint256 depositId);
+        Transfer GetTransfer(uint256 depositId);
+
+        /// <summary>
+        /// Get all the saved deposits. NOTE: Obviously not scalable.
+        /// </summary>
+        IList<Transfer> GetAllTransfers();
     }
 }

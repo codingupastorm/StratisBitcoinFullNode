@@ -8,7 +8,6 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Features.FederatedPeg.Interfaces;
 using Stratis.Features.FederatedPeg.Models;
-using Stratis.Features.FederatedPeg.SourceChain;
 using Transaction = DBreeze.Transactions.Transaction;
 
 namespace Stratis.Features.FederatedPeg.TargetChain
@@ -16,7 +15,7 @@ namespace Stratis.Features.FederatedPeg.TargetChain
     /// <summary>
     /// Holds information about all known deposits on the opposite chain.
     /// </summary>
-    public class DepositRepository : IDepositRepository
+    public class TransferRepository : ITransferRepository
     {
         /// <summary>This table contains the cross-chain transfer information.</summary>
         private const string DepositTableName = "deposits";
@@ -27,7 +26,7 @@ namespace Stratis.Features.FederatedPeg.TargetChain
         private readonly DBreezeEngine db;
         private readonly DBreezeSerializer serializer;
 
-        public DepositRepository(DataFolder dataFolder, IFederationGatewaySettings settings, DBreezeSerializer serializer)
+        public TransferRepository(DataFolder dataFolder, IFederationGatewaySettings settings, DBreezeSerializer serializer)
         {
             string depositStoreName = "federatedTransfers" + settings.MultiSigAddress; // TODO: Unneccessary?
             string folder = Path.Combine(dataFolder.RootPath, depositStoreName);
@@ -94,7 +93,7 @@ namespace Stratis.Features.FederatedPeg.TargetChain
                             return false;
                         }
 
-                        this.PutDeposit(dbreezeTransaction, (Deposit)deposit);
+                        this.PutTransfer(dbreezeTransaction, Transfer.FromDeposit(deposit));
                     }
 
                     nextSyncNum++;
@@ -109,18 +108,16 @@ namespace Stratis.Features.FederatedPeg.TargetChain
             return true;
         }
 
-        // TODO: Use a separate object for deposits in the DepositRepository - not a shared one with what the controllers use
-
-        private void PutDeposit(Transaction dbreezeTransaction, Deposit deposit)
+        private void PutTransfer(Transaction dbreezeTransaction, Transfer transfer)
         {
-            Guard.NotNull(deposit, nameof(deposit));
+            Guard.NotNull(transfer, nameof(transfer));
 
-            byte[] depositBytes = this.serializer.Serialize(deposit);
-            dbreezeTransaction.Insert<byte[], byte[]>(DepositTableName, deposit.Id.ToBytes(), depositBytes);
+            byte[] depositBytes = this.serializer.Serialize(transfer);
+            dbreezeTransaction.Insert<byte[], byte[]>(DepositTableName, transfer.DepositTransactionId.ToBytes(), depositBytes);
         }
 
         /// <inheritdoc />
-        public Deposit GetDeposit(uint256 depositId)
+        public Transfer GetTransfer(uint256 depositId)
         {
             using (Transaction dbreezeTransaction = this.db.GetTransaction())
             {
@@ -129,7 +126,20 @@ namespace Stratis.Features.FederatedPeg.TargetChain
                 if (!row.Exists)
                     return null;
 
-                return this.serializer.Deserialize<Deposit>(row.Value);
+                return this.serializer.Deserialize<Transfer>(row.Value);
+            }
+        }
+
+        /// <inheritdoc />
+        public IList<Transfer> GetAllTransfers()
+        {
+            // TODO: Make scalable.
+
+            using (Transaction dbreezeTransaction = this.db.GetTransaction())
+            {
+                IEnumerable<Row<byte[], byte[]>> rows = dbreezeTransaction.SelectForward<byte[], byte[]>(DepositTableName);
+
+                return rows.Where(x => x.Key.Length == 32).Select(x => this.serializer.Deserialize<Transfer>(x.Value)).ToList();
             }
         }
     }

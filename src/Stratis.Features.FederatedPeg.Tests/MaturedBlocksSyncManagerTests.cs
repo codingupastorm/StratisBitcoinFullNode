@@ -17,16 +17,16 @@ namespace Stratis.Features.FederatedPeg.Tests
 
         private readonly IFederationGatewayClient federationGatewayClient;
         private readonly ICrossChainTransferStore crossChainTransferStore;
-        private readonly IDepositRepository depositRepository;
+        private readonly ITransferRepository transferRepository;
 
         public MaturedBlocksSyncManagerTests()
         {
             ILoggerFactory loggerFactory = Substitute.For<ILoggerFactory>();
             this.federationGatewayClient = Substitute.For<IFederationGatewayClient>();
             this.crossChainTransferStore = Substitute.For<ICrossChainTransferStore>();
-            this.depositRepository = Substitute.For<IDepositRepository>();
+            this.transferRepository = Substitute.For<ITransferRepository>();
 
-            this.syncManager = new TestOnlyMaturedBlocksSyncManager(this.depositRepository, this.federationGatewayClient, loggerFactory);
+            this.syncManager = new TestOnlyMaturedBlocksSyncManager(this.transferRepository, this.federationGatewayClient, loggerFactory);
         }
 
         [Fact(Skip = TestingValues.SkipTests)]
@@ -60,7 +60,7 @@ namespace Stratis.Features.FederatedPeg.Tests
 
         private class TestOnlyMaturedBlocksSyncManager : MaturedBlocksSyncManager
         {
-            public TestOnlyMaturedBlocksSyncManager(IDepositRepository store, IFederationGatewayClient federationGatewayClient, ILoggerFactory loggerFactory)
+            public TestOnlyMaturedBlocksSyncManager(ITransferRepository store, IFederationGatewayClient federationGatewayClient, ILoggerFactory loggerFactory)
                 : base(store, federationGatewayClient, loggerFactory)
             {
             }

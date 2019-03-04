@@ -13,11 +13,11 @@ using Xunit;
 
 namespace Stratis.Features.FederatedPeg.Tests
 {
-    public class DepositRepositoryTests
+    public class TransferRepositoryTests
     {
-        private readonly DepositRepository depositRepository;
+        private readonly TransferRepository transferRepository;
 
-        public DepositRepositoryTests()
+        public TransferRepositoryTests()
         {
             Network network = CirrusNetwork.NetworksSelector.Regtest();
             var dbreezeSerializer = new DBreezeSerializer(network);
@@ -26,7 +26,7 @@ namespace Stratis.Features.FederatedPeg.Tests
             settings.Setup(x => x.MultiSigAddress)
                 .Returns(new BitcoinPubKeyAddress(new KeyId(), network));
 
-            this.depositRepository = new DepositRepository(dataFolder, settings.Object, dbreezeSerializer);
+            this.transferRepository = new TransferRepository(dataFolder, settings.Object, dbreezeSerializer);
         }
 
         [Fact]
@@ -44,15 +44,14 @@ namespace Stratis.Features.FederatedPeg.Tests
                 model
             };
 
-            Assert.True(this.depositRepository.SaveDeposits(modelList));
+            Assert.True(this.transferRepository.SaveDeposits(modelList));
 
-            Deposit retrievedDeposit = this.depositRepository.GetDeposit(model.Deposits[0].Id);
+            Transfer retrievedTransfer = this.transferRepository.GetTransfer(model.Deposits[0].Id);
 
-            Assert.Equal(model.Deposits[0].Id, retrievedDeposit.Id);
-            Assert.Equal(model.Deposits[0].Amount, retrievedDeposit.Amount);
-            Assert.Equal(model.Deposits[0].BlockHash, retrievedDeposit.BlockHash);
-            Assert.Equal(model.Deposits[0].BlockNumber, retrievedDeposit.BlockNumber);
-            Assert.Equal(model.Deposits[0].TargetAddress, retrievedDeposit.TargetAddress);
+            Assert.Equal(model.Deposits[0].Id, retrievedTransfer.DepositTransactionId);
+            Assert.Equal(model.Deposits[0].Amount, (Money) retrievedTransfer.DepositAmount);
+            Assert.Equal(model.Deposits[0].BlockNumber, retrievedTransfer.DepositHeight);
+            Assert.Equal(model.Deposits[0].TargetAddress, retrievedTransfer.DepositTargetAddress);
         }
 
         [Fact]
@@ -70,10 +69,10 @@ namespace Stratis.Features.FederatedPeg.Tests
                 model
             };
 
-            Assert.False(this.depositRepository.SaveDeposits(modelList));
+            Assert.False(this.transferRepository.SaveDeposits(modelList));
 
-            Deposit retrievedDeposit = this.depositRepository.GetDeposit(model.Deposits[0].Id);
-            Assert.Null(retrievedDeposit);
+            Transfer retrievedTransfer = this.transferRepository.GetTransfer(model.Deposits[0].Id);
+            Assert.Null(retrievedTransfer);
         }
 
         [Fact]
@@ -92,17 +91,16 @@ namespace Stratis.Features.FederatedPeg.Tests
             };
 
 
-            Assert.True(this.depositRepository.SaveDeposits(modelList));
+            Assert.True(this.transferRepository.SaveDeposits(modelList));
 
             foreach (IDeposit deposit in modelList[0].Deposits)
             {
-                Deposit retrievedDeposit = this.depositRepository.GetDeposit(deposit.Id);
+                Transfer retrievedDeposit = this.transferRepository.GetTransfer(deposit.Id);
 
-                Assert.Equal(deposit.Id, retrievedDeposit.Id);
-                Assert.Equal(deposit.Amount, retrievedDeposit.Amount);
-                Assert.Equal(deposit.BlockHash, retrievedDeposit.BlockHash);
-                Assert.Equal(deposit.BlockNumber, retrievedDeposit.BlockNumber);
-                Assert.Equal(deposit.TargetAddress, retrievedDeposit.TargetAddress);
+                Assert.Equal(deposit.Id, retrievedDeposit.DepositTransactionId);
+                Assert.Equal(deposit.Amount, (Money) retrievedDeposit.DepositAmount);
+                Assert.Equal(deposit.BlockNumber, retrievedDeposit.DepositHeight);
+                Assert.Equal(deposit.TargetAddress, retrievedDeposit.DepositTargetAddress);
             }
         }
 
@@ -135,17 +133,16 @@ namespace Stratis.Features.FederatedPeg.Tests
             };
 
 
-            Assert.True(this.depositRepository.SaveDeposits(modelList));
+            Assert.True(this.transferRepository.SaveDeposits(modelList));
 
             foreach (MaturedBlockDepositsModel maturedBlockDeposit in modelList)
             {
-                Deposit retrievedDeposit = this.depositRepository.GetDeposit(maturedBlockDeposit.Deposits[0].Id);
+                Transfer retrievedTransfer = this.transferRepository.GetTransfer(maturedBlockDeposit.Deposits[0].Id);
 
-                Assert.Equal(maturedBlockDeposit.Deposits[0].Id, retrievedDeposit.Id);
-                Assert.Equal(maturedBlockDeposit.Deposits[0].Amount, retrievedDeposit.Amount);
-                Assert.Equal(maturedBlockDeposit.Deposits[0].BlockHash, retrievedDeposit.BlockHash);
-                Assert.Equal(maturedBlockDeposit.Deposits[0].BlockNumber, retrievedDeposit.BlockNumber);
-                Assert.Equal(maturedBlockDeposit.Deposits[0].TargetAddress, retrievedDeposit.TargetAddress);
+                Assert.Equal(maturedBlockDeposit.Deposits[0].Id, retrievedTransfer.DepositTransactionId);
+                Assert.Equal(maturedBlockDeposit.Deposits[0].Amount, (Money) retrievedTransfer.DepositAmount);
+                Assert.Equal(maturedBlockDeposit.Deposits[0].BlockNumber, retrievedTransfer.DepositHeight);
+                Assert.Equal(maturedBlockDeposit.Deposits[0].TargetAddress, retrievedTransfer.DepositTargetAddress);
             }
         }
 
@@ -177,10 +174,10 @@ namespace Stratis.Features.FederatedPeg.Tests
                 })
             };
 
-            Assert.False(this.depositRepository.SaveDeposits(modelList));
+            Assert.False(this.transferRepository.SaveDeposits(modelList));
 
-            Deposit retrievedDeposit = this.depositRepository.GetDeposit(modelList[0].Deposits[0].Id);
-            Assert.Null(retrievedDeposit);
+            Transfer retrievedTransfer = this.transferRepository.GetTransfer(modelList[0].Deposits[0].Id);
+            Assert.Null(retrievedTransfer);
         }
     }
 }
