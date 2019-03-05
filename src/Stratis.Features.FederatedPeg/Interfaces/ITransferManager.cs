@@ -2,6 +2,6 @@
 {
     public interface ITransferManager
     {
-        void QueryDepositsAndMakeTransfers();
+        void ActOnTransfers();
     }
 }
