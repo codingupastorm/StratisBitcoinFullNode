@@ -14,8 +14,11 @@ namespace Stratis.Features.FederatedPeg.TargetChain
         public long DepositAmount => this.depositAmount;
         private long depositAmount;
 
-        public int? DepositHeight => this.depositHeight;
-        private int? depositHeight;
+        public int DepositHeight => this.depositHeight;
+        private int depositHeight;
+
+        public uint DepositTime => this.depositTime;
+        private uint depositTime;
 
         public Transaction PartialTransaction => this.partialTransaction;
         private Transaction partialTransaction;
@@ -48,13 +51,14 @@ namespace Stratis.Features.FederatedPeg.TargetChain
         /// <param name="blockHash">The hash of the block where the transaction resides.</param>
         /// <param name="blockHeight">The height (in our chain) of the block where the transaction resides.</param>
         public Transfer(TransferStatus status, uint256 depositTransactionId, string depositTargetAddress, Money depositAmount,
-            int? depositHeight, Transaction partialTransaction, uint256 blockHash = null, int? blockHeight = null)
+            int depositHeight, uint depositTime, Transaction partialTransaction, uint256 blockHash = null, int? blockHeight = null)
         {
             this.status = status;
             this.depositTransactionId = depositTransactionId;
             this.depositTargetAddress = depositTargetAddress;
             this.depositAmount = depositAmount;
             this.depositHeight = depositHeight;
+            this.depositTime = depositTime;
             this.partialTransaction = partialTransaction;
             this.blockHash = blockHash;
             this.blockHeight = blockHeight;
@@ -73,10 +77,8 @@ namespace Stratis.Features.FederatedPeg.TargetChain
             stream.ReadWrite(ref this.depositTransactionId);
             stream.ReadWrite(ref this.depositTargetAddress);
             stream.ReadWrite(ref this.depositAmount);
-
-            int depositHeight = this.DepositHeight ?? -1;
-            stream.ReadWrite(ref depositHeight);
-            this.depositHeight = (depositHeight < 0) ? (int?)null : depositHeight;
+            stream.ReadWrite(ref this.depositHeight);
+            stream.ReadWrite(ref this.depositTime);
 
             stream.ReadWrite(ref this.partialTransaction);
 
@@ -95,7 +97,7 @@ namespace Stratis.Features.FederatedPeg.TargetChain
             }
         }
 
-        public static Transfer FromDeposit(IDeposit deposit)
+        public static Transfer FromDeposit(IDeposit deposit, uint blockTime)
         {
             return new Transfer(
                 TransferStatus.NotCreated,
@@ -103,6 +105,7 @@ namespace Stratis.Features.FederatedPeg.TargetChain
                 deposit.TargetAddress,
                 deposit.Amount,
                 deposit.BlockNumber,
+                blockTime,
                 null
                 );
         }

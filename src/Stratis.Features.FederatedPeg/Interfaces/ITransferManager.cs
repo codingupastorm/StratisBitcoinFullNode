@@ -2,6 +2,6 @@
 {
     public interface ITransferManager
     {
-        void ActOnTransfers();
+        void ProgressTransfers();
     }
 }

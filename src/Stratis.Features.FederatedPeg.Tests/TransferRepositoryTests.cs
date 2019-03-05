@@ -34,7 +34,8 @@ namespace Stratis.Features.FederatedPeg.Tests
         {
             var model = new MaturedBlockDepositsModel(new MaturedBlockInfoModel
             {
-                BlockHeight = 0
+                BlockHeight = 0,
+                BlockTime = 1234
             }, new List<IDeposit>
             {
                 new Deposit(123, Money.Coins((decimal) 2.56), "mtXWDB6k5yC5v7TcwKZHB89SUp85yCKshy", 0, 123456)
@@ -51,6 +52,7 @@ namespace Stratis.Features.FederatedPeg.Tests
             Assert.Equal(model.Deposits[0].Id, retrievedTransfer.DepositTransactionId);
             Assert.Equal(model.Deposits[0].Amount, (Money) retrievedTransfer.DepositAmount);
             Assert.Equal(model.Deposits[0].BlockNumber, retrievedTransfer.DepositHeight);
+            Assert.Equal(model.BlockInfo.BlockTime, retrievedTransfer.DepositTime);
             Assert.Equal(model.Deposits[0].TargetAddress, retrievedTransfer.DepositTargetAddress);
         }
 
@@ -59,7 +61,8 @@ namespace Stratis.Features.FederatedPeg.Tests
         {
             var model = new MaturedBlockDepositsModel(new MaturedBlockInfoModel
             {
-                BlockHeight = 1
+                BlockHeight = 1,
+                BlockTime = 1234
             }, new List<IDeposit>
             {
                 new Deposit(123, Money.Coins((decimal) 2.56), "mtXWDB6k5yC5v7TcwKZHB89SUp85yCKshy", 1, 123456)
@@ -82,7 +85,8 @@ namespace Stratis.Features.FederatedPeg.Tests
             {
                 new MaturedBlockDepositsModel(new MaturedBlockInfoModel
                 {
-                    BlockHeight = 0
+                    BlockHeight = 0,
+                    BlockTime = 1234
                 }, new List<IDeposit>
                 {
                     new Deposit(123, Money.Coins((decimal) 2.56), "mtXWDB6k5yC5v7TcwKZHB89SUp85yCKshy", 0, 123456),
@@ -111,21 +115,24 @@ namespace Stratis.Features.FederatedPeg.Tests
             {
                 new MaturedBlockDepositsModel(new MaturedBlockInfoModel
                 {
-                    BlockHeight = 0
+                    BlockHeight = 0,
+                    BlockTime = 1234
                 }, new List<IDeposit>
                 {
                     new Deposit(123, Money.Coins((decimal) 2.56), "mtXWDB6k5yC5v7TcwKZHB89SUp85yCKshy", 0, 123456)
                 }),
                 new MaturedBlockDepositsModel(new MaturedBlockInfoModel
                 {
-                    BlockHeight = 1
+                    BlockHeight = 1,
+                    BlockTime = 1235
                 }, new List<IDeposit>
                 {
                     new Deposit(1234, Money.Coins((decimal) 2.56), "mtXWDB6k5yC5v7TcwKZHB89SUp85yCKshy", 1, 123456)
                 }),
                 new MaturedBlockDepositsModel(new MaturedBlockInfoModel
                 {
-                    BlockHeight = 2
+                    BlockHeight = 2,
+                    BlockTime = 1236
                 }, new List<IDeposit>
                 {
                     new Deposit(12345, Money.Coins((decimal) 2.56), "mtXWDB6k5yC5v7TcwKZHB89SUp85yCKshy", 2, 123456)
@@ -153,21 +160,24 @@ namespace Stratis.Features.FederatedPeg.Tests
             {
                 new MaturedBlockDepositsModel(new MaturedBlockInfoModel
                 {
-                    BlockHeight = 0
+                    BlockHeight = 0,
+                    BlockTime = 1234
                 }, new List<IDeposit>
                 {
                     new Deposit(123, Money.Coins((decimal) 2.56), "mtXWDB6k5yC5v7TcwKZHB89SUp85yCKshy", 0, 123456)
                 }),
                 new MaturedBlockDepositsModel(new MaturedBlockInfoModel
                 {
-                    BlockHeight = 1
+                    BlockHeight = 1,
+                    BlockTime = 1235
                 }, new List<IDeposit>
                 {
                     new Deposit(1234, Money.Coins((decimal) 2.56), "mtXWDB6k5yC5v7TcwKZHB89SUp85yCKshy", 1, 123456)
                 }),
                 new MaturedBlockDepositsModel(new MaturedBlockInfoModel
                 {
-                    BlockHeight = 3
+                    BlockHeight = 3,
+                    BlockTime = 1236
                 }, new List<IDeposit>
                 {
                     new Deposit(12345, Money.Coins((decimal) 2.56), "mtXWDB6k5yC5v7TcwKZHB89SUp85yCKshy", 3, 123456)

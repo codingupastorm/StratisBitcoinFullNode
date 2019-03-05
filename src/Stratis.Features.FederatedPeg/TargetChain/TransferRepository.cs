@@ -93,7 +93,7 @@ namespace Stratis.Features.FederatedPeg.TargetChain
                             return false;
                         }
 
-                        this.PutTransfer(dbreezeTransaction, Transfer.FromDeposit(deposit));
+                        this.PutTransfer(dbreezeTransaction, Transfer.FromDeposit(deposit, maturedBlockDeposit.BlockInfo.BlockTime));
                     }
 
                     nextSyncNum++;
