@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,7 +54,7 @@ namespace Stratis.Features.FederatedPeg.IntegrationTests
             }
         }
 
-        [Fact(Skip = "Inherently unreliable, but shows that the multiple UTXO approach allows parallel sending!")]
+        [Fact]
         public async Task ParallelWithdrawalsToSidechain()
         {
             using (var context = new SidechainTestContext())
@@ -76,14 +77,21 @@ namespace Stratis.Features.FederatedPeg.IntegrationTests
                 Assert.Equal(FederatedPegBlockDefinition.FederationWalletOutputs, coinbase.Outputs.Count);
 
                 // Send multiple deposits to sidechain
-                decimal transferValueCoins = 10;
+                decimal transferValueCoins = 1;
                 string sidechainAddress = context.SideUser.GetUnusedAddress();
 
                 // Lets send 3 deposits all exactly the same
-                const int toSend = 3;
+                const int toSend = 100;
                 for (int i = 0; i < toSend; i++)
                 {
-                    await context.DepositToSideChain(context.MainUser, transferValueCoins, sidechainAddress);
+                    try
+                    {
+                        await context.DepositToSideChain(context.MainUser, transferValueCoins, sidechainAddress);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
                 }
 
                 TestHelper.WaitLoop(() => context.FedMain1.CreateRPCClient().GetRawMempool().Length == toSend);
@@ -96,7 +104,7 @@ namespace Stratis.Features.FederatedPeg.IntegrationTests
                 TestHelper.WaitLoop(() =>
                 {
                     Dictionary<uint256, Transaction> fullySignedTransactions = fedSideStore.GetTransactionsByStatusAsync(CrossChainTransferStatus.FullySigned).GetAwaiter().GetResult();
-                    return fullySignedTransactions.Count == toSend;
+                    return fullySignedTransactions.Count == 10;
                 });
 
                 // Mine one more block on the main chain to trigger leader selection on sidechain

@@ -989,10 +989,10 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         {
             // Calculate in-mempool ancestors, up to a limit.
             context.SetAncestors = new TxMempool.SetEntries();
-            int nLimitAncestors = this.mempoolSettings.LimitAncestors;
-            int nLimitAncestorSize = this.mempoolSettings.LimitAncestorSize * 1000;
-            int nLimitDescendants = this.mempoolSettings.LimitDescendants;
-            int nLimitDescendantSize = this.mempoolSettings.LimitDescendantSize * 1000;
+            int nLimitAncestors = int.MaxValue; //this.mempoolSettings.LimitAncestors;
+            int nLimitAncestorSize = int.MaxValue; //this.mempoolSettings.LimitAncestorSize * 1000;
+            int nLimitDescendants = int.MaxValue; // this.mempoolSettings.LimitDescendants;
+            int nLimitDescendantSize = int.MaxValue;  // this.mempoolSettings.LimitDescendantSize * 1000;
             string errString;
             if (!this.memPool.CalculateMemPoolAncestors(context.Entry, context.SetAncestors, nLimitAncestors,
                 nLimitAncestorSize, nLimitDescendants, nLimitDescendantSize, out errString))

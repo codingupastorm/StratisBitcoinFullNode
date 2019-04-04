@@ -1011,6 +1011,9 @@ namespace Stratis.Features.FederatedPeg.TargetChain
         {
             return Task.Run(() =>
             {
+                if (this.network.Name == "FederatedPegRegTest" && status == CrossChainTransferStatus.Partial)
+                    Console.WriteLine("Got im");
+
                 ICrossChainTransfer[] res = this.GetTransfersByStatus(new[] { status }, sort);
                 return res.Where(t => t.PartialTransaction != null).ToDictionary(t => t.DepositTransactionId, t => t.PartialTransaction);
             });
