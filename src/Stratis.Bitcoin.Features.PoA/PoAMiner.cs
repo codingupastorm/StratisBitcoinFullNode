@@ -231,6 +231,10 @@ namespace Stratis.Bitcoin.Features.PoA
 
             blockTemplate.Block.Header.Time = timestamp;
 
+            // Breakpoint here to see the problem - gets worse every time
+            var blockDateTime = blockTemplate.Block.Header.BlockTime.UtcDateTime;
+            var dateTimeNow = DateTime.UtcNow;
+
             // Update merkle root.
             blockTemplate.Block.UpdateMerkleRoot();
 

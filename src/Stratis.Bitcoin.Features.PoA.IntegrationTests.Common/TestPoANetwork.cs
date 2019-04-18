@@ -41,6 +41,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
             );
 
             this.Consensus.SetPrivatePropertyValue(nameof(this.Consensus.MaxReorgLength), (uint)5);
+            this.MaxTipAge = 1;
         }
     }
 }

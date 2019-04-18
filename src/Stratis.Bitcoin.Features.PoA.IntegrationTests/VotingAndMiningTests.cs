@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using DBreeze.Utils;
 using NBitcoin;
 using NBitcoin.Crypto;
+using Stratis.Bitcoin.Base;
+using Stratis.Bitcoin.Configuration.Settings;
+using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
@@ -34,6 +38,18 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
             this.node1 = this.builder.CreatePoANode(this.network, this.network.FederationKey1).Start();
             this.node2 = this.builder.CreatePoANode(this.network, this.network.FederationKey2).Start();
             this.node3 = this.builder.CreatePoANode(this.network, this.network.FederationKey3).Start();
+        }
+
+        [Fact]
+        public async Task TestForMiningInIBD()
+        {
+            await this.node1.MineBlocksAsync(50);
+            Thread.Sleep(1000);
+            IChainState chainState = this.node1.FullNode.NodeService<IChainState>();
+            ConsensusSettings consensusSettings = this.node1.FullNode.NodeService<ConsensusSettings>();
+            ICheckpoints checkpoints = this.node1.FullNode.NodeService<ICheckpoints>();
+            var ibdState = new InitialBlockDownloadState(chainState, this.network, consensusSettings, checkpoints);
+            bool ibd = ibdState.IsInitialBlockDownload();
         }
 
         [Fact]
