@@ -34,7 +34,7 @@ namespace Stratis.Bitcoin.Utilities.JsonConverters
 
             try
             {
-                IBitcoinString result = Network.Parse(reader.Value.ToString(), null);
+                IBitcoinString result = Network.Parse(reader.Value.ToString(), this.Network);
                 if (result == null)
                 {
                     throw new JsonObjectException("Invalid BitcoinString data", reader);

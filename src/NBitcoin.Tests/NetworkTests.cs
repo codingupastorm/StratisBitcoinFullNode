@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using NBitcoin.BouncyCastle.Math;
 using NBitcoin.DataEncoders;
-using NBitcoin.Networks;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Networks.Deployments;
 using Stratis.Bitcoin.Tests.Common;
@@ -30,38 +29,6 @@ namespace NBitcoin.Tests
 
         [Fact]
         [Trait("UnitTest", "UnitTest")]
-        public void CanGetNetworkFromName()
-        {
-            Network bitcoinMain = KnownNetworks.Main;
-            Network bitcoinTestnet = KnownNetworks.TestNet;
-            Network bitcoinRegtest = KnownNetworks.RegTest;
-            Assert.Equal(NetworkRegistration.GetNetwork("main"), bitcoinMain);
-            Assert.Equal(NetworkRegistration.GetNetwork("mainnet"), bitcoinMain);
-            Assert.Equal(NetworkRegistration.GetNetwork("MainNet"), bitcoinMain);
-            Assert.Equal(NetworkRegistration.GetNetwork("test"), bitcoinTestnet);
-            Assert.Equal(NetworkRegistration.GetNetwork("testnet"), bitcoinTestnet);
-            Assert.Equal(NetworkRegistration.GetNetwork("regtest"), bitcoinRegtest);
-            Assert.Equal(NetworkRegistration.GetNetwork("reg"), bitcoinRegtest);
-            Assert.Equal(NetworkRegistration.GetNetwork("stratismain"), this.stratisMain);
-            Assert.Equal(NetworkRegistration.GetNetwork("StratisMain"), this.stratisMain);
-            Assert.Equal(NetworkRegistration.GetNetwork("StratisTest"), this.stratisTest);
-            Assert.Equal(NetworkRegistration.GetNetwork("stratistest"), this.stratisTest);
-            Assert.Equal(NetworkRegistration.GetNetwork("StratisRegTest"), this.stratisRegTest);
-            Assert.Equal(NetworkRegistration.GetNetwork("stratisregtest"), this.stratisRegTest);
-            Assert.Null(NetworkRegistration.GetNetwork("invalid"));
-        }
-
-        [Fact]
-        [Trait("UnitTest", "UnitTest")]
-        public void RegisterNetworkTwiceReturnsSameNetwork()
-        {
-            Network main = KnownNetworks.Main;
-            Network reregistered = NetworkRegistration.Register(main);
-            Assert.Equal(main, reregistered);
-        }
-
-        [Fact]
-        [Trait("UnitTest", "UnitTest")]
         public void ReadMagicByteWithFirstByteDuplicated()
         {
             List<byte> bytes = this.networkMain.MagicBytes.ToList();
@@ -81,9 +48,6 @@ namespace NBitcoin.Tests
             Assert.Equal(16, this.networkMain.Checkpoints.Count);
             Assert.Equal(6, this.networkMain.DNSSeeds.Count);
             Assert.Equal(512, this.networkMain.SeedNodes.Count);
-
-            Assert.Equal(NetworkRegistration.GetNetwork("main"), this.networkMain);
-            Assert.Equal(NetworkRegistration.GetNetwork("mainnet"), this.networkMain);
 
             Assert.Equal("Main", this.networkMain.Name);
             Assert.Equal(BitcoinMain.BitcoinRootFolderName, this.networkMain.RootFolderName);

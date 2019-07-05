@@ -66,7 +66,12 @@ namespace Stratis.Bitcoin.Features.Wallet
         /// The network this wallet is for.
         /// </summary>
         [JsonProperty(PropertyName = "network")]
-        [JsonConverter(typeof(NetworkConverter))]
+        public string NetworkName { get; set; }
+
+        /// <summary>
+        /// The actual Network object, set after serialization.
+        /// </summary>
+        [JsonIgnore]
         public Network Network { get; set; }
 
         /// <summary>
@@ -742,7 +747,7 @@ namespace Stratis.Bitcoin.Features.Wallet
             for (int i = firstNewAddressIndex; i < firstNewAddressIndex + addressesQuantity; i++)
             {
                 // Generate a new address.
-                PubKey pubkey = HdOperations.GeneratePublicKey(this.ExtendedPubKey, i, isChange);
+                PubKey pubkey = HdOperations.GeneratePublicKey(this.ExtendedPubKey, i, isChange, network);
                 BitcoinPubKeyAddress address = pubkey.GetAddress(network);
 
                 // Add the new address details to the list of addresses.

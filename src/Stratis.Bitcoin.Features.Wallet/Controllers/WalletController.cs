@@ -336,7 +336,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
                         ? request.ExtPubKey
                         : LegacyExtPubKeyConverter.ConvertIfInLegacyStratisFormat(request.ExtPubKey, this.network);
 
-                this.walletManager.RecoverWallet(request.Name, ExtPubKey.Parse(accountExtPubKey), request.AccountIndex,
+                this.walletManager.RecoverWallet(request.Name, ExtPubKey.Parse(accountExtPubKey, this.network), request.AccountIndex,
                     request.CreationDate);
 
                 this.SyncFromBestHeightForRecoveredWallets(request.CreationDate);
@@ -387,7 +387,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
 
                 var model = new WalletGeneralInfoModel
                 {
-                    Network = wallet.Network,
+                    Network = wallet.Network.ToString(),
                     CreationTime = wallet.CreationTime,
                     LastBlockSyncedHeight = wallet.AccountsRoot.Single().LastBlockSyncedHeight,
                     ConnectedNodes = this.connectionManager.ConnectedPeers.Count(),

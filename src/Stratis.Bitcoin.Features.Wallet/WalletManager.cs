@@ -1463,6 +1463,10 @@ namespace Stratis.Bitcoin.Features.Wallet
                 return;
             }
 
+            // Ensure it's for the same network, then set the actual Network object.
+            Guard.Assert(wallet.NetworkName == this.network.ToString());
+            wallet.Network = this.network;
+
             this.Wallets.Add(wallet);
         }
 

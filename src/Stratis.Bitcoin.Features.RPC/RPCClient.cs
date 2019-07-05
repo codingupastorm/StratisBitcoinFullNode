@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using NBitcoin.Networks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Stratis.Bitcoin.Features.RPC.Exceptions;
@@ -241,17 +240,17 @@ namespace Stratis.Bitcoin.Features.RPC
                 if (network.IsRegTest())
                 {
                     string regtest = Path.Combine(bitcoinFolder, "regtest", ".cookie");
-                    RegisterDefaultCookiePath(NetworkRegistration.Register(network), regtest);
+                    RegisterDefaultCookiePath(network, regtest);
                 }
                 else if (network.IsTest())
                 {
                     string testnet = Path.Combine(bitcoinFolder, "testnet3", ".cookie");
-                    RegisterDefaultCookiePath(NetworkRegistration.Register(network), testnet);
+                    RegisterDefaultCookiePath(network, testnet);
                 }
                 else
                 {
                     string mainnet = Path.Combine(bitcoinFolder, ".cookie");
-                    RegisterDefaultCookiePath(NetworkRegistration.Register(network), mainnet);
+                    RegisterDefaultCookiePath(network, mainnet);
                 }
 
             }
@@ -262,17 +261,17 @@ namespace Stratis.Bitcoin.Features.RPC
                 if (network.IsRegTest())
                 {
                     string regtest = Path.Combine(bitcoinFolder, "regtest", ".cookie");
-                    RegisterDefaultCookiePath(NetworkRegistration.Register(network), regtest);
+                    RegisterDefaultCookiePath(network, regtest);
                 }
                 else if (network.IsTest())
                 {
                     string testnet = Path.Combine(bitcoinFolder, "testnet3", ".cookie");
-                    RegisterDefaultCookiePath(NetworkRegistration.Register(network), testnet);
+                    RegisterDefaultCookiePath(network, testnet);
                 }
                 else
                 {
                     string mainnet = Path.Combine(bitcoinFolder, ".cookie");
-                    RegisterDefaultCookiePath(NetworkRegistration.Register(network), mainnet);
+                    RegisterDefaultCookiePath(network, mainnet);
                 }
             }
         }

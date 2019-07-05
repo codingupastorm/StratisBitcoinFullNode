@@ -320,7 +320,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             var wallet = new Wallet
             {
                 Name = "myWallet",
-                Network = NetworkHelpers.GetNetwork("mainnet")
+                Network = KnownNetworks.Main
             };
 
             var mockWalletManager = new Mock<IWalletManager>();
@@ -354,7 +354,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             var wallet = new Wallet
             {
                 Name = "myWallet",
-                Network = NetworkHelpers.GetNetwork("mainnet")
+                Network = KnownNetworks.Main
             };
 
             // The chain is at height 100.
@@ -594,7 +594,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             var wallet = new Wallet
             {
                 Name = "myWallet",
-                Network = NetworkHelpers.GetNetwork("mainnet")
+                Network = KnownNetworks.Main
             };
             var mockWalletManager = new Mock<IWalletManager>();
             mockWalletManager.Setup(w => w.LoadWallet(It.IsAny<string>(), It.IsAny<string>())).Returns(wallet);
@@ -715,7 +715,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             var wallet = new Wallet
             {
                 Name = "myWallet",
-                Network = NetworkHelpers.GetNetwork("mainnet"),
+                Network = KnownNetworks.Main,
                 CreationTime = new DateTime(2017, 6, 19, 1, 1, 1),
                 AccountsRoot = new List<AccountRoot> {
                     new AccountRoot()
@@ -755,7 +755,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             var viewResult = Assert.IsType<JsonResult>(result);
             var resultValue = Assert.IsType<WalletGeneralInfoModel>(viewResult.Value);
 
-            Assert.Equal(wallet.Network, resultValue.Network);
+            Assert.Equal(wallet.NetworkName, resultValue.Network);
             Assert.Equal(wallet.CreationTime, resultValue.CreationTime);
             Assert.Equal(15, resultValue.LastBlockSyncedHeight);
             Assert.Equal(0, resultValue.ConnectedNodes);

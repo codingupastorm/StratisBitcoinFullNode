@@ -95,18 +95,18 @@ namespace Stratis.Bitcoin.Features.ColdStaking.Tests
             Wallet.Wallet wallet = this.walletFixture.GenerateBlankWallet("myWallet", "password");
             (ExtKey ExtKey, string ExtPubKey) accountKeys = WalletTestsHelpers.GenerateAccountKeys(wallet, "password", "m/44'/0'/0'");
 
-            (PubKey PubKey, BitcoinPubKeyAddress Address) spendingKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/0");
-            (PubKey PubKey, BitcoinPubKeyAddress Address) changeKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/0");
+            (PubKey PubKey, BitcoinPubKeyAddress Address) spendingKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/0", this.Network);
+            (PubKey PubKey, BitcoinPubKeyAddress Address) changeKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "1/0", this.Network);
 
             Wallet.Wallet coldWallet = this.walletFixture.GenerateBlankWallet("myColdWallet", "password");
             (ExtKey ExtKey, string ExtPubKey) accountColdKeys = WalletTestsHelpers.GenerateAccountKeys(coldWallet, "password", $"m/44'/0'/{ColdStakingManager.ColdWalletAccountIndex}'");
 
-            (PubKey PubKey, BitcoinPubKeyAddress Address) destinationColdKeys = WalletTestsHelpers.GenerateAddressKeys(coldWallet, accountColdKeys.ExtPubKey, "0/0");
+            (PubKey PubKey, BitcoinPubKeyAddress Address) destinationColdKeys = WalletTestsHelpers.GenerateAddressKeys(coldWallet, accountColdKeys.ExtPubKey, "0/0", this.Network);
 
             Wallet.Wallet hotWallet = this.walletFixture.GenerateBlankWallet("myHotWallet", "password");
             (ExtKey ExtKey, string ExtPubKey) accountHotKeys = WalletTestsHelpers.GenerateAccountKeys(hotWallet, "password", $"m/44'/0'/{ColdStakingManager.HotWalletAccountIndex}'");
 
-            (PubKey PubKey, BitcoinPubKeyAddress Address) destinationHotKeys = WalletTestsHelpers.GenerateAddressKeys(hotWallet, accountHotKeys.ExtPubKey, "0/0");
+            (PubKey PubKey, BitcoinPubKeyAddress Address) destinationHotKeys = WalletTestsHelpers.GenerateAddressKeys(hotWallet, accountHotKeys.ExtPubKey, "0/0", this.Network);
 
             var spendingAddress = new HdAddress
             {
@@ -238,7 +238,7 @@ namespace Stratis.Bitcoin.Features.ColdStaking.Tests
             Wallet.Wallet withdrawalWallet = this.walletFixture.GenerateBlankWallet("myWithDrawalWallet", "password");
             (ExtKey ExtKey, string ExtPubKey) withdrawalAccountKeys = WalletTestsHelpers.GenerateAccountKeys(wallet, "password", "m/44'/0'/0'");
 
-            (PubKey PubKey, BitcoinPubKeyAddress Address) withdrawalKeys = WalletTestsHelpers.GenerateAddressKeys(withdrawalWallet, withdrawalAccountKeys.ExtPubKey, "0/0");
+            (PubKey PubKey, BitcoinPubKeyAddress Address) withdrawalKeys = WalletTestsHelpers.GenerateAddressKeys(withdrawalWallet, withdrawalAccountKeys.ExtPubKey, "0/0", this.Network);
 
             // Withdrawing to this address.
             var withdrawalAddress = new HdAddress

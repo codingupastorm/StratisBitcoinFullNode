@@ -6,7 +6,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBitcoin.Networks;
 using NBitcoin.Protocol;
 using NLog.Extensions.Logging;
 using Stratis.Bitcoin.Builder.Feature;
@@ -192,9 +191,6 @@ namespace Stratis.Bitcoin.Configuration
 
                 this.Logger.LogDebug("Network set to '{0}'.", this.Network.Name);
             }
-
-            // Ensure the network being used is registered and we have the correct Network object reference.
-            this.Network = NetworkRegistration.Register(this.Network);
 
             // Set the full data directory path.
             if (this.DataDir == null)

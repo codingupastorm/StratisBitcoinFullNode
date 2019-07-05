@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBitcoin.Networks;
 using NSubstitute;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.AsyncWork;
@@ -80,8 +79,6 @@ namespace Stratis.Features.FederatedPeg.Tests
             this.network = network ?? CirrusNetwork.NetworksSelector.Regtest();
             this.counterChainNetwork = counterChainNetwork ?? Networks.Stratis.Regtest();
             this.counterChainNetworkWrapper = new CounterChainNetworkWrapper(counterChainNetwork);
-
-            NetworkRegistration.Register(this.network);
 
             this.loggerFactory = Substitute.For<ILoggerFactory>();
             this.nodeLifetime = new NodeLifetime();

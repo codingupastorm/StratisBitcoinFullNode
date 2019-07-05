@@ -1,21 +1,31 @@
 ﻿using NBitcoin;
-using NBitcoin.Networks;
 using Stratis.Bitcoin.Networks;
 
 namespace Stratis.Bitcoin.Tests.Common
 {
     public static class KnownNetworks
     {
-        public static Network Main => NetworkRegistration.GetNetwork("Main") ?? NetworkRegistration.Register(new BitcoinMain());
+        // Ideally we wouldn't need these gross statics, but at the moment comparing new BitcoinMain() ==  new BitcoinMain() returns false,
+        // and we do this check between Network objects often in tests.
+        
+        // TODO: Fix the above. Agree upon using singleton network objects or overriding Equals() or something similar.
 
-        public static Network TestNet => NetworkRegistration.GetNetwork("TestNet") ?? NetworkRegistration.Register(new BitcoinTest());
+        private static BitcoinMain main;
+        public static Network Main => main ?? (main = new BitcoinMain());
 
-        public static Network RegTest => NetworkRegistration.GetNetwork("RegTest") ?? NetworkRegistration.Register(new BitcoinRegTest());
+        private static BitcoinTest testnet;
+        public static Network TestNet => testnet ?? (testnet = new BitcoinTest());
 
-        public static Network StratisMain => NetworkRegistration.GetNetwork("StratisMain") ?? NetworkRegistration.Register(new StratisMain());
+        private static BitcoinRegTest regtest;
+        public static Network RegTest =>  regtest ?? (regtest = new BitcoinRegTest());
 
-        public static Network StratisTest => NetworkRegistration.GetNetwork("StratisTest") ?? NetworkRegistration.Register(new StratisTest());
+        private static StratisMain stratismain;
+        public static Network StratisMain => stratismain ?? (stratismain = new StratisMain());
 
-        public static Network StratisRegTest => NetworkRegistration.GetNetwork("StratisRegTest") ?? NetworkRegistration.Register(new StratisRegTest());
+        private static StratisTest stratistest;
+        public static Network StratisTest => stratistest ?? (stratistest = new StratisTest());
+
+        private static StratisRegTest stratisregtest;
+        public static Network StratisRegTest => stratisregtest ?? (stratisregtest = new StratisRegTest());
     }
 }

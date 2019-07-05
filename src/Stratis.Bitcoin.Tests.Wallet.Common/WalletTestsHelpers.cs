@@ -270,9 +270,9 @@ namespace Stratis.Bitcoin.Tests.Wallet.Common
             return (accountExtKey, accountExtendedPubKey);
         }
 
-        public static (PubKey PubKey, BitcoinPubKeyAddress Address) GenerateAddressKeys(Features.Wallet.Wallet wallet, string accountExtendedPubKey, string keyPath)
+        public static (PubKey PubKey, BitcoinPubKeyAddress Address) GenerateAddressKeys(Features.Wallet.Wallet wallet, string accountExtendedPubKey, string keyPath, Network network)
         {
-            PubKey addressPubKey = ExtPubKey.Parse(accountExtendedPubKey).Derive(new KeyPath(keyPath)).PubKey;
+            PubKey addressPubKey = ExtPubKey.Parse(accountExtendedPubKey, network).Derive(new KeyPath(keyPath)).PubKey;
             BitcoinPubKeyAddress address = addressPubKey.GetAddress(wallet.Network);
 
             return (addressPubKey, address);

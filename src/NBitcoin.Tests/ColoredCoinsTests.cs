@@ -3,7 +3,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using NBitcoin.DataEncoders;
-using NBitcoin.Networks;
 using NBitcoin.OpenAsset;
 using Newtonsoft.Json;
 using Stratis.Bitcoin.Tests.Common;
@@ -95,8 +94,6 @@ namespace NBitcoin.Tests
 
         public ColoredCoinsTests()
         {
-            NetworkRegistration.Clear();
-
             this.networkRegTest = KnownNetworks.RegTest;
             this.networkTest = KnownNetworks.TestNet;
             this.networkMain = KnownNetworks.Main;
@@ -122,7 +119,7 @@ namespace NBitcoin.Tests
             Assert.Equal(testAddress.ScriptPubKey, testColored.ScriptPubKey);
 
             Assert.Equal(this.networkTest, testColored.Network);
-            testColored = new BitcoinColoredAddress("bWqaKUZETiECYgmJNbNZUoanBxnAzoVjCNx");
+            testColored = new BitcoinColoredAddress("bWqaKUZETiECYgmJNbNZUoanBxnAzoVjCNx", this.networkTest);
             Assert.Contains(testColored.Network, new[] { this.networkRegTest, this.networkTest });
             Assert.Equal(colored.ToNetwork(this.networkTest), testColored);
         }

@@ -1631,7 +1631,7 @@ namespace NBitcoin.Tests
             Key[] privKeys = new[]{"7R3MeCSVTTzp3w3Ny4g7RWpvMYu7CfuERZJcPqn1VRL3kyV9A2p",
                         "7R41movhhKW2ZencnZvzcoDssFpKfNCv4yRqHnXco85rBLN1C2D",
                         "7Qidst55wkYRJpJN4aEnGjz64Mnf7BrSehVuX2HqWWPpYNEkqQJ"}
-                        .Select(k => new BitcoinSecret(k).PrivateKey).ToArray();
+                        .Select(k => new BitcoinSecret(k, this.stratisMain).PrivateKey).ToArray();
 
             //First: combine the three keys into a multisig address
             Script redeem = PayToMultiSigTemplate.Instance.GenerateScriptPubKey(2, privKeys.Select(k => k.PubKey).ToArray());

@@ -19,7 +19,7 @@ namespace NBitcoin
             else
                 return keyBytes.Concat(new byte[] { 0x01 }).ToArray();
         }
-        public BitcoinSecret(string base58, Network expectedAddress = null)
+        public BitcoinSecret(string base58, Network expectedAddress)
             : base(base58, expectedAddress)
         {
         }

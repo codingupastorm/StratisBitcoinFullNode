@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using NBitcoin.DataEncoders;
-using NBitcoin.Networks;
 
 namespace NBitcoin
 {
@@ -31,9 +30,12 @@ namespace NBitcoin
             }
         }
 
-        protected Base58Data(string base64, Network expectedNetwork = null)
+        protected Base58Data(string base64, Network network)
         {
-            this._Network = expectedNetwork;
+            if (network == null)
+                throw new ArgumentNullException("network");
+
+            this._Network = network;
             SetString(base64);
         }
 
@@ -47,13 +49,6 @@ namespace NBitcoin
 
         private void SetString(string base64)
         {
-            if(this._Network == null)
-            {
-                this._Network = NetworkRegistration.GetNetworkFromBase58Data(base64, this.Type);
-                if(this._Network == null)
-                    throw new FormatException("Invalid " + GetType().Name);
-            }
-
             byte[] vchTemp = Encoders.Base58Check.DecodeData(base64);
             byte[] expectedVersion = this._Network.GetVersionBytes(this.Type, true);
 

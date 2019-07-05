@@ -21,7 +21,6 @@ namespace Stratis.Bitcoin.Tests.Utilities
             CanSerializeInJsonCore(Money.Coins(5.0m));
             CanSerializeInJsonCore(k.PubKey.GetAddress(KnownNetworks.Main));
             CanSerializeInJsonCore(new KeyPath("1/2"));
-            CanSerializeInJsonCore(KnownNetworks.Main);
             CanSerializeInJsonCore(new uint256(RandomUtils.GetBytes(32)));
             CanSerializeInJsonCore(new uint160(RandomUtils.GetBytes(20)));
             CanSerializeInJsonCore(new AssetId(k.PubKey));

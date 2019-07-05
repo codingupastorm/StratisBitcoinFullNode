@@ -6,7 +6,6 @@ using System.Text;
 using System.Threading;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
-using NBitcoin.Networks;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
@@ -74,8 +73,6 @@ namespace Stratis.SmartContracts.IntegrationTests.PoW
         [Fact]
         public void SendAndReceiveSmartContractTransactions()
         {
-            NetworkRegistration.Register(new SmartContractsRegTest());
-
             using (PoWMockChain chain = new PoWMockChain(2))
             {
                 MockChainNode scSender = chain.Nodes[0];

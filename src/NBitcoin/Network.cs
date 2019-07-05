@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using NBitcoin.DataEncoders;
-using NBitcoin.Networks;
 using NBitcoin.Protocol;
 using NBitcoin.Stealth;
 
@@ -428,7 +427,10 @@ namespace NBitcoin
             if (str == null)
                 throw new ArgumentNullException("str");
 
-            IEnumerable<Network> networks = expectedNetwork == null ? NetworkRegistration.GetNetworks() : new[] { expectedNetwork };
+            if (expectedNetwork == null)
+                throw new ArgumentNullException(nameof(expectedNetwork));
+
+            IEnumerable<Network> networks = new[] { expectedNetwork };
             bool maybeb58 = true;
             for (int i = 0; i < str.Length; i++)
             {
@@ -502,6 +504,8 @@ namespace NBitcoin
 
         private static IEnumerable<IBase58Data> GetCandidates(IEnumerable<Network> networks, string base58)
         {
+            // TODO: This and the method that consume it don't need a list of networks, they should always be receiving just the one.
+
             if (base58 == null)
                 throw new ArgumentNullException("base58");
             foreach (Network network in networks)

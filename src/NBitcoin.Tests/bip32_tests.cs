@@ -218,8 +218,8 @@ namespace NBitcoin.Tests
         {
             var key = new ExtKey();
             ExtPubKey pubkey = key.Neuter();
-            Assert.True(ExtKey.Parse(key.ToString(this.networkMain)).ToString(this.networkMain) == key.ToString(this.networkMain));
-            Assert.True(ExtPubKey.Parse(pubkey.ToString(this.networkMain)).ToString(this.networkMain) == pubkey.ToString(this.networkMain));
+            Assert.True(ExtKey.Parse(key.ToString(this.networkMain), this.networkMain).ToString(this.networkMain) == key.ToString(this.networkMain));
+            Assert.True(ExtPubKey.Parse(pubkey.ToString(this.networkMain), this.networkMain).ToString(this.networkMain) == pubkey.ToString(this.networkMain));
         }
         [Fact]
         [Trait("UnitTest", "UnitTest")]
