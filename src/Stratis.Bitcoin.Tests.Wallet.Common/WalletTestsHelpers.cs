@@ -5,6 +5,7 @@ using NBitcoin;
 using Newtonsoft.Json;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Bitcoin.Utilities.JsonConverters;
 
 namespace Stratis.Bitcoin.Tests.Wallet.Common
 {
@@ -556,19 +557,26 @@ namespace Stratis.Bitcoin.Tests.Wallet.Common
         /// <param name="name">The name.</param>
         /// <param name="password">The password.</param>
         /// <returns>The generated wallet.</returns>
-        public Features.Wallet.Wallet GenerateBlankWallet(string name, string password)
+        public Features.Wallet.Wallet GenerateBlankWallet(string name, string password, Network network)
         {
             if (this.walletsGenerated.TryGetValue((name, password), out Features.Wallet.Wallet existingWallet))
             {
-                string serializedExistingWallet = JsonConvert.SerializeObject(existingWallet, Formatting.None);
-                return JsonConvert.DeserializeObject<Features.Wallet.Wallet>(serializedExistingWallet);
+                string serializedExistingWallet = Serializer.ToString(existingWallet, network, new JsonSerializerSettings
+                {
+                    Formatting = Formatting.None
+                });
+
+                return Serializer.ToObject<Features.Wallet.Wallet>(serializedExistingWallet, network);
             }
 
             Features.Wallet.Wallet newWallet = WalletTestsHelpers.GenerateBlankWallet(name, password);
             this.walletsGenerated.Add((name, password), newWallet);
 
-            string serializedNewWallet = JsonConvert.SerializeObject(newWallet, Formatting.None);
-            return JsonConvert.DeserializeObject<Features.Wallet.Wallet>(serializedNewWallet);
+            string serializedNewWallet = Serializer.ToString(newWallet, network, new JsonSerializerSettings
+            {
+                Formatting = Formatting.None
+            });
+            return Serializer.ToObject<Features.Wallet.Wallet>(serializedNewWallet, network);
         }
     }
 }
