@@ -755,7 +755,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             var viewResult = Assert.IsType<JsonResult>(result);
             var resultValue = Assert.IsType<WalletGeneralInfoModel>(viewResult.Value);
 
-            Assert.Equal(wallet.NetworkName, resultValue.Network);
+            Assert.Equal(wallet.Network.Name, resultValue.Network);
             Assert.Equal(wallet.CreationTime, resultValue.CreationTime);
             Assert.Equal(15, resultValue.LastBlockSyncedHeight);
             Assert.Equal(0, resultValue.ConnectedNodes);

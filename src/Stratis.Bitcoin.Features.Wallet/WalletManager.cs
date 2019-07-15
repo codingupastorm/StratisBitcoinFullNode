@@ -138,7 +138,7 @@ namespace Stratis.Bitcoin.Features.Wallet
             this.ChainIndexer = chainIndexer;
             this.asyncProvider = asyncProvider;
             this.nodeLifetime = nodeLifetime;
-            this.fileStorage = new FileStorage<Wallet>(dataFolder.WalletPath);
+            this.fileStorage = new FileStorage<Wallet>(dataFolder.WalletPath, network);
             this.broadcasterManager = broadcasterManager;
             this.scriptAddressReader = scriptAddressReader;
             this.dateTimeProvider = dateTimeProvider;
@@ -1462,10 +1462,6 @@ namespace Stratis.Bitcoin.Features.Wallet
                 this.logger.LogTrace("(-)[NOT_FOUND]");
                 return;
             }
-
-            // Ensure it's for the same network, then set the actual Network object.
-            Guard.Assert(wallet.NetworkName == this.network.ToString());
-            wallet.Network = this.network;
 
             this.Wallets.Add(wallet);
         }

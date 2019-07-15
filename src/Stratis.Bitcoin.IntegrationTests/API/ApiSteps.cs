@@ -483,7 +483,7 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         {
             var generalInfoResponse = JsonDataSerializer.Instance.Deserialize<WalletGeneralInfoModel>(this.responseText);
             generalInfoResponse.WalletFilePath.Should().ContainAll(StratisRegTest, $"{WalletName}.wallet.json");
-            generalInfoResponse.Network.Name.Should().Be(StratisRegTest);
+            generalInfoResponse.Network.Should().Be(StratisRegTest);
             generalInfoResponse.ChainTip.Should().Be(0);
             generalInfoResponse.IsChainSynced.Should().BeFalse();
             generalInfoResponse.ConnectedNodes.Should().Be(0);

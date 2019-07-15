@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NBitcoin;
 using Newtonsoft.Json;
+using Stratis.Bitcoin.Utilities.JsonConverters;
 
 namespace Stratis.Bitcoin.Utilities
 {
@@ -70,15 +72,18 @@ namespace Stratis.Bitcoin.Utilities
         /// <summary> Gets the folder path. </summary>
         public string FolderPath { get; }
 
+        public Network Network { get; }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="FileStorage{T}"/> class.
         /// </summary>
         /// <param name="folderPath">The path of the folder in which the files are to be stored.</param>
-        public FileStorage(string folderPath)
+        public FileStorage(string folderPath, Network network)
         {
             Guard.NotEmpty(folderPath, nameof(folderPath));
 
             this.FolderPath = folderPath;
+            this.Network = network;
 
             // Create a folder if none exists.
             Directory.CreateDirectory(folderPath);
@@ -103,7 +108,12 @@ namespace Stratis.Bitcoin.Utilities
             string newFilePath = $"{filePath}.{uniqueId}.new";
             string tempFilePath = $"{filePath}.{uniqueId}.temp";
 
-            File.WriteAllText(newFilePath, JsonConvert.SerializeObject(toSave, options.Indent ? Formatting.Indented : Formatting.None, options.GetSerializationSettings()));
+            JsonSerializerSettings serializerSettings = options.GetSerializationSettings();
+            serializerSettings.Formatting = options.Indent ? Formatting.Indented : Formatting.None;
+
+            string jsonToSave = Serializer.ToString(toSave, this.Network, serializerSettings);
+
+            File.WriteAllText(newFilePath, jsonToSave);
 
             // If the file does not exist yet, create it.
             if (!File.Exists(filePath))
@@ -190,7 +200,9 @@ namespace Stratis.Bitcoin.Utilities
             if (!File.Exists(filePath))
                 throw new FileNotFoundException($"No wallet file found at {filePath}");
 
-            return JsonConvert.DeserializeObject<T>(File.ReadAllText(filePath));
+            string savedJson = File.ReadAllText(filePath);
+
+            return Serializer.ToObject<T>(savedJson, this.Network);
         }
 
         /// <summary>

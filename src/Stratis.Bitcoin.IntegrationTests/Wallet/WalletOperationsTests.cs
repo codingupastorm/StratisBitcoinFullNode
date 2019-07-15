@@ -1205,7 +1205,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
             generalInfoModel.ConnectedNodes.Should().Be(0);
             generalInfoModel.CreationTime.ToUnixTimeSeconds().Should().Be(1540204793);
             generalInfoModel.IsDecrypted.Should().BeTrue();
-            generalInfoModel.Network.Name.Should().Be(new StratisRegTest().Name);
+            generalInfoModel.Network.Should().Be(new StratisRegTest().Name);
             generalInfoModel.WalletFilePath.Should().Be(this.fixture.WalletWithFundsFilePath);
         }
 

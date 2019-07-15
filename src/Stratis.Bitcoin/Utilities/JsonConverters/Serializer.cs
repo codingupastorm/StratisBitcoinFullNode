@@ -18,7 +18,7 @@ namespace Stratis.Bitcoin.Utilities.JsonConverters
             settings.Converters.Add(new UInt160JsonConverter());
             settings.Converters.Add(new UInt256JsonConverter());
             settings.Converters.Add(new BitcoinSerializableJsonConverter());
-            // settings.Converters.Add(new NetworkConverter(network));
+            settings.Converters.Add(new NetworkConverter(network));
             settings.Converters.Add(new KeyPathJsonConverter());
             settings.Converters.Add(new SignatureJsonConverter());
             settings.Converters.Add(new HexJsonConverter());
@@ -30,22 +30,30 @@ namespace Stratis.Bitcoin.Utilities.JsonConverters
             settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
         }
 
-        public static T ToObject<T>(string data, Network network = null)
+        public static T ToObject<T>(string data, Network network = null, JsonSerializerSettings settings = null)
         {
-            var settings = new JsonSerializerSettings
+            if (settings == null)
             {
-                Formatting = Formatting.Indented
-            };
+                settings = new JsonSerializerSettings
+                {
+                    Formatting = Formatting.Indented
+                };
+            }
+
             RegisterFrontConverters(settings, network);
             return JsonConvert.DeserializeObject<T>(data, settings);
         }
 
-        public static string ToString<T>(T response, Network network = null)
+        public static string ToString<T>(T response, Network network = null, JsonSerializerSettings settings = null)
         {
-            var settings = new JsonSerializerSettings
+            if (settings == null)
             {
-                Formatting = Formatting.Indented
-            };
+                settings = new JsonSerializerSettings
+                {
+                    Formatting = Formatting.Indented
+                };
+            }
+
             RegisterFrontConverters(settings, network);
             return JsonConvert.SerializeObject(response, settings);
         }

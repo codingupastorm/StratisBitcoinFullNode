@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using Microsoft.Extensions.Logging;
+using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Utilities;
@@ -21,13 +22,14 @@ namespace Stratis.Bitcoin.Features.Wallet
 
         public AddressBookManager(
             ILoggerFactory loggerFactory,
-            DataFolder dataFolder)
+            DataFolder dataFolder,
+            Network network)
         {
             Guard.NotNull(loggerFactory, nameof(loggerFactory));
             Guard.NotNull(dataFolder, nameof(dataFolder));
 
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
-            this.fileStorage = new FileStorage<AddressBook>(dataFolder.RootPath);
+            this.fileStorage = new FileStorage<AddressBook>(dataFolder.RootPath, network);
         }
 
         /// <inheritdoc />
