@@ -20,6 +20,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             CanSerializeInJsonCore(k);
             CanSerializeInJsonCore(Money.Coins(5.0m));
             CanSerializeInJsonCore(k.PubKey.GetAddress(KnownNetworks.Main));
+            CanSerializeInJsonCore(KnownNetworks.Main);
             CanSerializeInJsonCore(new KeyPath("1/2"));
             CanSerializeInJsonCore(new uint256(RandomUtils.GetBytes(32)));
             CanSerializeInJsonCore(new uint160(RandomUtils.GetBytes(20)));
@@ -49,7 +50,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
 
         private T CanSerializeInJsonCore<T>(T value)
         {
-            string str = Serializer.ToString(value);
+            string str = Serializer.ToString(value, KnownNetworks.Main);
             T obj2 = Serializer.ToObject<T>(str, KnownNetworks.Main);
             Assert.Equal(str, Serializer.ToString(obj2));
             return obj2;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using NBitcoin;
 using Newtonsoft.Json;
 
@@ -20,7 +21,7 @@ namespace Stratis.Bitcoin.Utilities.JsonConverters
         /// <inheritdoc />
         public override bool CanConvert(Type objectType)
         {
-            return objectType == typeof(Network);
+            return typeof(Network).GetTypeInfo().IsAssignableFrom(objectType.GetTypeInfo());
         }
 
         /// <inheritdoc />

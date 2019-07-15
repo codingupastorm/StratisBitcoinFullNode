@@ -26,7 +26,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             string dir = this.GetFolderPathForTestExecution();
 
             // Act
-            var fileStorage = new FileStorage<TestObject>(dir);
+            var fileStorage = new FileStorage<TestObject>(dir, this.Network);
 
             // Assert
             Assert.True(Directory.Exists(fileStorage.FolderPath));
@@ -42,7 +42,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             string dir = this.GetFolderPathForTestExecution();
 
             // Act
-            var fileStorage = new FileStorage<TestObject>(dir);
+            var fileStorage = new FileStorage<TestObject>(dir, this.Network);
 
             // Assert
             Assert.True(Directory.Exists(fileStorage.FolderPath));
@@ -57,7 +57,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             // Arrange
             var testObject = new TestObject { Property1 = "prop1", Property2 = "prop2" };
             string dir = this.GetFolderPathForTestExecution();
-            var fileStorage = new FileStorage<TestObject>(dir);
+            var fileStorage = new FileStorage<TestObject>(dir, this.Network);
             fileStorage.SaveToFile(testObject, "savedTestObject.json");
 
             // Act
@@ -72,7 +72,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
         {
             // Arrange
             string dir = this.GetFolderPathForTestExecution();
-            var fileStorage = new FileStorage<TestObject>(dir);
+            var fileStorage = new FileStorage<TestObject>(dir, this.Network);
 
             // Act
             bool result = fileStorage.Exists("savedTestObject.json");
@@ -88,7 +88,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             var testObject1 = new TestObject { Property1 = "prop1", Property2 = "prop2" };
             var testObject2 = new TestObject { Property1 = "prop1", Property2 = "prop2" };
             string dir = this.GetFolderPathForTestExecution();
-            var fileStorage = new FileStorage<TestObject>(dir);
+            var fileStorage = new FileStorage<TestObject>(dir, this.Network);
             fileStorage.SaveToFile(testObject1, "savedTestObject1.json");
             fileStorage.SaveToFile(testObject2, "savedTestObject2.json");
 
@@ -108,7 +108,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             var testObject1 = new TestObject { Property1 = "prop1", Property2 = "prop2" };
             var testObject2 = new TestObject { Property1 = "prop1", Property2 = "prop2" };
             string dir = this.GetFolderPathForTestExecution();
-            var fileStorage = new FileStorage<TestObject>(dir);
+            var fileStorage = new FileStorage<TestObject>(dir, this.Network);
             fileStorage.SaveToFile(testObject1, "savedTestObject1.json");
             fileStorage.SaveToFile(testObject2, "savedTestObject2.json");
 
@@ -128,7 +128,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             var testObject1 = new TestObject { Property1 = "prop1", Property2 = "prop2" };
             var testObject2 = new TestObject { Property1 = "prop1", Property2 = "prop2" };
             string dir = this.GetFolderPathForTestExecution();
-            var fileStorage = new FileStorage<TestObject>(dir);
+            var fileStorage = new FileStorage<TestObject>(dir, this.Network);
             fileStorage.SaveToFile(testObject1, "savedTestObject1.json");
             fileStorage.SaveToFile(testObject2, "savedTestObject2.json");
 
@@ -148,7 +148,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             var testObject1 = new TestObject { Property1 = "prop1", Property2 = "prop2" };
             var testObject2 = new TestObject { Property1 = "prop1", Property2 = "prop2" };
             string dir = this.GetFolderPathForTestExecution();
-            var fileStorage = new FileStorage<TestObject>(dir);
+            var fileStorage = new FileStorage<TestObject>(dir, this.Network);
             fileStorage.SaveToFile(testObject1, "savedTestObject1.json");
             fileStorage.SaveToFile(testObject2, "savedTestObject2.json");
 
@@ -166,7 +166,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
         {
             // Arrange
             string dir = this.GetFolderPathForTestExecution();
-            var fileStorage = new FileStorage<TestObject>(dir);
+            var fileStorage = new FileStorage<TestObject>(dir, this.Network);
 
             // Act
             Assert.Throws<FileNotFoundException>(() => fileStorage.LoadByFileName("myfile.txt"));
@@ -178,7 +178,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             // Arrange
             var testObject1 = new TestObject { Property1 = "prop1", Property2 = "prop2" };
             string dir = this.GetFolderPathForTestExecution();
-            var fileStorage = new FileStorage<TestObject>(dir);
+            var fileStorage = new FileStorage<TestObject>(dir, this.Network);
             fileStorage.SaveToFile(testObject1, "savedTestObject1.json");
 
             // Act
@@ -196,7 +196,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             var testObject1 = new TestObject { Property1 = "prop1", Property2 = "prop2" };
             var testObject2 = new TestObject { Property1 = "prop3", Property2 = "prop4" };
             string dir = this.GetFolderPathForTestExecution();
-            var fileStorage = new FileStorage<TestObject>(dir);
+            var fileStorage = new FileStorage<TestObject>(dir, this.Network);
             fileStorage.SaveToFile(testObject1, "savedTestObject1.json");
             fileStorage.SaveToFile(testObject2, "savedTestObject2.json");
 
@@ -216,7 +216,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             var testObject1 = new TestObject { Property1 = "prop1", Property2 = "prop2" };
             var testObject2 = new TestObject { Property1 = "prop3", Property2 = "prop4" };
             string dir = this.GetFolderPathForTestExecution();
-            var fileStorage = new FileStorage<TestObject>(dir);
+            var fileStorage = new FileStorage<TestObject>(dir, this.Network);
             fileStorage.SaveToFile(testObject1, "savedTestObject1.txt");
             fileStorage.SaveToFile(testObject2, "savedTestObject2.txt");
 
@@ -233,7 +233,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             // Arrange
             var testObject = new TestObject { Property1 = "prop1", Property2 = "prop2" };
             string dir = this.GetFolderPathForTestExecution();
-            var fileStorage = new FileStorage<TestObject>(dir);
+            var fileStorage = new FileStorage<TestObject>(dir, this.Network);
             fileStorage.SaveToFile(testObject, "savedTestObject.json", new FileStorageOption { SaveBackupFile = true });
             testObject.Property1 = testObject.Property1 + "-changed";
             fileStorage.SaveToFile(testObject, "savedTestObject.json", new FileStorageOption { SaveBackupFile = true });
@@ -261,7 +261,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             // Arrange
             var testObject = new TestObject { Property1 = "prop1", Property2 = "prop2" };
             string dir = this.GetFolderPathForTestExecution();
-            var fileStorage = new FileStorage<TestObject>(dir);
+            var fileStorage = new FileStorage<TestObject>(dir, this.Network);
             fileStorage.SaveToFile(testObject, "savedTestObject.json", new FileStorageOption { SaveBackupFile = true });
 
             // Act
@@ -287,7 +287,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             // Arrange
             var testObject = new TestObject { Property1 = "prop1", Property2 = "prop2" };
             string dir = this.GetFolderPathForTestExecution();
-            var fileStorage = new FileStorage<TestObject>(dir);
+            var fileStorage = new FileStorage<TestObject>(dir, this.Network);
             fileStorage.SaveToFile(testObject, "savedTestObject.json", new FileStorageOption { SaveBackupFile = false });
             testObject.Property1 = testObject.Property1 + "-changed";
             fileStorage.SaveToFile(testObject, "savedTestObject.json");
@@ -310,7 +310,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             // Arrange
             var testObject = new TestObject { Property1 = "prop1", Property2 = "prop2" };
             string dir = this.GetFolderPathForTestExecution();
-            var fileStorage = new FileStorage<TestObject>(dir);
+            var fileStorage = new FileStorage<TestObject>(dir, this.Network);
             fileStorage.SaveToFile(testObject, "savedTestObject.json", new FileStorageOption { SaveBackupFile = false });
 
             // Act
@@ -328,7 +328,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             // Arrange
             var testObject = new TestObject { Property1 = "prop1", Property2 = "prop2" };
             string dir = this.GetFolderPathForTestExecution();
-            var fileStorage = new FileStorage<TestObject>(dir);
+            var fileStorage = new FileStorage<TestObject>(dir, this.Network);
             fileStorage.SaveToFile(testObject, "savedTestObject.json");
 
             // Act
@@ -346,7 +346,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             // Arrange
             var testObject = new TestObject { Property1 = "prop1", Property2 = "prop2" };
             string dir = this.GetFolderPathForTestExecution();
-            var fileStorage = new FileStorage<TestObject>(dir);
+            var fileStorage = new FileStorage<TestObject>(dir, this.Network);
             fileStorage.SaveToFile(testObject, "savedTestObject.json");
             testObject.Property1 = testObject.Property1 + "-changed";
             fileStorage.SaveToFile(testObject, "savedTestObject.json");
