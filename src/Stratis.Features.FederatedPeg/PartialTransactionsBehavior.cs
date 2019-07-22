@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.P2P.Peer;
@@ -7,7 +9,9 @@ using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Features.FederatedPeg.InputConsolidation;
 using Stratis.Features.FederatedPeg.Interfaces;
+using Stratis.Features.FederatedPeg.NetworkHelpers;
 using Stratis.Features.FederatedPeg.Payloads;
+using Stratis.Features.FederatedPeg.TargetChain;
 
 namespace Stratis.Features.FederatedPeg
 {
@@ -22,6 +26,8 @@ namespace Stratis.Features.FederatedPeg
         private readonly Network network;
 
         private readonly IFederatedPegSettings federatedPegSettings;
+
+        private readonly IPAddressComparer ipAddressComparer;
 
         private readonly ICrossChainTransferStore crossChainTransferStore;
 
@@ -47,6 +53,7 @@ namespace Stratis.Features.FederatedPeg
             this.network = network;
             this.federatedPegSettings = federatedPegSettings;
             this.crossChainTransferStore = crossChainTransferStore;
+            this.ipAddressComparer = new IPAddressComparer();
             this.inputConsolidator = inputConsolidator;
         }
 
@@ -58,13 +65,13 @@ namespace Stratis.Features.FederatedPeg
 
         protected override void AttachCore()
         {
-            if (this.federatedPegSettings.FederationNodeIpEndPoints.Contains(Utils.EnsureIPv6(this.AttachedPeer.PeerEndPoint)))
+            if (this.federatedPegSettings.FederationNodeIpEndPoints.Any(e => this.ipAddressComparer.Equals(e.Address, this.AttachedPeer.PeerEndPoint.Address)))
                 this.AttachedPeer.MessageReceived.Register(this.OnMessageReceivedAsync, true);
         }
 
         protected override void DetachCore()
         {
-            if (this.federatedPegSettings.FederationNodeIpEndPoints.Contains(Utils.EnsureIPv6(this.AttachedPeer.PeerEndPoint)))
+            if (this.federatedPegSettings.FederationNodeIpEndPoints.Any(e => this.ipAddressComparer.Equals(e.Address, this.AttachedPeer.PeerEndPoint.Address)))
                 this.AttachedPeer.MessageReceived.Unregister(this.OnMessageReceivedAsync);
         }
 
@@ -74,7 +81,7 @@ namespace Stratis.Features.FederatedPeg
         /// <param name="payload">The payload to broadcast.</param>
         private async Task BroadcastAsync(RequestPartialTransactionPayload payload)
         {
-            if (this.AttachedPeer.IsConnected && this.federatedPegSettings.FederationNodeIpEndPoints.Contains(Utils.EnsureIPv6(this.AttachedPeer.PeerEndPoint)))
+            if (this.federatedPegSettings.FederationNodeIpEndPoints.Any(e => this.ipAddressComparer.Equals(e.Address, this.AttachedPeer.PeerEndPoint.Address)))
                 await this.AttachedPeer.SendMessageAsync(payload).ConfigureAwait(false);
         }
 
