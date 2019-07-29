@@ -12,7 +12,6 @@ using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.FederatedPeg.InputConsolidation;
 using Stratis.Features.FederatedPeg.Interfaces;
 using Stratis.Features.FederatedPeg.TargetChain;
 
@@ -1024,7 +1023,7 @@ namespace Stratis.Features.FederatedPeg.Wallet
             lock (this.lockObject)
             {
                 // All the input UTXO's should be present in spending details of the multi-sig address.
-                List<Coin> coins = checkSignature ? new List<Coin>() : null;
+                List<Coin> coins = new List<Coin>();
                 // Verify that the transaction has valid UTXOs.
                 if (!this.TransactionHasValidUTXOs(transaction, coins))
                     return false;
@@ -1041,6 +1040,16 @@ namespace Stratis.Features.FederatedPeg.Wallet
                                                              .FirstOrDefault();
                     if (oldestInput != null && DeterministicCoinOrdering.CompareTransactionData(earliestUnspent, oldestInput) < 0)
                         return false;
+                }
+
+                // Check that the fee is correct.
+                Money expectedFee = this.federatedPegSettings.GetWithdrawalTransactionFee(coins.Count);
+                Money actualFee = transaction.GetFee(coins.ToArray());
+
+                if (expectedFee != actualFee)
+                {
+                    this.logger.LogDebug("Fee is incorrect, '{0}' instead of '{1}'.", actualFee, expectedFee);
+                    return false;
                 }
 
                 // Verify that all inputs are signed.
