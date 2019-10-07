@@ -9,7 +9,7 @@ using Stratis.Features.FederatedPeg.Interfaces;
 namespace Stratis.Features.FederatedPeg.Notifications
 {
     /// <summary>
-    /// Observer that passes notifications indicating the arrival of new <see cref="Block"/>s
+    /// ObserverReferences that passes notifications indicating the arrival of new <see cref="Block"/>s
     /// onto the CrossChainTransactionMonitor.
     /// </summary>
     public class BlockObserver

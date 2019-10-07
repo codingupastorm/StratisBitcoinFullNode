@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace Stratis.SmartContracts.RuntimeObserver
 {
@@ -22,6 +23,10 @@ namespace Stratis.SmartContracts.RuntimeObserver
         /// </summary>
         public static Observer Get(string id)
         {
+            Console.WriteLine(id);
+            Debug.WriteLine(id);
+
+
             return instances[Guid.Parse(id)];
         } 
 
@@ -30,9 +35,9 @@ namespace Stratis.SmartContracts.RuntimeObserver
         /// </summary>
         /// <param name="id"></param>
         /// <param name="observer"></param>
-        public static void Set(Guid id, Observer observer)
+        public static void Set(string id, Observer observer)
         {
-            instances[id] = observer;
+            instances[Guid.Parse(id)] = observer;
         }
     }
 }

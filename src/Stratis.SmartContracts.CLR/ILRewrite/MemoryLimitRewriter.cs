@@ -13,8 +13,8 @@ namespace Stratis.SmartContracts.CLR.ILRewrite
     {
         public void Rewrite(MethodDefinition methodDefinition, ILProcessor il, ObserverRewriterContext context)
         {
-            // Start from 2 - we added the 2 load variable instructions in ObserverRewriter
-            for(int i=2; i< methodDefinition.Body.Instructions.Count; i++)
+            // Start from first instruction after the Observer injection code
+            for (int i= ObserverRewriter.ReservedInstructions; i< methodDefinition.Body.Instructions.Count; i++)
             {
                 // Keep current number of instructions to detect changes.
                 int instructionCount = methodDefinition.Body.Instructions.Count;
@@ -95,7 +95,7 @@ namespace Stratis.SmartContracts.CLR.ILRewrite
         {
             il.Body.SimplifyMacros();
             il.InsertBefore(instruction, il.CreateLdlocBest(context.ObserverVariable));
-            il.InsertBefore(instruction, il.Create(OpCodes.Call, context.Observer.FlowThroughMemoryInt32Method));
+            il.InsertBefore(instruction, il.Create(OpCodes.Call, context.ObserverReferences.FlowThroughMemoryInt32Method));
             il.Body.OptimizeMacros();
         }
 
@@ -110,7 +110,7 @@ namespace Stratis.SmartContracts.CLR.ILRewrite
                 il.Create(OpCodes.Dup),
                 il.Create(OpCodes.Ldlen),
                 il.CreateLdlocBest(context.ObserverVariable),
-                il.Create(OpCodes.Call, context.Observer.FlowThroughMemoryInt32Method),
+                il.Create(OpCodes.Call, context.ObserverReferences.FlowThroughMemoryInt32Method),
                 il.Create(OpCodes.Pop)
                 );
             il.Body.OptimizeMacros();

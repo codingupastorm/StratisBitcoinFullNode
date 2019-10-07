@@ -4,13 +4,13 @@ namespace Stratis.SmartContracts.CLR.ILRewrite
 {
     public class ObserverRewriterContext
     {
-        public ObserverReferences Observer { get; }
+        public ObserverReferences ObserverReferences { get; }
 
         public VariableDefinition ObserverVariable { get; }
 
-        public ObserverRewriterContext(ObserverReferences observer, VariableDefinition observerVariable)
+        public ObserverRewriterContext(ObserverReferences observerReferences, VariableDefinition observerVariable)
         {
-            this.Observer = observer;
+            this.ObserverReferences = observerReferences;
             this.ObserverVariable = observerVariable;
         }
     }

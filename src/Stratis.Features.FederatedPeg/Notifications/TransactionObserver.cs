@@ -7,7 +7,7 @@ using Stratis.Features.FederatedPeg.Interfaces;
 namespace Stratis.Features.FederatedPeg.Notifications
 {
     /// <summary>
-    /// Observer that receives notifications about the arrival of new <see cref="Transaction"/>s.
+    /// ObserverReferences that receives notifications about the arrival of new <see cref="Transaction"/>s.
     /// </summary>
     public class TransactionObserver
     {

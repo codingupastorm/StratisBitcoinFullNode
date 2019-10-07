@@ -129,7 +129,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 new InternalHashHelper(),
                 () => 1000);
 
-            this.rewriter = new ObserverRewriter(new Observer(this.gasMeter, new MemoryMeter(ReflectionVirtualMachine.MemoryUnitLimit)));
+            this.rewriter = new ObserverRewriter();
         }
 
         [Fact]
@@ -159,7 +159,9 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             CSharpFunctionalExtensions.Result<IContractAssembly> assembly = this.assemblyLoader.Load(module.ToByteCode());
 
-            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
+            var observer = new Observer(this.gasMeter, new MemoryMeter(ReflectionVirtualMachine.MemoryUnitLimit));
+
+            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null, observer);
 
             IContractInvocationResult result = contract.Invoke(callData);
             // Number here shouldn't be hardcoded - note this is really only to let us know of consensus failure
@@ -182,7 +184,9 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             CSharpFunctionalExtensions.Result<IContractAssembly> assembly = this.assemblyLoader.Load(module.ToByteCode());
 
-            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
+            var observer = new Observer(this.gasMeter, new MemoryMeter(ReflectionVirtualMachine.MemoryUnitLimit));
+
+            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null, observer);
 
             // Because our contract contains an infinite loop, we want to kill our test after
             // some amount of time without achieving a result. 3 seconds is an arbitrarily high enough timeout
@@ -212,7 +216,9 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             CSharpFunctionalExtensions.Result<IContractAssembly> assembly = this.assemblyLoader.Load(module.ToByteCode());
 
-            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
+            var observer = new Observer(this.gasMeter, new MemoryMeter(ReflectionVirtualMachine.MemoryUnitLimit));
+
+            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null, observer);
 
             IContractInvocationResult result = contract.InvokeConstructor(null);
 
@@ -235,7 +241,9 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             CSharpFunctionalExtensions.Result<IContractAssembly> assembly = this.assemblyLoader.Load(module.ToByteCode());
 
-            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
+            var observer = new Observer(this.gasMeter, new MemoryMeter(ReflectionVirtualMachine.MemoryUnitLimit));
+
+            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null, observer);
 
             IContractInvocationResult result = contract.InvokeConstructor(new[] { "Test Owner" });
 
@@ -259,7 +267,9 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             CSharpFunctionalExtensions.Result<IContractAssembly> assembly = this.assemblyLoader.Load(module.ToByteCode());
 
-            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
+            var observer = new Observer(this.gasMeter, new MemoryMeter(ReflectionVirtualMachine.MemoryUnitLimit));
+
+            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null, observer);
 
             IContractInvocationResult result = contract.Invoke(callData);
 
@@ -299,7 +309,9 @@ public static class Other
 
             CSharpFunctionalExtensions.Result<IContractAssembly> assembly = this.assemblyLoader.Load(module.ToByteCode());
 
-            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
+            var observer = new Observer(this.gasMeter, new MemoryMeter(ReflectionVirtualMachine.MemoryUnitLimit));
+
+            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null, observer);
 
             IContractInvocationResult result = contract.InvokeConstructor(null);
 
@@ -307,49 +319,49 @@ public static class Other
             Assert.Equal(this.gasMeter.GasLimit, this.gasMeter.GasConsumed);
         }
 
-        [Fact]
-        public void Test_Replacing_Observer()
-        {
-            ContractCompilationResult compilationResult =
-                ContractCompiler.Compile(TestMultipleConstructorSource);
+        //[Fact]
+        //public void Test_Replacing_Observer()
+        //{
+        //    ContractCompilationResult compilationResult =
+        //        ContractCompiler.Compile(TestMultipleConstructorSource);
 
-            Assert.True(compilationResult.Success);
-            byte[] originalAssemblyBytes = compilationResult.Compilation;
+        //    Assert.True(compilationResult.Success);
+        //    byte[] originalAssemblyBytes = compilationResult.Compilation;
 
-            IContractModuleDefinition module = this.moduleReader.Read(originalAssemblyBytes).Value;
+        //    IContractModuleDefinition module = this.moduleReader.Read(originalAssemblyBytes).Value;
 
-            // Rewrite and execute module.
-            module.Rewrite(this.rewriter);
-            CSharpFunctionalExtensions.Result<IContractAssembly> assembly = this.assemblyLoader.Load(module.ToByteCode());
-            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
-            IContractInvocationResult result = contract.InvokeConstructor(new[] { "Test Owner" });
-            // Number here shouldn't be hardcoded - note this is really only to let us know of consensus failure
-            Assert.Equal((Gas)328, this.gasMeter.GasConsumed);
+        //    // Rewrite and execute module.
+        //    module.Rewrite(this.rewriter);
+        //    CSharpFunctionalExtensions.Result<IContractAssembly> assembly = this.assemblyLoader.Load(module.ToByteCode());
+        //    IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
+        //    IContractInvocationResult result = contract.InvokeConstructor(new[] { "Test Owner" });
+        //    // Number here shouldn't be hardcoded - note this is really only to let us know of consensus failure
+        //    Assert.Equal((Gas)328, this.gasMeter.GasConsumed);
 
-            // Now lets rewrite with a new Observer.
-            var newGasMeter = new GasMeter((Gas)5000000);
-            var newMemoryMeter = new MemoryMeter(ReflectionVirtualMachine.MemoryUnitLimit);
-            var replacerRewriter = new ObserverReplacerRewriter(new Observer(newGasMeter, newMemoryMeter));
-            module.Rewrite(replacerRewriter);
+        //    // Now lets rewrite with a new ObserverReferences.
+        //    var newGasMeter = new GasMeter((Gas)5000000);
+        //    var newMemoryMeter = new MemoryMeter(ReflectionVirtualMachine.MemoryUnitLimit);
+        //    var replacerRewriter = new ObserverReplacerRewriter(new Observer(newGasMeter, newMemoryMeter));
+        //    module.Rewrite(replacerRewriter);
 
-            // The calling of this new module should affect a different gas meter. The previous one should remain untouched.
-            assembly = this.assemblyLoader.Load(module.ToByteCode());
-            var context = new ContractExecutorTestContext();
-            var newState = new SmartContractState(
-                new Block(1, this.TestAddress),
-                new Message(this.TestAddress, this.TestAddress, 0),
-                new PersistentState(new MeteredPersistenceStrategy(context.State, newGasMeter, new BasicKeyEncodingStrategy()),
-                    context.Serializer, this.TestAddress.ToUint160()),
-                context.Serializer,
-                new ContractLogHolder(),
-                Mock.Of<IInternalTransactionExecutor>(),
-                new InternalHashHelper(),
-                () => 1000);
-            IContract newContract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), newState, null);
-            result = newContract.InvokeConstructor(new[] { "Test Owner" });
-            Assert.Equal((Gas)328, this.gasMeter.GasConsumed);
-            Assert.Equal((Gas)328, newGasMeter.GasConsumed);
-        }
+        //    // The calling of this new module should affect a different gas meter. The previous one should remain untouched.
+        //    assembly = this.assemblyLoader.Load(module.ToByteCode());
+        //    var context = new ContractExecutorTestContext();
+        //    var newState = new SmartContractState(
+        //        new Block(1, this.TestAddress),
+        //        new Message(this.TestAddress, this.TestAddress, 0),
+        //        new PersistentState(new MeteredPersistenceStrategy(context.State, newGasMeter, new BasicKeyEncodingStrategy()),
+        //            context.Serializer, this.TestAddress.ToUint160()),
+        //        context.Serializer,
+        //        new ContractLogHolder(),
+        //        Mock.Of<IInternalTransactionExecutor>(),
+        //        new InternalHashHelper(),
+        //        () => 1000);
+        //    IContract newContract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), newState, null);
+        //    result = newContract.InvokeConstructor(new[] { "Test Owner" });
+        //    Assert.Equal((Gas)328, this.gasMeter.GasConsumed);
+        //    Assert.Equal((Gas)328, newGasMeter.GasConsumed);
+        //}
 
         [Fact]
         public void Test_MemoryLimit_Small_Allocations_Pass()
@@ -379,7 +391,7 @@ public static class Other
         }
 
         // These are all split up because if they all use the same one
-        // they will have the same 'Observer' and it will overflow.
+        // they will have the same 'ObserverReferences' and it will overflow.
         // TODO: Future improvement: Use Theory, and don't compile from scratch
         // every time to save performance.
 
@@ -460,8 +472,19 @@ public static class Other
 
             CSharpFunctionalExtensions.Result<IContractAssembly> assembly = this.assemblyLoader.Load(module.ToByteCode());
 
-            return Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
+            var observer = new Observer(this.gasMeter, new MemoryMeter(ReflectionVirtualMachine.MemoryUnitLimit));
+
+            return Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null, observer);
         }
 
     }
+
+    //public class Test : SmartContract
+    //{
+    //    public Test(ISmartContractState state) : base(state)
+    //    {
+
+    //        var observerVariable = ObserverInstances.Get(this.GetRefId());
+    //    }
+    //}
 }

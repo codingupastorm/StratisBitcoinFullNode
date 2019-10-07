@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using NBitcoin;
 using Stratis.SmartContracts.CLR.Exceptions;
+using Stratis.SmartContracts.CLR.ILRewrite;
 using Stratis.SmartContracts.RuntimeObserver;
 
 namespace Stratis.SmartContracts.CLR
@@ -66,9 +67,11 @@ namespace Stratis.SmartContracts.CLR
         /// <summary>
         /// Creates an <see cref="IContract"/> that represents a smart contract in an uninitialized state.
         /// </summary>
-        public static IContract CreateUninitialized(Type type, ISmartContractState state, uint160 address)
+        public static IContract CreateUninitialized(Type type, ISmartContractState state, uint160 address, Observer observer)
         {
             var contract = (SmartContract)FormatterServices.GetSafeUninitializedObject(type);
+
+            ObserverInstances.Set(contract.GetRefId(), observer);
 
             return new Contract(contract, type, state, address);
         }

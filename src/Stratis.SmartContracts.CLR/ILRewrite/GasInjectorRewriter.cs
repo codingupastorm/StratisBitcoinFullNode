@@ -17,8 +17,8 @@ namespace Stratis.SmartContracts.CLR.ILRewrite
             List<Instruction> branches = GetBranchingOps(methodDefinition).ToList();
             List<Instruction> branchTos = branches.Select(x => (Instruction)x.Operand).ToList();
 
-            // Start from 2 because we setup Observer in first 2 instructions
-            int position = 2;
+            // Start from first instruction after the Observer injection code
+            int position = ObserverRewriter.ReservedInstructions;
 
             List<CodeSegment> segments = new List<CodeSegment>();
 
@@ -64,7 +64,7 @@ namespace Stratis.SmartContracts.CLR.ILRewrite
 
             foreach (CodeSegment segment in segments)
             {
-                AddSpendGasMethodBeforeInstruction(il, context.Observer, context.ObserverVariable, segment);
+                AddSpendGasMethodBeforeInstruction(il, context.ObserverReferences, context.ObserverVariable, segment);
             }
 
             // All of the branches now need to point to the place 3 instructions earlier!

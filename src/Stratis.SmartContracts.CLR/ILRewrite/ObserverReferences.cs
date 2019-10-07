@@ -10,11 +10,6 @@ namespace Stratis.SmartContracts.CLR.ILRewrite
     public class ObserverReferences
     {
         /// <summary>
-        /// The actual field to load onto the stack which we can call methods on. 
-        /// </summary>
-        public FieldDefinition InstanceField { get; }
-
-        /// <summary>
         /// Reference to the SpendGas method on the <see cref="Observer"/>.
         /// </summary>
         public MethodReference SpendGasMethod { get; }
@@ -29,9 +24,8 @@ namespace Stratis.SmartContracts.CLR.ILRewrite
         /// </summary>
         public MethodReference FlowThroughMemoryInt32Method { get; }
 
-        public ObserverReferences(FieldDefinition instanceField, ModuleDefinition module)
+        public ObserverReferences(ModuleDefinition module)
         {
-            this.InstanceField = instanceField;
             this.SpendGasMethod = module.ImportReference(MethodInfos.SpendGas);
             this.SpendMemoryMethod = module.ImportReference(MethodInfos.SpendMemory);
             this.FlowThroughMemoryInt32Method = module.ImportReference(MethodInfos.FlowThroughMemoryInt32);
