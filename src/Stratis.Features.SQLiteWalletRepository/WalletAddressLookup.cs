@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using DBreeze.Utils;
 using NBitcoin;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Utilities;
@@ -95,7 +94,6 @@ namespace Stratis.Features.SQLiteWalletRepository
         private bool Exists(Script scriptPubKey, out AddressIdentifier address)
         {
             string strWalletId = DBParameter.Create(this.walletId);
-            string strHex = DBParameter.Create(scriptPubKey.ToHex());
             var strBytes = scriptPubKey.ToBytes();
 
             //var query = this.conn.SQLiteConnection.Table<HDAddress>().Where(a => a.ScriptPubKey == strBytes);
