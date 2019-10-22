@@ -21,6 +21,7 @@ namespace Stratis.Features.SQLiteWalletRepository.Tables
         public int AddressIndex { get; set; }
         public byte[] ScriptPubKey { get; set; }
         public byte[] PubKey { get; set; }
+        public string Address { get; set; }
 
         internal static IEnumerable<string> CreateScript()
         {
@@ -32,6 +33,7 @@ namespace Stratis.Features.SQLiteWalletRepository.Tables
                 AddressIndex        INTEGER NOT NULL,
                 ScriptPubKey        BLOB    NOT NULL,
                 PubKey              BLOB,
+                Address             TEXT NOT NULL,
                 PRIMARY KEY(WalletId, AccountIndex, AddressType, AddressIndex)
             )";
 

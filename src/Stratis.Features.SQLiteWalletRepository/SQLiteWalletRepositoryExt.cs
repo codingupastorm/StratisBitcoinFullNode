@@ -47,7 +47,7 @@ namespace Stratis.Features.SQLiteWalletRepository
 
             var res = new HdAddress(null)
             {
-                Address = repo.ScriptAddressReader.GetAddressFromScriptPubKey(repo.Network, scriptPubKey),
+                Address = address.Address,
                 Index = address.AddressIndex,
                 AddressType = address.AddressType,
                 HdPath = repo.ToHdPath(address.AccountIndex, address.AddressType, address.AddressIndex),
