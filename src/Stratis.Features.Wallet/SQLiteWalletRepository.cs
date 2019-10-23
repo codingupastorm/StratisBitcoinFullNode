@@ -40,7 +40,7 @@ namespace Stratis.Features.Wallet
         {
             // TODO: dbPerWallet?
 
-            // TODO: Method to get wallet name.
+            // TODO: Method to get wallet name, this gross
             foreach (string walletName in Directory.EnumerateFiles(this.dataFolder.WalletPath, "*.db")
                 .Select(p => p.Substring(this.dataFolder.WalletPath.Length + 1).Split('.')[0]))
             {
@@ -48,18 +48,16 @@ namespace Stratis.Features.Wallet
                 var walletContainer = new WalletContainer
                 {
                     Database = walletDatabase,
-                    Wallet = 
+                    Wallet = walletDatabase.GetWalletByName(walletName)
                 };
-                var conn = GetConnection(walletName);
 
-                HDWallet wallet = conn.GetWalletByName(walletName);
-                var walletContainer = new WalletContainer(conn, wallet, new ProcessBlocksInfo(conn, null, wallet));
-                this.Wallets[walletName] = walletContainer;
+                this.wallets[walletName] = walletContainer;
 
-                walletContainer.AddressesOfInterest.AddAll(wallet.WalletId);
-                walletContainer.TransactionsOfInterest.AddAll(wallet.WalletId);
+                // TODO: Do I need these?
+                //walletContainer.AddressesOfInterest.AddAll(wallet.WalletId);
+                //walletContainer.TransactionsOfInterest.AddAll(wallet.WalletId);
 
-                this.logger.LogDebug("Added '{0}` to wallet collection.", wallet.Name);
+                //this.logger.LogDebug("Added '{0}` to wallet collection.", wallet.Name);
             }
 
 

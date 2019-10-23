@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using SQLite;
 using Stratis.Bitcoin.Configuration;
@@ -26,6 +27,7 @@ namespace Stratis.Features.Wallet
         public WalletDto GetWalletByName(string name)
         {
             // name is only incoming for when db is shared. Unnecessary?
+            throw new NotImplementedException();
         }
 
         public void InsertTransactionData(TransactionDataDto transactionData)
