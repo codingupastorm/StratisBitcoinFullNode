@@ -51,6 +51,13 @@ namespace Stratis.Features.Wallet
 
         public void AddSpendableOutput()
         {
+            TransactionDataRow row = new TransactionDataRow
+            {
+                
+            };
+
+            // Record outputs received by our wallets.
+            this.RecordReceipt(block, pubKeyScript, txOut, tx.IsCoinBase | tx.IsCoinStake, blockTime ?? tx.Time, txId, i, containsAddress && address.AddressType == 1);
             throw new NotImplementedException();
         }
 
