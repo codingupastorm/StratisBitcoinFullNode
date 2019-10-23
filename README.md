@@ -1,1 +1,3 @@
-# Stratis.DLT.CA
+# CertificateAuthority
+
+See documentation folder for more information.
