@@ -96,9 +96,60 @@ namespace Stratis.Features.Wallet
         }
 
         // Could be renamed. Called when a transaction comes through the mempool.
-        public void ProcessTransaction(string walletName, Transaction transaction, uint256 txId = null)
+        public void ProcessTransaction(string walletName, Transaction transaction, uint256 fixedTxId)
         {
-            throw new NotImplementedException();
+            // TODO: TopUpTracker.
+
+            bool additions = false;
+
+            WalletContainer wallet = this.wallets[walletName];
+
+            uint256 txId = fixedTxId ?? transaction.GetHash();
+            bool addSpendTx = false;
+
+            for (int i = 0; i < transaction.Inputs.Count; i++)
+            {
+                TxIn txIn = transaction.Inputs[i];
+
+                if (wallet.TransactionsOfInterest.Contains(txIn.PrevOut.ToBytes()))
+                {
+                    // Record our outputs that are being spent.
+                    wallet.Database.UpdateOutputToBeSpent();
+
+                    //foreach (AddressIdentifier address in addresses)
+                    //    RecordSpend(block, txIn, address.ScriptPubKey, tx.IsCoinBase | tx.IsCoinStake, blockTime ?? tx.Time, tx.TotalOut, txId, i);
+
+                    additions = true;
+                    addSpendTx = true;
+                }
+            }
+
+            for (int i = 0; i < transaction.Outputs.Count; i++)
+            {
+                TxOut txOut = transaction.Outputs[i];
+
+                if (txOut.IsEmpty)
+                    continue;
+
+                if (txOut.ScriptPubKey.ToBytes(true)[0] == (byte)OpcodeType.OP_RETURN)
+                    continue;
+
+                if (wallet.AddressesOfInterest.ContainsKey(txOut.ScriptPubKey.ToBytes()))
+                {
+                    // TODO: TryGet faster?
+                    AddressRow address = wallet.AddressesOfInterest[txOut.ScriptPubKey.ToBytes()];
+
+                    // TODO: Continue from here.
+
+                    wallet.Database.AddSpendableOutput();
+                    additions = true;
+
+                    wallet.TransactionsOfInterest.Add(new OutPoint(txId, i).ToBytes());
+                }
+            }
+            
+
+            
         }
 
         // Could be renamed. Called when a transaction is removed from the mempool.
@@ -124,7 +175,41 @@ namespace Stratis.Features.Wallet
         public Bitcoin.Features.Wallet.Wallet CreateWallet(string walletName, string encryptedSeed, byte[] chainCode, HashHeightPair lastBlockSynced,
             BlockLocator blockLocator, long? creationTime = null)
         {
-            throw new NotImplementedException("Not needed for me to test.");
+            // TODO: Lock?
+
+            this.logger.LogDebug("Creating wallet '{0}'.", walletName);
+
+            if (this.wallets.ContainsKey(walletName))
+                throw new WalletException($"Wallet with name '{walletName}' already exists.");
+
+            if (this.wallets.Any(w => w.Value.Wallet?.EncryptedSeed == encryptedSeed))
+                throw new WalletException("Cannot create this wallet as a wallet with the same private key already exists.");
+
+            // TODO: Transaction.
+
+            WalletDatabase database = new WalletDatabase(this.dataFolder, walletName);
+            var wallet = new WalletRow
+            {
+                Name = walletName,
+                EncryptedSeed = encryptedSeed,
+                ChainCode = (chainCode == null) ? null : Convert.ToBase64String(chainCode),
+                CreationTime = creationTime ?? (int) this.Network.GenesisTime,
+                BlockLocator = "",
+                LastBlockSyncedHash = null,
+                LastBlockSyncedHeight = -1
+            };
+
+            database.InsertWallet(wallet);
+
+            WalletContainer walletContainer = new WalletContainer(database);
+
+            this.wallets[walletName] = walletContainer;
+
+            // TODO: blockLocator etc?
+
+            // TODO: Commit transaction + Rollback.
+
+            return GetWallet(walletName);
         }
 
         public bool DeleteWallet(string walletName)
