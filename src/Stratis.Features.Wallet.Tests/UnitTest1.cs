@@ -15,7 +15,7 @@ namespace Stratis.Features.Wallet.Tests
 
             var walletDb = new WalletDatabase(dataFolder, "wallet");
 
-            var transactionData = new TransactionDataDto
+            var transactionData = new TransactionDataRow
             {
                 AccountIndex = 0,
                 Address = "Address",

@@ -10,7 +10,7 @@ namespace Stratis.Features.Wallet
     /// <summary>
     /// Controls direct access to the database on-disk always.
     /// </summary>
-    public class WalletDatabase
+    public class WalletDatabase : IDisposable
     {
         private readonly SQLiteConnection db;
 
@@ -20,29 +20,53 @@ namespace Stratis.Features.Wallet
 
             // Open connection and create tables if they don't already exist.
             this.db = new SQLiteConnection(databasePath);
-            this.db.CreateTable<TransactionDataDto>();
-            this.db.CreateTable<WalletDto>();
+            this.db.CreateTable<WalletRow>();
+            this.db.CreateTable<AddressRow>();
+            this.db.CreateTable<TransactionDataRow>();
         }
 
-        public WalletDto GetWalletByName(string name)
+        // TODO: This is assuming that a wallet always has its own db. Current wallet doesn't.
+
+        public WalletRow GetWallet()
         {
             // name is only incoming for when db is shared. Unnecessary?
             throw new NotImplementedException();
         }
 
-        public void InsertTransactionData(TransactionDataDto transactionData)
+        public IEnumerable<AddressRow> GetAllAddresses()
+        {
+            // TODO: May need paramters for this later.
+            return this.db.Table<AddressRow>();
+        } 
+
+        public IEnumerable<TransactionDataRow> GetAllUnspentTransactions()
+        {
+            // TODO: May need parameters for this later.
+
+            return this.db.Table<TransactionDataRow>()
+                .Where(x => x.SpendBlockHash == null);
+        }
+
+        public void InsertTransactionData(TransactionDataRow transactionData)
         {
             this.db.Insert(transactionData);
         }
 
-        // TODO: This is a test nmethod, not legit.
-        public IEnumerable<TransactionDataDto> GetAllSpendableTransactions()
+        // TODO: This is a test method, not legit.
+        public IEnumerable<TransactionDataRow> GetAllSpendableTransactions()
         {
             var bytes = new byte[] {1, 2, 3};
 
-            return this.db.Table<TransactionDataDto>()
+            return this.db.Table<TransactionDataRow>()
                 .Where(x => x.SpendTxId == null)
                 .Where(x=>x.OutputBlockHash == bytes);
+        }
+
+
+
+        public void Dispose()
+        {
+            this.db.Dispose();
         }
     }
 }

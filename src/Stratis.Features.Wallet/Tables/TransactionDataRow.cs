@@ -1,7 +1,10 @@
-﻿namespace Stratis.Features.Wallet.Tables
+﻿using SQLite;
+
+namespace Stratis.Features.Wallet.Tables
 {
-    public class TransactionDataDto
+    public class TransactionDataRow
     {
+        [PrimaryKey]
         public int WalletId { get; set; }
         public int AccountIndex { get; set; }
         public int AddressType { get; set; }
@@ -11,7 +14,9 @@
         public string Address { get; set; }
         public decimal Value { get; set; }
         public long OutputTxTime { get; set; }
+        [PrimaryKey]
         public byte[] OutputTxId { get; set; }
+        [PrimaryKey]
         public int OutputIndex { get; set; }
         public int? OutputBlockHeight { get; set; }
         public byte[] OutputBlockHash { get; set; }

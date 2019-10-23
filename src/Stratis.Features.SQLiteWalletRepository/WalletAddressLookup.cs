@@ -14,7 +14,7 @@ namespace Stratis.Features.SQLiteWalletRepository
     /// <remarks>
     /// Shared lookups can't provide wallet-specific information.
     /// </remarks>
-    internal class WalletAddressLookup : BaseLookup, IWalletAddressLookup
+    public class WalletAddressLookup : BaseLookup, IWalletAddressLookup
     {
         private readonly DBConnection conn;
         private int? walletId;

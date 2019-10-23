@@ -7,7 +7,7 @@ using Stratis.Features.SQLiteWalletRepository.Tables;
 
 namespace Stratis.Features.SQLiteWalletRepository
 {
-    internal class WalletTransactionLookup : BaseLookup, IWalletTransactionLookup
+    public class WalletTransactionLookup : BaseLookup, IWalletTransactionLookup
     {
         private readonly DBConnection conn;
         private readonly int? walletId;

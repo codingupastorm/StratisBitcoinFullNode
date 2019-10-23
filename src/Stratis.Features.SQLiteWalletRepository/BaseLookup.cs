@@ -32,7 +32,7 @@ namespace Stratis.Features.SQLiteWalletRepository
         }
     }
 
-    internal class BaseLookup
+    public class BaseLookup
     {
         private byte[] hashArray;
         private int maxHashArrayLengthLog;
