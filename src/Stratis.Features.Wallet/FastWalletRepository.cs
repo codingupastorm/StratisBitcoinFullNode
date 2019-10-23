@@ -139,11 +139,12 @@ namespace Stratis.Features.Wallet
                     // TODO: TryGet faster?
                     AddressRow address = wallet.AddressesOfInterest[txOut.ScriptPubKey.ToBytes()];
 
-                    // TODO: Continue from here.
+                    // TODO: Continue from here. Fill in this and outputtobespent.
 
                     wallet.Database.AddSpendableOutput();
                     additions = true;
 
+                    // Watch this transaction from now on. We want to see if he gets spent!
                     wallet.TransactionsOfInterest.Add(new OutPoint(txId, i).ToBytes());
                 }
             }
