@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CertificateAuthority", "Cer
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CertificateAuthority.Tests", "CertificateAuthority.Tests\CertificateAuthority.Tests.csproj", "{A2510539-E1A5-427C-A529-CD92070B9A5F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CertificateAuthority.Client", "CertificateAuthority.Client\CertificateAuthority.Client.csproj", "{A872578A-1015-45EE-91DC-D75C197AAC47}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CertificateAuthority.Client", "CertificateAuthority.Client\CertificateAuthority.Client.csproj", "{FE8225F3-AC2E-4433-8D40-7368D43E1FB8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{A2510539-E1A5-427C-A529-CD92070B9A5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A2510539-E1A5-427C-A529-CD92070B9A5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A2510539-E1A5-427C-A529-CD92070B9A5F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A872578A-1015-45EE-91DC-D75C197AAC47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A872578A-1015-45EE-91DC-D75C197AAC47}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A872578A-1015-45EE-91DC-D75C197AAC47}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A872578A-1015-45EE-91DC-D75C197AAC47}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE8225F3-AC2E-4433-8D40-7368D43E1FB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE8225F3-AC2E-4433-8D40-7368D43E1FB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE8225F3-AC2E-4433-8D40-7368D43E1FB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE8225F3-AC2E-4433-8D40-7368D43E1FB8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
