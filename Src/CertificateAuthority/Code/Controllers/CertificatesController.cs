@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using CertificateAuthority.Code.Database;
 using CertificateAuthority.Code.Models;
 using Microsoft.AspNetCore.Mvc;
+using NLog;
 
 namespace CertificateAuthority.Code.Controllers
 {
@@ -14,6 +15,8 @@ namespace CertificateAuthority.Code.Controllers
         private readonly DataCacheLayer cache;
 
         private readonly CertificatesManager certManager;
+
+        private readonly NLog.Logger logger = LogManager.GetCurrentClassLogger();
 
         public CertificatesController(DataCacheLayer cache, CertificatesManager certManager)
         {
@@ -112,8 +115,9 @@ namespace CertificateAuthority.Code.Controllers
                 // Rethrow.
                 throw e;
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                this.logger.Error(e);
                 return StatusCode(500, "Internal server error");
             }
         }
