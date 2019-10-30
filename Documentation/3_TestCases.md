@@ -42,18 +42,11 @@ Lowest setup that should be used for this test is 8gb RAM, SSD hard drive, 4+ co
 
 ## P2P encryption and permissioned membership test cases
 
-#### #6 - TODO
+#### #6 - Ensure 2 nodes with valid certificates can connect to each other
 
-TODO
+#### #7 - Ensure that node with envoked certificate can't connect to anyone
 
+#### #8 - Ensure that node with certificate that is not signed by root certificate can't connect to anyone
 
+#### #9 - Ensure that a test poa network of >= 10 nodes can function normally if every node has a valid certificate 
 
-#### #7 - TODO
-
-TODO
-
-
-
-#### #8 - TODO
-
-TODO
