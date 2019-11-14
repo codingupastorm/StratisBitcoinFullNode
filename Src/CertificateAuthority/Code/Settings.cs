@@ -12,8 +12,8 @@ namespace CertificateAuthority.Code
         {
             configReader = textFileConfiguration;
 
-            string defaultPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "litedb.db");
-            LiteDbPath = configReader.GetOrDefault<string>("dbpath", defaultPath);
+            string defaultPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SQLiteDatabase.db");
+            DatabasePath = configReader.GetOrDefault<string>("dbpath", defaultPath);
 
             DefaultIssuanceCertificateDays = configReader.GetOrDefault<int>("defaultCertDays", 10 * 365);
 
@@ -27,7 +27,7 @@ namespace CertificateAuthority.Code
 
         private TextFileConfiguration configReader;
 
-        public string LiteDbPath { get; private set; }
+        public string DatabasePath { get; private set; }
 
         public int DefaultIssuanceCertificateDays { get; private set; }
 
