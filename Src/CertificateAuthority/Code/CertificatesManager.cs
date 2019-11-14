@@ -5,8 +5,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using CertificateAuthority.Code.Database;
 using CertificateAuthority.Code.Models;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore.Internal;
 using NLog;
 
 namespace CertificateAuthority.Code
@@ -108,7 +106,7 @@ namespace CertificateAuthority.Code
             {
                 Status = CertificateStatus.Good,
                 Thumbprint = createdCertificate.Thumbprint,
-                CertificateContent = File.ReadAllLines(crtGeneratedPath).Join(" "),
+                CertificateContent = string.Join(" ", File.ReadAllLines(crtGeneratedPath)),
                 IssuerAccountId = creatorId
             };
 
