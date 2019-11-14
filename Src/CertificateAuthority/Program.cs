@@ -50,8 +50,6 @@ namespace CertificateAuthority
             services.AddSingleton<DataRepository>();
             services.AddSingleton<DataCacheLayer>();
             services.AddSingleton<CertificatesManager>();
-
-            services.AddTransient<LiteDbContext, LiteDbContext>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

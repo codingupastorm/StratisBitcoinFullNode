@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using CertificateAuthority.Code.Models;
 using LiteDB;
 using NLog;
@@ -9,15 +10,25 @@ namespace CertificateAuthority.Code.Database
     {
         private readonly NLog.Logger logger = LogManager.GetCurrentClassLogger();
 
-        private readonly LiteDbContext context;
+        public readonly LiteDatabase Database;
 
         private const string certificateInfosKey = "certInfos";
 
         private const string accountsKey = "accounts";
 
-        public DataRepository(LiteDbContext context, Settings settings)
+        public DataRepository(Settings settings)
         {
-            this.context = context;
+            try
+            {
+                this.Database = new LiteDatabase(settings.LiteDbPath);
+
+                this.logger.Debug("Database initialized at {0}.", settings.LiteDbPath);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+                throw new Exception("Can find or create LiteDb database.", ex);
+            }
 
             LiteCollection<AccountModel> accountsCollection = this.GetAccountsCollection();
 
@@ -45,14 +56,14 @@ namespace CertificateAuthority.Code.Database
 
         public LiteCollection<CertificateInfoModel> GetCertificatesCollection()
         {
-            LiteCollection<CertificateInfoModel> collection = context.Database.GetCollection<CertificateInfoModel>(certificateInfosKey);
+            LiteCollection<CertificateInfoModel> collection = this.Database.GetCollection<CertificateInfoModel>(certificateInfosKey);
 
             return collection;
         }
 
         public LiteCollection<AccountModel> GetAccountsCollection()
         {
-            LiteCollection<AccountModel> collection = context.Database.GetCollection<AccountModel>(accountsKey);
+            LiteCollection<AccountModel> collection = this.Database.GetCollection<AccountModel>(accountsKey);
 
             return collection;
         }
