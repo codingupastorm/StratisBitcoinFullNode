@@ -84,8 +84,6 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
             services.AddSingleton<DataRepository>();
             services.AddSingleton<DataCacheLayer>();
             services.AddSingleton<CertificatesManager>();
-
-            services.AddTransient<LiteDbContext, LiteDbContext>();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
