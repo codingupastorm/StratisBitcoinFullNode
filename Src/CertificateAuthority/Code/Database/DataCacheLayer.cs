@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using CertificateAuthority.Code.Models;
-using LiteDB;
 using NLog;
-using Logger = LiteDB.Logger;
 
 namespace CertificateAuthority.Code.Database
 {
@@ -14,25 +12,47 @@ namespace CertificateAuthority.Code.Database
 
         public HashSet<string> RevokedCertificates;
 
-        private readonly DataRepository repository;
+        private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        private LiteCollection<CertificateInfoModel> storeCollection;
+        private Settings settings;
 
-        private readonly object storeCollectionLocker;
-
-        private readonly LiteCollection<AccountModel> accountsCollection;
-
-        /// <summary>Protects all access to <see cref="accountsCollection"/>.</summary>
-        private readonly object accountsCollectionLocker;
-
-        private readonly NLog.Logger logger = LogManager.GetCurrentClassLogger();
-
-        public DataCacheLayer(DataRepository repository)
+        public DataCacheLayer(Settings settings)
         {
-            this.repository = repository;
-            this.storeCollectionLocker = new object();
-            this.accountsCollection = this.repository.GetAccountsCollection();
-            this.accountsCollectionLocker = new object();
+            this.settings = settings;
+
+            using (CADbContext dbContext = this.CreateContext())
+            {
+                dbContext.Database.EnsureCreated();
+
+                if (!dbContext.Accounts.Any() && settings.CreateAdminAccountOnCleanStart)
+                {
+                    AccountAccessFlags adminAttrs = AccountAccessFlags.AccessAccountInfo;
+
+                    foreach (AccountAccessFlags attr in DataHelper.AllAccessFlags)
+                        adminAttrs |= attr;
+
+                    // Create Admin.
+                    AccountModel admin = new AccountModel()
+                    {
+                        Name = Settings.AdminName,
+                        PasswordHash = settings.DefaultAdminPasswordHash,
+                        AccessInfo = adminAttrs,
+
+                        // Will set below.
+                        CreatorId = 1
+                    };
+
+                    dbContext.Accounts.Add(admin);
+                    dbContext.SaveChanges();
+
+                    this.logger.Info("Default Admin account was added.");
+                }
+            }
+        }
+
+        private CADbContext CreateContext()
+        {
+            return new CADbContext(settings);
         }
 
         public void Initialize()
@@ -41,14 +61,15 @@ namespace CertificateAuthority.Code.Database
             this.CertStatusesByThumbprint = new Dictionary<string, CertificateStatus>();
             this.RevokedCertificates = new HashSet<string>();
 
-            this.storeCollection = this.repository.GetCertificatesCollection();
-
-            foreach (CertificateInfoModel info in this.storeCollection.FindAll())
+            using (CADbContext dbContext = this.CreateContext())
             {
-                this.CertStatusesByThumbprint.Add(info.Thumbprint, info.Status);
+                foreach (CertificateInfoModel info in dbContext.Certificates)
+                {
+                    this.CertStatusesByThumbprint.Add(info.Thumbprint, info.Status);
 
-                if (info.Status == CertificateStatus.Revoked)
-                    RevokedCertificates.Add(info.Thumbprint);
+                    if (info.Status == CertificateStatus.Revoked)
+                        RevokedCertificates.Add(info.Thumbprint);
+                }
             }
 
             this.logger.Info("{0} initialized with {1} certificates, {2} of them revoked.", nameof(DataCacheLayer),
@@ -79,38 +100,39 @@ namespace CertificateAuthority.Code.Database
         {
             string thumbprint = model.Model.Thumbprint;
 
-            this.VerifyCredentialsAndAccessLevel(model, out AccountModel caller);
-
-            if (this.GetCertificateStatus(thumbprint) != CertificateStatus.Good)
-                return false;
-
-            CertificateInfoModel certToEdit;
-
-            lock (this.storeCollectionLocker)
+            using (CADbContext dbContext = this.CreateContext())
             {
+                this.VerifyCredentialsAndAccessLevel(model, dbContext, out AccountModel caller);
+
+                if (this.GetCertificateStatus(thumbprint) != CertificateStatus.Good)
+                    return false;
+
                 this.CertStatusesByThumbprint[thumbprint] = CertificateStatus.Revoked;
 
-                certToEdit = this.storeCollection.Find(x => x.Thumbprint == thumbprint).Single();
+                CertificateInfoModel certToEdit = dbContext.Certificates.Single(x => x.Thumbprint == thumbprint);
 
                 certToEdit.Status = CertificateStatus.Revoked;
                 certToEdit.RevokerAccountId = caller.Id;
-                this.storeCollection.Update(certToEdit);
+
+                dbContext.Update(certToEdit);
+                dbContext.SaveChanges();
+
+                this.RevokedCertificates.Add(thumbprint);
+                this.logger.Info("Certificate id {0}, thumbprint {1} was revoked.", certToEdit.Id, certToEdit.Thumbprint);
             }
 
-            this.RevokedCertificates.Add(thumbprint);
-
-            this.logger.Info("Certificate id {0}, thumbprint {1} was revoked.", certToEdit.Id, certToEdit.Thumbprint);
             return true;
         }
 
         /// <summary>Adds new certificate to the certificate collection.</summary>
         public void AddNewCertificate(CertificateInfoModel certificate)
         {
-            lock (this.storeCollectionLocker)
-            {
-                this.storeCollection.Insert(certificate);
+            this.CertStatusesByThumbprint.Add(certificate.Thumbprint, certificate.Status);
 
-                this.CertStatusesByThumbprint.Add(certificate.Thumbprint, certificate.Status);
+            using (CADbContext dbContext = this.CreateContext())
+            {
+                dbContext.Certificates.Add(certificate);
+                dbContext.SaveChanges();
             }
 
             this.logger.Info("Certificate id {0}, thumbprint {1} was added.");
@@ -119,33 +141,33 @@ namespace CertificateAuthority.Code.Database
         /// <summary>Finds issued certificate by thumbprint and returns it or null if it wasn't found.</summary>
         public CertificateInfoModel GetCertificateByThumbprint(CredentialsAccessWithModel<CredentialsModelWithThumbprintModel> model)
         {
-            this.VerifyCredentialsAndAccessLevel(model, out AccountModel account);
-
-            lock (this.storeCollectionLocker)
+            using (CADbContext dbContext = this.CreateContext())
             {
-                return this.storeCollection.FindOne(x => x.Thumbprint == model.Model.Thumbprint);
+                this.VerifyCredentialsAndAccessLevel(model, dbContext, out AccountModel account);
+
+                return dbContext.Certificates.SingleOrDefault(x => x.Thumbprint == model.Model.Thumbprint);
             }
         }
 
         /// <summary>Provides collection of all issued certificates.</summary>
         public List<CertificateInfoModel> GetAllCertificates(CredentialsAccessModel accessModelInfo)
         {
-            this.VerifyCredentialsAndAccessLevel(accessModelInfo, out AccountModel account);
-
-            lock (this.storeCollectionLocker)
+            using (CADbContext dbContext = this.CreateContext())
             {
-                return this.storeCollection.FindAll().ToList();
+                this.VerifyCredentialsAndAccessLevel(accessModelInfo, dbContext, out AccountModel account);
+
+                return dbContext.Certificates.ToList();
             }
         }
 
         /// <summary>Provides collection of all certificates issued by account with specified id.</summary>
         public List<CertificateInfoModel> GetCertificatesIssuedByAccountId(CredentialsAccessWithModel<CredentialsModelWithTargetId> accessWithModel)
         {
-            this.VerifyCredentialsAndAccessLevel(accessWithModel, out AccountModel account);
-
-            lock (this.storeCollectionLocker)
+            using (CADbContext dbContext = this.CreateContext())
             {
-                return this.storeCollection.Find(x => x.IssuerAccountId == accessWithModel.Model.TargetAccountId).ToList();
+                this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel account);
+
+                return dbContext.Certificates.Where(x => x.IssuerAccountId == accessWithModel.Model.TargetAccountId).ToList();
             }
         }
 
@@ -156,24 +178,22 @@ namespace CertificateAuthority.Code.Database
         /// <summary>Provides account information of the account with id specified.</summary>
         public AccountInfo GetAccountInfoById(CredentialsAccessWithModel<CredentialsModelWithTargetId> accessWithModel)
         {
-            lock (this.accountsCollectionLocker)
+            using (CADbContext dbContext = this.CreateContext())
             {
-                this.VerifyCredentialsAndAccessLevelLocked(accessWithModel, out AccountModel account);
+                this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel account);
 
-                AccountInfo targetAccount = this.accountsCollection.FindById(accessWithModel.Model.TargetAccountId);
-
-                return targetAccount;
+                return dbContext.Accounts.SingleOrDefault(x => x.Id == accessWithModel.Model.TargetAccountId);
             }
         }
 
         /// <summary>Provides collection of all existing accounts.</summary>
         public List<AccountInfo> GetAllAccounts(CredentialsAccessModel accessModelInfo)
         {
-            lock (this.accountsCollectionLocker)
+            using (CADbContext dbContext = this.CreateContext())
             {
-                this.VerifyCredentialsAndAccessLevelLocked(accessModelInfo, out AccountModel account);
+                this.VerifyCredentialsAndAccessLevel(accessModelInfo, dbContext, out AccountModel account);
 
-                return this.accountsCollection.FindAll().Select(x => x as AccountInfo).ToList();
+                return dbContext.Accounts.Select(x => x as AccountInfo).ToList();
             }
         }
 
@@ -181,14 +201,15 @@ namespace CertificateAuthority.Code.Database
         /// <returns>Wrapper with new account's id in it.'</returns>
         public int CreateAccount(CredentialsAccessWithModel<CreateAccount> accessWithModel)
         {
-            lock (this.accountsCollectionLocker)
+            using (CADbContext dbContext = this.CreateContext())
             {
-                this.VerifyCredentialsAndAccessLevelLocked(accessWithModel, out AccountModel account);
+                this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel account);
 
-                if (this.accountsCollection.FindOne(x => x.Name == accessWithModel.Model.NewAccountName) != null)
+                if (dbContext.Accounts.Any(x => x.Name == accessWithModel.Model.NewAccountName))
                     throw new Exception("That name is already taken!");
 
-                AccountAccessFlags newAccountAccessLevel = (AccountAccessFlags)accessWithModel.Model.NewAccountAccess | AccountAccessFlags.BasicAccess;
+                AccountAccessFlags newAccountAccessLevel =
+                    (AccountAccessFlags) accessWithModel.Model.NewAccountAccess | AccountAccessFlags.BasicAccess;
 
                 if (!DataHelper.IsCreatorHasGreaterOrEqualAccess(account.AccessInfo, newAccountAccessLevel))
                     throw new Exception("You can't create an account with access level higher than yours!");
@@ -201,7 +222,8 @@ namespace CertificateAuthority.Code.Database
                     CreatorId = account.Id
                 };
 
-                this.accountsCollection.Insert(newAccount);
+                dbContext.Accounts.Add(newAccount);
+                dbContext.SaveChanges();
 
                 this.logger.Info("Account was created: '{0}', creator: '{1}'.", newAccount, account);
                 return newAccount.Id;
@@ -211,13 +233,13 @@ namespace CertificateAuthority.Code.Database
         /// <summary>Deletes existing account with id specified.</summary>
         public void DeleteAccount(CredentialsAccessWithModel<CredentialsModelWithTargetId> accessWithModel)
         {
-            lock (this.accountsCollectionLocker)
+            using (CADbContext dbContext = this.CreateContext())
             {
-                this.VerifyCredentialsAndAccessLevelLocked(accessWithModel, out AccountModel caller);
+                this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel caller);
 
                 int accountId = accessWithModel.Model.TargetAccountId;
 
-                AccountModel accountToDelete = this.accountsCollection.FindById(accountId);
+                AccountModel accountToDelete = dbContext.Accounts.SingleOrDefault(x => x.Id == accountId);
 
                 if (accountToDelete == null)
                     throw new Exception("Account not found.");
@@ -225,7 +247,8 @@ namespace CertificateAuthority.Code.Database
                 if (accountToDelete.Name == Settings.AdminName)
                     throw new Exception("You can't delete Admin account!");
 
-                this.accountsCollection.Delete(accountId);
+                dbContext.Accounts.Remove(accountToDelete);
+                dbContext.SaveChanges();
 
                 this.logger.Info("Account with id {0} was deleted by: '{1}'.", accountId, caller);
             }
@@ -234,16 +257,16 @@ namespace CertificateAuthority.Code.Database
         /// <summary>Sets account access level to a provided one.</summary>
         public void ChangeAccountAccessLevel(CredentialsAccessWithModel<ChangeAccountAccessLevel> accessWithModel)
         {
-            lock (this.accountsCollectionLocker)
+            using (CADbContext dbContext = this.CreateContext())
             {
-                this.VerifyCredentialsAndAccessLevelLocked(accessWithModel, out AccountModel caller);
+                this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel caller);
 
                 int accountId = accessWithModel.Model.TargetAccountId;
 
                 if (caller.Id == accountId)
                     throw new Exception("You can't change your own access level!");
 
-                AccountModel accountToEdit = this.accountsCollection.FindById(accountId);
+                AccountModel accountToEdit = dbContext.Accounts.SingleOrDefault(x => x.Id == accountId);
 
                 if (accountToEdit == null)
                     throw new Exception("Account not found.");
@@ -259,7 +282,8 @@ namespace CertificateAuthority.Code.Database
                 AccountAccessFlags oldAccessInfo = accountToEdit.AccessInfo;
                 accountToEdit.AccessInfo = newAccountAccessLevel;
 
-                this.accountsCollection.Update(accountToEdit);
+                dbContext.Accounts.Update(accountToEdit);
+                dbContext.SaveChanges();
 
                 this.logger.Info("Account with id {0} access level was changed from {1} to {2} by account with id {3}.",
                     accountId, oldAccessInfo, accountToEdit.AccessInfo, caller.Id);
@@ -268,28 +292,11 @@ namespace CertificateAuthority.Code.Database
 
         #endregion
 
-        public void VerifyCredentialsAndAccessLevel(CredentialsAccessModel credentialsAccessModel, out AccountModel account)
-        {
-            lock (this.accountsCollectionLocker)
-            {
-                this.VerifyCredentialsAndAccessLevelLocked(credentialsAccessModel, out account);
-            }
-        }
-
-        public void VerifyCredentialsAndAccessLevel<T>(CredentialsAccessWithModel<T> credentialsAccessWithModel, out AccountModel account) where T : CredentialsModel
-        {
-            lock (this.accountsCollectionLocker)
-            {
-                this.VerifyCredentialsAndAccessLevelLocked(credentialsAccessWithModel, out account);
-            }
-        }
-
         /// <summary>Checks account's password and access attributes for particular action.</summary>
-        /// <remarks>All access should be protected by <see cref="accountsCollectionLocker"/>.</remarks>
         /// <exception cref="InvalidCredentialsException">Thrown in case credentials are invalid.</exception>
-        private void VerifyCredentialsAndAccessLevelLocked(CredentialsAccessModel credentialsAccessModel, out AccountModel account)
+        private void VerifyCredentialsAndAccessLevel(CredentialsAccessModel credentialsAccessModel, CADbContext dbContext, out AccountModel account)
         {
-            account = this.accountsCollection.FindById(credentialsAccessModel.AccountId);
+            account = dbContext.Accounts.SingleOrDefault(x => x.Id == credentialsAccessModel.AccountId);
 
             if (account == null)
                 throw InvalidCredentialsException.FromErrorCode(CredentialsExceptionErrorCodes.AccountNotFound, credentialsAccessModel.RequiredAccess);
@@ -299,6 +306,16 @@ namespace CertificateAuthority.Code.Database
 
             if (!account.HasAttribute(credentialsAccessModel.RequiredAccess))
                 throw InvalidCredentialsException.FromErrorCode(CredentialsExceptionErrorCodes.InvalidAccess, credentialsAccessModel.RequiredAccess);
+        }
+
+        /// <summary>Checks account's password and access attributes for particular action.</summary>
+        /// <exception cref="InvalidCredentialsException">Thrown in case credentials are invalid.</exception>
+        public void VerifyCredentialsAndAccessLevel(CredentialsAccessModel credentialsAccessModel, out AccountModel account)
+        {
+            using (CADbContext dbContext = this.CreateContext())
+            {
+                this.VerifyCredentialsAndAccessLevel(credentialsAccessModel, dbContext, out account);
+            }
         }
     }
 }

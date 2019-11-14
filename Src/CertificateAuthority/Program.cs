@@ -47,7 +47,6 @@ namespace CertificateAuthority
 
             services.AddSingleton<Settings>();
 
-            services.AddSingleton<DataRepository>();
             services.AddSingleton<DataCacheLayer>();
             services.AddSingleton<CertificatesManager>();
         }

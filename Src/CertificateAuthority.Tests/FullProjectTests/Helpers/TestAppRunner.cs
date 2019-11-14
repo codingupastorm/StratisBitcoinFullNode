@@ -65,8 +65,6 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
 
         public CertificatesManager CertificatesManager { get; private set; }
 
-        public DataRepository DataRepository { get; private set; }
-
         public Settings Settings { get; private set; }
 
         public IConfiguration Configuration { get; }
@@ -81,7 +79,6 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             services.AddSingleton<Settings>();
-            services.AddSingleton<DataRepository>();
             services.AddSingleton<DataCacheLayer>();
             services.AddSingleton<CertificatesManager>();
         }
@@ -99,8 +96,6 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
 
             this.CertificatesManager = app.ApplicationServices.GetService<CertificatesManager>();
             this.CertificatesManager.Initialize();
-
-            this.DataRepository = app.ApplicationServices.GetService<DataRepository>();
 
             app.UseDeveloperExceptionPage();
             app.UseHttpsRedirection();

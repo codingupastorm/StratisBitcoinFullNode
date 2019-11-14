@@ -24,8 +24,6 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
         private CredentialsModel adminCredentials;
 
-        private DataRepository dataRepository;
-
         public ControllersTests()
         {
             StartupContainer.RequestStartupCreation();
@@ -36,7 +34,6 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             this.accountsController = startup.CreateAccountsController();
             this.certificatesController = startup.CreateCertificatesController();
-            this.dataRepository = startup.DataRepository;
         }
 
         [Fact]
