@@ -24,6 +24,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
         private CredentialsModel adminCredentials;
 
+        private DataCacheLayer dataCacheLayer;
+
         public ControllersTests()
         {
             StartupContainer.RequestStartupCreation();
@@ -34,6 +36,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             this.accountsController = startup.CreateAccountsController();
             this.certificatesController = startup.CreateCertificatesController();
+            this.dataCacheLayer = startup.DataCacheLayer;
         }
 
         [Fact]
@@ -90,10 +93,10 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 string print2 = TestsHelper.GenerateRandomString(20);
 
                 // Add fake certificates using data repository.
-                this.dataRepository.GetCertificatesCollection().Insert(new CertificateInfoModel()
+                this.dataCacheLayer.AddNewCertificate(new CertificateInfoModel()
                     { IssuerAccountId = issuerId, CertificateContent = TestsHelper.GenerateRandomString(50), Status = CertificateStatus.Good, Thumbprint = print1 });
 
-                this.dataRepository.GetCertificatesCollection().Insert(new CertificateInfoModel()
+                this.dataCacheLayer.AddNewCertificate(new CertificateInfoModel()
                     { IssuerAccountId = issuerId, CertificateContent = TestsHelper.GenerateRandomString(50), Status = CertificateStatus.Good, Thumbprint = print2 });
 
                 List<CertificateInfoModel> certs = this.accountsController.GetCertificatesIssuedByAccountId(new CredentialsModelWithTargetId(issuerId, this.adminCredentials.AccountId, this.adminCredentials.Password)).Value;
