@@ -67,7 +67,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             }
 
             // GetAllAccounts
-            List<AccountInfo> allAccounts = this.accountsController.GetAllAccounts(this.adminCredentials).Value;
+            List<AccountModel> allAccounts = this.accountsController.GetAllAccounts(this.adminCredentials).Value;
             Assert.Equal(4, allAccounts.Count);
 
             // DeleteAccountByAccountId
