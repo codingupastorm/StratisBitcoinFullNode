@@ -130,7 +130,7 @@ namespace CertificateAuthority.Code.Controllers
         [HttpGet]
         [Route("get_certificate_status")]
         [ProducesResponseType(typeof(string), 200)]
-        public ActionResult<string> GetCertificateStatus(GetCertificateStatusModel model)
+        public ActionResult<string> GetCertificateStatus([FromQuery]GetCertificateStatusModel model)
         {
             CertificateStatus status = this.cache.GetCertificateStatus(model.Thumbprint);
 

@@ -2,6 +2,7 @@
 using CertificateAuthority.Code.Database;
 using CertificateAuthority.Code.Models;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace CertificateAuthority.Code.Controllers
 {
@@ -36,7 +37,7 @@ namespace CertificateAuthority.Code.Controllers
         /// <response code="201">Dictionary with access flag as key and access string as value.</response>
         [HttpPost("get_all_access_level_values")]
         [ProducesResponseType(typeof(Dictionary<int, string>), 200)]
-        public ActionResult<Dictionary<int, string>> GetAllAccessLevels(CredentialsModel model)
+        public ActionResult<string> GetAllAccessLevels(CredentialsModel model)
         {
             CredentialsAccessModel accessModelInfo = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.BasicAccess);
 
@@ -47,7 +48,8 @@ namespace CertificateAuthority.Code.Controllers
             foreach (AccountAccessFlags flag in DataHelper.AllAccessFlags)
                 accesses.Add((int)flag, flag.ToString());
 
-            return accesses;
+            string output = JsonConvert.SerializeObject(accesses);
+            return output;
         }
     }
 }

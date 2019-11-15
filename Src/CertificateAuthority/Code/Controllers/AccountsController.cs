@@ -29,14 +29,14 @@ namespace CertificateAuthority.Code.Controllers
         }
 
         /// <summary>Provides account information of the account with id specified. AccessAccountInfo access level required.</summary>
-        /// <response code="201">Collection of <see cref="AccountInfo"/> instances."/>.</response>
+        /// <response code="201">Collection of <see cref="AccountModel"/> instances."/>.</response>
         [HttpPost("list_accounts")]
-        [ProducesResponseType(typeof(List<AccountInfo>), 200)]
-        public ActionResult<List<AccountInfo>> GetAllAccounts([FromBody]CredentialsModel model)
+        [ProducesResponseType(typeof(List<AccountModel>), 200)]
+        public ActionResult<List<AccountModel>> GetAllAccounts([FromBody]CredentialsModel model)
         {
             var data = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAccountInfo);
 
-            List<AccountInfo> result = this.cache.GetAllAccounts(data);
+            List<AccountModel> result = this.cache.GetAllAccounts(data);
             return result;
         }
 

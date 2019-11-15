@@ -11,6 +11,10 @@ namespace CertificateAuthority.Code.Models
         {
             this.TargetAccountId = targetAccountId;
         }
+
+        public CredentialsModelWithTargetId()
+        {
+        }
     }
 
     #region Models for AccountsController
@@ -31,6 +35,10 @@ namespace CertificateAuthority.Code.Models
             this.NewAccountPasswordHash = newAccountPasswordHash;
             this.NewAccountAccess = newAccountAccess;
         }
+
+        public CreateAccount()
+        {
+        }
     }
 
     public class ChangeAccountAccessLevel : CredentialsModelWithTargetId
@@ -41,6 +49,10 @@ namespace CertificateAuthority.Code.Models
         public ChangeAccountAccessLevel(int accessFlags, int targetAccountId, int accountId, string password) : base(targetAccountId, accountId, password)
         {
             this.AccessFlags = accessFlags;
+        }
+
+        public ChangeAccountAccessLevel()
+        {
         }
     }
     #endregion
@@ -55,6 +67,10 @@ namespace CertificateAuthority.Code.Models
         {
             this.Thumbprint = thumbprint;
         }
+
+        public CredentialsModelWithThumbprintModel()
+        {
+        }
     }
 
     /// <summary>Model that combines credentials information and a file sent in request.</summary>
@@ -66,6 +82,10 @@ namespace CertificateAuthority.Code.Models
         {
             this.CertificateRequestFile = certificateRequestFile;
         }
+
+        public IssueCertificateFromRequestModel()
+        {
+        }
     }
 
     public class IssueCertificateFromFileContentsModel : CredentialsModel
@@ -75,6 +95,10 @@ namespace CertificateAuthority.Code.Models
         public IssueCertificateFromFileContentsModel(string certificateRequestFileContents, int accountId, string password) : base(accountId, password)
         {
             this.CertificateRequestFileContents = certificateRequestFileContents;
+        }
+
+        public IssueCertificateFromFileContentsModel()
+        {
         }
     }
 
@@ -91,6 +115,10 @@ namespace CertificateAuthority.Code.Models
             this.Thumbprint = thumbprint;
             this.AsString = asString;
         }
+
+        public GetCertificateStatusModel()
+        {
+        }
     }
     #endregion
 
@@ -102,6 +130,10 @@ namespace CertificateAuthority.Code.Models
         public CredentialsModelWithStringModel(string value, int accountId, string password) : base(accountId, password)
         {
             this.Value = value;
+        }
+
+        public CredentialsModelWithStringModel()
+        {
         }
     }
     #endregion

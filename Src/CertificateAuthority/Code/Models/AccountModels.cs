@@ -66,6 +66,10 @@ namespace CertificateAuthority.Code.Models
             this.AccountId = accountId;
             this.Password = password;
         }
+
+        public CredentialsModel()
+        {
+        }
     }
 
     public class CredentialsAccessModel : CredentialsModel
@@ -73,6 +77,10 @@ namespace CertificateAuthority.Code.Models
         public CredentialsAccessModel(int accountId, string password, AccountAccessFlags requiredAccess) : base(accountId, password)
         {
             this.RequiredAccess = requiredAccess;
+        }
+
+        public CredentialsAccessModel()
+        {
         }
 
         public AccountAccessFlags RequiredAccess { get; private set; }
@@ -85,6 +93,10 @@ namespace CertificateAuthority.Code.Models
         public CredentialsAccessWithModel(T model, AccountAccessFlags requiredAccess) : base(model.AccountId, model.Password, requiredAccess)
         {
             this.Model = model;
+        }
+
+        public CredentialsAccessWithModel()
+        {
         }
     }
 

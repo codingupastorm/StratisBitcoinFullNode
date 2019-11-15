@@ -187,13 +187,13 @@ namespace CertificateAuthority.Code.Database
         }
 
         /// <summary>Provides collection of all existing accounts.</summary>
-        public List<AccountInfo> GetAllAccounts(CredentialsAccessModel accessModelInfo)
+        public List<AccountModel> GetAllAccounts(CredentialsAccessModel accessModelInfo)
         {
             using (CADbContext dbContext = this.CreateContext())
             {
                 this.VerifyCredentialsAndAccessLevel(accessModelInfo, dbContext, out AccountModel account);
 
-                return dbContext.Accounts.Select(x => x as AccountInfo).ToList();
+                return dbContext.Accounts.ToList();
             }
         }
 
