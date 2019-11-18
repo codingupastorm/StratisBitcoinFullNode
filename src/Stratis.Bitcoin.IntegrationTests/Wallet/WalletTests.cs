@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Controllers;
@@ -64,6 +64,14 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
 
                 long receivetotal = stratisReceiver.FullNode.WalletManager().GetSpendableTransactionsInWallet(WalletName).Sum(s => s.Transaction.Amount);
                 Assert.Equal(Money.COIN * 100, receivetotal);
+
+                // Check that on the sending node, the Spendable Balance includes unconfirmed transactions.
+                // The transaction will have consumed 3 outputs, leaving us 3, and will also return us some as change.
+                // Change is always the First output because Shuffle is false!
+                Money expectedSenderSpendableBalance = Money.COIN * 3 * 50 + trx.Outputs.First().Value; 
+                AccountBalance senderBalance = stratisSender.FullNode.WalletManager().GetBalances(WalletName).First();
+                Assert.Equal(expectedSenderSpendableBalance, senderBalance.SpendableAmount);
+
                 Assert.Null(stratisReceiver.FullNode.WalletManager().GetSpendableTransactionsInWallet(WalletName).First().Transaction.BlockHeight);
 
                 // Generate two new blocks so the transaction is confirmed
@@ -73,6 +81,42 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                 TestBase.WaitLoop(() => TestHelper.AreNodesSynced(stratisReceiver, stratisSender));
 
                 Assert.Equal(Money.Coins(100), stratisReceiver.FullNode.WalletManager().GetBalances(WalletName, Account).Single().AmountConfirmed);
+            }
+        }
+
+        [Fact]
+        public void WalletValidatesIncorrectPasswordAfterCorrectIsUsed()
+        {
+            using (NodeBuilder builder = NodeBuilder.Create(this))
+            {
+                CoreNode stratisSender = builder.CreateStratisPowNode(this.network).WithWallet().Start();
+                CoreNode stratisReceiver = builder.CreateStratisPowNode(this.network).WithWallet().Start();
+
+                int maturity = (int)stratisSender.FullNode.Network.Consensus.CoinbaseMaturity;
+                TestHelper.MineBlocks(stratisSender, maturity + 1 + 5);
+
+                // The mining should add coins to the wallet
+                long total = stratisSender.FullNode.WalletManager().GetSpendableTransactionsInWallet(WalletName).Sum(s => s.Transaction.Amount);
+                Assert.Equal(Money.COIN * 6 * 50, total);
+
+                // Sync both nodes
+                TestHelper.ConnectAndSync(stratisSender, stratisReceiver);
+
+                // Build a transaction using the correct password.
+                HdAddress sendto = stratisReceiver.FullNode.WalletManager().GetUnusedAddress(new WalletAccountReference(WalletName, Account));
+                Transaction trx = stratisSender.FullNode.WalletTransactionHandler().BuildTransaction(CreateContext(stratisSender.FullNode.Network,
+                    new WalletAccountReference(WalletName, Account), Password, sendto.ScriptPubKey, Money.COIN * 100, FeeType.Medium, 101));
+
+                // Build a transaction using an incorrect password. It should throw an exception.
+                SecurityException exception = Assert.Throws<SecurityException>(() =>
+                {
+                    Transaction trx2 = stratisSender.FullNode.WalletTransactionHandler().BuildTransaction(CreateContext(
+                        stratisSender.FullNode.Network,
+                        new WalletAccountReference(WalletName, Account), "Wrong", sendto.ScriptPubKey, Money.COIN * 100,
+                        FeeType.Medium, 101));
+                });
+
+                Assert.StartsWith("Invalid password", exception.Message);
             }
         }
 
@@ -289,9 +333,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                 TestHelper.MineBlocks(stratisSender, 2);
                 TestHelper.MineBlocks(stratisReorg, 10);
 
-                // Rewind the wallet for the stratisReceiver node.
-                (stratisReceiver.FullNode.NodeService<IWalletSyncManager>() as WalletSyncManager).SyncFromHeight(5);
-
                 // Connect the reorg chain.
                 TestHelper.ConnectAndSync(stratisReceiver, stratisReorg);
                 TestHelper.ConnectAndSync(stratisSender, stratisReorg);
@@ -358,7 +399,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                 CoreNode stratisminer = builder.CreateStratisPowNode(this.network).WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
 
                 // Push the wallet back.
-                stratisminer.FullNode.Services.ServiceProvider.GetService<IWalletSyncManager>().SyncFromHeight(5);
+                stratisminer.FullNode.NodeService<IWalletSyncManager>().SyncFromHeight(5);
 
                 TestHelper.MineBlocks(stratisminer, 5);
             }

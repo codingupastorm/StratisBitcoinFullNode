@@ -5,7 +5,6 @@ using Stratis.Bitcoin;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.Api;
-using Stratis.Bitcoin.Features.Apps;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.MemoryPool;
@@ -19,6 +18,7 @@ using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Features.Diagnostic;
+using Stratis.Features.SQLiteWalletRepository;
 
 namespace Stratis.StratisD
 {
@@ -40,9 +40,9 @@ namespace Stratis.StratisD
                     .UsePosConsensus()
                     .UseMempool()
                     .UseColdStakingWallet()
+                    .AddSQLiteWalletRepository()
                     .AddPowPosMining()
                     .UseApi()
-                    .UseApps()
                     .AddRPC()
                     .UseDiagnosticFeature();
 

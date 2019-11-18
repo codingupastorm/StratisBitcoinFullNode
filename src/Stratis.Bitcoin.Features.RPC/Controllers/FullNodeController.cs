@@ -199,6 +199,10 @@ namespace Stratis.Bitcoin.Features.RPC.Controllers
             {
                 throw new ArgumentException(nameof(hex), ex.Message);
             }
+            catch (FormatException ex)
+            {
+                throw new ArgumentException(nameof(hex), ex.Message);
+            }
             catch (Exception)
             {
                 return null;
