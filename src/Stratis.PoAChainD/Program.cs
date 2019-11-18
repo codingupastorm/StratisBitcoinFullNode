@@ -12,6 +12,7 @@ using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.SQLiteWalletRepository;
 
 namespace Stratis.PoAChainD
 {
@@ -37,6 +38,7 @@ namespace Stratis.PoAChainD
                     .UsePoAConsensus(network)
                     .UseMempool()
                     .UseWallet()
+                    .AddSQLiteWalletRepository()
                     .UseApi()
                     .AddRPC()
                     .Build();
