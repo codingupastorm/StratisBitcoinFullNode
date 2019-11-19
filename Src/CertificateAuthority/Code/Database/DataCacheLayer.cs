@@ -78,52 +78,6 @@ namespace CertificateAuthority.Code.Database
 
         #region certificates
 
-        /// <summary>
-        /// Get's status of the certificate with the provided thumbprint or
-        /// returns <see cref="CertificateStatus.Unknown"/> if certificate wasn't found.
-        /// </summary>
-        public CertificateStatus GetCertificateStatus(string thumbprint)
-        {
-            if (this.CertStatusesByThumbprint.TryGetValue(thumbprint, out CertificateStatus status))
-            {
-                return status;
-            }
-
-            return CertificateStatus.Unknown;
-        }
-
-        /// <summary>
-        /// Sets certificate status with the provided thumbprint to <see cref="CertificateStatus.Revoked"/>
-        /// if certificate was found and it's status is <see cref="CertificateStatus.Good"/>.
-        /// </summary>
-        public bool RevokeCertificate(CredentialsAccessWithModel<CredentialsModelWithThumbprintModel> model)
-        {
-            string thumbprint = model.Model.Thumbprint;
-
-            using (CADbContext dbContext = this.CreateContext())
-            {
-                this.VerifyCredentialsAndAccessLevel(model, dbContext, out AccountModel caller);
-
-                if (this.GetCertificateStatus(thumbprint) != CertificateStatus.Good)
-                    return false;
-
-                this.CertStatusesByThumbprint[thumbprint] = CertificateStatus.Revoked;
-
-                CertificateInfoModel certToEdit = dbContext.Certificates.Single(x => x.Thumbprint == thumbprint);
-
-                certToEdit.Status = CertificateStatus.Revoked;
-                certToEdit.RevokerAccountId = caller.Id;
-
-                dbContext.Update(certToEdit);
-                dbContext.SaveChanges();
-
-                this.RevokedCertificates.Add(thumbprint);
-                this.logger.Info("Certificate id {0}, thumbprint {1} was revoked.", certToEdit.Id, certToEdit.Thumbprint);
-            }
-
-            return true;
-        }
-
         /// <summary>Adds new certificate to the certificate collection.</summary>
         public void AddNewCertificate(CertificateInfoModel certificate)
         {
@@ -136,28 +90,6 @@ namespace CertificateAuthority.Code.Database
             }
 
             this.logger.Info("Certificate id {0}, thumbprint {1} was added.");
-        }
-
-        /// <summary>Finds issued certificate by thumbprint and returns it or null if it wasn't found.</summary>
-        public CertificateInfoModel GetCertificateByThumbprint(CredentialsAccessWithModel<CredentialsModelWithThumbprintModel> model)
-        {
-            using (CADbContext dbContext = this.CreateContext())
-            {
-                this.VerifyCredentialsAndAccessLevel(model, dbContext, out AccountModel account);
-
-                return dbContext.Certificates.SingleOrDefault(x => x.Thumbprint == model.Model.Thumbprint);
-            }
-        }
-
-        /// <summary>Provides collection of all issued certificates.</summary>
-        public List<CertificateInfoModel> GetAllCertificates(CredentialsAccessModel accessModelInfo)
-        {
-            using (CADbContext dbContext = this.CreateContext())
-            {
-                this.VerifyCredentialsAndAccessLevel(accessModelInfo, dbContext, out AccountModel account);
-
-                return dbContext.Certificates.ToList();
-            }
         }
 
         /// <summary>Provides collection of all certificates issued by account with specified id.</summary>
@@ -294,7 +226,7 @@ namespace CertificateAuthority.Code.Database
 
         /// <summary>Checks account's password and access attributes for particular action.</summary>
         /// <exception cref="InvalidCredentialsException">Thrown in case credentials are invalid.</exception>
-        private void VerifyCredentialsAndAccessLevel(CredentialsAccessModel credentialsAccessModel, CADbContext dbContext, out AccountModel account)
+        public void VerifyCredentialsAndAccessLevel(CredentialsAccessModel credentialsAccessModel, CADbContext dbContext, out AccountModel account)
         {
             account = dbContext.Accounts.SingleOrDefault(x => x.Id == credentialsAccessModel.AccountId);
 

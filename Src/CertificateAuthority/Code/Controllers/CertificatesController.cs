@@ -1,5 +1,4 @@
-﻿using CertificateAuthority.Code.Database;
-using CertificateAuthority.Code.Models;
+﻿using CertificateAuthority.Code.Models;
 using Microsoft.AspNetCore.Mvc;
 using NLog;
 using System;
@@ -12,16 +11,12 @@ namespace CertificateAuthority.Code.Controllers
     [ApiController]
     public class CertificatesController : Controller
     {
-        private readonly DataCacheLayer cache;
-
-        private readonly CertificatesManager certManager;
-
+        private readonly CertificatesManager certificateManager;
         private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        public CertificatesController(DataCacheLayer cache, CertificatesManager certManager)
+        public CertificatesController(CertificatesManager certificateManager)
         {
-            this.cache = cache;
-            this.certManager = certManager;
+            this.certificateManager = certificateManager;
         }
 
         /// <summary>
@@ -34,10 +29,7 @@ namespace CertificateAuthority.Code.Controllers
         public ActionResult<bool> RevokeCertificate([FromBody]CredentialsModelWithThumbprintModel model)
         {
             var data = new CredentialsAccessWithModel<CredentialsModelWithThumbprintModel>(model, AccountAccessFlags.RevokeCertificates);
-
-            bool result = this.cache.RevokeCertificate(data);
-
-            return result;
+            return this.certificateManager.RevokeCertificate(data);
         }
 
         /// <summary>Finds issued certificate by thumbprint and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
@@ -46,10 +38,7 @@ namespace CertificateAuthority.Code.Controllers
         public ActionResult<CertificateInfoModel> GetCertificateByThumbprint([FromBody]CredentialsModelWithThumbprintModel model)
         {
             var data = new CredentialsAccessWithModel<CredentialsModelWithThumbprintModel>(model, AccountAccessFlags.AccessAnyCertificate);
-
-            CertificateInfoModel cert = this.cache.GetCertificateByThumbprint(data);
-
-            return cert;
+            return this.certificateManager.GetCertificateByThumbprint(data);
         }
 
         /// <summary>Provides collection of all issued certificates. AccessAnyCertificate access level is required.</summary>
@@ -59,10 +48,7 @@ namespace CertificateAuthority.Code.Controllers
         public ActionResult<List<CertificateInfoModel>> GetAllCertificates([FromBody]CredentialsModel model)
         {
             var data = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAnyCertificate);
-
-            List<CertificateInfoModel> result = this.cache.GetAllCertificates(data);
-
-            return result;
+            return this.certificateManager.GetAllCertificates(data);
         }
 
         /// <summary>Issues a new certificate using provided certificate request. IssueCertificates access level is required.</summary>
@@ -75,8 +61,7 @@ namespace CertificateAuthority.Code.Controllers
 
             try
             {
-                CertificateInfoModel infoModel = await this.certManager.IssueCertificateAsync(data);
-
+                CertificateInfoModel infoModel = await this.certificateManager.IssueCertificateAsync(data);
                 return infoModel;
             }
             catch (InvalidCredentialsException e)
@@ -106,7 +91,7 @@ namespace CertificateAuthority.Code.Controllers
                 if (string.IsNullOrEmpty(data.Model.CertificateRequestFileContents))
                     return BadRequest();
 
-                CertificateInfoModel infoModel = await this.certManager.IssueCertificateAsync(data);
+                CertificateInfoModel infoModel = await this.certificateManager.IssueCertificateAsync(data);
 
                 return infoModel;
             }
@@ -132,7 +117,7 @@ namespace CertificateAuthority.Code.Controllers
         [ProducesResponseType(typeof(string), 200)]
         public ActionResult<string> GetCertificateStatus([FromQuery]GetCertificateStatusModel model)
         {
-            CertificateStatus status = this.cache.GetCertificateStatus(model.Thumbprint);
+            CertificateStatus status = this.certificateManager.GetCertificateStatusByThumbprint(model.Thumbprint);
 
             if (model.AsString)
                 return status.ToString();
@@ -147,7 +132,7 @@ namespace CertificateAuthority.Code.Controllers
         [ProducesResponseType(typeof(ICollection<string>), 200)]
         public ActionResult<ICollection<string>> GetRevokedCertificates()
         {
-            return cache.RevokedCertificates;
+            return certificateManager.GetRevokedCertificates();
         }
     }
 }

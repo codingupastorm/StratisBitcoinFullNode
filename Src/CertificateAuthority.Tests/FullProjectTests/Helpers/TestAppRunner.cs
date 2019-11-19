@@ -111,7 +111,7 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
 
         public CertificatesController CreateCertificatesController()
         {
-            return new CertificatesController(this.DataCacheLayer, this.CertificatesManager);
+            return new CertificatesController(this.CertificatesManager);
         }
     }
 }
