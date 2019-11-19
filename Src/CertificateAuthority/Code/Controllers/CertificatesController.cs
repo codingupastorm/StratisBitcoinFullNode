@@ -16,7 +16,7 @@ namespace CertificateAuthority.Code.Controllers
 
         private readonly CertificatesManager certManager;
 
-        private readonly NLog.Logger logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public CertificatesController(DataCacheLayer cache, CertificatesManager certManager)
         {

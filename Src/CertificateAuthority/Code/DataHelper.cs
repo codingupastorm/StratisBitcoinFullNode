@@ -1,11 +1,11 @@
-﻿ using System;
- using System.Collections.Generic;
- using System.Linq;
- using System.Security.Cryptography;
+﻿using CertificateAuthority.Code.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
- using CertificateAuthority.Code.Models;
 
- namespace CertificateAuthority.Code
+namespace CertificateAuthority.Code
 {
     public static class DataHelper
     {

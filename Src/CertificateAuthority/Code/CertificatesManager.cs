@@ -1,11 +1,11 @@
-﻿using System;
+﻿using CertificateAuthority.Code.Database;
+using CertificateAuthority.Code.Models;
+using NLog;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
-using CertificateAuthority.Code.Database;
-using CertificateAuthority.Code.Models;
-using NLog;
 
 namespace CertificateAuthority.Code
 {
@@ -29,7 +29,7 @@ namespace CertificateAuthority.Code
 
         private readonly Settings settings;
 
-        private readonly NLog.Logger logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public CertificatesManager(DataCacheLayer cache, Settings settings)
         {
@@ -98,7 +98,7 @@ namespace CertificateAuthority.Code
 
             this.RunCmdCommand(createCertCommand);
 
-            await this.WaitTillFIleCreatedAsync(crtGeneratedPath, 2000);
+            await this.WaitTillFileCreatedAsync(crtGeneratedPath, 2000);
 
             X509Certificate2 createdCertificate = new X509Certificate2(crtGeneratedPath);
 
@@ -123,16 +123,18 @@ namespace CertificateAuthority.Code
         private void RunCmdCommand(string arguments)
         {
             System.Diagnostics.Process process = new System.Diagnostics.Process();
-            System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
-            startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-            startInfo.CreateNoWindow = true;
-            startInfo.FileName = "cmd.exe";
-            startInfo.Arguments = $"/c \"{arguments}\"";
+            System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo
+            {
+                WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden,
+                CreateNoWindow = true,
+                FileName = "cmd.exe",
+                Arguments = $"/c \"{arguments}\""
+            };
             process.StartInfo = startInfo;
             process.Start();
         }
 
-        private async Task WaitTillFIleCreatedAsync(string path, int maxWaitMs)
+        private async Task WaitTillFileCreatedAsync(string path, int maxWaitMs)
         {
             int msWaited = 0;
 

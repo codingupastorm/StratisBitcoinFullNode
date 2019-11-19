@@ -14,7 +14,7 @@ namespace CertificateAuthority.Code.Database
 
         private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        private Settings settings;
+        private readonly Settings settings;
 
         public DataCacheLayer(Settings settings)
         {
