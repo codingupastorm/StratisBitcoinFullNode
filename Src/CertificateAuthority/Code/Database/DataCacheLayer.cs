@@ -1,8 +1,8 @@
-﻿using System;
+﻿using CertificateAuthority.Code.Models;
+using NLog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using CertificateAuthority.Code.Models;
-using NLog;
 
 namespace CertificateAuthority.Code.Database
 {
@@ -209,7 +209,7 @@ namespace CertificateAuthority.Code.Database
                     throw new Exception("That name is already taken!");
 
                 AccountAccessFlags newAccountAccessLevel =
-                    (AccountAccessFlags) accessWithModel.Model.NewAccountAccess | AccountAccessFlags.BasicAccess;
+                    (AccountAccessFlags)accessWithModel.Model.NewAccountAccess | AccountAccessFlags.BasicAccess;
 
                 if (!DataHelper.IsCreatorHasGreaterOrEqualAccess(account.AccessInfo, newAccountAccessLevel))
                     throw new Exception("You can't create an account with access level higher than yours!");

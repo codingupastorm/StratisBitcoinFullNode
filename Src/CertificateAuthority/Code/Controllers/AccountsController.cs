@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
-using CertificateAuthority.Code.Database;
+﻿using CertificateAuthority.Code.Database;
 using CertificateAuthority.Code.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 
 namespace CertificateAuthority.Code.Controllers
 {

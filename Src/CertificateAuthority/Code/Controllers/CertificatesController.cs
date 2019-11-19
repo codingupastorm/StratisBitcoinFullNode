@@ -1,10 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using CertificateAuthority.Code.Database;
+﻿using CertificateAuthority.Code.Database;
 using CertificateAuthority.Code.Models;
 using Microsoft.AspNetCore.Mvc;
 using NLog;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace CertificateAuthority.Code.Controllers
 {
