@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using CertificateAuthority.Code;
+﻿using CertificateAuthority.Code;
 using CertificateAuthority.Code.Controllers;
 using CertificateAuthority.Code.Database;
 using CertificateAuthority.Code.Models;
 using CertificateAuthority.Tests.FullProjectTests.Helpers;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 using AccountAccessFlags = CertificateAuthority.Code.Models.AccountAccessFlags;
 using AccountInfo = CertificateAuthority.Code.Models.AccountInfo;
@@ -94,10 +94,10 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
                 // Add fake certificates using data repository.
                 this.dataCacheLayer.AddNewCertificate(new CertificateInfoModel()
-                    { IssuerAccountId = issuerId, CertificateContent = TestsHelper.GenerateRandomString(50), Status = CertificateStatus.Good, Thumbprint = print1 });
+                { IssuerAccountId = issuerId, CertificateContent = TestsHelper.GenerateRandomString(50), Status = CertificateStatus.Good, Thumbprint = print1 });
 
                 this.dataCacheLayer.AddNewCertificate(new CertificateInfoModel()
-                    { IssuerAccountId = issuerId, CertificateContent = TestsHelper.GenerateRandomString(50), Status = CertificateStatus.Good, Thumbprint = print2 });
+                { IssuerAccountId = issuerId, CertificateContent = TestsHelper.GenerateRandomString(50), Status = CertificateStatus.Good, Thumbprint = print2 });
 
                 List<CertificateInfoModel> certs = this.accountsController.GetCertificatesIssuedByAccountId(new CredentialsModelWithTargetId(issuerId, this.adminCredentials.AccountId, this.adminCredentials.Password)).Value;
 
@@ -185,7 +185,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             this.CheckThrowsIfNoAccess((int accountId, string password) => this.certificatesController.GetAllCertificates(new CredentialsModelWithThumbprintModel("123", accountId, password)),
                 AccountAccessFlags.AccessAnyCertificate);
 
-            this.CheckThrowsIfNoAccess( (int accountId, string password) => this.certificatesController.IssueCertificate_UsingRequestFileAsync(new IssueCertificateFromRequestModel(null, accountId, password)).GetAwaiter().GetResult(),
+            this.CheckThrowsIfNoAccess((int accountId, string password) => this.certificatesController.IssueCertificate_UsingRequestFileAsync(new IssueCertificateFromRequestModel(null, accountId, password)).GetAwaiter().GetResult(),
                 AccountAccessFlags.IssueCertificates);
 
             this.CheckThrowsIfNoAccess((int accountId, string password) => this.certificatesController.IssueCertificate_UsingRequestStringAsync(new IssueCertificateFromFileContentsModel("123", accountId, password)).GetAwaiter().GetResult(),
