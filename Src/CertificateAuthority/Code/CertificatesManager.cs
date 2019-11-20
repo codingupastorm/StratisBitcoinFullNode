@@ -55,10 +55,10 @@ namespace CertificateAuthority.Code
         /// <summary>Issues a new certificate using provided certificate request.</summary>
         public async Task<CertificateInfoModel> IssueCertificateAsync(CredentialsAccessWithModel<IssueCertificateFromRequestModel> model)
         {
+            this.repository.VerifyCredentialsAndAccessLevel(model, out AccountModel creator);
+
             if (model.Model.CertificateRequestFile.Length == 0)
                 throw new Exception("Empty file!");
-
-            this.repository.VerifyCredentialsAndAccessLevel(model, out AccountModel creator);
 
             string requestFileName = $"certRequest_{random.Next(0, int.MaxValue).ToString()}.csr";
             var requestFullPath = Path.Combine(this.tempDirectory, requestFileName);
