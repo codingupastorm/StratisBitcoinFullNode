@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using NLog;
 
 namespace CertificateAuthority.Code
 {
@@ -22,8 +21,6 @@ namespace CertificateAuthority.Code
 
             OpenSslPath = configReader.GetOrDefault<string>("opensslpath", @"C:\Program Files\OpenSSL-Win64\bin\openssl.exe");
         }
-
-        private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         private TextFileConfiguration configReader;
 

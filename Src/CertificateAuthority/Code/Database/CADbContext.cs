@@ -23,7 +23,6 @@ namespace CertificateAuthority.Code.Database
             base.OnConfiguring(optionsBuilder);
         }
 
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<AccountModel>().ToTable("Accounts");

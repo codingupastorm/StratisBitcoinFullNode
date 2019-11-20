@@ -1,17 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using CertificateAuthority.Code;
+﻿using CertificateAuthority.Code;
+using CertificateAuthority.Code.Controllers;
 using CertificateAuthority.Code.Database;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using CertificateAuthority.Code.Controllers;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace CertificateAuthority.Tests.FullProjectTests.Helpers
 {
@@ -111,7 +111,7 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
 
         public CertificatesController CreateCertificatesController()
         {
-            return new CertificatesController(this.DataCacheLayer, this.CertificatesManager);
+            return new CertificatesController(this.CertificatesManager);
         }
     }
 }

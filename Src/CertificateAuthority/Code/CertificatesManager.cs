@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
-using CertificateAuthority.Code.Database;
+﻿using CertificateAuthority.Code.Database;
 using CertificateAuthority.Code.Models;
 using NLog;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 
 namespace CertificateAuthority.Code
 {
@@ -29,7 +30,7 @@ namespace CertificateAuthority.Code
 
         private readonly Settings settings;
 
-        private readonly NLog.Logger logger = LogManager.GetCurrentClassLogger();
+        private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public CertificatesManager(DataCacheLayer cache, Settings settings)
         {
@@ -98,7 +99,7 @@ namespace CertificateAuthority.Code
 
             this.RunCmdCommand(createCertCommand);
 
-            await this.WaitTillFIleCreatedAsync(crtGeneratedPath, 2000);
+            await this.WaitTillFileCreatedAsync(crtGeneratedPath, 2000);
 
             X509Certificate2 createdCertificate = new X509Certificate2(crtGeneratedPath);
 
@@ -119,20 +120,97 @@ namespace CertificateAuthority.Code
             return infoModel;
         }
 
+        /// <summary>Provides collection of all issued certificates.</summary>
+        public List<CertificateInfoModel> GetAllCertificates(CredentialsAccessModel accessModelInfo)
+        {
+            using (CADbContext dbContext = this.CreateContext())
+            {
+                this.cache.VerifyCredentialsAndAccessLevel(accessModelInfo, dbContext, out AccountModel account);
+                return dbContext.Certificates.ToList();
+            }
+        }
+
+        /// <summary>Finds issued certificate by thumbprint and returns it or null if it wasn't found.</summary>
+        public CertificateInfoModel GetCertificateByThumbprint(CredentialsAccessWithModel<CredentialsModelWithThumbprintModel> model)
+        {
+            using (CADbContext dbContext = this.CreateContext())
+            {
+                this.cache.VerifyCredentialsAndAccessLevel(model, dbContext, out AccountModel account);
+                return dbContext.Certificates.SingleOrDefault(x => x.Thumbprint == model.Model.Thumbprint);
+            }
+        }
+
+        /// <summary>
+        /// Gets the status of a certificate with the provided thumbprint or
+        /// returns <see cref="CertificateStatus.Unknown"/> if certificate wasn't found.
+        /// </summary>
+        public CertificateStatus GetCertificateStatusByThumbprint(string thumbprint)
+        {
+            if (this.cache.CertStatusesByThumbprint.TryGetValue(thumbprint, out CertificateStatus status))
+                return status;
+
+            return CertificateStatus.Unknown;
+        }
+
+        /// <summary> Returns all revoked certificates.</summary>
+        public HashSet<string> GetRevokedCertificates()
+        {
+            return this.cache.RevokedCertificates;
+        }
+
+        /// <summary>
+        /// Sets certificate status with the provided thumbprint to <see cref="CertificateStatus.Revoked"/>
+        /// if certificate was found and it's status is <see cref="CertificateStatus.Good"/>.
+        /// </summary>
+        public bool RevokeCertificate(CredentialsAccessWithModel<CredentialsModelWithThumbprintModel> model)
+        {
+            string thumbprint = model.Model.Thumbprint;
+
+            using (CADbContext dbContext = this.CreateContext())
+            {
+                this.cache.VerifyCredentialsAndAccessLevel(model, dbContext, out AccountModel caller);
+
+                if (this.GetCertificateStatusByThumbprint(thumbprint) != CertificateStatus.Good)
+                    return false;
+
+                this.cache.CertStatusesByThumbprint[thumbprint] = CertificateStatus.Revoked;
+
+                CertificateInfoModel certToEdit = dbContext.Certificates.Single(x => x.Thumbprint == thumbprint);
+
+                certToEdit.Status = CertificateStatus.Revoked;
+                certToEdit.RevokerAccountId = caller.Id;
+
+                dbContext.Update(certToEdit);
+                dbContext.SaveChanges();
+
+                this.cache.RevokedCertificates.Add(thumbprint);
+                this.logger.Info("Certificate id {0}, thumbprint {1} was revoked.", certToEdit.Id, certToEdit.Thumbprint);
+            }
+
+            return true;
+        }
+
+        private CADbContext CreateContext()
+        {
+            return new CADbContext(settings);
+        }
+
         /// <summary>Executes command line command.</summary>
         private void RunCmdCommand(string arguments)
         {
             System.Diagnostics.Process process = new System.Diagnostics.Process();
-            System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
-            startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-            startInfo.CreateNoWindow = true;
-            startInfo.FileName = "cmd.exe";
-            startInfo.Arguments = $"/c \"{arguments}\"";
+            System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo
+            {
+                WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden,
+                CreateNoWindow = true,
+                FileName = "cmd.exe",
+                Arguments = $"/c \"{arguments}\""
+            };
             process.StartInfo = startInfo;
             process.Start();
         }
 
-        private async Task WaitTillFIleCreatedAsync(string path, int maxWaitMs)
+        private async Task WaitTillFileCreatedAsync(string path, int maxWaitMs)
         {
             int msWaited = 0;
 
