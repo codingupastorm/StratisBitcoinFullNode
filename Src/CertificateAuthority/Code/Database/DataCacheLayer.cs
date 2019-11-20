@@ -76,7 +76,7 @@ namespace CertificateAuthority.Code.Database
                 this.CertStatusesByThumbprint.Count, this.RevokedCertificates.Count);
         }
 
-        #region certificates
+        #region Certificates
 
         /// <summary>Adds new certificate to the certificate collection.</summary>
         public void AddNewCertificate(CertificateInfoModel certificate)
@@ -95,61 +95,43 @@ namespace CertificateAuthority.Code.Database
         /// <summary>Provides collection of all certificates issued by account with specified id.</summary>
         public List<CertificateInfoModel> GetCertificatesIssuedByAccountId(CredentialsAccessWithModel<CredentialsModelWithTargetId> accessWithModel)
         {
-            using (CADbContext dbContext = this.CreateContext())
-            {
-                this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel account);
-
-                return dbContext.Certificates.Where(x => x.IssuerAccountId == accessWithModel.Model.TargetAccountId).ToList();
-            }
+            return ExecuteQuery(accessWithModel, (dbContext) => { return dbContext.Certificates.Where(x => x.IssuerAccountId == accessWithModel.Model.TargetAccountId).ToList(); });
         }
 
         #endregion
 
-        #region accounts
+        #region Accounts
 
         /// <summary>Provides account information of the account with id specified.</summary>
-        public AccountInfo GetAccountInfoById(CredentialsAccessWithModel<CredentialsModelWithTargetId> accessWithModel)
+        public AccountInfo GetAccountInfoById(CredentialsAccessWithModel<CredentialsModelWithTargetId> credentialsModel)
         {
-            using (CADbContext dbContext = this.CreateContext())
-            {
-                this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel account);
-
-                return dbContext.Accounts.SingleOrDefault(x => x.Id == accessWithModel.Model.TargetAccountId);
-            }
+            return ExecuteQuery<CredentialsAccessWithModel<CredentialsModelWithTargetId>, AccountInfo>(credentialsModel, (dbContext) => dbContext.Accounts.SingleOrDefault(x => x.Id == credentialsModel.Model.TargetAccountId));
         }
 
         /// <summary>Provides collection of all existing accounts.</summary>
-        public List<AccountModel> GetAllAccounts(CredentialsAccessModel accessModelInfo)
+        public List<AccountModel> GetAllAccounts(CredentialsAccessModel credentialsModel)
         {
-            using (CADbContext dbContext = this.CreateContext())
-            {
-                this.VerifyCredentialsAndAccessLevel(accessModelInfo, dbContext, out AccountModel account);
-
-                return dbContext.Accounts.ToList();
-            }
+            return ExecuteQuery(credentialsModel, (dbContext) => dbContext.Accounts.ToList());
         }
 
-        /// <summary>Creates new account.</summary>
-        /// <returns>Wrapper with new account's id in it.'</returns>
-        public int CreateAccount(CredentialsAccessWithModel<CreateAccount> accessWithModel)
+        /// <summary>Creates a new account.</summary>
+        public int CreateAccount(CredentialsAccessWithModel<CreateAccount> credentialsModel)
         {
-            using (CADbContext dbContext = this.CreateContext())
+            return ExecuteQuery(credentialsModel, (dbContext, account) =>
             {
-                this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel account);
-
-                if (dbContext.Accounts.Any(x => x.Name == accessWithModel.Model.NewAccountName))
+                if (dbContext.Accounts.Any(x => x.Name == credentialsModel.Model.NewAccountName))
                     throw new Exception("That name is already taken!");
 
                 AccountAccessFlags newAccountAccessLevel =
-                    (AccountAccessFlags)accessWithModel.Model.NewAccountAccess | AccountAccessFlags.BasicAccess;
+                    (AccountAccessFlags)credentialsModel.Model.NewAccountAccess | AccountAccessFlags.BasicAccess;
 
                 if (!DataHelper.IsCreatorHasGreaterOrEqualAccess(account.AccessInfo, newAccountAccessLevel))
-                    throw new Exception("You can't create an account with access level higher than yours!");
+                    throw new Exception("You can't create an account with an access level higher than yours!");
 
                 AccountModel newAccount = new AccountModel()
                 {
-                    Name = accessWithModel.Model.NewAccountName,
-                    PasswordHash = accessWithModel.Model.NewAccountPasswordHash,
+                    Name = credentialsModel.Model.NewAccountName,
+                    PasswordHash = credentialsModel.Model.NewAccountPasswordHash,
                     AccessInfo = newAccountAccessLevel,
                     CreatorId = account.Id
                 };
@@ -159,17 +141,15 @@ namespace CertificateAuthority.Code.Database
 
                 this.logger.Info("Account was created: '{0}', creator: '{1}'.", newAccount, account);
                 return newAccount.Id;
-            }
+            });
         }
 
         /// <summary>Deletes existing account with id specified.</summary>
-        public void DeleteAccount(CredentialsAccessWithModel<CredentialsModelWithTargetId> accessWithModel)
+        public void DeleteAccount(CredentialsAccessWithModel<CredentialsModelWithTargetId> credentialsModel)
         {
-            using (CADbContext dbContext = this.CreateContext())
+            ExecuteCommand(credentialsModel, (dbContext, account) =>
             {
-                this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel caller);
-
-                int accountId = accessWithModel.Model.TargetAccountId;
+                int accountId = credentialsModel.Model.TargetAccountId;
 
                 AccountModel accountToDelete = dbContext.Accounts.SingleOrDefault(x => x.Id == accountId);
 
@@ -182,20 +162,18 @@ namespace CertificateAuthority.Code.Database
                 dbContext.Accounts.Remove(accountToDelete);
                 dbContext.SaveChanges();
 
-                this.logger.Info("Account with id {0} was deleted by: '{1}'.", accountId, caller);
-            }
+                this.logger.Info("Account with id {0} was deleted by: '{1}'.", accountId, account);
+            });
         }
 
         /// <summary>Sets account access level to a provided one.</summary>
-        public void ChangeAccountAccessLevel(CredentialsAccessWithModel<ChangeAccountAccessLevel> accessWithModel)
+        public void ChangeAccountAccessLevel(CredentialsAccessWithModel<ChangeAccountAccessLevel> credentialsModel)
         {
-            using (CADbContext dbContext = this.CreateContext())
+            ExecuteCommand(credentialsModel, (dbContext, account) =>
             {
-                this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel caller);
+                int accountId = credentialsModel.Model.TargetAccountId;
 
-                int accountId = accessWithModel.Model.TargetAccountId;
-
-                if (caller.Id == accountId)
+                if (account.Id == accountId)
                     throw new Exception("You can't change your own access level!");
 
                 AccountModel accountToEdit = dbContext.Accounts.SingleOrDefault(x => x.Id == accountId);
@@ -206,9 +184,9 @@ namespace CertificateAuthority.Code.Database
                 if (accountToEdit.Name == Settings.AdminName)
                     throw new Exception("Admin's access level can't be changed.");
 
-                AccountAccessFlags newAccountAccessLevel = (AccountAccessFlags)accessWithModel.Model.AccessFlags;
+                AccountAccessFlags newAccountAccessLevel = (AccountAccessFlags)credentialsModel.Model.AccessFlags;
 
-                if (!DataHelper.IsCreatorHasGreaterOrEqualAccess(caller.AccessInfo, newAccountAccessLevel))
+                if (!DataHelper.IsCreatorHasGreaterOrEqualAccess(account.AccessInfo, newAccountAccessLevel))
                     throw new Exception("You can't set access level to be higher than yours!");
 
                 AccountAccessFlags oldAccessInfo = accountToEdit.AccessInfo;
@@ -217,14 +195,13 @@ namespace CertificateAuthority.Code.Database
                 dbContext.Accounts.Update(accountToEdit);
                 dbContext.SaveChanges();
 
-                this.logger.Info("Account with id {0} access level was changed from {1} to {2} by account with id {3}.",
-                    accountId, oldAccessInfo, accountToEdit.AccessInfo, caller.Id);
-            }
+                this.logger.Info("Account with id {0} access level was changed from {1} to {2} by account with id {3}.", accountId, oldAccessInfo, accountToEdit.AccessInfo, account.Id);
+            });
         }
 
         #endregion
 
-        /// <summary>Checks account's password and access attributes for particular action.</summary>
+        /// <summary>Validate the account's password and access attributes for a particular action.</summary>
         /// <exception cref="InvalidCredentialsException">Thrown in case credentials are invalid.</exception>
         public void VerifyCredentialsAndAccessLevel(CredentialsAccessModel credentialsAccessModel, CADbContext dbContext, out AccountModel account)
         {
@@ -240,14 +217,40 @@ namespace CertificateAuthority.Code.Database
                 throw InvalidCredentialsException.FromErrorCode(CredentialsExceptionErrorCodes.InvalidAccess, credentialsAccessModel.RequiredAccess);
         }
 
-        /// <summary>Checks account's password and access attributes for particular action.</summary>
+        /// <summary>Validate the account's password and access attributes for a particular action.</summary>
         /// <exception cref="InvalidCredentialsException">Thrown in case credentials are invalid.</exception>
         public void VerifyCredentialsAndAccessLevel(CredentialsAccessModel credentialsAccessModel, out AccountModel account)
         {
-            using (CADbContext dbContext = this.CreateContext())
-            {
-                this.VerifyCredentialsAndAccessLevel(credentialsAccessModel, dbContext, out account);
-            }
+            using CADbContext dbContext = this.CreateContext();
+            this.VerifyCredentialsAndAccessLevel(credentialsAccessModel, dbContext, out account);
+        }
+
+        public TResult ExecuteQuery<TAccessModel, TResult>(TAccessModel accessWithModel, Func<CADbContext, TResult> action) where TAccessModel : CredentialsAccessModel
+        {
+            using CADbContext dbContext = this.CreateContext();
+            this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel account);
+            return action(dbContext);
+        }
+
+        public TResult ExecuteQuery<TAccessModel, TResult>(TAccessModel accessWithModel, Func<CADbContext, AccountModel, TResult> action) where TAccessModel : CredentialsAccessModel
+        {
+            using CADbContext dbContext = this.CreateContext();
+            this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel account);
+            return action(dbContext, account);
+        }
+
+        public void ExecuteCommand<TAccessModel>(TAccessModel accessWithModel, Action<CADbContext, AccountModel> action) where TAccessModel : CredentialsAccessModel
+        {
+            using CADbContext dbContext = this.CreateContext();
+            this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel account);
+            action(dbContext, account);
+        }
+
+        public TResult ExecuteCommand<TAccessModel, TResult>(TAccessModel accessWithModel, Func<CADbContext, AccountModel, TResult> action) where TAccessModel : CredentialsAccessModel
+        {
+            using CADbContext dbContext = this.CreateContext();
+            this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel account);
+            return action(dbContext, account);
         }
     }
 }
