@@ -154,7 +154,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
         }
 
         [Fact]
-        private async Task TestAccessLevels()
+        private void TestAccessLevels()
         {
             // Accounts.
             this.CheckThrowsIfNoAccess((int accountId, string password) => this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(1, accountId, password)),

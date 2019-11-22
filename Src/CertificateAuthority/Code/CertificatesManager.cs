@@ -26,7 +26,7 @@ namespace CertificateAuthority.Code
 
         private Random random;
 
-        private readonly DataCacheLayer cache;
+        private readonly DataCacheLayer repository;
 
         private readonly Settings settings;
 
@@ -34,7 +34,7 @@ namespace CertificateAuthority.Code
 
         public CertificatesManager(DataCacheLayer cache, Settings settings)
         {
-            this.cache = cache;
+            this.repository = cache;
             this.settings = settings;
         }
 
@@ -55,12 +55,10 @@ namespace CertificateAuthority.Code
         /// <summary>Issues a new certificate using provided certificate request.</summary>
         public async Task<CertificateInfoModel> IssueCertificateAsync(CredentialsAccessWithModel<IssueCertificateFromRequestModel> model)
         {
-            this.cache.VerifyCredentialsAndAccessLevel(model, out AccountModel creator);
+            this.repository.VerifyCredentialsAndAccessLevel(model, out AccountModel creator);
 
             if (model.Model.CertificateRequestFile.Length == 0)
                 throw new Exception("Empty file!");
-
-            int nextSerialNumber = cache.CertStatusesByThumbprint.Count;
 
             string requestFileName = $"certRequest_{random.Next(0, int.MaxValue).ToString()}.csr";
             var requestFullPath = Path.Combine(this.tempDirectory, requestFileName);
@@ -68,24 +66,27 @@ namespace CertificateAuthority.Code
             using (var stream = new FileStream(requestFullPath, FileMode.Create))
                 model.Model.CertificateRequestFile.CopyTo(stream);
 
+            int nextSerialNumber = repository.CertStatusesByThumbprint.Count;
+
             return await this.IssueCertificate(requestFullPath, nextSerialNumber, creator.Id);
         }
 
         /// <summary>Issues a new certificate using provided certificate request.</summary>
         public async Task<CertificateInfoModel> IssueCertificateAsync(CredentialsAccessWithModel<IssueCertificateFromFileContentsModel> model)
         {
-            List<string> certificateRequestLines = DataHelper.GetCertificateRequestLines(model.Model.CertificateRequestFileContents);
-
-            this.cache.VerifyCredentialsAndAccessLevel(model, out AccountModel creator);
-
-            int nextSerialNumber = cache.CertStatusesByThumbprint.Count;
+            this.repository.VerifyCredentialsAndAccessLevel(model, out AccountModel creator);
 
             string requestFileName = $"certRequest_{random.Next(0, int.MaxValue).ToString()}.csr";
             var requestFullPath = Path.Combine(this.tempDirectory, requestFileName);
 
+            List<string> certificateRequestLines = DataHelper.GetCertificateRequestLines(model.Model.CertificateRequestFileContents);
+
             File.WriteAllLines(requestFullPath, certificateRequestLines);
 
             this.logger.Info("Issuing certificate from the following request: '{0}'.", model.Model.CertificateRequestFileContents);
+
+            int nextSerialNumber = repository.CertStatusesByThumbprint.Count;
+
             return await this.IssueCertificate(requestFullPath, nextSerialNumber, creator.Id);
         }
 
@@ -111,7 +112,7 @@ namespace CertificateAuthority.Code
                 IssuerAccountId = creatorId
             };
 
-            cache.AddNewCertificate(infoModel);
+            repository.AddNewCertificate(infoModel);
 
             this.logger.Info("New certificate was issued by account id {0}; certificate: '{1}'.", creatorId, infoModel);
 
@@ -123,21 +124,13 @@ namespace CertificateAuthority.Code
         /// <summary>Provides collection of all issued certificates.</summary>
         public List<CertificateInfoModel> GetAllCertificates(CredentialsAccessModel accessModelInfo)
         {
-            using (CADbContext dbContext = this.CreateContext())
-            {
-                this.cache.VerifyCredentialsAndAccessLevel(accessModelInfo, dbContext, out AccountModel account);
-                return dbContext.Certificates.ToList();
-            }
+            return this.repository.ExecuteQuery(accessModelInfo, (dbContext) => { return dbContext.Certificates.ToList(); });
         }
 
         /// <summary>Finds issued certificate by thumbprint and returns it or null if it wasn't found.</summary>
         public CertificateInfoModel GetCertificateByThumbprint(CredentialsAccessWithModel<CredentialsModelWithThumbprintModel> model)
         {
-            using (CADbContext dbContext = this.CreateContext())
-            {
-                this.cache.VerifyCredentialsAndAccessLevel(model, dbContext, out AccountModel account);
-                return dbContext.Certificates.SingleOrDefault(x => x.Thumbprint == model.Model.Thumbprint);
-            }
+            return this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Certificates.SingleOrDefault(x => x.Thumbprint == model.Model.Thumbprint); });
         }
 
         /// <summary>
@@ -146,7 +139,7 @@ namespace CertificateAuthority.Code
         /// </summary>
         public CertificateStatus GetCertificateStatusByThumbprint(string thumbprint)
         {
-            if (this.cache.CertStatusesByThumbprint.TryGetValue(thumbprint, out CertificateStatus status))
+            if (this.repository.CertStatusesByThumbprint.TryGetValue(thumbprint, out CertificateStatus status))
                 return status;
 
             return CertificateStatus.Unknown;
@@ -155,7 +148,7 @@ namespace CertificateAuthority.Code
         /// <summary> Returns all revoked certificates.</summary>
         public HashSet<string> GetRevokedCertificates()
         {
-            return this.cache.RevokedCertificates;
+            return this.repository.RevokedCertificates;
         }
 
         /// <summary>
@@ -164,35 +157,28 @@ namespace CertificateAuthority.Code
         /// </summary>
         public bool RevokeCertificate(CredentialsAccessWithModel<CredentialsModelWithThumbprintModel> model)
         {
-            string thumbprint = model.Model.Thumbprint;
-
-            using (CADbContext dbContext = this.CreateContext())
+            return this.repository.ExecuteCommand(model, (dbContext, account) =>
             {
-                this.cache.VerifyCredentialsAndAccessLevel(model, dbContext, out AccountModel caller);
+                string thumbprint = model.Model.Thumbprint;
 
                 if (this.GetCertificateStatusByThumbprint(thumbprint) != CertificateStatus.Good)
                     return false;
 
-                this.cache.CertStatusesByThumbprint[thumbprint] = CertificateStatus.Revoked;
+                this.repository.CertStatusesByThumbprint[thumbprint] = CertificateStatus.Revoked;
 
                 CertificateInfoModel certToEdit = dbContext.Certificates.Single(x => x.Thumbprint == thumbprint);
 
                 certToEdit.Status = CertificateStatus.Revoked;
-                certToEdit.RevokerAccountId = caller.Id;
+                certToEdit.RevokerAccountId = account.Id;
 
                 dbContext.Update(certToEdit);
                 dbContext.SaveChanges();
 
-                this.cache.RevokedCertificates.Add(thumbprint);
+                this.repository.RevokedCertificates.Add(thumbprint);
                 this.logger.Info("Certificate id {0}, thumbprint {1} was revoked.", certToEdit.Id, certToEdit.Thumbprint);
-            }
 
-            return true;
-        }
-
-        private CADbContext CreateContext()
-        {
-            return new CADbContext(settings);
+                return true;
+            });
         }
 
         /// <summary>Executes command line command.</summary>
