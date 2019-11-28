@@ -5,7 +5,7 @@ using Stratis.Features.ContractEndorsement.ReadWrite;
 
 namespace Stratis.Features.ContractEndorsement.State
 {
-    public class ContractStateDb
+    public class FinalisedStateDb : IReadableStateDb
     {
         private readonly IDatabase<uint160, ContractState> contractStateDb;
 
@@ -13,7 +13,7 @@ namespace Stratis.Features.ContractEndorsement.State
 
         private readonly IDatabase<CacheKey, StateValue> contractStorageDatabase;
 
-        public ContractStateDb(IDatabase<uint160, ContractState> contractStateDb,
+        public FinalisedStateDb(IDatabase<uint160, ContractState> contractStateDb,
             IDatabase<byte[], byte[]> codeHashDb,
             IDatabase<CacheKey, StateValue> contractStorageDatabase)
         {
@@ -25,37 +25,39 @@ namespace Stratis.Features.ContractEndorsement.State
 
         public bool IsExist(uint160 addr)
         {
-            throw new NotImplementedException();
+            return this.contractStateDb.Get(addr) != null;
         }
 
         public ContractState GetContractState(uint160 addr)
         {
-            throw new NotImplementedException();
+            return this.contractStateDb.Get(addr);
         }
 
         public byte[] GetCode(uint160 addr)
         {
-            throw new NotImplementedException();
+            ContractState contractState = this.contractStateDb.Get(addr);
+
+            if (contractState == null)
+                return null;
+
+            return this.codeHashDb.Get(contractState.CodeHash);
         }
 
         public byte[] GetCodeHash(uint160 addr)
         {
-            throw new NotImplementedException();
+            ContractState contractState = this.contractStateDb.Get(addr);
+            return contractState?.CodeHash;
         }
 
         public string GetContractType(uint160 addr)
         {
-            throw new NotImplementedException();
-        }
-
-        public void SetState(uint160 contractAddress, string key, StateValue data)
-        {
-            throw new NotImplementedException();
+            ContractState contractState = this.contractStateDb.Get(addr);
+            return contractState?.TypeName;
         }
 
         public StateValue GetState(uint160 contractAddress, string key)
         {
-            throw new NotImplementedException();
+            return this.contractStorageDatabase.Get(new CacheKey(contractAddress, key));
         }
 
         /// <summary>

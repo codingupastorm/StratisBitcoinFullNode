@@ -69,7 +69,7 @@ namespace Stratis.Features.ContractEndorsement
             throw new NotImplementedException();
         }
 
-        public T GetStruct<T>(string key) where T : struct, new()
+        public T GetStruct<T>(string key) where T : struct
         {
             throw new NotImplementedException();
         }
@@ -129,7 +129,7 @@ namespace Stratis.Features.ContractEndorsement
             throw new NotImplementedException();
         }
 
-        public void SetStruct<T>(string key, T value) where T : struct, new()
+        public void SetStruct<T>(string key, T value) where T : struct
         {
             throw new NotImplementedException();
         }

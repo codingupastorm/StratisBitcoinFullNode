@@ -8,6 +8,7 @@ using Stratis.SmartContracts.CLR.Caching;
 using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.CLR.ILRewrite;
 using Stratis.SmartContracts.CLR.Loader;
+using Stratis.SmartContracts.CLR.Metering;
 using Stratis.SmartContracts.Core.Hashing;
 using Stratis.SmartContracts.RuntimeObserver;
 
@@ -15,10 +16,11 @@ namespace Stratis.Features.ContractEndorsement
 {
     public class HyperContractExecutor
     {
+        public const long MemoryUnitLimit = 100_000;
+        public const long GasLimit = 100_000;
+
         private readonly ILoader assemblyLoader;
-
-        private readonly IReadableContractStateDb contractStateDb;
-
+        private readonly IReadableStateDb contractStateDb;
         private readonly IContractModuleDefinitionReader moduleDefinitionReader;
         private readonly IContractAssemblyCache assemblyCache;
 
@@ -26,7 +28,7 @@ namespace Stratis.Features.ContractEndorsement
             ILoader assemblyLoader,
             IContractModuleDefinitionReader moduleDefinitionReader,
             IContractAssemblyCache contractAssemblyCache,
-            IReadableContractStateDb contractStateDb)
+            IReadableStateDb contractStateDb)
         {
             this.assemblyLoader = assemblyLoader;
             this.contractStateDb = contractStateDb;
@@ -45,6 +47,9 @@ namespace Stratis.Features.ContractEndorsement
 
             // TODO: Obviously insert something useful here. Use the cached state.
             var hyperContractState = new HyperContractState();
+
+            // New Observer for this execution. Note: should it come from outside? TODO: Yes
+            var observer = new Observer(new GasMeter(new Gas(GasLimit)), new MemoryMeter(MemoryUnitLimit));
 
             // The type and code that will ultimately be executed. Assigned based on which method we use to rewrite contract code.
             string typeToInstantiate;
@@ -119,7 +124,8 @@ namespace Stratis.Features.ContractEndorsement
 
                     if (!contractLoadResult.IsSuccess)
                     {
-                        return VmExecutionResult.Fail(VmExecutionErrorKind.LoadFailed, contractLoadResult.Error);
+                        return ContractExecutionResult.Fail(contractLoadResult.Error);
+                        // return VmExecutionResult.Fail(VmExecutionErrorKind.LoadFailed, contractLoadResult.Error);
                     }
 
                     contract = contractLoadResult.Value;
@@ -131,14 +137,12 @@ namespace Stratis.Features.ContractEndorsement
                 }
             }
 
-            this.LogExecutionContext(contract.State.Block, contract.State.Message, contract.Address);
-
             // Set the code and the Type before the method is invoked
-            repository.SetCode(contract.Address, contractCode);
-            repository.SetContractType(contract.Address, typeToInstantiate);
+            cachedStateDb.SetContractCode(contractAddress, contractCode);
+            cachedStateDb.SetContractType(contract.Address, typeToInstantiate);
 
             // Set Observer and load and execute.
-            assemblyPackage.Assembly.SetObserver(executionContext.Observer);
+            assemblyPackage.Assembly.SetObserver(observer);
 
             // Invoke the constructor of the provided contract code
             IContractInvocationResult invocationResult = contract.InvokeConstructor(parameters);
@@ -148,27 +152,12 @@ namespace Stratis.Features.ContractEndorsement
 
             if (!invocationResult.IsSuccess)
             {
-                return GetInvocationVmErrorResult(invocationResult);
+                return ContractExecutionResult.Fail("TODO Fail error message");
+                // return GetInvocationVmErrorResult(invocationResult);
             }
 
-            return VmExecutionResult.Ok(invocationResult.Return, typeToInstantiate);
-
-            // Rewrite the contract code to include gas and memory tracking.
-
-            // Load the contract assembly.
-
-            // Add code and type to cached db.
-
-            // Set Observer.
-
-            // Invoke constructor.
-
-            // Re-set observer.
-
-            // Get result and return.
-
-
-            throw new NotImplementedException();
+            // TODO
+            return ContractExecutionResult.Successful();
         }
 
         public ContractExecutionResult Call(object[] parameters)

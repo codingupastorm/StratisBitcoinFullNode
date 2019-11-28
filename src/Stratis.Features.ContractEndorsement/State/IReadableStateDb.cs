@@ -2,7 +2,7 @@
 
 namespace Stratis.Features.ContractEndorsement.State
 {
-    public interface IReadableContractStateDb
+    public interface IReadableStateDb
     {
         bool IsExist(uint160 addr);
 
