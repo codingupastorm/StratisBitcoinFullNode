@@ -13,7 +13,7 @@ namespace Stratis.Features.ContractEndorsement.State
         /// <summary>
         /// When things are written during execution they go here for retrieval later on.
         /// </summary>
-        private readonly Dictionary<CacheKey, StateValue> storageCache;
+        private readonly Dictionary<CacheKey, StorageValue> storageCache;
 
         private readonly Dictionary<uint160, ContractState> contractStateCache;
 
@@ -26,7 +26,7 @@ namespace Stratis.Features.ContractEndorsement.State
 
         public CachedStateDb(IReadableStateDb canonicalDb)
         {
-            this.storageCache = new Dictionary<CacheKey, StateValue>();
+            this.storageCache = new Dictionary<CacheKey, StorageValue>();
             this.contractStateCache = new Dictionary<uint160, ContractState>();
             this.codeHashCache = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
             this.canonicalDb = canonicalDb;
@@ -34,7 +34,7 @@ namespace Stratis.Features.ContractEndorsement.State
 
         #region Setters
 
-        public void SetState(uint160 contractAddress, string key, StateValue data)
+        public void SetStorageValue(uint160 contractAddress, string key, StorageValue data)
         {
             this.storageCache[new CacheKey(contractAddress, key)] = data;
         }
@@ -103,14 +103,14 @@ namespace Stratis.Features.ContractEndorsement.State
             throw new System.NotImplementedException();
         }
 
-        public StateValue GetState(uint160 contractAddress, string key)
+        public StorageValue GetStorageValue(uint160 contractAddress, string key)
         {
             var cacheKey = new CacheKey(contractAddress, key);
 
             if (this.storageCache.ContainsKey(cacheKey))
                 return this.storageCache[cacheKey];
 
-            return this.canonicalDb.GetState(contractAddress, key);
+            return this.canonicalDb.GetStorageValue(contractAddress, key);
         }
     }
 }

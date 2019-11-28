@@ -10,14 +10,14 @@ namespace Stratis.Features.ContractEndorsement.Tests
     {
         private readonly Database<uint160, ContractState> contractDb;
         private readonly ByteArrayDatabase<byte[]> codeDb;
-        private readonly Database<CacheKey, StateValue> contractStorageDb;
+        private readonly Database<CacheKey, StorageValue> contractStorageDb;
         private readonly FinalisedStateDb db;
 
         public ContractStateDbTests()
         {
             this.contractDb = new Database<uint160, ContractState>();
             this.codeDb = new ByteArrayDatabase<byte[]>(); 
-            this.contractStorageDb = new Database<CacheKey, StateValue>();
+            this.contractStorageDb = new Database<CacheKey, StorageValue>();
             this.db = new FinalisedStateDb(this.contractDb, this.codeDb, this.contractStorageDb);
         }
 

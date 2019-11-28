@@ -14,6 +14,6 @@ namespace Stratis.Features.ContractEndorsement.State
 
         string GetContractType(uint160 addr);
 
-        StateValue GetState(uint160 contractAddress, string key);
+        StorageValue GetStorageValue(uint160 contractAddress, string key);
     }
 }

@@ -11,11 +11,11 @@ namespace Stratis.Features.ContractEndorsement.State
 
         private readonly IDatabase<byte[], byte[]> codeHashDb;
 
-        private readonly IDatabase<CacheKey, StateValue> contractStorageDatabase;
+        private readonly IDatabase<CacheKey, StorageValue> contractStorageDatabase;
 
         public FinalisedStateDb(IDatabase<uint160, ContractState> contractStateDb,
             IDatabase<byte[], byte[]> codeHashDb,
-            IDatabase<CacheKey, StateValue> contractStorageDatabase)
+            IDatabase<CacheKey, StorageValue> contractStorageDatabase)
         {
             this.contractStateDb = contractStateDb;
             this.codeHashDb = codeHashDb;
@@ -55,7 +55,7 @@ namespace Stratis.Features.ContractEndorsement.State
             return contractState?.TypeName;
         }
 
-        public StateValue GetState(uint160 contractAddress, string key)
+        public StorageValue GetStorageValue(uint160 contractAddress, string key)
         {
             return this.contractStorageDatabase.Get(new CacheKey(contractAddress, key));
         }
