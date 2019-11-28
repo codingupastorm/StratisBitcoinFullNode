@@ -4,11 +4,11 @@
     {
         public string Key { get; }
 
-        public string Value { get; }
+        public byte[] Value { get; }
 
         public bool IsDelete { get; private set; }
 
-        public Write(string key, string value)
+        public Write(string key, byte[] value)
         {
             this.Key = key;
             this.Value = value;

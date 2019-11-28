@@ -7,7 +7,7 @@ namespace Stratis.Features.ContractEndorsement.State
     /// <summary>
     /// A contract's state.
     /// </summary>
-    public class AccountState
+    public class ContractState
     {
         /// <summary>
         /// 32 byte hash of the code deployed at this contract.
@@ -21,11 +21,11 @@ namespace Stratis.Features.ContractEndorsement.State
         /// </summary>
         public string TypeName { get; set; }
 
-        public AccountState() { }
+        public ContractState() { }
 
         #region Serialization
 
-        public AccountState(byte[] bytes) : this()
+        public ContractState(byte[] bytes) : this()
         {
             RLPCollection list = RLP.Decode(bytes);
             RLPCollection innerList = (RLPCollection)list[0];
