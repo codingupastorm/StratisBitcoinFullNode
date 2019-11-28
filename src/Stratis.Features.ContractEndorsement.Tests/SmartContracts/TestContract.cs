@@ -1,5 +1,4 @@
-﻿
-using Stratis.HyperContracts;
+﻿using Stratis.HyperContracts;
 
 public class TestContract : HyperContract
 {

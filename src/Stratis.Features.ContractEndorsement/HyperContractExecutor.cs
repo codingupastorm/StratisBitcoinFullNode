@@ -92,7 +92,7 @@ namespace Stratis.Features.ContractEndorsement
 
                 if (moduleResult.IsFailure)
                 {
-                    return ContractExecutionResult.Successful();
+                    return ContractExecutionResult.Fail("Contract bytecode is not valid IL.");
                     // TODO:
                     //return VmExecutionResult.Fail(VmExecutionErrorKind.LoadFailed,
                     //    "Contract bytecode is not valid IL.");
