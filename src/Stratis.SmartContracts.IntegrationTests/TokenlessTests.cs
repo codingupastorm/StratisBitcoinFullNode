@@ -1,6 +1,6 @@
 ﻿using System;
+using NBitcoin;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
-using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.Networks;
@@ -18,7 +18,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
         public TokenlessTests()
         {
-            this.network = new SmartContractsPoAWhitelistRegTest();
+            this.network = new SmartContractsPoARegTest();
 
             this.builder = SmartContractNodeBuilder.Create(this);
             this.nodeFactory = (nodeIndex) => this.builder.CreateTokenlessSmartContractPoANode(this.network, nodeIndex).Start();
@@ -34,10 +34,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 this.SetupNodes(chain, node1, node2);
 
                 // Compile file
-                byte[] toSend = ContractCompiler.CompileFile("SmartContracts/StorageDemo.cs").Compilation;
-
-                // Add the hash to all the nodes on the chain.
-                chain.WhitelistCode(toSend);
+                byte[] toSend = ContractCompiler.CompileFile("SmartContracts/TokenlessExample.cs").Compilation;
 
                 // Send create with value, and ensure balance is stored.
                 BuildCreateContractTransactionResponse sendResponse = node1.SendCreateContractTransaction(toSend, 30);
@@ -47,6 +44,30 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Check the balance exists at contract location.
                 Assert.Equal((ulong)30 * 100_000_000, node1.GetContractBalance(sendResponse.NewContractAddress));
             }
+        }
+
+        private void SetupNodes(IMockChain chain, MockChainNode node1, MockChainNode node2)
+        {
+            // TODO: Use ready chain data
+            // Get premine
+            chain.MineBlocks(10);
+
+            // Send half to other from whoever received premine
+            if ((long)node1.WalletSpendableBalance == node1.CoreNode.FullNode.Network.Consensus.PremineReward.Satoshi)
+            {
+                PayHalfPremine(chain, node1, node2);
+            }
+            else
+            {
+                PayHalfPremine(chain, node2, node1);
+            }
+        }
+
+        private void PayHalfPremine(IMockChain chain, MockChainNode from, MockChainNode to)
+        {
+            from.SendTransaction(to.MinerAddress.ScriptPubKey, new Money(from.CoreNode.FullNode.Network.Consensus.PremineReward.Satoshi / 2, MoneyUnit.Satoshi));
+            from.WaitMempoolCount(1);
+            chain.MineBlocks(1);
         }
 
         public void Dispose()
