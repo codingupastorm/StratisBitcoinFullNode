@@ -27,6 +27,10 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public void CanDeployTokenlessContract()
         {
+            // TODO: Continue from here. 
+
+            // Up to the point where the contract is being retrieved.
+
             using (var chain = new PoAMockChain(2, this.nodeFactory).Build())
             {
                 MockChainNode node1 = chain.Nodes[0];
