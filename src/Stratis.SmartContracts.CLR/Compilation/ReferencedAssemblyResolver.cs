@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using Stratis.SmartContracts.Standards;
+using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.SmartContracts.CLR.Compilation
 {
@@ -23,7 +24,8 @@ namespace Stratis.SmartContracts.CLR.Compilation
                 Core, 
                 typeof(SmartContract).Assembly, 
                 typeof(Enumerable).Assembly,
-                typeof(IStandardToken).Assembly
+                typeof(IStandardToken).Assembly,
+                typeof(TokenlessSmartContract).Assembly
             };
     }
 }

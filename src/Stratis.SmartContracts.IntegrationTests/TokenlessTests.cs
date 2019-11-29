@@ -36,13 +36,15 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Compile file
                 byte[] toSend = ContractCompiler.CompileFile("SmartContracts/TokenlessExample.cs").Compilation;
 
+                Assert.NotNull(toSend);
+
                 // Send create with value, and ensure balance is stored.
-                BuildCreateContractTransactionResponse sendResponse = node1.SendCreateContractTransaction(toSend, 30);
+                BuildCreateContractTransactionResponse sendResponse = node1.SendCreateContractTransaction(toSend, 0);
                 node1.WaitMempoolCount(1);
                 chain.MineBlocks(1);
 
                 // Check the balance exists at contract location.
-                Assert.Equal((ulong)30 * 100_000_000, node1.GetContractBalance(sendResponse.NewContractAddress));
+                Assert.NotNull(node1.GetCode(sendResponse.NewContractAddress));
             }
         }
 
