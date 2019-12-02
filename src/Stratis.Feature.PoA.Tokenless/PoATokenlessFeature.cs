@@ -1,84 +1,53 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using NBitcoin;
-using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder.Feature;
-using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.Behaviors;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Features.PoA.Voting;
-using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Feature.PoA.Tokenless.Core;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
     public sealed class PoATokenlessFeature : FullNodeFeature
     {
-        /// <summary>Manager of node's network connections.</summary>
-        private readonly IConnectionManager connectionManager;
-
-        /// <summary>Thread safe chain of block headers from genesis.</summary>
-        private readonly ChainIndexer chainIndexer;
-
-        private readonly IFederationManager federationManager;
-
-        /// <summary>Provider of IBD state.</summary>
-        private readonly IInitialBlockDownloadState initialBlockDownloadState;
-
-        private readonly IConsensusManager consensusManager;
-
-        /// <summary>A handler that can manage the lifetime of network peers.</summary>
-        private readonly IPeerBanning peerBanning;
-
-        /// <summary>Factory for creating loggers.</summary>
-        private readonly ILoggerFactory loggerFactory;
+        private readonly ICoreComponent coreComponent;
 
         private readonly IPoAMiner miner;
 
         private readonly VotingManager votingManager;
 
-        private readonly Network network;
-
         private readonly IWhitelistedHashesRepository whitelistedHashesRepository;
 
         private readonly IdleFederationMembersKicker idleFederationMembersKicker;
-
-        private readonly IChainState chainState;
-
-        private readonly IBlockStoreQueue blockStoreQueue;
 
         private readonly CertificatesManager certificatesManager;
 
         private readonly RevocationChecker revocationChecker;
 
-        public PoATokenlessFeature(IFederationManager federationManager, PayloadProvider payloadProvider, IConnectionManager connectionManager, ChainIndexer chainIndexer,
-            IInitialBlockDownloadState initialBlockDownloadState, IConsensusManager consensusManager, IPeerBanning peerBanning, ILoggerFactory loggerFactory,
-            IPoAMiner miner, VotingManager votingManager, Network network, IWhitelistedHashesRepository whitelistedHashesRepository,
-            IdleFederationMembersKicker idleFederationMembersKicker, IChainState chainState, IBlockStoreQueue blockStoreQueue, CertificatesManager certificatesManager,
-            RevocationChecker revocationChecker)
+        public PoATokenlessFeature(
+            ICoreComponent coreComponent,
+            CertificatesManager certificatesManager,
+            IdleFederationMembersKicker idleFederationMembersKicker,
+            IPoAMiner miner,
+            PayloadProvider payloadProvider,
+            RevocationChecker revocationChecker,
+            VotingManager votingManager,
+            IWhitelistedHashesRepository whitelistedHashesRepository)
         {
-            this.federationManager = federationManager;
-            this.connectionManager = connectionManager;
-            this.chainIndexer = chainIndexer;
-            this.initialBlockDownloadState = initialBlockDownloadState;
-            this.consensusManager = consensusManager;
-            this.peerBanning = peerBanning;
-            this.loggerFactory = loggerFactory;
+            this.coreComponent = coreComponent;
+
+            this.certificatesManager = certificatesManager;
+            this.idleFederationMembersKicker = idleFederationMembersKicker;
             this.miner = miner;
+            this.revocationChecker = revocationChecker;
             this.votingManager = votingManager;
             this.whitelistedHashesRepository = whitelistedHashesRepository;
-            this.network = network;
-            this.idleFederationMembersKicker = idleFederationMembersKicker;
-            this.chainState = chainState;
-            this.blockStoreQueue = blockStoreQueue;
-            this.certificatesManager = certificatesManager;
-            this.revocationChecker = revocationChecker;
 
             payloadProvider.DiscoverPayloads(this.GetType().Assembly);
         }
@@ -86,16 +55,16 @@ namespace Stratis.Feature.PoA.Tokenless
         /// <inheritdoc />
         public override async Task InitializeAsync()
         {
-            NetworkPeerConnectionParameters connectionParameters = this.connectionManager.Parameters;
+            NetworkPeerConnectionParameters connectionParameters = this.coreComponent.ConnectionManager.Parameters;
 
             this.ReplaceConsensusManagerBehavior(connectionParameters);
 
             this.ReplaceBlockStoreBehavior(connectionParameters);
 
-            this.federationManager.Initialize();
+            this.coreComponent.FederationManager.Initialize();
             this.whitelistedHashesRepository.Initialize();
 
-            var options = (PoAConsensusOptions)this.network.Consensus.Options;
+            var options = (PoAConsensusOptions)this.coreComponent.Network.Consensus.Options;
 
             if (options.VotingEnabled)
             {
@@ -125,7 +94,7 @@ namespace Stratis.Feature.PoA.Tokenless
             }
 
             connectionParameters.TemplateBehaviors.Remove(defaultConsensusManagerBehavior);
-            connectionParameters.TemplateBehaviors.Add(new PoAConsensusManagerBehavior(this.chainIndexer, this.initialBlockDownloadState, this.consensusManager, this.peerBanning, this.loggerFactory));
+            connectionParameters.TemplateBehaviors.Add(new PoAConsensusManagerBehavior(this.coreComponent.ChainIndexer, this.coreComponent.InitialBlockDownloadState, this.coreComponent.ConsensusManager, this.coreComponent.PeerBanning, this.coreComponent.LoggerFactory));
         }
 
         /// <summary>Replaces default <see cref="PoABlockStoreBehavior"/> with <see cref="PoABlockStoreBehavior"/>.</summary>
@@ -139,7 +108,7 @@ namespace Stratis.Feature.PoA.Tokenless
             }
 
             connectionParameters.TemplateBehaviors.Remove(defaultBlockStoreBehavior);
-            connectionParameters.TemplateBehaviors.Add(new PoABlockStoreBehavior(this.chainIndexer, this.chainState, this.loggerFactory, this.consensusManager, this.blockStoreQueue));
+            connectionParameters.TemplateBehaviors.Add(new PoABlockStoreBehavior(this.coreComponent.ChainIndexer, this.coreComponent.ChainState, this.coreComponent.LoggerFactory, this.coreComponent.ConsensusManager, this.coreComponent.BlockStoreQueue));
         }
 
         /// <inheritdoc />
@@ -151,7 +120,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
             this.idleFederationMembersKicker.Dispose();
 
-            if (((PoAConsensusOptions)this.network.Consensus.Options).EnablePermissionedMembership)
+            if (((PoAConsensusOptions)this.coreComponent.Network.Consensus.Options).EnablePermissionedMembership)
             {
                 this.revocationChecker.Dispose();
             }
