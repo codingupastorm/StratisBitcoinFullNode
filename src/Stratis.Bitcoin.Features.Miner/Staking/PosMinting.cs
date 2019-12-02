@@ -845,7 +845,7 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
                         {
                             context.Logger.LogDebug("Kernel found with solution hash '{0}'.", contextInformation.HashProofOfStake);
 
-                            Wallet.Wallet wallet = this.walletManager.GetWalletByName(utxoStakeInfo.Secret.WalletName);
+                            Wallet.Wallet wallet = this.walletManager.GetWallet(utxoStakeInfo.Secret.WalletName);
                             context.CoinstakeContext.Key = wallet.GetExtendedPrivateKeyForAddress(utxoStakeInfo.Secret.WalletPassword, utxoStakeInfo.Address).PrivateKey;
                             utxoStakeInfo.Key = context.CoinstakeContext.Key;
 
@@ -977,12 +977,6 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
                 if (depth < 1)
                 {
                     this.logger.LogDebug("UTXO '{0}' is new or reorg happened.", utxoStakeDescription.OutPoint);
-                    continue;
-                }
-
-                if (depth < requiredDepth)
-                {
-                    this.logger.LogDebug("UTXO '{0}' depth {1} is lower than required minimum depth {2}.", utxoStakeDescription.OutPoint, depth, requiredDepth);
                     continue;
                 }
 

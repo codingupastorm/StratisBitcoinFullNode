@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -11,6 +10,7 @@ using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Features.Wallet.Models;
+using Stratis.Bitcoin.Consensus;
 
 namespace Stratis.Bitcoin.Features.SignalR.Broadcasters
 {
@@ -21,21 +21,26 @@ namespace Stratis.Bitcoin.Features.SignalR.Broadcasters
     {
         private readonly IWalletManager walletManager;
         private readonly IConnectionManager connectionManager;
+        private readonly IConsensusManager consensusManager;
         private readonly ChainIndexer chainIndexer;
+        private readonly bool includeAddressBalances;
 
         public WalletInfoBroadcaster(
             ILoggerFactory loggerFactory,
             IWalletManager walletManager,
+            IConsensusManager consensusManager,
             IConnectionManager connectionManager,
             IAsyncProvider asyncProvider,
             INodeLifetime nodeLifetime,
             ChainIndexer chainIndexer,
-            EventsHub eventsHub)
+            EventsHub eventsHub, bool includeAddressBalances = false)
             : base(eventsHub, loggerFactory, nodeLifetime, asyncProvider)
         {
             this.walletManager = walletManager;
             this.connectionManager = connectionManager;
+            this.consensusManager = consensusManager;
             this.chainIndexer = chainIndexer;
+            this.includeAddressBalances = includeAddressBalances;
         }
 
         protected override IEnumerable<IClientEvent> GetMessages()
@@ -50,7 +55,7 @@ namespace Stratis.Bitcoin.Features.SignalR.Broadcasters
                     IList<AccountBalanceModel> accountBalanceModels = new List<AccountBalanceModel>();
                     foreach (var balance in balances)
                     {
-                        HdAccount account = balance.Account;
+                        HdAccount account = wallet.GetAccount(balance.Account.Name);
 
                         var accountBalanceModel = new AccountBalanceModel
                         {
@@ -60,18 +65,20 @@ namespace Stratis.Bitcoin.Features.SignalR.Broadcasters
                             AmountConfirmed = balance.AmountConfirmed,
                             AmountUnconfirmed = balance.AmountUnconfirmed,
                             SpendableAmount = balance.SpendableAmount,
-                            Addresses = account.GetCombinedAddresses().Select(address =>
-                            {
-                                (Money confirmedAmount, Money unConfirmedAmount) = address.GetBalances();
-                                return new AddressModel
+                            Addresses = this.includeAddressBalances
+                                ? account.GetCombinedAddresses().Select(address =>
                                 {
-                                    Address = address.Address,
-                                    IsUsed = address.Transactions.Any(),
-                                    IsChange = address.IsChangeAddress(),
-                                    AmountConfirmed = confirmedAmount,
-                                    AmountUnconfirmed = unConfirmedAmount
-                                };
-                            })
+                                    (Money confirmedAmount, Money unConfirmedAmount) = address.GetBalances();
+                                    return new AddressModel
+                                    {
+                                        Address = address.Address,
+                                        IsUsed = address.Transactions.Any(),
+                                        IsChange = address.IsChangeAddress(),
+                                        AmountConfirmed = confirmedAmount,
+                                        AmountUnconfirmed = unConfirmedAmount
+                                    };
+                                })
+                                : null
                         };
 
                         accountBalanceModels.Add(accountBalanceModel);
@@ -84,21 +91,11 @@ namespace Stratis.Bitcoin.Features.SignalR.Broadcasters
                         CreationTime = wallet.CreationTime,
                         LastBlockSyncedHeight = wallet.AccountsRoot.Single().LastBlockSyncedHeight,
                         ConnectedNodes = this.connectionManager.ConnectedPeers.Count(),
-                        ChainTip = this.chainIndexer.Tip.Height,
+                        ChainTip = this.consensusManager.HeaderTip,
                         IsChainSynced = this.chainIndexer.IsDownloaded(),
                         IsDecrypted = true,
                         AccountsBalances = accountBalanceModels
                     };
-
-                    // Get the wallet's file path.
-                    (string folder, IEnumerable<string> fileNameCollection) = this.walletManager.GetWalletsFiles();
-                    string searchFile =
-                        Path.ChangeExtension(walletName, this.walletManager.GetWalletFileExtension());
-                    string fileName = fileNameCollection.FirstOrDefault(i => i.Equals(searchFile));
-                    if (!string.IsNullOrEmpty(folder) && !string.IsNullOrEmpty(fileName))
-                    {
-                        clientEvent.WalletFilePath = Path.Combine(folder, fileName);
-                    }
                 }
                 catch (Exception e)
                 {
