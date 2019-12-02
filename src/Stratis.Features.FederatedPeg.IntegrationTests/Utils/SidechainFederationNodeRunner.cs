@@ -16,6 +16,7 @@ using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Features.Collateral;
 using Stratis.Features.Collateral.CounterChain;
+using Stratis.SmartContracts;
 
 namespace Stratis.Features.FederatedPeg.IntegrationTests.Utils
 {
@@ -59,6 +60,7 @@ namespace Stratis.Features.FederatedPeg.IntegrationTests.Utils
                 {
                     options.UseReflectionExecutor();
                     options.UsePoAWhitelistedContracts();
+                    options.UseSmartContractType(typeof(SmartContract));
                 })
                 .UseSmartContractWallet()
                 .MockIBD()

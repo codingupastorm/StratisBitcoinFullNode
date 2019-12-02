@@ -8,7 +8,6 @@ using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.CLR.Exceptions;
 using Stratis.SmartContracts.CLR.ILRewrite;
 using Stratis.SmartContracts.CLR.Loader;
-using Stratis.SmartContracts.CLR.Metering;
 using Stratis.SmartContracts.CLR.Validation;
 using Stratis.SmartContracts.Core.Hashing;
 using Stratis.SmartContracts.Core.State;
@@ -26,6 +25,9 @@ namespace Stratis.SmartContracts.CLR
         private readonly ILoader assemblyLoader;
         private readonly IContractModuleDefinitionReader moduleDefinitionReader;
         private readonly IContractAssemblyCache assemblyCache;
+
+        private readonly Type contractBaseType;
+
         public const int VmVersion = 1;
         public const long MemoryUnitLimit = 100_000;
 
@@ -33,14 +35,19 @@ namespace Stratis.SmartContracts.CLR
             ILoggerFactory loggerFactory,
             ILoader assemblyLoader,
             IContractModuleDefinitionReader moduleDefinitionReader,
-            IContractAssemblyCache assemblyCache)
+            IContractAssemblyCache assemblyCache,
+            ContractBaseTypeHolder contractBaseTypeHolder)
         {
             this.validator = validator;
             this.logger = loggerFactory.CreateLogger(this.GetType());
             this.assemblyLoader = assemblyLoader;
             this.moduleDefinitionReader = moduleDefinitionReader;
             this.assemblyCache = assemblyCache;
+            this.contractBaseType = contractBaseTypeHolder.ContractBaseType;
         }
+
+        // TODO: This class shouldn't consume anything from ISmartContractState. In fact, the state should really be an object of any type that is passed in to be set via reflection.
+        // This will allow more modularity - this one class can handle instantiation for all types of contracts.
 
         /// <summary>
         /// Creates a new instance of a smart contract by invoking the contract's constructor
@@ -139,7 +146,7 @@ namespace Stratis.SmartContracts.CLR
 
                     contract = contractLoadResult.Value;
 
-                    assemblyPackage = new CachedAssemblyPackage(new ContractAssembly(contract.Type.Assembly));
+                    assemblyPackage = new CachedAssemblyPackage(new ContractAssembly(contract.Type.Assembly, this.contractBaseType));
 
                     // Cache this completely validated and rewritten contract to reuse later.
                     this.assemblyCache.Store(codeHashUint256, assemblyPackage);
@@ -236,7 +243,7 @@ namespace Stratis.SmartContracts.CLR
 
                     contract = contractLoadResult.Value;
 
-                    assemblyPackage = new CachedAssemblyPackage(new ContractAssembly(contract.Type.Assembly));
+                    assemblyPackage = new CachedAssemblyPackage(new ContractAssembly(contract.Type.Assembly, this.contractBaseType));
 
                     // Cache this completely validated and rewritten contract to reuse later.
                     this.assemblyCache.Store(codeHashUint256, assemblyPackage);

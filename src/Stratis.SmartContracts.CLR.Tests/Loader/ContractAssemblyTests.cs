@@ -15,7 +15,7 @@ namespace Stratis.SmartContracts.CLR.Tests.Loader
         public ContractAssemblyTests()
         {
             this.compilation = ContractCompiler.CompileFile(this.Contract);
-            this.loader = new ContractAssemblyLoader();
+            this.loader = new ContractAssemblyLoader(new ContractBaseTypeHolder(typeof(SmartContract)));
         }
 
         [Fact]

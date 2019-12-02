@@ -169,5 +169,15 @@ namespace Stratis.Bitcoin.Features.SmartContracts
 
             return options;
         }
+
+        /// <summary>
+        /// Sets the smart contract base type that this network is going to be executing.
+        /// </summary>
+        public static SmartContractOptions UseSmartContractType(this SmartContractOptions options, Type type)
+        {
+            options.Services.AddSingleton<ContractBaseTypeHolder>(new ContractBaseTypeHolder(type));
+
+            return options;
+        }
     }
 }

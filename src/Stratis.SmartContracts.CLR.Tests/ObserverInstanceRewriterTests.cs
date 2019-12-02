@@ -101,7 +101,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             this.TestAddress = "0x0000000000000000000000000000000000000001".HexToAddress();
             this.repository = context.State;
             this.moduleReader = new ContractModuleDefinitionReader();
-            this.assemblyLoader = new ContractAssemblyLoader();
+            this.assemblyLoader = new ContractAssemblyLoader(new ContractBaseTypeHolder(typeof(SmartContract)));
             this.gasMeter = new GasMeter((Gas)5000000);
 
             var block = new TestBlock

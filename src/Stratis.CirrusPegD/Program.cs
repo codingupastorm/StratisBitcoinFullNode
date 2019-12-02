@@ -24,6 +24,7 @@ using Stratis.Features.Collateral;
 using Stratis.Features.Collateral.CounterChain;
 using Stratis.Features.FederatedPeg;
 using Stratis.Sidechains.Networks;
+using Stratis.SmartContracts;
 
 namespace Stratis.CirrusPegD
 {
@@ -134,6 +135,7 @@ namespace Stratis.CirrusPegD
                 {
                     options.UseReflectionExecutor();
                     options.UsePoAWhitelistedContracts();
+                    options.UseSmartContractType(typeof(SmartContract));
                 })
                 .UseSmartContractWallet()
                 .Build();

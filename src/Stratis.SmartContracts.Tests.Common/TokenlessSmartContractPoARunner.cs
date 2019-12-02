@@ -15,6 +15,7 @@ using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.Utilities;
+using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.SmartContracts.Tests.Common
 {
@@ -43,6 +44,7 @@ namespace Stratis.SmartContracts.Tests.Common
                             .AddSmartContracts(options =>
                             {
                                 options.UseReflectionExecutor();
+                                options.UseSmartContractType(typeof(TokenlessSmartContract));
                             })
                             .UseSmartContractPoAConsensus()
                             .UseSmartContractPoAMining()

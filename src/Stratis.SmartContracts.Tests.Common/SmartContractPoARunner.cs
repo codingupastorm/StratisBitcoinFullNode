@@ -41,6 +41,7 @@ namespace Stratis.SmartContracts.Tests.Common
                             .AddSmartContracts(options =>
                             {
                                 options.UseReflectionExecutor();
+                                options.UseSmartContractType(typeof(SmartContract));
                             })
                             .UseSmartContractPoAConsensus()
                             .UseSmartContractPoAMining()

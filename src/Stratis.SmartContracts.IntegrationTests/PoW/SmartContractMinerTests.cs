@@ -337,11 +337,14 @@ namespace Stratis.SmartContracts.IntegrationTests.PoW
                 this.transferProcessor = new ContractTransferProcessor(this.loggerFactory, this.network);
 
                 this.AddressGenerator = new AddressGenerator();
-                this.assemblyLoader = new ContractAssemblyLoader();
+
+                var contractBaseTypeHolder = new ContractBaseTypeHolder(typeof(SmartContract));
+
+                this.assemblyLoader = new ContractAssemblyLoader(contractBaseTypeHolder);
                 this.callDataSerializer = new CallDataSerializer(new ContractPrimitiveSerializer(this.network));
                 this.moduleDefinitionReader = new ContractModuleDefinitionReader();
                 this.contractCache = new ContractAssemblyCache();
-                this.reflectionVirtualMachine = new ReflectionVirtualMachine(this.validator, this.loggerFactory, this.assemblyLoader, this.moduleDefinitionReader, this.contractCache);
+                this.reflectionVirtualMachine = new ReflectionVirtualMachine(this.validator, this.loggerFactory, this.assemblyLoader, this.moduleDefinitionReader, this.contractCache, contractBaseTypeHolder);
                 this.stateProcessor = new StateProcessor(this.reflectionVirtualMachine, this.AddressGenerator);
                 this.internalTxExecutorFactory = new InternalExecutorFactory(this.loggerFactory, this.stateProcessor);
                 this.primitiveSerializer = new ContractPrimitiveSerializer(this.network);

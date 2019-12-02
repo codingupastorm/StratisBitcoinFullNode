@@ -23,6 +23,7 @@ using Stratis.Bitcoin.Utilities;
 using Stratis.Features.Collateral;
 using Stratis.Features.Collateral.CounterChain;
 using Stratis.Sidechains.Networks;
+using Stratis.SmartContracts;
 
 namespace Stratis.CirrusMinerD
 {
@@ -89,6 +90,7 @@ namespace Stratis.CirrusMinerD
                 {
                     options.UseReflectionExecutor();
                     options.UsePoAWhitelistedContracts();
+                    options.UseSmartContractType(typeof(SmartContract));
                 })
                 .UseSmartContractWallet()
                 .Build();
