@@ -19,7 +19,50 @@ namespace Stratis.Bitcoin.P2P.Peer
     /// Represents a network connection to a peer. It is responsible for reading incoming messages
     /// from the peer and sending messages from the node to the peer.
     /// </summary>
-    public class NetworkPeerConnection : IDisposable
+    public interface INetworkPeerConnection : IDisposable
+    {
+        /// <summary>Unique identifier of a client.</summary>
+        int Id { get; }
+
+        /// <summary>Address of the end point the client is connected to, or <c>null</c> if the client has not connected yet.</summary>
+        IPEndPoint RemoteEndPoint { get; }
+
+        /// <summary>Cancellation to be triggered at shutdown to abort all pending operations on the connection.</summary>
+        CancellationTokenSource CancellationSource { get; }
+
+        /// <summary>Queue of incoming messages distributed to message consumers.</summary>
+        MessageProducer<IncomingMessage> MessageProducer { get; }
+
+        /// <summary>
+        /// Starts waiting for incoming messages.
+        /// </summary>
+        void StartReceiveMessages();
+
+        /// <summary>
+        /// Connects the network client to the target server.
+        /// </summary>
+        /// <param name="endPoint">IP address and port to connect to.</param>
+        /// <param name="cancellation">Cancellation token that allows aborting the operation.</param>
+        /// <exception cref="OperationCanceledException">Thrown when the connection attempt was aborted.</exception>
+        Task ConnectAsync(IPEndPoint endPoint, CancellationToken cancellation);
+
+        /// <summary>
+        /// Sends message to the connected counterparty.
+        /// </summary>
+        /// <param name="payload">Payload of the message to send.</param>
+        /// <param name="cancellation">Cancellation token that allows aborting the sending operation.</param>
+        /// <exception cref="OperationCanceledException">Thrown when the peer has been disconnected
+        /// or the cancellation token has been cancelled or another error occurred.</exception>
+        Task SendAsync(Payload payload, CancellationToken cancellation = default(CancellationToken));
+
+        /// <summary>
+        /// Closes TCP connection and disposes it's stream.
+        /// </summary>
+        void Disconnect();
+    }
+
+    /// <summary><see cref="INetworkPeerConnection"/>.</summary>
+    public class NetworkPeerConnection : INetworkPeerConnection
     {
         /// <summary>Logger factory to create loggers.</summary>
         private readonly ILoggerFactory loggerFactory;
@@ -31,7 +74,7 @@ namespace Stratis.Bitcoin.P2P.Peer
         private readonly IAsyncProvider asyncProvider;
 
         /// <summary>Instance logger.</summary>
-        private ILogger logger;
+        protected ILogger logger;
 
         /// <summary>Specification of the network the node runs on - regtest/testnet/mainnet.</summary>
         private readonly Network network;
@@ -45,20 +88,20 @@ namespace Stratis.Bitcoin.P2P.Peer
         /// <summary>Registration to the message producer of the connected peer.</summary>
         private readonly MessageProducerRegistration<IncomingMessage> messageProducerRegistration;
 
-        /// <summary>Unique identifier of a client.</summary>
+        /// <inheritdoc />
         public int Id { get; private set; }
 
         /// <summary>Underlaying TCP client.</summary>
-        private TcpClient tcpClient;
+        protected TcpClient tcpClient;
 
         /// <summary>Prevents parallel execution of multiple write operations on <see cref="stream"/>.</summary>
         private readonly AsyncLock writeLock;
 
         /// <summary>Stream to send and receive messages through established TCP connection.</summary>
         /// <remarks>Write operations on the stream have to be protected by <see cref="writeLock"/>.</remarks>
-        private NetworkStream stream;
+        protected Stream stream;
 
-        /// <summary>Address of the end point the client is connected to, or <c>null</c> if the client has not connected yet.</summary>
+        /// <inheritdoc />
         public IPEndPoint RemoteEndPoint
         {
             get
@@ -70,13 +113,13 @@ namespace Stratis.Bitcoin.P2P.Peer
         /// <summary>Network peer this connection connects to.</summary>
         private readonly INetworkPeer peer;
 
-        /// <summary>Cancellation to be triggered at shutdown to abort all pending operations on the connection.</summary>
+        /// <inheritdoc />
         public CancellationTokenSource CancellationSource { get; private set; }
 
         /// <summary>Task responsible for reading incoming messages from the stream.</summary>
         private Task receiveMessageTask;
 
-        /// <summary>Queue of incoming messages distributed to message consumers.</summary>
+        /// <inheritdoc />
         public MessageProducer<IncomingMessage> MessageProducer { get; private set; }
 
         /// <summary>Set to <c>1</c> if the peer disposal has been initiated, <c>0</c> otherwise.</summary>
@@ -107,8 +150,6 @@ namespace Stratis.Bitcoin.P2P.Peer
             this.tcpClient = client;
             this.Id = clientId;
 
-            this.stream = this.tcpClient.Connected ? this.tcpClient.GetStream() : null;
-
             this.writeLock = new AsyncLock();
 
             this.CancellationSource = new CancellationTokenSource();
@@ -118,9 +159,17 @@ namespace Stratis.Bitcoin.P2P.Peer
             this.messageProducerRegistration = this.MessageProducer.AddMessageListener(this.messageListener);
         }
 
-        /// <summary>
-        /// Starts waiting for incoming messages.
-        /// </summary>
+        protected virtual Stream GetStream()
+        {
+            if (this.stream != null)
+                return this.stream;
+
+            this.stream = this.tcpClient.Connected ? this.tcpClient.GetStream() : null;
+
+            return this.stream;
+        }
+
+        /// <inheritdoc />
         public void StartReceiveMessages()
         {
             this.receiveMessageTask = this.ReceiveMessagesAsync();
@@ -163,12 +212,7 @@ namespace Stratis.Bitcoin.P2P.Peer
             }
         }
 
-        /// <summary>
-        /// Connects the network client to the target server.
-        /// </summary>
-        /// <param name="endPoint">IP address and port to connect to.</param>
-        /// <param name="cancellation">Cancellation token that allows aborting the operation.</param>
-        /// <exception cref="OperationCanceledException">Thrown when the connection attempt was aborted.</exception>
+        /// <inheritdoc />
         public async Task ConnectAsync(IPEndPoint endPoint, CancellationToken cancellation)
         {
             this.logger = this.loggerFactory.CreateLogger(this.GetType().FullName, $"[{this.Id}-{endPoint}] ");
@@ -178,8 +222,6 @@ namespace Stratis.Bitcoin.P2P.Peer
                 this.asyncProvider.Signals.Publish(new PeerConnectionAttempt(false, endPoint));
                 await this.tcpClient.ConnectAsync(endPoint.Address, endPoint.Port).WithCancellationAsync(cancellation).ConfigureAwait(false);
                 this.asyncProvider.Signals.Publish(new PeerConnected(false, endPoint));
-
-                this.stream = this.tcpClient.GetStream();
             }
             catch (OperationCanceledException)
             {
@@ -204,13 +246,7 @@ namespace Stratis.Bitcoin.P2P.Peer
             }
         }
 
-        /// <summary>
-        /// Sends message to the connected counterparty.
-        /// </summary>
-        /// <param name="payload">Payload of the message to send.</param>
-        /// <param name="cancellation">Cancellation token that allows aborting the sending operation.</param>
-        /// <exception cref="OperationCanceledException">Thrown when the peer has been disconnected
-        /// or the cancellation token has been cancelled or another error occurred.</exception>
+        /// <inheritdoc />
         public async Task SendAsync(Payload payload, CancellationToken cancellation = default(CancellationToken))
         {
             if (!this.payloadProvider.IsPayloadRegistered(payload.GetType()))
@@ -295,7 +331,7 @@ namespace Stratis.Bitcoin.P2P.Peer
         {
             using (await this.writeLock.LockAsync(cancellation).ConfigureAwait(false))
             {
-                NetworkStream innerStream = this.stream;
+                Stream innerStream = this.GetStream();
 
                 if (innerStream == null)
                 {
@@ -416,7 +452,7 @@ namespace Stratis.Bitcoin.P2P.Peer
         /// <exception cref="OperationCanceledException">Thrown if the operation was cancelled or the end of the stream was reached.</exception>
         private async Task ReadBytesAsync(byte[] buffer, int offset, int bytesToRead, CancellationToken cancellation = default(CancellationToken))
         {
-            NetworkStream innerStream = this.stream;
+            Stream innerStream = this.GetStream();
 
             if (innerStream == null)
             {
@@ -489,12 +525,10 @@ namespace Stratis.Bitcoin.P2P.Peer
             this.writeLock.Dispose();
         }
 
-        /// <summary>
-        /// Closes TCP connection and disposes it's stream.
-        /// </summary>
+        /// <inheritdoc />
         public void Disconnect()
         {
-            NetworkStream disposeStream = this.stream;
+            Stream disposeStream = this.stream;
             TcpClient disposeTcpClient = this.tcpClient;
 
             this.stream = null;

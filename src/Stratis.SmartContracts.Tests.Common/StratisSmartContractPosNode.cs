@@ -14,6 +14,7 @@ using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.P2P;
+using Stratis.Features.SQLiteWalletRepository;
 
 namespace Stratis.SmartContracts.Tests.Common
 {
@@ -41,6 +42,7 @@ namespace Stratis.SmartContracts.Tests.Common
                             })
                             .UseSmartContractPosConsensus()
                             .UseSmartContractWallet()
+                            .AddSQLiteWalletRepository()
                             .UseSmartContractPosPowMining()
                             .MockIBD()
                             .UseTestChainedHeaderTree()

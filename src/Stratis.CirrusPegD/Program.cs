@@ -23,6 +23,7 @@ using Stratis.Bitcoin.Utilities;
 using Stratis.Features.Collateral;
 using Stratis.Features.Collateral.CounterChain;
 using Stratis.Features.FederatedPeg;
+using Stratis.Features.SQLiteWalletRepository;
 using Stratis.Sidechains.Networks;
 using Stratis.SmartContracts;
 
@@ -102,6 +103,7 @@ namespace Stratis.CirrusPegD
                 .AddRPC()
                 .UsePosConsensus()
                 .UseWallet()
+                .AddSQLiteWalletRepository()
                 .AddPowPosMining()
                 .Build();
 
@@ -138,6 +140,7 @@ namespace Stratis.CirrusPegD
                     options.UseSmartContractType(typeof(SmartContract));
                 })
                 .UseSmartContractWallet()
+                .AddSQLiteWalletRepository()
                 .Build();
 
             return node;

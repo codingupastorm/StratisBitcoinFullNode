@@ -8,6 +8,7 @@ using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.SQLiteWalletRepository;
 
 namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
 {
@@ -29,9 +30,10 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
             this.FullNode = (FullNode)new FullNodeBuilder()
                 .UseNodeSettings(settings)
                 .UseBlockStore()
-                .UsePoAConsensus()
+                .UsePoAConsensus(this.Network)
                 .UseMempool()
                 .UseWallet()
+                .AddSQLiteWalletRepository()
                 .UseApi()
                 .AddRPC()
                 .MockIBD()

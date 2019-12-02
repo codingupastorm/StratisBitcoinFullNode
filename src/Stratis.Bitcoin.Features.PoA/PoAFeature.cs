@@ -14,6 +14,7 @@ using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.PoA.Behaviors;
+using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P.Peer;
@@ -57,10 +58,15 @@ namespace Stratis.Bitcoin.Features.PoA
 
         private readonly IBlockStoreQueue blockStoreQueue;
 
+        private readonly CertificatesManager certificatesManager;
+
+        private readonly RevocationChecker revocationChecker;
+
         public PoAFeature(IFederationManager federationManager, PayloadProvider payloadProvider, IConnectionManager connectionManager, ChainIndexer chainIndexer,
             IInitialBlockDownloadState initialBlockDownloadState, IConsensusManager consensusManager, IPeerBanning peerBanning, ILoggerFactory loggerFactory,
             IPoAMiner miner, VotingManager votingManager, Network network, IWhitelistedHashesRepository whitelistedHashesRepository,
-            IdleFederationMembersKicker idleFederationMembersKicker, IChainState chainState, IBlockStoreQueue blockStoreQueue)
+            IdleFederationMembersKicker idleFederationMembersKicker, IChainState chainState, IBlockStoreQueue blockStoreQueue, CertificatesManager certificatesManager,
+            RevocationChecker revocationChecker)
         {
             this.federationManager = federationManager;
             this.connectionManager = connectionManager;
@@ -76,12 +82,14 @@ namespace Stratis.Bitcoin.Features.PoA
             this.idleFederationMembersKicker = idleFederationMembersKicker;
             this.chainState = chainState;
             this.blockStoreQueue = blockStoreQueue;
+            this.certificatesManager = certificatesManager;
+            this.revocationChecker = revocationChecker;
 
             payloadProvider.DiscoverPayloads(this.GetType().Assembly);
         }
 
         /// <inheritdoc />
-        public override Task InitializeAsync()
+        public override async Task InitializeAsync()
         {
             NetworkPeerConnectionParameters connectionParameters = this.connectionManager.Parameters;
 
@@ -102,9 +110,13 @@ namespace Stratis.Bitcoin.Features.PoA
                     this.idleFederationMembersKicker.Initialize();
             }
 
-            this.miner.InitializeMining();
+            if (options.EnablePermissionedMembership)
+            {
+                await this.revocationChecker.InitializeAsync().ConfigureAwait(false);
+                await this.certificatesManager.InitializeAsync().ConfigureAwait(false);
+            }
 
-            return Task.CompletedTask;
+            this.miner.InitializeMining();
         }
 
         /// <summary>Replaces default <see cref="ConsensusManagerBehavior"/> with <see cref="PoAConsensusManagerBehavior"/>.</summary>
@@ -143,6 +155,11 @@ namespace Stratis.Bitcoin.Features.PoA
             this.votingManager.Dispose();
 
             this.idleFederationMembersKicker.Dispose();
+
+            if (((PoAConsensusOptions)this.network.Consensus.Options).EnablePermissionedMembership)
+            {
+                this.revocationChecker.Dispose();
+            }
         }
     }
 
@@ -152,7 +169,7 @@ namespace Stratis.Bitcoin.Features.PoA
     public static class FullNodeBuilderConsensusExtension
     {
         /// <summary>This is mandatory for all PoA networks.</summary>
-        public static IFullNodeBuilder UsePoAConsensus(this IFullNodeBuilder fullNodeBuilder)
+        public static IFullNodeBuilder UsePoAConsensus(this IFullNodeBuilder fullNodeBuilder, Network network)
         {
             fullNodeBuilder.ConfigureFeature(features =>
             {
@@ -191,6 +208,19 @@ namespace Stratis.Bitcoin.Features.PoA
                         services.AddSingleton<IPollResultExecutor, PollResultExecutor>();
                         services.AddSingleton<IWhitelistedHashesRepository, WhitelistedHashesRepository>();
                         services.AddSingleton<IdleFederationMembersKicker>();
+
+                        // Permissioned membership.
+                        services.AddSingleton<CertificatesManager>();
+                        services.AddSingleton<RevocationChecker>();
+
+                        var options = (PoAConsensusOptions)network.Consensus.Options;
+
+                        if (options.EnablePermissionedMembership)
+                        {
+                            ServiceDescriptor descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(INetworkPeerFactory));
+                            services.Remove(descriptor);
+                            services.AddSingleton<INetworkPeerFactory, TlsEnabledNetworkPeerFactory>();
+                        }
                     });
             });
 

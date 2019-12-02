@@ -161,7 +161,7 @@ namespace Stratis.Bitcoin.P2P.Peer
         public TimeSpan? TimeOffset { get; private set; }
 
         /// <inheritdoc/>
-        public NetworkPeerConnection Connection { get; private set; }
+        public INetworkPeerConnection Connection { get; private set; }
 
         /// <summary>Statistics about the number of bytes transferred from and to the peer.</summary>
         private PerformanceCounter counter;
@@ -350,7 +350,7 @@ namespace Stratis.Bitcoin.P2P.Peer
             client.Client.ReceiveBufferSize = parameters.ReceiveBufferSize;
             client.Client.SendBufferSize = parameters.SendBufferSize;
 
-            this.Connection = networkPeerFactory.CreateNetworkPeerConnection(this, client, this.ProcessMessageAsync);
+            this.Connection = networkPeerFactory.CreateNetworkPeerConnection(this, client, this.ProcessMessageAsync, false);
 
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName, $"[{this.Connection.Id}-{peerEndPoint}] ");
         }
@@ -380,7 +380,7 @@ namespace Stratis.Bitcoin.P2P.Peer
             Action<IPEndPoint, Payload> onSendingMessage = null)
             : this(true, peerEndPoint, network, parameters, dateTimeProvider, loggerFactory, selfEndpointTracker, asyncProvider, onDisconnected, onSendingMessage)
         {
-            this.Connection = networkPeerFactory.CreateNetworkPeerConnection(this, client, this.ProcessMessageAsync);
+            this.Connection = networkPeerFactory.CreateNetworkPeerConnection(this, client, this.ProcessMessageAsync, true);
 
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName, $"[{this.Connection.Id}-{peerEndPoint}] ");
 

@@ -227,6 +227,11 @@ namespace Stratis.Bitcoin.Features.Wallet.Models
         /// then the balance for the entire wallet (all accounts) is retrieved.
         /// </summary>         
         public string AccountName { get; set; }
+        
+        /// <summary>
+        /// For Cirrus we need to get Balances By Address
+        /// </summary>
+        public bool IncludeBalanceByAddress { get; set; }
     }
 
     /// <summary>
@@ -652,15 +657,25 @@ namespace Stratis.Bitcoin.Features.Wallet.Models
     /// <summary>
     /// A class containing the necessary parameters for a wallet resynchronization request.
     /// </summary>
-    public class WalletSyncFromDateRequest : RequestModel
+    public class WalletSyncRequest : RequestModel
     {
         /// <summary>
         /// The date and time from which to resync the wallet.
         /// </summary>
         [JsonConverter(typeof(IsoDateTimeConverter))]
         public DateTime Date { get; set; }
-    }
 
+        /// <summary>
+        /// Sync from start of wallet creation.
+        /// </summary>
+        public bool All { get; set; }
+
+        /// <summary>
+        /// The WalletName to Sync
+        /// </summary>
+        public string WalletName { get; set; }
+    }
+    
     /// <summary>
     /// A class containing the necessary parameters for a wallet stats request.
     /// </summary>
