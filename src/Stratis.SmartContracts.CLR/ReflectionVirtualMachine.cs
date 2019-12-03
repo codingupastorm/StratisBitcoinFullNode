@@ -25,6 +25,7 @@ namespace Stratis.SmartContracts.CLR
         private readonly ILoader assemblyLoader;
         private readonly IContractModuleDefinitionReader moduleDefinitionReader;
         private readonly IContractAssemblyCache assemblyCache;
+        private readonly IContractInitializer contractInitializer;
 
         private readonly Type contractBaseType;
 
@@ -36,7 +37,8 @@ namespace Stratis.SmartContracts.CLR
             ILoader assemblyLoader,
             IContractModuleDefinitionReader moduleDefinitionReader,
             IContractAssemblyCache assemblyCache,
-            ContractBaseTypeHolder contractBaseTypeHolder)
+            ContractBaseTypeHolder contractBaseTypeHolder,
+            IContractInitializer contractInitializer)
         {
             this.validator = validator;
             this.logger = loggerFactory.CreateLogger(this.GetType());
@@ -44,6 +46,7 @@ namespace Stratis.SmartContracts.CLR
             this.moduleDefinitionReader = moduleDefinitionReader;
             this.assemblyCache = assemblyCache;
             this.contractBaseType = contractBaseTypeHolder.ContractBaseType;
+            this.contractInitializer = contractInitializer;
         }
 
         // TODO: This class shouldn't consume anything from ISmartContractState. In fact, the state should really be an object of any type that is passed in to be set via reflection.
@@ -83,7 +86,7 @@ namespace Stratis.SmartContracts.CLR
                 Type type = assemblyPackage.Assembly.GetType(typeToInstantiate);
 
                 uint160 address = contractState.Message.ContractAddress.ToUint160();
-                contract = Contract.CreateUninitialized(type, contractState, address);
+                contract = this.contractInitializer.CreateUninitialized(type, contractState, address);
 
 
                 // TODO: Type not found?
@@ -205,7 +208,7 @@ namespace Stratis.SmartContracts.CLR
                 Type type = assemblyPackage.Assembly.GetType(typeName);
 
                 uint160 address = contractState.Message.ContractAddress.ToUint160();
-                contract = Contract.CreateUninitialized(type, contractState, address);
+                contract = this.contractInitializer.CreateUninitialized(type, contractState, address);
             }
             else
             {
@@ -321,7 +324,7 @@ namespace Stratis.SmartContracts.CLR
 
             try
             {
-                contract = Contract.CreateUninitialized(type, contractState, address);
+                contract = this.contractInitializer.CreateUninitialized(type, contractState, address);
             }
             catch (Exception e)
             {

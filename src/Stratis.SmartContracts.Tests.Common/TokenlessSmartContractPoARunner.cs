@@ -45,7 +45,7 @@ namespace Stratis.SmartContracts.Tests.Common
                             .AddSmartContracts(options =>
                             {
                                 options.UseReflectionExecutor();
-                                options.UseSmartContractType(typeof(TokenlessSmartContract));
+                                options.UseSmartContractType<TokenlessSmartContract>();
                             })
                             .UseSmartContractPoAConsensus()
                             .UseSmartContractPoAMining()

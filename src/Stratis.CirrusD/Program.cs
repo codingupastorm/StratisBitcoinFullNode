@@ -60,7 +60,7 @@ namespace Stratis.CirrusD
                 {
                     options.UseReflectionExecutor();
                     options.UsePoAWhitelistedContracts();
-                    options.UseSmartContractType(typeof(SmartContract));
+                    options.UseSmartContractType<SmartContract>();
                 })
                 .UseSmartContractPoAConsensus()
                 .UseSmartContractPoAMining()

@@ -137,7 +137,7 @@ namespace Stratis.CirrusPegD
                 {
                     options.UseReflectionExecutor();
                     options.UsePoAWhitelistedContracts();
-                    options.UseSmartContractType(typeof(SmartContract));
+                    options.UseSmartContractType<SmartContract>();
                 })
                 .UseSmartContractWallet()
                 .AddSQLiteWalletRepository()
