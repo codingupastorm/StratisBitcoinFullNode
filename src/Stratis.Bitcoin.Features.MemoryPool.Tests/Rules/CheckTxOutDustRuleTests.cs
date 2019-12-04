@@ -39,7 +39,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Tests.Rules
                 ValueOut = transaction.TotalOut
             };
 
-            rule.CheckTransaction(mempoolValidationContext);
+            rule.Execute(mempoolValidationContext);
             Assert.Null(mempoolValidationContext.State.Error);
         }
 
@@ -54,7 +54,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Tests.Rules
                 ValueOut = transaction.TotalOut
             };
 
-            rule.CheckTransaction(mempoolValidationContext);
+            rule.Execute(mempoolValidationContext);
             Assert.Null(mempoolValidationContext.State.Error);
         }
 
@@ -75,7 +75,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Tests.Rules
                 ValueOut = transaction.TotalOut
             };
 
-            Assert.Throws<MempoolErrorException>(() => rule.CheckTransaction(mempoolValidationContext));
+            Assert.Throws<MempoolErrorException>(() => rule.Execute(mempoolValidationContext));
             Assert.NotNull(mempoolValidationContext.State.Error);
             Assert.Equal(MempoolErrors.TransactionContainsDustTxOuts, mempoolValidationContext.State.Error);
         }
@@ -91,7 +91,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Tests.Rules
                 ValueOut = transaction.TotalOut
             };
 
-            Assert.Throws<MempoolErrorException>(() => rule.CheckTransaction(mempoolValidationContext));
+            Assert.Throws<MempoolErrorException>(() => rule.Execute(mempoolValidationContext));
             Assert.NotNull(mempoolValidationContext.State.Error);
             Assert.Equal(MempoolErrors.TransactionContainsDustTxOuts, mempoolValidationContext.State.Error);
         }

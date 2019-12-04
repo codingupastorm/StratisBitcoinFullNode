@@ -18,7 +18,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Rules
         {
         }
 
-        public override void CheckTransaction(MempoolValidationContext context)
+        public override void Execute(MempoolValidationContext context)
         {
             // Whether to limit free transactions:
             // context.State.LimitFree

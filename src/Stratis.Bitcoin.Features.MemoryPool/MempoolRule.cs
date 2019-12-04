@@ -31,6 +31,6 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         }
 
         /// <inheritdoc />
-        public abstract void CheckTransaction(MempoolValidationContext context);
+        public abstract void Execute(MempoolValidationContext context);
     }
 }

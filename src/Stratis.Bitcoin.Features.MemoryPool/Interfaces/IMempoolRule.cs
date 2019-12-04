@@ -10,6 +10,6 @@
         /// If it doesn't, a <see cref="ConsensusErrorException" /> will be thrown.
         /// </summary>
         /// <param name="context">Current validation context.</param>
-        void CheckTransaction(MempoolValidationContext context);
+        void Execute(MempoolValidationContext context);
     }
 }

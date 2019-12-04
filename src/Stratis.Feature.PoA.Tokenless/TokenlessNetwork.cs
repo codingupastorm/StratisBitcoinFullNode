@@ -5,13 +5,13 @@ using System.Linq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
-using Stratis.Bitcoin.Features.MemoryPool.Rules;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules;
 using Stratis.Bitcoin.Features.PoA.Policies;
 using Stratis.Bitcoin.Features.PoA.Voting.ConsensusRules;
 using Stratis.Bitcoin.Features.SmartContracts.Rules;
 using Stratis.Feature.PoA.Tokenless.Core.Rules;
+using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -61,7 +61,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.GenesisVersion = 1;
             this.GenesisReward = Money.Zero;
 
-            Block genesisBlock = CreateGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion, this.GenesisReward);
+            Block genesisBlock = CreateGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion);
 
             this.Genesis = genesisBlock;
 
@@ -235,23 +235,26 @@ namespace Stratis.Feature.PoA.Tokenless
             // ------------------------------------------------------
         }
 
+        // TODO-TL: What other rules are required?
         public void RegisterMempoolRules(IConsensus consensus)
         {
             consensus.MempoolRules = new List<Type>()
             {
-                typeof(CheckCoinViewMempoolRule),
-                typeof(CreateMempoolEntryMempoolRule),
+                typeof(CreateTokenlessMempoolEntryRule),
+                typeof(IsSmartContractWellFormedMempoolRule),
+                typeof(CanRetrieveSmartContractSenderMempoolRule)
             };
         }
 
-        private Block CreateGenesisBlock(ConsensusFactory consensusFactory, uint nTime, uint nNonce, uint nBits, int nVersion, Money genesisReward)
+        // TODO-TL: Determine what gets put into the genesis block.
+        private Block CreateGenesisBlock(ConsensusFactory consensusFactory, uint time, uint nonce, uint bits, int versio)
         {
-            string data = "506f41202d204345485450414a6c75334f424148484139205845504839";
+            string data = "GenesisBlockForTheNewTokenlessNetwork";
 
-            Transaction txNew = consensusFactory.CreateTransaction();
-            txNew.Version = 1;
-            txNew.Time = nTime;
-            txNew.AddInput(new TxIn()
+            Transaction transaction = consensusFactory.CreateTransaction();
+            transaction.Version = 1;
+            transaction.Time = time;
+            transaction.AddInput(new TxIn()
             {
                 ScriptSig = new Script(Op.GetPushOp(0), new Op()
                 {
@@ -259,21 +262,16 @@ namespace Stratis.Feature.PoA.Tokenless
                     PushData = new[] { (byte)42 }
                 }, Op.GetPushOp(Encoders.ASCII.DecodeData(data)))
             });
-            txNew.AddOutput(new TxOut()
-            {
-                Value = genesisReward,
-            });
 
             Block genesis = consensusFactory.CreateBlock();
-            genesis.Header.BlockTime = Utils.UnixTimeToDateTime(nTime);
-            genesis.Header.Bits = nBits;
-            genesis.Header.Nonce = nNonce;
-            genesis.Header.Version = nVersion;
-            genesis.Transactions.Add(txNew);
+            genesis.Header.BlockTime = Utils.UnixTimeToDateTime(time);
+            genesis.Header.Bits = bits;
+            genesis.Header.Nonce = nonce;
+            genesis.Header.Version = versio;
+            genesis.Transactions.Add(transaction);
             genesis.Header.HashPrevBlock = uint256.Zero;
             genesis.UpdateMerkleRoot();
             return genesis;
         }
-
     }
 }

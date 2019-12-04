@@ -2,21 +2,21 @@
 using NBitcoin;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
+using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Rules;
 using Stratis.SmartContracts.CLR;
 
-namespace Stratis.Bitcoin.Features.SmartContracts.PoA.MempoolRules
+namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
 {
     /// <summary>
     /// Validates that a smart contract transaction can be deserialized correctly, and that it conforms to gas
     /// price and gas limit rules.
     /// </summary>
-    public class SmartContractFormatLogicMempoolRule : MempoolRule
+    public sealed class IsSmartContractWellFormedMempoolRule : MempoolRule
     {
         private readonly ICallDataSerializer callDataSerializer;
 
-        public SmartContractFormatLogicMempoolRule(Network network,
+        public IsSmartContractWellFormedMempoolRule(Network network,
             ITxMempool mempool,
             MempoolSettings mempoolSettings,
             ChainIndexer chainIndexer,
@@ -31,15 +31,11 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoA.MempoolRules
         {
             TxOut scTxOut = context.Transaction.TryGetSmartContractTxOut();
 
+            // If the TxOut is null then this transaction does not contain any smart contract execution code.
             if (scTxOut == null)
-            {
-                // No SC output to validate.
                 return;
-            }
 
-            ContractTxData txData = ContractTransactionChecker.GetAndValidateContractTxData(this.callDataSerializer, scTxOut);
-
-            SmartContractFormatLogic.Check(txData, context.Fees);
+            ContractTransactionChecker.GetAndValidateContractTxData(this.callDataSerializer, scTxOut);
         }
     }
 }

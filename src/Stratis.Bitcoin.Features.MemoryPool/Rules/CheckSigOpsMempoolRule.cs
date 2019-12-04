@@ -17,7 +17,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Rules
         {
         }
 
-        public override void CheckTransaction(MempoolValidationContext context)
+        public override void Execute(MempoolValidationContext context)
         {
             // Check that the transaction doesn't have an excessive number of
             // sigops, making it impossible to mine. Since the coinbase transaction

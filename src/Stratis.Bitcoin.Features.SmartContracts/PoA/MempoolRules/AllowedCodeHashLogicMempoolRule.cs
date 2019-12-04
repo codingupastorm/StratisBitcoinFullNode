@@ -33,7 +33,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoA.MempoolRules
         }
 
         /// <inheritdoc/>
-        public override void CheckTransaction(MempoolValidationContext context)
+        public override void Execute(MempoolValidationContext context)
         {
             TxOut scTxOut = context.Transaction.TryGetSmartContractTxOut();
 
@@ -43,7 +43,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoA.MempoolRules
                 return;
             }
 
-            ContractTxData txData = ContractTransactionChecker.GetContractTxData(this.callDataSerializer, scTxOut);
+            ContractTxData txData = ContractTransactionChecker.GetAndValidateContractTxData(this.callDataSerializer, scTxOut);
 
             if (!txData.IsCreateContract)
                 return;

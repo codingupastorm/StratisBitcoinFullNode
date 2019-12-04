@@ -24,7 +24,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Rules
             this.consensusRuleEngine = consensusRuleEngine;
         }
 
-        public override void CheckTransaction(MempoolValidationContext context)
+        public override void Execute(MempoolValidationContext context)
         {
             var scriptVerifyFlags = ScriptVerify.Standard;
             if (!this.settings.RequireStandard)

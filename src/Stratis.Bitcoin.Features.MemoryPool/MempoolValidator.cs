@@ -325,7 +325,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
 
                 foreach (IMempoolRule rule in this.mempoolRules)
                 {
-                    rule.CheckTransaction(context);
+                    rule.Execute(context);
                 }
 
                 // Remove conflicting transactions from the mempool
