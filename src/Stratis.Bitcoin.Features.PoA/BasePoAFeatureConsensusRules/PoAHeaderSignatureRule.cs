@@ -35,31 +35,31 @@ namespace Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules
         {
             base.Initialize();
 
-            var engine = this.Parent as PoAConsensusRuleEngine;
+            var rulesEngine = this.Parent as PoAConsensusRuleEngine;
 
-            this.slotsManager = engine.SlotsManager;
-            this.validator = engine.PoaHeaderValidator;
-            this.votingManager = engine.VotingManager;
-            this.federationManager = engine.FederationManager;
-            this.chainState = engine.ChainState;
+            this.slotsManager = rulesEngine.SlotsManager;
+            this.validator = rulesEngine.PoaHeaderValidator;
+            this.votingManager = rulesEngine.VotingManager;
+            this.federationManager = rulesEngine.FederationManager;
+            this.chainState = rulesEngine.ChainState;
             this.consensusFactory = (PoAConsensusFactory)this.Parent.Network.Consensus.ConsensusFactory;
 
             this.maxReorg = this.Parent.Network.Consensus.MaxReorgLength;
-            this.votingEnabled = ((PoAConsensusOptions) this.Parent.Network.Consensus.Options).VotingEnabled;
+            this.votingEnabled = ((PoAConsensusOptions)this.Parent.Network.Consensus.Options).VotingEnabled;
         }
 
         public override void Run(RuleContext context)
         {
-            var header = context.ValidationContext.ChainedHeaderToValidate.Header as PoABlockHeader;
+            var poaHeader = context.ValidationContext.ChainedHeaderToValidate.Header as PoABlockHeader;
 
-            PubKey pubKey = this.slotsManager.GetFederationMemberForTimestamp(header.Time).PubKey;
+            PubKey pubKey = this.slotsManager.GetFederationMemberForTimestamp(poaHeader.Time).PubKey;
 
-            if (!this.validator.VerifySignature(pubKey, header))
+            if (!this.validator.VerifySignature(pubKey, poaHeader))
             {
-                // In case voting is enabled it is possible that federation was modified and another fed member signed
-                // the header. Since voting changes are applied after max reorg blocks are passed we can tell exactly
-                // how federation will look like max reorg blocks ahead. Code below tries to construct federation that is
-                // expected to exist at the moment block that corresponds to header being validated was produced. Then
+                // If voting is enabled, it is possible that the federation was modified and another federation member signed
+                // the header. Since voting changes are only applied after [max reorg] blocks have passed, we can tell exactly
+                // how the federation will look like, [max reorg] blocks ahead. The code below tries to construct the federation that is
+                // expected to exist at the moment the block that corresponds to header being validated was produced. Then
                 // this federation is used to estimate who was expected to sign a block and then the signature is verified.
                 if (this.votingEnabled)
                 {
@@ -84,9 +84,9 @@ namespace Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules
                             modifiedFederation.Remove(federationMember);
                     }
 
-                    pubKey = this.slotsManager.GetFederationMemberForTimestamp(header.Time, modifiedFederation).PubKey;
+                    pubKey = this.slotsManager.GetFederationMemberForTimestamp(poaHeader.Time, modifiedFederation).PubKey;
 
-                    if (this.validator.VerifySignature(pubKey, header))
+                    if (this.validator.VerifySignature(pubKey, poaHeader))
                     {
                         this.Logger.LogDebug("Signature verified using updated federation.");
                         return;

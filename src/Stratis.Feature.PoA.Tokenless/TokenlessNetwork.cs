@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
@@ -9,10 +10,12 @@ using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules;
 using Stratis.Bitcoin.Features.PoA.Policies;
 using Stratis.Bitcoin.Features.PoA.Voting.ConsensusRules;
+using Stratis.Bitcoin.Features.SmartContracts.Rules;
+using Stratis.Feature.PoA.Tokenless.Core.Rules;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
-    public sealed class PoATokenlessNetwork : Network
+    public sealed class TokenlessNetwork : Network
     {
         /// <summary> The name of the root folder containing the different PoA blockchains.</summary>
         private const string NetworkRootFolderName = "poa_tokenless";
@@ -20,7 +23,7 @@ namespace Stratis.Feature.PoA.Tokenless
         /// <summary> The default name used for the Stratis configuration file. </summary>
         private const string NetworkDefaultConfigFilename = "poa_tokenless.conf";
 
-        public PoATokenlessNetwork()
+        public TokenlessNetwork()
         {
             // The message start string is designed to be unlikely to occur in normal data.
             // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -39,7 +42,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.DefaultMaxOutboundConnections = 16;
             this.DefaultMaxInboundConnections = 109;
             this.DefaultRPCPort = 16474;
-            this.DefaultAPIPort = 37221; // TODO: Confirm
+            this.DefaultAPIPort = 37221; // TK: Check
             this.MaxTipAge = 2 * 60 * 60;
             this.MinTxFee = 10000;
             this.FallbackFee = 10000;
@@ -154,15 +157,18 @@ namespace Stratis.Feature.PoA.Tokenless
             this.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS] = encoder;
             this.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS] = encoder;
 
-            // No DNS seeds.
+            // No DNS seeds
+            // TK: Not needed.
             this.DNSSeeds = new List<DNSSeedData> { };
 
             // No seed nodes.
+            // TK: Not needed.
             string[] seedNodes = { };
             this.SeedNodes = this.ConvertToNetworkAddresses(seedNodes, this.DefaultPort).ToList();
 
             this.StandardScriptsRegistry = new PoAStandardScriptsRegistry();
 
+            // TK: Generate new Genesis
             Assert(this.Consensus.HashGenesisBlock == uint256.Parse("0x0621b88fb7a99c985d695be42e606cb913259bace2babe92970547fa033e4076"));
             Assert(this.Genesis.Header.HashMerkleRoot == uint256.Parse("0x9928b372fd9e4cf62a31638607344c03c48731ba06d24576342db9c8591e1432"));
 
@@ -181,62 +187,60 @@ namespace Stratis.Feature.PoA.Tokenless
         {
             // IHeaderValidationConsensusRule
             consensus.ConsensusRules
-                .Register<HeaderTimeChecksPoARule>()
-                .Register<StratisHeaderVersionRule>()
-                .Register<PoAHeaderDifficultyRule>()
-                .Register<PoAHeaderSignatureRule>();
+                .Register<HeaderTimeChecksPoARule>() // TK: Valid
+                .Register<StratisHeaderVersionRule>() // TK: N/A as we won't have outside nodes connecting to us?
+                .Register<PoAHeaderDifficultyRule>() // TK: This can be replaced with a Network Assert?
+                .Register<PoAHeaderSignatureRule>(); // TK: Valid
             // ------------------------------------------------------
 
             // IIntegrityValidationConsensusRule
             consensus.ConsensusRules
-                .Register<BlockMerkleRootRule>()
-                .Register<PoAIntegritySignatureRule>();
+                .Register<BlockMerkleRootRule>() // TK: Valid
+                .Register<PoAIntegritySignatureRule>(); // TK: Valid
             // ------------------------------------------------------
 
             // IPartialValidationConsensusRule
             consensus.ConsensusRules
-                .Register<SetActivationDeploymentsPartialValidationRule>()
+                .Register<SetActivationDeploymentsPartialValidationRule>() // TK: Do we care about these?
 
                 // Rules that are inside the method ContextualCheckBlock
-                .Register<TransactionLocktimeActivationRule>()
-                .Register<CoinbaseHeightActivationRule>()
-                .Register<BlockSizeRule>()
+                .Register<TransactionLocktimeActivationRule>() // TK: Perhaps valid?
+                .Register<CoinbaseHeightActivationRule>() // TK: Do we care about enforcing BIP34?
+                .Register<BlockSizeRule>() // TK: Pretty sure we are not enforcing block size / weight rules?
 
                 // Rules that are inside the method CheckBlock
-                .Register<EnsureCoinbaseRule>()
-                .Register<CheckPowTransactionRule>()
-                .Register<CheckSigOpsRule>()
+                .Register<EnsureCoinbaseRule>() // TK: Blocks on this network will only contain TxOut with SC code, so need for coinbase / coinstake?
+                .Register<CheckPowTransactionRule>() // TK: Possibly not valid, should be replaced with a rule to check TxInput sender and SC TxOutput
+                .Register<CheckSigOpsRule>() // TK: do we care?
 
-                .Register<PoAVotingCoinbaseOutputFormatRule>();
+                .Register<PoAVotingCoinbaseOutputFormatRule>(); // TK: Not valid on context of tokenless PoA? 
             // ------------------------------------------------------
 
             // IFullValidationConsensusRule
             consensus.ConsensusRules
-                .Register<SetActivationDeploymentsFullValidationRule>()
+                .Register<SetActivationDeploymentsFullValidationRule>() // TK: do we care about chain splits or chain upgrades?
 
                 // Rules that require the store to be loaded (coinview)
                 .Register<LoadCoinviewRule>()
-                .Register<TransactionDuplicationActivationRule>() // implements BIP30
+                .Register<TransactionDuplicationActivationRule>() // TK: do we care?
 
-                .Register<PoACoinviewRule>()
+                .Register<ContractTransactionFullValidationRule>() //TK: Check with Jordan re changes to these rules.
+                .Register<TxOutSmartContractExecRule>()//TK: Check with Jordan re changes to these rules.
+                .Register<OpSpendRule>()//TK: Check with Jordan re changes to these rules.
+                .Register<CanGetSenderRule>()//TK: Check with Jordan re changes to these rules.
+                .Register<P2PKHNotContractRule>()//TK: Check with Jordan re changes to these rules.
+
+                .Register<TokenlessCoinviewRule>() // TK: Investigate rule changes required Refunds / Gas / Sender etc.
                 .Register<SaveCoinviewRule>();
             // ------------------------------------------------------
         }
 
         public void RegisterMempoolRules(IConsensus consensus)
         {
-            // TODO: These are currently the PoW/PoS rules as PoA does not have smart contracts by itself. Are other specialised rules needed?
             consensus.MempoolRules = new List<Type>()
             {
-                typeof(CheckConflictsMempoolRule),
                 typeof(CheckCoinViewMempoolRule),
                 typeof(CreateMempoolEntryMempoolRule),
-                typeof(CheckSigOpsMempoolRule),
-                typeof(CheckFeeMempoolRule),
-                typeof(CheckRateLimitMempoolRule),
-                typeof(CheckAncestorsMempoolRule),
-                typeof(CheckReplacementMempoolRule),
-                typeof(CheckAllInputsMempoolRule)
             };
         }
 

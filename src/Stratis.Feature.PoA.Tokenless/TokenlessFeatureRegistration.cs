@@ -6,7 +6,7 @@ namespace Stratis.Feature.PoA.Tokenless
     /// <summary>
     /// A class providing extension methods for <see cref="IFullNodeBuilder"/>.
     /// </summary>
-    public static class PoATokenlessFeatureRegistration
+    public static class TokenlessFeatureRegistration
     {
         /// <summary>This is mandatory for all PoA networks.</summary>
         public static IFullNodeBuilder UsePoAConsensus(this IFullNodeBuilder fullNodeBuilder, Network network)

@@ -4,6 +4,8 @@ using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 
 namespace Stratis.Bitcoin.Features.MemoryPool.Rules
 {
+    // TK: In a token-less chain we dont care about ancestors as nothing is being spent?
+
     /// <summary>
     /// Validates the ancestors of a memory pool entry.
     /// Checks that the number of ancestors isn't too large.

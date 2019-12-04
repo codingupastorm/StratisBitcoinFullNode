@@ -4,6 +4,8 @@ using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 
 namespace Stratis.Bitcoin.Features.MemoryPool.Rules
 {
+    // TK: In a token-less chain we dont have any fees, so drop this rule?
+
     /// <summary>
     /// Validates the transaction fee is valid.
     /// Checks whether the fee meets minimum fee, free transactions have sufficient priority,

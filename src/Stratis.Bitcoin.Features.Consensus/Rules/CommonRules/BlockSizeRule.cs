@@ -23,7 +23,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
 
             var consensus = this.Parent.Network.Consensus;
 
-            // After the coinbase witness nonce and commitment are verified,
+            // After the coinbase witness nonce and commitment is verified,
             // we can check if the block weight passes (before we've checked the
             // coinbase witness, it would be possible for the weight to be too
             // large by filling up the coinbase witness, which doesn't change

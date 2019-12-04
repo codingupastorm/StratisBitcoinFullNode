@@ -12,7 +12,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
     /// This rule will validate that the calculated merkle tree matches the merkle root in the header.
     /// </summary>
     /// <remarks>
-    /// Transactions in a block are hashed together using SHA256 in to a merkle tree,
+    /// Transactions in a block are hashed together using SHA256 into a merkle tree,
     /// the root of that tree is included in the block header.
     /// </remarks>
     /// <remarks>
@@ -119,7 +119,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
                     }
                     if (!mutated)
                         mutated = subTreeHashes[level] == currentLeaveHash;
-                    
+
                     Buffer.BlockCopy(subTreeHashes[level].ToBytes(), 0, hash, 0, 32);
                     Buffer.BlockCopy(currentLeaveHash.ToBytes(), 0, hash, 32, 32);
                     currentLeaveHash = Hashes.Hash256(hash);
@@ -157,7 +157,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
                         branch.Add(root);
 
                     // Line was added to allocate once and not twice
-                    var rootBytes = root.ToBytes(); 
+                    var rootBytes = root.ToBytes();
                     Buffer.BlockCopy(rootBytes, 0, hash, 0, 32);
                     Buffer.BlockCopy(rootBytes, 0, hash, 32, 32);
                     root = Hashes.Hash256(hash);

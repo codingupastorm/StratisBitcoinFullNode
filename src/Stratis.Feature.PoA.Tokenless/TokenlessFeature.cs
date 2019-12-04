@@ -14,7 +14,7 @@ using Stratis.Feature.PoA.Tokenless.Core;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
-    public sealed class PoATokenlessFeature : FullNodeFeature
+    public sealed class TokenlessFeature : FullNodeFeature
     {
         private readonly ICoreComponent coreComponent;
 
@@ -30,7 +30,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         private readonly RevocationChecker revocationChecker;
 
-        public PoATokenlessFeature(
+        public TokenlessFeature(
             ICoreComponent coreComponent,
             CertificatesManager certificatesManager,
             IdleFederationMembersKicker idleFederationMembersKicker,

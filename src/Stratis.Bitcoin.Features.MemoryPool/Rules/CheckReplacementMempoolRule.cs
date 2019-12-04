@@ -6,6 +6,8 @@ using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 
 namespace Stratis.Bitcoin.Features.MemoryPool.Rules
 {
+    // TK: In a token-less chain we dont care about fees. So perhaps we can remove this rule?
+
     /// <summary>
     /// Check if transaction can replace others.
     /// Only transactions that increase fees over previous transactions are accepted.

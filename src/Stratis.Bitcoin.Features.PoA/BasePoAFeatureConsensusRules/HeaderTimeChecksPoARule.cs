@@ -7,8 +7,10 @@ using TracerAttributes;
 namespace Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules
 {
     /// <summary>
-    /// Ensures that timestamp of current block is greater than timestamp of previous block,
-    /// that timestamp is not more than targetSpacing seconds far in the future and that it is devisible by target spacing.
+    /// Ensures the following: 
+    /// <para>The timestamp of the current block is greater than the timestamp of the previous block.</para>
+    /// <para>The timestamp is not more than the targetSpacing in seconds into the future.</para>
+    /// <para>The timestamp is divisible by target spacing.</para>
     /// </summary>
     /// <seealso cref="HeaderValidationConsensusRule" />
     public class HeaderTimeChecksPoARule : HeaderValidationConsensusRule
@@ -30,29 +32,29 @@ namespace Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules
         /// <inheritdoc />
         public override void Run(RuleContext context)
         {
-            ChainedHeader chainedHeader = context.ValidationContext.ChainedHeaderToValidate;
+            ChainedHeader currentChainedHeader = context.ValidationContext.ChainedHeaderToValidate;
 
-            // Timestamp should be greater than timestamp of prev block.
-            if (chainedHeader.Header.Time <= chainedHeader.Previous.Header.Time)
+            // Timestamp should be greater than the timestamp of the previous block.
+            if (currentChainedHeader.Header.Time <= currentChainedHeader.Previous.Header.Time)
             {
-                this.Logger.LogTrace("(-)[TIME_TOO_OLD]");
+                this.Logger.LogTrace("(-)[TIMESTAMP_INVALID_OLDER_THAN_PREV]");
                 ConsensusErrors.TimeTooOld.Throw();
             }
 
-            // Timestamp shouldn't be more than current time plus max future drift.
+            // Timestamp shouldn't be more than the current the time plus max future drift.
             long maxValidTime = this.Parent.DateTimeProvider.GetAdjustedTimeAsUnixTimestamp() + MaxFutureDriftSeconds;
-            if (chainedHeader.Header.Time > maxValidTime)
+            if (currentChainedHeader.Header.Time > maxValidTime)
             {
-                this.Logger.LogWarning("Peer presented header with timestamp that is too far in to the future. Header was ignored." +
+                this.Logger.LogWarning("Peer presented a header with a timestamp that is too far into the future. Header was ignored." +
                                        " If you see this message a lot consider checking if your computer's time is correct.");
-                this.Logger.LogTrace("(-)[TIME_TOO_NEW]");
+                this.Logger.LogTrace("(-)[TIMESTAMP_INVALID_TOO_NEW]");
                 ConsensusErrors.TimeTooNew.Throw();
             }
 
             // Timestamp should be divisible by target spacing.
-            if (!this.slotsManager.IsValidTimestamp(chainedHeader.Header.Time))
+            if (!this.slotsManager.IsValidTimestamp(currentChainedHeader.Header.Time))
             {
-                this.Logger.LogTrace("(-)[INVALID_TIMESTAMP]");
+                this.Logger.LogTrace("(-)[TIMESTAMP_INVALID_NOT_DIVISBLE]");
                 PoAConsensusErrors.InvalidHeaderTimestamp.Throw();
             }
         }
