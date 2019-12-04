@@ -46,7 +46,6 @@ namespace Stratis.SmartContracts.CLR
                 return IsCallContract(type) 
                     ? this.DeserializeCallContract(smartContractBytes, vmVersion, gasPrice, gasLimit)
                     : this.DeserializeCreateContract(smartContractBytes, vmVersion, gasPrice, gasLimit);
-                
             }
             catch (Exception e)
             {

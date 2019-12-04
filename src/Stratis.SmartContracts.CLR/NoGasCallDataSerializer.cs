@@ -25,6 +25,7 @@ namespace Stratis.SmartContracts.CLR
     /// </summary>
     public class NoGasCallDataSerializer : CallDataSerializer
     {
+        public const int VmVersionToSet = 0;
         public const ulong GasPriceToSet = 0;
         public const ulong GasLimitToSet = 100_000;
 
@@ -64,7 +65,7 @@ namespace Stratis.SmartContracts.CLR
             var contractExecutionCode = this.primitiveSerializer.Deserialize<byte[]>(decodedParams[0]);
             object[] methodParameters = this.DeserializeMethodParameters(decodedParams[1]);
 
-            var callData = new ContractTxData(0, GasPriceToSet, (Gas) GasLimitToSet, contractExecutionCode, methodParameters);
+            var callData = new ContractTxData(VmVersionToSet, GasPriceToSet, (Gas) GasLimitToSet, contractExecutionCode, methodParameters);
             return Result.Ok(callData);
         }
 
@@ -81,7 +82,7 @@ namespace Stratis.SmartContracts.CLR
 
             string methodName = this.primitiveSerializer.Deserialize<string>(decodedParams[0]);
             object[] methodParameters = this.DeserializeMethodParameters(decodedParams[1]);
-            var callData = new ContractTxData(0, GasPriceToSet, (Gas) GasLimitToSet, contractAddress, methodName, methodParameters);
+            var callData = new ContractTxData(VmVersionToSet, GasPriceToSet, (Gas) GasLimitToSet, contractAddress, methodName, methodParameters);
             return Result.Ok(callData);
         }
 
@@ -102,11 +103,11 @@ namespace Stratis.SmartContracts.CLR
 
             byte[] encoded = RLP.EncodeList(rlpBytes.Select(RLP.EncodeElement).ToArray());
 
-            var bytes = new byte[OpcodeSize + encoded.Length];
+            var bytes = new byte[OpcodeSize + AddressSize + encoded.Length];
 
             contractTxData.ContractAddress.ToBytes().CopyTo(bytes, OpcodeSize);
             bytes[0] = contractTxData.OpCodeType;
-            encoded.CopyTo(bytes, CallContractPrefixSize);
+            encoded.CopyTo(bytes, OpcodeSize + AddressSize);
 
             return bytes;
         }

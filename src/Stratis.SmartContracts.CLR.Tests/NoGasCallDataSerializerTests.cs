@@ -1,8 +1,10 @@
 ﻿using System.Linq;
 using System.Text;
+using CSharpFunctionalExtensions;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Networks;
+using Stratis.SmartContracts.RuntimeObserver;
 using Xunit;
 
 namespace Stratis.SmartContracts.CLR.Tests
@@ -34,16 +36,16 @@ namespace Stratis.SmartContracts.CLR.Tests
                 }"
             );
 
-            var contractTxData = new ContractTxData(1, 1, (RuntimeObserver.Gas)5000, contractExecutionCode);
-            var callDataResult = this.serializer.Deserialize(this.serializer.Serialize(contractTxData));
-            var callData = callDataResult.Value;
+            var contractTxData = new ContractTxData(0, 0, (Gas)0, contractExecutionCode);
+            Result<ContractTxData> callDataResult = this.serializer.Deserialize(this.serializer.Serialize(contractTxData));
+            ContractTxData callData = callDataResult.Value;
 
             Assert.True((bool)callDataResult.IsSuccess);
-            Assert.Equal(1, callData.VmVersion);
+            Assert.Equal(NoGasCallDataSerializer.VmVersionToSet, callData.VmVersion);
             Assert.Equal((byte)ScOpcodeType.OP_CREATECONTRACT, callData.OpCodeType);
             Assert.Equal<byte[]>(contractExecutionCode, callData.ContractExecutionCode);
-            Assert.Equal((RuntimeObserver.Gas)1, callData.GasPrice);
-            Assert.Equal((RuntimeObserver.Gas)5000, callData.GasLimit);
+            Assert.Equal((Gas)NoGasCallDataSerializer.GasPriceToSet, callData.GasPrice);
+            Assert.Equal((Gas)NoGasCallDataSerializer.GasLimitToSet, callData.GasLimit);
         }
 
         [Fact]
@@ -73,10 +75,10 @@ namespace Stratis.SmartContracts.CLR.Tests
                 '#'
             };
 
-            var contractTxData = new ContractTxData(1, 1, (RuntimeObserver.Gas)5000, contractExecutionCode, methodParameters);
+            var contractTxData = new ContractTxData(NoGasCallDataSerializer.VmVersionToSet, NoGasCallDataSerializer.GasPriceToSet, (Gas)NoGasCallDataSerializer.GasLimitToSet, contractExecutionCode, methodParameters);
 
-            var callDataResult = this.serializer.Deserialize(this.serializer.Serialize(contractTxData));
-            var callData = callDataResult.Value;
+            Result<ContractTxData> callDataResult = this.serializer.Deserialize(this.serializer.Serialize(contractTxData));
+            ContractTxData callData = callDataResult.Value;
 
             Assert.True((bool)callDataResult.IsSuccess);
             Assert.Equal(contractTxData.VmVersion, callData.VmVersion);
@@ -106,18 +108,18 @@ namespace Stratis.SmartContracts.CLR.Tests
         [Fact]
         public void SmartContract_CanSerialize_OP_CALLCONTRACT_WithoutMethodParameters()
         {
-            var contractTxData = new ContractTxData(1, 1, (RuntimeObserver.Gas)5000, 100, "Execute");
+            ContractTxData contractTxData = new ContractTxData(1, 1, (RuntimeObserver.Gas)5000, 100, "Execute");
 
-            var callDataResult = this.serializer.Deserialize(this.serializer.Serialize(contractTxData));
-            var callData = callDataResult.Value;
+            Result<ContractTxData> callDataResult = this.serializer.Deserialize(this.serializer.Serialize(contractTxData));
+            ContractTxData callData = callDataResult.Value;
 
             Assert.True((bool)callDataResult.IsSuccess);
-            Assert.Equal(contractTxData.VmVersion, callData.VmVersion);
+            Assert.Equal(NoGasCallDataSerializer.VmVersionToSet, callData.VmVersion);
             Assert.Equal(contractTxData.OpCodeType, callData.OpCodeType);
             Assert.Equal(contractTxData.ContractAddress, callData.ContractAddress);
             Assert.Equal(contractTxData.MethodName, callData.MethodName);
-            Assert.Equal(contractTxData.GasPrice, callData.GasPrice);
-            Assert.Equal(contractTxData.GasLimit, callData.GasLimit);
+            Assert.Equal(NoGasCallDataSerializer.GasPriceToSet, callData.GasPrice);
+            Assert.Equal(NoGasCallDataSerializer.GasLimitToSet, callData.GasLimit);
         }
 
         [Fact]
@@ -136,9 +138,9 @@ namespace Stratis.SmartContracts.CLR.Tests
                 "0x95D34980095380851902ccd9A1Fb4C813C2cb639".HexToAddress()
             };
 
-            var contractTxData = new ContractTxData(1, 1, (RuntimeObserver.Gas)5000, 100, "Execute", methodParameters);
-            var callDataResult = this.serializer.Deserialize(this.serializer.Serialize(contractTxData));
-            var callData = callDataResult.Value;
+            ContractTxData contractTxData = new ContractTxData(NoGasCallDataSerializer.VmVersionToSet, NoGasCallDataSerializer.GasPriceToSet, (Gas)NoGasCallDataSerializer.GasLimitToSet, 100, "Execute", methodParameters);
+            Result<ContractTxData> callDataResult = this.serializer.Deserialize(this.serializer.Serialize(contractTxData));
+            ContractTxData callData = callDataResult.Value;
 
             Assert.True((bool)callDataResult.IsSuccess);
 
