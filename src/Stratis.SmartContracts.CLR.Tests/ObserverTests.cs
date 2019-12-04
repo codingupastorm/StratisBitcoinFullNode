@@ -93,6 +93,7 @@ namespace Stratis.SmartContracts.CLR.Tests
         private readonly IContractModuleDefinitionReader moduleReader;
         private readonly ContractAssemblyLoader assemblyLoader;
         private readonly IGasMeter gasMeter;
+        private readonly IContractInitializer contractInitializer;
 
         public ObserverTests()
         {
@@ -129,6 +130,8 @@ namespace Stratis.SmartContracts.CLR.Tests
                 new InternalHashHelper(),
                 () => 1000);
 
+            this.contractInitializer = new ContractInitializer<SmartContract>();
+
             this.rewriter = new ObserverRewriter(new Observer(this.gasMeter, new MemoryMeter(ReflectionVirtualMachine.MemoryUnitLimit)));
         }
 
@@ -160,7 +163,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             CSharpFunctionalExtensions.Result<IContractAssembly> assembly = this.assemblyLoader.Load(module.ToByteCode());
 
             assembly.Value.SetObserver(new Observer(this.gasMeter, new MemoryMeter(10000)));
-            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
+            IContract contract = this.contractInitializer.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
 
             IContractInvocationResult result = contract.Invoke(callData);
             // Number here shouldn't be hardcoded - note this is really only to let us know of consensus failure
@@ -184,7 +187,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             CSharpFunctionalExtensions.Result<IContractAssembly> assembly = this.assemblyLoader.Load(module.ToByteCode());
             assembly.Value.SetObserver(new Observer(this.gasMeter, new MemoryMeter(10000)));
 
-            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
+            IContract contract = this.contractInitializer.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
 
             // Because our contract contains an infinite loop, we want to kill our test after
             // some amount of time without achieving a result. 3 seconds is an arbitrarily high enough timeout
@@ -215,7 +218,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             CSharpFunctionalExtensions.Result<IContractAssembly> assembly = this.assemblyLoader.Load(module.ToByteCode());
             assembly.Value.SetObserver(new Observer(this.gasMeter, new MemoryMeter(10000)));
 
-            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
+            IContract contract = this.contractInitializer.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
 
             IContractInvocationResult result = contract.InvokeConstructor(null);
 
@@ -239,7 +242,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             CSharpFunctionalExtensions.Result<IContractAssembly> assembly = this.assemblyLoader.Load(module.ToByteCode());
             assembly.Value.SetObserver(new Observer(this.gasMeter, new MemoryMeter(10000)));
 
-            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
+            IContract contract = this.contractInitializer.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
 
             IContractInvocationResult result = contract.InvokeConstructor(new[] { "Test Owner" });
 
@@ -264,7 +267,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             CSharpFunctionalExtensions.Result<IContractAssembly> assembly = this.assemblyLoader.Load(module.ToByteCode());
             assembly.Value.SetObserver(new Observer(this.gasMeter, new MemoryMeter(10000)));
 
-            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
+            IContract contract = this.contractInitializer.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
 
             IContractInvocationResult result = contract.Invoke(callData);
 
@@ -305,7 +308,7 @@ public static class Other
             CSharpFunctionalExtensions.Result<IContractAssembly> assembly = this.assemblyLoader.Load(module.ToByteCode());
             assembly.Value.SetObserver(new Observer(this.gasMeter, new MemoryMeter(10000)));
 
-            IContract contract = Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
+            IContract contract = this.contractInitializer.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
 
             IContractInvocationResult result = contract.InvokeConstructor(null);
 
@@ -423,7 +426,7 @@ public static class Other
             CSharpFunctionalExtensions.Result<IContractAssembly> assembly = this.assemblyLoader.Load(module.ToByteCode());
             assembly.Value.SetObserver(new Observer(this.gasMeter, new MemoryMeter(10000)));
 
-            return Contract.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
+            return this.contractInitializer.CreateUninitialized(assembly.Value.GetType(module.ContractType.Name), this.state, null);
         }
 
     }
