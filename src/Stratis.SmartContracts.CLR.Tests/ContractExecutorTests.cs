@@ -59,7 +59,8 @@ namespace Stratis.SmartContracts.CLR.Tests
             this.contractPrimitiveSerializer = new ContractPrimitiveSerializer(this.network);
             this.serializer = new Serializer(this.contractPrimitiveSerializer);
             this.contractCache = new ContractAssemblyCache();
-            this.vm = new ReflectionVirtualMachine(this.validator, this.loggerFactory, this.assemblyLoader, this.moduleDefinitionReader, this.contractCache, contractBaseTypeHolder);
+            var contractInitializer = new ContractInitializer<SmartContract>();
+            this.vm = new ReflectionVirtualMachine(this.validator, this.loggerFactory, this.assemblyLoader, this.moduleDefinitionReader, this.contractCache, contractBaseTypeHolder, contractInitializer);
             this.stateProcessor = new StateProcessor(this.vm, this.addressGenerator);
             this.internalTxExecutorFactory = new InternalExecutorFactory(this.loggerFactory, this.stateProcessor);
             this.smartContractStateFactory = new SmartContractStateFactory(this.contractPrimitiveSerializer, this.internalTxExecutorFactory, this.serializer);

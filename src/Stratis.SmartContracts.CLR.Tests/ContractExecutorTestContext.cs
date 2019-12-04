@@ -46,10 +46,11 @@ namespace Stratis.SmartContracts.CLR.Tests
             this.AddressGenerator = new AddressGenerator();
             this.Validator = new SmartContractValidator();
             var contractBaseTypeHolder = new ContractBaseTypeHolder(typeof(SmartContract));
+            var contractInitializer = new ContractInitializer<SmartContract>();
             this.AssemblyLoader = new ContractAssemblyLoader(contractBaseTypeHolder);
             this.ModuleDefinitionReader = new ContractModuleDefinitionReader();
             this.ContractCache = new ContractAssemblyCache();
-            this.Vm = new ReflectionVirtualMachine(this.Validator, this.LoggerFactory, this.AssemblyLoader, this.ModuleDefinitionReader, this.ContractCache, contractBaseTypeHolder);
+            this.Vm = new ReflectionVirtualMachine(this.Validator, this.LoggerFactory, this.AssemblyLoader, this.ModuleDefinitionReader, this.ContractCache, contractBaseTypeHolder, contractInitializer);
             this.StateProcessor = new StateProcessor(this.Vm, this.AddressGenerator);
             this.InternalTxExecutorFactory = new InternalExecutorFactory(this.LoggerFactory, this.StateProcessor);
             this.SmartContractStateFactory = new SmartContractStateFactory(this.ContractPrimitiveSerializer, this.InternalTxExecutorFactory, this.Serializer);
