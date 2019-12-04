@@ -4,8 +4,6 @@ using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 
 namespace Stratis.Bitcoin.Features.MemoryPool.Rules
 {
-    // TK: Remove
-
     /// <summary>
     /// Validates the rate limit.
     /// Currently not implemented.

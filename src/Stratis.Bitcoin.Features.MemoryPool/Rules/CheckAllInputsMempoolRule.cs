@@ -6,9 +6,6 @@ using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 
 namespace Stratis.Bitcoin.Features.MemoryPool.Rules
 {
-    // TK: In a token-less chain we will only ever have one input which contains the sender's address.
-    // We can remove this rule?
-
     /// <summary>
     /// Validate inputs against previous transactions.
     /// Checks against <see cref="ScriptVerify.Standard"/> and <see cref="ScriptVerify.P2SH"/>

@@ -5,9 +5,6 @@ using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 
 namespace Stratis.Bitcoin.Features.MemoryPool.Rules
 {
-    // TK: In a token-less chain we dont consume any inputs so is this rule required?
-    // Perhaps duplicate call contract transaction from the same sender?
-
     /// <summary>
     /// Check for conflicts with in-memory transactions.
     /// If a conflict is found it is added to the validation context.

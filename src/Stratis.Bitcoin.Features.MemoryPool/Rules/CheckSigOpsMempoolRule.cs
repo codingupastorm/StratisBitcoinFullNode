@@ -4,8 +4,6 @@ using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 
 namespace Stratis.Bitcoin.Features.MemoryPool.Rules
 {
-    // TK: This rule seems to be OK?
-
     /// <summary>
     /// Check that the transaction doesn't have an excessive number of sigops.
     /// </summary>

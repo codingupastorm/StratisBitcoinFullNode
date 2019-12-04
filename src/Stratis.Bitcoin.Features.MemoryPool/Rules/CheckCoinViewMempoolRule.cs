@@ -5,9 +5,6 @@ using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Bitcoin.Features.MemoryPool.Rules
 {
-    // TK: Not sure that all parts of this rule is required.
-    // Perhaps just the part where we check if the hash is not yet in coinview?
-
     /// <summary>
     /// Validates the transaction with the coin view.
     /// Checks if already in coin view, and missing and unavailable inputs.
