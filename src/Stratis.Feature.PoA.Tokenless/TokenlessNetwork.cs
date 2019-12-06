@@ -112,7 +112,6 @@ namespace Stratis.Feature.PoA.Tokenless
                 buriedDeployments: buriedDeployments,
                 bip9Deployments: bip9Deployments,
                 bip34Hash: new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"),
-                ruleChangeActivationThreshold: 1916, // TODO-TL: Check
                 minerConfirmationWindow: 2016, // TODO-TL: Check
                 maxReorgLength: 500, // TODO-TL: Check
                 defaultAssumeValid: null,

@@ -6,7 +6,6 @@ using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.Behaviors;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
-using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
@@ -20,12 +19,6 @@ namespace Stratis.Feature.PoA.Tokenless
 
         private readonly IPoAMiner miner;
 
-        private readonly VotingManager votingManager;
-
-        private readonly IWhitelistedHashesRepository whitelistedHashesRepository;
-
-        private readonly IdleFederationMembersKicker idleFederationMembersKicker;
-
         private readonly CertificatesManager certificatesManager;
 
         private readonly RevocationChecker revocationChecker;
@@ -33,21 +26,15 @@ namespace Stratis.Feature.PoA.Tokenless
         public TokenlessFeature(
             ICoreComponent coreComponent,
             CertificatesManager certificatesManager,
-            IdleFederationMembersKicker idleFederationMembersKicker,
             IPoAMiner miner,
             PayloadProvider payloadProvider,
-            RevocationChecker revocationChecker,
-            VotingManager votingManager,
-            IWhitelistedHashesRepository whitelistedHashesRepository)
+            RevocationChecker revocationChecker)
         {
             this.coreComponent = coreComponent;
 
             this.certificatesManager = certificatesManager;
-            this.idleFederationMembersKicker = idleFederationMembersKicker;
             this.miner = miner;
             this.revocationChecker = revocationChecker;
-            this.votingManager = votingManager;
-            this.whitelistedHashesRepository = whitelistedHashesRepository;
 
             payloadProvider.DiscoverPayloads(this.GetType().Assembly);
         }
@@ -62,18 +49,9 @@ namespace Stratis.Feature.PoA.Tokenless
             this.ReplaceBlockStoreBehavior(connectionParameters);
 
             this.coreComponent.FederationManager.Initialize();
-            this.whitelistedHashesRepository.Initialize();
 
+            // TODO-TL: Check if we need a new ConsensusOptions.
             var options = (PoAConsensusOptions)this.coreComponent.Network.Consensus.Options;
-
-            if (options.VotingEnabled)
-            {
-                this.votingManager.Initialize();
-
-                if (options.AutoKickIdleMembers)
-                    this.idleFederationMembersKicker.Initialize();
-            }
-
             if (options.EnablePermissionedMembership)
             {
                 await this.revocationChecker.InitializeAsync().ConfigureAwait(false);
@@ -115,10 +93,6 @@ namespace Stratis.Feature.PoA.Tokenless
         public override void Dispose()
         {
             this.miner.Dispose();
-
-            this.votingManager.Dispose();
-
-            this.idleFederationMembersKicker.Dispose();
 
             if (((PoAConsensusOptions)this.coreComponent.Network.Consensus.Options).EnablePermissionedMembership)
             {
