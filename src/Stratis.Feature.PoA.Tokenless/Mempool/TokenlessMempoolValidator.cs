@@ -6,11 +6,11 @@ using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
+using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Feature.PoA.Tokenless.Mempool;
 
-namespace Stratis.Bitcoin.Features.MemoryPool
+namespace Stratis.Feature.PoA.Tokenless.Mempool
 {
     /// <summary>
     /// Validates memory pool transactions.

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
@@ -16,7 +17,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
 
         public override void CheckTransaction(MempoolValidationContext context)
         {
-            // TODO-TL: Implement
+            throw new NotImplementedException();
         }
     }
 }
