@@ -134,9 +134,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         /// <summary> Dictionary of <see cref="DeltaPair"/> indexed by transaction hash.</summary>
         private readonly Dictionary<uint256, DeltaPair> mapDeltas;
 
-        /// <summary> All tx witness hashes/entries in mapTx, in random order.</summary>
-        private readonly Dictionary<TxMempoolEntry, uint256> vTxHashes;
-
         private readonly ILogger logger;
         private readonly ISignals signals;
 
@@ -149,7 +146,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
             this.mapLinks = new TxlinksMap();
             this.MapNextTx = new List<NextTxPair>();
             this.mapDeltas = new Dictionary<uint256, DeltaPair>();
-            this.vTxHashes = new Dictionary<TxMempoolEntry, uint256>(); // All tx witness hashes/entries in mapTx, in random order.
 
             this.InnerClear(); //lock free clear
 
@@ -185,16 +181,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         public void Clear()
         {
             this.InnerClear();
-        }
-
-        /// <summary>
-        /// Set the new memory pools min fee to the fee rate of the removed set.
-        /// </summary>
-        /// <param name="rate">Fee rate of the removed set</param>
-        private void TrackPackageRemoved(FeeRate rate)
-        {
-            if (rate.FeePerK.Satoshi > this.rollingMinimumFeeRate)
-                this.rollingMinimumFeeRate = rate.FeePerK.Satoshi;
         }
 
         /// <inheritdoc />
@@ -244,14 +230,9 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         /// <inheritdoc />
         public bool AddUnchecked(uint256 hash, TxMempoolEntry entry, bool validFeeEstimate = true)
         {
-            //LOCK(cs);
             var setAncestors = new SetEntries();
-            long nNoLimit = long.MaxValue;
-            string dummy;
-            this.CalculateMemPoolAncestors(entry, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, out dummy);
-            bool returnVal = this.AddUnchecked(hash, entry, setAncestors, validFeeEstimate);
-
-            return returnVal;
+            this.CalculateMemPoolAncestors(entry, setAncestors, long.MaxValue, long.MaxValue, long.MaxValue, long.MaxValue, out _);
+            return this.AddUnchecked(hash, entry, setAncestors, validFeeEstimate);
         }
 
         /// <inheritdoc />
@@ -260,30 +241,18 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
             this.MapTx.Add(mempoolEntry);
             this.mapLinks.Add(mempoolEntry, new TxLinks { Parents = new SetEntries(), Children = new SetEntries() });
 
-            // Update transaction for any feeDelta created by PrioritiseTransaction
-            // TODO: refactor so that the fee delta is calculated before inserting
-            // into mapTx.
-            DeltaPair pos = this.mapDeltas.TryGet(hash);
-            if (pos != null)
-            {
-                if (pos.Amount != null)
-                {
-                    mempoolEntry.UpdateFeeDelta(pos.Amount.Satoshi);
-                }
-            }
-
             // Update cachedInnerUsage to include contained transaction's usage.
             // (When we update the entry for in-mempool parents, memory usage will be
             // further updated.)
             this.cachedInnerUsage += mempoolEntry.DynamicMemoryUsage();
 
-            Transaction tx = mempoolEntry.Transaction;
             var setParentTransactions = new HashSet<uint256>();
-            foreach (TxIn txInput in tx.Inputs)
+            foreach (TxIn txInput in mempoolEntry.Transaction.Inputs)
             {
-                this.MapNextTx.Add(new NextTxPair { OutPoint = txInput.PrevOut, Transaction = tx });
+                this.MapNextTx.Add(new NextTxPair { OutPoint = txInput.PrevOut, Transaction = mempoolEntry.Transaction });
                 setParentTransactions.Add(txInput.PrevOut.Hash);
             }
+
             // Don't bother worrying about child transactions of this one.
             // Normal case of a new transaction arriving is that there can't be any
             // children, because such children would be orphans.
@@ -292,24 +261,18 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
             // to clean up the mess we're leaving here.
 
             // Update ancestors with information about this tx
-            foreach (uint256 phash in setParentTransactions)
+            foreach (uint256 parentHash in setParentTransactions)
             {
-                TxMempoolEntry pit = this.MapTx.TryGet(phash);
-                if (pit != null)
-                    this.UpdateParent(mempoolEntry, pit, true);
+                TxMempoolEntry parentMempoolEntry = this.MapTx.TryGet(parentHash);
+                if (parentMempoolEntry != null)
+                    this.UpdateParent(mempoolEntry, parentMempoolEntry, true);
             }
 
             this.UpdateAncestorsOf(true, mempoolEntry, setAncestors);
             this.UpdateEntryForAncestors(mempoolEntry, setAncestors);
 
-            this.MinerPolicyEstimator.ProcessTransaction(mempoolEntry, validFeeEstimate);
-
-            this.vTxHashes.Add(mempoolEntry, tx.GetWitHash());
-
             if (this.signals != null)
-            {
                 this.signals.Publish(new TransactionAddedToMemoryPool(mempoolEntry.Transaction));
-            }
 
             return true;
         }
@@ -318,20 +281,17 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         /// Set ancestor state for an entry.
         /// </summary>
         /// <param name="entry">Memory pool entry.</param>
-        /// <param name="setAncestors">Transaction ancestors.</param>
-        private void UpdateEntryForAncestors(TxMempoolEntry entry, SetEntries setAncestors)
+        /// <param name="mempoolEntries">Transaction ancestors.</param>
+        private void UpdateEntryForAncestors(TxMempoolEntry entry, SetEntries mempoolEntries)
         {
-            long updateCount = setAncestors.Count;
             long updateSize = 0;
-            Money updateFee = 0;
-            long updateSigOpsCost = 0;
-            foreach (TxMempoolEntry ancestorIt in setAncestors)
+
+            foreach (TxMempoolEntry ancestorMempoolEntry in mempoolEntries)
             {
-                updateSize += ancestorIt.GetTxSize();
-                updateFee += ancestorIt.ModifiedFee;
-                updateSigOpsCost += ancestorIt.SigOpCost;
+                updateSize += ancestorMempoolEntry.GetTxSize();
             }
-            entry.UpdateAncestorState(updateSize, updateFee, updateCount, updateSigOpsCost);
+
+            entry.UpdateAncestorState(updateSize, 0, mempoolEntries.Count, 0);
         }
 
         /// <summary>
@@ -339,20 +299,21 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         /// </summary>
         /// <param name="add">Whether to add or remove.</param>
         /// <param name="entry">Memory pool entry.</param>
-        /// <param name="setAncestors">Transaction ancestors.</param>
-        private void UpdateAncestorsOf(bool add, TxMempoolEntry entry, SetEntries setAncestors)
+        /// <param name="entries">Transaction ancestors.</param>
+        private void UpdateAncestorsOf(bool add, TxMempoolEntry entry, SetEntries entries)
         {
-            SetEntries parentIters = this.GetMemPoolParents(entry);
-            // add or remove this tx as a child of each parent
-            foreach (TxMempoolEntry piter in parentIters)
-                this.UpdateChild(piter, entry, add);
+            SetEntries parentEntries = this.GetMemPoolParents(entry);
+
+            // Add or remove this transaction as a child of each parent.
+            foreach (TxMempoolEntry parentEntry in parentEntries)
+                this.UpdateChild(parentEntry, entry, add);
 
             long updateCount = (add ? 1 : -1);
             long updateSize = updateCount * entry.GetTxSize();
-            Money updateFee = updateCount * entry.ModifiedFee;
-            foreach (TxMempoolEntry ancestorIt in setAncestors)
+
+            foreach (TxMempoolEntry ancestorIt in entries)
             {
-                ancestorIt.UpdateDescendantState(updateSize, updateFee, updateCount);
+                ancestorIt.UpdateDescendantState(updateSize, 0, updateCount);
             }
         }
 
@@ -429,20 +390,26 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         }
 
         /// <inheritdoc />
-        public bool CalculateMemPoolAncestors(TxMempoolEntry entry, SetEntries setAncestors, long limitAncestorCount,
-            long limitAncestorSize, long limitDescendantCount, long limitDescendantSize, out string errString,
+        public bool CalculateMemPoolAncestors(
+            TxMempoolEntry entry,
+            SetEntries ancestorEntries,
+            long limitAncestorCount,
+            long limitAncestorSize,
+            long limitDescendantCount,
+            long limitDescendantSize,
+            out string errString,
             bool fSearchForParents = true)
         {
             errString = string.Empty;
+
             var parentHashes = new SetEntries();
-            Transaction tx = entry.Transaction;
 
             if (fSearchForParents)
             {
                 // Get parents of this transaction that are in the mempool
                 // GetMemPoolParents() is only valid for entries in the mempool, so we
                 // iterate mapTx to find parents.
-                foreach (TxIn txInput in tx.Inputs)
+                foreach (TxIn txInput in entry.Transaction.Inputs)
                 {
                     TxMempoolEntry piter = this.MapTx.TryGet(txInput.PrevOut.Hash);
                     if (piter != null)
@@ -476,7 +443,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
             {
                 TxMempoolEntry stageit = parentHashes.First();
 
-                setAncestors.Add(stageit);
+                ancestorEntries.Add(stageit);
                 parentHashes.Remove(stageit);
                 totalSizeWithAncestors += stageit.GetTxSize();
 
@@ -503,11 +470,12 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
                 foreach (TxMempoolEntry phash in setMemPoolParents)
                 {
                     // If this is a new ancestor, add it.
-                    if (!setAncestors.Contains(phash))
+                    if (!ancestorEntries.Contains(phash))
                     {
                         parentHashes.Add(phash);
                     }
-                    if (parentHashes.Count + setAncestors.Count + 1 > limitAncestorCount)
+
+                    if (parentHashes.Count + ancestorEntries.Count + 1 > limitAncestorCount)
                     {
                         errString = $"too many unconfirmed ancestors [limit: {limitAncestorCount}]";
                         this.logger.LogTrace("(-)[TOO_MANY_UNCONFIRM_ANCESTORS]:false");
@@ -536,42 +504,40 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         /// <inheritdoc />
         public bool Exists(uint256 hash)
         {
-            bool returnVal = this.MapTx.ContainsKey(hash);
-
-            return returnVal;
+            return this.MapTx.ContainsKey(hash);
         }
 
         /// <inheritdoc />
-        public void RemoveRecursive(Transaction origTx)
+        public void RemoveRecursive(Transaction originalTx)
         {
             // Remove transaction from memory pool
-            uint256 origHahs = origTx.GetHash();
+            uint256 originalTransactionHash = originalTx.GetHash();
 
-            var txToRemove = new SetEntries();
-            TxMempoolEntry origit = this.MapTx.TryGet(origHahs);
-            if (origit != null)
-            {
-                txToRemove.Add(origit);
-            }
+            var transactionsToRemove = new SetEntries();
+
+            TxMempoolEntry originalEntry = this.MapTx.TryGet(originalTransactionHash);
+            if (originalEntry != null)
+                transactionsToRemove.Add(originalEntry);
             else
             {
                 // When recursively removing but origTx isn't in the mempool
                 // be sure to remove any children that are in the pool. This can
                 // happen during chain re-orgs if origTx isn't re-accepted into
                 // the mempool for any reason.
-                for (int i = 0; i < origTx.Outputs.Count; i++)
+                for (int i = 0; i < originalTx.Outputs.Count; i++)
                 {
-                    NextTxPair it = this.MapNextTx.FirstOrDefault(w => w.OutPoint == new OutPoint(origHahs, i));
+                    NextTxPair it = this.MapNextTx.FirstOrDefault(w => w.OutPoint == new OutPoint(originalTransactionHash, i));
                     if (it == null)
                         continue;
                     TxMempoolEntry nextit = this.MapTx.TryGet(it.Transaction.GetHash());
                     Guard.Assert(nextit != null);
-                    txToRemove.Add(nextit);
+                    transactionsToRemove.Add(nextit);
                 }
             }
+
             var setAllRemoves = new SetEntries();
 
-            foreach (TxMempoolEntry item in txToRemove)
+            foreach (TxMempoolEntry item in transactionsToRemove)
             {
                 this.CalculateDescendants(item, setAllRemoves);
             }
@@ -582,8 +548,8 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         /// <inheritdoc />
         public void RemoveStaged(SetEntries stage, bool updateDescendants)
         {
-            //AssertLockHeld(cs);
             this.UpdateForRemoveFromMempool(stage, updateDescendants);
+
             foreach (TxMempoolEntry it in stage)
             {
                 this.RemoveUnchecked(it);
@@ -593,7 +559,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         /// <inheritdoc />
         public int Expire(long time)
         {
-            //LOCK(cs);
             var toremove = new SetEntries();
             foreach (TxMempoolEntry entry in this.MapTx.EntryTime)
             {
@@ -606,6 +571,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
             {
                 this.CalculateDescendants(removeit, stage);
             }
+
             this.RemoveStaged(stage, false);
 
             return stage.Count;
@@ -622,9 +588,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
             {
                 this.MapNextTx.Remove(this.MapNextTx.FirstOrDefault(w => w.OutPoint == txin.PrevOut));
             }
-
-            if (this.vTxHashes.Any())
-                this.vTxHashes.Remove(entry);
 
             this.cachedInnerUsage -= entry.DynamicMemoryUsage();
             this.cachedInnerUsage -= this.mapLinks[entry]?.Parents?.Sum(p => p.DynamicMemoryUsage()) ?? 0 + this.mapLinks[entry]?.Children?.Sum(p => p.DynamicMemoryUsage()) ?? 0;
@@ -646,6 +609,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
             {
                 stage.Add(entry);
             }
+
             // Traverse down the children of entry, only adding children that are not
             // accounted for in setDescendants already (because those children have either
             // already been walked, or will be walked in this iteration).
@@ -673,9 +637,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         /// <param name="updateDescendants">If updateDescendants is true, then also update in-mempool descendants' ancestor state.</param>
         private void UpdateForRemoveFromMempool(SetEntries entriesToRemove, bool updateDescendants)
         {
-            // For each entry, walk back all ancestors and decrement size associated with this
-            // transaction
-            long nNoLimit = long.MaxValue;
+            // For each entry, walk back all ancestors and decrement size associated with this transaction.
 
             if (updateDescendants)
             {
@@ -691,18 +653,16 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
                     this.CalculateDescendants(removeIt, setDescendants);
                     setDescendants.Remove(removeIt); // don't update state for self
                     long modifySize = -removeIt.GetTxSize();
-                    long modifyFee = -removeIt.ModifiedFee;
-                    long modifySigOps = -removeIt.SigOpCost;
 
                     foreach (TxMempoolEntry dit in setDescendants)
-                        dit.UpdateAncestorState(modifySize, modifyFee, -1, modifySigOps);
+                        dit.UpdateAncestorState(modifySize, 0, -1, 0);
                 }
             }
 
             foreach (TxMempoolEntry entry in entriesToRemove)
             {
                 var setAncestors = new SetEntries();
-                string dummy = string.Empty;
+
                 // Since this is a tx that is already in the mempool, we can call CMPA
                 // with fSearchForParents = false.  If the mempool is in a consistent
                 // state, then using true or false should both be correct, though false
@@ -720,7 +680,8 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
                 // differ from the set of mempool parents we'd calculate by searching,
                 // and it's important that we use the mapLinks[] notion of ancestor
                 // transactions as the set of things to update for removal.
-                this.CalculateMemPoolAncestors(entry, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, out dummy, false);
+                this.CalculateMemPoolAncestors(entry, setAncestors, long.MaxValue, long.MaxValue, long.MaxValue, long.MaxValue, out _, false);
+
                 // Note that UpdateAncestorsOf severs the child links that point to
                 // removeIt in the entries for the parents of removeIt.
                 this.UpdateAncestorsOf(false, entry, setAncestors);
@@ -742,17 +703,19 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         private void UpdateChildrenForRemoval(TxMempoolEntry entry)
         {
             SetEntries setMemPoolChildren = this.GetMemPoolChildren(entry);
+
             foreach (TxMempoolEntry updateIt in setMemPoolChildren)
                 this.UpdateParent(updateIt, entry, false);
         }
 
         /// <inheritdoc />
-        public void RemoveForBlock(IEnumerable<Transaction> vtx, int blockHeight)
+        public void RemoveForBlock(IEnumerable<Transaction> transactions, int blockHeight)
         {
             var entries = new List<TxMempoolEntry>();
-            foreach (Transaction tx in vtx)
+
+            foreach (Transaction transaction in transactions)
             {
-                uint256 hash = tx.GetHash();
+                uint256 hash = transaction.GetHash();
                 TxMempoolEntry entry = this.MapTx.TryGet(hash);
                 if (entry != null)
                     entries.Add(entry);
@@ -760,38 +723,38 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
 
             // Before the txs in the new block have been removed from the mempool, update policy estimates
             this.MinerPolicyEstimator.ProcessBlock(blockHeight, entries);
-            foreach (Transaction tx in vtx)
+            foreach (Transaction transaction in transactions)
             {
-                uint256 hash = tx.GetHash();
+                uint256 hash = transaction.GetHash();
 
                 TxMempoolEntry entry = this.MapTx.TryGet(hash);
                 if (entry != null)
                 {
-                    var stage = new SetEntries();
-                    stage.Add(entry);
+                    var stage = new SetEntries
+                    {
+                        entry
+                    };
+
                     this.RemoveStaged(stage, true);
                 }
 
-                this.RemoveConflicts(tx);
-                this.ClearPrioritisation(tx.GetHash());
+                this.RemoveConflicts(transaction);
+                this.ClearPrioritisation(transaction.GetHash());
             }
         }
 
-        /// <summary>
-        /// Removes conflicting transactions.
-        /// </summary>
-        /// <param name="tx">Transaction to remove conflicts from.</param>
-        private void RemoveConflicts(Transaction tx)
+        /// <summary> Removes conflicting transactions.</summary>
+        /// <param name="transaction">Transaction to remove conflicts from.</param>
+        private void RemoveConflicts(Transaction transaction)
         {
             // Remove transactions which depend on inputs of tx, recursively
-            //LOCK(cs);
-            foreach (TxIn txInput in tx.Inputs)
+            foreach (TxIn txInput in transaction.Inputs)
             {
                 NextTxPair it = this.MapNextTx.FirstOrDefault(p => p.OutPoint == txInput.PrevOut);
                 if (it != null)
                 {
                     Transaction txConflict = it.Transaction;
-                    if (txConflict != tx)
+                    if (txConflict != transaction)
                     {
                         this.ClearPrioritisation(txConflict.GetHash());
                         this.RemoveRecursive(txConflict);
@@ -815,63 +778,31 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         /// <returns>Number of bytes in use by memory pool.</returns>
         public long DynamicMemoryUsage()
         {
-            // TODO : calculate roughly the size of each element in its list
-
-            //LOCK(cs);
-            // Estimate the overhead of mapTx to be 15 pointers + an allocation, as no exact formula for boost::multi_index_contained is implemented.
-            //int sizeofEntry = 10;
-            //int sizeofDelta = 10;
-            //int sizeofLinks = 10;
-            //int sizeofNextTx = 10;
-            //int sizeofHashes = 10;
-
-            //return sizeofEntry*this.MapTx.Count +
-            //       sizeofNextTx*this.mapNextTx.Count +
-            //       sizeofDelta*this.mapDeltas.Count +
-            //       sizeofLinks*this.mapLinks.Count +
-            //       sizeofHashes*this.vTxHashes.Count +
-            //       cachedInnerUsage;
-
-            long returnVal = this.MapTx.Values.Sum(m => m.DynamicMemoryUsage()) + this.cachedInnerUsage;
-            return returnVal;
+            return this.MapTx.Values.Sum(m => m.DynamicMemoryUsage()) + this.cachedInnerUsage;
         }
 
         /// <inheritdoc />
         public void TrimToSize(long sizelimit, List<uint256> pvNoSpendsRemaining = null)
         {
-            //LOCK(cs);
-
-            int nTxnRemoved = 0;
-            var maxFeeRateRemoved = new FeeRate(0);
             while (this.MapTx.Any() && this.DynamicMemoryUsage() > sizelimit)
             {
-                TxMempoolEntry it = this.MapTx.DescendantScore.First();
-
-                // We set the new mempool min fee to the feerate of the removed set, plus the
-                // "minimum reasonable fee rate" (ie some value under which we consider txn
-                // to have 0 fee). This way, we don't allow txn to enter mempool with feerate
-                // equal to txn which were removed with no block in between.
-                var removed = new FeeRate(it.ModFeesWithDescendants, (int)it.SizeWithDescendants);
-                removed = new FeeRate(new Money(removed.FeePerK + this.minReasonableRelayFee.FeePerK));
-
-                this.TrackPackageRemoved(removed);
-                maxFeeRateRemoved = new FeeRate(Math.Max(maxFeeRateRemoved.FeePerK, removed.FeePerK));
+                TxMempoolEntry entry = this.MapTx.DescendantScore.First();
 
                 var stage = new SetEntries();
-                this.CalculateDescendants(it, stage);
-                nTxnRemoved += stage.Count;
+                this.CalculateDescendants(entry, stage);
 
-                var txn = new List<Transaction>();
+                var transactions = new List<Transaction>();
                 if (pvNoSpendsRemaining != null)
                 {
                     foreach (TxMempoolEntry setEntry in stage)
-                        txn.Add(setEntry.Transaction);
+                        transactions.Add(setEntry.Transaction);
                 }
 
                 this.RemoveStaged(stage, false);
-                if (pvNoSpendsRemaining != null)
+
+                if (pvNoSpendsRemaining == null)
                 {
-                    foreach (Transaction tx in txn)
+                    foreach (Transaction tx in transactions)
                     {
                         foreach (TxIn txin in tx.Inputs)
                         {
@@ -884,9 +815,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
                     }
                 }
             }
-
-            if (maxFeeRateRemoved > new FeeRate(0))
-                this.logger.LogInformation($"Removed {nTxnRemoved} txn, rolling minimum fee bumped to {maxFeeRateRemoved}");
         }
 
         /// <inheritdoc />
@@ -899,29 +827,22 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         /// <inheritdoc />
         public void ApplyDeltas(uint256 hash, ref double dPriorityDelta, ref Money nFeeDelta)
         {
-            //LOCK(cs);
-            DeltaPair delta = this.mapDeltas.TryGet(hash);
-            if (delta == null)
-                return;
-
-            dPriorityDelta += delta.Delta;
-            nFeeDelta += delta.Amount;
-        }
-
-        /// <inheritdoc />
-        public static double AllowFreeThreshold()
-        {
-            return Money.COIN * 144 / 250;
+            // Not valid in a tokenless blockchain.
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc />
         public void WriteFeeEstimates(BitcoinStream stream)
         {
+            // Not valid in a tokenless blockchain.
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc />
         public void ReadFeeEstimates(BitcoinStream stream)
         {
+            // Not valid in a tokenless blockchain.
+            throw new NotImplementedException();
         }
     }
 }
