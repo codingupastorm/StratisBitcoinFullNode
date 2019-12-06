@@ -8,8 +8,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         public TokenlessMempoolValidationContext(Transaction transaction, MempoolValidationState mempoolValidationState)
             : base(transaction, mempoolValidationState)
         {
-            this.Transaction = transaction;
-            this.State = mempoolValidationState;
         }
     }
 }

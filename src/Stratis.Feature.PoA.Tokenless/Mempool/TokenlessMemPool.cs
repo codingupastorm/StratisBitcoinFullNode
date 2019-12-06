@@ -146,7 +146,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         /// <param name="nodeSettings">Full node settings.</param>
         public TokenlessMempool(IDateTimeProvider dateTimeProvider, BlockPolicyEstimator blockPolicyEstimator, ILoggerFactory loggerFactory, NodeSettings nodeSettings, ISignals signals = null)
         {
-            this.dateTimeProvider = dateTimeProvider;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.signals = signals;
 
@@ -176,9 +175,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
             get { return this.MapTx.Count; }
         }
 
-        /// <summary>Gets the date and time provider.</summary>
-        private IDateTimeProvider dateTimeProvider { get; }
-
         /// <summary>
         /// Clears the collections that contain the memory pool transactions,
         /// and increments the running total of transactions updated.
@@ -195,7 +191,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         /// <inheritdoc />
         public void Clear()
         {
-            //LOCK(cs);
             this.InnerClear();
         }
 
