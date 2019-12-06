@@ -23,7 +23,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Rules
         {
         }
 
-        public override void Execute(MempoolValidationContext context)
+        public override void CheckTransaction(MempoolValidationContext context)
         {
             // Check if it's economically rational to mine this transaction rather
             // than the ones it replaces.

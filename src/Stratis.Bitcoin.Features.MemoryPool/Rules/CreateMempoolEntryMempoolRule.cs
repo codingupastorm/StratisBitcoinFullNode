@@ -35,7 +35,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Rules
             this.consensusRules = consensusRules;
         }
 
-        public override void Execute(MempoolValidationContext context)
+        public override void CheckTransaction(MempoolValidationContext context)
         {
             // Only accept BIP68 sequence locked transactions that can be mined in the next
             // block; we don't want our mempool filled up with transactions that can't

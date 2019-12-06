@@ -24,7 +24,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.MempoolRules
         }
 
         /// <inheritdoc/>
-        public override void Execute(MempoolValidationContext context)
+        public override void CheckTransaction(MempoolValidationContext context)
         {
             // If wanting to execute a contract, we must be able to get the sender.
             if (context.Transaction.Outputs.Any(x => x.ScriptPubKey.IsSmartContractExec()))

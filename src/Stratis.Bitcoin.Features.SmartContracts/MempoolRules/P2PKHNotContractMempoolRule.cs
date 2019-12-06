@@ -25,7 +25,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.MempoolRules
         }
 
         /// <inheritdoc/>
-        public override void Execute(MempoolValidationContext context)
+        public override void CheckTransaction(MempoolValidationContext context)
         {
             P2PKHNotContractRule.CheckTransaction(this.stateRepositoryRoot, context.Transaction);
         }

@@ -19,7 +19,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Rules
         {
         }
 
-        public override void Execute(MempoolValidationContext context)
+        public override void CheckTransaction(MempoolValidationContext context)
         {
             // Calculate in-mempool ancestors, up to a limit.
             context.SetAncestors = new TxMempool.SetEntries();

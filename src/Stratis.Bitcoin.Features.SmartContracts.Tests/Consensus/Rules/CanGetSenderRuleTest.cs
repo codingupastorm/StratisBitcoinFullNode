@@ -72,7 +72,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Consensus.Rules
             transaction.Outputs.Add(new TxOut(100, new Script(new byte[] { (byte)ScOpcodeType.OP_CREATECONTRACT })));
 
             // Mempool check works
-            this.mempoolRule.Execute(new MempoolValidationContext(transaction, new MempoolValidationState(false)));
+            this.mempoolRule.CheckTransaction(new MempoolValidationContext(transaction, new MempoolValidationState(false)));
 
             // Block validation check works
             Block block = this.network.CreateBlock();
@@ -93,7 +93,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Consensus.Rules
             transaction.Outputs.Add(new TxOut(100, new Script(new byte[] { (byte)ScOpcodeType.OP_CREATECONTRACT })));
 
             // Mempool check fails
-            Assert.ThrowsAny<ConsensusErrorException>(() => this.mempoolRule.Execute(new MempoolValidationContext(transaction, new MempoolValidationState(false))));
+            Assert.ThrowsAny<ConsensusErrorException>(() => this.mempoolRule.CheckTransaction(new MempoolValidationContext(transaction, new MempoolValidationState(false))));
 
             // Block validation check fails
             Block block = this.network.CreateBlock();

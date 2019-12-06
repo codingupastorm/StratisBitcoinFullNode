@@ -27,7 +27,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
         }
 
         /// <inheritdoc/>
-        public override void Execute(MempoolValidationContext context)
+        public override void CheckTransaction(MempoolValidationContext context)
         {
             TxOut scTxOut = context.Transaction.TryGetSmartContractTxOut();
 

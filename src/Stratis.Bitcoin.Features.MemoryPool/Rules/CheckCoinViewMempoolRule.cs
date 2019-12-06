@@ -19,7 +19,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Rules
         {
         }
 
-        public override void Execute(MempoolValidationContext context)
+        public override void CheckTransaction(MempoolValidationContext context)
         {
             Guard.Assert(context.View != null);
 

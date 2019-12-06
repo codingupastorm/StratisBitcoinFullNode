@@ -20,7 +20,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Rules
         }
 
         /// <inheritdoc />
-        public override void Execute(MempoolValidationContext context)
+        public override void CheckTransaction(MempoolValidationContext context)
         {
             foreach (var txOut in context.Transaction.Outputs)
             {

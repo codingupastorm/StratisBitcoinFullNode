@@ -19,7 +19,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Rules
         {
         }
 
-        public override void Execute(MempoolValidationContext context)
+        public override void CheckTransaction(MempoolValidationContext context)
         {
             Money mempoolRejectFee = this.mempool.GetMinFee(this.settings.MaxMempool * 1000000).GetFee(context.EntrySize);
             if (mempoolRejectFee > 0 && context.ModifiedFees < mempoolRejectFee)
