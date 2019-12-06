@@ -103,17 +103,20 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
     /// </remarks>
     public class TokenlessMempool : ITxMempool
     {
-        /// <summary>The indexed transaction set in the memory pool.</summary>
+        /// <summary> The indexed transaction set in the memory pool.</summary>
         public IndexedTransactionSet MapTx { get; }
 
-        /// <summary>Collection of transaction inputs.</summary>
+        /// <summary> Collection of transaction inputs.</summary>
         public List<NextTxPair> MapNextTx { get; }
 
-        /// <summary>Value n means that n times in 2^32 we check.</summary>
+        /// <summary> Value n means that n times in 2^32 we check.</summary>
         private double checkFrequency;
 
-        /// <summary>Sum of dynamic memory usage of all the map elements (NOT the maps themselves).</summary>
+        /// <summary> Sum of dynamic memory usage of all the map elements (NOT the maps themselves).</summary>
         private long cachedInnerUsage;
+
+        /// <summary> Gets the miner policy estimator.</summary>
+        public BlockPolicyEstimator MinerPolicyEstimator { get; }
 
         /// <summary>
         /// minReasonableRelayFee should be a feerate which is, roughly, somewhere
@@ -122,29 +125,22 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         ///  </summary>
         private readonly FeeRate minReasonableRelayFee;
 
-        /// <summary>minimum fee to get into the pool, decreases exponentially.</summary>
+        /// <summary> Minimum fee to get into the pool, decreases exponentially.</summary>
         private double rollingMinimumFeeRate;
 
-        /// <summary>Collection of transaction links.</summary>
+        /// <summary> Collection of transaction links.</summary>
         private readonly TxlinksMap mapLinks;
 
-        /// <summary>Dictionary of <see cref="DeltaPair"/> indexed by transaction hash.</summary>
+        /// <summary> Dictionary of <see cref="DeltaPair"/> indexed by transaction hash.</summary>
         private readonly Dictionary<uint256, DeltaPair> mapDeltas;
 
-        /// <summary>All tx witness hashes/entries in mapTx, in random order.</summary>
+        /// <summary> All tx witness hashes/entries in mapTx, in random order.</summary>
         private readonly Dictionary<TxMempoolEntry, uint256> vTxHashes;
 
         private readonly ILogger logger;
         private readonly ISignals signals;
 
-        /// <summary>
-        /// Constructs a new TxMempool object.
-        /// </summary>
-        /// <param name="dateTimeProvider">The data and time provider for accessing current date and time.</param>
-        /// <param name="blockPolicyEstimator">The block policy estimator object.</param>
-        /// <param name="loggerFactory">Factory for creating instance logger.</param>
-        /// <param name="nodeSettings">Full node settings.</param>
-        public TokenlessMempool(IDateTimeProvider dateTimeProvider, BlockPolicyEstimator blockPolicyEstimator, ILoggerFactory loggerFactory, NodeSettings nodeSettings, ISignals signals = null)
+        public TokenlessMempool(BlockPolicyEstimator blockPolicyEstimator, ILoggerFactory loggerFactory, NodeSettings nodeSettings, ISignals signals = null)
         {
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.signals = signals;
@@ -165,9 +161,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
             this.MinerPolicyEstimator = blockPolicyEstimator;
             this.minReasonableRelayFee = nodeSettings.MinRelayTxFeeRate;
         }
-
-        /// <summary>Gets the miner policy estimator.</summary>
-        public BlockPolicyEstimator MinerPolicyEstimator { get; }
 
         /// <summary>Get the number of transactions in the memory pool.</summary>
         public long Size
