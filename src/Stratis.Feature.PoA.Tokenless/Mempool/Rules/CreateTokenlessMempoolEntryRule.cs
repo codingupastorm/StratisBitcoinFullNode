@@ -16,9 +16,8 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
 
         public override void CheckTransaction(MempoolValidationContext context)
         {
-            // TODO-TL: Create the mempool entry in the validation context.
-
-            // Set TxSize and Set TxMempoolEntry
+            context.Entry = new TokenlessMempoolEntry(this.network.Consensus.Options, this.chainIndexer.Height, context.State.AcceptTime, context.Transaction);
+            context.EntrySize = (int)context.Entry.GetTxSize();
         }
     }
 }

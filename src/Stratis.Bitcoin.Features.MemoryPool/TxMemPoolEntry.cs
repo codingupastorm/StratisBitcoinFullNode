@@ -43,29 +43,38 @@ namespace Stratis.Bitcoin.Features.MemoryPool
     /// <summary>
     /// A transaction entry in the memory pool.
     /// </summary>
-    public class TxMempoolEntry:IComparable, ITxMempoolFees
+    public class TxMempoolEntry : IComparable, ITxMempoolFees
     {
         /// <summary>Index in memory pools vTxHashes.</summary>
         public volatile uint vTxHashesIdx;
 
         /// <summary>The modified size of the transaction used for priority.</summary>
-        private long nModSize;
+        private readonly long nModSize;
 
         /// <summary>The total memory usage.</summary>
-        private long nUsageSize;
+        private readonly long nUsageSize;
 
         /// <summary>Priority when entering the memory pool.</summary>
-        private double entryPriority;
+        private readonly double entryPriority;
 
         /// <summary> Proof of work consensus options.</summary>
         private readonly ConsensusOptions consensusOptions;
+
+        public TxMempoolEntry(ConsensusOptions consensusOptions, int entryHeight, long entryTime, Transaction transaction)
+        {
+            this.consensusOptions = consensusOptions;
+            this.EntryHeight = entryHeight;
+            this.Time = entryHeight;
+            this.Transaction = transaction;
+            this.TransactionHash = transaction.GetHash();
+        }
 
         /// <summary>
         /// Constructs a transaction memory pool entry.
         /// </summary>
         /// <param name="transaction">Transaction for the entry.</param>
         /// <param name="nFee">Fee for the transaction in the entry in the memory pool.</param>
-        /// <param name="nTime">The local time when entering the memory pool.</param>
+        /// <param name="entryTime">The local time when entering the memory pool.</param>
         /// <param name="entryPriority">Priority when entering the memory pool.</param>
         /// <param name="entryHeight">The chain height when entering the mempool.</param>
         /// <param name="inChainInputValue">The sum of all txin values that are already in blockchain.</param>
@@ -74,21 +83,17 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         /// <param name="lp">Tthe lock points that track the height and time at which tx was final.</param>
         /// <param name="consensusOptions">Proof of work consensus options used to compute transaction weight and modified size.</param>
         public TxMempoolEntry(Transaction transaction, Money nFee,
-            long nTime, double entryPriority, int entryHeight,
+            long entryTime, double entryPriority, int entryHeight,
             Money inChainInputValue, bool spendsCoinbase,
             long nSigOpsCost, LockPoints lp, ConsensusOptions consensusOptions)
+            : this(consensusOptions, entryHeight, entryTime, transaction)
         {
-            this.Transaction = transaction;
-            this.TransactionHash = transaction.GetHash();
             this.Fee = nFee;
-            this.Time = nTime;
             this.entryPriority = entryPriority;
-            this.EntryHeight = entryHeight;
             this.InChainInputValue = inChainInputValue;
             this.SpendsCoinbase = spendsCoinbase;
             this.SigOpCost = nSigOpsCost;
             this.LockPoints = lp;
-            this.consensusOptions = consensusOptions;
 
             this.TxWeight = MempoolValidator.GetTransactionWeight(transaction, consensusOptions);
             this.nModSize = MempoolValidator.CalculateModifiedSize(this.Transaction.GetSerializedSize(), this.Transaction, consensusOptions);
@@ -314,7 +319,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         /// <param name="a">The first object to compare.</param>
         /// <param name="b">The second object to compare.</param>
         /// <returns>Returns -1 if a less than b, 0 if a equals b, and 1 if a greater than b.</returns>
-        public static int CompareFees<T>(T a, T b) where T:IComparable,ITxMempoolFees
+        public static int CompareFees<T>(T a, T b) where T : IComparable, ITxMempoolFees
         {
             // Avoid division by rewriting (a/b > c/d) as (a*d > c*b).
             Money f1 = a.ModFeesWithAncestors * b.SizeWithAncestors;

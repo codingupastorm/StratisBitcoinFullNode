@@ -120,6 +120,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Interfaces
         /// <param name="nBlocks">The confirmation target blocks.</param>
         /// <returns>The fee rate estimate.</returns>
         FeeRate EstimateFee(int nBlocks);
+        void AddUnchecked(uint256 transactionHash, TxMempoolEntry entry, object setAncestors);
 
         /// <summary>
         /// Estimates the priority using <see cref="MinerPolicyEstimator"/>.

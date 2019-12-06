@@ -3,7 +3,6 @@ using NBitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Interfaces;
 
 namespace Stratis.Feature.PoA.Tokenless.Core
@@ -15,7 +14,6 @@ namespace Stratis.Feature.PoA.Tokenless.Core
         IChainState ChainState { get; }
         IConnectionManager ConnectionManager { get; }
         IConsensusManager ConsensusManager { get; }
-        IFederationManager FederationManager { get; }
         IInitialBlockDownloadState InitialBlockDownloadState { get; }
         ILoggerFactory LoggerFactory { get; }
         Network Network { get; }
@@ -34,8 +32,6 @@ namespace Stratis.Feature.PoA.Tokenless.Core
 
         public IConsensusManager ConsensusManager { get; }
 
-        public IFederationManager FederationManager { get; }
-
         public IInitialBlockDownloadState InitialBlockDownloadState { get; }
 
         public ILoggerFactory LoggerFactory { get; }
@@ -50,7 +46,6 @@ namespace Stratis.Feature.PoA.Tokenless.Core
             IChainState chainState,
             IConnectionManager connectionManager,
             IConsensusManager consensusManager,
-            IFederationManager federationManager,
             IInitialBlockDownloadState initialBlockDownloadState,
             ILoggerFactory loggerFactory,
             Network network,
@@ -61,7 +56,6 @@ namespace Stratis.Feature.PoA.Tokenless.Core
             this.ChainState = chainState;
             this.ConnectionManager = connectionManager;
             this.ConsensusManager = consensusManager;
-            this.FederationManager = federationManager;
             this.InitialBlockDownloadState = initialBlockDownloadState;
             this.LoggerFactory = loggerFactory;
             this.Network = network;
