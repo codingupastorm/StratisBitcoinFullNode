@@ -44,7 +44,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Rules
         /// <param name="callDataSerializer">The serialzer that deserializes the smart contract byte code.</param>
         /// <param name="scTxOut">The <see cref="TxOut"/> that is assumed to contain the smart contract execution code.</param>
         /// <returns>If valid, the deserialized byte code.</returns>
-        public static ContractTxData GetAndValidateContractTxData(ICallDataSerializer callDataSerializer, TxOut scTxOut)
+        public static ContractTxData GetContractTxData(ICallDataSerializer callDataSerializer, TxOut scTxOut)
         {
             Result<ContractTxData> callDataDeserializationResult = callDataSerializer.Deserialize(scTxOut.ScriptPubKey.ToBytes());
 
@@ -68,7 +68,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Rules
                 return;
             }
 
-            ContractTxData txData = GetAndValidateContractTxData(this.callDataSerializer, scTxOut);
+            ContractTxData txData = GetContractTxData(this.callDataSerializer, scTxOut);
 
             foreach (IContractTransactionValidationRule rule in rules)
             {

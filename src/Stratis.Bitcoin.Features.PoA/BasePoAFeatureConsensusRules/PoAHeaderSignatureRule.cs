@@ -35,13 +35,13 @@ namespace Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules
         {
             base.Initialize();
 
-            var rulesEngine = this.Parent as PoAConsensusRuleEngine;
+            var engine = this.Parent as PoAConsensusRuleEngine;
 
-            this.slotsManager = rulesEngine.SlotsManager;
-            this.validator = rulesEngine.PoaHeaderValidator;
-            this.votingManager = rulesEngine.VotingManager;
-            this.federationManager = rulesEngine.FederationManager;
-            this.chainState = rulesEngine.ChainState;
+            this.slotsManager = engine.SlotsManager;
+            this.validator = engine.PoaHeaderValidator;
+            this.votingManager = engine.VotingManager;
+            this.federationManager = engine.FederationManager;
+            this.chainState = engine.ChainState;
             this.consensusFactory = (PoAConsensusFactory)this.Parent.Network.Consensus.ConsensusFactory;
 
             this.maxReorg = this.Parent.Network.Consensus.MaxReorgLength;

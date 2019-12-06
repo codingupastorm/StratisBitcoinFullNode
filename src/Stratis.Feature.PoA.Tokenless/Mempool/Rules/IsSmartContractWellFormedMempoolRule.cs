@@ -35,7 +35,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
             if (scTxOut == null)
                 return;
 
-            ContractTransactionChecker.GetAndValidateContractTxData(this.callDataSerializer, scTxOut);
+            ContractTransactionChecker.GetContractTxData(this.callDataSerializer, scTxOut);
         }
     }
 }

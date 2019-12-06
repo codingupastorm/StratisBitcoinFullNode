@@ -30,7 +30,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
                 if (scTxOut == null)
                     return Task.CompletedTask;
 
-                ContractTransactionChecker.GetAndValidateContractTxData(this.callDataSerializer, scTxOut);
+                ContractTransactionChecker.GetContractTxData(this.callDataSerializer, scTxOut);
             }
 
             return Task.CompletedTask;
