@@ -3,15 +3,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using DBreeze;
-using DBreeze.DataTypes;
-using DBreeze.Exceptions;
-using DBreeze.Utils;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.NodeStorage.Interfaces;
+using Stratis.Features.NodeStorage.KeyValueStore;
+using Stratis.Features.NodeStorage.KeyValueStoreLDB;
 
 namespace Stratis.Bitcoin.Features.BlockStore
 {
@@ -21,7 +19,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
     public interface IBlockRepository : IBlockStore
     {
         /// <summary> The dbreeze database engine.</summary>
-        DBreezeEngine DBreeze { get; }
+        IKeyValueStore KeyValueStore { get; }
 
         /// <summary>
         /// Deletes blocks and indexes for transactions that belong to deleted blocks.
@@ -90,7 +88,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
         internal const string TransactionTableName = "Transaction";
 
-        public DBreezeEngine DBreeze { get; }
+        public IKeyValueStore KeyValueStore { get; }
 
         private readonly ILogger logger;
 
@@ -106,27 +104,26 @@ namespace Stratis.Bitcoin.Features.BlockStore
         /// <inheritdoc />
         public bool TxIndex { get; private set; }
 
-        private readonly DBreezeSerializer dBreezeSerializer;
         private readonly IReadOnlyDictionary<uint256, Transaction> genesisTransactions;
 
-        public BlockRepository(Network network, DataFolder dataFolder,
-            ILoggerFactory loggerFactory, DBreezeSerializer dBreezeSerializer)
-            : this(network, dataFolder.BlockPath, loggerFactory, dBreezeSerializer)
-        {
-        }
-
-        public BlockRepository(Network network, string folder, ILoggerFactory loggerFactory, DBreezeSerializer dBreezeSerializer)
+        public BlockRepository(Network network, ILoggerFactory loggerFactory, INodeStorageProvider nodeStorageProvider)
         {
             Guard.NotNull(network, nameof(network));
-            Guard.NotEmpty(folder, nameof(folder));
 
-            Directory.CreateDirectory(folder);
-            this.DBreeze = new DBreezeEngine(folder);
+            RegisterStoreProvider(nodeStorageProvider, new DBreezeSerializer(network.Consensus.ConsensusFactory));
+
+            this.KeyValueStore = nodeStorageProvider.GetStore("blocks");
 
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.network = network;
-            this.dBreezeSerializer = dBreezeSerializer;
             this.genesisTransactions = network.GetGenesis().Transactions.ToDictionary(k => k.GetHash());
+        }
+
+        public static void RegisterStoreProvider(INodeStorageProvider nodeStorageProvider, DBreezeSerializer dBreezeSerializer)
+        {
+            nodeStorageProvider.RegisterStoreProvider("blocks", 
+                (nsp, repositorySerializer) => new KeyValueStore<KeyValueStoreLDBRepository>(nsp.DataFolder.BlockPath, nsp.LoggerFactory, nsp.DateTimeProvider, repositorySerializer), 
+                dBreezeSerializer);
         }
 
         /// <inheritdoc />
@@ -134,7 +131,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
         {
             Block genesis = this.network.GetGenesis();
 
-            using (DBreeze.Transactions.Transaction transaction = this.DBreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 bool doCommit = false;
 
@@ -171,22 +168,16 @@ namespace Stratis.Bitcoin.Features.BlockStore
             }
 
             Transaction res = null;
-            using (DBreeze.Transactions.Transaction transaction = this.DBreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                transaction.ValuesLazyLoadingIsOn = false;
-
-                Row<byte[], byte[]> transactionRow = transaction.Select<byte[], byte[]>(TransactionTableName, trxid.ToBytes());
-                if (!transactionRow.Exists)
+                if (!transaction.Select(TransactionTableName, trxid, out uint256 blockHash))
                 {
                     this.logger.LogTrace("(-)[NO_BLOCK]:null");
                     return null;
                 }
 
-                Row<byte[], byte[]> blockRow = transaction.Select<byte[], byte[]>(BlockTableName, transactionRow.Value);
-
-                if (blockRow.Exists)
+                if (transaction.Select(BlockTableName, blockHash, out Block block))
                 {
-                    var block = this.dBreezeSerializer.Deserialize<Block>(blockRow.Value);
                     res = block.Transactions.FirstOrDefault(t => t.GetHash() == trxid);
                 }
             }
@@ -205,10 +196,8 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
             Transaction[] txes = new Transaction[trxids.Length];
 
-            using (DBreeze.Transactions.Transaction transaction = this.DBreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                transaction.ValuesLazyLoadingIsOn = false;
-
                 for (int i = 0; i < trxids.Length; i++)
                 {
                     cancellation.ThrowIfCancellationRequested();
@@ -229,22 +218,18 @@ namespace Stratis.Bitcoin.Features.BlockStore
                         continue;
                     }
 
-                    Row<byte[], byte[]> transactionRow = transaction.Select<byte[], byte[]>(TransactionTableName, trxids[i].ToBytes());
-                    if (!transactionRow.Exists)
+                    if (!transaction.Select(TransactionTableName, trxids[i], out uint256 blockHash))
                     {
                         this.logger.LogTrace("(-)[NO_TX_ROW]:null");
                         return null;
                     }
 
-                    Row<byte[], byte[]> blockRow = transaction.Select<byte[], byte[]>(BlockTableName, transactionRow.Value);
-
-                    if (!blockRow.Exists)
+                    if (!transaction.Select(BlockTableName, blockHash, out Block block))
                     {
                         this.logger.LogTrace("(-)[NO_BLOCK]:null");
                         return null;
                     }
 
-                    var block = this.dBreezeSerializer.Deserialize<Block>(blockRow.Value);
                     Transaction tx = block.Transactions.FirstOrDefault(t => t.GetHash() == trxids[i]);
 
                     txes[i] = tx;
@@ -271,82 +256,54 @@ namespace Stratis.Bitcoin.Features.BlockStore
             }
 
             uint256 res = null;
-            using (DBreeze.Transactions.Transaction transaction = this.DBreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                transaction.ValuesLazyLoadingIsOn = false;
-
-                Row<byte[], byte[]> transactionRow = transaction.Select<byte[], byte[]>(TransactionTableName, trxid.ToBytes());
-                if (transactionRow.Exists)
-                    res = new uint256(transactionRow.Value);
+                if (transaction.Select(TransactionTableName, trxid, out uint256 blockHash))
+                    res = blockHash;
             }
 
             return res;
         }
 
-        protected virtual void OnInsertBlocks(DBreeze.Transactions.Transaction dbreezeTransaction, List<Block> blocks)
+        protected virtual void OnInsertBlocks(IKeyValueStoreTransaction dbTransaction, List<Block> blocks)
         {
             var transactions = new List<(Transaction, Block)>();
-            var byteListComparer = new ByteListComparer();
-            var blockDict = new Dictionary<uint256, Block>();
 
-            // Gather blocks.
-            foreach (Block block in blocks)
-            {
-                uint256 blockId = block.GetHash();
-                blockDict[blockId] = block;
-            }
+            bool[] blockExists = dbTransaction.ExistsMultiple<uint256>(BlockTableName, blocks.Select(b => b.GetHash()).ToArray());
 
-            // Sort blocks. Be consistent in always converting our keys to byte arrays using the ToBytes method.
-            List<KeyValuePair<uint256, Block>> blockList = blockDict.ToList();
-            blockList.Sort((pair1, pair2) => byteListComparer.Compare(pair1.Key.ToBytes(), pair2.Key.ToBytes()));
+            blocks = blocks.Where((b, n) => !blockExists[n]).ToList();
+
+            dbTransaction.InsertMultiple(BlockTableName, blocks.Select(b => (b.GetHash(), b)).ToArray());
 
             // Index blocks.
-            foreach (KeyValuePair<uint256, Block> kv in blockList)
-            {
-                uint256 blockId = kv.Key;
-                Block block = kv.Value;
-
-                // If the block is already in store don't write it again.
-                Row<byte[], byte[]> blockRow = dbreezeTransaction.Select<byte[], byte[]>(BlockTableName, blockId.ToBytes());
-                if (!blockRow.Exists)
-                {
-                    dbreezeTransaction.Insert<byte[], byte[]>(BlockTableName, blockId.ToBytes(), this.dBreezeSerializer.Serialize(block));
-
-                    if (this.TxIndex)
-                    {
-                        foreach (Transaction transaction in block.Transactions)
-                            transactions.Add((transaction, block));
-                    }
-                }
-            }
-
             if (this.TxIndex)
-                this.OnInsertTransactions(dbreezeTransaction, transactions);
+            {
+                foreach (Block block in blocks)
+                {
+                    foreach (Transaction transaction in block.Transactions)
+                        transactions.Add((transaction, block));
+                }
+
+                this.OnInsertTransactions(dbTransaction, transactions);
+            }
         }
 
-        protected virtual void OnInsertTransactions(DBreeze.Transactions.Transaction dbreezeTransaction, List<(Transaction, Block)> transactions)
+        protected virtual void OnInsertTransactions(IKeyValueStoreTransaction dbTransaction, List<(Transaction, Block)> transactions)
         {
-            var byteListComparer = new ByteListComparer();
-            transactions.Sort((pair1, pair2) => byteListComparer.Compare(pair1.Item1.GetHash().ToBytes(), pair2.Item1.GetHash().ToBytes()));
-
-            // Index transactions.
-            foreach ((Transaction transaction, Block block) in transactions)
-                dbreezeTransaction.Insert(TransactionTableName, transaction.GetHash().ToBytes(), block.GetHash().ToBytes());
+            dbTransaction.InsertMultiple(TransactionTableName, transactions.Select(tb => (tb.Item1.GetHash(), tb.Item2.GetHash())).ToArray());
         }
 
         /// <inheritdoc />
         public void ReIndex()
         {
-            using (DBreeze.Transactions.Transaction dbreezeTransaction = this.DBreeze.GetTransaction())
+            using (IKeyValueStoreTransaction dbTransaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, BlockTableName, TransactionTableName))
             {
-                dbreezeTransaction.SynchronizeTables(BlockTableName, TransactionTableName);
-
                 if (this.TxIndex)
                 {
                     int rowCount = 0;
                     // Insert transactions to database.
 
-                    var totalBlocksCount = dbreezeTransaction.Count(BlockTableName);
+                    var totalBlocksCount = dbTransaction.Count(BlockTableName);
 
                     var warningMessage = new StringBuilder();
                     warningMessage.AppendLine("".PadRight(59, '=') + " W A R N I N G " + "".PadRight(59, '='));
@@ -359,14 +316,9 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
                     this.logger.LogInformation(warningMessage.ToString());
 
-                    IEnumerable<Row<byte[], byte[]>> blockRows = dbreezeTransaction.SelectForward<byte[], byte[]>(BlockTableName);
-                    foreach (Row<byte[], byte[]> blockRow in blockRows)
+                    foreach ((uint256 blockHash, Block block) in dbTransaction.SelectForward<uint256, Block>(BlockTableName))
                     {
-                        var block = this.dBreezeSerializer.Deserialize<Block>(blockRow.Value);
-                        foreach (Transaction transaction in block.Transactions)
-                        {
-                            dbreezeTransaction.Insert<byte[], byte[]>(TransactionTableName, transaction.GetHash().ToBytes(), block.GetHash().ToBytes());
-                        }
+                        dbTransaction.InsertMultiple(TransactionTableName, block.Transactions.Select(t => (t.GetHash(), blockHash)).ToArray());
 
                         // inform the user about the ongoing operation
                         if (++rowCount % 1000 == 0)
@@ -380,10 +332,10 @@ namespace Stratis.Bitcoin.Features.BlockStore
                 else
                 {
                     // Clear tx from database.
-                    dbreezeTransaction.RemoveAllKeys(TransactionTableName, true);
+                    dbTransaction.RemoveAllKeys(TransactionTableName);
                 }
 
-                dbreezeTransaction.Commit();
+                dbTransaction.Commit();
             }
         }
 
@@ -395,9 +347,8 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
             // DBreeze is faster if sort ascending by key in memory before insert
             // however we need to find how byte arrays are sorted in DBreeze.
-            using (DBreeze.Transactions.Transaction transaction = this.DBreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, BlockTableName, TransactionTableName, CommonTableName))
             {
-                transaction.SynchronizeTables(BlockTableName, TransactionTableName, CommonTableName);
                 this.OnInsertBlocks(transaction, blocks);
 
                 // Commit additions
@@ -406,55 +357,46 @@ namespace Stratis.Bitcoin.Features.BlockStore
             }
         }
 
-        private bool? LoadTxIndex(DBreeze.Transactions.Transaction dbreezeTransaction)
+        private bool? LoadTxIndex(IKeyValueStoreTransaction dbTransaction)
         {
             bool? res = null;
-            Row<byte[], bool> row = dbreezeTransaction.Select<byte[], bool>(CommonTableName, TxIndexKey);
-            if (row.Exists)
+            if (dbTransaction.Select(CommonTableName, TxIndexKey, out bool txIndex))
             {
-                this.TxIndex = row.Value;
-                res = row.Value;
+                this.TxIndex = txIndex;
+                res = txIndex;
             }
 
             return res;
         }
 
-        private void SaveTxIndex(DBreeze.Transactions.Transaction dbreezeTransaction, bool txIndex)
+        private void SaveTxIndex(IKeyValueStoreTransaction dbTransaction, bool txIndex)
         {
             this.TxIndex = txIndex;
-            dbreezeTransaction.Insert<byte[], bool>(CommonTableName, TxIndexKey, txIndex);
+            dbTransaction.Insert(CommonTableName, TxIndexKey, txIndex);
         }
 
         /// <inheritdoc />
         public void SetTxIndex(bool txIndex)
         {
-            using (DBreeze.Transactions.Transaction transaction = this.DBreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 this.SaveTxIndex(transaction, txIndex);
                 transaction.Commit();
             }
         }
 
-        private HashHeightPair LoadTipHashAndHeight(DBreeze.Transactions.Transaction dbreezeTransaction)
+        private HashHeightPair LoadTipHashAndHeight(IKeyValueStoreTransaction dbTransaction)
         {
-            if (this.TipHashAndHeight == null)
-            {
-                dbreezeTransaction.ValuesLazyLoadingIsOn = false;
-
-                Row<byte[], byte[]> row = dbreezeTransaction.Select<byte[], byte[]>(CommonTableName, RepositoryTipKey);
-                if (row.Exists)
-                    this.TipHashAndHeight = this.dBreezeSerializer.Deserialize<HashHeightPair>(row.Value);
-
-                dbreezeTransaction.ValuesLazyLoadingIsOn = true;
-            }
+            if (this.TipHashAndHeight == null && dbTransaction.Select(CommonTableName, RepositoryTipKey, out HashHeightPair hashHeightPair))
+                this.TipHashAndHeight = hashHeightPair;
 
             return this.TipHashAndHeight;
         }
 
-        private void SaveTipHashAndHeight(DBreeze.Transactions.Transaction dbreezeTransaction, HashHeightPair newTip)
+        private void SaveTipHashAndHeight(IKeyValueStoreTransaction dbTransaction, HashHeightPair newTip)
         {
             this.TipHashAndHeight = newTip;
-            dbreezeTransaction.Insert(CommonTableName, RepositoryTipKey, this.dBreezeSerializer.Serialize(newTip));
+            dbTransaction.Insert(CommonTableName, RepositoryTipKey, newTip);
         }
 
         /// <inheritdoc />
@@ -462,15 +404,14 @@ namespace Stratis.Bitcoin.Features.BlockStore
         {
             Guard.NotNull(hash, nameof(hash));
 
+            if (hash == this.network.GenesisHash)
+                return this.network.GetGenesis();
+
             Block res = null;
-            using (DBreeze.Transactions.Transaction transaction = this.DBreeze.GetTransaction())
+            using (IKeyValueStoreTransaction dbTransaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                transaction.ValuesLazyLoadingIsOn = false;
-
-                var results = this.GetBlocksFromHashes(transaction, new List<uint256> {hash});
-
-                if (results.FirstOrDefault() != null)
-                    res = results.FirstOrDefault();
+                if (dbTransaction.Select(BlockTableName, hash, out Block block))
+                    res = block;
             }
 
             return res;
@@ -483,10 +424,8 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
             List<Block> blocks;
 
-            using (DBreeze.Transactions.Transaction transaction = this.DBreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                transaction.ValuesLazyLoadingIsOn = false;
-
                 blocks = this.GetBlocksFromHashes(transaction, hashes);
             }
 
@@ -499,25 +438,22 @@ namespace Stratis.Bitcoin.Features.BlockStore
             Guard.NotNull(hash, nameof(hash));
 
             bool res = false;
-            using (DBreeze.Transactions.Transaction transaction = this.DBreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                // Lazy loading is on so we don't fetch the whole value, just the row.
-                byte[] key = hash.ToBytes();
-                Row<byte[], byte[]> blockRow = transaction.Select<byte[], byte[]>("Block", key);
-                if (blockRow.Exists)
+                if (transaction.Exists(BlockTableName, hash))
                     res = true;
             }
 
             return res;
         }
 
-        protected virtual void OnDeleteTransactions(DBreeze.Transactions.Transaction dbreezeTransaction, List<(Transaction, Block)> transactions)
+        protected virtual void OnDeleteTransactions(IKeyValueStoreTransaction dbTransaction, List<(Transaction, Block)> transactions)
         {
             foreach ((Transaction transaction, Block block) in transactions)
-                dbreezeTransaction.RemoveKey<byte[]>(TransactionTableName, transaction.GetHash().ToBytes());
+                dbTransaction.RemoveKey(TransactionTableName, transaction.GetHash(), transaction);
         }
 
-        protected virtual void OnDeleteBlocks(DBreeze.Transactions.Transaction dbreezeTransaction, List<Block> blocks)
+        protected virtual void OnDeleteBlocks(IKeyValueStoreTransaction dbTransaction, List<Block> blocks)
         {
             if (this.TxIndex)
             {
@@ -527,49 +463,21 @@ namespace Stratis.Bitcoin.Features.BlockStore
                     foreach (Transaction transaction in block.Transactions)
                         transactions.Add((transaction, block));
 
-                this.OnDeleteTransactions(dbreezeTransaction, transactions);
+                this.OnDeleteTransactions(dbTransaction, transactions);
             }
 
             foreach (Block block in blocks)
-                dbreezeTransaction.RemoveKey<byte[]>(BlockTableName, block.GetHash().ToBytes());
+                dbTransaction.RemoveKey(BlockTableName, block.GetHash(), block);
         }
 
-        public List<Block> GetBlocksFromHashes(DBreeze.Transactions.Transaction dbreezeTransaction, List<uint256> hashes)
+        public List<Block> GetBlocksFromHashes(IKeyValueStoreTransaction dbTransaction, List<uint256> hashes)
         {
-            var results = new Dictionary<uint256, Block>();
+            List<Block> blocks = dbTransaction.SelectMultiple<uint256, Block>(BlockTableName, hashes.ToArray());
+            for (int i = 0; i < blocks.Count; i++)
+                if (hashes[i] == this.network.GenesisHash)
+                    blocks[i] = this.network.GetGenesis();
 
-            // Access hash keys in sorted order.
-            var byteListComparer = new ByteListComparer();
-            List<(uint256, byte[])> keys = hashes.Select(hash => (hash, hash.ToBytes())).ToList();
-
-            keys.Sort((key1, key2) => byteListComparer.Compare(key1.Item2, key2.Item2));
-
-            foreach ((uint256, byte[]) key in keys)
-            {
-                // If searching for genesis block, return it.
-                if (key.Item1 == this.network.GenesisHash)
-                {
-                    results[key.Item1] = this.network.GetGenesis();
-                    continue;
-                }
-
-                Row<byte[], byte[]> blockRow = dbreezeTransaction.Select<byte[], byte[]>(BlockTableName, key.Item2);
-                if (blockRow.Exists)
-                {
-                    results[key.Item1] = this.dBreezeSerializer.Deserialize<Block>(blockRow.Value);
-
-                    this.logger.LogDebug("Block hash '{0}' loaded from the store.", key.Item1);
-                }
-                else
-                {
-                    results[key.Item1] = null;
-
-                    this.logger.LogDebug("Block hash '{0}' not found in the store.", key.Item1);
-                }
-            }
-
-            // Return the result in the order that the hashes were presented.
-            return hashes.Select(hash => results[hash]).ToList();
+            return blocks;
         }
 
         /// <inheritdoc />
@@ -578,11 +486,8 @@ namespace Stratis.Bitcoin.Features.BlockStore
             Guard.NotNull(newTip, nameof(newTip));
             Guard.NotNull(hashes, nameof(hashes));
 
-            using (DBreeze.Transactions.Transaction transaction = this.DBreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, BlockTableName, CommonTableName, TransactionTableName))
             {
-                transaction.SynchronizeTables(BlockTableName, CommonTableName, TransactionTableName);
-                transaction.ValuesLazyLoadingIsOn = false;
-
                 List<Block> blocks = this.GetBlocksFromHashes(transaction, hashes);
                 this.OnDeleteBlocks(transaction, blocks.Where(b => b != null).ToList());
                 this.SaveTipHashAndHeight(transaction, newTip);
@@ -595,11 +500,8 @@ namespace Stratis.Bitcoin.Features.BlockStore
         {
             Guard.NotNull(hashes, nameof(hashes));
 
-            using (DBreeze.Transactions.Transaction transaction = this.DBreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, BlockTableName, CommonTableName, TransactionTableName))
             {
-                transaction.SynchronizeTables(BlockRepository.BlockTableName, BlockRepository.CommonTableName, BlockRepository.TransactionTableName);
-                transaction.ValuesLazyLoadingIsOn = false;
-
                 List<Block> blocks = this.GetBlocksFromHashes(transaction, hashes);
 
                 this.OnDeleteBlocks(transaction, blocks.Where(b => b != null).ToList());
@@ -611,7 +513,6 @@ namespace Stratis.Bitcoin.Features.BlockStore
         /// <inheritdoc />
         public void Dispose()
         {
-            this.DBreeze.Dispose();
         }
     }
 }

@@ -28,6 +28,7 @@ using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.NodeStorage;
 using Xunit;
 using Xunit.Sdk;
 
@@ -146,9 +147,9 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             testChainContext.PartialValidator = new PartialValidator(testChainContext.AsyncProvider, testChainContext.ConsensusRules, testChainContext.LoggerFactory);
             testChainContext.FullValidator = new FullValidator(testChainContext.ConsensusRules, testChainContext.LoggerFactory);
 
-            var dBreezeSerializer = new DBreezeSerializer(network.Consensus.ConsensusFactory);
+            var nodeStorageProvider = new NodeStorageProvider(dataFolder, testChainContext.LoggerFactory, DateTimeProvider.Default);
 
-            var blockRepository = new BlockRepository(testChainContext.Network, dataFolder, testChainContext.LoggerFactory, dBreezeSerializer);
+            var blockRepository = new BlockRepository(testChainContext.Network, testChainContext.LoggerFactory, nodeStorageProvider);
 
             var blockStoreFlushCondition = new BlockStoreQueueFlushCondition(testChainContext.ChainState, testChainContext.InitialBlockDownloadState);
 

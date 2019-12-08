@@ -31,6 +31,7 @@
   <ItemGroup>
     <ProjectReference Include="..\NBitcoin\NBitcoin.csproj" />
     <ProjectReference Include="..\Stratis.Bitcoin\Stratis.Bitcoin.csproj" />
+    <ProjectReference Include="..\Stratis.Features.NodeStorage\Stratis.Features.NodeStorage.csproj" />
   </ItemGroup>
 
   <ItemGroup>
