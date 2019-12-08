@@ -30,7 +30,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         public abstract void Init(string rootPath);
 
         /// <inheritdoc />
-        public abstract void OnBeginTransaction(IKeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTransactionMode mode);        /// <inheritdoc />
+        public abstract void OnBeginTransaction(IKeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTransactionMode mode);
 
         /// <inheritdoc />
         public abstract void OnCommit(IKeyValueStoreTransaction keyValueStoreTransaction);
