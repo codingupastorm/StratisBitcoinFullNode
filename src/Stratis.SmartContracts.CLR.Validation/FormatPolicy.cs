@@ -5,6 +5,7 @@ using Stratis.SmartContracts.CLR.Validation.Validators.Method;
 using Stratis.SmartContracts.CLR.Validation.Validators.Module;
 using Stratis.SmartContracts.CLR.Validation.Validators.Type;
 using Stratis.SmartContracts.Standards;
+using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.SmartContracts.CLR.Validation
 {
@@ -23,7 +24,8 @@ namespace Stratis.SmartContracts.CLR.Validation
             Core,
             typeof(SmartContract).Assembly,
             typeof(Enumerable).Assembly,
-            typeof(IStandardToken).Assembly
+            typeof(IStandardToken).Assembly,
+            typeof(TokenlessSmartContract).Assembly
         };
 
         public static ValidationPolicy Default = new ValidationPolicy()

@@ -15,6 +15,7 @@ using Stratis.Bitcoin.Features.SmartContracts.Wallet;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Features.SQLiteWalletRepository;
 using Stratis.Sidechains.Networks;
+using Stratis.SmartContracts;
 
 namespace Stratis.CirrusDnsD
 {
@@ -74,6 +75,7 @@ namespace Stratis.CirrusDnsD
                 {
                     options.UseReflectionExecutor();
                     options.UsePoAWhitelistedContracts();
+                    options.UseSmartContractType<SmartContract>();
                 })
                 .UseSmartContractPoAConsensus()
                 .UseSmartContractPoAMining()
