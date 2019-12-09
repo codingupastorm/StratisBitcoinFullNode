@@ -8,10 +8,10 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
     /// </summary>
     public abstract class KeyValueStoreRepository : IKeyValueStoreRepository
     {
-        public IKeyValueStore KeyValueStore { get; protected set; }
+        public KeyValueStore KeyValueStore { get; protected set; }
         public Dictionary<string, IKeyValueStoreTable> Tables { get; protected set; }
 
-        public KeyValueStoreRepository(IKeyValueStore keyValueStore)
+        public KeyValueStoreRepository(KeyValueStore keyValueStore)
         {
             this.KeyValueStore = keyValueStore;
             this.Tables = new Dictionary<string, IKeyValueStoreTable>();

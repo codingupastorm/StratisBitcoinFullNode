@@ -40,7 +40,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
         private int nextTablePrefix;
         private SingleThreadResource TransactionLock;
 
-        public KeyValueStoreLDBRepository(IKeyValueStore keyValueStore) : base(keyValueStore)
+        public KeyValueStoreLDBRepository(KeyValueStore.KeyValueStore keyValueStore) : base(keyValueStore)
         {
             var logger = this.KeyValueStore.LoggerFactory.CreateLogger(nameof(KeyValueStoreLDBRepository));
 

@@ -1,6 +1,4 @@
 ﻿using System;
-using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Features.NodeStorage.Interfaces
 {
@@ -29,14 +27,5 @@ namespace Stratis.Features.NodeStorage.Interfaces
         /// </summary>
         /// <param name="keyValueStoreTrackers">The trackers to use.</param>
         void SetLookups(IKeyValueStoreTrackers keyValueStoreTrackers);
-
-        /// <summary>Interface providing control over the updating of transient lookups.</summary>
-        IKeyValueStoreTrackers Lookups { get; }
-
-        /// <summary>Interface providing serialization of database objects.</summary>
-        IRepositorySerializer RepositorySerializer { get; }
-
-        /// <summary>Interface providing logger factory.</summary>
-        ILoggerFactory LoggerFactory { get; }
     }
 }

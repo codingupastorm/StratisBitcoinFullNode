@@ -89,14 +89,10 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
         {
             // Set up block store.
             this.NodeSettings = new NodeSettings(network, args: new[] { $"-datadir={dataDir}" }, protocolVersion: ProtocolVersion.ALT_PROTOCOL_VERSION);
-            var serializer = new DBreezeSerializer(network.Consensus.ConsensusFactory);
 
-            // Build the chain from the block store.
-            var nodeStorageProvider = new NodeStorageProvider(this.NodeSettings.DataFolder, this.NodeSettings.LoggerFactory, DateTimeProvider.Default);
+            var blockStoreFactory = new BlockStoreFactory(network, this.NodeSettings.DataFolder, this.NodeSettings.LoggerFactory, DateTimeProvider.Default);
 
-            BlockRepository.RegisterStoreProvider(nodeStorageProvider, serializer);
-
-            this.BlockRepo = new BlockRepository(network, this.NodeSettings.LoggerFactory, nodeStorageProvider);
+            this.BlockRepo = new BlockRepository(network, this.NodeSettings.LoggerFactory, blockStoreFactory);
             this.BlockRepo.Initialize();
 
             var prevBlock = new Dictionary<uint256, uint256>();
