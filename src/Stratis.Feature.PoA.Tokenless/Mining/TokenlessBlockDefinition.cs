@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.Consensus.CoinViews;
+using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Features.Miner;
@@ -23,11 +24,11 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
 {
     public sealed class TokenlessBlockDefinition : BlockDefinition
     {
-        private uint160 coinbaseAddress;
+        //private uint160 coinbaseAddress;
         private readonly ICoinView coinView;
         private readonly IContractExecutorFactory executorFactory;
         private readonly ILogger logger;
-        private readonly List<TxOut> refundOutputs;
+        //private readonly List<TxOut> refundOutputs;
         private readonly List<Receipt> receipts;
         private readonly IStateRepositoryRoot stateRoot;
         private readonly IBlockExecutionResultCache executionCache;
@@ -60,7 +61,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             this.stateRoot = stateRoot;
             this.callDataSerializer = callDataSerializer;
             this.executionCache = executionCache;
-            this.refundOutputs = new List<TxOut>();
+            //this.refundOutputs = new List<TxOut>();
             this.receipts = new List<Receipt>();
 
             // When building smart contract blocks, we will be generating and adding both transactions to the block and txouts to the coinbase. 
@@ -106,7 +107,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
 
             this.AddTransactionToBlock(mempoolEntry.Transaction);
             this.UpdateBlockStatistics(mempoolEntry);
-            this.UpdateTotalFees(result.Fee);
 
             // If there are refunds, add them to the block.
             //if (result.Refund != null)
@@ -125,12 +125,85 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
 
         public override BlockTemplate Build(ChainedHeader chainTip, Script scriptPubKey)
         {
-            throw new System.NotImplementedException();
+            // TODO-TL: Implement new way to get sender
+            GetSenderResult getSenderResult = this.senderRetriever.GetAddressFromScript(scriptPubKey);
+
+            this.stateSnapshot = this.stateRoot.GetSnapshotTo(((ISmartContractBlockHeader)this.ConsensusManager.Tip.Header).HashStateRoot.ToBytes());
+
+            this.receipts.Clear();
+
+            this.blockGasConsumed = 0;
+
+            base.Configure();
+
+            this.ChainTip = chainTip;
+
+            this.block = this.BlockTemplate.Block;
+            this.scriptPubKey = scriptPubKey;
+
+            this.ComputeBlockVersion();
+
+            this.MedianTimePast = Utils.DateTimeToUnixTime(this.ChainTip.GetMedianTimePast());
+            this.LockTimeCutoff = MempoolValidator.StandardLocktimeVerifyFlags.HasFlag(Transaction.LockTimeFlags.MedianTimePast)
+                ? this.MedianTimePast
+                : this.block.Header.Time;
+
+            // Add transactions from the mempool
+            this.AddTransactions(out int nPackagesSelected, out int nDescendantsUpdated);
+
+            this.LastBlockTx = this.BlockTx;
+            this.LastBlockSize = this.BlockSize;
+            this.LastBlockWeight = this.BlockWeight;
+
+            int serializedSize = this.block.GetSerializedSize();
+            this.logger.LogDebug("Serialized size is {0} bytes, block weight is {1}, number of txs is {2}, tx fees are {3}, number of sigops is {4}.", serializedSize, this.block.GetBlockWeight(this.Network.Consensus), this.BlockTx, this.fees, this.BlockSigOpsCost);
+
+            this.UpdateHeaders();
+
+            // Cache the results. We don't need to execute these again when validating.
+            var cacheModel = new BlockExecutionResultModel(this.stateSnapshot, this.receipts);
+            this.executionCache.StoreExecutionResult(this.BlockTemplate.Block.GetHash(), cacheModel);
+
+            return this.BlockTemplate;
         }
 
         public override void UpdateHeaders()
         {
-            throw new System.NotImplementedException();
+            this.UpdateBaseHeaders();
+
+            this.block.Header.Bits = this.block.Header.GetWorkRequired(this.Network, this.ChainTip);
+
+            var scHeader = (ISmartContractBlockHeader)this.block.Header;
+
+            scHeader.HashStateRoot = new uint256(this.stateSnapshot.Root);
+
+            this.UpdateReceiptRoot(scHeader);
+
+            this.UpdateLogsBloom(scHeader);
+        }
+
+        /// <summary>
+        /// Sets the receipt root based on all the receipts generated in smart contract execution inside this block.
+        /// </summary>
+        /// <param name="scHeader">The smart contract header that will be updated.</param>
+        private void UpdateReceiptRoot(ISmartContractBlockHeader scHeader)
+        {
+            var leaves = this.receipts.Select(r => r.GetHash()).ToList();
+            scHeader.ReceiptRoot = BlockMerkleRootRule.ComputeMerkleRoot(leaves, out _);
+        }
+
+        /// <summary>
+        /// Sets the bloom filter for all logs that occurred in this block's execution.
+        /// </summary>
+        /// <param name="scHeader">The smart contract header that will be updated.</param>
+        private void UpdateLogsBloom(ISmartContractBlockHeader scHeader)
+        {
+            Bloom logsBloom = new Bloom();
+            foreach (Receipt receipt in this.receipts)
+            {
+                logsBloom.Or(receipt.Bloom);
+            }
+            scHeader.LogsBloom = logsBloom;
         }
 
         /// <summary>
