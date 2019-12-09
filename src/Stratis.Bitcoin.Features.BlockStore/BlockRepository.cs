@@ -465,8 +465,12 @@ namespace Stratis.Bitcoin.Features.BlockStore
         {
             List<Block> blocks = dbTransaction.SelectMultiple<uint256, Block>(BlockTableName, hashes.ToArray());
             for (int i = 0; i < blocks.Count; i++)
+            {
                 if (hashes[i] == this.network.GenesisHash)
                     blocks[i] = this.network.GetGenesis();
+
+                this.logger.LogDebug("Block hash '{0}' loaded from the store.", hashes[i]);
+            }
 
             return blocks;
         }
