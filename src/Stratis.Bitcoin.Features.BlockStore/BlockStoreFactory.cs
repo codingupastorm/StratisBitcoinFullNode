@@ -15,10 +15,11 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
     public class BlockStoreFactory : IBlockStoreFactory
     {
-        private DataFolder dataFolder;
-        private ILoggerFactory loggerFactory;
-        private IDateTimeProvider dateTimeProvider;
-        private IRepositorySerializer repositorySerializer;
+        private readonly DataFolder dataFolder;
+        private readonly ILoggerFactory loggerFactory;
+        private readonly IDateTimeProvider dateTimeProvider;
+        private readonly IRepositorySerializer repositorySerializer;
+
         private KeyValueStore<KeyValueStoreLDBRepository> keyValueStore;
 
         public BlockStoreFactory(Network network, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
@@ -27,6 +28,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
             this.dataFolder = dataFolder;
             this.loggerFactory = loggerFactory;
             this.dateTimeProvider = dateTimeProvider;
+            this.keyValueStore = null;
         }
 
         public IKeyValueStore GetStore()

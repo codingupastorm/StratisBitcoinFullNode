@@ -305,10 +305,5 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
 
             this.disposed = true;
         }
-
-        ~KeyValueStoreTransaction()
-        {
-            Dispose(false);
-        }
     }
 }

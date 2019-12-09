@@ -18,7 +18,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         }
 
         /// <inheritdoc />
-        public abstract IKeyValueStoreTransaction CreateTransaction(KeyValueStoreTransactionMode mode, params string[] tables);
+        public abstract IKeyValueStoreTransaction StartTransaction(KeyValueStoreTransactionMode mode, params string[] tables);
 
         /// <inheritdoc />
         public abstract byte[] Get(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable, byte[] key);

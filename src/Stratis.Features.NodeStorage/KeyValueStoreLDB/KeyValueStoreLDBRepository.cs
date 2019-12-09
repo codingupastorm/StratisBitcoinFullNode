@@ -118,7 +118,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
             return table;
         }
 
-        public override IKeyValueStoreTransaction CreateTransaction(KeyValueStoreTransactionMode mode, params string[] tables)
+        public override IKeyValueStoreTransaction StartTransaction(KeyValueStoreTransactionMode mode, params string[] tables)
         {
             return new KeyValueStoreLDBTransaction(this, mode, tables);
         }

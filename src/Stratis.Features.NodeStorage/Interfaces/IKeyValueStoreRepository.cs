@@ -14,12 +14,12 @@ namespace Stratis.Features.NodeStorage.Interfaces
         void Init(string rootPath);
 
         /// <summary>
-        /// Request the underlying database to create a transaction.
+        /// Request the underlying database to start a transaction.
         /// </summary>
         /// <param name="mode">The transaction mode.</param>
         /// <param name="tables">The tables that will be modified.</param>
         /// <returns>A transaction that can be passed as a parameter to the rest of the class methods.</returns>
-        IKeyValueStoreTransaction CreateTransaction(KeyValueStoreTransactionMode mode, params string[] tables);
+        IKeyValueStoreTransaction StartTransaction(KeyValueStoreTransactionMode mode, params string[] tables);
 
         /// <summary>
         /// Gets the value (byte array) associated with a table and key (byte array) from the underlying database.

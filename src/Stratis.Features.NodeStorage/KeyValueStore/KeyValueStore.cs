@@ -10,11 +10,12 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
     /// </summary>
     public abstract class KeyValueStore : IKeyValueStore
     {
-        public IDateTimeProvider DateTimeProvider { get; private set; }
-        public string RootPath { get; private set; }
+        public readonly IDateTimeProvider DateTimeProvider;
+        public readonly string RootPath;
+        public readonly ILoggerFactory LoggerFactory;
+        public readonly IRepositorySerializer RepositorySerializer;
+
         public IKeyValueStoreTrackers Lookups { get; private set; }
-        public ILoggerFactory LoggerFactory { get; private set; }
-        public IRepositorySerializer RepositorySerializer { get; private set; }
 
         /// <summary>
         /// Creates a key-value store.
@@ -29,6 +30,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
             this.LoggerFactory = loggerFactory;
             this.DateTimeProvider = dateTimeProvider;
             this.RepositorySerializer = repositorySerializer;
+            this.Lookups = null;
         }
 
         public abstract IKeyValueStoreTransaction CreateTransaction(KeyValueStoreTransactionMode mode, params string[] tables);
@@ -71,14 +73,14 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         public KeyValueStore(string rootPath, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, IRepositorySerializer repositorySerializer) :
             base(rootPath, loggerFactory, dateTimeProvider, repositorySerializer)
         {
-            this.Repository = (R)System.Activator.CreateInstance(typeof(R), (KeyValueStore)this);
+            this.Repository = (R)Activator.CreateInstance(typeof(R), (KeyValueStore)this);
             this.Repository.Init(this.RootPath);
         }
 
         /// <inheritdoc/>
         public override IKeyValueStoreTransaction CreateTransaction(KeyValueStoreTransactionMode mode, params string[] tables)
         {
-            return this.Repository.CreateTransaction(mode, tables);
+            return this.Repository.StartTransaction(mode, tables);
         }
 
         // Flag: Has Dispose already been called?
@@ -99,11 +101,6 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
 
             // Call the base class implementation.
             base.Dispose(disposing);
-        }
-
-        ~KeyValueStore()
-        {
-            Dispose(false);
         }
     }
 }
