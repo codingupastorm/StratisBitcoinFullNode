@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using System.Text;
-using CSharpFunctionalExtensions;
 using Moq;
 using NBitcoin;
 using Stratis.SmartContracts.CLR.Caching;
@@ -258,7 +257,7 @@ public class Contract : SmartContract
                 rewrittenCode = moduleDefinition.ToByteCode().Value;
             }
             
-            var contractAssembly = new ContractAssembly(Assembly.Load(rewrittenCode));
+            var contractAssembly = new ContractAssembly(Assembly.Load(rewrittenCode), typeof(SmartContract));
 
             // Cache the assembly.
             this.context.ContractCache.Store(new uint256(codeHash), new CachedAssemblyPackage(contractAssembly));

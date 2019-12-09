@@ -6,6 +6,7 @@ using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.PoA;
+using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Bitcoin.Features.SmartContracts.Rules;
@@ -42,6 +43,10 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoA
                         services.AddSingleton<IPollResultExecutor, PollResultExecutor>();
                         services.AddSingleton<IWhitelistedHashesRepository, WhitelistedHashesRepository>();
                         services.AddSingleton<IdleFederationMembersKicker>();
+
+                        // Purely to make DI work, shouldn't be used.
+                        services.AddSingleton<CertificatesManager>();
+                        services.AddSingleton<RevocationChecker>();
                     });
             });
 

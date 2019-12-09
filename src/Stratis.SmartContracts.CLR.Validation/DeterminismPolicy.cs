@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using Stratis.SmartContracts.CLR.Validation.Policy;
 using Stratis.SmartContracts.CLR.Validation.Validators.Instruction;
 using Stratis.SmartContracts.CLR.Validation.Validators.Type;
+using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.SmartContracts.CLR.Validation
 {
@@ -14,7 +15,9 @@ namespace Stratis.SmartContracts.CLR.Validation
         public static WhitelistPolicy WhitelistPolicy = new WhitelistPolicy()
             .Namespace(nameof(System), AccessPolicy.Denied, SystemPolicy)
             .Namespace(typeof(RuntimeHelpers).Namespace, AccessPolicy.Denied, CompilerServicesPolicy)
-            .Namespace(typeof(SmartContract).Namespace, AccessPolicy.Allowed, SmartContractsPolicy);
+            .Namespace(typeof(SmartContract).Namespace, AccessPolicy.Allowed, SmartContractsPolicy)
+            .Namespace(typeof(TokenlessSmartContract).Namespace, AccessPolicy.Allowed, TokenlessSmartContractsPolicy)
+            ;
 
         public static ValidationPolicy Default = new ValidationPolicy()
             .WhitelistValidator(WhitelistPolicy)
@@ -55,6 +58,12 @@ namespace Stratis.SmartContracts.CLR.Validation
         {
             policy
                 .Type(typeof(SmartContract), AccessPolicy.Allowed);
+        }
+
+        private static void TokenlessSmartContractsPolicy(NamespacePolicy policy)
+        {
+            policy
+                .Type(typeof(TokenlessSmartContract), AccessPolicy.Allowed);
         }
     }
 }

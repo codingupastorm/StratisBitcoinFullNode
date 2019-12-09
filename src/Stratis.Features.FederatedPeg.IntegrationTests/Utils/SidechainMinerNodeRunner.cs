@@ -17,6 +17,7 @@ using Stratis.Bitcoin.Utilities;
 using Stratis.Features.Collateral;
 using Stratis.Features.Collateral.CounterChain;
 using Stratis.Features.SQLiteWalletRepository;
+using Stratis.SmartContracts;
 
 namespace Stratis.Features.FederatedPeg.IntegrationTests.Utils
 {
@@ -56,6 +57,7 @@ namespace Stratis.Features.FederatedPeg.IntegrationTests.Utils
                 {
                     options.UseReflectionExecutor();
                     options.UsePoAWhitelistedContracts();
+                    options.UseSmartContractType<SmartContract>();
                 })
                 .UseSmartContractWallet()
                 .AddSQLiteWalletRepository()

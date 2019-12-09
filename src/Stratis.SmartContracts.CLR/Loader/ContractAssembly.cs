@@ -12,9 +12,17 @@ namespace Stratis.SmartContracts.CLR.Loader
     /// </summary>
     public class ContractAssembly : IContractAssembly
     {
-        public ContractAssembly(Assembly assembly)
+        /// <summary>
+        /// The base class used for contracts.
+        /// Current options are <see cref="SmartContract" /> and <see cref="Stratis.SmartContracts.Tokenless.TokenlessSmartContract" />.
+        /// </summary>
+        private readonly Type smartContractBase;
+
+        public ContractAssembly(Assembly assembly, Type smartContractBase)
         {
             this.Assembly = assembly;
+
+            this.smartContractBase = smartContractBase;
 
             this.DeployedType = this.GetDeployedType();
         }
@@ -41,7 +49,7 @@ namespace Stratis.SmartContracts.CLR.Loader
 
         private Type GetDeployedType()
         {
-            List<Type> contractTypes = this.Assembly.ExportedTypes.Where(IsContractType).ToList();
+            List<Type> contractTypes = this.Assembly.ExportedTypes.Where(x=> IsContractType(x, this.smartContractBase)).ToList();
 
             return contractTypes.Count == 1
                 ? contractTypes.First()
@@ -49,12 +57,12 @@ namespace Stratis.SmartContracts.CLR.Loader
                     x.CustomAttributes.Any(y => y.AttributeType == typeof(DeployAttribute)));
         }
 
-        public static bool IsContractType(Type typeDefinition)
+        public static bool IsContractType(Type typeDefinition, Type contractBaseType)
         {
             return typeDefinition.IsClass &&
                    !typeDefinition.IsAbstract &&
                    typeDefinition.BaseType != null &&
-                   typeDefinition.BaseType == typeof(SmartContract);
+                   typeDefinition.BaseType == contractBaseType;
         }
 
         private Type GetObserverType()

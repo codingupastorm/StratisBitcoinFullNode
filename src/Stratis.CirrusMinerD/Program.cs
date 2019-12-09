@@ -24,6 +24,7 @@ using Stratis.Features.Collateral;
 using Stratis.Features.Collateral.CounterChain;
 using Stratis.Features.SQLiteWalletRepository;
 using Stratis.Sidechains.Networks;
+using Stratis.SmartContracts;
 
 namespace Stratis.CirrusMinerD
 {
@@ -90,6 +91,7 @@ namespace Stratis.CirrusMinerD
                 {
                     options.UseReflectionExecutor();
                     options.UsePoAWhitelistedContracts();
+                    options.UseSmartContractType<SmartContract>();
                 })
                 .UseSmartContractWallet()
                 .AddSQLiteWalletRepository()
