@@ -13,13 +13,16 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
     {
         private class KeyValueStoreLDBTransaction : KeyValueStoreTransaction
         {
-            internal SnapShot snapshot;
-            internal ReadOptions readOptions => (this.snapshot == null) ? new ReadOptions() : new ReadOptions() { Snapshot = this.snapshot };
+            public SnapShot snapshot;
+            public ReadOptions readOptions => (this.snapshot == null) ? new ReadOptions() : new ReadOptions() { Snapshot = this.snapshot };
 
             public KeyValueStoreLDBTransaction(IKeyValueStoreRepository repository, KeyValueStoreTransactionMode mode, params string[] tables)
                 : base(repository, mode, tables)
             {
             }
+
+            public ConcurrentBag<string> TablesCleared => this.tablesCleared;
+            public ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>> TableUpdates => this.tableUpdates;
         }
 
         /// <summary>
@@ -35,8 +38,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
             public KeyValueStoreLDBRepository Repository { get; internal set; }
         }
 
-        internal DB Storage;
-
+        private DB Storage;
         private int nextTablePrefix;
         private SingleThreadResource TransactionLock;
 
@@ -137,7 +139,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
             {
                 var writeBatch = new WriteBatch();
 
-                foreach (string tableName in ((KeyValueStoreTransaction)keyValueStoreTransaction).tablesCleared)
+                foreach (string tableName in ((KeyValueStoreLDBTransaction)keyValueStoreTransaction).TablesCleared)
                 {
                     var table = (KeyValueStoreLDBTable)this.GetTable(tableName);
 
@@ -147,7 +149,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
                     }
                 }
 
-                foreach (KeyValuePair<string, ConcurrentDictionary<byte[], byte[]>> updates in ((KeyValueStoreTransaction)keyValueStoreTransaction).tableUpdates)
+                foreach (KeyValuePair<string, ConcurrentDictionary<byte[], byte[]>> updates in ((KeyValueStoreLDBTransaction)keyValueStoreTransaction).TableUpdates)
                 {
                     var table = (KeyValueStoreLDBTable)this.GetTable(updates.Key);
 

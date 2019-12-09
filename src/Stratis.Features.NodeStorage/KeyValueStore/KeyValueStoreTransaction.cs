@@ -31,10 +31,10 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         private Dictionary<string, IKeyValueStoreTracker> trackers;
 
         /// <summary>Used to buffer changes to records until a commit takes place.</summary>
-        internal ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>> tableUpdates;
+        protected ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>> tableUpdates;
 
         /// <summary>Used to buffer clearing of table contents until a commit takes place.</summary>
-        internal ConcurrentBag<string> tablesCleared;
+        protected ConcurrentBag<string> tablesCleared;
 
         /// <summary>Comparer used to compare two byte arrays for equality.</summary>
         private IEqualityComparer<byte[]> byteArrayComparer = new ByteArrayComparer();

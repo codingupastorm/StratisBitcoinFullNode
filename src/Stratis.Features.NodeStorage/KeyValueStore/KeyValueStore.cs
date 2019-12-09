@@ -10,16 +10,10 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
     /// </summary>
     public abstract class KeyValueStore : IKeyValueStore
     {
-        internal IDateTimeProvider DateTimeProvider { get; private set; }
-        internal string RootPath { get; private set; }
-
-        /// <inheritdoc/>
+        public IDateTimeProvider DateTimeProvider { get; private set; }
+        public string RootPath { get; private set; }
         public IKeyValueStoreTrackers Lookups { get; private set; }
-
-        /// <inheritdoc/>
         public ILoggerFactory LoggerFactory { get; private set; }
-
-        /// <inheritdoc/>
         public IRepositorySerializer RepositorySerializer { get; private set; }
 
         /// <summary>
@@ -65,7 +59,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
     /// <typeparam name="R">The database-specific repository class.</typeparam>
     public class KeyValueStore<R> : KeyValueStore where R : KeyValueStoreRepository
     {
-        internal IKeyValueStoreRepository Repository { get; private set; }
+        public IKeyValueStoreRepository Repository { get; private set; }
 
         /// <summary>
         /// Creates a key-value store.
