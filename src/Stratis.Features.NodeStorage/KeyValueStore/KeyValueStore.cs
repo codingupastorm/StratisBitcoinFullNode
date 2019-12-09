@@ -45,9 +45,6 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
             this.Lookups = keyValueStoreTrackers;
         }
 
-        // Has Dispose already been called?
-        bool disposed = false;
-
         // Public implementation of Dispose pattern callable by consumers.
         public void Dispose()
         {
@@ -59,12 +56,6 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         /// <param name="disposing">Indicates whether disposing.</param>
         protected virtual void Dispose(bool disposing)
         {
-            this.disposed = true;
-        }
-
-        ~KeyValueStore()
-        {
-            Dispose(false);
         }
     }
 
