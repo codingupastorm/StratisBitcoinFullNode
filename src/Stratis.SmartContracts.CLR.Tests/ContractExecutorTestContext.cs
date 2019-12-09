@@ -24,7 +24,7 @@ namespace Stratis.SmartContracts.CLR.Tests
         public StateRepositoryRoot State { get; }
         public SmartContractValidator Validator { get; }
         public IAddressGenerator AddressGenerator {get;}
-        public ContractAssemblyLoader AssemblyLoader { get; }
+        public ContractAssemblyLoader<SmartContract> AssemblyLoader { get; }
         public IContractModuleDefinitionReader ModuleDefinitionReader { get; }
         public IContractPrimitiveSerializer ContractPrimitiveSerializer { get; }
         public IInternalExecutorFactory InternalTxExecutorFactory { get; }
@@ -45,10 +45,11 @@ namespace Stratis.SmartContracts.CLR.Tests
             this.Serializer = new Serializer(this.ContractPrimitiveSerializer);
             this.AddressGenerator = new AddressGenerator();
             this.Validator = new SmartContractValidator();
-            this.AssemblyLoader = new ContractAssemblyLoader();
+            var contractInitializer = new ContractInitializer<SmartContract>();
+            this.AssemblyLoader = new ContractAssemblyLoader<SmartContract>();
             this.ModuleDefinitionReader = new ContractModuleDefinitionReader();
             this.ContractCache = new ContractAssemblyCache();
-            this.Vm = new ReflectionVirtualMachine(this.Validator, this.LoggerFactory, this.AssemblyLoader, this.ModuleDefinitionReader, this.ContractCache);
+            this.Vm = new ReflectionVirtualMachine(this.Validator, this.LoggerFactory, this.AssemblyLoader, this.ModuleDefinitionReader, this.ContractCache, contractInitializer);
             this.StateProcessor = new StateProcessor(this.Vm, this.AddressGenerator);
             this.InternalTxExecutorFactory = new InternalExecutorFactory(this.LoggerFactory, this.StateProcessor);
             this.SmartContractStateFactory = new SmartContractStateFactory(this.ContractPrimitiveSerializer, this.InternalTxExecutorFactory, this.Serializer);

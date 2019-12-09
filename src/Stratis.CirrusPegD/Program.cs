@@ -25,6 +25,7 @@ using Stratis.Features.Collateral.CounterChain;
 using Stratis.Features.FederatedPeg;
 using Stratis.Features.SQLiteWalletRepository;
 using Stratis.Sidechains.Networks;
+using Stratis.SmartContracts;
 
 namespace Stratis.CirrusPegD
 {
@@ -136,6 +137,7 @@ namespace Stratis.CirrusPegD
                 {
                     options.UseReflectionExecutor();
                     options.UsePoAWhitelistedContracts();
+                    options.UseSmartContractType<SmartContract>();
                 })
                 .UseSmartContractWallet()
                 .AddSQLiteWalletRepository()

@@ -109,7 +109,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts
                         services.AddSingleton<IContractAssemblyCache, ContractAssemblyCache>();
                         services.AddSingleton<IVirtualMachine, ReflectionVirtualMachine>();
                         services.AddSingleton<IAddressGenerator, AddressGenerator>();
-                        services.AddSingleton<ILoader, ContractAssemblyLoader>();
                         services.AddSingleton<IContractModuleDefinitionReader, ContractModuleDefinitionReader>();
                         services.AddSingleton<IStateFactory, StateFactory>();
                         services.AddSingleton<SmartContractTransactionPolicy>();
@@ -167,6 +166,16 @@ namespace Stratis.Bitcoin.Features.SmartContracts
             // Controllers + utils
             services.AddSingleton<CSharpContractDecompiler>();
 
+            return options;
+        }
+
+        /// <summary>
+        /// Sets the smart contract base type that this network is going to be executing.
+        /// </summary>
+        public static SmartContractOptions UseSmartContractType<T>(this SmartContractOptions options)
+        {
+            options.Services.AddSingleton<IContractInitializer, ContractInitializer<T>>();
+            options.Services.AddSingleton<ILoader, ContractAssemblyLoader<T>>();
             return options;
         }
     }

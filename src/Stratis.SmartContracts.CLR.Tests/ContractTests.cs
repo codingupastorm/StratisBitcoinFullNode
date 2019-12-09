@@ -14,6 +14,7 @@ namespace Stratis.SmartContracts.CLR.Tests
         private Type type;
         private uint160 address;
         private IContract contract;
+        private IContractInitializer contractInitializer;
 
         public class HasReceive : SmartContract
         {
@@ -108,6 +109,8 @@ namespace Stratis.SmartContracts.CLR.Tests
             var message = new Mock<IMessage>();
             Func<ulong> getBalance = () => 1;
 
+            this.contractInitializer = new ContractInitializer<SmartContract>();
+
             this.state = Mock.Of<ISmartContractState>(
                 g => g.InternalTransactionExecutor == internalTxExecutor.Object
                      && g.InternalHashHelper == internalHashHelper.Object
@@ -117,7 +120,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                      && g.GetBalance == getBalance);
             this.type = typeof(TestContract);
             this.address = uint160.One;
-            this.contract = Contract.CreateUninitialized(this.type, this.state, this.address);
+            this.contract = this.contractInitializer.CreateUninitialized(this.type, this.state, this.address);
             this.instance = (TestContract) this.contract.GetPrivateFieldValue("instance");
         }
 
@@ -249,7 +252,7 @@ namespace Stratis.SmartContracts.CLR.Tests
         {
             var parameters = new List<object> { 1 };
 
-            var constructorExists = Contract.ConstructorExists(typeof(TestContract), parameters);
+            var constructorExists = Contract<SmartContract>.ConstructorExists(typeof(TestContract), parameters);
 
             Assert.True(constructorExists);
         }
@@ -260,7 +263,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             // No constructor with this signature should exist due to missing ISmartContractState
             var parameters = new List<object> { 1, "1" };
 
-            var constructorExists = Contract.ConstructorExists(typeof(TestContract), parameters);
+            var constructorExists = Contract<SmartContract>.ConstructorExists(typeof(TestContract), parameters);
 
             Assert.False(constructorExists);
         }
@@ -268,9 +271,9 @@ namespace Stratis.SmartContracts.CLR.Tests
         [Fact]
         public void HasReceive_Returns_Correct_Receive()
         {
-            var receiveContract = Contract.CreateUninitialized(typeof(HasReceive), this.state, this.address);
+            var receiveContract = Contract<SmartContract>.CreateUninitialized(typeof(HasReceive), this.state, this.address);
 
-            var receiveMethod = ((Contract) receiveContract).ReceiveHandler;
+            var receiveMethod = ((Contract<SmartContract>) receiveContract).ReceiveHandler;
 
             Assert.NotNull(receiveMethod);
         }
@@ -278,10 +281,10 @@ namespace Stratis.SmartContracts.CLR.Tests
         [Fact]
         public void HasNoReceive_Returns_Correct_Receive()
         {
-            var receiveContract = Contract.CreateUninitialized(typeof(HasNoReceive), this.state, this.address);
+            var receiveContract = Contract<SmartContract>.CreateUninitialized(typeof(HasNoReceive), this.state, this.address);
 
             // ReceiveHandler should be null here because we set the binding flags to only resolve methods on the declared type
-            var receiveMethod = ((Contract)receiveContract).ReceiveHandler;
+            var receiveMethod = ((Contract<SmartContract>)receiveContract).ReceiveHandler;
 
             Assert.Null(receiveMethod);
         }
@@ -289,7 +292,7 @@ namespace Stratis.SmartContracts.CLR.Tests
         [Fact]
         public void EmptyMethodName_Invokes_Receive()
         {
-            var receiveContract = Contract.CreateUninitialized(typeof(HasReceive), this.state, this.address);
+            var receiveContract = Contract<SmartContract>.CreateUninitialized(typeof(HasReceive), this.state, this.address);
             var receiveInstance = (HasReceive) receiveContract.GetPrivateFieldValue("instance");
             var methodCall = MethodCall.Receive();
 
@@ -302,7 +305,7 @@ namespace Stratis.SmartContracts.CLR.Tests
         [Fact]
         public void EmptyMethodName_DoesNot_Invoke_Receive()
         {
-            var receiveContract = Contract.CreateUninitialized(typeof(HasNoReceive), this.state, this.address);
+            var receiveContract = Contract<SmartContract>.CreateUninitialized(typeof(HasNoReceive), this.state, this.address);
             var methodCall = MethodCall.Receive();
 
             var result = receiveContract.Invoke(methodCall);
@@ -313,7 +316,7 @@ namespace Stratis.SmartContracts.CLR.Tests
         [Fact]
         public void EmptyMethodName_WithParams_DoesNot_Invoke_Receive()
         {
-            var receiveContract = Contract.CreateUninitialized(typeof(HasReceive), this.state, this.address);
+            var receiveContract = Contract<SmartContract>.CreateUninitialized(typeof(HasReceive), this.state, this.address);
             var receiveInstance = (HasReceive)receiveContract.GetPrivateFieldValue("instance");
 
             var parameters = new object[] { 1, "1" };
@@ -328,7 +331,7 @@ namespace Stratis.SmartContracts.CLR.Tests
         [Fact]
         public void Non_Existent_Method_DoesNot_Invoke_Receive()
         {
-            var receiveContract = Contract.CreateUninitialized(typeof(HasReceive), this.state, this.address);
+            var receiveContract = Contract<SmartContract>.CreateUninitialized(typeof(HasReceive), this.state, this.address);
             var receiveInstance = (HasReceive)receiveContract.GetPrivateFieldValue("instance");
             var methodCall = new MethodCall("DoesntExist");
 
@@ -343,7 +346,7 @@ namespace Stratis.SmartContracts.CLR.Tests
         public void Invoke_Receive_Method_Sets_State()
         {
             var methodCall = MethodCall.Receive();
-            var receiveContract = Contract.CreateUninitialized(typeof(HasReceive), this.state, this.address);
+            var receiveContract = Contract<SmartContract>.CreateUninitialized(typeof(HasReceive), this.state, this.address);
             var receiveInstance = (HasReceive)receiveContract.GetPrivateFieldValue("instance");
 
             receiveContract.Invoke(methodCall);

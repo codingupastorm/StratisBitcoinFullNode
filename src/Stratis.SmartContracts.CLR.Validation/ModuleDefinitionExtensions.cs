@@ -14,7 +14,7 @@ namespace Stratis.SmartContracts.CLR.Validation
             return typeDefinition.IsClass &&
                    !typeDefinition.IsAbstract &&
                    typeDefinition.BaseType != null &&
-                   typeDefinition.BaseType.FullName == InheritsSmartContractValidator.SmartContractType;
+                   (typeDefinition.BaseType.FullName == InheritsSmartContractValidator.SmartContractType || typeDefinition.BaseType.FullName == InheritsSmartContractValidator.TokenlessContractType);
         }
 
         /// <summary>

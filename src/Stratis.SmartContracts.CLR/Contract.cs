@@ -12,7 +12,7 @@ namespace Stratis.SmartContracts.CLR
     /// <summary>
     /// A class representing a contract instance. Manages the lifecycle of a contract object and allows for constructor and method invocations.
     /// </summary>
-    public class Contract : IContract
+    public class Contract<T> : IContract
     {
         /// <summary>
         /// The default binding flags for matching the receive method. Matches public instance methods declared on the contract type only.
@@ -21,7 +21,7 @@ namespace Stratis.SmartContracts.CLR
 
         private const BindingFlags DefaultBindingFlags = BindingFlags.Instance | BindingFlags.NonPublic;
 
-        private readonly SmartContract instance;
+        private readonly T instance;
 
         /// <summary>
         /// Indicates whether the ISmartContractState fields have been set on the instance object yet.
@@ -55,7 +55,7 @@ namespace Stratis.SmartContracts.CLR
             }
         }
 
-        private Contract(SmartContract instance, Type type, ISmartContractState state, uint160 address)
+        public Contract(T instance, Type type, ISmartContractState state, uint160 address)
         {
             this.instance = instance;
             this.State = state;
@@ -68,9 +68,9 @@ namespace Stratis.SmartContracts.CLR
         /// </summary>
         public static IContract CreateUninitialized(Type type, ISmartContractState state, uint160 address)
         {
-            var contract = (SmartContract)FormatterServices.GetSafeUninitializedObject(type);
+            var contract = (T)FormatterServices.GetSafeUninitializedObject(type);
 
-            return new Contract(contract, type, state, address);
+            return new Contract<T>(contract, type, state, address);
         }
 
         /// <summary>
@@ -220,9 +220,9 @@ namespace Stratis.SmartContracts.CLR
         /// <summary>
         /// Uses reflection to set the state field on the contract object.
         /// </summary>
-        private static void SetStateField(SmartContract smartContract, ISmartContractState contractState)
+        private static void SetStateField(T smartContract, ISmartContractState contractState)
         {
-            FieldInfo field = typeof(SmartContract).GetField("state", DefaultBindingFlags);
+            FieldInfo field = typeof(T).GetField("state", DefaultBindingFlags);
 
             field.SetValue(smartContract, contractState);
         }
