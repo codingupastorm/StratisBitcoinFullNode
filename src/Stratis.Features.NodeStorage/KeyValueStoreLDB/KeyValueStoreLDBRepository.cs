@@ -22,6 +22,12 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
             }
         }
 
+        /// <summary>
+        /// LevelDB does not understand the concept of tables. However this class introduces that concept in a way the LevelDB can understand.
+        /// </summary>
+        /// <remarks>
+        /// The standard workaround is to prefix the key with the "table" identifier.
+        /// </remarks>
         private class KeyValueStoreLDBTable : IKeyValueStoreTable
         {
             public string TableName { get; internal set; }
