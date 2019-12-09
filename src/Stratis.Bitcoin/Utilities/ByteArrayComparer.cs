@@ -1,11 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace Stratis.Features.NodeStorage.Common
+namespace Stratis.Bitcoin.Utilities
 {
     /// <summary>
     /// Compares two byte arrays for equality.
     /// </summary>
-    internal sealed class ByteArrayComparer : IEqualityComparer<byte[]>
+    public sealed class ByteArrayComparer : IEqualityComparer<byte[]>
     {
         public bool Equals(byte[] first, byte[] second)
         {

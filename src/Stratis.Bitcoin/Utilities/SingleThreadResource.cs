@@ -1,8 +1,10 @@
-﻿using System.Threading;
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Utilities;
 
-namespace Stratis.Features.NodeStorage.Common
+namespace Stratis.Bitcoin.Utilities
 {
     /// <summary>
     /// Represents a resource that can only be held by one thread at a time.

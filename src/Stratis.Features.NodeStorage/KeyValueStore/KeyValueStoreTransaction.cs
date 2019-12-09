@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.NodeStorage.Common;
 using Stratis.Features.NodeStorage.Interfaces;
 
 namespace Stratis.Features.NodeStorage.KeyValueStore
