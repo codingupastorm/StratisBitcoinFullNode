@@ -157,7 +157,7 @@ namespace Stratis.SmartContracts.IntegrationTests.PoW
             internal AddressGenerator AddressGenerator { get; private set; }
             public Key privateKey;
             private ISerializer serializer;
-            private ContractAssemblyLoader assemblyLoader;
+            private ContractAssemblyLoader<SmartContract> assemblyLoader;
             public ICallDataSerializer callDataSerializer;
             internal ReflectionExecutorFactory ExecutorFactory { get; private set; }
             internal string Folder { get; private set; }
@@ -338,15 +338,13 @@ namespace Stratis.SmartContracts.IntegrationTests.PoW
 
                 this.AddressGenerator = new AddressGenerator();
 
-                var contractBaseTypeHolder = new ContractBaseTypeHolder(typeof(SmartContract));
-
-                this.assemblyLoader = new ContractAssemblyLoader(contractBaseTypeHolder);
+                this.assemblyLoader = new ContractAssemblyLoader<SmartContract>();
                 var contractInitializer = new ContractInitializer<SmartContract>();
                 this.callDataSerializer = new CallDataSerializer(new ContractPrimitiveSerializer(this.network));
                 this.moduleDefinitionReader = new ContractModuleDefinitionReader();
                 this.contractCache = new ContractAssemblyCache();
 
-                this.reflectionVirtualMachine = new ReflectionVirtualMachine(this.validator, this.loggerFactory, this.assemblyLoader, this.moduleDefinitionReader, this.contractCache, contractBaseTypeHolder, contractInitializer);
+                this.reflectionVirtualMachine = new ReflectionVirtualMachine(this.validator, this.loggerFactory, this.assemblyLoader, this.moduleDefinitionReader, this.contractCache, contractInitializer);
                 this.stateProcessor = new StateProcessor(this.reflectionVirtualMachine, this.AddressGenerator);
                 this.internalTxExecutorFactory = new InternalExecutorFactory(this.loggerFactory, this.stateProcessor);
                 this.primitiveSerializer = new ContractPrimitiveSerializer(this.network);

@@ -27,7 +27,7 @@ namespace Stratis.SmartContracts.CLR
         private readonly IContractAssemblyCache assemblyCache;
         private readonly IContractInitializer contractInitializer;
 
-        private readonly Type contractBaseType;
+        // private readonly Type contractBaseType;
 
         public const int VmVersion = 1;
         public const long MemoryUnitLimit = 100_000;
@@ -37,7 +37,6 @@ namespace Stratis.SmartContracts.CLR
             ILoader assemblyLoader,
             IContractModuleDefinitionReader moduleDefinitionReader,
             IContractAssemblyCache assemblyCache,
-            ContractBaseTypeHolder contractBaseTypeHolder,
             IContractInitializer contractInitializer)
         {
             this.validator = validator;
@@ -45,7 +44,6 @@ namespace Stratis.SmartContracts.CLR
             this.assemblyLoader = assemblyLoader;
             this.moduleDefinitionReader = moduleDefinitionReader;
             this.assemblyCache = assemblyCache;
-            this.contractBaseType = contractBaseTypeHolder.ContractBaseType;
             this.contractInitializer = contractInitializer;
         }
 
@@ -136,7 +134,7 @@ namespace Stratis.SmartContracts.CLR
                     typeToInstantiate = typeName ?? moduleDefinition.ContractType.Name;
                     ContractByteCode code = getCodeResult.Value;
 
-                    Result<IContract> contractLoadResult = this.Load(
+                    Result<(IContract contract, IContractAssembly assembly)> contractLoadResult = this.Load(
                         code,
                         typeToInstantiate,
                         contractState.Message.ContractAddress.ToUint160(),
@@ -147,9 +145,9 @@ namespace Stratis.SmartContracts.CLR
                         return VmExecutionResult.Fail(VmExecutionErrorKind.LoadFailed, contractLoadResult.Error);
                     }
 
-                    contract = contractLoadResult.Value;
+                    contract = contractLoadResult.Value.contract;
 
-                    assemblyPackage = new CachedAssemblyPackage(new ContractAssembly(contract.Type.Assembly, this.contractBaseType));
+                    assemblyPackage = new CachedAssemblyPackage(contractLoadResult.Value.assembly);
 
                     // Cache this completely validated and rewritten contract to reuse later.
                     this.assemblyCache.Store(codeHashUint256, assemblyPackage);
@@ -233,7 +231,7 @@ namespace Stratis.SmartContracts.CLR
                     // due to the fact that the nested call's gas limit may be specified by the user.
                     // Because of that we can't reuse the same observer for a single execution.
 
-                    Result<IContract> contractLoadResult = this.Load(
+                    Result<(IContract contract, IContractAssembly assembly)> contractLoadResult = this.Load(
                         code,
                         typeName,
                         contractState.Message.ContractAddress.ToUint160(),
@@ -244,9 +242,11 @@ namespace Stratis.SmartContracts.CLR
                         return VmExecutionResult.Fail(VmExecutionErrorKind.LoadFailed, contractLoadResult.Error);
                     }
 
-                    contract = contractLoadResult.Value;
+                    contract = contractLoadResult.Value.contract;
 
-                    assemblyPackage = new CachedAssemblyPackage(new ContractAssembly(contract.Type.Assembly, this.contractBaseType));
+                    
+
+                    assemblyPackage = new CachedAssemblyPackage(contractLoadResult.Value.assembly);
 
                     // Cache this completely validated and rewritten contract to reuse later.
                     this.assemblyCache.Store(codeHashUint256, assemblyPackage);
@@ -293,7 +293,7 @@ namespace Stratis.SmartContracts.CLR
         /// <summary>
         /// Loads the contract bytecode and returns an <see cref="IContract"/> representing an uninitialized contract instance.
         /// </summary>
-        private Result<IContract> Load(ContractByteCode byteCode,
+        private Result<(IContract, IContractAssembly)> Load(ContractByteCode byteCode,
             string typeName,
             uint160 address,
             ISmartContractState contractState)
@@ -304,7 +304,7 @@ namespace Stratis.SmartContracts.CLR
             {
                 this.logger.LogDebug(assemblyLoadResult.Error);
 
-                return Result.Fail<IContract>(assemblyLoadResult.Error);
+                return Result.Fail<(IContract, IContractAssembly)>(assemblyLoadResult.Error);
             }
 
             IContractAssembly contractAssembly = assemblyLoadResult.Value;
@@ -317,7 +317,7 @@ namespace Stratis.SmartContracts.CLR
 
                 this.logger.LogDebug(typeNotFoundError);
 
-                return Result.Fail<IContract>(typeNotFoundError);
+                return Result.Fail<(IContract, IContractAssembly)>(typeNotFoundError);
             }
 
             IContract contract;
@@ -330,10 +330,10 @@ namespace Stratis.SmartContracts.CLR
             {
                 this.logger.LogError("Exception occurred: {0}", e.ToString());
 
-                return Result.Fail<IContract>("Exception occurred while instantiating contract instance");
+                return Result.Fail<(IContract, IContractAssembly)>("Exception occurred while instantiating contract instance");
             }
 
-            return Result.Ok(contract);
+            return Result.Ok((contract, contractAssembly));
         }
 
         private bool Rewrite(IContractModuleDefinition moduleDefinition, IILRewriter rewriter)

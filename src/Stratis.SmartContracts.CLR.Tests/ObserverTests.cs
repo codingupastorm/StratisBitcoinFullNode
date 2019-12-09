@@ -91,7 +91,7 @@ namespace Stratis.SmartContracts.CLR.Tests
         private readonly ObserverRewriter rewriter;
         private readonly IStateRepository repository;
         private readonly IContractModuleDefinitionReader moduleReader;
-        private readonly ContractAssemblyLoader assemblyLoader;
+        private readonly ContractAssemblyLoader<SmartContract> assemblyLoader;
         private readonly IGasMeter gasMeter;
         private readonly IContractInitializer contractInitializer;
 
@@ -101,7 +101,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             this.TestAddress = "0x0000000000000000000000000000000000000001".HexToAddress();
             this.repository = context.State;
             this.moduleReader = new ContractModuleDefinitionReader();
-            this.assemblyLoader = new ContractAssemblyLoader(new ContractBaseTypeHolder(typeof(SmartContract)));
+            this.assemblyLoader = new ContractAssemblyLoader<SmartContract>();
             this.gasMeter = new GasMeter((Gas)5000000);
 
             var block = new TestBlock
