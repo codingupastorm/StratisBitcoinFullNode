@@ -20,7 +20,7 @@ namespace Stratis.Features.NodeStorage.Interfaces
         /// The transaction factory for this key-store type.
         /// </summary>
         /// <param name="mode">The transaction mode.</param>
-        /// <param name="tables">The tables that will be updated if <paramref name="mode"/> is <see cref="KeyValueStoreTransactionMode.ReadWrite>.</param>
+        /// <param name="tables">The tables that will be updated if <paramref name="mode"/> is <see cref="KeyValueStoreTransactionMode.ReadWrite"/>.</param>
         /// <returns>A transaction specific to the key-store type.</returns>
         IKeyValueStoreTransaction CreateTransaction(KeyValueStoreTransactionMode mode, params string[] tables);
 
