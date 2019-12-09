@@ -246,6 +246,10 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         {
             Guard.Assert(this.mode == KeyValueStoreTransactionMode.ReadWrite);
 
+            // Remove buffered updates to prevent replay during commit.
+            this.tableUpdates.TryRemove(tableName, out _);
+
+            // Signal the underlying table to be cleared during commit.
             this.tablesCleared.Add(tableName);
         }
 
