@@ -11,7 +11,6 @@ using Stratis.Bitcoin.Utilities;
 namespace Stratis.Bitcoin.Features.MemoryPool.Rules
 {
     // TODO: This is still a large rule, perhaps further split it up according to the public methods
-
     /// <summary>
     /// Creates a memory pool entry in the validation context.
     /// Validates the transactions can be mined, and the pay to script hashs are standard.
