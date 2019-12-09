@@ -25,7 +25,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Rules
     /// Abstraction for shared SC coinview rule logic. 
     /// TODO: Long-term solution requires refactoring of the FN CoinViewRule implementation.
     /// </summary>
-    internal sealed class SmartContractCoinViewRuleLogic
+    public sealed class SmartContractCoinViewRuleLogic
     {
         private readonly IStateRepositoryRoot stateRepositoryRoot;
         private readonly IContractExecutorFactory executorFactory;

@@ -7,15 +7,8 @@ namespace Stratis.SmartContracts.CLR.Loader
     /// <summary>
     /// Loads assemblies from bytecode.
     /// </summary>
-    public class ContractAssemblyLoader : ILoader
+    public class ContractAssemblyLoader<T> : ILoader
     {
-        private readonly Type contractBaseType;
-
-        public ContractAssemblyLoader(ContractBaseTypeHolder contractBaseTypeHolder)
-        {
-            this.contractBaseType = contractBaseTypeHolder?.ContractBaseType;
-        }
-
         /// <summary>
         /// Loads a contract from a raw byte array into an anonymous <see cref="AssemblyLoadContext"/>.
         /// </summary>
@@ -25,7 +18,7 @@ namespace Stratis.SmartContracts.CLR.Loader
             {
                 Assembly assembly = Assembly.Load(bytes.Value);
 
-                return Result.Ok<IContractAssembly>(new ContractAssembly(assembly, this.contractBaseType));
+                return Result.Ok<IContractAssembly>(new ContractAssembly(assembly, typeof(T)));
             }
             catch (BadImageFormatException e)
             {

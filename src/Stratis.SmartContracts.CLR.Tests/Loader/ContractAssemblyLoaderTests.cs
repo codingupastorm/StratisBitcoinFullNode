@@ -9,14 +9,14 @@ namespace Stratis.SmartContracts.CLR.Tests.Loader
     public class ContractAssemblyLoaderTests
     {
         private readonly ContractCompilationResult compilation;
-        private readonly ContractAssemblyLoader loader;
+        private readonly ContractAssemblyLoader<SmartContract> loader;
 
         public string Contract = Path.Combine("Loader", "Test.cs");
 
         public ContractAssemblyLoaderTests()
         {
             this.compilation = ContractCompiler.CompileFile(this.Contract);
-            this.loader = new ContractAssemblyLoader(new ContractBaseTypeHolder(typeof(SmartContract)));
+            this.loader = new ContractAssemblyLoader<SmartContract>();
         }
 
         [Fact]
