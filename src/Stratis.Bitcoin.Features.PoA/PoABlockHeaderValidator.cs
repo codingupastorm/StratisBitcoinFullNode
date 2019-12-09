@@ -24,8 +24,8 @@ namespace Stratis.Bitcoin.Features.PoA
         }
 
         /// <summary>
-        /// Verifies if signature of provided header was created using
-        /// private key that corresponds to given public key.
+        /// Verifies that the signature of the provided header was created using
+        /// the private key that corresponds to given public key.
         /// </summary>
         public bool VerifySignature(PubKey pubKey, PoABlockHeader header)
         {

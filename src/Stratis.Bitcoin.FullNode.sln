@@ -176,9 +176,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Features.SQLiteWall
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Features.SQLiteWalletRepository.Tests", "Stratis.Features.SQLiteWalletRepository.Tests\Stratis.Features.SQLiteWalletRepository.Tests.csproj", "{789E4584-5616-4F0C-A3E8-88669B6AA91F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stratis.SmartContracts.CLRTokenless", "Stratis.SmartContracts.CLRTokenless\Stratis.SmartContracts.CLRTokenless.csproj", "{7D520179-A6AD-4A7F-9026-D27161E31EE6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.SmartContracts.CLRTokenless", "Stratis.SmartContracts.CLRTokenless\Stratis.SmartContracts.CLRTokenless.csproj", "{7D520179-A6AD-4A7F-9026-D27161E31EE6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stratis.SmartContracts.Tokenless", "Stratis.SmartContracts.Tokenless\Stratis.SmartContracts.Tokenless.csproj", "{BB6C331B-6C7E-46E0-8EB2-A11B7D011F3D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.SmartContracts.Tokenless", "Stratis.SmartContracts.Tokenless\Stratis.SmartContracts.Tokenless.csproj", "{BB6C331B-6C7E-46E0-8EB2-A11B7D011F3D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
