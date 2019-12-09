@@ -64,7 +64,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         {
             this.consensusOptions = consensusOptions;
             this.EntryHeight = entryHeight;
-            this.Time = entryHeight;
+            this.Time = entryTime;
             this.Transaction = transaction;
             this.TransactionHash = transaction.GetHash();
         }
