@@ -171,8 +171,10 @@ namespace Stratis.Feature.PoA.Tokenless
             this.StandardScriptsRegistry = new PoAStandardScriptsRegistry();
 
             // TODO-TL: Generate new Genesis
-            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("0x0621b88fb7a99c985d695be42e606cb913259bace2babe92970547fa033e4076"));
-            Assert(this.Genesis.Header.HashMerkleRoot == uint256.Parse("0x9928b372fd9e4cf62a31638607344c03c48731ba06d24576342db9c8591e1432"));
+            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("ad3c9c471280e686cd85c156a829caaacd2936a4649b9ca26fff743b1462c551"));
+            //Assert(this.Genesis.Header.HashMerkleRoot == uint256.Parse("0x9928b372fd9e4cf62a31638607344c03c48731ba06d24576342db9c8591e1432"));
+
+            // TODO-TL: Add Smart Contract State Root Hash
 
             if ((this.ConsensusOptions.GenesisFederationMembers == null) || (this.ConsensusOptions.GenesisFederationMembers.Count == 0))
                 throw new Exception("No keys for initial federation are configured!");

@@ -17,15 +17,15 @@ namespace Stratis.Feature.PoA.Tokenless
     {
         private readonly ICoreComponent coreComponent;
 
-        private readonly IPoAMiner miner;
-
         private readonly CertificatesManager certificatesManager;
-
+        private readonly IFederationManager federationManager;
+        private readonly IPoAMiner miner;
         private readonly RevocationChecker revocationChecker;
 
         public TokenlessFeature(
             ICoreComponent coreComponent,
             CertificatesManager certificatesManager,
+            IFederationManager federationManager,
             IPoAMiner miner,
             PayloadProvider payloadProvider,
             RevocationChecker revocationChecker)
@@ -33,6 +33,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.coreComponent = coreComponent;
 
             this.certificatesManager = certificatesManager;
+            this.federationManager = federationManager;
             this.miner = miner;
             this.revocationChecker = revocationChecker;
 
@@ -48,7 +49,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
             this.ReplaceBlockStoreBehavior(connectionParameters);
 
-            this.coreComponent.FederationManager.Initialize();
+            this.federationManager.Initialize();
 
             // TODO-TL: Check if we need a new ConsensusOptions.
             var options = (PoAConsensusOptions)this.coreComponent.Network.Consensus.Options;
