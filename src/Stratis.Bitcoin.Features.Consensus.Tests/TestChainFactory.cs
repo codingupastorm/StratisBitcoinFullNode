@@ -147,9 +147,9 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             testChainContext.PartialValidator = new PartialValidator(testChainContext.AsyncProvider, testChainContext.ConsensusRules, testChainContext.LoggerFactory);
             testChainContext.FullValidator = new FullValidator(testChainContext.ConsensusRules, testChainContext.LoggerFactory);
 
-            var nodeStorageProvider = new NodeStorageProvider(dataFolder, testChainContext.LoggerFactory, DateTimeProvider.Default);
+            var blockStoreFactory = new BlockStoreFactory(testChainContext.Network, dataFolder, testChainContext.LoggerFactory, DateTimeProvider.Default);
 
-            var blockRepository = new BlockRepository(testChainContext.Network, testChainContext.LoggerFactory, nodeStorageProvider);
+            var blockRepository = new BlockRepository(testChainContext.Network, testChainContext.LoggerFactory, blockStoreFactory);
 
             var blockStoreFlushCondition = new BlockStoreQueueFlushCondition(testChainContext.ChainState, testChainContext.InitialBlockDownloadState);
 

@@ -9,7 +9,6 @@ using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.NodeStorage;
 using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests.BlockStore
@@ -32,10 +31,10 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
         public void BlockRepositoryPutBatch()
         {
             var dataFolder = TestBase.CreateDataFolder(this);
-            
-            var nodeStorageProvider = new NodeStorageProvider(dataFolder, this.loggerFactory, DateTimeProvider.Default);
 
-            using (var blockRepository = new BlockRepository(this.network, this.loggerFactory, nodeStorageProvider))
+            var blockStoreFactory = new BlockStoreFactory(this.network, dataFolder, this.loggerFactory, DateTimeProvider.Default);
+
+            using (var blockRepository = new BlockRepository(this.network, this.loggerFactory, blockStoreFactory))
             {
                 blockRepository.SetTxIndex(true);
 

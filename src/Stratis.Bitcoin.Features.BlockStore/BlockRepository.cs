@@ -106,24 +106,15 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
         private readonly IReadOnlyDictionary<uint256, Transaction> genesisTransactions;
 
-        public BlockRepository(Network network, ILoggerFactory loggerFactory, INodeStorageProvider nodeStorageProvider)
+        public BlockRepository(Network network, ILoggerFactory loggerFactory, IBlockStoreFactory blockStoreFactory)
         {
             Guard.NotNull(network, nameof(network));
 
-            RegisterStoreProvider(nodeStorageProvider, new DBreezeSerializer(network.Consensus.ConsensusFactory));
-
-            this.KeyValueStore = nodeStorageProvider.GetStore("blocks");
+            this.KeyValueStore = blockStoreFactory.GetStore();
 
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.network = network;
             this.genesisTransactions = network.GetGenesis().Transactions.ToDictionary(k => k.GetHash());
-        }
-
-        public static void RegisterStoreProvider(INodeStorageProvider nodeStorageProvider, DBreezeSerializer dBreezeSerializer)
-        {
-            nodeStorageProvider.RegisterStoreProvider("blocks", 
-                (nsp, repositorySerializer) => new KeyValueStore<KeyValueStoreLDBRepository>(nsp.DataFolder.BlockPath, nsp.LoggerFactory, nsp.DateTimeProvider, repositorySerializer), 
-                dBreezeSerializer);
         }
 
         /// <inheritdoc />

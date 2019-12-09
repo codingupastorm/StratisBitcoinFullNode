@@ -204,7 +204,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
                         services.AddSingleton<StoreSettings>();
                         services.AddSingleton<IBlockStoreQueueFlushCondition, BlockStoreQueueFlushCondition>();
                         services.AddSingleton<IAddressIndexer, AddressIndexer>();
-                        services.AddSingleton<INodeStorageProvider, NodeStorageProvider>();
+                        services.AddSingleton<IBlockStoreFactory, BlockStoreFactory>();
                     });
             });
 
