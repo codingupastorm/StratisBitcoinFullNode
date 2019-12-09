@@ -5,7 +5,7 @@ using Stratis.Features.NodeStorage.Interfaces;
 namespace Stratis.Features.NodeStorage.KeyValueStore
 {
     /// <summary>
-    /// Generic key-value store template. The template parameter supplies the database type. 
+    /// Generic key-value store template. The template parameter supplies the database type.
     /// </summary>
     /// <typeparam name="R">The database-specific repository class.</typeparam>
     public class KeyValueStore<R> : IKeyValueStore where R : IKeyValueStoreRepository

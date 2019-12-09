@@ -19,7 +19,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
             public KeyValueStoreLDBTransaction(IKeyValueStoreRepository repository, KeyValueStoreTransactionMode mode, params string[] tables)
                 : base(repository, mode, tables)
             {
-            }            
+            }
         }
 
         private class KeyValueStoreLDBTable : IKeyValueStoreTable
@@ -30,7 +30,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
         }
 
         internal DB Storage;
-        
+
         private int nextTablePrefix;
         private SingleThreadResource TransactionLock;
 
@@ -121,7 +121,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
             {
                 this.TransactionLock.Wait();
             }
-                
+
             ((KeyValueStoreLDBTransaction)keyValueStoreTransaction).snapshot = (mode == KeyValueStoreTransactionMode.Read) ? this.Storage.CreateSnapshot() : null;
         }
 

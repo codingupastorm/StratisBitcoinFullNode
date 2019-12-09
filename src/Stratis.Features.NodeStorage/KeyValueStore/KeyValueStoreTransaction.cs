@@ -13,7 +13,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
     /// Provides high-level methods, supporting serialization, to access the key-value store.
     /// </summary>
     /// <remarks>
-    /// Changes are buffered in-memory until the commit operation takes place. This class also 
+    /// Changes are buffered in-memory until the commit operation takes place. This class also
     /// provides a mechanism to keep transient lookups (if any) in sync with changes to the database.
     /// </remarks>
     public abstract class KeyValueStoreTransaction : IKeyValueStoreTransaction
@@ -199,8 +199,8 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         {
             var table = this.GetTable(tableName);
 
-            Dictionary<byte[], byte[]> res = this.tablesCleared.Contains(tableName) ? 
-                new Dictionary<byte[], byte[]>() : 
+            Dictionary<byte[], byte[]> res = this.tablesCleared.Contains(tableName) ?
+                new Dictionary<byte[], byte[]>() :
                 this.repository.GetAll(this, table, keysOnly).ToDictionary(k => k.Item1, k => k.Item2, this.byteArrayComparer);
 
             if (this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> updates))
