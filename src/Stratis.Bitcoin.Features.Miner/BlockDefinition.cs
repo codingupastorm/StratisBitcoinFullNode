@@ -50,13 +50,7 @@ namespace Stratis.Bitcoin.Features.Miner
         /// </summary>
         protected const int MaxConsecutiveAddTransactionFailures = 1000;
 
-        /// <summary>
-        /// Unconfirmed transactions in the memory pool often depend on other
-        /// transactions in the memory pool. When we select transactions from the
-        /// pool, we select by highest fee rate of a transaction combined with all
-        /// its ancestors.
-        /// </summary>
-        protected long LastBlockTx = 0;
+        protected long LastBlockWeight = 0;
 
         protected long MedianTimePast;
 
@@ -66,9 +60,9 @@ namespace Stratis.Bitcoin.Features.Miner
         protected BlockTemplate BlockTemplate;
 
         /// <summary>
-        /// A convenience pointer that always refers to the <see cref="NBitcoin.Block"/> in <see cref="BlockTemplate"/>.
+        /// A convenience pointer that always refers to the <see cref="Block"/> in <see cref="BlockTemplate"/>.
         /// </summary>
-        protected Block Block;
+        protected Block block;
 
         /// <summary>
         /// Configuration parameters for the block size.
@@ -137,7 +131,7 @@ namespace Stratis.Bitcoin.Features.Miner
         {
             this.height = this.ChainTip.Height + 1;
             var headerVersionRule = this.ConsensusManager.ConsensusRules.GetRule<HeaderVersionRule>();
-            this.Block.Header.Version = headerVersionRule.ComputeBlockVersion(this.ChainTip);
+            this.block.Header.Version = headerVersionRule.ComputeBlockVersion(this.ChainTip);
         }
 
         /// <summary>
@@ -152,7 +146,7 @@ namespace Stratis.Bitcoin.Features.Miner
             this.coinbase.AddInput(TxIn.CreateCoinbase(this.ChainTip.Height + 1));
             this.coinbase.AddOutput(new TxOut(Money.Zero, this.scriptPubKey));
 
-            this.Block.AddTransaction(this.coinbase);
+            this.block.AddTransaction(this.coinbase);
         }
 
         /// <summary>
@@ -182,7 +176,7 @@ namespace Stratis.Bitcoin.Features.Miner
 
             this.ChainTip = chainTip;
 
-            this.Block = this.BlockTemplate.Block;
+            this.block = this.BlockTemplate.Block;
             this.scriptPubKey = scriptPubKey;
 
             this.CreateCoinbase();
@@ -197,7 +191,7 @@ namespace Stratis.Bitcoin.Features.Miner
             this.MedianTimePast = Utils.DateTimeToUnixTime(this.ChainTip.GetMedianTimePast());
             this.LockTimeCutoff = MempoolValidator.StandardLocktimeVerifyFlags.HasFlag(Transaction.LockTimeFlags.MedianTimePast)
                 ? this.MedianTimePast
-                : this.Block.Header.Time;
+                : this.block.Header.Time;
 
             // TODO: Implement Witness Code
             // Decide whether to include witness transactions
@@ -211,7 +205,7 @@ namespace Stratis.Bitcoin.Features.Miner
             // Add transactions from the mempool
             this.AddTransactions(out int nPackagesSelected, out int nDescendantsUpdated);
 
-            this.LastBlockTx = this.BlockTx;
+            this.LastBlockWeight = this.BlockWeight;
 
             // TODO: Implement Witness Code
             // pblocktemplate->CoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
@@ -223,8 +217,8 @@ namespace Stratis.Bitcoin.Features.Miner
             // We need the fee details per transaction to be readily available in case we have to remove transactions from the block later.
             this.BlockTemplate.FeeDetails = this.inBlock.Select(i => new { i.TransactionHash, i.Fee }).ToDictionary(d => d.TransactionHash, d => d.Fee);
 
-            int nSerializeSize = this.Block.GetSerializedSize();
-            this.logger.LogDebug("Serialized size is {0} bytes, block weight is {1}, number of txs is {2}, tx fees are {3}, number of sigops is {4}.", nSerializeSize, this.Block.GetBlockWeight(this.Network.Consensus), this.BlockTx, this.fees, this.BlockSigOpsCost);
+            int nSerializeSize = this.block.GetSerializedSize();
+            this.logger.LogDebug("Serialized size is {0} bytes, block weight is {1}, number of txs is {2}, tx fees are {3}, number of sigops is {4}.", nSerializeSize, this.block.GetBlockWeight(this.Network.Consensus), this.BlockTx, this.fees, this.BlockSigOpsCost);
 
             this.UpdateHeaders();
         }
@@ -239,7 +233,7 @@ namespace Stratis.Bitcoin.Features.Miner
         /// </summary>
         protected void AddTransactionToBlock(Transaction transaction)
         {
-            this.Block.AddTransaction(transaction);
+            this.block.AddTransaction(transaction);
             this.BlockTx++;
 
             if (this.NeedSizeAccounting)
@@ -494,20 +488,20 @@ namespace Stratis.Bitcoin.Features.Miner
         /// </list>
         /// </para>
         /// </summary>
-        private bool TestPackageTransactions(TxMempool.SetEntries package)
+        protected virtual bool TestPackageTransactions(TxMempool.SetEntries entries)
         {
-            foreach (TxMempoolEntry it in package)
+            foreach (TxMempoolEntry entry in entries)
             {
-                if (!it.Transaction.IsFinal(Utils.UnixTimeToDateTime(this.LockTimeCutoff), this.height))
+                if (!entry.Transaction.IsFinal(Utils.UnixTimeToDateTime(this.LockTimeCutoff), this.height))
                     return false;
 
-                if (!this.IncludeWitness && it.Transaction.HasWitness)
+                if (!this.IncludeWitness && entry.Transaction.HasWitness)
                     return false;
 
                 if (this.NeedSizeAccounting)
                 {
                     long nPotentialBlockSize = this.BlockSize; // only used with needSizeAccounting
-                    int nTxSize = it.Transaction.GetSerializedSize();
+                    int nTxSize = entry.Transaction.GetSerializedSize();
                     if (nPotentialBlockSize + nTxSize >= this.Options.BlockMaxSize)
                         return false;
 
@@ -572,9 +566,9 @@ namespace Stratis.Bitcoin.Features.Miner
         /// <summary>Update the block's header information.</summary>
         protected void UpdateBaseHeaders()
         {
-            this.Block.Header.HashPrevBlock = this.ChainTip.HashBlock;
-            this.Block.Header.UpdateTime(this.DateTimeProvider.GetTimeOffset(), this.Network, this.ChainTip);
-            this.Block.Header.Nonce = 0;
+            this.block.Header.HashPrevBlock = this.ChainTip.HashBlock;
+            this.block.Header.UpdateTime(this.DateTimeProvider.GetTimeOffset(), this.Network, this.ChainTip);
+            this.block.Header.Nonce = 0;
         }
 
         /// <summary>Network specific logic specific as to how the block's header will be set.</summary>
