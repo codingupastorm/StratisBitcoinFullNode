@@ -173,8 +173,8 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
 
             if (this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv))
                 for (int i = 0; i < exists.Length; i++)
-                    if (kv.TryGetValue(serKeys[i], out byte[] key) && key != null)
-                        exists[i] = true;
+                    if (kv.TryGetValue(serKeys[i], out byte[] value))
+                        exists[i] = value != null;
 
             return exists;
         }
@@ -182,33 +182,24 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         /// <inheritdoc />
         public bool Select<TKey, TObject>(string tableName, TKey key, out TObject obj)
         {
-            var table = this.GetTable(tableName);
-            var keyBytes = this.Serialize(key);
+            obj = this.SelectMultiple<TKey, TObject>(tableName, new[] { key })[0];
 
-            if (!this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv) || !kv.TryGetValue(keyBytes, out byte[] res))
-                res = this.tablesCleared.Contains(tableName) ? null : this.repository.Get(this, table, keyBytes);
-
-            if (res == null)
-            {
-                obj = default(TObject);
-                return false;
-            }
-
-            obj = this.Deserialize<TObject>(res.ToArray());
-
-            return true;
+            return obj != null;
         }
 
         /// <inheritdoc />
         public List<TObject> SelectMultiple<TKey, TObject>(string tableName, TKey[] keys)
         {
-            TObject Select(TKey key)
-            {
-                this.Select(tableName, key, out TObject obj);
-                return obj;
-            }
+            byte[][] serKeys = keys.Select(k => this.Serialize(k)).ToArray();
+            IKeyValueStoreTable table = this.GetTable(tableName);
 
-            return keys.Select(k => Select(k)).ToList();
+            byte[][] objects = this.tablesCleared.Contains(tableName) ? new byte[keys.Length][] : this.repository.Get(this, table, serKeys);
+            if (this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv))
+                for (int i = 0; i < objects.Length; i++)
+                    if (kv.TryGetValue(serKeys[i], out byte[] value))
+                        objects[i] = value;
+
+            return objects.Select(v => this.Deserialize<TObject>(v)).ToList();
         }
 
         /// <inheritdoc />

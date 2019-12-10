@@ -26,7 +26,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         public abstract bool[] Exists(IKeyValueStoreTransaction tran, IKeyValueStoreTable table, byte[][] keys);
 
         /// <inheritdoc />
-        public abstract byte[] Get(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable, byte[] key);
+        public abstract byte[][] Get(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable, byte[][] keys);
 
         /// <inheritdoc />
         public abstract IEnumerable<(byte[], byte[])> GetAll(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable, bool keysOnly = false);

@@ -54,7 +54,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
         {
             var options = new Options()
             {
-                CreateIfMissing = true,                      
+                CreateIfMissing = true,
             };
 
             this.Storage = new DB(options, rootPath);
@@ -119,11 +119,15 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
             }
         }
 
-        public override byte[] Get(IKeyValueStoreTransaction tran, IKeyValueStoreTable table, byte[] key)
+        public override byte[][] Get(IKeyValueStoreTransaction tran, IKeyValueStoreTable table, byte[][] keys)
         {
-            var keyBytes = new byte[] { ((KeyValueStoreLDBTable)table).KeyPrefix }.Concat(key).ToArray();
+            var keyBytes = keys.Select(key => new byte[] { ((KeyValueStoreLDBTable)table).KeyPrefix }.Concat(key).ToArray()).ToArray();
+            (byte[] k, int n)[] orderedKeys = keyBytes.Select((k, n) => (k, n)).OrderBy(t => t.k, new ByteListComparer()).ToArray();
+            var res = new byte[keys.Length][];
+            for (int i = 0; i < orderedKeys.Length; i++)
+                res[orderedKeys[i].n] = this.Storage.Get(orderedKeys[i].k, ((KeyValueStoreLDBTransaction)tran).readOptions);
 
-            return this.Storage.Get(keyBytes, ((KeyValueStoreLDBTransaction)tran).readOptions);
+            return res;
         }
 
         public override IEnumerable<(byte[], byte[])> GetAll(IKeyValueStoreTransaction tran, IKeyValueStoreTable table, bool keysOnly = false)
@@ -183,22 +187,27 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
             try
             {
                 var writeBatch = new WriteBatch();
+                var tableUpdates = ((KeyValueStoreLDBTransaction)keyValueStoreTransaction).TableUpdates;
 
                 foreach (string tableName in ((KeyValueStoreLDBTransaction)keyValueStoreTransaction).TablesCleared)
                 {
                     var table = (KeyValueStoreLDBTable)this.GetTable(tableName);
+                    tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> tableUpdate);
 
                     foreach ((byte[] Key, byte[] _) kv in this.GetAll(keyValueStoreTransaction, table, true))
                     {
+                        if (tableUpdate != null && tableUpdate.ContainsKey(kv.Key))
+                            continue;
+
                         writeBatch.Delete(new byte[] { table.KeyPrefix }.Concat(kv.Key).ToArray());
                     }
                 }
 
-                foreach (KeyValuePair<string, ConcurrentDictionary<byte[], byte[]>> updates in ((KeyValueStoreLDBTransaction)keyValueStoreTransaction).TableUpdates)
+                foreach (KeyValuePair<string, ConcurrentDictionary<byte[], byte[]>> tableUpdate in tableUpdates)
                 {
-                    var table = (KeyValueStoreLDBTable)this.GetTable(updates.Key);
+                    var table = (KeyValueStoreLDBTable)this.GetTable(tableUpdate.Key);
 
-                    foreach (KeyValuePair<byte[], byte[]> kv in updates.Value)
+                    foreach (KeyValuePair<byte[], byte[]> kv in tableUpdate.Value)
                     {
                         if (kv.Value == null)
                         {

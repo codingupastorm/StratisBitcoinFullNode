@@ -26,7 +26,7 @@ namespace Stratis.Features.NodeStorage.Interfaces
         /// </summary>
         /// <param name="keyValueStoreTransaction">The transaction.</param>
         /// <param name="keyValueStoreTable">The table to read.</param>
-        /// <param name="keys">The keys (byte array) to check for existence.</param>
+        /// <param name="keys">The keys (byte arrays) to check for existence.</param>
         /// <returns>A boolean array corresponding to each key indicating whether the key exists.</returns>
         bool[] Exists(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable, byte[][] keys);
 
@@ -37,9 +37,9 @@ namespace Stratis.Features.NodeStorage.Interfaces
         /// </summary>
         /// <param name="keyValueStoreTransaction">The transaction.</param>
         /// <param name="keyValueStoreTable">The table to read.</param>
-        /// <param name="key">The key (byte array) of the value to read.</param>
-        /// <returns>The value as a byte array.</returns>
-        byte[] Get(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable, byte[] key);
+        /// <param name="keys">The keys (byte arrays) of the values to read.</param>
+        /// <returns>The values as an array of byte arrays.</returns>
+        byte[][] Get(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable, byte[][] keys);
 
         /// <summary>
         /// Gets the values (byte arrays) and keys (byte arrays) associated with a table.

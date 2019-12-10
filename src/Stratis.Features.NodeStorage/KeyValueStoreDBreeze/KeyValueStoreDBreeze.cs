@@ -81,16 +81,20 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
             }
         }
 
-        public override byte[] Get(IKeyValueStoreTransaction transaction, IKeyValueStoreTable table, byte[] key)
+        public override byte[][] Get(IKeyValueStoreTransaction transaction, IKeyValueStoreTable table, byte[][] keys)
         {
             var tran = ((KeyValueStoreDBZTransaction)transaction).dBreezeTransaction;
 
-            var row = tran.Select<byte[], byte[]>(((KeyValueStoreDBZTable)table).TableName, key);
+            (byte[] k, int n)[] orderedKeys = keys.Select((k, n) => (k, n)).OrderBy(t => t.k, new ByteListComparer()).ToArray();
+            var res = new byte[keys.Length][];
+            for (int i = 0; i < orderedKeys.Length; i++)
+            {
+                var key = orderedKeys[i].k;
+                var row = tran.Select<byte[], byte[]>(((KeyValueStoreDBZTable)table).TableName, key);
+                res[orderedKeys[i].n] = row.Exists ? row.Value : null;
+            }
 
-            if (!row.Exists)
-                return null;
-
-            return row.Value;
+            return res;
         }
 
         public override IEnumerable<(byte[], byte[])> GetAll(IKeyValueStoreTransaction transaction, IKeyValueStoreTable table, bool keysOnly)
