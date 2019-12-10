@@ -4,7 +4,7 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Features.NodeStorage.Interfaces;
 using Stratis.Features.NodeStorage.KeyValueStore;
-using Stratis.Features.NodeStorage.KeyValueStoreLDB;
+using Stratis.Features.NodeStorage.KeyValueStoreLevelDB;
 
 namespace Stratis.Bitcoin.Features.BlockStore
 {
@@ -20,7 +20,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
         private readonly IDateTimeProvider dateTimeProvider;
         private readonly IRepositorySerializer repositorySerializer;
 
-        private KeyValueStore<KeyValueStoreLDBRepository> keyValueStore;
+        private KeyValueStore<KeyValueStoreLevelDB> keyValueStore;
 
         public BlockStoreFactory(Network network, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
         {
@@ -34,7 +34,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
         public IKeyValueStore GetStore()
         {
             if (this.keyValueStore == null)
-                this.keyValueStore = new KeyValueStore<KeyValueStoreLDBRepository>(this.dataFolder.BlockPath, this.loggerFactory, this.dateTimeProvider, this.repositorySerializer);
+                this.keyValueStore = new KeyValueStore<KeyValueStoreLevelDB>(this.dataFolder.BlockPath, this.loggerFactory, this.dateTimeProvider, this.repositorySerializer);
 
             return this.keyValueStore;
         }

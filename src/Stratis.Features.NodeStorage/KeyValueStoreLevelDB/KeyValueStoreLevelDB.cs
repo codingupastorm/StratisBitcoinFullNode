@@ -8,9 +8,9 @@ using Stratis.Bitcoin.Utilities;
 using Stratis.Features.NodeStorage.Interfaces;
 using Stratis.Features.NodeStorage.KeyValueStore;
 
-namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
+namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
 {
-    public class KeyValueStoreLDBRepository : KeyValueStoreRepository
+    public class KeyValueStoreLevelDB : KeyValueStoreRepository
     {
         private class KeyValueStoreLDBTransaction : KeyValueStoreTransaction
         {
@@ -22,8 +22,8 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
             {
             }
 
-            public ConcurrentBag<string> TablesCleared => this.tablesCleared;
-            public ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>> TableUpdates => this.tableUpdates;
+            internal ConcurrentBag<string> TablesCleared => this.tablesCleared;
+            internal ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>> TableUpdates => this.tableUpdates;
         }
 
         /// <summary>
@@ -36,16 +36,16 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
         {
             public string TableName { get; internal set; }
             public byte KeyPrefix { get; internal set; }
-            public KeyValueStoreLDBRepository Repository { get; internal set; }
+            public KeyValueStoreLevelDB Repository { get; internal set; }
         }
 
         private DB Storage;
         private int nextTablePrefix;
         private SingleThreadResource TransactionLock;
 
-        public KeyValueStoreLDBRepository(KeyValueStore.KeyValueStore keyValueStore) : base(keyValueStore)
+        public KeyValueStoreLevelDB(KeyValueStore.KeyValueStore keyValueStore) : base(keyValueStore)
         {
-            var logger = this.KeyValueStore.LoggerFactory.CreateLogger(nameof(KeyValueStoreLDBRepository));
+            var logger = this.KeyValueStore.LoggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
 
             this.TransactionLock = new SingleThreadResource($"{nameof(this.TransactionLock)}", logger);
         }
@@ -126,7 +126,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
             return this.Storage.Get(keyBytes, ((KeyValueStoreLDBTransaction)tran).readOptions);
         }
 
-        public override IEnumerable<(byte[], byte[])> GetAll(IKeyValueStoreTransaction tran, IKeyValueStoreTable table)
+        public override IEnumerable<(byte[], byte[])> GetAll(IKeyValueStoreTransaction tran, IKeyValueStoreTable table, bool keysOnly = false)
         {
             using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).readOptions))
             {
@@ -137,7 +137,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
                     byte[] keyBytes = iterator.Key();
 
                     if (keyBytes[0] == ((KeyValueStoreLDBTable)table).KeyPrefix)
-                        yield return (keyBytes.Skip(1).ToArray(), iterator.Value());
+                        yield return (keyBytes.Skip(1).ToArray(), keysOnly ? null : iterator.Value());
 
                     iterator.Next();
                 }
@@ -188,7 +188,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
                 {
                     var table = (KeyValueStoreLDBTable)this.GetTable(tableName);
 
-                    foreach ((byte[] Key, byte[] _) kv in this.GetAll(keyValueStoreTransaction, table))
+                    foreach ((byte[] Key, byte[] _) kv in this.GetAll(keyValueStoreTransaction, table, true))
                     {
                         writeBatch.Delete(new byte[] { table.KeyPrefix }.Concat(kv.Key).ToArray());
                     }

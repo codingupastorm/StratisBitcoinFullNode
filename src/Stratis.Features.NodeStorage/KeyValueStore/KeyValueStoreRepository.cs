@@ -29,7 +29,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         public abstract byte[] Get(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable, byte[] key);
 
         /// <inheritdoc />
-        public abstract IEnumerable<(byte[], byte[])> GetAll(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable);
+        public abstract IEnumerable<(byte[], byte[])> GetAll(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable, bool keysOnly = false);
 
         /// <inheritdoc />
         public abstract void Init(string rootPath);
