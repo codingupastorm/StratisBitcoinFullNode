@@ -132,7 +132,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoS
             base.OnBuild(chainTip, scriptPubKey);
 
             this.coinbase.Outputs.AddRange(this.refundOutputs);
-            
+
             return this.BlockTemplate;
         }
 
@@ -141,9 +141,9 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoS
         {
             base.UpdateBaseHeaders();
 
-            this.Block.Header.Bits = this.stakeValidator.GetNextTargetRequired(this.stakeChain, this.ChainTip, this.Network.Consensus, false);
+            this.block.Header.Bits = this.stakeValidator.GetNextTargetRequired(this.stakeChain, this.ChainTip, this.Network.Consensus, false);
 
-            var scHeader = (ISmartContractBlockHeader)this.Block.Header;
+            var scHeader = (ISmartContractBlockHeader)this.block.Header;
 
             scHeader.HashStateRoot = new uint256(this.stateSnapshot.Root);
 
@@ -195,7 +195,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoS
                 result.Logs.ToArray()
             );
             this.receipts.Add(receipt);
-            
+
             return result;
         }
     }

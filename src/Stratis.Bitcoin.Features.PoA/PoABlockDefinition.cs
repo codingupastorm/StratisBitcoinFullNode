@@ -45,7 +45,7 @@ namespace Stratis.Bitcoin.Features.PoA
         {
             base.UpdateBaseHeaders();
 
-            this.Block.Header.Bits = PoAHeaderDifficultyRule.PoABlockDifficulty;
+            this.block.Header.Bits = PoAHeaderDifficultyRule.PoABlockDifficulty;
         }
     }
 }

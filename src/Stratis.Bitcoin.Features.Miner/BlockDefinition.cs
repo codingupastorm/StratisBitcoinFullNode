@@ -153,7 +153,7 @@ namespace Stratis.Bitcoin.Features.Miner
         /// Configures (resets) the builder to its default state
         /// before constructing a new block.
         /// </summary>
-        protected void Configure()
+        protected virtual void Configure()
         {
             this.BlockSize = 1000;
             this.BlockTemplate = new BlockTemplate(this.Network);

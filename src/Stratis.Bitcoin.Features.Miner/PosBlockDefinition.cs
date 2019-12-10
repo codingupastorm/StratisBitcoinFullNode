@@ -68,7 +68,7 @@ namespace Stratis.Bitcoin.Features.Miner
         {
             base.UpdateBaseHeaders();
 
-            this.Block.Header.Bits = this.stakeValidator.GetNextTargetRequired(this.stakeChain, this.ChainTip, this.Network.Consensus, true);
+            this.block.Header.Bits = this.stakeValidator.GetNextTargetRequired(this.stakeChain, this.ChainTip, this.Network.Consensus, true);
         }
 
         /// <inheritdoc/>
@@ -82,7 +82,7 @@ namespace Stratis.Bitcoin.Features.Miner
             if (entry.Transaction.Time > adjustedTime + this.futureDriftRule.GetFutureDrift(adjustedTime))
                 return false;
 
-            if (entry.Transaction.Time > this.Block.Transactions[0].Time)
+            if (entry.Transaction.Time > this.block.Transactions[0].Time)
                 return false;
 
             return base.TestPackage(entry, packageSize, packageSigOpsCost);

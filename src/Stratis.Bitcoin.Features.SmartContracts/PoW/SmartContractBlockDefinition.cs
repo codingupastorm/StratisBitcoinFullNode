@@ -175,9 +175,9 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoW
         {
             this.UpdateBaseHeaders();
 
-            this.Block.Header.Bits = this.Block.Header.GetWorkRequired(this.Network, this.ChainTip);
+            this.block.Header.Bits = this.block.Header.GetWorkRequired(this.Network, this.ChainTip);
 
-            var scHeader = (ISmartContractBlockHeader)this.Block.Header;
+            var scHeader = (ISmartContractBlockHeader)this.block.Header;
 
             scHeader.HashStateRoot = new uint256(this.stateSnapshot.Root);
 

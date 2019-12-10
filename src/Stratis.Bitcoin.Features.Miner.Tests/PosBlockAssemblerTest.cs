@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
@@ -189,7 +188,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
             {
                 var newOptions = new PosConsensusOptions();
                 this.stratisTest.Consensus.Options = newOptions;
-                this.stratisTest.Consensus.BIP9Deployments[0] = new BIP9DeploymentsParameters("Test",19,
+                this.stratisTest.Consensus.BIP9Deployments[0] = new BIP9DeploymentsParameters("Test", 19,
                     new DateTimeOffset(new DateTime(2016, 1, 1, 0, 0, 0, DateTimeKind.Utc)),
                     new DateTimeOffset(new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc)),
                     2);
@@ -514,14 +513,14 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
                 ILoggerFactory loggerFactory)
                 : base(consensusManager, dateTimeProvider, loggerFactory, mempool, mempoolLock, minerSettings, network, stakeChain, stakeValidator)
             {
-                base.Block = this.BlockTemplate.Block;
+                base.block = this.BlockTemplate.Block;
             }
 
             public Block UpdateHeaders(ChainedHeader chainTip)
             {
                 this.ChainTip = chainTip;
                 base.UpdateHeaders();
-                return this.Block;
+                return this.block;
             }
 
             public (int Height, int Version) ComputeBlockVersion(ChainedHeader chainTip)
@@ -530,7 +529,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
 
                 base.ComputeBlockVersion();
 
-                return (base.height, base.Block.Header.Version);
+                return (base.height, base.block.Header.Version);
             }
 
             public BlockTemplate CreateCoinBase(ChainedHeader chainTip, Script scriptPubKeyIn)
@@ -540,7 +539,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
 
                 base.CreateCoinbase();
 
-                base.BlockTemplate.Block = base.Block;
+                base.BlockTemplate.Block = base.block;
 
                 return base.BlockTemplate;
             }
@@ -549,7 +548,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
             {
                 base.AddTransactions(out int selected, out int updated);
 
-                return (base.Block, selected, updated);
+                return (base.block, selected, updated);
             }
 
             public void AddInBlockTxEntries(params TxMempoolEntry[] entries)

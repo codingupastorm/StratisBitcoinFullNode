@@ -72,26 +72,17 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         {
             this.ChainTip = chainTip;
 
-            // TODO-TL: Implement new way to get sender
-            GetSenderResult getSenderResult = this.senderRetriever.GetAddressFromScript(scriptPubKey);
-
             this.stateSnapshot = this.stateRoot.GetSnapshotTo(((ISmartContractBlockHeader)this.ConsensusManager.Tip.Header).HashStateRoot.ToBytes());
-
             this.receipts.Clear();
 
             base.Configure();
 
-            this.block = this.BlockTemplate.Block;
-            this.scriptPubKey = scriptPubKey;
-
-            this.ComputeBlockVersion();
-
             this.MedianTimePast = Utils.DateTimeToUnixTime(this.ChainTip.GetMedianTimePast());
-            this.LockTimeCutoff = MempoolValidator.StandardLocktimeVerifyFlags.HasFlag(Transaction.LockTimeFlags.MedianTimePast) ? this.MedianTimePast : this.block.Header.Time;
+            this.LockTimeCutoff = MempoolValidator.StandardLocktimeVerifyFlags.HasFlag(Transaction.LockTimeFlags.MedianTimePast) ? this.MedianTimePast : this.BlockTemplate.Block.Header.Time;
 
             this.AddTransactions(out int _, out int _);
 
-            this.logger.LogDebug("Serialized size is {0} bytes, block weight is {1}, number of txs is {2}, tx fees are {3}, number of sigops is {4}.", this.block.GetSerializedSize(), this.block.GetBlockWeight(this.Network.Consensus), this.BlockTx, this.fees, this.BlockSigOpsCost);
+            this.logger.LogDebug("Serialized size is {0} bytes, block weight is {1}, number of txs is {2}", this.BlockTemplate.Block.GetSerializedSize(), this.BlockTemplate.Block.GetBlockWeight(this.Network.Consensus), this.BlockTx);
 
             this.UpdateHeaders();
 
@@ -102,6 +93,17 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             return this.BlockTemplate;
         }
 
+        /// <inheritdoc/>
+        protected override void Configure()
+        {
+            this.BlockSize = 1000;
+            this.BlockTemplate = new BlockTemplate(this.Network);
+            this.BlockTx = 0;
+            this.BlockWeight = 1000 * this.Network.Consensus.Options.WitnessScaleFactor;
+            this.inBlock = new TxMempool.SetEntries();
+        }
+
+        /// <inheritdoc/>
         protected override void AddTransactions(out int packagesSelected, out int descendentsUpdated)
         {
             packagesSelected = 0;
@@ -126,6 +128,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             }
         }
 
+        /// <inheritdoc/>
         protected override bool TestPackage(TxMempoolEntry entry, long packageSize, long packageSigOpsCost)
         {
             if (this.BlockWeight + this.Network.Consensus.Options.WitnessScaleFactor * packageSize >= this.Options.BlockMaxWeight)
@@ -139,6 +142,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             return true;
         }
 
+        /// <inheritdoc/>
         protected override bool TestPackageTransactions(TxMempool.SetEntries entries)
         {
             if (!this.NeedSizeAccounting)
@@ -153,35 +157,33 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             return true;
         }
 
-        public override void AddToBlock(TxMempoolEntry mempoolEntry)
+        /// <inheritdoc/>
+        public override void AddToBlock(TxMempoolEntry entry)
         {
-            TxOut smartContractTxOut = mempoolEntry.Transaction.TryGetSmartContractTxOut();
+            TxOut smartContractTxOut = entry.Transaction.TryGetSmartContractTxOut();
             if (smartContractTxOut == null)
+                this.logger.LogDebug("Transaction {0} does not contain smart contract information.", entry.Transaction.GetHash());
+            else
             {
-                this.logger.LogDebug("Transaction does not contain smart contract information.");
-                return;
+                this.logger.LogDebug("Transaction {0} contains smart contract information.", entry.Transaction.GetHash());
+                this.ExecuteSmartContract(entry);
             }
 
-            this.logger.LogDebug("Transaction contains smart contract information.");
-
-            this.ExecuteSmartContract(mempoolEntry);
-
-            this.AddTransactionToBlock(mempoolEntry.Transaction);
-            this.UpdateBlockStatistics(mempoolEntry);
+            this.AddTransactionToBlock(entry.Transaction);
+            this.UpdateBlockStatistics(entry);
         }
 
+        /// <inheritdoc/>
         public override void UpdateHeaders()
         {
             this.UpdateBaseHeaders();
 
-            this.block.Header.Bits = this.block.Header.GetWorkRequired(this.Network, this.ChainTip);
+            this.BlockTemplate.Block.Header.Bits = this.BlockTemplate.Block.Header.GetWorkRequired(this.Network, this.ChainTip);
 
-            var scHeader = (ISmartContractBlockHeader)this.block.Header;
-
+            var scHeader = (ISmartContractBlockHeader)this.BlockTemplate.Block.Header;
             scHeader.HashStateRoot = new uint256(this.stateSnapshot.Root);
 
             this.UpdateReceiptRoot(scHeader);
-
             this.UpdateLogsBloom(scHeader);
         }
 
@@ -201,7 +203,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         /// <param name="scHeader">The smart contract header that will be updated.</param>
         private void UpdateLogsBloom(ISmartContractBlockHeader scHeader)
         {
-            Bloom logsBloom = new Bloom();
+            var logsBloom = new Bloom();
             foreach (Receipt receipt in this.receipts)
             {
                 logsBloom.Or(receipt.Bloom);
@@ -223,7 +225,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             if (!getSenderResult.Success)
                 throw new ConsensusErrorException(new ConsensusError("sc-block-assembler-addcontracttoblock", getSenderResult.Error));
 
-            IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)this.height, this.coinbaseAddress, mempoolEntry.Fee, getSenderResult.Sender, mempoolEntry.Transaction);
+            IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)this.height, new uint160(0), mempoolEntry.Fee, getSenderResult.Sender, mempoolEntry.Transaction);
             IContractExecutor executor = this.executorFactory.CreateExecutor(this.stateSnapshot, transactionContext);
             IContractExecutionResult result = executor.Execute(transactionContext);
             Result<ContractTxData> deserializedCallData = this.callDataSerializer.Deserialize(transactionContext.Data);
