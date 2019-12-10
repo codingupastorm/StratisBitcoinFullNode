@@ -1,0 +1,220 @@
+﻿using System;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using DBreeze;
+using Microsoft.Extensions.Logging;
+using NBitcoin;
+using Stratis.Bitcoin.AsyncWork;
+using Stratis.Bitcoin.Base;
+using Stratis.Bitcoin.Base.Deployments;
+using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Configuration.Logging;
+using Stratis.Bitcoin.Configuration.Settings;
+using Stratis.Bitcoin.Consensus;
+using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Bitcoin.Features.Consensus.CoinViews;
+using Stratis.Bitcoin.Features.Consensus.Rules;
+using Stratis.Bitcoin.Features.MemoryPool;
+using Stratis.Bitcoin.Features.MemoryPool.Fee;
+using Stratis.Bitcoin.Features.Miner;
+using Stratis.Bitcoin.Features.SmartContracts;
+using Stratis.Bitcoin.Features.SmartContracts.Caching;
+using Stratis.Bitcoin.Tests.Common;
+using Stratis.Bitcoin.Utilities;
+using Stratis.Feature.PoA.Tokenless;
+using Stratis.Feature.PoA.Tokenless.Mempool;
+using Stratis.Feature.PoA.Tokenless.Mining;
+using Stratis.Patricia;
+using Stratis.SmartContracts.CLR;
+using Stratis.SmartContracts.CLR.Caching;
+using Stratis.SmartContracts.CLR.Compilation;
+using Stratis.SmartContracts.CLR.Loader;
+using Stratis.SmartContracts.CLR.ResultProcessors;
+using Stratis.SmartContracts.CLR.Serialization;
+using Stratis.SmartContracts.CLR.Validation;
+using Stratis.SmartContracts.Core.State;
+using Stratis.SmartContracts.Core.Util;
+using Stratis.SmartContracts.Tokenless;
+using Xunit;
+
+namespace Stratis.Bitcoin.IntegrationTests.Tokenless
+{
+    public sealed class MiningTests
+    {
+        private readonly CachedCoinView cachedCoinView;
+        private readonly InMemoryCoinView inMemoryCoinView;
+        private readonly ChainIndexer chainIndexer;
+        private readonly IDateTimeProvider dateTimeProvider;
+        private readonly ILoggerFactory loggerFactory;
+        private readonly Network network;
+        private readonly NodeSettings nodeSettings;
+        private ConsensusSettings consensusSettings;
+        private StateRepositoryRoot stateRoot;
+        private SmartContractValidator validator;
+        private ContractRefundProcessor refundProcessor;
+        private ContractTransferProcessor transferProcessor;
+        private AddressGenerator AddressGenerator;
+        private ContractAssemblyLoader<TokenlessSmartContract> assemblyLoader;
+        private CallDataSerializer callDataSerializer;
+        private ContractModuleDefinitionReader moduleDefinitionReader;
+        private ContractAssemblyCache contractCache;
+        private ReflectionVirtualMachine reflectionVirtualMachine;
+        private StateProcessor stateProcessor;
+        private InternalExecutorFactory internalTxExecutorFactory;
+        private ContractPrimitiveSerializer primitiveSerializer;
+        private Serializer serializer;
+        private SmartContractStateFactory smartContractStateFactory;
+        private StateFactory stateFactory;
+        private BasicKeyEncodingStrategy keyEncodingStrategy;
+        private string folder;
+
+        public ReflectionExecutorFactory executorFactory { get; private set; }
+
+        private BlockExecutionResultCache executionCache;
+        private ChainState chainState;
+        private ConsensusManager consensusManager;
+        private TokenlessMempool mempool;
+        private MempoolSchedulerLock mempoolLock;
+        private ConsensusRuleEngine consensusRules;
+
+        public MiningTests()
+        {
+            this.network = new TokenlessNetwork();
+            this.chainIndexer = new ChainIndexer(this.network);
+            this.nodeSettings = new NodeSettings(this.network);
+            this.consensusSettings = new ConsensusSettings(this.nodeSettings);
+
+            this.loggerFactory = new ExtendedLoggerFactory();
+            this.loggerFactory.AddConsoleWithFilters();
+
+            this.inMemoryCoinView = new InMemoryCoinView(this.chainIndexer.Tip.HashBlock);
+
+            this.loggerFactory = new ExtendedLoggerFactory();
+            this.loggerFactory.AddConsoleWithFilters();
+
+            this.dateTimeProvider = DateTimeProvider.Default;
+            this.cachedCoinView = new CachedCoinView(this.inMemoryCoinView, this.dateTimeProvider, this.loggerFactory, new NodeStats(this.dateTimeProvider, this.loggerFactory), this.consensusSettings);
+        }
+
+        [Fact]
+        public async Task Build_Tokenless_BlockDefinition_With_SmartContractBytecode_Async()
+        {
+            await InitializeAsync();
+
+            var blockDefinition = CreateBlockDefinition();
+            var block = blockDefinition.Build(this.chainIndexer.Tip, null);
+        }
+
+        [Fact]
+        public void Build_Tokenless_BlockDefinition_WithOut_SmartContractBytecode()
+        {
+
+        }
+
+        private BlockDefinition CreateBlockDefinition()
+        {
+            return new TokenlessBlockDefinition(
+                new BlockBufferGenerator(),
+                this.cachedCoinView,
+                this.consensusManager,
+                this.dateTimeProvider,
+                this.executorFactory,
+                new ExtendedLoggerFactory(),
+                this.mempool,
+                this.mempoolLock,
+                new MinerSettings(this.nodeSettings),
+                this.network,
+                new SenderRetriever(),
+                this.stateRoot,
+                this.executionCache,
+                this.callDataSerializer);
+        }
+
+        private async Task InitializeAsync()
+        {
+            this.chainState = new ChainState()
+            {
+                BlockStoreTip = new ChainedHeader(this.network.GetGenesis().Header, this.network.GetGenesis().GetHash(), 0)
+            };
+
+            InitializeConsensusRules();
+
+            this.consensusManager = ConsensusManagerHelper.CreateConsensusManager(this.network, chainState: this.chainState, inMemoryCoinView: this.inMemoryCoinView, chainIndexer: this.chainIndexer, consensusRules: this.consensusRules);
+            await this.consensusManager.InitializeAsync(this.chainIndexer.Tip);
+            this.mempool = new TokenlessMempool(new BlockPolicyEstimator(new MempoolSettings(this.nodeSettings), this.loggerFactory, this.nodeSettings), this.loggerFactory, this.nodeSettings);
+            this.mempoolLock = new MempoolSchedulerLock();
+
+            InitializeSmartContractComponents();
+        }
+
+        private void InitializeConsensusRules()
+        {
+            var consensusRulesContainer = new ConsensusRulesContainer();
+
+            //consensusRulesContainer.HeaderValidationRules.Add(Activator.CreateInstance(typeof(BitcoinHeaderVersionRule)) as HeaderValidationConsensusRule);
+            //consensusRulesContainer.FullValidationRules.Add(new SetActivationDeploymentsFullValidationRule() as FullValidationConsensusRule);
+            //consensusRulesContainer.FullValidationRules.Add(new LoadCoinviewRule() as FullValidationConsensusRule);
+
+            //consensusRulesContainer.FullValidationRules.Add(new TxOutSmartContractExecRule() as FullValidationConsensusRule);
+            //consensusRulesContainer.FullValidationRules.Add(new OpSpendRule() as FullValidationConsensusRule);
+            //consensusRulesContainer.FullValidationRules.Add(new CanGetSenderRule(senderRetriever) as FullValidationConsensusRule);
+            //consensusRulesContainer.FullValidationRules.Add(new P2PKHNotContractRule(this.StateRoot) as FullValidationConsensusRule);
+            //consensusRulesContainer.FullValidationRules.Add(new CanGetSenderRule(senderRetriever) as FullValidationConsensusRule);
+            //consensusRulesContainer.FullValidationRules.Add(new SmartContractPowCoinviewRule(this.network, this.StateRoot, this.ExecutorFactory, this.callDataSerializer, senderRetriever, receiptRepository, this.cachedCoinView, this.executionCache, new LoggerFactory()) as FullValidationConsensusRule);
+            //consensusRulesContainer.FullValidationRules.Add(new SaveCoinviewRule() as FullValidationConsensusRule);
+
+            this.consensusRules = new PowConsensusRuleEngine(
+                    this.network,
+                    this.loggerFactory,
+                    DateTimeProvider.Default,
+                    this.chainIndexer,
+                    new NodeDeployments(this.network, this.chainIndexer),
+                    this.consensusSettings,
+                    new Checkpoints(),
+                    this.cachedCoinView,
+                    this.chainState,
+                    new InvalidBlockHashStore(this.dateTimeProvider),
+                    new NodeStats(this.dateTimeProvider, this.loggerFactory),
+                    new AsyncProvider(this.loggerFactory, new Signals.Signals(this.loggerFactory, null), new NodeLifetime()),
+                    consensusRulesContainer)
+                .SetupRulesEngineParent();
+        }
+
+        private void InitializeSmartContractComponents([CallerMemberName] string callingMethod = "")
+        {
+            this.keyEncodingStrategy = BasicKeyEncodingStrategy.Default;
+
+            this.folder = TestBase.AssureEmptyDir(Path.Combine(AppContext.BaseDirectory, "TestCase", callingMethod));
+            var engine = new DBreezeEngine(Path.Combine(this.folder, "contracts"));
+            var byteStore = new DBreezeByteStore(engine, "ContractState1");
+            byteStore.Empty();
+            ISource<byte[], byte[]> stateDB = new NoDeleteSource<byte[], byte[]>(byteStore);
+
+            this.stateRoot = new StateRepositoryRoot(stateDB);
+            this.validator = new SmartContractValidator();
+
+            this.refundProcessor = new ContractRefundProcessor(this.loggerFactory);
+            this.transferProcessor = new ContractTransferProcessor(this.loggerFactory, this.network);
+
+            this.AddressGenerator = new AddressGenerator();
+
+            this.assemblyLoader = new ContractAssemblyLoader<TokenlessSmartContract>();
+            var contractInitializer = new ContractInitializer<TokenlessSmartContract>();
+            this.callDataSerializer = new CallDataSerializer(new ContractPrimitiveSerializer(this.network));
+            this.moduleDefinitionReader = new ContractModuleDefinitionReader();
+            this.contractCache = new ContractAssemblyCache();
+
+            this.reflectionVirtualMachine = new ReflectionVirtualMachine(this.validator, this.loggerFactory, this.assemblyLoader, this.moduleDefinitionReader, this.contractCache, contractInitializer);
+            this.stateProcessor = new StateProcessor(this.reflectionVirtualMachine, this.AddressGenerator);
+            this.internalTxExecutorFactory = new InternalExecutorFactory(this.loggerFactory, this.stateProcessor);
+            this.primitiveSerializer = new ContractPrimitiveSerializer(this.network);
+            this.serializer = new Serializer(this.primitiveSerializer);
+            this.smartContractStateFactory = new SmartContractStateFactory(this.primitiveSerializer, this.internalTxExecutorFactory, this.serializer);
+            this.stateFactory = new StateFactory(this.smartContractStateFactory);
+            this.executorFactory = new ReflectionExecutorFactory(this.loggerFactory, this.callDataSerializer, this.refundProcessor, this.transferProcessor, this.stateFactory, this.stateProcessor, this.primitiveSerializer);
+
+            this.executionCache = new BlockExecutionResultCache();
+        }
+    }
+}
