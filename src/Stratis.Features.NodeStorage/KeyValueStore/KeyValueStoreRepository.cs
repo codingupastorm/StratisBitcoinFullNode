@@ -18,13 +18,18 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         }
 
         /// <inheritdoc />
-        public abstract IKeyValueStoreTransaction StartTransaction(KeyValueStoreTransactionMode mode, params string[] tables);
+        public abstract IKeyValueStoreTransaction CreateKeyValueStoreTransaction(KeyValueStoreTransactionMode mode, params string[] tables);
+
+        public abstract int Count(IKeyValueStoreTransaction tran, IKeyValueStoreTable table);
+
+        /// <inheritdoc />
+        public abstract bool[] Exists(IKeyValueStoreTransaction tran, IKeyValueStoreTable table, byte[][] keys);
 
         /// <inheritdoc />
         public abstract byte[] Get(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable, byte[] key);
 
         /// <inheritdoc />
-        public abstract IEnumerable<(byte[], byte[])> GetAll(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable, bool keysOnly = false);
+        public abstract IEnumerable<(byte[], byte[])> GetAll(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable);
 
         /// <inheritdoc />
         public abstract void Init(string rootPath);

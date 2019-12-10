@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DBreeze.Utils;
 using LevelDB;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Features.NodeStorage.Interfaces;
@@ -53,7 +54,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
         {
             var options = new Options()
             {
-                CreateIfMissing = true,
+                CreateIfMissing = true,                      
             };
 
             this.Storage = new DB(options, rootPath);
@@ -74,6 +75,50 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
             }
         }
 
+        public override int Count(IKeyValueStoreTransaction tran, IKeyValueStoreTable table)
+        {
+            using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).readOptions))
+            {
+                int count = 0;
+
+                iterator.SeekToFirst();
+
+                while (iterator.IsValid())
+                {
+                    byte[] keyBytes = iterator.Key();
+
+                    if (keyBytes[0] == ((KeyValueStoreLDBTable)table).KeyPrefix)
+                        count++;
+
+                    iterator.Next();
+                }
+
+                return count;
+            }
+        }
+
+        public override bool[] Exists(IKeyValueStoreTransaction tran, IKeyValueStoreTable table, byte[][] keys)
+        {
+            using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).readOptions))
+            {
+                byte keyPrefix = ((KeyValueStoreLDBTable)table).KeyPrefix;
+
+                bool Exist(byte[] key)
+                {
+                    var keyBytes = new byte[] { keyPrefix }.Concat(key).ToArray();
+                    iterator.Seek(keyBytes);
+                    return iterator.IsValid();
+                }
+
+                (byte[] k, int n)[] orderedKeys = keys.Select((k, n) => (k, n)).OrderBy(t => t.k, new ByteListComparer()).ToArray();
+                var exists = new bool[keys.Length];
+                for (int i = 0; i < orderedKeys.Length; i++)
+                    exists[orderedKeys[i].n] = Exist(orderedKeys[i].k);
+
+                return exists;
+            }
+        }
+
         public override byte[] Get(IKeyValueStoreTransaction tran, IKeyValueStoreTable table, byte[] key)
         {
             var keyBytes = new byte[] { ((KeyValueStoreLDBTable)table).KeyPrefix }.Concat(key).ToArray();
@@ -81,7 +126,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
             return this.Storage.Get(keyBytes, ((KeyValueStoreLDBTransaction)tran).readOptions);
         }
 
-        public override IEnumerable<(byte[], byte[])> GetAll(IKeyValueStoreTransaction tran, IKeyValueStoreTable table, bool keysOnly = false)
+        public override IEnumerable<(byte[], byte[])> GetAll(IKeyValueStoreTransaction tran, IKeyValueStoreTable table)
         {
             using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).readOptions))
             {
@@ -92,7 +137,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
                     byte[] keyBytes = iterator.Key();
 
                     if (keyBytes[0] == ((KeyValueStoreLDBTable)table).KeyPrefix)
-                        yield return (keyBytes.Skip(1).ToArray(), keysOnly ? null : iterator.Value());
+                        yield return (keyBytes.Skip(1).ToArray(), iterator.Value());
 
                     iterator.Next();
                 }
@@ -118,7 +163,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
             return table;
         }
 
-        public override IKeyValueStoreTransaction StartTransaction(KeyValueStoreTransactionMode mode, params string[] tables)
+        public override IKeyValueStoreTransaction CreateKeyValueStoreTransaction(KeyValueStoreTransactionMode mode, params string[] tables)
         {
             return new KeyValueStoreLDBTransaction(this, mode, tables);
         }
@@ -143,7 +188,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLDB
                 {
                     var table = (KeyValueStoreLDBTable)this.GetTable(tableName);
 
-                    foreach ((byte[] Key, byte[] _) kv in this.GetAll(keyValueStoreTransaction, table, true))
+                    foreach ((byte[] Key, byte[] _) kv in this.GetAll(keyValueStoreTransaction, table))
                     {
                         writeBatch.Delete(new byte[] { table.KeyPrefix }.Concat(kv.Key).ToArray());
                     }

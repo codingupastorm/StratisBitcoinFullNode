@@ -19,10 +19,21 @@ namespace Stratis.Features.NodeStorage.Interfaces
         /// <param name="mode">The transaction mode.</param>
         /// <param name="tables">The tables that will be modified.</param>
         /// <returns>A transaction that can be passed as a parameter to the rest of the class methods.</returns>
-        IKeyValueStoreTransaction StartTransaction(KeyValueStoreTransactionMode mode, params string[] tables);
+        IKeyValueStoreTransaction CreateKeyValueStoreTransaction(KeyValueStoreTransactionMode mode, params string[] tables);
 
         /// <summary>
-        /// Gets the value (byte array) associated with a table and key (byte array) from the underlying database.
+        /// Determines if the keys (array of byte array) exists in the given table.
+        /// </summary>
+        /// <param name="keyValueStoreTransaction">The transaction.</param>
+        /// <param name="keyValueStoreTable">The table to read.</param>
+        /// <param name="keys">The keys (byte array) to check for existence.</param>
+        /// <returns>A boolean array corresponding to each key indicating whether the key exists.</returns>
+        bool[] Exists(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable, byte[][] keys);
+
+        int Count(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable);
+
+        /// <summary>
+        /// Gets the value (byte array) associated with a key (byte array) in the given table.
         /// </summary>
         /// <param name="keyValueStoreTransaction">The transaction.</param>
         /// <param name="keyValueStoreTable">The table to read.</param>
@@ -31,13 +42,12 @@ namespace Stratis.Features.NodeStorage.Interfaces
         byte[] Get(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable, byte[] key);
 
         /// <summary>
-        /// Gets the values (byte arrays) and keys (byte arrays) associated with a table from the underlying database.
+        /// Gets the values (byte arrays) and keys (byte arrays) associated with a table.
         /// </summary>
         /// <param name="keyValueStoreTransaction">The transaction.</param>
         /// <param name="keyValueStoreTable">The table to read.</param>
-        /// <param name="keysOnly">Set to <c>true</c> if only the keys are required, otherwise the keys are set to <c>null</c>.</param>
         /// <returns>The keys and values as byte arrays.</returns>
-        IEnumerable<(byte[], byte[])> GetAll(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable, bool keysOnly = false);
+        IEnumerable<(byte[], byte[])> GetAll(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable);
 
         /// <summary>
         /// A call-back indicating that the transaction is starting.

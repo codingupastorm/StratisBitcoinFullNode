@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -312,13 +313,11 @@ namespace Stratis.Bitcoin.Features.BlockStore
                         dbTransaction.InsertMultiple(TransactionTableName, block.Transactions.Select(t => (t.GetHash(), blockHash)).ToArray());
 
                         // inform the user about the ongoing operation
-                        if (++rowCount % 1000 == 0)
+                        if (++rowCount % 10000 == 0)
                         {
                             this.logger.LogInformation("Reindex in process... {0}/{1} blocks processed.", rowCount, totalBlocksCount);
                         }
                     }
-
-                    this.logger.LogInformation("Reindex completed successfully.");
                 }
                 else
                 {
@@ -326,8 +325,14 @@ namespace Stratis.Bitcoin.Features.BlockStore
                     dbTransaction.RemoveAllKeys(TransactionTableName);
                 }
 
+                this.logger.LogInformation("Reindex is committing the updates.");
+
                 dbTransaction.Commit();
+
+                this.logger.LogInformation("Reindex completed successfully.");
             }
+
+            GC.Collect();
         }
 
         /// <inheritdoc />

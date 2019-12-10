@@ -80,7 +80,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         /// <inheritdoc/>
         public override IKeyValueStoreTransaction CreateTransaction(KeyValueStoreTransactionMode mode, params string[] tables)
         {
-            return this.Repository.StartTransaction(mode, tables);
+            return this.Repository.CreateKeyValueStoreTransaction(mode, tables);
         }
 
         // Flag: Has Dispose already been called?

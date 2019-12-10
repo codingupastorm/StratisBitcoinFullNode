@@ -73,7 +73,27 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         /// <inheritdoc />
         public int Count(string tableName)
         {
-            return this.SelectForward(tableName, true).Count();
+            // Count = snapshot_count - deletes + inserts.
+            IKeyValueStoreTable table = this.GetTable(tableName);
+
+            int count = this.tablesCleared.Contains(tableName) ? 0 : this.repository.Count(this, table);
+
+            // Determine prior existence of updated keys.
+            if (!this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv))
+                return count;
+
+            var updateKeys = kv.Keys.ToArray();
+            var existed = this.repository.Exists(this, table, updateKeys);
+            for (int i = 0; i < updateKeys.Length; i++)
+            {
+                byte[] key = updateKeys[i];
+                if (!existed[i] && kv[key] != null)
+                    count++;
+                else if (existed[i] && kv[key] == null)
+                    count--;
+            }
+
+            return count;
         }
 
         private byte[] Serialize<T>(T obj)
@@ -141,19 +161,22 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         /// <inheritdoc />
         public bool Exists<TKey>(string tableName, TKey key)
         {
-            var table = this.GetTable(tableName);
-            var keyBytes = this.Serialize(key);
-
-            if (this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv) && kv.TryGetValue(keyBytes, out byte[] res))
-                return res != null;
-
-            return this.Select<TKey, byte[]>(tableName, key, out _);
+            return this.ExistsMultiple<TKey>(tableName, new[] { key })[0];
         }
 
         /// <inheritdoc />
         public bool[] ExistsMultiple<TKey>(string tableName, TKey[] keys)
         {
-            return keys.Select(k => this.Exists(tableName, k)).ToArray();
+            byte[][] serKeys = keys.Select(k => this.Serialize(k)).ToArray();
+            IKeyValueStoreTable table = this.GetTable(tableName);
+            bool[] exists = this.tablesCleared.Contains(tableName) ? new bool[keys.Length] : this.repository.Exists(this, table, serKeys);
+
+            if (this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv))
+                for (int i = 0; i < exists.Length; i++)
+                    if (kv.TryGetValue(serKeys[i], out byte[] key) && key != null)
+                        exists[i] = true;
+
+            return exists;
         }
 
         /// <inheritdoc />
@@ -194,28 +217,40 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
             return this.SelectForward<TKey, TObject>(tableName).ToDictionary(kv => kv.Item1, kv => kv.Item2);
         }
 
-        private IEnumerable<(byte[], byte[])> SelectForward(string tableName, bool keysOnly = false)
-        {
-            var table = this.GetTable(tableName);
-
-            Dictionary<byte[], byte[]> res = this.tablesCleared.Contains(tableName) ?
-                new Dictionary<byte[], byte[]>() :
-                this.repository.GetAll(this, table, keysOnly).ToDictionary(k => k.Item1, k => k.Item2, this.byteArrayComparer);
-
-            if (this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> updates))
-                foreach (KeyValuePair<byte[], byte[]> kv in updates)
-                    res[kv.Key] = kv.Value;
-
-            foreach (KeyValuePair<byte[], byte[]> kv in res)
-                if (kv.Value != null)
-                    yield return (kv.Key, kv.Value);
-        }
-
         /// <inheritdoc />
         public IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName)
         {
-            foreach ((byte[], byte[]) kv in this.SelectForward(tableName))
-                yield return (this.Deserialize<TKey>(kv.Item1), this.Deserialize<TObject>(kv.Item2));
+            var table = this.GetTable(tableName);
+
+            this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> updates);
+
+            var yielded = new HashSet<byte[]>(this.byteArrayComparer);
+
+            if (!this.tablesCleared.Contains(tableName))
+            {
+                foreach ((byte[] key, byte[] value) in this.repository.GetAll(this, table))
+                {
+                    if (updates != null && updates.TryGetValue(key, out byte[] updateValue))
+                    {
+                        if (updateValue == null)
+                            continue;
+
+                        yielded.Add(key);
+
+                        yield return (this.Deserialize<TKey>(key), this.Deserialize<TObject>(updateValue));
+                    }
+
+                    if (value == null)
+                        continue;
+
+                    yield return (this.Deserialize<TKey>(key), this.Deserialize<TObject>(value));
+                }
+            }
+
+            if (updates != null)
+                foreach (KeyValuePair<byte[], byte[]> kv in updates)
+                    if (kv.Value != null && !yielded.Contains(kv.Key))
+                        yield return (this.Deserialize<TKey>(kv.Key), this.Deserialize<TObject>(kv.Value));
         }
 
         /// <inheritdoc />
@@ -261,6 +296,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
             this.isInTransaction = false;
 
             this.Repository.OnCommit(this);
+
             this.tableUpdates.Clear();
             this.tablesCleared = new ConcurrentBag<string>();
 
@@ -277,6 +313,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
             this.isInTransaction = false;
 
             this.Repository.OnRollback(this);
+
             this.tableUpdates.Clear();
             this.tablesCleared = new ConcurrentBag<string>();
         }
