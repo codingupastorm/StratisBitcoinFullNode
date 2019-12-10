@@ -4,7 +4,6 @@ using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.NodeStorage;
 using Stratis.Features.NodeStorage.Interfaces;
 using Xunit;
 

@@ -28,7 +28,6 @@ using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.NodeStorage;
 using Xunit;
 using Xunit.Sdk;
 

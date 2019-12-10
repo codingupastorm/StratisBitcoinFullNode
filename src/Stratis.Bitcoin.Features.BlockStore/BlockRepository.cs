@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -9,8 +8,6 @@ using NBitcoin;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Features.NodeStorage.Interfaces;
-using Stratis.Features.NodeStorage.KeyValueStore;
-using Stratis.Features.NodeStorage.KeyValueStoreLDB;
 
 namespace Stratis.Bitcoin.Features.BlockStore
 {

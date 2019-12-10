@@ -4,7 +4,6 @@ using Stratis.Bitcoin.Features.BlockStore.Pruning;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.NodeStorage;
 using Xunit;
 
 namespace Stratis.Bitcoin.Features.BlockStore.Tests
