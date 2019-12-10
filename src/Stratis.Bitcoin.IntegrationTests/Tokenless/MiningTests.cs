@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -17,6 +18,7 @@ using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.Consensus.Rules;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Fee;
+using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Caching;
@@ -24,6 +26,7 @@ using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Mempool;
+using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
 using Stratis.Feature.PoA.Tokenless.Mining;
 using Stratis.Patricia;
 using Stratis.SmartContracts.CLR;
@@ -43,6 +46,8 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
     public sealed class MiningTests
     {
         private readonly CachedCoinView cachedCoinView;
+        private readonly MempoolSettings mempoolSettings;
+        private readonly IEnumerable<IMempoolRule> mempoolRules;
         private readonly InMemoryCoinView inMemoryCoinView;
         private readonly ChainIndexer chainIndexer;
         private readonly IDateTimeProvider dateTimeProvider;
@@ -95,21 +100,34 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
 
             this.dateTimeProvider = DateTimeProvider.Default;
             this.cachedCoinView = new CachedCoinView(this.inMemoryCoinView, this.dateTimeProvider, this.loggerFactory, new NodeStats(this.dateTimeProvider, this.loggerFactory), this.consensusSettings);
+
+            this.mempoolSettings = new MempoolSettings(this.nodeSettings) { MempoolExpiry = MempoolValidator.DefaultMempoolExpiry };
+            this.mempoolRules = CreateMempoolRules();
+
         }
 
         [Fact]
         public async Task Build_Tokenless_BlockDefinition_With_SmartContractBytecode_Async()
         {
-            await InitializeAsync();
-
-            var blockDefinition = CreateBlockDefinition();
-            var block = blockDefinition.Build(this.chainIndexer.Tip, null);
+            // Write once we can create a tokenless smart contract.
         }
 
         [Fact]
-        public void Build_Tokenless_BlockDefinition_WithOut_SmartContractBytecode()
+        public async Task Build_Tokenless_BlockDefinition_WithOut_SmartContractBytecode_Async()
         {
+            await InitializeAsync();
 
+            var mempoolValidator = new TokenlessMempoolValidator(this.chainIndexer, this.cachedCoinView, this.dateTimeProvider, this.loggerFactory, this.mempool, new MempoolSchedulerLock(), this.mempoolRules, this.mempoolSettings);
+
+            var transaction = this.network.CreateTransaction();
+
+            var mempoolValidationState = new MempoolValidationState(false);
+            await mempoolValidator.AcceptToMemoryPool(mempoolValidationState, transaction);
+            Assert.Single(this.mempool.MapTx);
+
+            var blockDefinition = CreateBlockDefinition();
+            var block = blockDefinition.Build(this.chainIndexer.Tip, null);
+            Assert.Single(block.Block.Transactions);
         }
 
         private BlockDefinition CreateBlockDefinition()
@@ -215,6 +233,17 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
             this.executorFactory = new ReflectionExecutorFactory(this.loggerFactory, this.callDataSerializer, this.refundProcessor, this.transferProcessor, this.stateFactory, this.stateProcessor, this.primitiveSerializer);
 
             this.executionCache = new BlockExecutionResultCache();
+        }
+
+        private IEnumerable<IMempoolRule> CreateMempoolRules()
+        {
+            foreach (var ruleType in this.network.Consensus.MempoolRules)
+            {
+                if (ruleType == typeof(IsSmartContractWellFormedMempoolRule))
+                    yield return (IMempoolRule)Activator.CreateInstance(ruleType, this.network, this.mempool, this.mempoolSettings, this.chainIndexer, this.loggerFactory, this.callDataSerializer);
+                else
+                    yield return (IMempoolRule)Activator.CreateInstance(ruleType, this.network, this.mempool, this.mempoolSettings, this.chainIndexer, this.loggerFactory);
+            }
         }
     }
 }
