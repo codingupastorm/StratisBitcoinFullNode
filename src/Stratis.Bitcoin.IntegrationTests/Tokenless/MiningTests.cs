@@ -103,7 +103,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
 
             this.mempoolSettings = new MempoolSettings(this.nodeSettings) { MempoolExpiry = MempoolValidator.DefaultMempoolExpiry };
             this.mempoolRules = CreateMempoolRules();
-
         }
 
         [Fact]
