@@ -50,16 +50,6 @@ namespace Stratis.Bitcoin.Features.Miner
         /// </summary>
         protected const int MaxConsecutiveAddTransactionFailures = 1000;
 
-        /// <summary>
-        /// Unconfirmed transactions in the memory pool often depend on other
-        /// transactions in the memory pool. When we select transactions from the
-        /// pool, we select by highest fee rate of a transaction combined with all
-        /// its ancestors.
-        /// </summary>
-        protected long LastBlockTx = 0;
-
-        protected long LastBlockSize = 0;
-
         protected long LastBlockWeight = 0;
 
         protected long MedianTimePast;
@@ -163,7 +153,7 @@ namespace Stratis.Bitcoin.Features.Miner
         /// Configures (resets) the builder to its default state
         /// before constructing a new block.
         /// </summary>
-        private void Configure()
+        protected void Configure()
         {
             this.BlockSize = 1000;
             this.BlockTemplate = new BlockTemplate(this.Network);
@@ -215,8 +205,6 @@ namespace Stratis.Bitcoin.Features.Miner
             // Add transactions from the mempool
             this.AddTransactions(out int nPackagesSelected, out int nDescendantsUpdated);
 
-            this.LastBlockTx = this.BlockTx;
-            this.LastBlockSize = this.BlockSize;
             this.LastBlockWeight = this.BlockWeight;
 
             // TODO: Implement Witness Code
@@ -500,20 +488,20 @@ namespace Stratis.Bitcoin.Features.Miner
         /// </list>
         /// </para>
         /// </summary>
-        private bool TestPackageTransactions(TxMempool.SetEntries package)
+        protected virtual bool TestPackageTransactions(TxMempool.SetEntries entries)
         {
-            foreach (TxMempoolEntry it in package)
+            foreach (TxMempoolEntry entry in entries)
             {
-                if (!it.Transaction.IsFinal(Utils.UnixTimeToDateTime(this.LockTimeCutoff), this.height))
+                if (!entry.Transaction.IsFinal(Utils.UnixTimeToDateTime(this.LockTimeCutoff), this.height))
                     return false;
 
-                if (!this.IncludeWitness && it.Transaction.HasWitness)
+                if (!this.IncludeWitness && entry.Transaction.HasWitness)
                     return false;
 
                 if (this.NeedSizeAccounting)
                 {
                     long nPotentialBlockSize = this.BlockSize; // only used with needSizeAccounting
-                    int nTxSize = it.Transaction.GetSerializedSize();
+                    int nTxSize = entry.Transaction.GetSerializedSize();
                     if (nPotentialBlockSize + nTxSize >= this.Options.BlockMaxSize)
                         return false;
 

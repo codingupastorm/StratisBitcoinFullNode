@@ -3,6 +3,7 @@ using System.Linq;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Stratis.Bitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
@@ -11,7 +12,6 @@ using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Caching;
-using Stratis.Bitcoin.Features.SmartContracts.PoW;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Utilities;
 using Stratis.SmartContracts.CLR;
@@ -24,18 +24,15 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
 {
     public sealed class TokenlessBlockDefinition : BlockDefinition
     {
-        //private uint160 coinbaseAddress;
         private readonly ICoinView coinView;
         private readonly IContractExecutorFactory executorFactory;
         private readonly ILogger logger;
-        //private readonly List<TxOut> refundOutputs;
         private readonly List<Receipt> receipts;
         private readonly IStateRepositoryRoot stateRoot;
         private readonly IBlockExecutionResultCache executionCache;
         private readonly ICallDataSerializer callDataSerializer;
         private IStateRepositoryRoot stateSnapshot;
         private readonly ISenderRetriever senderRetriever;
-        private ulong blockGasConsumed;
 
         public TokenlessBlockDefinition(
             IBlockBufferGenerator blockBufferGenerator,
@@ -61,7 +58,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             this.stateRoot = stateRoot;
             this.callDataSerializer = callDataSerializer;
             this.executionCache = executionCache;
-            //this.refundOutputs = new List<TxOut>();
             this.receipts = new List<Receipt>();
 
             // When building smart contract blocks, we will be generating and adding both transactions to the block and txouts to the coinbase. 
@@ -70,6 +66,104 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             // To avoid this without significantly overhauling the BlockDefinition, for now we just lower the block size by a percentage buffer.
             // If in the future blocks are being built over the size limit and you need an easy fix, just increase the size of this buffer.
             this.Options = blockBufferGenerator.GetOptionsWithBuffer(this.Options);
+        }
+
+        public override BlockTemplate Build(ChainedHeader chainTip, Script scriptPubKey)
+        {
+            this.ChainTip = chainTip;
+
+            // TODO-TL: Implement new way to get sender
+            GetSenderResult getSenderResult = this.senderRetriever.GetAddressFromScript(scriptPubKey);
+
+            this.stateSnapshot = this.stateRoot.GetSnapshotTo(((ISmartContractBlockHeader)this.ConsensusManager.Tip.Header).HashStateRoot.ToBytes());
+
+            this.receipts.Clear();
+
+            base.Configure();
+
+            this.block = this.BlockTemplate.Block;
+            this.scriptPubKey = scriptPubKey;
+
+            this.ComputeBlockVersion();
+
+            this.MedianTimePast = Utils.DateTimeToUnixTime(this.ChainTip.GetMedianTimePast());
+            this.LockTimeCutoff = MempoolValidator.StandardLocktimeVerifyFlags.HasFlag(Transaction.LockTimeFlags.MedianTimePast) ? this.MedianTimePast : this.block.Header.Time;
+
+            this.AddTransactions(out int _, out int _);
+
+            this.logger.LogDebug("Serialized size is {0} bytes, block weight is {1}, number of txs is {2}, tx fees are {3}, number of sigops is {4}.", this.block.GetSerializedSize(), this.block.GetBlockWeight(this.Network.Consensus), this.BlockTx, this.fees, this.BlockSigOpsCost);
+
+            this.UpdateHeaders();
+
+            // Cache the results. We don't need to execute these again when validating.
+            var cacheModel = new BlockExecutionResultModel(this.stateSnapshot, this.receipts);
+            this.executionCache.StoreExecutionResult(this.BlockTemplate.Block.GetHash(), cacheModel);
+
+            return this.BlockTemplate;
+        }
+
+        protected override void AddTransactions(out int packagesSelected, out int descendentsUpdated)
+        {
+            packagesSelected = 0;
+            descendentsUpdated = 0;
+
+            // TODO-TL: Implement new ordering by time.
+            var entriesToAdd = this.MempoolLock.ReadAsync(() => this.Mempool.MapTx.AncestorScore).ConfigureAwait(false).GetAwaiter().GetResult().ToList();
+
+            int consecutiveFailed = 0;
+
+            foreach (TxMempoolEntry entryToAdd in entriesToAdd)
+            {
+                // Skip entries in mapTx that are already in a block.
+                if (this.inBlock.Contains(entryToAdd))
+                    continue;
+
+                if (!this.TestPackage(entryToAdd, entryToAdd.SizeWithAncestors, 0))
+                {
+                    consecutiveFailed++;
+
+                    // TODO-TL: Is this neccessary?
+                    if ((consecutiveFailed > MaxConsecutiveAddTransactionFailures) && (this.BlockWeight > this.Options.BlockMaxWeight - 4000))
+                        break;
+
+                    continue;
+                }
+
+                if (!this.TestPackageTransactions(new TxMempool.SetEntries() { entryToAdd }))
+                    continue;
+
+                // This transaction will make it in, reset the failed counter.
+                consecutiveFailed = 0;
+
+                this.AddToBlock(entryToAdd);
+            }
+        }
+
+        protected override bool TestPackage(TxMempoolEntry entry, long packageSize, long packageSigOpsCost)
+        {
+            if (this.BlockWeight + this.Network.Consensus.Options.WitnessScaleFactor * packageSize >= this.Options.BlockMaxWeight)
+            {
+                this.logger.LogTrace("(-)[MAX_WEIGHT_REACHED]:false");
+                return false;
+            }
+
+            this.logger.LogTrace("(-):true");
+
+            return true;
+        }
+
+        protected override bool TestPackageTransactions(TxMempool.SetEntries entries)
+        {
+            if (!this.NeedSizeAccounting)
+                return true;
+
+            foreach (TxMempoolEntry entry in entries)
+            {
+                if (this.BlockSize + entry.Transaction.GetSerializedSize() >= this.Options.BlockMaxSize)
+                    return false;
+            }
+
+            return true;
         }
 
         public override void AddToBlock(TxMempoolEntry mempoolEntry)
@@ -83,88 +177,10 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
 
             this.logger.LogDebug("Transaction contains smart contract information.");
 
-            if (this.blockGasConsumed >= SmartContractBlockDefinition.GasPerBlockLimit)
-            {
-                this.logger.LogDebug("The gas limit for this block has been reached.");
-                return;
-            }
-
-            IContractExecutionResult result = this.ExecuteSmartContract(mempoolEntry);
-
-            // If including this transaction would put us over the block gas limit, then don't include it
-            // and roll back all of the execution we did.
-            //if (this.blockGasConsumed > GasPerBlockLimit)
-            //{
-            //    // Remove the last receipt.
-            //    this.receipts.RemoveAt(this.receipts.Count - 1);
-
-            //    // Set our state to where it was before this execution.
-            //    uint256 lastState = this.receipts.Last().PostState;
-            //    this.stateSnapshot.SyncToRoot(lastState.ToBytes());
-
-            //    return;
-            //}
+            this.ExecuteSmartContract(mempoolEntry);
 
             this.AddTransactionToBlock(mempoolEntry.Transaction);
             this.UpdateBlockStatistics(mempoolEntry);
-
-            // If there are refunds, add them to the block.
-            //if (result.Refund != null)
-            //{
-            //    this.refundOutputs.Add(result.Refund);
-            //    this.logger.LogDebug("refund was added with value {0}.", result.Refund.Value);
-            //}
-
-            // Add internal transactions made during execution.
-            if (result.InternalTransaction != null)
-            {
-                this.AddTransactionToBlock(result.InternalTransaction);
-                this.logger.LogDebug("Internal {0}:{1} was added.", nameof(result.InternalTransaction), result.InternalTransaction.GetHash());
-            }
-        }
-
-        public override BlockTemplate Build(ChainedHeader chainTip, Script scriptPubKey)
-        {
-            // TODO-TL: Implement new way to get sender
-            GetSenderResult getSenderResult = this.senderRetriever.GetAddressFromScript(scriptPubKey);
-
-            this.stateSnapshot = this.stateRoot.GetSnapshotTo(((ISmartContractBlockHeader)this.ConsensusManager.Tip.Header).HashStateRoot.ToBytes());
-
-            this.receipts.Clear();
-
-            this.blockGasConsumed = 0;
-
-            base.Configure();
-
-            this.ChainTip = chainTip;
-
-            this.block = this.BlockTemplate.Block;
-            this.scriptPubKey = scriptPubKey;
-
-            this.ComputeBlockVersion();
-
-            this.MedianTimePast = Utils.DateTimeToUnixTime(this.ChainTip.GetMedianTimePast());
-            this.LockTimeCutoff = MempoolValidator.StandardLocktimeVerifyFlags.HasFlag(Transaction.LockTimeFlags.MedianTimePast)
-                ? this.MedianTimePast
-                : this.block.Header.Time;
-
-            // Add transactions from the mempool
-            this.AddTransactions(out int nPackagesSelected, out int nDescendantsUpdated);
-
-            this.LastBlockTx = this.BlockTx;
-            this.LastBlockSize = this.BlockSize;
-            this.LastBlockWeight = this.BlockWeight;
-
-            int serializedSize = this.block.GetSerializedSize();
-            this.logger.LogDebug("Serialized size is {0} bytes, block weight is {1}, number of txs is {2}, tx fees are {3}, number of sigops is {4}.", serializedSize, this.block.GetBlockWeight(this.Network.Consensus), this.BlockTx, this.fees, this.BlockSigOpsCost);
-
-            this.UpdateHeaders();
-
-            // Cache the results. We don't need to execute these again when validating.
-            var cacheModel = new BlockExecutionResultModel(this.stateSnapshot, this.receipts);
-            this.executionCache.StoreExecutionResult(this.BlockTemplate.Block.GetHash(), cacheModel);
-
-            return this.BlockTemplate;
         }
 
         public override void UpdateHeaders()
@@ -225,8 +241,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             IContractExecutor executor = this.executorFactory.CreateExecutor(this.stateSnapshot, transactionContext);
             IContractExecutionResult result = executor.Execute(transactionContext);
             Result<ContractTxData> deserializedCallData = this.callDataSerializer.Deserialize(transactionContext.Data);
-
-            this.blockGasConsumed += result.GasConsumed;
 
             // Store all fields. We will reuse these in CoinviewRule.
             var receipt = new Receipt(
