@@ -110,8 +110,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             // TODO-TL: Implement new ordering by time.
             var entriesToAdd = this.MempoolLock.ReadAsync(() => this.Mempool.MapTx.AncestorScore).ConfigureAwait(false).GetAwaiter().GetResult().ToList();
 
-            int consecutiveFailed = 0;
-
             foreach (TxMempoolEntry entryToAdd in entriesToAdd)
             {
                 // Skip entries in mapTx that are already in a block.
@@ -119,21 +117,10 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
                     continue;
 
                 if (!this.TestPackage(entryToAdd, entryToAdd.SizeWithAncestors, 0))
-                {
-                    consecutiveFailed++;
-
-                    // TODO-TL: Is this neccessary?
-                    if ((consecutiveFailed > MaxConsecutiveAddTransactionFailures) && (this.BlockWeight > this.Options.BlockMaxWeight - 4000))
-                        break;
-
                     continue;
-                }
 
                 if (!this.TestPackageTransactions(new TxMempool.SetEntries() { entryToAdd }))
                     continue;
-
-                // This transaction will make it in, reset the failed counter.
-                consecutiveFailed = 0;
 
                 this.AddToBlock(entryToAdd);
             }
@@ -225,7 +212,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         /// <summary>
         /// Execute the contract and add all relevant fees and refunds to the block.
         /// </summary>
-        /// <remarks>TODO: At some point we need to change height to a ulong.</remarks>
         /// <param name="mempoolEntry">The mempool entry containing the smart contract transaction.</param>
         private IContractExecutionResult ExecuteSmartContract(TxMempoolEntry mempoolEntry)
         {
