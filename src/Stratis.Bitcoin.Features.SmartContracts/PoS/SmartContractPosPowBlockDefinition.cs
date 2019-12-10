@@ -141,9 +141,9 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoS
         {
             base.UpdateBaseHeaders();
 
-            this.block.Header.Bits = this.stakeValidator.GetNextTargetRequired(this.stakeChain, this.ChainTip, this.Network.Consensus, false);
+            this.Block.Header.Bits = this.stakeValidator.GetNextTargetRequired(this.stakeChain, this.ChainTip, this.Network.Consensus, false);
 
-            var scHeader = (ISmartContractBlockHeader)this.block.Header;
+            var scHeader = (ISmartContractBlockHeader)this.Block.Header;
 
             scHeader.HashStateRoot = new uint256(this.stateSnapshot.Root);
 

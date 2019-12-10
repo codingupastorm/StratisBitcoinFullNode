@@ -514,14 +514,14 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
                 ILoggerFactory loggerFactory)
                 : base(consensusManager, dateTimeProvider, loggerFactory, mempool, mempoolLock, minerSettings, network, stakeChain, stakeValidator)
             {
-                base.block = this.BlockTemplate.Block;
+                base.Block = this.BlockTemplate.Block;
             }
 
             public Block UpdateHeaders(ChainedHeader chainTip)
             {
                 this.ChainTip = chainTip;
                 base.UpdateHeaders();
-                return this.block;
+                return this.Block;
             }
 
             public (int Height, int Version) ComputeBlockVersion(ChainedHeader chainTip)
@@ -530,7 +530,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
 
                 base.ComputeBlockVersion();
 
-                return (base.height, base.block.Header.Version);
+                return (base.height, base.Block.Header.Version);
             }
 
             public BlockTemplate CreateCoinBase(ChainedHeader chainTip, Script scriptPubKeyIn)
@@ -540,7 +540,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
 
                 base.CreateCoinbase();
 
-                base.BlockTemplate.Block = base.block;
+                base.BlockTemplate.Block = base.Block;
 
                 return base.BlockTemplate;
             }
@@ -549,7 +549,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
             {
                 base.AddTransactions(out int selected, out int updated);
 
-                return (base.block, selected, updated);
+                return (base.Block, selected, updated);
             }
 
             public void AddInBlockTxEntries(params TxMempoolEntry[] entries)

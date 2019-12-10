@@ -58,10 +58,6 @@ namespace Stratis.Bitcoin.Features.Miner
         /// </summary>
         protected long LastBlockTx = 0;
 
-        protected long LastBlockSize = 0;
-
-        protected long LastBlockWeight = 0;
-
         protected long MedianTimePast;
 
         /// <summary>
@@ -70,9 +66,9 @@ namespace Stratis.Bitcoin.Features.Miner
         protected BlockTemplate BlockTemplate;
 
         /// <summary>
-        /// A convenience pointer that always refers to the <see cref="Block"/> in <see cref="BlockTemplate"/>.
+        /// A convenience pointer that always refers to the <see cref="NBitcoin.Block"/> in <see cref="BlockTemplate"/>.
         /// </summary>
-        protected Block block;
+        protected Block Block;
 
         /// <summary>
         /// Configuration parameters for the block size.
@@ -141,7 +137,7 @@ namespace Stratis.Bitcoin.Features.Miner
         {
             this.height = this.ChainTip.Height + 1;
             var headerVersionRule = this.ConsensusManager.ConsensusRules.GetRule<HeaderVersionRule>();
-            this.block.Header.Version = headerVersionRule.ComputeBlockVersion(this.ChainTip);
+            this.Block.Header.Version = headerVersionRule.ComputeBlockVersion(this.ChainTip);
         }
 
         /// <summary>
@@ -156,14 +152,14 @@ namespace Stratis.Bitcoin.Features.Miner
             this.coinbase.AddInput(TxIn.CreateCoinbase(this.ChainTip.Height + 1));
             this.coinbase.AddOutput(new TxOut(Money.Zero, this.scriptPubKey));
 
-            this.block.AddTransaction(this.coinbase);
+            this.Block.AddTransaction(this.coinbase);
         }
 
         /// <summary>
         /// Configures (resets) the builder to its default state
         /// before constructing a new block.
         /// </summary>
-        private void Configure()
+        protected void Configure()
         {
             this.BlockSize = 1000;
             this.BlockTemplate = new BlockTemplate(this.Network);
@@ -186,7 +182,7 @@ namespace Stratis.Bitcoin.Features.Miner
 
             this.ChainTip = chainTip;
 
-            this.block = this.BlockTemplate.Block;
+            this.Block = this.BlockTemplate.Block;
             this.scriptPubKey = scriptPubKey;
 
             this.CreateCoinbase();
@@ -201,7 +197,7 @@ namespace Stratis.Bitcoin.Features.Miner
             this.MedianTimePast = Utils.DateTimeToUnixTime(this.ChainTip.GetMedianTimePast());
             this.LockTimeCutoff = MempoolValidator.StandardLocktimeVerifyFlags.HasFlag(Transaction.LockTimeFlags.MedianTimePast)
                 ? this.MedianTimePast
-                : this.block.Header.Time;
+                : this.Block.Header.Time;
 
             // TODO: Implement Witness Code
             // Decide whether to include witness transactions
@@ -216,8 +212,6 @@ namespace Stratis.Bitcoin.Features.Miner
             this.AddTransactions(out int nPackagesSelected, out int nDescendantsUpdated);
 
             this.LastBlockTx = this.BlockTx;
-            this.LastBlockSize = this.BlockSize;
-            this.LastBlockWeight = this.BlockWeight;
 
             // TODO: Implement Witness Code
             // pblocktemplate->CoinbaseCommitment = GenerateCoinbaseCommitment(*pblock, pindexPrev, chainparams.GetConsensus());
@@ -229,8 +223,8 @@ namespace Stratis.Bitcoin.Features.Miner
             // We need the fee details per transaction to be readily available in case we have to remove transactions from the block later.
             this.BlockTemplate.FeeDetails = this.inBlock.Select(i => new { i.TransactionHash, i.Fee }).ToDictionary(d => d.TransactionHash, d => d.Fee);
 
-            int nSerializeSize = this.block.GetSerializedSize();
-            this.logger.LogDebug("Serialized size is {0} bytes, block weight is {1}, number of txs is {2}, tx fees are {3}, number of sigops is {4}.", nSerializeSize, this.block.GetBlockWeight(this.Network.Consensus), this.BlockTx, this.fees, this.BlockSigOpsCost);
+            int nSerializeSize = this.Block.GetSerializedSize();
+            this.logger.LogDebug("Serialized size is {0} bytes, block weight is {1}, number of txs is {2}, tx fees are {3}, number of sigops is {4}.", nSerializeSize, this.Block.GetBlockWeight(this.Network.Consensus), this.BlockTx, this.fees, this.BlockSigOpsCost);
 
             this.UpdateHeaders();
         }
@@ -245,7 +239,7 @@ namespace Stratis.Bitcoin.Features.Miner
         /// </summary>
         protected void AddTransactionToBlock(Transaction transaction)
         {
-            this.block.AddTransaction(transaction);
+            this.Block.AddTransaction(transaction);
             this.BlockTx++;
 
             if (this.NeedSizeAccounting)
@@ -578,9 +572,9 @@ namespace Stratis.Bitcoin.Features.Miner
         /// <summary>Update the block's header information.</summary>
         protected void UpdateBaseHeaders()
         {
-            this.block.Header.HashPrevBlock = this.ChainTip.HashBlock;
-            this.block.Header.UpdateTime(this.DateTimeProvider.GetTimeOffset(), this.Network, this.ChainTip);
-            this.block.Header.Nonce = 0;
+            this.Block.Header.HashPrevBlock = this.ChainTip.HashBlock;
+            this.Block.Header.UpdateTime(this.DateTimeProvider.GetTimeOffset(), this.Network, this.ChainTip);
+            this.Block.Header.Nonce = 0;
         }
 
         /// <summary>Network specific logic specific as to how the block's header will be set.</summary>

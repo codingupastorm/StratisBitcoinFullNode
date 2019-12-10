@@ -68,7 +68,7 @@ namespace Stratis.Bitcoin.Features.Miner
         {
             base.UpdateBaseHeaders();
 
-            this.block.Header.Bits = this.stakeValidator.GetNextTargetRequired(this.stakeChain, this.ChainTip, this.Network.Consensus, false);
+            this.Block.Header.Bits = this.stakeValidator.GetNextTargetRequired(this.stakeChain, this.ChainTip, this.Network.Consensus, false);
         }
 
         /// <inheritdoc/>

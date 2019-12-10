@@ -49,7 +49,7 @@ namespace Stratis.Bitcoin.Features.Miner
         {
             base.UpdateBaseHeaders();
 
-            this.block.Header.Bits = this.block.Header.GetWorkRequired(this.Network, this.ChainTip);
+            this.Block.Header.Bits = this.Block.Header.GetWorkRequired(this.Network, this.ChainTip);
         }
     }
 }

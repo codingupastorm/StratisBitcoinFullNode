@@ -436,7 +436,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
                 BlockDefinitionOptions options = null)
                 : base(consensusLoop, dateTimeProvider, loggerFactory, mempool, mempoolLock, minerSettings, network, consensusRules)
             {
-                this.block = this.BlockTemplate.Block;
+                this.Block = this.BlockTemplate.Block;
             }
 
             public override BlockTemplate Build(ChainedHeader chainTip, Script scriptPubKey)
@@ -459,7 +459,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
                 this.ChainTip = chainTip;
 
                 base.ComputeBlockVersion();
-                return (this.height, this.block.Header.Version);
+                return (this.height, this.Block.Header.Version);
             }
 
             public BlockTemplate CreateCoinBase(ChainedHeader chainTip, Script scriptPubKeyIn)
@@ -467,7 +467,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
                 this.scriptPubKey = scriptPubKeyIn;
                 this.ChainTip = chainTip;
                 base.CreateCoinbase();
-                this.BlockTemplate.Block = this.block;
+                this.BlockTemplate.Block = this.Block;
 
                 return this.BlockTemplate;
             }
@@ -485,7 +485,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
                 int updated;
                 base.AddTransactions(out selected, out updated);
 
-                return (this.block, selected, updated);
+                return (this.Block, selected, updated);
             }
         }
     }
