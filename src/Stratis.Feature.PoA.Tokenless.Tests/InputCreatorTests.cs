@@ -1,20 +1,19 @@
 
 using System.Linq;
 using NBitcoin;
-using Stratis.SmartContracts.CLR;
 using Xunit;
 
 namespace Stratis.Feature.PoA.Tokenless.Tests
 {
     public class InputCreatorTests
     {
-        private readonly InputCreator inputCreator;
+        private readonly InputHelper inputCreator;
         private readonly Network network;
 
         public InputCreatorTests()
         {
             this.network = new TokenlessNetwork();
-            this.inputCreator = new InputCreator(this.network);
+            this.inputCreator = new InputHelper(this.network);
         }
 
         [Fact]
@@ -25,15 +24,14 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             transaction.Outputs.Add(new TxOut(Money.Zero, outputScript));
 
             var key = new Key();
-            string address = key.PubKey.GetAddress(this.network).ToString();
-            uint160 addressUint160 = address.ToUint160(this.network);
 
-            this.inputCreator.InsertSenderTxInAndSign(transaction, addressUint160, key.GetBitcoinSecret(this.network));
+            this.inputCreator.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
 
             Assert.Single(transaction.Inputs);
+            Assert.True(transaction.Inputs.AsIndexedInputs().First().VerifyScript(this.network, new Script()));
 
-            bool isLegit = transaction.Inputs.AsIndexedInputs().First().VerifyScript(this.network, new Script());
-
+            //string address = key.PubKey.GetAddress(this.network).ToString();
+            //uint160 addressUint160 = address.ToUint160(this.network);
         }
     }
 }
