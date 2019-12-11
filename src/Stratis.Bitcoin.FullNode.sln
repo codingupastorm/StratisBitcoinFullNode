@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29509.3
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.539
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "global", "global", "{5B331FD3-D493-46A9-928B-B786FC6F3103}"
 	ProjectSection(SolutionItems) = preProject
@@ -175,6 +175,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Features.SQLiteWalletRepository", "Stratis.Features.SQLiteWalletRepository\Stratis.Features.SQLiteWalletRepository.csproj", "{AA085181-BBB4-495E-BFD8-7AE4BB52A0A0}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Features.SQLiteWalletRepository.Tests", "Stratis.Features.SQLiteWalletRepository.Tests\Stratis.Features.SQLiteWalletRepository.Tests.csproj", "{789E4584-5616-4F0C-A3E8-88669B6AA91F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Features.NodeStorage", "Stratis.Features.NodeStorage\Stratis.Features.NodeStorage.csproj", "{17B89102-B42B-49AC-B670-44F63C3574FC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.SmartContracts.CLRTokenless", "Stratis.SmartContracts.CLRTokenless\Stratis.SmartContracts.CLRTokenless.csproj", "{7D520179-A6AD-4A7F-9026-D27161E31EE6}"
 EndProject
@@ -468,6 +470,10 @@ Global
 		{789E4584-5616-4F0C-A3E8-88669B6AA91F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{789E4584-5616-4F0C-A3E8-88669B6AA91F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{789E4584-5616-4F0C-A3E8-88669B6AA91F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17B89102-B42B-49AC-B670-44F63C3574FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17B89102-B42B-49AC-B670-44F63C3574FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17B89102-B42B-49AC-B670-44F63C3574FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17B89102-B42B-49AC-B670-44F63C3574FC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7D520179-A6AD-4A7F-9026-D27161E31EE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7D520179-A6AD-4A7F-9026-D27161E31EE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7D520179-A6AD-4A7F-9026-D27161E31EE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -544,6 +550,7 @@ Global
 		{AFEA4601-7938-44D2-A295-DBA022069F5B} = {15D29FFD-6142-4DC5-AFFD-10BA0CA55C45}
 		{AA085181-BBB4-495E-BFD8-7AE4BB52A0A0} = {15D29FFD-6142-4DC5-AFFD-10BA0CA55C45}
 		{789E4584-5616-4F0C-A3E8-88669B6AA91F} = {EAE139C2-B19C-4905-9117-8A4068ABD3D2}
+		{17B89102-B42B-49AC-B670-44F63C3574FC} = {15D29FFD-6142-4DC5-AFFD-10BA0CA55C45}
 		{7D520179-A6AD-4A7F-9026-D27161E31EE6} = {1B9A916F-DDAC-4675-B424-EDEDC1A58231}
 		{BB6C331B-6C7E-46E0-8EB2-A11B7D011F3D} = {1B9A916F-DDAC-4675-B424-EDEDC1A58231}
 		{C4E0F99D-40EB-4A0F-8CBD-CBE3581DBFA9} = {15D29FFD-6142-4DC5-AFFD-10BA0CA55C45}
