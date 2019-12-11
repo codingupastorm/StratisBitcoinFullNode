@@ -11,7 +11,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
 {
     public class KeyValueStoreDBreeze : KeyValueStoreRepository
     {
-        internal class KeyValueStoreDBZTransaction : KeyValueStoreTransaction
+        private class KeyValueStoreDBZTransaction : KeyValueStoreTransaction
         {
             internal DBreeze.Transactions.Transaction dBreezeTransaction;
 
@@ -30,7 +30,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
         /// <summary>
         /// Information related to a DBreeze table.
         /// </summary>
-        internal class KeyValueStoreDBZTable : KeyValueStoreTable
+        private class KeyValueStoreDBZTable : KeyValueStoreTable
         {
         }
 
