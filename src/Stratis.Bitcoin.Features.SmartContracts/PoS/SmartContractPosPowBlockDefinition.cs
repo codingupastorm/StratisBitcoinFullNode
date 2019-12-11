@@ -132,7 +132,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoS
             base.OnBuild(chainTip, scriptPubKey);
 
             this.coinbase.Outputs.AddRange(this.refundOutputs);
-            
+
             return this.BlockTemplate;
         }
 
@@ -195,7 +195,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoS
                 result.Logs.ToArray()
             );
             this.receipts.Add(receipt);
-            
+
             return result;
         }
     }

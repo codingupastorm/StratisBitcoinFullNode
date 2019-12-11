@@ -8,6 +8,7 @@ using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules;
 using Stratis.Bitcoin.Features.PoA.Policies;
+using Stratis.Bitcoin.Features.SmartContracts.PoA;
 using Stratis.Feature.PoA.Tokenless.Consensus.Rules;
 using Stratis.Feature.PoA.Tokenless.Core.Rules;
 using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
@@ -54,7 +55,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.CoinTicker = "POATL";
 
             // TODO-TL: Is the CF any different for tokenless?
-            var consensusFactory = new PoAConsensusFactory();
+            var consensusFactory = new SmartContractPoAConsensusFactory();
 
             // Create the genesis block.
             this.GenesisTime = 1513622125;
@@ -171,7 +172,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.StandardScriptsRegistry = new PoAStandardScriptsRegistry();
 
             // TODO-TL: Generate new Genesis
-            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("ad3c9c471280e686cd85c156a829caaacd2936a4649b9ca26fff743b1462c551"));
+            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("690a702893d30a75739b52d9e707f05e5c7da38df0500aa791468a5e609244ba"));
             //Assert(this.Genesis.Header.HashMerkleRoot == uint256.Parse("0x9928b372fd9e4cf62a31638607344c03c48731ba06d24576342db9c8591e1432"));
 
             // TODO-TL: Add Smart Contract State Root Hash
@@ -222,7 +223,7 @@ namespace Stratis.Feature.PoA.Tokenless
         }
 
         // TODO-TL: Check no output?
-        private Block CreateGenesisBlock(ConsensusFactory consensusFactory, uint time, uint nonce, uint bits, int versio)
+        private Block CreateGenesisBlock(SmartContractPoAConsensusFactory consensusFactory, uint time, uint nonce, uint bits, int versio)
         {
             string data = "GenesisBlockForTheNewTokenlessNetwork";
 
@@ -246,6 +247,9 @@ namespace Stratis.Feature.PoA.Tokenless
             genesis.Transactions.Add(transaction);
             genesis.Header.HashPrevBlock = uint256.Zero;
             genesis.UpdateMerkleRoot();
+
+            ((SmartContractPoABlockHeader)genesis.Header).HashStateRoot = new uint256("21B463E3B52F6201C0AD6C991BE0485B6EF8C092E64583FFA655CC1B171FE856");
+
             return genesis;
         }
     }

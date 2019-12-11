@@ -2,8 +2,10 @@
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
+using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Feature.PoA.Tokenless.Mempool;
+using Stratis.Feature.PoA.Tokenless.Mining;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -22,15 +24,14 @@ namespace Stratis.Feature.PoA.Tokenless
                     {
                         services.Replace(ServiceDescriptor.Singleton<ITxMempool, TokenlessMempool>());
                         services.Replace(ServiceDescriptor.Singleton<IMempoolValidator, TokenlessMempoolValidator>());
+                        services.AddSingleton<BlockDefinition, TokenlessBlockDefinition>();
 
                         services.AddSingleton<IFederationManager, FederationManager>();
                         services.AddSingleton<IPoAMiner, PoAMiner>();
-
-                        //services.AddSingleton<PoABlockHeaderValidator>();
-                        //services.AddSingleton<MinerSettings>();
-                        //services.AddSingleton<PoAMinerSettings>();
-                        //services.AddSingleton<ISlotsManager, SlotsManager>();
-                        //services.AddSingleton<BlockDefinition, PoABlockDefinition>();
+                        services.AddSingleton<ISlotsManager, SlotsManager>();
+                        services.AddSingleton<PoABlockHeaderValidator>();
+                        services.AddSingleton<MinerSettings>();
+                        services.AddSingleton<PoAMinerSettings>();
                     });
             });
 
