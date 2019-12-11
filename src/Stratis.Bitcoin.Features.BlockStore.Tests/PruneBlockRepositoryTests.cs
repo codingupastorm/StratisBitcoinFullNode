@@ -15,7 +15,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         }
 
         [Fact]
-        public void PruneRepository_PruneAndCompact_FromGenesis_OnStartUp()
+        public void PruneRepositoryPruneAndCompactFromGenesisOnStartUp()
         {
             var posBlocks = CreatePosBlocks(50);
             var chainedHeaderTip = BuildProvenHeaderChainFromBlocks(posBlocks);
@@ -24,8 +24,10 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var dataFolder = new DataFolder(dataFolderPath);
 
             var dBreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
+            var keyValueStore = new BlockKeyValueStore(this.Network, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
-            var blockRepository = new BlockRepository(this.Network, dataFolder, this.LoggerFactory.Object, dBreezeSerializer);
+            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore);
+
             blockRepository.PutBlocks(new HashHeightPair(posBlocks.Last().GetHash(), 50), posBlocks);
 
             var storeSettings = new StoreSettings(NodeSettings.Default(this.Network))
@@ -45,7 +47,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         }
 
         [Fact]
-        public void PruneRepository_PruneAndCompact_MidChain_OnStartUp()
+        public void PruneRepositoryPruneAndCompactMidChainOnStartUp()
         {
             var posBlocks = CreatePosBlocks(200);
             var chainedHeaderTip = BuildProvenHeaderChainFromBlocks(posBlocks);
@@ -54,8 +56,10 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var dataFolder = new DataFolder(dataFolderPath);
 
             var dBreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
+            var keyValueStore = new BlockKeyValueStore(this.Network, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
-            var blockRepository = new BlockRepository(this.Network, dataFolder, this.LoggerFactory.Object, dBreezeSerializer);
+            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore);
+
             blockRepository.PutBlocks(new HashHeightPair(posBlocks.Take(100).Last().GetHash(), 100), posBlocks.Take(100).ToList());
 
             var storeSettings = new StoreSettings(NodeSettings.Default(this.Network))
@@ -84,7 +88,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         }
 
         [Fact]
-        public void PruneRepository_PruneAndCompact_OnShutDown()
+        public void PruneRepositoryPruneAndCompactOnShutDown()
         {
             var posBlocks = CreatePosBlocks(50);
             var chainedHeaderTip = BuildProvenHeaderChainFromBlocks(posBlocks);
@@ -93,8 +97,10 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var dataFolder = new DataFolder(dataFolderPath);
 
             var dBreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
+            var keyValueStore = new BlockKeyValueStore(this.Network, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
-            var blockRepository = new BlockRepository(this.Network, dataFolder, this.LoggerFactory.Object, dBreezeSerializer);
+            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore);
+
             blockRepository.PutBlocks(new HashHeightPair(posBlocks.Last().GetHash(), 50), posBlocks);
 
             var storeSettings = new StoreSettings(NodeSettings.Default(this.Network))

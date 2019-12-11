@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DBreeze.DataTypes;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.NodeStorage.Interfaces;
 
 namespace Stratis.Bitcoin.Features.BlockStore.Pruning
 {
@@ -31,7 +31,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Pruning
         /// <inheritdoc />
         public void Initialize()
         {
-            using (DBreeze.Transactions.Transaction transaction = this.blockRepository.DBreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.blockRepository.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
                 this.LoadPrunedTip(transaction);
             }
@@ -48,9 +48,9 @@ namespace Stratis.Bitcoin.Features.BlockStore.Pruning
 
                 this.PrunedTip = new HashHeightPair(genesis.GetHash(), 0);
 
-                using (DBreeze.Transactions.Transaction transaction = this.blockRepository.DBreeze.GetTransaction())
+                using (IKeyValueStoreTransaction transaction = this.blockRepository.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
                 {
-                    transaction.Insert(BlockRepository.CommonTableName, prunedTipKey, this.dBreezeSerializer.Serialize(this.PrunedTip));
+                    transaction.Insert(BlockRepository.CommonTableName, prunedTipKey, this.PrunedTip);
                     transaction.Commit();
                 }
             }
@@ -110,17 +110,12 @@ namespace Stratis.Bitcoin.Features.BlockStore.Pruning
             this.UpdatePrunedTip(blockRepositoryTip.GetAncestor(upperHeight));
         }
 
-        private void LoadPrunedTip(DBreeze.Transactions.Transaction dbreezeTransaction)
+        private void LoadPrunedTip(IKeyValueStoreTransaction dbTransaction)
         {
             if (this.PrunedTip == null)
             {
-                dbreezeTransaction.ValuesLazyLoadingIsOn = false;
-
-                Row<byte[], byte[]> row = dbreezeTransaction.Select<byte[], byte[]>(BlockRepository.CommonTableName, prunedTipKey);
-                if (row.Exists)
-                    this.PrunedTip = this.dBreezeSerializer.Deserialize<HashHeightPair>(row.Value);
-
-                dbreezeTransaction.ValuesLazyLoadingIsOn = true;
+                if (dbTransaction.Select(BlockRepository.CommonTableName, prunedTipKey, out HashHeightPair prunedTip))
+                    this.PrunedTip = prunedTip; 
             }
         }
 
@@ -131,32 +126,30 @@ namespace Stratis.Bitcoin.Features.BlockStore.Pruning
         {
             Task task = Task.Run(() =>
             {
-                using (DBreeze.Transactions.Transaction dbreezeTransaction = this.blockRepository.DBreeze.GetTransaction())
+                using (IKeyValueStoreTransaction dbTransaction = this.blockRepository.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, BlockRepository.BlockTableName, BlockRepository.TransactionTableName, BlockRepository.CommonTableName))
                 {
-                    dbreezeTransaction.SynchronizeTables(BlockRepository.BlockTableName, BlockRepository.TransactionTableName);
-
-                    var tempBlocks = dbreezeTransaction.SelectDictionary<byte[], byte[]>(BlockRepository.BlockTableName);
+                    var tempBlocks = dbTransaction.SelectDictionary<byte[], byte[]>(BlockRepository.BlockTableName);
 
                     if (tempBlocks.Count != 0)
                     {
                         this.logger.LogInformation($"{tempBlocks.Count} blocks will be copied to the pruned table.");
 
-                        dbreezeTransaction.RemoveAllKeys(BlockRepository.BlockTableName, true);
-                        dbreezeTransaction.InsertDictionary(BlockRepository.BlockTableName, tempBlocks, false);
+                        dbTransaction.RemoveAllKeys(BlockRepository.BlockTableName);
+                        dbTransaction.InsertDictionary(BlockRepository.BlockTableName, tempBlocks);
 
-                        var tempTransactions = dbreezeTransaction.SelectDictionary<byte[], byte[]>(BlockRepository.TransactionTableName);
+                        var tempTransactions = dbTransaction.SelectDictionary<byte[], byte[]>(BlockRepository.TransactionTableName);
                         if (tempTransactions.Count != 0)
                         {
                             this.logger.LogInformation($"{tempTransactions.Count} transactions will be copied to the pruned table.");
-                            dbreezeTransaction.RemoveAllKeys(BlockRepository.TransactionTableName, true);
-                            dbreezeTransaction.InsertDictionary(BlockRepository.TransactionTableName, tempTransactions, false);
+                            dbTransaction.RemoveAllKeys(BlockRepository.TransactionTableName);
+                            dbTransaction.InsertDictionary(BlockRepository.TransactionTableName, tempTransactions);
                         }
 
                         // Save the hash and height of where the node was pruned up to.
-                        dbreezeTransaction.Insert(BlockRepository.CommonTableName, prunedTipKey, this.dBreezeSerializer.Serialize(this.PrunedTip));
+                        dbTransaction.Insert(BlockRepository.CommonTableName, prunedTipKey, this.PrunedTip);
                     }
 
-                    dbreezeTransaction.Commit();
+                    dbTransaction.Commit();
                 }
 
                 return Task.CompletedTask;

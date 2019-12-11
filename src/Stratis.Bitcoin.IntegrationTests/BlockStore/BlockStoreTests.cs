@@ -30,7 +30,11 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
         [Fact]
         public void BlockRepositoryPutBatch()
         {
-            using (var blockRepository = new BlockRepository(this.network, TestBase.CreateDataFolder(this), this.loggerFactory, this.dBreezeSerializer))
+            var dataFolder = TestBase.CreateDataFolder(this);
+
+            var keyValueStore = new BlockKeyValueStore(this.network, dataFolder, this.loggerFactory, DateTimeProvider.Default);
+
+            using (var blockRepository = new BlockRepository(this.network, this.loggerFactory, keyValueStore))
             {
                 blockRepository.SetTxIndex(true);
 
