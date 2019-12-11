@@ -222,7 +222,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         /// <inheritdoc />
         public Dictionary<TKey, TObject> SelectDictionary<TKey, TObject>(string tableName)
         {
-            return this.SelectForward<TKey, TObject>(tableName).ToDictionary(kv => kv.Item1, kv => kv.Item2);
+            return this.SelectAll<TKey, TObject>(tableName).ToDictionary(kv => kv.Item1, kv => kv.Item2);
         }
 
         private IEnumerable<O> MergeSortedEnumerations<O, T>(IEnumerable<O> primary, IEnumerable<O> secondary, Func<O, T> keySelector, IComparer<T> comparer, bool descending = false)
@@ -254,30 +254,43 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
             }
         }
 
-        private IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly = false, bool backwards = false)
+        private IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly = false, bool? backwards = null)
         {
-            var table = this.GetTable(tableName);
-
-            var byteListComparer = new ByteListComparer();
-
-            this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> upd);
-            var updates = (upd == null) ? null : (backwards ? upd.OrderByDescending(k => k.Key, byteListComparer) : upd.OrderBy(k => k.Key, byteListComparer)).Select(k => (k.Key, keysOnly ? null : k.Value));
-
+            IEnumerable<(byte[], byte[])> res = null;
             bool ignoreDB = this.tablesCleared.Contains(tableName);
 
-            IEnumerable<(byte[], byte[])> res;
+            this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> upd);
 
-            if (!ignoreDB && !this.tablesCleared.Contains(tableName))
+            // Not sorted?
+            if (backwards == null)
             {
-                var dbrows = this.repository.GetAll(this, table, keysOnly: keysOnly, backwards: backwards);
-                if (updates == null)
-                    res = dbrows;
-                else
-                    res = this.MergeSortedEnumerations<(byte[], byte[]), byte[]>(dbrows, updates, k => k.Item1, byteListComparer, descending: backwards);
+                res = upd?.Where(k => k.Key != null).Select(k => (k.Key, k.Value));
+
+                if (!ignoreDB)
+                {
+                    var dbRows = this.repository.GetAll(this, this.GetTable(tableName), keysOnly: keysOnly, backwards: backwards ?? false);
+
+                    res = (res == null) ? dbRows : res.Concat(dbRows.Where(k => !upd.ContainsKey(k.Item1)));
+                }
             }
             else
             {
-                res = updates;
+                var table = this.GetTable(tableName);
+                var byteListComparer = new ByteListComparer();
+                var updates = (upd == null) ? null : ((bool)backwards ? upd.OrderByDescending(k => k.Key, byteListComparer) : upd.OrderBy(k => k.Key, byteListComparer)).Select(k => (k.Key, keysOnly ? null : k.Value));
+
+                if (!ignoreDB && !this.tablesCleared.Contains(tableName))
+                {
+                    var dbrows = this.repository.GetAll(this, table, keysOnly: keysOnly, backwards: (bool)backwards);
+                    if (updates == null)
+                        res = dbrows;
+                    else
+                        res = this.MergeSortedEnumerations<(byte[], byte[]), byte[]>(dbrows, updates, k => k.Item1, byteListComparer, descending: (bool)backwards);
+                }
+                else
+                {
+                    res = updates;
+                }
             }
 
             if (res != null)
