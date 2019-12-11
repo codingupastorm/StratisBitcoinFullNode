@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Stratis.Features.NodeStorage.KeyValueStore
+﻿namespace Stratis.Features.NodeStorage.KeyValueStore
 {
     public class KeyValueStoreTable
     {
