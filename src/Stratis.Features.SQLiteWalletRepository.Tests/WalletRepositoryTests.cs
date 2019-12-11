@@ -88,7 +88,7 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
             // Set up block store.
             this.NodeSettings = new NodeSettings(network, args: new[] { $"-datadir={dataDir}" }, protocolVersion: ProtocolVersion.ALT_PROTOCOL_VERSION);
 
-            var blockStoreFactory = new BlockStoreFactory(network, this.NodeSettings.DataFolder, this.NodeSettings.LoggerFactory, DateTimeProvider.Default);
+            var blockStoreFactory = new BlockKeyValueStore(network, this.NodeSettings.DataFolder, this.NodeSettings.LoggerFactory, DateTimeProvider.Default);
 
             this.BlockRepo = new BlockRepository(network, this.NodeSettings.LoggerFactory, blockStoreFactory);
             this.BlockRepo.Initialize();
@@ -385,10 +385,10 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
                     // FINDFORK
                     // See if FindFork can be run from multiple threads
                     var forks = new ChainedHeader[1];
-                    Parallel.ForEach(forks.Select((f,n) => n), n =>
-                    {
-                        forks[n] = repo.FindFork("test2", chainedHeader2);
-                    });
+                    Parallel.ForEach(forks.Select((f, n) => n), n =>
+                     {
+                         forks[n] = repo.FindFork("test2", chainedHeader2);
+                     });
 
                     Assert.DoesNotContain(forks, f => f.Height != chainedHeader2.Height);
 

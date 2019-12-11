@@ -32,7 +32,7 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
         {
             var dataFolder = TestBase.CreateDataFolder(this);
 
-            var blockStoreFactory = new BlockStoreFactory(this.network, dataFolder, this.loggerFactory, DateTimeProvider.Default);
+            var blockStoreFactory = new BlockKeyValueStore(this.network, dataFolder, this.loggerFactory, DateTimeProvider.Default);
 
             using (var blockRepository = new BlockRepository(this.network, this.loggerFactory, blockStoreFactory))
             {
