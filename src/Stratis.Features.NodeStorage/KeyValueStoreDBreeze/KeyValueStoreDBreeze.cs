@@ -37,6 +37,26 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
             this.TransactionLock = new SingleThreadResource($"{nameof(this.TransactionLock)}", logger);
         }
 
+        public override T Deserialize<T>(byte[] objBytes)
+        {
+            if (typeof(T) == typeof(int))
+            {
+                return (T)(object)DBreeze.DataTypes.DataTypesConvertor.ConvertBack<int>(objBytes);
+            }
+
+            return base.Deserialize<T>(objBytes);
+        }
+
+        public override byte[] Serialize<T>(T obj)
+        {
+            if (typeof(T) == typeof(int))
+            {
+                return DBreeze.DataTypes.DataTypesConvertor.ConvertKey((int)(object)obj);
+            }
+
+            return base.Serialize(obj);
+        }
+
         public override void Init(string rootPath)
         {
             this.Storage = new DBreezeEngine(rootPath);

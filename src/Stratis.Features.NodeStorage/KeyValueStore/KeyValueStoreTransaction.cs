@@ -99,51 +99,12 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
 
         private byte[] Serialize<T>(T obj)
         {
-            if (obj == null)
-                return new byte[] { };
-
-            if (obj.GetType() == typeof(byte[]))
-                return (byte[])(object)obj;
-
-            if (obj.GetType() == typeof(bool) || obj.GetType() == typeof(bool?))
-                return new byte[] { (byte)((bool)(object)obj ? 1 : 0) };
-
-            if (obj.GetType() == typeof(int))
-            {
-                byte[] bytes = BitConverter.GetBytes((int)(object)obj);
-                if (BitConverter.IsLittleEndian)
-                    bytes = bytes.Reverse().ToArray();
-                return bytes;
-            }
-
-            return this.repository.KeyValueStore.RepositorySerializer.Serialize(obj);
+            return this.repository.Serialize(obj);
         }
 
         private T Deserialize<T>(byte[] objBytes)
         {
-            if (objBytes == null)
-                return default(T);
-
-            Type objType = typeof(T);
-
-            if (objType == typeof(byte[]))
-                return (T)(object)objBytes;
-
-            if (objBytes.Length == 0)
-                return default(T);
-
-            if (objType == typeof(bool) || objType == typeof(bool?))
-                return (T)(object)(objBytes[0] != 0);
-
-            if (objType == typeof(int))
-            {
-                var bytes = (byte[])objBytes.Clone();
-                if (BitConverter.IsLittleEndian)
-                    bytes = bytes.Reverse().ToArray();
-                return (T)(object)BitConverter.ToInt32(bytes, 0);
-            }
-
-            return (T)this.repository.KeyValueStore.RepositorySerializer.Deserialize(objBytes, typeof(T));
+            return this.repository.Deserialize<T>(objBytes);
         }
 
         /// <inheritdoc />
