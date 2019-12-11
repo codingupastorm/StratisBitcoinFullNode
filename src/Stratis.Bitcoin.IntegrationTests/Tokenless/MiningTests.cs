@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using DBreeze;
@@ -127,10 +128,10 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
             var block = blockDefinition.Build(this.chainIndexer.Tip, null);
             Assert.Single(block.Block.Transactions);
 
-            var newContractAddress = this.AddressGenerator.GenerateAddress(transaction.GetHash(), 0);
-
-            byte[] codeAtAddress = this.stateRoot.GetCode(newContractAddress);
-            Assert.NotNull(codeAtAddress);
+            var result = this.executionCache.GetExecutionResult(block.Block.GetHash());
+            Assert.NotNull(result);
+            Assert.Single(result.Receipts);
+            Assert.True(result.Receipts.First().Success);
             // TODO: Check doing things like saving Sender.
         }
 
