@@ -11,7 +11,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
 {
     public class KeyValueStoreDBreeze : KeyValueStoreRepository
     {
-        private class KeyValueStoreDBZTransaction : KeyValueStoreTransaction
+        internal class KeyValueStoreDBZTransaction : KeyValueStoreTransaction
         {
             internal DBreeze.Transactions.Transaction dBreezeTransaction;
 
@@ -30,13 +30,8 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
         /// <summary>
         /// Information related to a DBreeze table.
         /// </summary>
-        /// <remarks>
-        /// The standard workaround is to prefix the key with the "table" identifier.
-        /// </remarks>
-        private class KeyValueStoreDBZTable : IKeyValueStoreTable
+        internal class KeyValueStoreDBZTable : KeyValueStoreTable
         {
-            public string TableName { get; internal set; }
-            public KeyValueStoreDBreeze Repository { get; internal set; }
         }
 
         private DBreezeEngine Storage;
@@ -54,58 +49,63 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
             this.Storage = new DBreezeEngine(rootPath);
         }
 
-        public override int Count(IKeyValueStoreTransaction tran, IKeyValueStoreTable table)
+        public override int Count(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table)
         {
-            return (int)((KeyValueStoreDBZTransaction)tran).dBreezeTransaction.Count(((KeyValueStoreDBZTable)table).TableName);
+            var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
+            var dbTransaction = tran.dBreezeTransaction;
+
+            return (int)dbTransaction.Count(table.TableName);
         }
 
-        public override bool[] Exists(IKeyValueStoreTransaction transaction, IKeyValueStoreTable table, byte[][] keys)
+        public override bool[] Exists(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table, byte[][] keys)
         {
-            var tran = ((KeyValueStoreDBZTransaction)transaction).dBreezeTransaction;
+            var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
+            var dbTransaction = tran.dBreezeTransaction;
 
-            tran.ValuesLazyLoadingIsOn = true;
+            dbTransaction.ValuesLazyLoadingIsOn = true;
             try
             {
                 (byte[] k, int n)[] orderedKeys = keys.Select((k, n) => (k, n)).OrderBy(t => t.k, new ByteListComparer()).ToArray();
 
                 var exists = new bool[keys.Length];
                 for (int i = 0; i < orderedKeys.Length; i++)
-                    exists[orderedKeys[i].n] = tran.Select<byte[], byte[]>(
-                        ((KeyValueStoreDBZTable)table).TableName, orderedKeys[i].k).Exists;
+                    exists[orderedKeys[i].n] = dbTransaction.Select<byte[], byte[]>(table.TableName, orderedKeys[i].k).Exists;
 
                 return exists;
             }
             finally
             {
-                tran.ValuesLazyLoadingIsOn = false;
+                dbTransaction.ValuesLazyLoadingIsOn = false;
             }
         }
 
-        public override byte[][] Get(IKeyValueStoreTransaction transaction, IKeyValueStoreTable table, byte[][] keys)
+        public override byte[][] Get(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table, byte[][] keys)
         {
-            var tran = ((KeyValueStoreDBZTransaction)transaction).dBreezeTransaction;
+            var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
+            var dbTransaction = tran.dBreezeTransaction;
 
             (byte[] k, int n)[] orderedKeys = keys.Select((k, n) => (k, n)).OrderBy(t => t.k, new ByteListComparer()).ToArray();
             var res = new byte[keys.Length][];
             for (int i = 0; i < orderedKeys.Length; i++)
             {
                 var key = orderedKeys[i].k;
-                var row = tran.Select<byte[], byte[]>(((KeyValueStoreDBZTable)table).TableName, key);
+                var row = dbTransaction.Select<byte[], byte[]>(table.TableName, key);
                 res[orderedKeys[i].n] = row.Exists ? row.Value : null;
             }
 
             return res;
         }
 
-        public override IEnumerable<(byte[], byte[])> GetAll(IKeyValueStoreTransaction transaction, IKeyValueStoreTable table, bool keysOnly)
+        public override IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table, bool keysOnly)
         {
-            var tran = ((KeyValueStoreDBZTransaction)transaction).dBreezeTransaction;
+            var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
+            var dbTransaction = tran.dBreezeTransaction;
 
-            tran.ValuesLazyLoadingIsOn = keysOnly;
+            dbTransaction.ValuesLazyLoadingIsOn = keysOnly;
 
             try
             {
-                foreach (var row in tran.SelectForward<byte[], byte[]>(((KeyValueStoreDBZTable)table).TableName))
+                foreach (var row in dbTransaction.SelectForward<byte[], byte[]>(table.TableName))
                 {
                     byte[] keyBytes = row.Key;
 
@@ -114,13 +114,13 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
             }
             finally
             {
-                tran.ValuesLazyLoadingIsOn = false;
+                dbTransaction.ValuesLazyLoadingIsOn = false;
             }
         }
 
-        public override IKeyValueStoreTable GetTable(string tableName)
+        public override KeyValueStoreTable GetTable(string tableName)
         {
-            if (!this.Tables.TryGetValue(tableName, out IKeyValueStoreTable table))
+            if (!this.Tables.TryGetValue(tableName, out KeyValueStoreTable table))
             {
                 table = new KeyValueStoreDBZTable()
                 {
@@ -134,12 +134,12 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
             return table;
         }
 
-        public override IKeyValueStoreTransaction CreateKeyValueStoreTransaction(KeyValueStoreTransactionMode mode, params string[] tables)
+        public override KeyValueStoreTransaction CreateKeyValueStoreTransaction(KeyValueStoreTransactionMode mode, params string[] tables)
         {
             return new KeyValueStoreDBZTransaction(this, mode, tables);
         }
 
-        public override void OnBeginTransaction(IKeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTransactionMode mode)
+        public override void OnBeginTransaction(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTransactionMode mode)
         {
             if (mode == KeyValueStoreTransactionMode.ReadWrite)
             {
@@ -147,27 +147,27 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
             }
         }
 
-        public override void OnCommit(IKeyValueStoreTransaction keyValueStoreTransaction)
+        public override void OnCommit(KeyValueStoreTransaction keyValueStoreTransaction)
         {
-            var tran = ((KeyValueStoreDBZTransaction)keyValueStoreTransaction);
-            var tablesModified = tran.TablesCleared.Concat(tran.TableUpdates.Keys).Distinct().ToArray();
-
+            var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
             var dbTransaction = tran.dBreezeTransaction;
+
+            var tablesModified = tran.TablesCleared.Concat(tran.TableUpdates.Keys).Distinct().ToArray();
             if (tablesModified.Length > 0)
                 dbTransaction.SynchronizeTables(tablesModified);
 
             try
             {
-                foreach (string tableName in ((KeyValueStoreDBZTransaction)keyValueStoreTransaction).TablesCleared)
+                foreach (string tableName in tran.TablesCleared)
                 {
-                    var table = (KeyValueStoreDBZTable)this.GetTable(tableName);
+                    var table = this.GetTable(tableName);
 
                     dbTransaction.RemoveAllKeys(tableName, true);
                 }
 
-                foreach (KeyValuePair<string, ConcurrentDictionary<byte[], byte[]>> updates in ((KeyValueStoreDBZTransaction)keyValueStoreTransaction).TableUpdates)
+                foreach (KeyValuePair<string, ConcurrentDictionary<byte[], byte[]>> updates in tran.TableUpdates)
                 {
-                    var table = (KeyValueStoreDBZTable)this.GetTable(updates.Key);
+                    var table = this.GetTable(updates.Key);
 
                     foreach (KeyValuePair<byte[], byte[]> kv in updates.Value)
                     {
@@ -191,12 +191,13 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
             }
         }
 
-        public override void OnRollback(IKeyValueStoreTransaction keyValueStoreTransaction)
+        public override void OnRollback(KeyValueStoreTransaction keyValueStoreTransaction)
         {
-            var tran = ((KeyValueStoreDBZTransaction)keyValueStoreTransaction).dBreezeTransaction;
+            var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
+            var dbTransaction = tran.dBreezeTransaction;
 
-            tran.Rollback();
-            tran.Dispose();
+            dbTransaction.Rollback();
+            dbTransaction.Dispose();
 
             this.TransactionLock.Release();
         }

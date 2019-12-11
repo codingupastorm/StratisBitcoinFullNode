@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Stratis.Features.NodeStorage.KeyValueStore;
 
 namespace Stratis.Features.NodeStorage.Interfaces
 {
@@ -19,7 +20,7 @@ namespace Stratis.Features.NodeStorage.Interfaces
         /// <param name="mode">The transaction mode.</param>
         /// <param name="tables">The tables that will be modified.</param>
         /// <returns>A transaction that can be passed as a parameter to the rest of the class methods.</returns>
-        IKeyValueStoreTransaction CreateKeyValueStoreTransaction(KeyValueStoreTransactionMode mode, params string[] tables);
+        KeyValueStoreTransaction CreateKeyValueStoreTransaction(KeyValueStoreTransactionMode mode, params string[] tables);
 
         /// <summary>
         /// Determines if the keys (array of byte array) exists in the given table.
@@ -28,9 +29,9 @@ namespace Stratis.Features.NodeStorage.Interfaces
         /// <param name="keyValueStoreTable">The table to read.</param>
         /// <param name="keys">The keys (byte arrays) to check for existence.</param>
         /// <returns>A boolean array corresponding to each key indicating whether the key exists.</returns>
-        bool[] Exists(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable, byte[][] keys);
+        bool[] Exists(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable keyValueStoreTable, byte[][] keys);
 
-        int Count(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable);
+        int Count(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable keyValueStoreTable);
 
         /// <summary>
         /// Gets the value (byte array) associated with a key (byte array) in the given table.
@@ -39,7 +40,7 @@ namespace Stratis.Features.NodeStorage.Interfaces
         /// <param name="keyValueStoreTable">The table to read.</param>
         /// <param name="keys">The keys (byte arrays) of the values to read.</param>
         /// <returns>The values as an array of byte arrays.</returns>
-        byte[][] Get(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable, byte[][] keys);
+        byte[][] Get(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable keyValueStoreTable, byte[][] keys);
 
         /// <summary>
         /// Gets the values (byte arrays) and keys (byte arrays) associated with a table.
@@ -48,33 +49,33 @@ namespace Stratis.Features.NodeStorage.Interfaces
         /// <param name="keyValueStoreTable">The table to read.</param>
         /// <param name="keysOnly">Set to <c>true</c> if values are optional.</param>
         /// <returns>The keys and values as byte arrays.</returns>
-        IEnumerable<(byte[], byte[])> GetAll(IKeyValueStoreTransaction keyValueStoreTransaction, IKeyValueStoreTable keyValueStoreTable, bool keysOnly = false);
+        IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable keyValueStoreTable, bool keysOnly = false);
 
         /// <summary>
         /// A call-back indicating that the transaction is starting.
         /// </summary>
         /// <param name="keyValueStoreTransaction">The transaction.</param>
         /// <param name="mode">The transaction mode.</param>
-        void OnBeginTransaction(IKeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTransactionMode mode);
+        void OnBeginTransaction(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTransactionMode mode);
 
         /// <summary>
         /// A call-back indicating that the transaction is being committed.
         /// </summary>
         /// <param name="keyValueStoreTransaction">The transaction.</param>
-        void OnCommit(IKeyValueStoreTransaction keyValueStoreTransaction);
+        void OnCommit(KeyValueStoreTransaction keyValueStoreTransaction);
 
         /// <summary>
         /// A call-back indicating that the transaction is ending without being committed.
         /// </summary>
         /// <param name="keyValueStoreTransaction">The transaction.</param>
-        void OnRollback(IKeyValueStoreTransaction keyValueStoreTransaction);
+        void OnRollback(KeyValueStoreTransaction keyValueStoreTransaction);
 
         /// <summary>
         /// Gets an object representing a table with the given name.
         /// </summary>
         /// <param name="tableName">The name of the table.</param>
         /// <returns>The object representing the table.</returns>
-        IKeyValueStoreTable GetTable(string tableName);
+        KeyValueStoreTable GetTable(string tableName);
 
         /// <summary>
         /// Called when the repository is being closed.

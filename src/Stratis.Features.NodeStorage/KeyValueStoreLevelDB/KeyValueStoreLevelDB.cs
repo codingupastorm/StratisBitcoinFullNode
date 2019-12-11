@@ -14,8 +14,8 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
     {
         private class KeyValueStoreLDBTransaction : KeyValueStoreTransaction
         {
-            public SnapShot snapshot;
-            public ReadOptions readOptions => (this.snapshot == null) ? new ReadOptions() : new ReadOptions() { Snapshot = this.snapshot };
+            public SnapShot Snapshot;
+            public ReadOptions ReadOptions => (this.Snapshot == null) ? new ReadOptions() : new ReadOptions() { Snapshot = this.Snapshot };
 
             public KeyValueStoreLDBTransaction(IKeyValueStoreRepository repository, KeyValueStoreTransactionMode mode, params string[] tables)
                 : base(repository, mode, tables)
@@ -32,11 +32,9 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
         /// <remarks>
         /// The standard workaround is to prefix the key with the "table" identifier.
         /// </remarks>
-        private class KeyValueStoreLDBTable : IKeyValueStoreTable
+        private class KeyValueStoreLDBTable : KeyValueStoreTable
         {
-            public string TableName { get; internal set; }
             public byte KeyPrefix { get; internal set; }
-            public KeyValueStoreLevelDB Repository { get; internal set; }
         }
 
         private DB Storage;
@@ -75,9 +73,9 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
             }
         }
 
-        public override int Count(IKeyValueStoreTransaction tran, IKeyValueStoreTable table)
+        public override int Count(KeyValueStoreTransaction tran, KeyValueStoreTable table)
         {
-            using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).readOptions))
+            using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).ReadOptions))
             {
                 int count = 0;
 
@@ -97,9 +95,9 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
             }
         }
 
-        public override bool[] Exists(IKeyValueStoreTransaction tran, IKeyValueStoreTable table, byte[][] keys)
+        public override bool[] Exists(KeyValueStoreTransaction tran, KeyValueStoreTable table, byte[][] keys)
         {
-            using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).readOptions))
+            using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).ReadOptions))
             {
                 byte keyPrefix = ((KeyValueStoreLDBTable)table).KeyPrefix;
 
@@ -119,20 +117,20 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
             }
         }
 
-        public override byte[][] Get(IKeyValueStoreTransaction tran, IKeyValueStoreTable table, byte[][] keys)
+        public override byte[][] Get(KeyValueStoreTransaction tran, KeyValueStoreTable table, byte[][] keys)
         {
             var keyBytes = keys.Select(key => new byte[] { ((KeyValueStoreLDBTable)table).KeyPrefix }.Concat(key).ToArray()).ToArray();
             (byte[] k, int n)[] orderedKeys = keyBytes.Select((k, n) => (k, n)).OrderBy(t => t.k, new ByteListComparer()).ToArray();
             var res = new byte[keys.Length][];
             for (int i = 0; i < orderedKeys.Length; i++)
-                res[orderedKeys[i].n] = this.Storage.Get(orderedKeys[i].k, ((KeyValueStoreLDBTransaction)tran).readOptions);
+                res[orderedKeys[i].n] = this.Storage.Get(orderedKeys[i].k, ((KeyValueStoreLDBTransaction)tran).ReadOptions);
 
             return res;
         }
 
-        public override IEnumerable<(byte[], byte[])> GetAll(IKeyValueStoreTransaction tran, IKeyValueStoreTable table, bool keysOnly = false)
+        public override IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction tran, KeyValueStoreTable table, bool keysOnly = false)
         {
-            using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).readOptions))
+            using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).ReadOptions))
             {
                 iterator.SeekToFirst();
 
@@ -148,9 +146,9 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
             }
         }
 
-        public override IKeyValueStoreTable GetTable(string tableName)
+        public override KeyValueStoreTable GetTable(string tableName)
         {
-            if (!this.Tables.TryGetValue(tableName, out IKeyValueStoreTable table))
+            if (!this.Tables.TryGetValue(tableName, out KeyValueStoreTable table))
             {
                 table = new KeyValueStoreLDBTable()
                 {
@@ -159,7 +157,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
                     KeyPrefix = (byte)this.nextTablePrefix++
                 };
 
-                this.Storage.Put(new byte[] { 0, ((KeyValueStoreLDBTable)table).KeyPrefix }, Encoding.ASCII.GetBytes(((KeyValueStoreLDBTable)table).TableName));
+                this.Storage.Put(new byte[] { 0, ((KeyValueStoreLDBTable)table).KeyPrefix }, Encoding.ASCII.GetBytes(table.TableName));
 
                 this.Tables[tableName] = table;
             }
@@ -167,22 +165,22 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
             return table;
         }
 
-        public override IKeyValueStoreTransaction CreateKeyValueStoreTransaction(KeyValueStoreTransactionMode mode, params string[] tables)
+        public override KeyValueStoreTransaction CreateKeyValueStoreTransaction(KeyValueStoreTransactionMode mode, params string[] tables)
         {
             return new KeyValueStoreLDBTransaction(this, mode, tables);
         }
 
-        public override void OnBeginTransaction(IKeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTransactionMode mode)
+        public override void OnBeginTransaction(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTransactionMode mode)
         {
             if (mode == KeyValueStoreTransactionMode.ReadWrite)
             {
                 this.TransactionLock.Wait();
             }
 
-            ((KeyValueStoreLDBTransaction)keyValueStoreTransaction).snapshot = (mode == KeyValueStoreTransactionMode.Read) ? this.Storage.CreateSnapshot() : null;
+            ((KeyValueStoreLDBTransaction)keyValueStoreTransaction).Snapshot = (mode == KeyValueStoreTransactionMode.Read) ? this.Storage.CreateSnapshot() : null;
         }
 
-        public override void OnCommit(IKeyValueStoreTransaction keyValueStoreTransaction)
+        public override void OnCommit(KeyValueStoreTransaction keyValueStoreTransaction)
         {
             try
             {
@@ -224,14 +222,14 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
             }
             finally
             {
-                ((KeyValueStoreLDBTransaction)keyValueStoreTransaction).snapshot?.Dispose();
+                ((KeyValueStoreLDBTransaction)keyValueStoreTransaction).Snapshot?.Dispose();
                 this.TransactionLock.Release();
             }
         }
 
-        public override void OnRollback(IKeyValueStoreTransaction keyValueStoreTransaction)
+        public override void OnRollback(KeyValueStoreTransaction keyValueStoreTransaction)
         {
-            ((KeyValueStoreLDBTransaction)keyValueStoreTransaction).snapshot?.Dispose();
+            ((KeyValueStoreLDBTransaction)keyValueStoreTransaction).Snapshot?.Dispose();
             this.TransactionLock.Release();
         }
 

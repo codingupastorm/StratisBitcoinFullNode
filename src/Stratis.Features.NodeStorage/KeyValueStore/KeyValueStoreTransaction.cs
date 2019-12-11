@@ -65,7 +65,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
             this.isInTransaction = true;
         }
 
-        private IKeyValueStoreTable GetTable(string tableName)
+        private KeyValueStoreTable GetTable(string tableName)
         {
             return this.Repository.GetTable(tableName);
         }
@@ -74,7 +74,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         public int Count(string tableName)
         {
             // Count = snapshot_count - deletes + inserts.
-            IKeyValueStoreTable table = this.GetTable(tableName);
+            KeyValueStoreTable table = this.GetTable(tableName);
 
             int count = this.tablesCleared.Contains(tableName) ? 0 : this.repository.Count(this, table);
 
@@ -168,7 +168,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         public bool[] ExistsMultiple<TKey>(string tableName, TKey[] keys)
         {
             byte[][] serKeys = keys.Select(k => this.Serialize(k)).ToArray();
-            IKeyValueStoreTable table = this.GetTable(tableName);
+            KeyValueStoreTable table = this.GetTable(tableName);
             bool[] exists = this.tablesCleared.Contains(tableName) ? new bool[keys.Length] : this.repository.Exists(this, table, serKeys);
 
             if (this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv))
@@ -191,7 +191,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         public List<TObject> SelectMultiple<TKey, TObject>(string tableName, TKey[] keys)
         {
             byte[][] serKeys = keys.Select(k => this.Serialize(k)).ToArray();
-            IKeyValueStoreTable table = this.GetTable(tableName);
+            KeyValueStoreTable table = this.GetTable(tableName);
 
             byte[][] objects = this.tablesCleared.Contains(tableName) ? new byte[keys.Length][] : this.repository.Get(this, table, serKeys);
             if (this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv))
