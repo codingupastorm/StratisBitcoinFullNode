@@ -126,7 +126,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
 
             var block = blockDefinition.Build(this.chainIndexer.Tip, null);
             Assert.Single(block.Block.Transactions);
-            // TODO: Check code exists at address etc.
+
+            var newContractAddress = this.AddressGenerator.GenerateAddress(transaction.GetHash(), 0);
+
+            byte[] codeAtAddress = this.stateRoot.GetCode(newContractAddress);
+            Assert.NotNull(codeAtAddress);
             // TODO: Check doing things like saving Sender.
         }
 
