@@ -90,4 +90,10 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="SmartContracts\TokenlessExample.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
+  </ItemGroup>
+
 </Project>
