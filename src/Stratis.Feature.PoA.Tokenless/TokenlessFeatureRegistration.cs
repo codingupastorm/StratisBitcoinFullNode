@@ -1,5 +1,11 @@
-﻿using NBitcoin;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Stratis.Bitcoin.Builder;
+using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
+using Stratis.Bitcoin.Features.Miner;
+using Stratis.Bitcoin.Features.PoA;
+using Stratis.Feature.PoA.Tokenless.Mempool;
+using Stratis.Feature.PoA.Tokenless.Mining;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -8,25 +14,26 @@ namespace Stratis.Feature.PoA.Tokenless
     /// </summary>
     public static class TokenlessFeatureRegistration
     {
-        /// <summary>This is mandatory for all PoA networks.</summary>
-        public static IFullNodeBuilder UsePoAConsensus(this IFullNodeBuilder fullNodeBuilder, Network network)
+        public static IFullNodeBuilder AsTokenlessNetwork(this IFullNodeBuilder fullNodeBuilder)
         {
-            //fullNodeBuilder.ConfigureFeature(features =>
-            //{
-            //    features
-            //        .AddFeature<PoATokenlessFeature>()
-            //        .DependOn<ConsensusFeature>()
-            //        .FeatureServices(services =>
-            //        {
-            //            services.AddSingleton<IFederationManager, FederationManager>();
-            //            services.AddSingleton<PoABlockHeaderValidator>();
-            //            services.AddSingleton<IPoAMiner, PoAMiner>();
-            //            services.AddSingleton<MinerSettings>();
-            //            services.AddSingleton<PoAMinerSettings>();
-            //            services.AddSingleton<ISlotsManager, SlotsManager>();
-            //            services.AddSingleton<BlockDefinition, PoABlockDefinition>();
-            //        });
-            //});
+            fullNodeBuilder.ConfigureFeature(features =>
+            {
+                features
+                    .AddFeature<TokenlessFeature>()
+                    .FeatureServices(services =>
+                    {
+                        services.Replace(ServiceDescriptor.Singleton<ITxMempool, TokenlessMempool>());
+                        services.Replace(ServiceDescriptor.Singleton<IMempoolValidator, TokenlessMempoolValidator>());
+                        services.AddSingleton<BlockDefinition, TokenlessBlockDefinition>();
+
+                        services.AddSingleton<IFederationManager, FederationManager>();
+                        services.AddSingleton<IPoAMiner, PoAMiner>();
+                        services.AddSingleton<ISlotsManager, SlotsManager>();
+                        services.AddSingleton<PoABlockHeaderValidator>();
+                        services.AddSingleton<MinerSettings>();
+                        services.AddSingleton<PoAMinerSettings>();
+                    });
+            });
 
             //LoggingConfiguration.RegisterFeatureNamespace<ConsensusFeature>("consensus");
             //fullNodeBuilder.ConfigureFeature(features =>

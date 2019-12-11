@@ -30,8 +30,6 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         public long FeeDelta { get; set; }
     }
 
-;
-
     /// <summary>
     /// Memory pool of pending transactions.
     /// </summary>
@@ -136,15 +134,6 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         /// <summary>Value n means that n times in 2^32 we check.</summary>
         private double checkFrequency;
 
-        /// <summary>Number of transactions updated.</summary>
-        private int nTransactionsUpdated;
-
-        /// <summary>
-        ///  Sum of all mempool tx's virtual sizes.
-        ///  Differs from serialized Transaction size since witness data is discounted. Defined in BIP 141.
-        /// </summary>
-        private long totalTxSize;
-
         /// <summary>Sum of dynamic memory usage of all the map elements (NOT the maps themselves).</summary>
         private long cachedInnerUsage;
 
@@ -165,13 +154,13 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         private double rollingMinimumFeeRate;
 
         /// <summary>Collection of transaction links.</summary>
-        private TxlinksMap mapLinks;
+        private readonly TxlinksMap mapLinks;
 
         /// <summary>Dictionary of <see cref="DeltaPair"/> indexed by transaction hash.</summary>
-        private Dictionary<uint256, DeltaPair> mapDeltas;
+        private readonly Dictionary<uint256, DeltaPair> mapDeltas;
 
         /// <summary>All tx witness hashes/entries in mapTx, in random order.</summary>
-        private Dictionary<TxMempoolEntry, uint256> vTxHashes;
+        private readonly Dictionary<TxMempoolEntry, uint256> vTxHashes;
 
         /// <summary>Instance logger for the memory pool.</summary>
         private readonly ILogger logger;
@@ -227,14 +216,11 @@ namespace Stratis.Bitcoin.Features.MemoryPool
             this.mapLinks.Clear();
             this.MapTx.Clear();
             this.MapNextTx.Clear();
-            this.totalTxSize = 0;
             this.cachedInnerUsage = 0;
             this.lastRollingFeeUpdate = this.TimeProvider.GetTime();
             this.blockSinceLastRollingFeeBump = false;
             this.rollingMinimumFeeRate = 0;
-            ++this.nTransactionsUpdated;
         }
-
 
         /// <inheritdoc />
         public void Clear()
@@ -247,7 +233,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         /// Set the new memory pools min fee to the fee rate of the removed set.
         /// </summary>
         /// <param name="rate">Fee rate of the removed set</param>
-        private void trackPackageRemoved(FeeRate rate)
+        private void TrackPackageRemoved(FeeRate rate)
         {
             // candidate for async
             //AssertLockHeld(cs);
@@ -289,12 +275,6 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         public FeeRate EstimateSmartFee(int nBlocks, out int answerFoundAtBlocks)
         {
             return this.MinerPolicyEstimator.EstimateSmartFee(nBlocks, this, out answerFoundAtBlocks);
-        }
-
-        /// <inheritdoc />
-        public double EstimatePriority(int nBlocks)
-        {
-            return this.MinerPolicyEstimator.EstimatePriority(nBlocks);
         }
 
         /// <inheritdoc />
@@ -370,9 +350,6 @@ namespace Stratis.Bitcoin.Features.MemoryPool
 
             this.UpdateAncestorsOf(true, entry, setAncestors);
             this.UpdateEntryForAncestors(entry, setAncestors);
-
-            this.nTransactionsUpdated++;
-            this.totalTxSize += entry.GetTxSize();
 
             this.MinerPolicyEstimator.ProcessTransaction(entry, validFeeEstimate);
 
@@ -697,24 +674,12 @@ namespace Stratis.Bitcoin.Features.MemoryPool
             }
 
             if (this.vTxHashes.Any())
-            {
                 this.vTxHashes.Remove(entry);
 
-                //vTxHashes[it] = std::move(vTxHashes.back());
-                //vTxHashes[it].second->vTxHashesIdx = it->vTxHashesIdx;
-                //vTxHashes.pop_back();
-                //if (vTxHashes.size() * 2 < vTxHashes.capacity())
-                //  vTxHashes.shrink_to_fit();
-            }
-            //else
-            //  vTxHashes.clear();
-
-            this.totalTxSize -= entry.GetTxSize();
             this.cachedInnerUsage -= entry.DynamicMemoryUsage();
             this.cachedInnerUsage -= this.mapLinks[entry]?.Parents?.Sum(p => p.DynamicMemoryUsage()) ?? 0 + this.mapLinks[entry]?.Children?.Sum(p => p.DynamicMemoryUsage()) ?? 0;
             this.mapLinks.Remove(entry);
             this.MapTx.Remove(entry);
-            this.nTransactionsUpdated++;
             this.MinerPolicyEstimator.RemoveTx(hash);
 
             if (this.signals != null)
@@ -731,6 +696,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
             {
                 stage.Add(entry);
             }
+
             // Traverse down the children of entry, only adding children that are not
             // accounted for in setDescendants already (because those children have either
             // already been walked, or will be walked in this iteration).
@@ -942,7 +908,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
                 var removed = new FeeRate(it.ModFeesWithDescendants, (int)it.SizeWithDescendants);
                 removed = new FeeRate(new Money(removed.FeePerK + this.minReasonableRelayFee.FeePerK));
 
-                this.trackPackageRemoved(removed);
+                this.TrackPackageRemoved(removed);
                 maxFeeRateRemoved = new FeeRate(Math.Max(maxFeeRateRemoved.FeePerK, removed.FeePerK));
 
                 var stage = new SetEntries();
@@ -1046,18 +1012,6 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         /// <inheritdoc />
         public void ReadFeeEstimates(BitcoinStream stream)
         {
-        }
-
-        /// <inheritdoc />
-        public int GetTransactionsUpdated()
-        {
-            return this.nTransactionsUpdated;
-        }
-
-        /// <inheritdoc />
-        public void AddTransactionsUpdated(int n)
-        {
-            this.nTransactionsUpdated += n;
         }
 
         /// <summary>

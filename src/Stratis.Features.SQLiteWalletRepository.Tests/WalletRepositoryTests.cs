@@ -385,10 +385,10 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
                     // FINDFORK
                     // See if FindFork can be run from multiple threads
                     var forks = new ChainedHeader[1];
-                    Parallel.ForEach(forks.Select((f,n) => n), n =>
-                    {
-                        forks[n] = repo.FindFork("test2", chainedHeader2);
-                    });
+                    Parallel.ForEach(forks.Select((f, n) => n), n =>
+                     {
+                         forks[n] = repo.FindFork("test2", chainedHeader2);
+                     });
 
                     Assert.DoesNotContain(forks, f => f.Height != chainedHeader2.Height);
 

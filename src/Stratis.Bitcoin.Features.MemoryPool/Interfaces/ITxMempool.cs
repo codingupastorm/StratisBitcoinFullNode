@@ -2,6 +2,7 @@
 using NBitcoin;
 using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.MemoryPool.Fee;
+using static Stratis.Bitcoin.Features.MemoryPool.TxMempool;
 
 namespace Stratis.Bitcoin.Features.MemoryPool.Interfaces
 {
@@ -17,16 +18,10 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Interfaces
         long Size { get; }
 
         /// <summary>The indexed transaction set in the memory pool.</summary>
-        TxMempool.IndexedTransactionSet MapTx { get; }
+        IndexedTransactionSet MapTx { get; }
 
         /// <summary>Collection of transaction inputs.</summary>
-        List<TxMempool.NextTxPair> MapNextTx { get; }
-
-        /// <summary>
-        /// Increments number of transaction that have been updated counter.
-        /// </summary>
-        /// <param name="n">Number of transactions to increment by.</param>
-        void AddTransactionsUpdated(int n);
+        List<NextTxPair> MapNextTx { get; }
 
         /// <summary>
         /// Add to memory pool without checking anything after calculating transaction ancestors.
@@ -45,7 +40,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Interfaces
         /// <summary>
         /// Add to memory pool without checking anything.
         /// </summary>
-        /// <param name="hash">Transaction hash.</param>
+        /// <param name="transactionHash">Transaction hash.</param>
         /// <param name="entry">Memory pool entry.</param>
         /// <param name="setAncestors">Transaction ancestors.</param>
         /// <param name="validFeeEstimate">Whether to update fee estimate.</param>
@@ -53,7 +48,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Interfaces
         /// <remarks>
         /// Used by AcceptToMemoryPool(), which DOES do all the appropriate checks.
         /// </remarks>
-        bool AddUnchecked(uint256 hash, TxMempoolEntry entry, TxMempool.SetEntries setAncestors, bool validFeeEstimate = true);
+        bool AddUnchecked(uint256 transactionHash, TxMempoolEntry entry, SetEntries setAncestors, bool validFeeEstimate = true);
 
         /// <summary>
         /// Apply transaction priority and fee deltas.
@@ -122,13 +117,6 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Interfaces
         FeeRate EstimateFee(int nBlocks);
 
         /// <summary>
-        /// Estimates the priority using <see cref="MinerPolicyEstimator"/>.
-        /// </summary>
-        /// <param name="nBlocks">The confirmation target blocks.</param>
-        /// <returns>The estimated priority.</returns>
-        double EstimatePriority(int nBlocks);
-
-        /// <summary>
         /// Estimates the smart fee using <see cref="MinerPolicyEstimator"/>.
         /// </summary>
         /// <param name="nBlocks">The confirmation target blocks.</param>
@@ -176,12 +164,6 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Interfaces
         /// would otherwise be half of this, it is set to 0 instead.
         /// </remarks>
         FeeRate GetMinFee(long sizelimit);
-
-        /// <summary>
-        /// Get number of transactions that have been updated.
-        /// </summary>
-        /// <returns>Number of transactions.</returns>
-        int GetTransactionsUpdated();
 
         /// <summary>
         /// Check that none of this transactions inputs are in the mempool, and thus

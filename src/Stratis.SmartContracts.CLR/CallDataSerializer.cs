@@ -30,7 +30,7 @@ namespace Stratis.SmartContracts.CLR
             this.methodParamSerializer = new MethodParameterByteSerializer(primitiveSerializer);
         }
 
-        public Result<ContractTxData> Deserialize(byte[] smartContractBytes)
+        public virtual Result<ContractTxData> Deserialize(byte[] smartContractBytes)
         {
             try
             {
@@ -44,9 +44,8 @@ namespace Stratis.SmartContracts.CLR
                 var gasLimit = (RuntimeObserver.Gas) this.primitiveSerializer.Deserialize<ulong>(gasLimitBytes);
 
                 return IsCallContract(type) 
-                    ? this.SerializeCallContract(smartContractBytes, vmVersion, gasPrice, gasLimit)
-                    : this.SerializeCreateContract(smartContractBytes, vmVersion, gasPrice, gasLimit);
-                
+                    ? this.DeserializeCallContract(smartContractBytes, vmVersion, gasPrice, gasLimit)
+                    : this.DeserializeCreateContract(smartContractBytes, vmVersion, gasPrice, gasLimit);
             }
             catch (Exception e)
             {
@@ -55,7 +54,7 @@ namespace Stratis.SmartContracts.CLR
             }
         }
 
-        protected virtual Result<ContractTxData> SerializeCreateContract(byte[] smartContractBytes, int vmVersion, ulong gasPrice, RuntimeObserver.Gas gasLimit)
+        private Result<ContractTxData> DeserializeCreateContract(byte[] smartContractBytes, int vmVersion, ulong gasPrice, RuntimeObserver.Gas gasLimit)
         {
             byte[] remaining = smartContractBytes.Slice(PrefixSize, (uint) (smartContractBytes.Length - PrefixSize));
 
@@ -68,7 +67,7 @@ namespace Stratis.SmartContracts.CLR
             return Result.Ok(callData);
         }
 
-        public Result<ContractTxData> SerializeCallContract(byte[] smartContractBytes, int vmVersion, ulong gasPrice, RuntimeObserver.Gas gasLimit)
+        private Result<ContractTxData> DeserializeCallContract(byte[] smartContractBytes, int vmVersion, ulong gasPrice, RuntimeObserver.Gas gasLimit)
         {
             byte[] contractAddressBytes = smartContractBytes.Slice(PrefixSize, AddressSize);
             var contractAddress = new uint160(contractAddressBytes);
@@ -93,7 +92,7 @@ namespace Stratis.SmartContracts.CLR
             return innerList.Select(x => x.RLPData).ToList();
         }
 
-        public byte[] Serialize(ContractTxData contractTxData)
+        public virtual byte[] Serialize(ContractTxData contractTxData)
         {
             return IsCallContract(contractTxData.OpCodeType) 
                 ? this.SerializeCallContract(contractTxData) 

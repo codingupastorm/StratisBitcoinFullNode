@@ -16,7 +16,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
 
         public override void CheckTransaction(MempoolValidationContext context)
         {
-            // TODO-TL: Implement
+            //  TODO-TL: Implement
         }
     }
 }
