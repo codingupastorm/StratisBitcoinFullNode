@@ -1,12 +1,15 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules;
+using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.SmartContracts.Caching;
 using Stratis.Bitcoin.Features.SmartContracts.Rules;
+using Stratis.Bitcoin.Utilities;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.Receipts;
@@ -15,10 +18,9 @@ using Stratis.SmartContracts.Core.Util;
 
 namespace Stratis.Feature.PoA.Tokenless.Core.Rules
 {
-    // TK: Need to investigate this rule and remove what is not required for tokenless.
-    public sealed class TokenlessCoinviewRule : PoACoinviewRule
+    public sealed class TokenlessCoinviewRule : CoinViewRule
     {
-        private SmartContractCoinViewRuleLogic logic;
+        private TokenlessCoinViewRuleLogic logic;
         private readonly IStateRepositoryRoot stateRepositoryRoot;
         private readonly IContractExecutorFactory executorFactory;
         private readonly ICallDataSerializer callDataSerializer;
@@ -53,19 +55,19 @@ namespace Stratis.Feature.PoA.Tokenless.Core.Rules
         {
             base.Initialize();
 
-            this.logic = new SmartContractCoinViewRuleLogic(this.stateRepositoryRoot, this.executorFactory, this.callDataSerializer, this.senderRetriever, this.receiptRepository, this.coinView, this.executionCache, this.loggerFactory);
+            this.logic = new TokenlessCoinViewRuleLogic(this.callDataSerializer, this.coinView, this.executionCache, this.executorFactory, this.loggerFactory, this.receiptRepository, this.senderRetriever, this.stateRepositoryRoot);
         }
 
         /// <inheritdoc />
         public override async Task RunAsync(RuleContext context)
         {
-            await this.logic.RunAsync(base.RunAsync, context);
+            await this.logic.RunAsync(context);
         }
 
         /// <inheritdoc/>
         protected override bool CheckInput(Transaction tx, int inputIndexCopy, TxOut txout, PrecomputedTransactionData txData, TxIn input, DeploymentFlags flags)
         {
-            return this.logic.CheckInput(base.CheckInput, tx, inputIndexCopy, txout, txData, input, flags);
+            return this.logic.CheckInput(tx, inputIndexCopy, txout, txData, input, flags);
         }
 
         /// <summary>
@@ -74,7 +76,27 @@ namespace Stratis.Feature.PoA.Tokenless.Core.Rules
         /// <inheritdoc/>
         public override void UpdateCoinView(RuleContext context, Transaction transaction)
         {
-            this.logic.UpdateCoinView(base.UpdateUTXOSet, context, transaction);
+            throw new InvalidOperationException("Not valid in a tokenless blockchain.");
+        }
+
+        protected override Money GetTransactionFee(UnspentOutputSet view, Transaction tx)
+        {
+            throw new InvalidOperationException("Not valid in a tokenless blockchain.");
+        }
+
+        public override void CheckBlockReward(RuleContext context, Money fees, int height, Block block)
+        {
+            throw new InvalidOperationException("Not valid in a tokenless blockchain.");
+        }
+
+        public override void CheckMaturity(UnspentOutputs coins, int spendHeight)
+        {
+            throw new InvalidOperationException("Not valid in a tokenless blockchain.");
+        }
+
+        public override Money GetProofOfWorkReward(int height)
+        {
+            throw new InvalidOperationException("Not valid in a tokenless blockchain.");
         }
     }
 }
