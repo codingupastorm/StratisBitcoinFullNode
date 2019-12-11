@@ -11,23 +11,24 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
 {
     public class BlockRepositoryTests : LogsTestBase
     {
-        private BlockStoreFactory GetBlockStoreFactory(string dir)
+        private BlockKeyValueStore keyValueStore = null;
+
+        private void SetBlockKeyValueStore(string dir)
         {
-            return new BlockStoreFactory(this.Network, new DataFolder(dir), this.LoggerFactory.Object, DateTimeProvider.Default);
+            this.keyValueStore = new BlockKeyValueStore(this.Network, new DataFolder(dir), this.LoggerFactory.Object, DateTimeProvider.Default);
         }
 
         [Fact]
         public void InitializesGenesisBlockAndTxIndexOnFirstLoad()
         {
             string dir = CreateTestDir(this);
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
+            SetBlockKeyValueStore(dir);
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
             }
 
-            IKeyValueStore keyValueStore = blockStoreFactory.GetStore();
-            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 Assert.True(transaction.Select<byte[], HashHeightPair>("Common", new byte[0], out HashHeightPair savedTip));
                 transaction.Select<byte[], bool>("Common", new byte[1], out bool txIndex);
@@ -41,23 +42,21 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void DoesNotOverwriteExistingBlockAndTxIndexOnFirstLoad()
         {
             string dir = CreateTestDir(this);
+            SetBlockKeyValueStore(dir);
 
             // Initialize the repo.
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
-            var keyValueStore = blockStoreFactory.GetStore();
-
-            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 transaction.Insert<byte[], byte[]>("Common", new byte[0], this.DBreezeSerializer.Serialize(new HashHeightPair(new uint256(56), 1)));
                 transaction.Insert<byte[], byte[]>("Common", new byte[1], new byte[] { 1 });
                 transaction.Commit();
             }
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
             }
 
-            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
                 Assert.True(transaction.Select<byte[], HashHeightPair>("Common", new byte[0], out HashHeightPair storedTip));
                 Assert.True(transaction.Select<byte[], bool>("Common", new byte[1], out bool txIndex));
@@ -71,18 +70,16 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void GetTrxAsyncWithoutTransactionIndexReturnsNewTransaction()
         {
             string dir = CreateTestDir(this);
+            SetBlockKeyValueStore(dir);
 
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
-            var keyValueStore = blockStoreFactory.GetStore();
-
-            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 transaction.Insert<byte[], HashHeightPair>("Common", new byte[0], new HashHeightPair(uint256.Zero, 1));
                 transaction.Insert<byte[], bool>("Common", new byte[1], false);
                 transaction.Commit();
             }
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 Assert.Equal(default(Transaction), repository.GetTransactionById(uint256.Zero));
             }
@@ -92,11 +89,9 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void GetTrxAsyncWithoutTransactionInIndexReturnsNull()
         {
             string dir = CreateTestDir(this);
+            SetBlockKeyValueStore(dir);
 
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
-            var keyValueStore = blockStoreFactory.GetStore();
-
-            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 var blockId = new uint256(8920);
                 transaction.Insert<byte[], HashHeightPair>("Common", new byte[0], new HashHeightPair(uint256.Zero, 1));
@@ -104,7 +99,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
                 transaction.Commit();
             }
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 Assert.Null(repository.GetTransactionById(new uint256(65)));
             }
@@ -114,13 +109,12 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void GetTrxAsyncWithTransactionReturnsExistingTransaction()
         {
             string dir = CreateTestDir(this);
+            SetBlockKeyValueStore(dir);
+
             Transaction trans = this.Network.CreateTransaction();
             trans.Version = 125;
 
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
-            var keyValueStore = blockStoreFactory.GetStore();
-
-            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 Block block = this.Network.CreateBlock();
                 block.Header.GetHash();
@@ -133,7 +127,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
                 transaction.Commit();
             }
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 Assert.Equal((uint)125, repository.GetTransactionById(trans.GetHash()).Version);
             }
@@ -143,18 +137,16 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void GetTrxBlockIdAsyncWithoutTxIndexReturnsDefaultId()
         {
             string dir = CreateTestDir(this);
+            SetBlockKeyValueStore(dir);
 
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
-            var keyValueStore = blockStoreFactory.GetStore();
-
-            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 transaction.Insert<byte[], HashHeightPair>("Common", new byte[0], new HashHeightPair(uint256.Zero, 1));
                 transaction.Insert<byte[], bool>("Common", new byte[1], false);
                 transaction.Commit();
             }
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 Assert.Equal(default(uint256), repository.GetBlockIdByTransactionId(new uint256(26)));
             }
@@ -164,18 +156,16 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void GetTrxBlockIdAsyncWithoutExistingTransactionReturnsNull()
         {
             string dir = CreateTestDir(this);
+            SetBlockKeyValueStore(dir);
 
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
-            var keyValueStore = blockStoreFactory.GetStore();
-
-            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 transaction.Insert<byte[], HashHeightPair>("Common", new byte[0], new HashHeightPair(uint256.Zero, 1));
                 transaction.Insert<byte[], bool>("Common", new byte[1], true);
                 transaction.Commit();
             }
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 Assert.Null(repository.GetBlockIdByTransactionId(new uint256(26)));
             }
@@ -185,11 +175,9 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void GetTrxBlockIdAsyncWithTransactionReturnsBlockId()
         {
             string dir = CreateTestDir(this);
+            SetBlockKeyValueStore(dir);
 
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
-            var keyValueStore = blockStoreFactory.GetStore();
-
-            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 transaction.Insert<uint256, uint256>("Transaction", new uint256(26), new uint256(42));
                 transaction.Insert<byte[], HashHeightPair>("Common", new byte[0], new HashHeightPair(uint256.Zero, 1));
@@ -197,7 +185,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
                 transaction.Commit();
             }
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 Assert.Equal(new uint256(42), repository.GetBlockIdByTransactionId(new uint256(26)));
             }
@@ -207,6 +195,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void PutAsyncWritesBlocksAndTxsToDbAndSavesNextBlockHash()
         {
             string dir = CreateTestDir(this);
+            SetBlockKeyValueStore(dir);
 
             var nextBlockHash = new uint256(1241256);
             var blocks = new List<Block>();
@@ -228,22 +217,19 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             block2.Transactions.Add(transaction);
             blocks.Add(block2);
 
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
-            var keyValueStore = blockStoreFactory.GetStore();
-
-            using (IKeyValueStoreTransaction trans = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            using (IKeyValueStoreTransaction trans = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 trans.Insert<byte[], HashHeightPair>("Common", new byte[0], new HashHeightPair(uint256.Zero, 1));
                 trans.Insert<byte[], bool>("Common", new byte[1], true);
                 trans.Commit();
             }
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 repository.PutBlocks(new HashHeightPair(nextBlockHash, 100), blocks);
             }
 
-            using (IKeyValueStoreTransaction trans = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
+            using (IKeyValueStoreTransaction trans = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
                 Assert.True(trans.Select<byte[], HashHeightPair>("Common", new byte[0], out HashHeightPair blockHashKey));
                 var blockDict = trans.SelectDictionary<uint256, Block>("Block");
@@ -271,22 +257,20 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void SetTxIndexUpdatesTxIndex()
         {
             string dir = CreateTestDir(this);
+            SetBlockKeyValueStore(dir);
 
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
-            var keyValueStore = blockStoreFactory.GetStore();
-
-            using (IKeyValueStoreTransaction trans = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            using (IKeyValueStoreTransaction trans = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 trans.Insert<byte[], byte[]>("Common", new byte[1], new byte[] { 1 });
                 trans.Commit();
             }
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 repository.SetTxIndex(false);
             }
 
-            using (IKeyValueStoreTransaction trans = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
+            using (IKeyValueStoreTransaction trans = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
                 Assert.True(trans.Select<byte[], bool>("Common", new byte[1], out bool txIndex));
                 Assert.False(txIndex);
@@ -297,18 +281,17 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void GetAsyncWithExistingBlockReturnsBlock()
         {
             string dir = CreateTestDir(this);
+            SetBlockKeyValueStore(dir);
+
             Block block = this.Network.Consensus.ConsensusFactory.CreateBlock();
 
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
-            var keyValueStore = blockStoreFactory.GetStore();
-
-            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 transaction.Insert<uint256, Block>("Block", block.GetHash(), block);
                 transaction.Commit();
             }
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 Assert.Equal(block.GetHash(), repository.GetBlock(block.GetHash()).GetHash());
             }
@@ -318,6 +301,8 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void GetAsyncWithExistingBlocksReturnsBlocks()
         {
             string dir = CreateTestDir(this);
+            SetBlockKeyValueStore(dir);
+
             var blocks = new Block[10];
 
             blocks[0] = this.Network.Consensus.ConsensusFactory.CreateBlock();
@@ -327,17 +312,14 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
                 blocks[i].Header.HashPrevBlock = blocks[i - 1].Header.GetHash();
             }
 
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
-            var keyValueStore = blockStoreFactory.GetStore();
-
-            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 for (int i = 0; i < blocks.Length; i++)
                     transaction.Insert<uint256, Block>("Block", blocks[i].GetHash(), blocks[i]);
                 transaction.Commit();
             }
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 List<Block> result = repository.GetBlocks(blocks.Select(b => b.GetHash()).ToList());
 
@@ -351,9 +333,9 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void GetAsyncWithoutExistingBlockReturnsNull()
         {
             string dir = CreateTestDir(this);
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
+            SetBlockKeyValueStore(dir);
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 Assert.Null(repository.GetBlock(new uint256()));
             }
@@ -363,19 +345,18 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void ExistAsyncWithExistingBlockReturnsTrue()
         {
             string dir = CreateTestDir(this);
+            SetBlockKeyValueStore(dir);
+
             Block block = this.Network.Consensus.ConsensusFactory.CreateBlock();
 
             // Initialize the repo.
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
-            var keyValueStore = blockStoreFactory.GetStore();
-
-            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 transaction.Insert<uint256, Block>("Block", block.GetHash(), block);
                 transaction.Commit();
             }
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 Assert.True(repository.Exist(block.GetHash()));
             }
@@ -385,9 +366,9 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void ExistAsyncWithoutExistingBlockReturnsFalse()
         {
             string dir = CreateTestDir(this);
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
+            SetBlockKeyValueStore(dir);
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 Assert.False(repository.Exist(new uint256()));
             }
@@ -397,14 +378,13 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void DeleteAsyncRemovesBlocksAndTransactions()
         {
             string dir = CreateTestDir(this);
+            SetBlockKeyValueStore(dir);
+
             Block block = this.Network.CreateBlock();
             block.Transactions.Add(this.Network.CreateTransaction());
 
             // Initialize the repo.
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
-            var keyValueStore = blockStoreFactory.GetStore();
-
-            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 transaction.Insert<uint256, Block>("Block", block.GetHash(), block);
                 transaction.Insert<uint256, uint256>("Transaction", block.Transactions[0].GetHash(), block.GetHash());
@@ -414,12 +394,12 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
 
             var tip = new HashHeightPair(new uint256(45), 100);
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 repository.Delete(tip, new List<uint256> { block.GetHash() });
             }
 
-            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
                 Assert.True(transaction.Select<byte[], HashHeightPair>("Common", new byte[0], out HashHeightPair storedTip));
                 Dictionary<uint256, Block> blockDict = transaction.SelectDictionary<uint256, Block>("Block");
@@ -435,29 +415,28 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void ReIndexAsync_TxIndex_OffToOn()
         {
             string dir = CreateTestDir(this);
+            SetBlockKeyValueStore(dir);
+
             Block block = this.Network.CreateBlock();
             Transaction transaction = this.Network.CreateTransaction();
             block.Transactions.Add(transaction);
 
             // Set up database to mimic that created when TxIndex was off. No transactions stored.
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
-            var keyValueStore = blockStoreFactory.GetStore();
-
-            using (IKeyValueStoreTransaction trans = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            using (IKeyValueStoreTransaction trans = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 trans.Insert<uint256, Block>("Block", block.GetHash(), block);
                 trans.Commit();
             }
 
             // Turn TxIndex on and then reindex database, as would happen on node startup if -txindex and -reindex are set.
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 repository.SetTxIndex(true);
                 repository.ReIndex();
             }
 
             // Check that after indexing database, the transaction inside the block is now indexed.
-            using (IKeyValueStoreTransaction trans = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            using (IKeyValueStoreTransaction trans = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 var blockDict = trans.SelectDictionary<uint256, Block>("Block");
                 var transDict = trans.SelectDictionary<uint256, uint256>("Transaction");
@@ -478,15 +457,14 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void ReIndexAsync_TxIndex_OnToOff()
         {
             string dir = CreateTestDir(this);
+            SetBlockKeyValueStore(dir);
+
             Block block = this.Network.CreateBlock();
             Transaction transaction = this.Network.CreateTransaction();
             block.Transactions.Add(transaction);
 
             // Set up database to mimic that created when TxIndex was on. Transaction from block is stored.
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
-            var keyValueStore = blockStoreFactory.GetStore();
-
-            using (IKeyValueStoreTransaction trans = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            using (IKeyValueStoreTransaction trans = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 trans.Insert<uint256, Block>("Block", block.GetHash(), block);
                 trans.Insert<uint256, uint256>("Transaction", transaction.GetHash(), block.GetHash());
@@ -494,14 +472,14 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             }
 
             // Turn TxIndex off and then reindex database, as would happen on node startup if -txindex=0 and -reindex are set.
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 repository.SetTxIndex(false);
                 repository.ReIndex();
             }
 
             // Check that after indexing database, the transaction is no longer stored.
-            using (IKeyValueStoreTransaction trans = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
+            using (IKeyValueStoreTransaction trans = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
                 var blockDict = trans.SelectDictionary<uint256, Block>("Block");
                 var transDict = trans.SelectDictionary<uint256, uint256>("Transaction");
@@ -519,9 +497,9 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void GetBlockByHashReturnsGenesisBlock()
         {
             string dir = CreateTestDir(this);
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
+            SetBlockKeyValueStore(dir);
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 Block genesis = repository.GetBlock(this.Network.GetGenesis().GetHash());
 
@@ -533,9 +511,9 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public void GetBlocksByHashReturnsGenesisBlock()
         {
             string dir = CreateTestDir(this);
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
+            SetBlockKeyValueStore(dir);
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 List<Block> results = repository.GetBlocks(new List<uint256> { this.Network.GetGenesis().GetHash() });
 
@@ -552,9 +530,9 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var genesisTransactions = genesis.Transactions;
 
             string dir = CreateTestDir(this);
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
+            SetBlockKeyValueStore(dir);
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 repository.SetTxIndex(true);
 
@@ -575,9 +553,9 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var genesisTransactions = genesis.Transactions;
 
             string dir = CreateTestDir(this);
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
+            SetBlockKeyValueStore(dir);
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 repository.SetTxIndex(true);
 
@@ -599,9 +577,9 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var genesisTransactions = genesis.Transactions;
 
             string dir = CreateTestDir(this);
-            BlockStoreFactory blockStoreFactory = this.GetBlockStoreFactory(dir);
+            SetBlockKeyValueStore(dir);
 
-            using (IBlockRepository repository = this.SetupRepository(this.Network, blockStoreFactory))
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
                 repository.SetTxIndex(true);
 
@@ -615,9 +593,9 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             }
         }
 
-        private IBlockRepository SetupRepository(Network main, BlockStoreFactory blockStoreFactory)
+        private IBlockRepository SetupRepository(Network main)
         {
-            var repository = new BlockRepository(main, this.LoggerFactory.Object, blockStoreFactory);
+            var repository = new BlockRepository(main, this.LoggerFactory.Object, this.keyValueStore);
             repository.Initialize();
 
             return repository;

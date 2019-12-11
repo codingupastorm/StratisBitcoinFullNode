@@ -104,11 +104,11 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
         private readonly IReadOnlyDictionary<uint256, Transaction> genesisTransactions;
 
-        public BlockRepository(Network network, ILoggerFactory loggerFactory, IBlockStoreFactory blockStoreFactory)
+        public BlockRepository(Network network, ILoggerFactory loggerFactory, IBlockKeyValueStore blockKeyValueStore)
         {
             Guard.NotNull(network, nameof(network));
 
-            this.KeyValueStore = blockStoreFactory.GetStore();
+            this.KeyValueStore = blockKeyValueStore;
 
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.network = network;

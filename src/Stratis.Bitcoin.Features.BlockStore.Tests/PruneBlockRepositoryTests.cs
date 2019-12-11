@@ -24,9 +24,9 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var dataFolder = new DataFolder(dataFolderPath);
 
             var dBreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
-            var blockStoreFactory = new BlockStoreFactory(this.Network, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
+            var keyValueStore = new BlockKeyValueStore(this.Network, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
-            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, blockStoreFactory);
+            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore);
 
             blockRepository.PutBlocks(new HashHeightPair(posBlocks.Last().GetHash(), 50), posBlocks);
 
@@ -56,9 +56,9 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var dataFolder = new DataFolder(dataFolderPath);
 
             var dBreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
-            var blockStoreFactory = new BlockStoreFactory(this.Network, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
+            var keyValueStore = new BlockKeyValueStore(this.Network, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
-            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, blockStoreFactory);
+            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore);
 
             blockRepository.PutBlocks(new HashHeightPair(posBlocks.Take(100).Last().GetHash(), 100), posBlocks.Take(100).ToList());
 
@@ -97,9 +97,9 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var dataFolder = new DataFolder(dataFolderPath);
 
             var dBreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
-            var blockStoreFactory = new BlockStoreFactory(this.Network, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
+            var keyValueStore = new BlockKeyValueStore(this.Network, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
-            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, blockStoreFactory);
+            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore);
 
             blockRepository.PutBlocks(new HashHeightPair(posBlocks.Last().GetHash(), 50), posBlocks);
 
