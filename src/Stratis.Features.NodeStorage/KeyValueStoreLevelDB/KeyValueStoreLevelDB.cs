@@ -128,11 +128,14 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
             return res;
         }
 
-        public override IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction tran, KeyValueStoreTable table, bool keysOnly = false)
+        public override IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction tran, KeyValueStoreTable table, bool keysOnly = false, bool backwards = false)
         {
             using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).ReadOptions))
             {
-                iterator.SeekToFirst();
+                if (backwards)
+                    iterator.SeekToLast();
+                else
+                    iterator.SeekToFirst();
 
                 while (iterator.IsValid())
                 {
@@ -141,7 +144,10 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
                     if (keyBytes[0] == ((KeyValueStoreLDBTable)table).KeyPrefix)
                         yield return (keyBytes.Skip(1).ToArray(), keysOnly ? null : iterator.Value());
 
-                    iterator.Next();
+                    if (backwards)
+                        iterator.Prev();
+                    else
+                        iterator.Next();
                 }
             }
         }
