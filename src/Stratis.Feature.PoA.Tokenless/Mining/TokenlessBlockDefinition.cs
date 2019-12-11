@@ -219,13 +219,8 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         /// <param name="mempoolEntry">The mempool entry containing the smart contract transaction.</param>
         private IContractExecutionResult ExecuteSmartContract(TxMempoolEntry mempoolEntry)
         {
-            // This coinview object can be altered by consensus whilst we're mining.
-            // If this occurred, we would be mining on top of the wrong tip anyway, so
-            // it's okay to throw a ConsensusError which is handled by the miner, and continue.
-
-            GetSenderResult getSenderResult = this.senderRetriever.GetSender(mempoolEntry.Transaction, this.coinView, this.inBlock.Select(x => x.Transaction).ToList());
-            if (!getSenderResult.Success)
-                throw new ConsensusErrorException(new ConsensusError("sc-block-assembler-addcontracttoblock", getSenderResult.Error));
+            // TODO: Get the sender from ITokenlessSigner
+            var getSenderResult = GetSenderResult.CreateSuccess(new uint160(0));
 
             IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)this.height, new uint160(0), mempoolEntry.Fee, getSenderResult.Sender, mempoolEntry.Transaction);
             IContractExecutor executor = this.executorFactory.CreateExecutor(this.stateSnapshot, transactionContext);

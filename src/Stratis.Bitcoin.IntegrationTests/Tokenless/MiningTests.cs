@@ -33,11 +33,11 @@ using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Caching;
 using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.CLR.Loader;
-using Stratis.SmartContracts.CLR.ResultProcessors;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.CLR.Validation;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Util;
+using Stratis.SmartContracts.RuntimeObserver;
 using Stratis.SmartContracts.Tokenless;
 using Xunit;
 
@@ -57,8 +57,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
         private ConsensusSettings consensusSettings;
         private StateRepositoryRoot stateRoot;
         private SmartContractValidator validator;
-        private ContractRefundProcessor refundProcessor;
-        private ContractTransferProcessor transferProcessor;
         private AddressGenerator AddressGenerator;
         private ContractAssemblyLoader<TokenlessSmartContract> assemblyLoader;
         private CallDataSerializer callDataSerializer;
@@ -74,7 +72,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
         private BasicKeyEncodingStrategy keyEncodingStrategy;
         private string folder;
 
-        public ReflectionExecutorFactory executorFactory { get; private set; }
+        private TokenlessReflectionExecutorFactory executorFactory;
 
         private BlockExecutionResultCache executionCache;
         private ChainState chainState;
@@ -108,7 +106,28 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
         [Fact]
         public async Task Build_Tokenless_BlockDefinition_With_SmartContractBytecode_Async()
         {
-            // Write once we can create a tokenless smart contract.
+            await InitializeAsync();
+            var mempoolValidator = CreateTokenlessMempoolValidator();
+            var blockDefinition = CreateBlockDefinition();
+
+            // Create a smart contract transaction
+            var transaction = this.network.CreateTransaction();
+            ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/TokenlessExample.cs");
+            Assert.True(compilationResult.Success);
+
+            var contractTxData = new ContractTxData(0,0,(Gas)0, compilationResult.Compilation);
+            byte[] outputScript = this.callDataSerializer.Serialize(contractTxData);
+            transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
+
+
+            var mempoolValidationState = new MempoolValidationState(false);
+            await mempoolValidator.AcceptToMemoryPool(mempoolValidationState, transaction);
+            Assert.Single(this.mempool.MapTx);
+
+            var block = blockDefinition.Build(this.chainIndexer.Tip, null);
+            Assert.Single(block.Block.Transactions);
+            // TODO: Check code exists at address etc.
+            // TODO: Check doing things like saving Sender.
         }
 
         [Fact]
@@ -116,8 +135,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
         {
             await InitializeAsync();
 
-            var mempoolValidator = new TokenlessMempoolValidator(this.chainIndexer, this.cachedCoinView, this.dateTimeProvider, this.loggerFactory, this.mempool, new MempoolSchedulerLock(), this.mempoolRules, this.mempoolSettings);
-
+            var mempoolValidator = CreateTokenlessMempoolValidator();
             var transaction = this.network.CreateTransaction();
 
             var mempoolValidationState = new MempoolValidationState(false);
@@ -127,6 +145,19 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
             var blockDefinition = CreateBlockDefinition();
             var block = blockDefinition.Build(this.chainIndexer.Tip, null);
             Assert.Single(block.Block.Transactions);
+        }
+
+        private TokenlessMempoolValidator CreateTokenlessMempoolValidator()
+        {
+            return new TokenlessMempoolValidator(
+                this.chainIndexer,
+                this.cachedCoinView,
+                this.dateTimeProvider,
+                this.loggerFactory,
+                this.mempool,
+                new MempoolSchedulerLock(),
+                this.mempoolRules,
+                this.mempoolSettings);
         }
 
         private BlockDefinition CreateBlockDefinition()
@@ -211,14 +242,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
             this.stateRoot = new StateRepositoryRoot(stateDB);
             this.validator = new SmartContractValidator();
 
-            this.refundProcessor = new ContractRefundProcessor(this.loggerFactory);
-            this.transferProcessor = new ContractTransferProcessor(this.loggerFactory, this.network);
-
             this.AddressGenerator = new AddressGenerator();
 
             this.assemblyLoader = new ContractAssemblyLoader<TokenlessSmartContract>();
             var contractInitializer = new ContractInitializer<TokenlessSmartContract>();
-            this.callDataSerializer = new CallDataSerializer(new ContractPrimitiveSerializer(this.network));
+            this.callDataSerializer = new NoGasCallDataSerializer(new ContractPrimitiveSerializer(this.network));
             this.moduleDefinitionReader = new ContractModuleDefinitionReader();
             this.contractCache = new ContractAssemblyCache();
 
@@ -229,7 +257,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
             this.serializer = new Serializer(this.primitiveSerializer);
             this.smartContractStateFactory = new SmartContractStateFactory(this.primitiveSerializer, this.internalTxExecutorFactory, this.serializer);
             this.stateFactory = new StateFactory(this.smartContractStateFactory);
-            this.executorFactory = new ReflectionExecutorFactory(this.loggerFactory, this.callDataSerializer, this.refundProcessor, this.transferProcessor, this.stateFactory, this.stateProcessor, this.primitiveSerializer);
+            this.executorFactory = new TokenlessReflectionExecutorFactory(this.callDataSerializer, this.stateFactory, this.stateProcessor, this.primitiveSerializer);
 
             this.executionCache = new BlockExecutionResultCache();
         }
