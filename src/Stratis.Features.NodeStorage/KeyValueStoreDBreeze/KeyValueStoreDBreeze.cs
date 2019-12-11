@@ -27,13 +27,6 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
             internal ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>> TableUpdates => this.tableUpdates;
         }
 
-        /// <summary>
-        /// Information related to a DBreeze table.
-        /// </summary>
-        private class KeyValueStoreDBZTable : KeyValueStoreTable
-        {
-        }
-
         private DBreezeEngine Storage;
         private SingleThreadResource TransactionLock;
 
@@ -122,7 +115,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
         {
             if (!this.Tables.TryGetValue(tableName, out KeyValueStoreTable table))
             {
-                table = new KeyValueStoreDBZTable()
+                table = new KeyValueStoreTable()
                 {
                     Repository = this,
                     TableName = tableName
