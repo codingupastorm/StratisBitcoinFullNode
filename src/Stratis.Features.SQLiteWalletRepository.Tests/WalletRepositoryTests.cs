@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using DBreeze.DataTypes;
 using NBitcoin;
 using NBitcoin.Protocol;
 using Stratis.Bitcoin.Configuration;
@@ -16,7 +15,7 @@ using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.SQLiteWalletRepository.External;
+using Stratis.Features.NodeStorage.Interfaces;
 using Xunit;
 
 namespace Stratis.Features.SQLiteWalletRepository.Tests
@@ -88,24 +87,19 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
         {
             // Set up block store.
             this.NodeSettings = new NodeSettings(network, args: new[] { $"-datadir={dataDir}" }, protocolVersion: ProtocolVersion.ALT_PROTOCOL_VERSION);
-            var serializer = new DBreezeSerializer(network.Consensus.ConsensusFactory);
 
-            // Build the chain from the block store.
-            this.BlockRepo = new BlockRepository(network, this.NodeSettings.DataFolder, this.NodeSettings.LoggerFactory, serializer);
+            var keyValueStore = new BlockKeyValueStore(network, this.NodeSettings.DataFolder, this.NodeSettings.LoggerFactory, DateTimeProvider.Default);
+
+            this.BlockRepo = new BlockRepository(network, this.NodeSettings.LoggerFactory, keyValueStore);
             this.BlockRepo.Initialize();
 
             var prevBlock = new Dictionary<uint256, uint256>();
 
-            using (DBreeze.Transactions.Transaction transaction = this.BlockRepo.DBreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.BlockRepo.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                transaction.ValuesLazyLoadingIsOn = true;
-
-                byte[] hashBytes = uint256.Zero.ToBytes();
-
-                foreach (Row<byte[], byte[]> blockRow in transaction.SelectForward<byte[], byte[]>("Block"))
+                foreach ((uint256 hashThis, Block block) in transaction.SelectForward<uint256, Block>("Block"))
                 {
-                    uint256 hashPrev = serializer.Deserialize<uint256>(blockRow.GetValuePart(sizeof(int), (uint)hashBytes.Length));
-                    var hashThis = new uint256(blockRow.Key);
+                    uint256 hashPrev = block.Header.HashPrevBlock;
                     prevBlock[hashThis] = hashPrev;
                     if (prevBlock.Count >= blockLimit)
                         break;
@@ -391,10 +385,10 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
                     // FINDFORK
                     // See if FindFork can be run from multiple threads
                     var forks = new ChainedHeader[1];
-                    Parallel.ForEach(forks.Select((f,n) => n), n =>
-                    {
-                        forks[n] = repo.FindFork("test2", chainedHeader2);
-                    });
+                    Parallel.ForEach(forks.Select((f, n) => n), n =>
+                     {
+                         forks[n] = repo.FindFork("test2", chainedHeader2);
+                     });
 
                     Assert.DoesNotContain(forks, f => f.Height != chainedHeader2.Height);
 

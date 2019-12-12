@@ -67,6 +67,8 @@ namespace Stratis.Bitcoin.Features.MemoryPool
             this.Time = entryTime;
             this.Transaction = transaction;
             this.TransactionHash = transaction.GetHash();
+
+            this.SizeWithAncestors = this.GetTxSize();
         }
 
         /// <summary>
