@@ -117,7 +117,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Rules
 
             foreach (Transaction transaction in context.ValidationContext.BlockToValidate.Transactions)
             {
-                // TODO-TL Tokenless transactions can never have a traditional coinbase so we need to check all inputs?
+                // TODO-TL: Tokenless transactions can never have a traditional coinbase so we need to check all inputs?
                 var txData = new PrecomputedTransactionData(transaction);
                 for (int inputIndex = 0; inputIndex < transaction.Inputs.Count; inputIndex++)
                 {
@@ -180,6 +180,8 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Rules
 
             // As we are in a tokenless blockchain, there is no need to call base's UpdateUtxOSet as we aren't "spending" anything.
             this.blockTxsProcessed.Add(transaction);
+
+            // TODO-TL: Update the UTXO set here?
         }
 
         /// <summary>
