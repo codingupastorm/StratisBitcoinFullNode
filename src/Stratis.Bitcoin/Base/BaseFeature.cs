@@ -391,6 +391,7 @@ namespace Stratis.Bitcoin.Base
                     services.AddSingleton<ITimeSyncBehaviorState, TimeSyncBehaviorState>();
                     services.AddSingleton<NodeDeployments>();
                     services.AddSingleton<IInitialBlockDownloadState, InitialBlockDownloadState>();
+                    services.AddSingleton<IKeyValueRepositoryStore, KeyValueRepositoryStore>();
                     services.AddSingleton<IKeyValueRepository, KeyValueRepository>();
                     services.AddSingleton<ITipsManager, TipsManager>();
                     services.AddSingleton<IAsyncProvider, AsyncProvider>();
