@@ -25,6 +25,7 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.Replace(ServiceDescriptor.Singleton<ITxMempool, TokenlessMempool>());
                         services.Replace(ServiceDescriptor.Singleton<IMempoolValidator, TokenlessMempoolValidator>());
                         services.AddSingleton<BlockDefinition, TokenlessBlockDefinition>();
+                        services.AddSingleton<ITokenlessSigner, TokenlessSigner>();
 
                         services.AddSingleton<IFederationManager, FederationManager>();
                         services.AddSingleton<IPoAMiner, PoAMiner>();

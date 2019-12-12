@@ -29,9 +29,8 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
         /// <inheritdoc/>
         public override void CheckTransaction(MempoolValidationContext context)
         {
-            TxOut scTxOut = context.Transaction.TryGetSmartContractTxOut();
-
             // If the TxOut is null then this transaction does not contain any smart contract execution code.
+            TxOut scTxOut = context.Transaction.TryGetSmartContractTxOut();
             if (scTxOut == null)
                 return;
 

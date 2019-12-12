@@ -1,5 +1,8 @@
 ﻿using System.Threading.Tasks;
+using NBitcoin;
+using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.SmartContracts.Core.Util;
 
 namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 {
@@ -8,9 +11,21 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
     /// </summary>
     public sealed class CanSmartContractSenderBeRetrievedPartialValidationRule : PartialValidationConsensusRule
     {
+        private readonly ITokenlessSigner tokenlessSigner;
+
+        public CanSmartContractSenderBeRetrievedPartialValidationRule(ITokenlessSigner tokenlessSigner)
+        {
+            this.tokenlessSigner = tokenlessSigner;
+        }
+
         public override Task RunAsync(RuleContext context)
         {
-            // TODO-TL: Implement
+            foreach (Transaction transaction in context.ValidationContext.BlockToValidate.Transactions)
+            {
+                GetSenderResult getSenderResult = this.tokenlessSigner.GetSender(transaction);
+                if (!getSenderResult.Success)
+                    new ConsensusError("error-getting-sender", string.Format("Unable to determine the sender for transaction '{0}'.", transaction.GetHash())).Throw();
+            }
 
             return Task.CompletedTask;
         }
