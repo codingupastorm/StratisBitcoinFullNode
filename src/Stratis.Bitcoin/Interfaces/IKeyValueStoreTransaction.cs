@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Stratis.Features.NodeStorage.Interfaces
+namespace Stratis.Bitcoin.Interfaces
 {
     /// <summary>
     /// The high-level methods for manipulating values in the key-value store.

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using Stratis.Features.NodeStorage.KeyValueStore;
+using Stratis.Bitcoin.KeyValueStore;
 
-namespace Stratis.Features.NodeStorage.Interfaces
+namespace Stratis.Bitcoin.Interfaces
 {
     /// <summary>
     /// Represents a glue-layer containing the basic methods that all key-value databases should support.

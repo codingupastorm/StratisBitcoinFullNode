@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using DBreeze.Utils;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.NodeStorage.Interfaces;
+using Stratis.Bitcoin.Interfaces;
 
-namespace Stratis.Features.NodeStorage.KeyValueStore
+namespace Stratis.Bitcoin.KeyValueStore
 {
     /// <summary>
     /// An abstract representation of the underlying database transaction.

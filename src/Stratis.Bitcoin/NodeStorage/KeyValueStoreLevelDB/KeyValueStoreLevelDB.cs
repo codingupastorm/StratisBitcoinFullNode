@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using DBreeze.Utils;
 using LevelDB;
+using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.NodeStorage.Interfaces;
-using Stratis.Features.NodeStorage.KeyValueStore;
 
-namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
+namespace Stratis.Bitcoin.KeyValueStoreLevelDB
 {
     public class KeyValueStoreLevelDB : KeyValueStoreRepository
     {
@@ -107,7 +107,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
                 {
                     var keyBytes = new byte[] { keyPrefix }.Concat(key).ToArray();
                     iterator.Seek(keyBytes);
-                    return iterator.IsValid() && this.byteArrayComparer.Compare(iterator.Key(), keyBytes) == 0;
+                    return iterator.IsValid() && this.byteArrayComparer.Equals(iterator.Key(), keyBytes);
                 }
 
                 (byte[] k, int n)[] orderedKeys = keys.Select((k, n) => (k, n)).OrderBy(t => t.k, this.byteArrayComparer).ToArray();

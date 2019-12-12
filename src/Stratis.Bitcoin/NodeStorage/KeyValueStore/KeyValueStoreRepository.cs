@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Stratis.Features.NodeStorage.Interfaces;
+using Stratis.Bitcoin.Interfaces;
 
-namespace Stratis.Features.NodeStorage.KeyValueStore
+namespace Stratis.Bitcoin.KeyValueStore
 {
     /// <summary>
     /// Abstract representation of the storage / underlying database type.

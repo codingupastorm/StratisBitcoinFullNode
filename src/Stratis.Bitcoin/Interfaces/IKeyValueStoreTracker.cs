@@ -1,4 +1,4 @@
-﻿namespace Stratis.Features.NodeStorage.Interfaces
+﻿namespace Stratis.Bitcoin.Interfaces
 {
     /// <summary>
     /// Enumerates the database events to keep track of.
