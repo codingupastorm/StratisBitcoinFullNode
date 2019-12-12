@@ -599,23 +599,29 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             string dir = CreateTestDir(this);
             SetBlockKeyValueStore(dir);
 
+            Block block = this.Network.CreateBlock();
+            Transaction tx1 = this.Network.CreateTransaction();
+            Transaction tx2= this.Network.CreateTransaction();
+            Transaction tx3 = this.Network.CreateTransaction();
+            block.AddTransaction(tx1);
+            block.AddTransaction(tx2);
+            block.AddTransaction(tx3);
+
             using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
-                transaction.Insert<uint256, uint256>("Transaction", new uint256(26), new uint256(42));
-                transaction.Insert<uint256, uint256>("Transaction", new uint256(27), new uint256(42));
-                transaction.Insert<uint256, uint256>("Transaction", new uint256(28), new uint256(42));
+                transaction.Insert<uint256, Block>("Block", block.Header.GetHash(), block);
+                transaction.Insert<uint256, uint256>("Transaction", tx1.GetHash(), block.Header.GetHash());
+                transaction.Insert<uint256, uint256>("Transaction", tx2.GetHash(), block.Header.GetHash());
+                transaction.Insert<uint256, uint256>("Transaction", tx3.GetHash(), block.Header.GetHash());
                 transaction.Commit();
             }
 
             using (IBlockRepository repository = this.SetupRepository(this.Network))
             {
-                // How come all of these are null?
-                var test1 = repository.GetTransactionById(26);
-                var test2 = repository.GetTransactionById(27);
-                var test3 = repository.GetTransactionById(29);
+                repository.SetTxIndex(true);
 
                 // How come all of these are true, even the last one?
-                bool[] transactionsExist = repository.TransactionsExist(new uint256[] {26, 27, 29});
+                bool[] transactionsExist = repository.TransactionsExist(new uint256[] {tx1.GetHash(), tx2.GetHash(), new uint256(42) });
                 Assert.True(transactionsExist[0]);
                 Assert.True(transactionsExist[1]);
                 Assert.False(transactionsExist[2]);
