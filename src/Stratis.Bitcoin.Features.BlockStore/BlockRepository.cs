@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Interfaces;
 
 namespace Stratis.Bitcoin.Features.BlockStore
 {

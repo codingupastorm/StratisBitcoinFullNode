@@ -118,6 +118,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts
                         services.AddSingleton<IBlockExecutionResultCache, BlockExecutionResultCache>();
 
                         // RECEIPTS -------------------------------------------------------------------------
+                        services.AddSingleton<IReceiptKVStore, PersistentReceiptKVStore>();
                         services.AddSingleton<IReceiptRepository, PersistentReceiptRepository>();
 
                         // UTILS ----------------------------------------------------------------------------

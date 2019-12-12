@@ -1,21 +1,20 @@
 ﻿using System.Collections.Generic;
-using System.IO;
-using DBreeze;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.SmartContracts.Core.Receipts
 {
     public class PersistentReceiptRepository : IReceiptRepository
     {
-        private const string TableName = "receipts";
-        private readonly DBreezeEngine engine;
+        internal const string TableName = "receipts";
+        private readonly IReceiptKVStore keyValueStore;
 
-        public PersistentReceiptRepository(DataFolder dataFolder)
+        public PersistentReceiptRepository(IReceiptKVStore persistentReceiptKVStore)
         {
-            string folder = dataFolder.SmartContractStatePath + TableName;
-            Directory.CreateDirectory(folder);
-            this.engine = new DBreezeEngine(folder);
+            Guard.NotNull(persistentReceiptKVStore, nameof(persistentReceiptKVStore));
+
+            this.keyValueStore = persistentReceiptKVStore;
         }
 
         // TODO: Handle pruning old data in case of reorg.
@@ -23,11 +22,11 @@ namespace Stratis.SmartContracts.Core.Receipts
         /// <inheritdoc />
         public void Store(IEnumerable<Receipt> receipts)
         {
-            using (DBreeze.Transactions.Transaction t = this.engine.GetTransaction())
+            using (IKeyValueStoreTransaction t = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, TableName))
             {
                 foreach(Receipt receipt in receipts)
                 {
-                    t.Insert<byte[], byte[]>(TableName, receipt.TransactionHash.ToBytes(), receipt.ToStorageBytesRlp());
+                    t.Insert<uint256, byte[]>(TableName, receipt.TransactionHash, receipt.ToStorageBytesRlp());
                 }
                 t.Commit();
             }
@@ -36,7 +35,7 @@ namespace Stratis.SmartContracts.Core.Receipts
         /// <inheritdoc />
         public Receipt Retrieve(uint256 hash)
         {
-            using (DBreeze.Transactions.Transaction t = this.engine.GetTransaction())
+            using (IKeyValueStoreTransaction t = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
                 return this.GetReceipt(t, hash);
             }
@@ -46,7 +45,7 @@ namespace Stratis.SmartContracts.Core.Receipts
         public IList<Receipt> RetrieveMany(IList<uint256> hashes)
         {
             List<Receipt> ret = new List<Receipt>();
-            using (DBreeze.Transactions.Transaction t = this.engine.GetTransaction())
+            using (IKeyValueStoreTransaction t = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
                 foreach(uint256 hash in hashes)
                 {
@@ -57,11 +56,9 @@ namespace Stratis.SmartContracts.Core.Receipts
             }
         }
 
-        private Receipt GetReceipt(DBreeze.Transactions.Transaction t, uint256 hash)
+        private Receipt GetReceipt(IKeyValueStoreTransaction t, uint256 hash)
         {
-            byte[] result = t.Select<byte[], byte[]>(TableName, hash.ToBytes()).Value;
-
-            if (result == null)
+            if (!t.Select<uint256, byte[]>(TableName, hash, out byte[] result))
                 return null;
 
             return Receipt.FromStorageBytesRlp(result);
