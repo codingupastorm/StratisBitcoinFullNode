@@ -9,7 +9,7 @@ using NBitcoin;
 using NBitcoin.BitcoinCore;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.NodeStorage.Interfaces;
+using Stratis.Bitcoin.Interfaces;
 
 namespace Stratis.Bitcoin.Features.Consensus.CoinViews
 {
@@ -74,7 +74,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
         {
             Block genesis = this.network.GetGenesis();
 
-            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(Stratis.Features.NodeStorage.Interfaces.KeyValueStoreTransactionMode.ReadWrite, "BlockHash"))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(Stratis.Bitcoin.Interfaces.KeyValueStoreTransactionMode.ReadWrite, "BlockHash"))
             {
                 if (this.GetTipHash(transaction) == null)
                 {
@@ -91,7 +91,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
         {
             uint256 tipHash;
 
-            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(Stratis.Features.NodeStorage.Interfaces.KeyValueStoreTransactionMode.Read))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(Stratis.Bitcoin.Interfaces.KeyValueStoreTransactionMode.Read))
             {
                 tipHash = this.GetTipHash(transaction);
             }
@@ -103,7 +103,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
         public FetchCoinsResponse FetchCoins(uint256[] txIds, CancellationToken cancellationToken = default(CancellationToken))
         {
             FetchCoinsResponse res = null;
-            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(Stratis.Features.NodeStorage.Interfaces.KeyValueStoreTransactionMode.ReadWrite, "BlockHash", "Coins"))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(Stratis.Bitcoin.Interfaces.KeyValueStoreTransactionMode.ReadWrite, "BlockHash", "Coins"))
             {
                 using (new StopwatchDisposable(o => this.performanceCounter.AddQueryTime(o)))
                 {
@@ -161,7 +161,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
         {
             int insertedEntities = 0;
 
-            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(Stratis.Features.NodeStorage.Interfaces.KeyValueStoreTransactionMode.ReadWrite, "BlockHash", "Coins", "Rewind"))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(Stratis.Bitcoin.Interfaces.KeyValueStoreTransactionMode.ReadWrite, "BlockHash", "Coins", "Rewind"))
             {
                 using (new StopwatchDisposable(o => this.performanceCounter.AddInsertTime(o)))
                 {
@@ -248,7 +248,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
         public uint256 Rewind()
         {
             uint256 res = null;
-            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(Stratis.Features.NodeStorage.Interfaces.KeyValueStoreTransactionMode.ReadWrite, "BlockHash", "Coins", "Rewind"))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(Stratis.Bitcoin.Interfaces.KeyValueStoreTransactionMode.ReadWrite, "BlockHash", "Coins", "Rewind"))
             {
                 if (this.GetRewindIndex(transaction) == 0)
                 {
@@ -291,7 +291,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
         /// <param name="stakeEntries">List of POS block information to be examined and persists if unsaved.</param>
         public void PutStake(IEnumerable<StakeItem> stakeEntries)
         {
-            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(Stratis.Features.NodeStorage.Interfaces.KeyValueStoreTransactionMode.ReadWrite, "Stake"))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(Stratis.Bitcoin.Interfaces.KeyValueStoreTransactionMode.ReadWrite, "Stake"))
             {
                 this.PutStakeInternal(transaction, stakeEntries);
                 transaction.Commit();
@@ -321,7 +321,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
         /// <param name="blocklist">List of partially initialized POS block information that is to be fully initialized with the values from the database.</param>
         public void GetStake(IEnumerable<StakeItem> blocklist)
         {
-            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(Stratis.Features.NodeStorage.Interfaces.KeyValueStoreTransactionMode.ReadWrite, "Stake"))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(Stratis.Bitcoin.Interfaces.KeyValueStoreTransactionMode.ReadWrite, "Stake"))
             {
                 foreach (StakeItem blockStake in blocklist)
                 {

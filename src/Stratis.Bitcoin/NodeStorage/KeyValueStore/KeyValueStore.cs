@@ -1,9 +1,9 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.NodeStorage.Interfaces;
+using Stratis.Bitcoin.Interfaces;
 
-namespace Stratis.Features.NodeStorage.KeyValueStore
+namespace Stratis.Bitcoin.KeyValueStore
 {
     /// <summary>
     /// Generic key-value store base-class.

@@ -2,10 +2,8 @@
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.NodeStorage.Interfaces;
-using Stratis.Features.NodeStorage.KeyValueStore;
-using Stratis.Features.NodeStorage.KeyValueStoreDBreeze;
-using Stratis.Features.NodeStorage.KeyValueStoreLevelDB;
+using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.KeyValueStore;
 
 namespace Stratis.Bitcoin.Features.Consensus
 {
@@ -13,7 +11,7 @@ namespace Stratis.Bitcoin.Features.Consensus
     {
     }
 
-    public class DBCoinViewStore : KeyValueStore<KeyValueStoreDBreeze>, IDBCoinViewStore
+    public class DBCoinViewStore : KeyValueStore<KeyValueStoreDBreeze.KeyValueStoreDBreeze>, IDBCoinViewStore
     {
         public DBCoinViewStore(Network network, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
             : base(dataFolder.CoinViewPath, loggerFactory, dateTimeProvider, new DBreezeSerializer(network.Consensus.ConsensusFactory))

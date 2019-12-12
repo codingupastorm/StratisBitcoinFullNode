@@ -4,23 +4,23 @@ using System.Linq;
 using DBreeze;
 using DBreeze.Utils;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.NodeStorage.Interfaces;
-using Stratis.Features.NodeStorage.KeyValueStore;
+using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.KeyValueStore;
 
-namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
+namespace Stratis.Bitcoin.KeyValueStoreDBreeze
 {
     public class KeyValueStoreDBreeze : KeyValueStoreRepository
     {
-        private class KeyValueStoreDBZTransaction : KeyValueStoreTransaction
+        internal class KeyValueStoreDBZTransaction : KeyValueStoreTransaction
         {
-            internal DBreeze.Transactions.Transaction dBreezeTransaction;
+            public DBreeze.Transactions.Transaction DBreezeTransaction { get; private set; }
 
             public KeyValueStoreDBZTransaction(IKeyValueStoreRepository repository, KeyValueStoreTransactionMode mode, params string[] tables)
                 : base(repository, mode, tables)
             {
-                this.dBreezeTransaction = ((KeyValueStoreDBreeze)repository).Storage.GetTransaction();
+                this.DBreezeTransaction = ((KeyValueStoreDBreeze)repository).Storage.GetTransaction();
                 if (mode == KeyValueStoreTransactionMode.Read && tables.Length > 0)
-                    this.dBreezeTransaction.SynchronizeTables(tables);
+                    this.DBreezeTransaction.SynchronizeTables(tables);
             }
 
             internal ConcurrentBag<string> TablesCleared => this.tablesCleared;
@@ -65,7 +65,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
         public override int Count(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table)
         {
             var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
-            var dbTransaction = tran.dBreezeTransaction;
+            var dbTransaction = tran.DBreezeTransaction;
 
             return (int)dbTransaction.Count(table.TableName);
         }
@@ -73,7 +73,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
         public override bool[] Exists(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table, byte[][] keys)
         {
             var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
-            var dbTransaction = tran.dBreezeTransaction;
+            var dbTransaction = tran.DBreezeTransaction;
 
             dbTransaction.ValuesLazyLoadingIsOn = true;
             try
@@ -95,7 +95,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
         public override byte[][] Get(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table, byte[][] keys)
         {
             var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
-            var dbTransaction = tran.dBreezeTransaction;
+            var dbTransaction = tran.DBreezeTransaction;
 
             (byte[] k, int n)[] orderedKeys = keys.Select((k, n) => (k, n)).OrderBy(t => t.k, new ByteListComparer()).ToArray();
             var res = new byte[keys.Length][];
@@ -112,7 +112,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
         public override IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table, bool keysOnly, bool backwards = false)
         {
             var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
-            var dbTransaction = tran.dBreezeTransaction;
+            var dbTransaction = tran.DBreezeTransaction;
 
             dbTransaction.ValuesLazyLoadingIsOn = keysOnly;
 
@@ -172,7 +172,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
         public override void OnCommit(KeyValueStoreTransaction keyValueStoreTransaction)
         {
             var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
-            var dbTransaction = tran.dBreezeTransaction;
+            var dbTransaction = tran.DBreezeTransaction;
 
             var tablesModified = tran.TablesCleared.Concat(tran.TableUpdates.Keys).Distinct().ToArray();
             if (tablesModified.Length > 0)
@@ -216,7 +216,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
         public override void OnRollback(KeyValueStoreTransaction keyValueStoreTransaction)
         {
             var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
-            var dbTransaction = tran.dBreezeTransaction;
+            var dbTransaction = tran.DBreezeTransaction;
 
             dbTransaction.Rollback();
             dbTransaction.Dispose();
