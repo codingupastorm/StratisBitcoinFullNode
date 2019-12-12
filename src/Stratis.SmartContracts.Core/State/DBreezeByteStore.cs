@@ -24,10 +24,10 @@ namespace Stratis.SmartContracts.Core.State
     /// </summary>
     public class DBreezeByteStore : ISource<byte[], byte[]>
     {
-        private ContractStateTableStore keyValueStore;
+        private IKeyValueStore keyValueStore;
         private string table;
 
-        public DBreezeByteStore(ContractStateTableStore keyValueStore, string table)
+        public DBreezeByteStore(IKeyValueStore keyValueStore, string table)
         {
             this.keyValueStore = keyValueStore;
             this.table = table;
