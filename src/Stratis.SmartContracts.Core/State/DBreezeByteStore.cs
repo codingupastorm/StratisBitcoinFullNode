@@ -3,13 +3,13 @@ using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStore;
-using Stratis.Bitcoin.KeyValueStoreDBreeze;
+using Stratis.Bitcoin.KeyValueStoreLevelDB;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Patricia;
 
 namespace Stratis.SmartContracts.Core.State
 {
-    public class ContractStateTableStore : KeyValueStore<KeyValueStoreDBreeze>
+    public class ContractStateTableStore : KeyValueStore<KeyValueStoreLevelDB>
     {
         public ContractStateTableStore(string rootFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, IRepositorySerializer repositorySerializer)
             : base(rootFolder, loggerFactory, dateTimeProvider, repositorySerializer)
