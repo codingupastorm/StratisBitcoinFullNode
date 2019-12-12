@@ -37,6 +37,26 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
             this.TransactionLock = new SingleThreadResource($"{nameof(this.TransactionLock)}", logger);
         }
 
+        public override T Deserialize<T>(byte[] objBytes)
+        {
+            if (typeof(T) == typeof(int))
+            {
+                return (T)(object)DBreeze.DataTypes.DataTypesConvertor.ConvertBack<int>(objBytes);
+            }
+
+            return base.Deserialize<T>(objBytes);
+        }
+
+        public override byte[] Serialize<T>(T obj)
+        {
+            if (typeof(T) == typeof(int))
+            {
+                return DBreeze.DataTypes.DataTypesConvertor.ConvertKey((int)(object)obj);
+            }
+
+            return base.Serialize(obj);
+        }
+
         public override void Init(string rootPath)
         {
             this.Storage = new DBreezeEngine(rootPath);
@@ -89,7 +109,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
             return res;
         }
 
-        public override IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table, bool keysOnly)
+        public override IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table, bool keysOnly, bool backwards = false)
         {
             var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
             var dbTransaction = tran.dBreezeTransaction;
@@ -98,11 +118,20 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreDBreeze
 
             try
             {
-                foreach (var row in dbTransaction.SelectForward<byte[], byte[]>(table.TableName))
+                if (backwards)
                 {
-                    byte[] keyBytes = row.Key;
+                    foreach (var row in dbTransaction.SelectBackward<byte[], byte[]>(table.TableName))
+                    {
+                        yield return (row.Key, row.Value);
+                    }
 
-                    yield return (row.Key, row.Value);
+                }
+                else
+                {
+                    foreach (var row in dbTransaction.SelectForward<byte[], byte[]>(table.TableName))
+                    {
+                        yield return (row.Key, row.Value);
+                    }
                 }
             }
             finally

@@ -48,8 +48,9 @@ namespace Stratis.Features.NodeStorage.Interfaces
         /// <param name="keyValueStoreTransaction">The transaction.</param>
         /// <param name="keyValueStoreTable">The table to read.</param>
         /// <param name="keysOnly">Set to <c>true</c> if values are optional.</param>
+        /// <param name="backwards">Set to <c>true</c> to iterate backwards.</param>
         /// <returns>The keys and values as byte arrays.</returns>
-        IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable keyValueStoreTable, bool keysOnly = false);
+        IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable keyValueStoreTable, bool keysOnly = false, bool backwards = false);
 
         /// <summary>
         /// A call-back indicating that the transaction is starting.

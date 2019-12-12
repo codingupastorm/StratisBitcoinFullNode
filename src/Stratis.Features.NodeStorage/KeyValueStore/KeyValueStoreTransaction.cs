@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using DBreeze.Utils;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Features.NodeStorage.Interfaces;
 
@@ -98,35 +99,12 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
 
         private byte[] Serialize<T>(T obj)
         {
-            if (obj == null)
-                return new byte[] { };
-
-            if (obj.GetType() == typeof(byte[]))
-                return (byte[])(object)obj;
-
-            if (obj.GetType() == typeof(bool) || obj.GetType() == typeof(bool?))
-                return new byte[] { (byte)((bool)(object)obj ? 1 : 0) };
-
-            return this.repository.KeyValueStore.RepositorySerializer.Serialize(obj);
+            return this.repository.Serialize(obj);
         }
 
         private T Deserialize<T>(byte[] objBytes)
         {
-            if (objBytes == null)
-                return default(T);
-
-            Type objType = typeof(T);
-
-            if (objType == typeof(byte[]))
-                return (T)(object)objBytes;
-
-            if (objBytes.Length == 0)
-                return default(T);
-
-            if (objType == typeof(bool) || objType == typeof(bool?))
-                return (T)(object)(objBytes[0] != 0);
-
-            return (T)this.repository.KeyValueStore.RepositorySerializer.Deserialize(objBytes, typeof(T));
+            return this.repository.Deserialize<T>(objBytes);
         }
 
         /// <inheritdoc />
@@ -205,43 +183,93 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         /// <inheritdoc />
         public Dictionary<TKey, TObject> SelectDictionary<TKey, TObject>(string tableName)
         {
-            return this.SelectForward<TKey, TObject>(tableName).ToDictionary(kv => kv.Item1, kv => kv.Item2);
+            return this.SelectAll<TKey, TObject>(tableName).ToDictionary(kv => kv.Item1, kv => kv.Item2);
         }
 
-        /// <inheritdoc />
-        public IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName)
+        private IEnumerable<O> MergeSortedEnumerations<O, T>(IEnumerable<O> primary, IEnumerable<O> secondary, Func<O, T> keySelector, IComparer<T> comparer, bool descending = false)
         {
-            var table = this.GetTable(tableName);
-
-            this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> updates);
-
-            var yielded = new HashSet<byte[]>(this.byteArrayComparer);
-
-            if (!this.tablesCleared.Contains(tableName))
+            while (true)
             {
-                foreach ((byte[] key, byte[] value) in this.repository.GetAll(this, table))
+                O first = primary.FirstOrDefault();
+                O second = secondary.FirstOrDefault();
+
+                if (first == null && second == null)
+                    break;
+
+                int cmp = (second == null) ? -1 : ((first != null) ? comparer.Compare(keySelector(first), keySelector(second)) * (descending ? -1 : 1) : 1);
+
+                if (cmp <= 0)
                 {
-                    if (updates != null && updates.TryGetValue(key, out byte[] updateValue))
-                    {
-                        if (updateValue == null)
-                            continue;
+                    yield return first;
+                    primary = primary.Skip(1);
 
-                        yielded.Add(key);
+                    // Remove if duplicated in secondary.
+                    if (cmp == 0)
+                        secondary = secondary.Skip(1);
+                }
+                else
+                {
+                    yield return second;
+                    secondary = secondary.Skip(1);
+                }
+            }
+        }
 
-                        yield return (this.Deserialize<TKey>(key), this.Deserialize<TObject>(updateValue));
-                    }
+        private IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly = false, bool? backwards = null)
+        {
+            IEnumerable<(byte[], byte[])> res = null;
+            bool ignoreDB = this.tablesCleared.Contains(tableName);
 
-                    if (value == null)
-                        continue;
+            this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> upd);
 
-                    yield return (this.Deserialize<TKey>(key), this.Deserialize<TObject>(value));
+            // Not sorted?
+            if (backwards == null)
+            {
+                res = upd?.Where(k => k.Key != null).Select(k => (k.Key, k.Value));
+
+                if (!ignoreDB)
+                {
+                    var dbRows = this.repository.GetAll(this, this.GetTable(tableName), keysOnly: keysOnly, backwards: backwards ?? false);
+
+                    res = (res == null) ? dbRows : res.Concat(dbRows.Where(k => !upd.ContainsKey(k.Item1)));
+                }
+            }
+            else
+            {
+                var table = this.GetTable(tableName);
+                var byteListComparer = new ByteListComparer();
+                var updates = (upd == null) ? null : ((bool)backwards ? upd.OrderByDescending(k => k.Key, byteListComparer) : upd.OrderBy(k => k.Key, byteListComparer)).Select(k => (k.Key, keysOnly ? null : k.Value));
+
+                if (!ignoreDB && !this.tablesCleared.Contains(tableName))
+                {
+                    var dbrows = this.repository.GetAll(this, table, keysOnly: keysOnly, backwards: (bool)backwards);
+                    if (updates == null)
+                        res = dbrows;
+                    else
+                        res = this.MergeSortedEnumerations<(byte[], byte[]), byte[]>(dbrows, updates, k => k.Item1, byteListComparer, descending: (bool)backwards);
+                }
+                else
+                {
+                    res = updates;
                 }
             }
 
-            if (updates != null)
-                foreach (KeyValuePair<byte[], byte[]> kv in updates)
-                    if (kv.Value != null && !yielded.Contains(kv.Key))
-                        yield return (this.Deserialize<TKey>(kv.Key), this.Deserialize<TObject>(kv.Value));
+            if (res != null)
+                foreach ((byte[] key, byte[] value) in res)
+                    yield return (this.Deserialize<TKey>(key), this.Deserialize<TObject>(value));
+        }
+
+
+        /// <inheritdoc />
+        public IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName, bool keysOnly = false)
+        {
+            return this.SelectAll<TKey, TObject>(tableName, backwards: false, keysOnly: keysOnly);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<(TKey, TObject)> SelectBackward<TKey, TObject>(string tableName, bool keysOnly = false)
+        {
+            return this.SelectAll<TKey, TObject>(tableName, backwards: true, keysOnly: keysOnly);
         }
 
         /// <inheritdoc />
