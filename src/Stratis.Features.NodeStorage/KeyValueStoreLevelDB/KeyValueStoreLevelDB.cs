@@ -40,12 +40,14 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
         private DB Storage;
         private int nextTablePrefix;
         private SingleThreadResource TransactionLock;
+        private ByteArrayComparer byteArrayComparer;
 
         public KeyValueStoreLevelDB(KeyValueStore.KeyValueStore keyValueStore) : base(keyValueStore)
         {
             var logger = this.KeyValueStore.LoggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
 
             this.TransactionLock = new SingleThreadResource($"{nameof(this.TransactionLock)}", logger);
+            this.byteArrayComparer = new ByteArrayComparer();
         }
 
         public override void Init(string rootPath)
@@ -105,7 +107,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
                 {
                     var keyBytes = new byte[] { keyPrefix }.Concat(key).ToArray();
                     iterator.Seek(keyBytes);
-                    return iterator.IsValid();
+                    return iterator.IsValid() && this.byteArrayComparer.Equals(iterator.Key(), keyBytes);
                 }
 
                 (byte[] k, int n)[] orderedKeys = keys.Select((k, n) => (k, n)).OrderBy(t => t.k, new ByteListComparer()).ToArray();
