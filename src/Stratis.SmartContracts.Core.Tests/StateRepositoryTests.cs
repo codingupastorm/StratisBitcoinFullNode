@@ -1,6 +1,10 @@
 ﻿using System.Text;
 using DBreeze;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.Tests.Common;
+using Stratis.Bitcoin.Utilities;
 using Stratis.Patricia;
 using Stratis.SmartContracts.Core.State;
 using Xunit;
@@ -139,12 +143,13 @@ namespace Stratis.SmartContracts.Core.Tests
         [Fact]
         public void Test20DBreeze()
         {
-            DBreezeEngine engine = new DBreezeEngine(DbreezeTestLocation);
-            using (DBreeze.Transactions.Transaction t = engine.GetTransaction())
+            var engine = new ContractStateTableStore(DbreezeTestLocation, new LoggerFactory(), DateTimeProvider.Default, new DBreezeSerializer(KnownNetworks.StratisRegTest.Consensus.ConsensusFactory));
+            using (IKeyValueStoreTransaction t = engine.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
-                t.RemoveAllKeys(DbreezeTestDb, true);
+                t.RemoveAllKeys(DbreezeTestDb);
                 t.Commit();
             }
+
             ISource<byte[], byte[]> stateDB = new NoDeleteSource<byte[], byte[]>(new DBreezeByteStore(engine, DbreezeTestDb));
             StateRepositoryRoot repository = new StateRepositoryRoot(stateDB);
             byte[] root = repository.Root;

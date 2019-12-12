@@ -385,11 +385,13 @@ namespace Stratis.Bitcoin.Base
                     services.AddSingleton(DateTimeProvider.Default);
                     services.AddSingleton<IInvalidBlockHashStore, InvalidBlockHashStore>();
                     services.AddSingleton<IChainState, ChainState>();
+                    services.AddSingleton<IChainRepositoryStore, ChainRepositoryStore>();
                     services.AddSingleton<IChainRepository, ChainRepository>();
                     services.AddSingleton<IFinalizedBlockInfoRepository, FinalizedBlockInfoRepository>();
                     services.AddSingleton<ITimeSyncBehaviorState, TimeSyncBehaviorState>();
                     services.AddSingleton<NodeDeployments>();
                     services.AddSingleton<IInitialBlockDownloadState, InitialBlockDownloadState>();
+                    services.AddSingleton<IKeyValueRepositoryStore, KeyValueRepositoryStore>();
                     services.AddSingleton<IKeyValueRepository, KeyValueRepository>();
                     services.AddSingleton<ITipsManager, TipsManager>();
                     services.AddSingleton<IAsyncProvider, AsyncProvider>();

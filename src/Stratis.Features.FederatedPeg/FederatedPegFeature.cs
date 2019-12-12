@@ -442,6 +442,7 @@ namespace Stratis.Features.FederatedPeg
                 .AddFeature<ConsensusFeature>()
                 .FeatureServices(services =>
                 {
+                    services.AddSingleton<IDBCoinViewStore, DBCoinViewStore>();
                     services.AddSingleton<DBreezeCoinView>();
                     services.AddSingleton<ICoinView, CachedCoinView>();
                     services.AddSingleton<IChainState, ChainState>();

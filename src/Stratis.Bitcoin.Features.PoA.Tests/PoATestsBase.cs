@@ -62,7 +62,8 @@ namespace Stratis.Bitcoin.Features.PoA.Tests
             this.asyncProvider = new AsyncProvider(this.loggerFactory, this.signals, new Mock<INodeLifetime>().Object);
 
             var dataFolder = new DataFolder(TestBase.CreateTestDir(this));
-            var finalizedBlockRepo = new FinalizedBlockInfoRepository(new KeyValueRepository(dataFolder, this.dBreezeSerializer), this.loggerFactory, this.asyncProvider);
+            var keyValueStore = new KeyValueRepositoryStore(this.network, dataFolder, this.loggerFactory, DateTimeProvider.Default);
+            var finalizedBlockRepo = new FinalizedBlockInfoRepository(new KeyValueRepository(keyValueStore, this.dBreezeSerializer), this.loggerFactory, this.asyncProvider);
             finalizedBlockRepo.LoadFinalizedBlockInfoAsync(this.network).GetAwaiter().GetResult();
 
             this.resultExecutorMock = new Mock<IPollResultExecutor>();
@@ -87,7 +88,8 @@ namespace Stratis.Bitcoin.Features.PoA.Tests
         public static IFederationManager CreateFederationManager(object caller, Network network, LoggerFactory loggerFactory, ISignals signals)
         {
             string dir = TestBase.CreateTestDir(caller);
-            var keyValueRepo = new KeyValueRepository(dir, new DBreezeSerializer(network.Consensus.ConsensusFactory));
+            var keyValueStore = new KeyValueRepositoryStore(network, new DataFolder(dir), loggerFactory, DateTimeProvider.Default);
+            var keyValueRepo = new KeyValueRepository(keyValueStore, new DBreezeSerializer(network.Consensus.ConsensusFactory));
 
             var settings = new NodeSettings(network, args: new string[] { $"-datadir={dir}" });
             var federationManager = new FederationManager(settings, network, loggerFactory, keyValueRepo, signals);

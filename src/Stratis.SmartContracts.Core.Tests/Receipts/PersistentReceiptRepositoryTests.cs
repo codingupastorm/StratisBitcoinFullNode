@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Bitcoin.Utilities;
 using Stratis.SmartContracts.Core.Receipts;
 using Xunit;
 
@@ -14,7 +16,10 @@ namespace Stratis.SmartContracts.Core.Tests.Receipts
 
         public PersistentReceiptRepositoryTests()
         {
-            this.db = new PersistentReceiptRepository(TestBase.CreateDataFolder(this));
+            var dataFolder = TestBase.CreateDataFolder(this);
+            var keyValueStore = new PersistentReceiptKVStore(KnownNetworks.StratisTest, dataFolder, new LoggerFactory(), DateTimeProvider.Default);
+
+            this.db = new PersistentReceiptRepository(keyValueStore);
         }
 
         [Fact]

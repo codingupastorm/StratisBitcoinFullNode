@@ -15,7 +15,7 @@ using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.NodeStorage.Interfaces;
+using Stratis.Bitcoin.Interfaces;
 using Xunit;
 
 namespace Stratis.Features.SQLiteWalletRepository.Tests

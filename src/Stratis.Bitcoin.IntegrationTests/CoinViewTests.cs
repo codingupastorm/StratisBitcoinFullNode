@@ -283,7 +283,9 @@ namespace Stratis.Bitcoin.IntegrationTests
         [Fact]
         public void CanSaveChainIncrementally()
         {
-            using (var repo = new ChainRepository(TestBase.CreateTestDir(this), this.loggerFactory, this.dBreezeSerializer))
+            DataFolder dataFolder = new DataFolder(TestBase.CreateTestDir(this));
+
+            using (var repo = new ChainRepository(new ChainRepositoryStore(this.network, dataFolder, this.loggerFactory, DateTimeProvider.Default), this.loggerFactory))
             {
                 var chain = new ChainIndexer(this.regTest);
 

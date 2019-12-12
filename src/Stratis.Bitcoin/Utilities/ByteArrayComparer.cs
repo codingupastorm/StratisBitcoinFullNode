@@ -7,18 +7,28 @@ namespace Stratis.Bitcoin.Utilities
     /// <summary>
     /// Compares two byte arrays for equality.
     /// </summary>
-    public sealed class ByteArrayComparer : IEqualityComparer<byte[]>
+    public sealed class ByteArrayComparer : IEqualityComparer<byte[]>, IComparer<byte[]>
     {
+        public int Compare(byte[] first, byte[] second)
+        {
+            int firstLen = first?.Length ?? -1;
+            int secondLen = second?.Length ?? -1;
+            int commonLen = Math.Min(firstLen, secondLen);
+
+            for (int i = 0; i < commonLen; i++)
+            {
+                if (first[i] == second[i])
+                    continue;
+
+                return (first[i] < second[i]) ? -1 : 1;
+            }
+
+            return firstLen.CompareTo(secondLen);
+        }
+
         public bool Equals(byte[] first, byte[] second)
         {
-            if ((first?.Length ?? -1) != (second?.Length ?? -1))
-                return false;
-
-            for (int i = 0; i < (first?.Length ?? 0); i++)
-                if (first[i] != second[i])
-                    return false;
-
-            return true;
+            return this.Compare(first, second) == 0;
         }
 
         public int GetHashCode(byte[] obj)

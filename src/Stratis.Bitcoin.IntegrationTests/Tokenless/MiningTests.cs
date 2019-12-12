@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading.Tasks;
 using DBreeze;
 using Microsoft.Extensions.Logging;
@@ -71,6 +72,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
         private SmartContractStateFactory smartContractStateFactory;
         private StateFactory stateFactory;
         private BasicKeyEncodingStrategy keyEncodingStrategy;
+        private TokenlessSigner tokenlessSigner;
         private string folder;
 
         private TokenlessReflectionExecutorFactory executorFactory;
@@ -120,6 +122,8 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
             byte[] outputScript = this.callDataSerializer.Serialize(contractTxData);
             transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
 
+            var key = new Key();
+            this.tokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
 
             var mempoolValidationState = new MempoolValidationState(false);
             await mempoolValidator.AcceptToMemoryPool(mempoolValidationState, transaction);
@@ -132,7 +136,14 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
             Assert.NotNull(result);
             Assert.Single(result.Receipts);
             Assert.True(result.Receipts.First().Success);
-            // TODO: Check doing things like saving Sender.
+
+            uint160 contractAddress = this.AddressGenerator.GenerateAddress(transaction.GetHash(), 0);
+            Assert.NotNull(result.MutatedStateRepository.GetCode(contractAddress));
+
+
+            byte[] senderValue = result.MutatedStateRepository.GetStorageValue(contractAddress, Encoding.UTF8.GetBytes("Sender"));
+            byte[] expectedSenderValue = key.PubKey.GetAddress(this.network).ToString().ToUint160(this.network).ToBytes();
+            Assert.Equal(expectedSenderValue, senderValue);
         }
 
         [Fact]
@@ -178,7 +189,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
                 this.mempoolLock,
                 new MinerSettings(this.nodeSettings),
                 this.network,
-                new SenderRetriever(),
+                this.tokenlessSigner, 
                 this.stateRoot,
                 this.executionCache,
                 this.callDataSerializer);
@@ -239,7 +250,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
             this.keyEncodingStrategy = BasicKeyEncodingStrategy.Default;
 
             this.folder = TestBase.AssureEmptyDir(Path.Combine(AppContext.BaseDirectory, "TestCase", callingMethod));
-            var engine = new DBreezeEngine(Path.Combine(this.folder, "contracts"));
+            var engine = new ContractStateTableStore(Path.Combine(this.folder, "contracts"), this.loggerFactory, this.dateTimeProvider, new DBreezeSerializer(this.network.Consensus.ConsensusFactory));
             var byteStore = new DBreezeByteStore(engine, "ContractState1");
             byteStore.Empty();
             ISource<byte[], byte[]> stateDB = new NoDeleteSource<byte[], byte[]>(byteStore);
@@ -265,6 +276,8 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
             this.executorFactory = new TokenlessReflectionExecutorFactory(this.callDataSerializer, this.stateFactory, this.stateProcessor, this.primitiveSerializer);
 
             this.executionCache = new BlockExecutionResultCache();
+
+            this.tokenlessSigner = new TokenlessSigner(this.network, new SenderRetriever());
         }
 
         private IEnumerable<IMempoolRule> CreateMempoolRules()

@@ -1,41 +1,50 @@
 ﻿using System;
-using DBreeze;
-using DBreeze.DataTypes;
+using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.KeyValueStore;
+using Stratis.Bitcoin.KeyValueStoreLevelDB;
+using Stratis.Bitcoin.Utilities;
 using Stratis.Patricia;
 
 namespace Stratis.SmartContracts.Core.State
 {
+    public class ContractStateTableStore : KeyValueStore<KeyValueStoreLevelDB>
+    {
+        public ContractStateTableStore(string rootFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, IRepositorySerializer repositorySerializer)
+            : base(rootFolder, loggerFactory, dateTimeProvider, repositorySerializer)
+        {
+        }
+    }
+
     /// <summary>
-    /// A basic Key/Value store in DBreeze.
+    /// A basic Key/Value store using IKeyValueStore;
     /// </summary>
     public class DBreezeByteStore : ISource<byte[], byte[]>
     {
-        private DBreezeEngine engine;
+        private IKeyValueStore keyValueStore;
         private string table;
 
-        public DBreezeByteStore(DBreezeEngine engine, string table)
+        public DBreezeByteStore(IKeyValueStore keyValueStore, string table)
         {
-            this.engine = engine;
+            this.keyValueStore = keyValueStore;
             this.table = table;
         }
 
         public byte[] Get(byte[] key)
         {
-            using (DBreeze.Transactions.Transaction t = this.engine.GetTransaction())
+            using (IKeyValueStoreTransaction t = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                Row<byte[], byte[]> row = t.Select<byte[], byte[]>(this.table, key);
+                if (!t.Select(this.table, key, out byte[] value))
+                    return null;
 
-                if (row.Exists)
-                    return row.Value;
-
-                return null;
+                return value;
             }
         }
 
         public void Put(byte[] key, byte[] val)
         {
-            using (DBreeze.Transactions.Transaction t = this.engine.GetTransaction())
+            using (IKeyValueStoreTransaction t = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 t.Insert(this.table, key, val);
                 t.Commit();
@@ -44,9 +53,9 @@ namespace Stratis.SmartContracts.Core.State
 
         public void Delete(byte[] key)
         {
-            using (DBreeze.Transactions.Transaction t = this.engine.GetTransaction())
+            using (IKeyValueStoreTransaction t = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
-                t.RemoveKey(this.table, key);
+                t.RemoveKey(this.table, key, (byte[])null);
                 t.Commit();
             }
         }
@@ -61,9 +70,9 @@ namespace Stratis.SmartContracts.Core.State
         /// </summary>
         public void Empty()
         {
-            using (DBreeze.Transactions.Transaction t = this.engine.GetTransaction())
+            using (IKeyValueStoreTransaction t = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
-                t.RemoveAllKeys(this.table, false);
+                t.RemoveAllKeys(this.table);
                 t.Commit();
             }
         }
@@ -74,6 +83,7 @@ namespace Stratis.SmartContracts.Core.State
     /// </summary>
     public class DBreezeContractStateStore : DBreezeByteStore
     {
-        public DBreezeContractStateStore(DataFolder dataFolder) : base(new DBreezeEngine(dataFolder.SmartContractStatePath), "state") { }
+        public DBreezeContractStateStore(DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, IRepositorySerializer repositorySerializer)
+            : base(new ContractStateTableStore(dataFolder.SmartContractStatePath, loggerFactory, dateTimeProvider, repositorySerializer), "state") { }
     }
 }

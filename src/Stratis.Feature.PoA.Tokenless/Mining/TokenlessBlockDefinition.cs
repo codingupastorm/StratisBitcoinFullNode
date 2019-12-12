@@ -32,7 +32,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         private readonly IBlockExecutionResultCache executionCache;
         private readonly ICallDataSerializer callDataSerializer;
         private IStateRepositoryRoot stateSnapshot;
-        private readonly ISenderRetriever senderRetriever;
+        private readonly ITokenlessSigner tokenlessSigner;
 
         public TokenlessBlockDefinition(
             IBlockBufferGenerator blockBufferGenerator,
@@ -45,7 +45,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             MempoolSchedulerLock mempoolLock,
             MinerSettings minerSettings,
             Network network,
-            ISenderRetriever senderRetriever,
+            ITokenlessSigner tokenlessSigner,
             IStateRepositoryRoot stateRoot,
             IBlockExecutionResultCache executionCache,
             ICallDataSerializer callDataSerializer)
@@ -54,9 +54,9 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             this.coinView = coinView;
             this.executorFactory = executorFactory;
             this.logger = loggerFactory.CreateLogger(this.GetType());
-            this.senderRetriever = senderRetriever;
             this.stateRoot = stateRoot;
             this.callDataSerializer = callDataSerializer;
+            this.tokenlessSigner = tokenlessSigner;
             this.executionCache = executionCache;
             this.receipts = new List<Receipt>();
 
@@ -219,9 +219,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         /// <param name="mempoolEntry">The mempool entry containing the smart contract transaction.</param>
         private IContractExecutionResult ExecuteSmartContract(TxMempoolEntry mempoolEntry)
         {
-            // TODO: Get the sender from ITokenlessSigner
-            var getSenderResult = GetSenderResult.CreateSuccess(new uint160(0));
-
+            GetSenderResult getSenderResult = this.tokenlessSigner.GetSender(mempoolEntry.Transaction);
             IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)this.height, new uint160(0), mempoolEntry.Fee, getSenderResult.Sender, mempoolEntry.Transaction);
             IContractExecutor executor = this.executorFactory.CreateExecutor(this.stateSnapshot, transactionContext);
             IContractExecutionResult result = executor.Execute(transactionContext);
