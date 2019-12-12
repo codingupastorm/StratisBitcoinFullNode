@@ -60,6 +60,13 @@ namespace Stratis.Bitcoin.Features.BlockStore
         bool Exist(uint256 hash);
 
         /// <summary>
+        /// Determine if transactions already exist in a block.
+        /// </summary>
+        /// <param name="hashes">A list of transaction hashes to test.</param>
+        /// <returns>A matching array of bools whether or not these transactions already exist.</returns>
+        bool[] TransactionsExist(uint256[] hashes);
+
+        /// <summary>
         /// Iterate over every block in the database.
         /// If <see cref="TxIndex"/> is true, we store the block hash alongside the transaction hash in the transaction table, otherwise clear the transaction table.
         /// </summary>
@@ -438,6 +445,14 @@ namespace Stratis.Bitcoin.Features.BlockStore
             }
 
             return res;
+        }
+
+        public bool[] TransactionsExist(uint256[] hashes)
+        {
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
+            {
+                return transaction.ExistsMultiple(TransactionTableName, hashes);
+            }
         }
 
         protected virtual void OnDeleteTransactions(IKeyValueStoreTransaction dbTransaction, List<(Transaction, Block)> transactions)

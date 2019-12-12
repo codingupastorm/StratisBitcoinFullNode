@@ -593,6 +593,35 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             }
         }
 
+        [Fact]
+        public void TransactionsExist()
+        {
+            string dir = CreateTestDir(this);
+            SetBlockKeyValueStore(dir);
+
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            {
+                transaction.Insert<uint256, uint256>("Transaction", new uint256(26), new uint256(42));
+                transaction.Insert<uint256, uint256>("Transaction", new uint256(27), new uint256(42));
+                transaction.Insert<uint256, uint256>("Transaction", new uint256(28), new uint256(42));
+                transaction.Commit();
+            }
+
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
+            {
+                // How come all of these are null?
+                var test1 = repository.GetTransactionById(26);
+                var test2 = repository.GetTransactionById(27);
+                var test3 = repository.GetTransactionById(29);
+
+                // How come all of these are true, even the last one?
+                bool[] transactionsExist = repository.TransactionsExist(new uint256[] {26, 27, 29});
+                Assert.True(transactionsExist[0]);
+                Assert.True(transactionsExist[1]);
+                Assert.False(transactionsExist[2]);
+            }
+        }
+
         private IBlockRepository SetupRepository(Network main)
         {
             var repository = new BlockRepository(main, this.LoggerFactory.Object, this.keyValueStore);
