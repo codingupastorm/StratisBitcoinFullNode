@@ -14,7 +14,7 @@ namespace Stratis.Bitcoin.Base
     public class ChainRepositoryStore : KeyValueStore<KeyValueStoreDBreeze.KeyValueStoreDBreeze>, IChainRepositoryStore
     {
         public ChainRepositoryStore(Network network, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
-            : base(dataFolder.BlockPath, loggerFactory, dateTimeProvider, new DBreezeSerializer(network.Consensus.ConsensusFactory))
+            : base(dataFolder.ChainPath, loggerFactory, dateTimeProvider, new DBreezeSerializer(network.Consensus.ConsensusFactory))
         {
         }
     }
