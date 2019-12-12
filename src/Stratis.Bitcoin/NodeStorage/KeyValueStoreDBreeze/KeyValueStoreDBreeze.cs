@@ -122,7 +122,7 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
                 {
                     foreach (var row in dbTransaction.SelectBackward<byte[], byte[]>(table.TableName))
                     {
-                        yield return (row.Key, row.Value);
+                        yield return (row.Key, keysOnly ? null : row.Value);
                     }
 
                 }
@@ -130,7 +130,7 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
                 {
                     foreach (var row in dbTransaction.SelectForward<byte[], byte[]>(table.TableName))
                     {
-                        yield return (row.Key, row.Value);
+                        yield return (row.Key, keysOnly ? null : row.Value);
                     }
                 }
             }
