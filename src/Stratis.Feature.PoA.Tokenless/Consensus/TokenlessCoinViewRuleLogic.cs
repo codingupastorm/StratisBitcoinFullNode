@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus;
@@ -64,13 +63,26 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Rules
             this.blockTxsProcessed.Clear();
             this.receipts.Clear();
 
+            this.DetermineIfResultIsAlreadyCached(context);
+            this.ProcessTransactions(context);
+            this.CompareAndValidateStateRoot(context);
+            this.ValidateAndStoreReceipts(context);
+            this.ValidateLogsBloom(context);
+
+            // Push to underlying database
+            this.mutableStateRepository.Commit();
+
+            // Update the globally injected state so all services receive the updates.
+            this.stateRepositoryRoot.SyncToRoot(this.mutableStateRepository.Root);
+        }
+
+        private void DetermineIfResultIsAlreadyCached(RuleContext context)
+        {
             // Get a IStateRepositoryRoot we can alter without affecting the injected one which is used elsewhere.
             uint256 blockRoot = ((ISmartContractBlockHeader)context.ValidationContext.ChainedHeaderToValidate.Previous.Header).HashStateRoot;
-
             this.logger.LogDebug("Block hash state root '{0}'.", blockRoot);
 
             this.cachedResults = this.executionCache.GetExecutionResult(context.ValidationContext.BlockToValidate.GetHash());
-
             if (this.cachedResults == null)
             {
                 // We have no cached results. Didn't come from our miner. We execute the contracts, so need to set up a new state repository.
@@ -88,100 +100,45 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Rules
                     this.receipts.Add(receipt);
                 }
             }
-
-            await ProcessTransactions(context);
-
-            var blockHeader = (ISmartContractBlockHeader)context.ValidationContext.BlockToValidate.Header;
-            var mutableStateRepositoryRoot = new uint256(this.mutableStateRepository.Root);
-            uint256 blockHeaderHashStateRoot = blockHeader.HashStateRoot;
-            this.logger.LogDebug("Compare state roots '{0}' and '{1}'", mutableStateRepositoryRoot, blockHeaderHashStateRoot);
-            if (mutableStateRepositoryRoot != blockHeaderHashStateRoot)
-                SmartContractConsensusErrors.UnequalStateRoots.Throw();
-
-            this.ValidateAndStoreReceipts(blockHeader.ReceiptRoot);
-            this.ValidateLogsBloom(blockHeader.LogsBloom);
-
-            // Push to underlying database
-            this.mutableStateRepository.Commit();
-
-            // Update the globally injected state so all services receive the updates.
-            this.stateRepositoryRoot.SyncToRoot(this.mutableStateRepository.Root);
         }
 
-        private async Task ProcessTransactions(RuleContext context)
+        private void CompareAndValidateStateRoot(RuleContext context)
+        {
+            var smartContractBlockHeader = (ISmartContractBlockHeader)context.ValidationContext.BlockToValidate.Header;
+            var mutableStateRepositoryRoot = new uint256(this.mutableStateRepository.Root);
+            uint256 blockHeaderHashStateRoot = smartContractBlockHeader.HashStateRoot;
+
+            this.logger.LogDebug("Compare state roots '{0}' and '{1}'", mutableStateRepositoryRoot, blockHeaderHashStateRoot);
+
+            if (mutableStateRepositoryRoot != blockHeaderHashStateRoot)
+                SmartContractConsensusErrors.UnequalStateRoots.Throw();
+        }
+
+        private void ProcessTransactions(RuleContext context)
         {
             if (context.SkipValidation)
                 return;
 
-            var inputsToCheck = new List<(Transaction tx, int inputIndexCopy, TxOut txOut, PrecomputedTransactionData txData, TxIn input, DeploymentFlags flags)>();
-
             foreach (Transaction transaction in context.ValidationContext.BlockToValidate.Transactions)
             {
-                // TODO-TL: Tokenless transactions can never have a traditional coinbase so we need to check all inputs?
-                var txData = new PrecomputedTransactionData(transaction);
-                for (int inputIndex = 0; inputIndex < transaction.Inputs.Count; inputIndex++)
+                // We already have results for this block therefore no need to do any processing.
+                if (this.cachedResults != null)
                 {
-                    TxIn txIn = transaction.Inputs[inputIndex];
-
-                    inputsToCheck.Add((
-                        tx: transaction,
-                        inputIndexCopy: inputIndex,
-                        txOut: null,
-                        txData,
-                        txIn,
-                        context.Flags
-                    ));
+                    // As we are in a tokenless blockchain, there is no need to call base's UpdateUtxOSet as we aren't "spending" anything.
+                    this.blockTxsProcessed.Add(transaction);
+                    return;
                 }
 
-                UpdateCoinView(context, transaction);
-            }
+                // If we are here, was definitely submitted by someone.
+                this.ValidateSubmittedTransaction(transaction);
 
-            // Start the Parallel loop on a thread so its result can be awaited rather than blocking
-            var checkInputsInParallel = Task.Run(() =>
-            {
-                return Parallel.ForEach(inputsToCheck, (input, state) =>
-                {
-                    if (state.ShouldExitCurrentIteration)
-                        return;
+                TxOut smartContractTxOut = transaction.Outputs.FirstOrDefault(txOut => SmartContractScript.IsSmartContractExec(txOut.ScriptPubKey));
+                if (smartContractTxOut != null)
+                    this.ExecuteContractTransaction(context, transaction);
 
-                    if (!this.CheckInput(input.tx, input.inputIndexCopy, input.txOut, input.txData, input.input, input.flags))
-                        state.Stop();
-                });
-            });
-
-            ParallelLoopResult loopResult = await checkInputsInParallel.ConfigureAwait(false);
-
-            if (!loopResult.IsCompleted)
-            {
-                this.logger.LogTrace("(-)[BAD_TX_SCRIPT]");
-                ConsensusErrors.BadTransactionScriptError.Throw();
-            }
-        }
-
-        /// <summary>
-        /// Executes contracts as necessary and updates the coinview / UTXOset after execution.
-        /// </summary>
-        private void UpdateCoinView(RuleContext context, Transaction transaction)
-        {
-            // We already have results for this block. No need to do any processing other than updating the UTXO set.
-            if (this.cachedResults != null)
-            {
                 // As we are in a tokenless blockchain, there is no need to call base's UpdateUtxOSet as we aren't "spending" anything.
                 this.blockTxsProcessed.Add(transaction);
-                return;
             }
-
-            // If we are here, was definitely submitted by someone
-            this.ValidateSubmittedTransaction(transaction);
-
-            TxOut smartContractTxOut = transaction.Outputs.FirstOrDefault(txOut => SmartContractScript.IsSmartContractExec(txOut.ScriptPubKey));
-            if (smartContractTxOut != null)
-                this.ExecuteContractTransaction(context, transaction);
-
-            // As we are in a tokenless blockchain, there is no need to call base's UpdateUtxOSet as we aren't "spending" anything.
-            this.blockTxsProcessed.Add(transaction);
-
-            // TODO-TL: Update the UTXO set here?
         }
 
         /// <summary>
@@ -256,36 +213,39 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Rules
         /// <summary>
         /// Throws a consensus exception if the receipt roots don't match.
         /// </summary>
-        public void ValidateAndStoreReceipts(uint256 receiptRoot)
+        public void ValidateAndStoreReceipts(RuleContext context)
         {
+            var smartContractBlockHeader = (ISmartContractBlockHeader)context.ValidationContext.BlockToValidate.Header;
+
             var leaves = this.receipts.Select(x => x.GetHash()).ToList();
             uint256 expectedReceiptRoot = BlockMerkleRootRule.ComputeMerkleRoot(leaves, out _);
 
-            if (receiptRoot != expectedReceiptRoot)
+            if (smartContractBlockHeader.ReceiptRoot != expectedReceiptRoot)
                 SmartContractConsensusErrors.UnequalReceiptRoots.Throw();
 
             this.receiptRepository.Store(this.receipts);
         }
 
-        private void ValidateLogsBloom(Bloom blockBloom)
+        private void ValidateLogsBloom(RuleContext context)
         {
-            Bloom logsBloom = new Bloom();
+            var smartContractBlockHeader = (ISmartContractBlockHeader)context.ValidationContext.BlockToValidate.Header;
 
+            var logsBloom = new Bloom();
             foreach (Receipt receipt in this.receipts)
             {
                 logsBloom.Or(receipt.Bloom);
             }
 
-            if (logsBloom != blockBloom)
+            if (logsBloom != smartContractBlockHeader.LogsBloom)
                 SmartContractConsensusErrors.UnequalLogsBloom.Throw();
         }
 
-        public bool CheckInput(Transaction tx, int inputIndexCopy, TxOut txout, PrecomputedTransactionData txData, TxIn input, DeploymentFlags flags)
+        public bool CheckInput(TxOut txout, TxIn input)
         {
             if (txout.ScriptPubKey.IsSmartContractExec() || txout.ScriptPubKey.IsSmartContractInternalCall())
                 return input.ScriptSig.IsSmartContractSpend();
 
-            // TODO-TL: Do we need to here check the new TxIn signature?
+            // TODO-TL: Do we need to check the new TxIn signature?
             return true;
         }
     }
