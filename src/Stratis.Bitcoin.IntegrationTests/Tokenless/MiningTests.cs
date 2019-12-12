@@ -239,7 +239,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
             this.keyEncodingStrategy = BasicKeyEncodingStrategy.Default;
 
             this.folder = TestBase.AssureEmptyDir(Path.Combine(AppContext.BaseDirectory, "TestCase", callingMethod));
-            var engine = new DBreezeEngine(Path.Combine(this.folder, "contracts"));
+            var engine = new ContractStateTableStore(Path.Combine(this.folder, "contracts"), this.loggerFactory, this.dateTimeProvider, new DBreezeSerializer(this.network.Consensus.ConsensusFactory));
             var byteStore = new DBreezeByteStore(engine, "ContractState1");
             byteStore.Empty();
             ISource<byte[], byte[]> stateDB = new NoDeleteSource<byte[], byte[]>(byteStore);
