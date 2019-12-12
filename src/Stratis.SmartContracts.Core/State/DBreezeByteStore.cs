@@ -1,6 +1,4 @@
 ﻿using System;
-using DBreeze;
-using DBreeze.DataTypes;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Interfaces;
@@ -20,7 +18,7 @@ namespace Stratis.SmartContracts.Core.State
     }
 
     /// <summary>
-    /// A basic Key/Value store in DBreeze.
+    /// A basic Key/Value store using IKeyValueStore;
     /// </summary>
     public class DBreezeByteStore : ISource<byte[], byte[]>
     {
