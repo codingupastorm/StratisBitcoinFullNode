@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using DBreeze;
 using DBreeze.Utils;
-using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStore;
+using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Bitcoin.KeyValueStoreDBreeze
 {
