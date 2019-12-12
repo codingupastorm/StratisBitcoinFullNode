@@ -77,6 +77,9 @@ namespace Stratis.SmartContracts.CLR
                 result = this.stateProcessor.Apply(newState, message);
             }
 
+            if (result.IsSuccess)
+                state.TransitionTo(newState);
+
             bool revert = !result.IsSuccess;
 
             var executionResult = new SmartContractExecutionResult
