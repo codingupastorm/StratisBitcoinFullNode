@@ -12,9 +12,10 @@ using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
-using Stratis.Bitcoin.Features.PoA.Voting;
+using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mining;
 
@@ -37,6 +38,7 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.Replace(ServiceDescriptor.Singleton<IMempoolValidator, TokenlessMempoolValidator>());
                         services.AddSingleton<BlockDefinition, TokenlessBlockDefinition>();
                         services.AddSingleton<ITokenlessSigner, TokenlessSigner>();
+                        services.AddSingleton<ICoreComponent, CoreComponent>();
                     });
             });
 
@@ -53,10 +55,11 @@ namespace Stratis.Feature.PoA.Tokenless
                     .AddFeature<ConsensusFeature>()
                     .FeatureServices(services =>
                     {
+                        // Base
                         services.AddSingleton<DBreezeCoinView>();
                         services.AddSingleton<IDBCoinViewStore, DBCoinViewStore>();
                         services.AddSingleton<ICoinView, CachedCoinView>();
-                        services.AddSingleton<IConsensusRuleEngine, PoAConsensusRuleEngine>(); // TODO-TL: Need to intro a tokenless rule engine
+                        services.AddSingleton<IConsensusRuleEngine, TokenlessConsensusRuleEngine>();
                         services.AddSingleton<IChainState, ChainState>();
                         services.AddSingleton<ConsensusQuery>()
                             .AddSingleton<INetworkDifficulty, ConsensusQuery>(provider => provider.GetService<ConsensusQuery>())
@@ -70,12 +73,8 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<PoAMinerSettings>();
                         services.AddSingleton<ISlotsManager, SlotsManager>();
 
-                        // TODO-TL: Remove once we have a new rule engine.
-                        services.AddSingleton<VotingManager>();
-                        services.AddSingleton<IPollResultExecutor, PollResultExecutor>();
-                        services.AddSingleton<IWhitelistedHashesRepository, WhitelistedHashesRepository>();
-                        services.AddSingleton<IdleFederationMembersKicker>();
-                        // ----------------------------------------------------
+                        // Smart Contract Specific
+                        services.AddSingleton<IBlockBufferGenerator, BlockBufferGenerator>();
 
                         // Permissioned membership.
                         services.AddSingleton<CertificatesManager>();

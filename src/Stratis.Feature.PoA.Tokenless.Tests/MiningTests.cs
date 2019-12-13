@@ -5,7 +5,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using DBreeze;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.AsyncWork;
@@ -118,7 +117,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
             ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/TokenlessExample.cs");
             Assert.True(compilationResult.Success);
 
-            var contractTxData = new ContractTxData(0,0,(Gas)0, compilationResult.Compilation);
+            var contractTxData = new ContractTxData(0, 0, (Gas)0, compilationResult.Compilation);
             byte[] outputScript = this.callDataSerializer.Serialize(contractTxData);
             transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
 
@@ -189,7 +188,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Tokenless
                 this.mempoolLock,
                 new MinerSettings(this.nodeSettings),
                 this.network,
-                this.tokenlessSigner, 
+                this.tokenlessSigner,
                 this.stateRoot,
                 this.executionCache,
                 this.callDataSerializer);

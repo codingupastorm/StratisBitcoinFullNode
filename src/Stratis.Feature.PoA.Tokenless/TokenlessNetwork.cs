@@ -15,7 +15,7 @@ using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
-    public sealed class TokenlessNetwork : Network
+    public sealed class TokenlessNetwork : PoANetwork
     {
         /// <summary> The name of the root folder containing the different PoA blockchains.</summary>
         private const string NetworkRootFolderName = "tokenless";
@@ -190,9 +190,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.RegisterMempoolRules(this.Consensus);
         }
 
-        public PoAConsensusOptions ConsensusOptions => this.Consensus.Options as PoAConsensusOptions;
-
-        public void RegisterRules(IConsensus consensus)
+        protected override void RegisterRules(IConsensus consensus)
         {
             // IHeaderValidationConsensusRules
             consensus.ConsensusRules
@@ -217,8 +215,7 @@ namespace Stratis.Feature.PoA.Tokenless
             // ------------------------------------------------------
         }
 
-        // TODO-TL: What other rules are required?
-        public void RegisterMempoolRules(IConsensus consensus)
+        protected override void RegisterMempoolRules(IConsensus consensus)
         {
             consensus.MempoolRules = new List<Type>()
             {
