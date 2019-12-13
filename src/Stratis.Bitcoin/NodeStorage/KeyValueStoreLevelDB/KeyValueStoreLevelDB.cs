@@ -12,18 +12,25 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
 {
     public class KeyValueStoreLevelDB : KeyValueStoreRepository
     {
-        private class KeyValueStoreLDBTransaction : KeyValueStoreTransaction
+        internal class KeyValueStoreLDBTransaction : KeyValueStoreTransaction
         {
-            public SnapShot Snapshot;
+            public SnapShot Snapshot { get; private set; }
+
             public ReadOptions ReadOptions => (this.Snapshot == null) ? new ReadOptions() : new ReadOptions() { Snapshot = this.Snapshot };
 
-            public KeyValueStoreLDBTransaction(IKeyValueStoreRepository repository, KeyValueStoreTransactionMode mode, params string[] tables)
+            public KeyValueStoreLDBTransaction(KeyValueStoreLevelDB repository, KeyValueStoreTransactionMode mode, params string[] tables)
                 : base(repository, mode, tables)
             {
+                this.Snapshot = (mode == KeyValueStoreTransactionMode.Read) ? repository.Storage.CreateSnapshot() : null;
             }
 
-            internal ConcurrentBag<string> TablesCleared => this.tablesCleared;
-            internal ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>> TableUpdates => this.tableUpdates;
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing)
+                    this.Snapshot?.Dispose();
+
+                base.Dispose(disposing);
+            }
         }
 
         /// <summary>
@@ -37,16 +44,17 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             public byte KeyPrefix { get; internal set; }
         }
 
-        private DB Storage;
+        internal DB Storage { get; private set; }
+
         private int nextTablePrefix;
-        private SingleThreadResource TransactionLock;
+        private SingleThreadResource transactionLock;
         private ByteArrayComparer byteArrayComparer;
 
         public KeyValueStoreLevelDB(KeyValueStore.KeyValueStore keyValueStore) : base(keyValueStore)
         {
-            var logger = this.KeyValueStore.LoggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
+            var logger = keyValueStore.LoggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
 
-            this.TransactionLock = new SingleThreadResource($"{nameof(this.TransactionLock)}", logger);
+            this.transactionLock = new SingleThreadResource($"{nameof(this.transactionLock)}", logger);
             this.byteArrayComparer = new ByteArrayComparer();
         }
 
@@ -182,10 +190,8 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
         {
             if (mode == KeyValueStoreTransactionMode.ReadWrite)
             {
-                this.TransactionLock.Wait();
+                this.transactionLock.Wait();
             }
-
-            ((KeyValueStoreLDBTransaction)keyValueStoreTransaction).Snapshot = (mode == KeyValueStoreTransactionMode.Read) ? this.Storage.CreateSnapshot() : null;
         }
 
         public override void OnCommit(KeyValueStoreTransaction keyValueStoreTransaction)
@@ -230,15 +236,13 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             }
             finally
             {
-                ((KeyValueStoreLDBTransaction)keyValueStoreTransaction).Snapshot?.Dispose();
-                this.TransactionLock.Release();
+                this.transactionLock.Release();
             }
         }
 
         public override void OnRollback(KeyValueStoreTransaction keyValueStoreTransaction)
         {
-            ((KeyValueStoreLDBTransaction)keyValueStoreTransaction).Snapshot?.Dispose();
-            this.TransactionLock.Release();
+            this.transactionLock.Release();
         }
 
         public override void Close()

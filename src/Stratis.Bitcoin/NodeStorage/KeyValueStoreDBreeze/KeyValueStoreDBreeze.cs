@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using DBreeze;
 using DBreeze.Utils;
-using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStore;
+using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Bitcoin.KeyValueStoreDBreeze
 {
@@ -15,26 +15,24 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
         {
             public DBreeze.Transactions.Transaction DBreezeTransaction { get; private set; }
 
-            public KeyValueStoreDBZTransaction(IKeyValueStoreRepository repository, KeyValueStoreTransactionMode mode, params string[] tables)
+            public KeyValueStoreDBZTransaction(KeyValueStoreDBreeze repository, KeyValueStoreTransactionMode mode, params string[] tables)
                 : base(repository, mode, tables)
             {
-                this.DBreezeTransaction = ((KeyValueStoreDBreeze)repository).Storage.GetTransaction();
+                this.DBreezeTransaction = repository.storage.GetTransaction();
                 if (mode == KeyValueStoreTransactionMode.Read && tables.Length > 0)
                     this.DBreezeTransaction.SynchronizeTables(tables);
             }
-
-            internal ConcurrentBag<string> TablesCleared => this.tablesCleared;
-            internal ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>> TableUpdates => this.tableUpdates;
         }
 
-        private DBreezeEngine Storage;
-        private SingleThreadResource TransactionLock;
+        private DBreezeEngine storage;
+        private SingleThreadResource transactionLock;
 
-        public KeyValueStoreDBreeze(KeyValueStore.KeyValueStore keyValueStore) : base(keyValueStore)
+        public KeyValueStoreDBreeze(KeyValueStore.KeyValueStore keyValueStore)
+            : base(keyValueStore)
         {
-            var logger = this.KeyValueStore.LoggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
+            var logger = keyValueStore.LoggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
 
-            this.TransactionLock = new SingleThreadResource($"{nameof(this.TransactionLock)}", logger);
+            this.transactionLock = new SingleThreadResource($"{nameof(this.transactionLock)}", logger);
         }
 
         public override T Deserialize<T>(byte[] objBytes)
@@ -59,7 +57,7 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
 
         public override void Init(string rootPath)
         {
-            this.Storage = new DBreezeEngine(rootPath);
+            this.storage = new DBreezeEngine(rootPath);
         }
 
         public override int Count(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table)
@@ -124,7 +122,6 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
                     {
                         yield return (row.Key, keysOnly ? null : row.Value);
                     }
-
                 }
                 else
                 {
@@ -165,7 +162,7 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
         {
             if (mode == KeyValueStoreTransactionMode.ReadWrite)
             {
-                this.TransactionLock.Wait();
+                this.transactionLock.Wait();
             }
         }
 
@@ -209,7 +206,7 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
                 dbTransaction.Commit();
                 dbTransaction.Dispose();
 
-                this.TransactionLock.Release();
+                this.transactionLock.Release();
             }
         }
 
@@ -221,7 +218,7 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
             dbTransaction.Rollback();
             dbTransaction.Dispose();
 
-            this.TransactionLock.Release();
+            this.transactionLock.Release();
         }
 
         public override void Close()
