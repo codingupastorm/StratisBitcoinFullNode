@@ -30,6 +30,7 @@ using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Util;
+using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.Bitcoin.Features.SmartContracts
 {
@@ -127,7 +128,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts
 
                         services.AddSingleton<IMethodParameterSerializer, MethodParameterByteSerializer>();
                         services.AddSingleton<IMethodParameterStringSerializer, MethodParameterStringSerializer>();
-                        services.AddSingleton<ICallDataSerializer, CallDataSerializer>();
 
                         // Registers the ScriptAddressReader concrete type and replaces the IScriptAddressReader implementation
                         // with SmartContractScriptAddressReader, which depends on the ScriptAddressReader concrete type.
@@ -160,9 +160,31 @@ namespace Stratis.Bitcoin.Features.SmartContracts
             services.AddSingleton<IContractTransferProcessor, ContractTransferProcessor>();
             services.AddSingleton<IKeyEncodingStrategy, BasicKeyEncodingStrategy>();
             services.AddSingleton<IContractExecutorFactory, ReflectionExecutorFactory>();
-            services.AddSingleton<IMethodParameterSerializer, MethodParameterByteSerializer>();
             services.AddSingleton<IContractPrimitiveSerializer, ContractPrimitiveSerializer>();
             services.AddSingleton<ISerializer, Serializer>();
+
+            services.AddSingleton<ICallDataSerializer, CallDataSerializer>();
+
+            // Controllers + utils
+            services.AddSingleton<CSharpContractDecompiler>();
+
+            return options;
+        }
+
+        public static SmartContractOptions UseTokenlessReflectionExecutor(this SmartContractOptions options)
+        {
+            IServiceCollection services = options.Services;
+
+            // Validator
+            services.AddSingleton<ISmartContractValidator, SmartContractValidator>();
+
+            // Executor et al.
+            services.AddSingleton<IKeyEncodingStrategy, BasicKeyEncodingStrategy>();
+            services.AddSingleton<IContractExecutorFactory, TokenlessReflectionExecutorFactory>();
+            services.AddSingleton<IContractPrimitiveSerializer, ContractPrimitiveSerializer>();
+            services.AddSingleton<ISerializer, Serializer>();
+
+            services.AddSingleton<ICallDataSerializer, NoGasCallDataSerializer>();
 
             // Controllers + utils
             services.AddSingleton<CSharpContractDecompiler>();
@@ -177,6 +199,16 @@ namespace Stratis.Bitcoin.Features.SmartContracts
         {
             options.Services.AddSingleton<IContractInitializer, ContractInitializer<T>>();
             options.Services.AddSingleton<ILoader, ContractAssemblyLoader<T>>();
+
+            // Obviously this is not ideal. 
+            if (typeof(T) == typeof(SmartContract))
+            {
+                options.Services.AddSingleton<ICallDataSerializer, CallDataSerializer>();
+            } 
+            else if (typeof(T) == typeof(TokenlessSmartContract))
+            {
+                options.Services.AddSingleton<ICallDataSerializer, NoGasCallDataSerializer>();
+            }
             return options;
         }
     }
