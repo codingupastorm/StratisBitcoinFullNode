@@ -30,7 +30,6 @@ using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Util;
-using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.Bitcoin.Features.SmartContracts
 {
@@ -199,16 +198,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts
         {
             options.Services.AddSingleton<IContractInitializer, ContractInitializer<T>>();
             options.Services.AddSingleton<ILoader, ContractAssemblyLoader<T>>();
-
-            // Obviously this is not ideal. 
-            if (typeof(T) == typeof(SmartContract))
-            {
-                options.Services.AddSingleton<ICallDataSerializer, CallDataSerializer>();
-            } 
-            else if (typeof(T) == typeof(TokenlessSmartContract))
-            {
-                options.Services.AddSingleton<ICallDataSerializer, NoGasCallDataSerializer>();
-            }
             return options;
         }
     }
