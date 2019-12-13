@@ -20,12 +20,12 @@ namespace Stratis.SmartContracts.Core.State
     /// <summary>
     /// A basic Key/Value store using IKeyValueStore;
     /// </summary>
-    public class DBreezeByteStore : ISource<byte[], byte[]>
+    public class KeyValueByteStore : ISource<byte[], byte[]>
     {
         private IKeyValueStore keyValueStore;
         private string table;
 
-        public DBreezeByteStore(IKeyValueStore keyValueStore, string table)
+        public KeyValueByteStore(IKeyValueStore keyValueStore, string table)
         {
             this.keyValueStore = keyValueStore;
             this.table = table;
@@ -81,9 +81,9 @@ namespace Stratis.SmartContracts.Core.State
     /// <summary>
     /// Used for dependency injection. A contract state specific implementation of the above class.
     /// </summary>
-    public class DBreezeContractStateStore : DBreezeByteStore
+    public class ContractStateKeyValueStore : KeyValueByteStore
     {
-        public DBreezeContractStateStore(DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, DBreezeSerializer repositorySerializer)
+        public ContractStateKeyValueStore(DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, RepositorySerializer repositorySerializer)
             : base(new ContractStateTableStore(dataFolder.SmartContractStatePath, loggerFactory, dateTimeProvider, repositorySerializer), "state") { }
     }
 }

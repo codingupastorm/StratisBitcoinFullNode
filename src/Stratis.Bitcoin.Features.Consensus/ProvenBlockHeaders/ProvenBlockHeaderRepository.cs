@@ -49,7 +49,7 @@ namespace Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders
         /// </summary>
         private ProvenBlockHeader provenBlockHeaderTip;
 
-        private readonly DBreezeSerializer dBreezeSerializer;
+        private readonly RepositorySerializer repositorySerializer;
 
         /// <inheritdoc />
         public HashHeightPair TipHashHeight { get; private set; }
@@ -58,12 +58,12 @@ namespace Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders
         /// Initializes a new instance of the object.
         /// </summary>
         /// <param name="network">Specification of the network the node runs on - RegTest/TestNet/MainNet.</param>
-        /// <param name="folder"><see cref="ProvenBlockHeaderRepository"/> folder path to the DBreeze database files.</param>
+        /// <param name="folder"><see cref="ProvenBlockHeaderRepository"/> folder path to the database files.</param>
         /// <param name="loggerFactory">Factory to create a logger for this type.</param>
-        /// <param name="dBreezeSerializer">The serializer to use for <see cref="IBitcoinSerializable"/> objects.</param>
+        /// <param name="repositorySerializer">The serializer to use for <see cref="IBitcoinSerializable"/> objects.</param>
         public ProvenBlockHeaderRepository(Network network, DataFolder folder, ILoggerFactory loggerFactory,
-            DBreezeSerializer dBreezeSerializer)
-        : this(network, folder.ProvenBlockHeaderPath, loggerFactory, dBreezeSerializer)
+            RepositorySerializer repositorySerializer)
+        : this(network, folder.ProvenBlockHeaderPath, loggerFactory, repositorySerializer)
         {
         }
 
@@ -71,15 +71,15 @@ namespace Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders
         /// Initializes a new instance of the object.
         /// </summary>
         /// <param name="network">Specification of the network the node runs on - RegTest/TestNet/MainNet.</param>
-        /// <param name="folder"><see cref="ProvenBlockHeaderRepository"/> folder path to the DBreeze database files.</param>
+        /// <param name="folder"><see cref="ProvenBlockHeaderRepository"/> folder path to the database files.</param>
         /// <param name="loggerFactory">Factory to create a logger for this type.</param>
-        /// <param name="dBreezeSerializer">The serializer to use for <see cref="IBitcoinSerializable"/> objects.</param>
+        /// <param name="repositorySerializer">The serializer to use for <see cref="IBitcoinSerializable"/> objects.</param>
         public ProvenBlockHeaderRepository(Network network, string folder, ILoggerFactory loggerFactory,
-            DBreezeSerializer dBreezeSerializer)
+            RepositorySerializer repositorySerializer)
         {
             Guard.NotNull(network, nameof(network));
             Guard.NotNull(folder, nameof(folder));
-            this.dBreezeSerializer = dBreezeSerializer;
+            this.repositorySerializer = repositorySerializer;
 
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
 
@@ -128,7 +128,7 @@ namespace Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders
                     Row<byte[], byte[]> row = transaction.Select<byte[], byte[]>(ProvenBlockHeaderTable, blockHeight.ToBytes());
 
                     if (row.Exists)
-                        return this.dBreezeSerializer.Deserialize<ProvenBlockHeader>(row.Value);
+                        return this.repositorySerializer.Deserialize<ProvenBlockHeader>(row.Value);
 
                     return null;
                 }
@@ -175,7 +175,7 @@ namespace Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders
         {
             Guard.NotNull(newTip, nameof(newTip));
 
-            transaction.Insert(BlockHashHeightTable, blockHashHeightKey, this.dBreezeSerializer.Serialize(newTip));
+            transaction.Insert(BlockHashHeightTable, blockHashHeightKey, this.repositorySerializer.Serialize(newTip));
         }
 
         /// <summary>
@@ -186,7 +186,7 @@ namespace Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders
         private void InsertHeaders(DBreeze.Transactions.Transaction transaction, SortedDictionary<int, ProvenBlockHeader> headers)
         {
             foreach (KeyValuePair<int, ProvenBlockHeader> header in headers)
-                transaction.Insert(ProvenBlockHeaderTable, header.Key.ToBytes(), this.dBreezeSerializer.Serialize(header.Value));
+                transaction.Insert(ProvenBlockHeaderTable, header.Key.ToBytes(), this.repositorySerializer.Serialize(header.Value));
 
             // Store the latest ProvenBlockHeader in memory.
             this.provenBlockHeaderTip = headers.Last().Value;
@@ -204,7 +204,7 @@ namespace Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders
             Row<byte[], byte[]> row = transaction.Select<byte[], byte[]>(BlockHashHeightTable, blockHashHeightKey);
 
             if (row.Exists)
-                tipHash = this.dBreezeSerializer.Deserialize<HashHeightPair>(row.Value);
+                tipHash = this.repositorySerializer.Deserialize<HashHeightPair>(row.Value);
 
             return tipHash;
         }

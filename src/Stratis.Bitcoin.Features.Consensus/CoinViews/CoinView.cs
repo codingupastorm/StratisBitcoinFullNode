@@ -34,7 +34,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
         /// <param name="oldBlockHash">Block hash of the current tip of the coinview.</param>
         /// <param name="nextBlockHash">Block hash of the tip of the coinview after the change is applied.</param>
         /// <param name="height">The height of the block.</param>
-        /// <param name="rewindDataList">List of rewind data items to be persisted. This should only be used when calling <see cref="DBreezeCoinView.SaveChanges" />.</param>
+        /// <param name="rewindDataList">List of rewind data items to be persisted. This should only be used when calling <see cref="DBCoinView.SaveChanges" />.</param>
         void SaveChanges(IList<UnspentOutputs> unspentOutputs, IEnumerable<TxOut[]> originalOutputs, uint256 oldBlockHash, uint256 nextBlockHash, int height, List<RewindData> rewindDataList = null);
 
         /// <summary>

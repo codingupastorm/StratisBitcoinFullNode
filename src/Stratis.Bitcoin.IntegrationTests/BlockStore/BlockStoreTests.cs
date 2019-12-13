@@ -17,14 +17,14 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
     {
         private readonly ILoggerFactory loggerFactory;
         private readonly Network network;
-        private readonly DBreezeSerializer dBreezeSerializer;
+        private readonly RepositorySerializer repositorySerializer;
 
         public BlockStoreTests()
         {
             this.loggerFactory = new LoggerFactory();
 
             this.network = new BitcoinRegTest();
-            this.dBreezeSerializer = new DBreezeSerializer(this.network.Consensus.ConsensusFactory);
+            this.repositorySerializer = new RepositorySerializer(this.network.Consensus.ConsensusFactory);
         }
 
         [Fact]
@@ -32,7 +32,7 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
         {
             var dataFolder = TestBase.CreateDataFolder(this);
 
-            var keyValueStore = new BlockKeyValueStore(new DBreezeSerializer(this.network.Consensus.ConsensusFactory), dataFolder, this.loggerFactory, DateTimeProvider.Default);
+            var keyValueStore = new BlockKeyValueStore(new RepositorySerializer(this.network.Consensus.ConsensusFactory), dataFolder, this.loggerFactory, DateTimeProvider.Default);
 
             using (var blockRepository = new BlockRepository(this.network, this.loggerFactory, keyValueStore))
             {

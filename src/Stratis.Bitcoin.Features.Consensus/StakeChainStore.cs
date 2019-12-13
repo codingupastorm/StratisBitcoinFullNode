@@ -12,9 +12,9 @@ namespace Stratis.Bitcoin.Features.Consensus
 {
     public class StakeChainStore : IStakeChain
     {
-        // The code to push to DBreezeCoinView can be included in CachedCoinView
+        // The code to push to DBCoinView can be included in CachedCoinView
         // then when the CachedCoinView flushes all uncommited entreis the stake entries can also
-        // be commited (before thre coin view save) from the CachedCoinView to the DBreezeCoinView.
+        // be commited (before thre coin view save) from the CachedCoinView to the DBCoinView.
 
         /// <summary>Instance logger.</summary>
         private readonly ILogger logger;
@@ -23,7 +23,7 @@ namespace Stratis.Bitcoin.Features.Consensus
 
         private readonly ChainIndexer chainIndexer;
 
-        private readonly DBreezeCoinView dBreezeCoinView;
+        private readonly DBCoinView dBCoinView;
 
         private readonly int threshold;
 
@@ -33,12 +33,12 @@ namespace Stratis.Bitcoin.Features.Consensus
 
         private readonly BlockStake genesis;
 
-        public StakeChainStore(Network network, ChainIndexer chainIndexer, DBreezeCoinView dBreezeCoinView, ILoggerFactory loggerFactory)
+        public StakeChainStore(Network network, ChainIndexer chainIndexer, DBCoinView dBCoinView, ILoggerFactory loggerFactory)
         {
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.network = network;
             this.chainIndexer = chainIndexer;
-            this.dBreezeCoinView = dBreezeCoinView;
+            this.dBCoinView = dBCoinView;
             this.threshold = 5000; // Count of items in memory.
             this.thresholdWindow = Convert.ToInt32(this.threshold * 0.4); // A window threshold.
             this.genesis = BlockStake.Load(this.network.GetGenesis());
@@ -48,12 +48,12 @@ namespace Stratis.Bitcoin.Features.Consensus
 
         public void Load()
         {
-            uint256 hash = this.dBreezeCoinView.GetTipHash();
+            uint256 hash = this.dBCoinView.GetTipHash();
             ChainedHeader currentHeader = this.chainIndexer.GetHeader(hash);
 
             while (currentHeader == null)
             {
-                hash = this.dBreezeCoinView.Rewind();
+                hash = this.dBCoinView.Rewind();
                 currentHeader = this.chainIndexer.GetHeader(hash);
             }
 
@@ -67,7 +67,7 @@ namespace Stratis.Bitcoin.Features.Consensus
                 currentHeader = currentHeader.Previous;
             }
 
-            this.dBreezeCoinView.GetStake(load);
+            this.dBCoinView.GetStake(load);
 
             // All block stake items should be in store.
             if (load.Any(l => l.BlockStake == null))
@@ -96,7 +96,7 @@ namespace Stratis.Bitcoin.Features.Consensus
             }
 
             var stakeItem = new StakeItem { BlockId = blockid };
-            this.dBreezeCoinView.GetStake(new[] { stakeItem });
+            this.dBCoinView.GetStake(new[] { stakeItem });
 
             Guard.Assert(stakeItem.BlockStake != null); // if we ask for it then we expect its in store
             return stakeItem.BlockStake;
@@ -124,7 +124,7 @@ namespace Stratis.Bitcoin.Features.Consensus
             {
                 // Push to store all items that are not already persisted.
                 ICollection<StakeItem> entries = this.items.Values;
-                this.dBreezeCoinView.PutStake(entries.Where(w => !w.InStore));
+                this.dBCoinView.PutStake(entries.Where(w => !w.InStore));
 
                 if (disposeMode)
                     return;

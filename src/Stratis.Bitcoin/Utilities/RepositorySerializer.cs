@@ -27,11 +27,11 @@ namespace Stratis.Bitcoin.Utilities
     /// <summary>
     /// Implementation of serialization and deserialization of objects that go into the DBreeze database.
     /// </summary>
-    public class DBreezeSerializer : IRepositorySerializer
+    public class RepositorySerializer : IRepositorySerializer
     {
         private readonly ConsensusFactory consensusFactory;
 
-        public DBreezeSerializer(ConsensusFactory consensusFactory)
+        public RepositorySerializer(ConsensusFactory consensusFactory)
         {
             this.consensusFactory = consensusFactory;
         }
