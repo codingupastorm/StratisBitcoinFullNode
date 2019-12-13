@@ -23,8 +23,9 @@ namespace Stratis.Bitcoin.Tests.Base
         {
             this.loggerFactory = new LoggerFactory();
             string dir = CreateTestDir(this);
-            var keyValueStore = new KeyValueRepositoryStore(this.Network, new DataFolder(dir), this.loggerFactory, DateTimeProvider.Default);
-            this.keyValueRepo = new KeyValueRepository(keyValueStore, new DBreezeSerializer(this.Network.Consensus.ConsensusFactory));
+            var dbreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
+            var keyValueStore = new KeyValueRepositoryStore(dbreezeSerializer, new DataFolder(dir), this.loggerFactory, DateTimeProvider.Default);
+            this.keyValueRepo = new KeyValueRepository(keyValueStore, dbreezeSerializer);
 
             this.tipsManager = new TipsManager(this.keyValueRepo, this.loggerFactory);
 
