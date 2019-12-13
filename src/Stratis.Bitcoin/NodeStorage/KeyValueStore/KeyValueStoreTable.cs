@@ -1,4 +1,4 @@
-﻿namespace Stratis.Features.NodeStorage.KeyValueStore
+﻿namespace Stratis.Bitcoin.KeyValueStore
 {
     public class KeyValueStoreTable
     {

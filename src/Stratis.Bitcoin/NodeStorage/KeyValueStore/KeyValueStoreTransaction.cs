@@ -2,10 +2,10 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.NodeStorage.Interfaces;
 
-namespace Stratis.Features.NodeStorage.KeyValueStore
+namespace Stratis.Bitcoin.KeyValueStore
 {
     /// <summary>
     /// An abstract representation of the underlying database transaction.
@@ -18,28 +18,25 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
     public abstract class KeyValueStoreTransaction : IKeyValueStoreTransaction
     {
         /// <summary>The underlying key-value repository provider.</summary>
-        private IKeyValueStoreRepository Repository;
+        private readonly KeyValueStoreRepository repository;
 
         /// <summary>Interface providing control over the updating of transient lookups.</summary>
-        private readonly IKeyValueStoreTrackers lookups;
+        public IKeyValueStoreTrackers Lookups { get; private set; }
 
         /// <summary>The mode of the transaction.</summary>
         private readonly KeyValueStoreTransactionMode mode;
 
         /// <summary>Tracking changes allows updating of transient lookups after a successful commit operation.</summary>
-        private Dictionary<string, IKeyValueStoreTracker> trackers;
+        internal Dictionary<string, IKeyValueStoreTracker> Trackers { get; private set; }
 
         /// <summary>Used to buffer changes to records until a commit takes place.</summary>
-        protected ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>> tableUpdates;
+        internal ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>> TableUpdates { get; private set; }
 
         /// <summary>Used to buffer clearing of table contents until a commit takes place.</summary>
-        protected ConcurrentBag<string> tablesCleared;
+        internal ConcurrentBag<string> TablesCleared { get; private set; }
 
         /// <summary>Comparer used to compare two byte arrays for equality.</summary>
         private IEqualityComparer<byte[]> byteArrayComparer = new ByteArrayComparer();
-
-        /// <summary>Used to access attributes on repository's base-class.</summary>
-        private KeyValueStoreRepository repository => (KeyValueStoreRepository)this.Repository;
 
         private bool isInTransaction;
 
@@ -54,12 +51,12 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
             KeyValueStoreTransactionMode mode,
             params string[] tables)
         {
-            this.Repository = keyValueStoreRepository;
+            this.repository = (KeyValueStoreRepository)keyValueStoreRepository;
             this.mode = mode;
-            this.lookups = this.repository.KeyValueStore.Lookups;
-            this.trackers = this.repository.KeyValueStore.Lookups?.CreateTrackers(tables);
-            this.tableUpdates = new ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>>();
-            this.tablesCleared = new ConcurrentBag<string>();
+            this.Lookups = this.repository.KeyValueStore.Lookups;
+            this.Trackers = this.repository.KeyValueStore.Lookups?.CreateTrackers(tables);
+            this.TableUpdates = new ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>>();
+            this.TablesCleared = new ConcurrentBag<string>();
 
             keyValueStoreRepository.OnBeginTransaction(this, mode);
             this.isInTransaction = true;
@@ -67,7 +64,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
 
         private KeyValueStoreTable GetTable(string tableName)
         {
-            return this.Repository.GetTable(tableName);
+            return this.repository.GetTable(tableName);
         }
 
         /// <inheritdoc />
@@ -76,10 +73,10 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
             // Count = snapshot_count - deletes + inserts.
             KeyValueStoreTable table = this.GetTable(tableName);
 
-            int count = this.tablesCleared.Contains(tableName) ? 0 : this.repository.Count(this, table);
+            int count = this.TablesCleared.Contains(tableName) ? 0 : this.repository.Count(this, table);
 
             // Determine prior existence of updated keys.
-            if (!this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv))
+            if (!this.TableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv))
                 return count;
 
             var updateKeys = kv.Keys.ToArray();
@@ -98,35 +95,12 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
 
         private byte[] Serialize<T>(T obj)
         {
-            if (obj == null)
-                return new byte[] { };
-
-            if (obj.GetType() == typeof(byte[]))
-                return (byte[])(object)obj;
-
-            if (obj.GetType() == typeof(bool) || obj.GetType() == typeof(bool?))
-                return new byte[] { (byte)((bool)(object)obj ? 1 : 0) };
-
-            return this.repository.KeyValueStore.RepositorySerializer.Serialize(obj);
+            return this.repository.Serialize(obj);
         }
 
         private T Deserialize<T>(byte[] objBytes)
         {
-            if (objBytes == null)
-                return default(T);
-
-            Type objType = typeof(T);
-
-            if (objType == typeof(byte[]))
-                return (T)(object)objBytes;
-
-            if (objBytes.Length == 0)
-                return default(T);
-
-            if (objType == typeof(bool) || objType == typeof(bool?))
-                return (T)(object)(objBytes[0] != 0);
-
-            return (T)this.repository.KeyValueStore.RepositorySerializer.Deserialize(objBytes, typeof(T));
+            return this.repository.Deserialize<T>(objBytes);
         }
 
         /// <inheritdoc />
@@ -134,10 +108,10 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         {
             Guard.Assert(this.mode == KeyValueStoreTransactionMode.ReadWrite);
 
-            if (!this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv))
+            if (!this.TableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv))
             {
                 kv = new ConcurrentDictionary<byte[], byte[]>(this.byteArrayComparer);
-                this.tableUpdates[tableName] = kv;
+                this.TableUpdates[tableName] = kv;
             }
 
             kv[this.Serialize(key)] = this.Serialize(obj);
@@ -169,12 +143,16 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         {
             byte[][] serKeys = keys.Select(k => this.Serialize(k)).ToArray();
             KeyValueStoreTable table = this.GetTable(tableName);
-            bool[] exists = this.tablesCleared.Contains(tableName) ? new bool[keys.Length] : this.repository.Exists(this, table, serKeys);
+            bool[] exists = this.TablesCleared.Contains(tableName) ? new bool[keys.Length] : this.repository.Exists(this, table, serKeys);
 
-            if (this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv))
+            if (this.TableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv))
+            {
                 for (int i = 0; i < exists.Length; i++)
+                {
                     if (kv.TryGetValue(serKeys[i], out byte[] value))
                         exists[i] = value != null;
+                }
+            }
 
             return exists;
         }
@@ -193,11 +171,15 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
             byte[][] serKeys = keys.Select(k => this.Serialize(k)).ToArray();
             KeyValueStoreTable table = this.GetTable(tableName);
 
-            byte[][] objects = this.tablesCleared.Contains(tableName) ? new byte[keys.Length][] : this.repository.Get(this, table, serKeys);
-            if (this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv))
+            byte[][] objects = this.TablesCleared.Contains(tableName) ? new byte[keys.Length][] : this.repository.Get(this, table, serKeys);
+            if (this.TableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv))
+            {
                 for (int i = 0; i < objects.Length; i++)
+                {
                     if (kv.TryGetValue(serKeys[i], out byte[] value))
                         objects[i] = value;
+                }
+            }
 
             return objects.Select(v => this.Deserialize<TObject>(v)).ToList();
         }
@@ -205,43 +187,94 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         /// <inheritdoc />
         public Dictionary<TKey, TObject> SelectDictionary<TKey, TObject>(string tableName)
         {
-            return this.SelectForward<TKey, TObject>(tableName).ToDictionary(kv => kv.Item1, kv => kv.Item2);
+            return this.SelectAll<TKey, TObject>(tableName).ToDictionary(kv => kv.Item1, kv => kv.Item2);
         }
 
-        /// <inheritdoc />
-        public IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName)
+        private IEnumerable<O> MergeSortedEnumerations<O, T>(IEnumerable<O> primary, IEnumerable<O> secondary, Func<O, T> keySelector, IComparer<T> comparer, bool descending = false)
         {
-            var table = this.GetTable(tableName);
-
-            this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> updates);
-
-            var yielded = new HashSet<byte[]>(this.byteArrayComparer);
-
-            if (!this.tablesCleared.Contains(tableName))
+            while (true)
             {
-                foreach ((byte[] key, byte[] value) in this.repository.GetAll(this, table))
+                O first = primary.FirstOrDefault();
+                O second = secondary.FirstOrDefault();
+
+                if (first == null && second == null)
+                    break;
+
+                int cmp = (second == null) ? -1 : ((first != null) ? comparer.Compare(keySelector(first), keySelector(second)) * (descending ? -1 : 1) : 1);
+
+                if (cmp <= 0)
                 {
-                    if (updates != null && updates.TryGetValue(key, out byte[] updateValue))
-                    {
-                        if (updateValue == null)
-                            continue;
+                    yield return first;
+                    primary = primary.Skip(1);
 
-                        yielded.Add(key);
+                    // Remove if duplicated in secondary.
+                    if (cmp == 0)
+                        secondary = secondary.Skip(1);
+                }
+                else
+                {
+                    yield return second;
+                    secondary = secondary.Skip(1);
+                }
+            }
+        }
 
-                        yield return (this.Deserialize<TKey>(key), this.Deserialize<TObject>(updateValue));
-                    }
+        private IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly = false, bool? backwards = null)
+        {
+            IEnumerable<(byte[], byte[])> res = null;
+            bool ignoreDB = this.TablesCleared.Contains(tableName);
 
-                    if (value == null)
-                        continue;
+            this.TableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> upd);
 
-                    yield return (this.Deserialize<TKey>(key), this.Deserialize<TObject>(value));
+            // Not sorted?
+            if (backwards == null)
+            {
+                res = upd?.Where(k => k.Key != null).Select(k => (k.Key, k.Value));
+
+                if (!ignoreDB)
+                {
+                    var dbRows = this.repository.GetAll(this, this.GetTable(tableName), keysOnly: keysOnly, backwards: backwards ?? false);
+
+                    res = (res == null) ? dbRows : res.Concat(dbRows.Where(k => !upd.ContainsKey(k.Item1)));
+                }
+            }
+            else
+            {
+                var table = this.GetTable(tableName);
+                var byteListComparer = new ByteArrayComparer();
+                var updates = (upd == null) ? null : ((bool)backwards ? upd.OrderByDescending(k => k.Key, byteListComparer) : upd.OrderBy(k => k.Key, byteListComparer)).Select(k => (k.Key, keysOnly ? null : k.Value));
+
+                if (!ignoreDB && !this.TablesCleared.Contains(tableName))
+                {
+                    var dbrows = this.repository.GetAll(this, table, keysOnly: keysOnly, backwards: (bool)backwards);
+                    if (updates == null)
+                        res = dbrows;
+                    else
+                        res = this.MergeSortedEnumerations<(byte[], byte[]), byte[]>(dbrows, updates, k => k.Item1, byteListComparer, descending: (bool)backwards);
+                }
+                else
+                {
+                    res = updates;
                 }
             }
 
-            if (updates != null)
-                foreach (KeyValuePair<byte[], byte[]> kv in updates)
-                    if (kv.Value != null && !yielded.Contains(kv.Key))
-                        yield return (this.Deserialize<TKey>(kv.Key), this.Deserialize<TObject>(kv.Value));
+            if (res != null)
+            {
+                foreach ((byte[] key, byte[] value) in res)
+                    yield return (this.Deserialize<TKey>(key), this.Deserialize<TObject>(value));
+            }
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName, bool keysOnly = false)
+        {
+            return this.SelectAll<TKey, TObject>(tableName, backwards: false, keysOnly: keysOnly);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<(TKey, TObject)> SelectBackward<TKey, TObject>(string tableName, bool keysOnly = false)
+        {
+            return this.SelectAll<TKey, TObject>(tableName, backwards: true, keysOnly: keysOnly);
         }
 
         /// <inheritdoc />
@@ -251,16 +284,16 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
 
             var keyBytes = this.Serialize(key);
 
-            if (!this.tableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv))
+            if (!this.TableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv))
             {
                 kv = new ConcurrentDictionary<byte[], byte[]>(this.byteArrayComparer);
-                this.tableUpdates[tableName] = kv;
+                this.TableUpdates[tableName] = kv;
             }
 
             kv[keyBytes] = null;
 
             // If this is a tracked table.
-            if (this.trackers != null && this.trackers.TryGetValue(tableName, out IKeyValueStoreTracker tracker))
+            if (this.Trackers != null && this.Trackers.TryGetValue(tableName, out IKeyValueStoreTracker tracker))
             {
                 // Record the object and its old value.
                 tracker.ObjectEvent(obj, KeyValueStoreEvent.ObjectDeleted);
@@ -273,10 +306,10 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
             Guard.Assert(this.mode == KeyValueStoreTransactionMode.ReadWrite);
 
             // Remove buffered updates to prevent replay during commit.
-            this.tableUpdates.TryRemove(tableName, out _);
+            this.TableUpdates.TryRemove(tableName, out _);
 
             // Signal the underlying table to be cleared during commit.
-            this.tablesCleared.Add(tableName);
+            this.TablesCleared.Add(tableName);
         }
 
         /// <inheritdoc />
@@ -286,14 +319,14 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
 
             this.isInTransaction = false;
 
-            this.Repository.OnCommit(this);
+            this.repository.OnCommit(this);
 
-            this.tableUpdates.Clear();
-            this.tablesCleared = new ConcurrentBag<string>();
+            this.TableUpdates.Clear();
+            this.TablesCleared = new ConcurrentBag<string>();
 
             // Having trackers allows us to postpone updating the lookups
             // until after a successful commit.
-            this.lookups?.OnCommit(this.trackers);
+            this.Lookups?.OnCommit(this.Trackers);
         }
 
         /// <inheritdoc />
@@ -303,19 +336,19 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
 
             this.isInTransaction = false;
 
-            this.Repository.OnRollback(this);
+            this.repository.OnRollback(this);
 
-            this.tableUpdates.Clear();
-            this.tablesCleared = new ConcurrentBag<string>();
+            this.TableUpdates.Clear();
+            this.TablesCleared = new ConcurrentBag<string>();
         }
 
         // Has Dispose already been called?
-        bool disposed = false;
+        private bool disposed = false;
 
         // Public implementation of Dispose pattern callable by consumers.
         public void Dispose()
         {
-            Dispose(true);
+            this.Dispose(true);
             GC.SuppressFinalize(this);
         }
 
@@ -329,7 +362,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
             if (disposing)
             {
                 if (this.mode == KeyValueStoreTransactionMode.ReadWrite && this.isInTransaction)
-                    this.Repository.OnRollback(this);
+                    this.repository.OnRollback(this);
 
                 this.isInTransaction = false;
             }

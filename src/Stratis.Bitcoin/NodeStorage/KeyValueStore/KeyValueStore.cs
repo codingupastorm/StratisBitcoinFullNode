@@ -1,21 +1,23 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
+using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.NodeStorage.Interfaces;
 
-namespace Stratis.Features.NodeStorage.KeyValueStore
+namespace Stratis.Bitcoin.KeyValueStore
 {
     /// <summary>
     /// Generic key-value store base-class.
     /// </summary>
     public abstract class KeyValueStore : IKeyValueStore
     {
-        public readonly IDateTimeProvider DateTimeProvider;
-        public readonly string RootPath;
-        public readonly ILoggerFactory LoggerFactory;
-        public readonly IRepositorySerializer RepositorySerializer;
+        private readonly IDateTimeProvider dateTimeProvider;
+        private readonly string rootPath;
 
-        public IKeyValueStoreTrackers Lookups { get; private set; }
+        internal ILoggerFactory LoggerFactory { get; private set; }
+
+        internal IRepositorySerializer RepositorySerializer { get; private set; }
+
+        internal IKeyValueStoreTrackers Lookups { get; private set; }
 
         /// <summary>
         /// Creates a key-value store.
@@ -26,9 +28,9 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         /// <param name="repositorySerializer">The serializer to use.</param>
         public KeyValueStore(string rootPath, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, IRepositorySerializer repositorySerializer)
         {
-            this.RootPath = rootPath;
+            this.rootPath = rootPath;
             this.LoggerFactory = loggerFactory;
-            this.DateTimeProvider = dateTimeProvider;
+            this.dateTimeProvider = dateTimeProvider;
             this.RepositorySerializer = repositorySerializer;
             this.Lookups = null;
         }
@@ -44,7 +46,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         // Public implementation of Dispose pattern callable by consumers.
         public void Dispose()
         {
-            Dispose(true);
+            this.Dispose(true);
             GC.SuppressFinalize(this);
         }
 
@@ -74,7 +76,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
             base(rootPath, loggerFactory, dateTimeProvider, repositorySerializer)
         {
             this.Repository = (R)Activator.CreateInstance(typeof(R), (KeyValueStore)this);
-            this.Repository.Init(this.RootPath);
+            this.Repository.Init(rootPath);
         }
 
         /// <inheritdoc/>
@@ -84,7 +86,7 @@ namespace Stratis.Features.NodeStorage.KeyValueStore
         }
 
         // Flag: Has Dispose already been called?
-        bool disposed = false;
+        private bool disposed = false;
 
         // Protected implementation of Dispose pattern.
         protected override void Dispose(bool disposing)

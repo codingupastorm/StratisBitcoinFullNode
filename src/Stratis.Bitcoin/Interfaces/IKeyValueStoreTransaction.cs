@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Stratis.Features.NodeStorage.Interfaces
+namespace Stratis.Bitcoin.Interfaces
 {
     /// <summary>
     /// The high-level methods for manipulating values in the key-value store.
@@ -14,7 +14,8 @@ namespace Stratis.Features.NodeStorage.Interfaces
         bool Select<TKey, TObject>(string tableName, TKey key, out TObject obj);
         List<TObject> SelectMultiple<TKey, TObject>(string tableName, TKey[] keys);
         Dictionary<TKey, TObject> SelectDictionary<TKey, TObject>(string tableName);
-        IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName);
+        IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName, bool keysOnly = false);
+        IEnumerable<(TKey, TObject)> SelectBackward<TKey, TObject>(string tableName, bool keysOnly = false);
         void RemoveKey<TKey, TObject>(string tableName, TKey key, TObject obj);
         int Count(string tableName);
         void RemoveAllKeys(string tableName);

@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using DBreeze;
-using DBreeze.DataTypes;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Bitcoin.Base
@@ -24,31 +21,22 @@ namespace Stratis.Bitcoin.Base
 
     public class ChainRepository : IChainRepository
     {
-        private readonly DBreezeSerializer dBreezeSerializer;
-
         /// <summary>Instance logger.</summary>
         private readonly ILogger logger;
 
         /// <summary>Access to DBreeze database.</summary>
-        private readonly DBreezeEngine dbreeze;
+        private readonly IChainRepositoryStore keyValueStore;
 
         private BlockLocator locator;
 
-        public ChainRepository(string folder, ILoggerFactory loggerFactory, DBreezeSerializer dBreezeSerializer)
+        public ChainRepository(IChainRepositoryStore chainRepositoryStore, ILoggerFactory loggerFactory)
         {
-            this.dBreezeSerializer = dBreezeSerializer;
-            Guard.NotEmpty(folder, nameof(folder));
+            Guard.NotNull(chainRepositoryStore, nameof(chainRepositoryStore));
             Guard.NotNull(loggerFactory, nameof(loggerFactory));
 
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
 
-            Directory.CreateDirectory(folder);
-            this.dbreeze = new DBreezeEngine(folder);
-        }
-
-        public ChainRepository(DataFolder dataFolder, ILoggerFactory loggerFactory, DBreezeSerializer dBreezeSerializer)
-            : this(dataFolder.ChainPath, loggerFactory, dBreezeSerializer)
-        {
+            this.keyValueStore = chainRepositoryStore;
         }
 
         /// <inheritdoc />
@@ -56,24 +44,19 @@ namespace Stratis.Bitcoin.Base
         {
             Task<ChainedHeader> task = Task.Run(() =>
             {
-                using (DBreeze.Transactions.Transaction transaction = this.dbreeze.GetTransaction())
+                using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
                 {
-                    transaction.ValuesLazyLoadingIsOn = false;
                     ChainedHeader tip = null;
-                    Row<int, byte[]> firstRow = transaction.Select<int, byte[]>("Chain", 0);
-
-                    if (!firstRow.Exists)
+                    if (!transaction.Select<int, BlockHeader>("Chain", 0, out BlockHeader previousHeader))
                         return genesisHeader;
 
-                    BlockHeader previousHeader = this.dBreezeSerializer.Deserialize<BlockHeader>(firstRow.Value);
                     Guard.Assert(previousHeader.GetHash() == genesisHeader.HashBlock); // can't swap networks
 
-                    foreach (Row<int, byte[]> row in transaction.SelectForwardSkip<int, byte[]>("Chain", 1))
+                    foreach ((int key, BlockHeader blockHeader) in transaction.SelectForward<int, BlockHeader>("Chain").Skip(1))
                     {
                         if ((tip != null) && (previousHeader.HashPrevBlock != tip.HashBlock))
                             break;
 
-                        BlockHeader blockHeader = this.dBreezeSerializer.Deserialize<BlockHeader>(row.Value);
                         tip = new ChainedHeader(previousHeader, blockHeader.HashPrevBlock, tip);
                         previousHeader = blockHeader;
                     }
@@ -99,7 +82,7 @@ namespace Stratis.Bitcoin.Base
 
             Task task = Task.Run(() =>
             {
-                using (DBreeze.Transactions.Transaction transaction = this.dbreeze.GetTransaction())
+                using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, "Chain"))
                 {
                     ChainedHeader fork = this.locator == null ? null : chainIndexer.FindFork(this.locator);
                     ChainedHeader tip = chainIndexer.Tip;
@@ -131,7 +114,7 @@ namespace Stratis.Bitcoin.Base
                             header = newHeader;
                         }
 
-                        transaction.Insert("Chain", block.Height, this.dBreezeSerializer.Serialize(header));
+                        transaction.Insert("Chain", block.Height, header);
                     }
 
                     this.locator = tip.GetLocator();
@@ -145,7 +128,7 @@ namespace Stratis.Bitcoin.Base
         /// <inheritdoc />
         public void Dispose()
         {
-            this.dbreeze?.Dispose();
+            this.keyValueStore?.Dispose();
         }
     }
 }

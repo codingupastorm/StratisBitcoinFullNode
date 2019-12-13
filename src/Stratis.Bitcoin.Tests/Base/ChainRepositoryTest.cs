@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using DBreeze;
-using DBreeze.DataTypes;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Base;
+using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
 using Xunit;
@@ -27,18 +27,18 @@ namespace Stratis.Bitcoin.Tests.Base
             var chain = new ChainIndexer(KnownNetworks.StratisRegTest);
             this.AppendBlock(chain);
 
-            using (var repo = new ChainRepository(dir, new LoggerFactory(), this.dBreezeSerializer))
+            var keyValueStore = new ChainRepositoryStore(this.dBreezeSerializer, new DataFolder(dir), new LoggerFactory(), DateTimeProvider.Default);
+
+            using (var repo = new ChainRepository(keyValueStore, new LoggerFactory()))
             {
                 repo.SaveAsync(chain).GetAwaiter().GetResult();
             }
 
-            using (var engine = new DBreezeEngine(dir))
+            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(Interfaces.KeyValueStoreTransactionMode.Read))
             {
                 ChainedHeader tip = null;
-                foreach (Row<int, byte[]> row in engine.GetTransaction().SelectForward<int, byte[]>("Chain"))
+                foreach ((int key, BlockHeader blockHeader) in transaction.SelectForward<int, BlockHeader>("Chain"))
                 {
-                    var blockHeader = this.dBreezeSerializer.Deserialize<BlockHeader>(row.Value);
-
                     if (tip != null && blockHeader.HashPrevBlock != tip.HashBlock)
                         break;
                     tip = new ChainedHeader(blockHeader, blockHeader.GetHash(), tip);
@@ -54,27 +54,26 @@ namespace Stratis.Bitcoin.Tests.Base
             var chain = new ChainIndexer(KnownNetworks.StratisRegTest);
             ChainedHeader tip = this.AppendBlock(chain);
 
-            using (var engine = new DBreezeEngine(dir))
+            var keyValueStore = new ChainRepositoryStore(this.dBreezeSerializer, new DataFolder(dir), new LoggerFactory(), DateTimeProvider.Default);
+
+            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(Interfaces.KeyValueStoreTransactionMode.ReadWrite))
             {
-                using (DBreeze.Transactions.Transaction transaction = engine.GetTransaction())
+                ChainedHeader toSave = tip;
+                var blocks = new List<ChainedHeader>();
+                while (toSave != null)
                 {
-                    ChainedHeader toSave = tip;
-                    var blocks = new List<ChainedHeader>();
-                    while (toSave != null)
-                    {
-                        blocks.Insert(0, toSave);
-                        toSave = toSave.Previous;
-                    }
-
-                    foreach (ChainedHeader block in blocks)
-                    {
-                        transaction.Insert("Chain", block.Height, this.dBreezeSerializer.Serialize(block.Header));
-                    }
-
-                    transaction.Commit();
+                    blocks.Insert(0, toSave);
+                    toSave = toSave.Previous;
                 }
+
+                foreach (ChainedHeader block in blocks)
+                {
+                    transaction.Insert("Chain", block.Height, block.Header);
+                }
+
+                transaction.Commit();
             }
-            using (var repo = new ChainRepository(dir, new LoggerFactory(), this.dBreezeSerializer))
+            using (var repo = new ChainRepository(keyValueStore, new LoggerFactory()))
             {
                 var testChain = new ChainIndexer(KnownNetworks.StratisRegTest);
                 testChain.SetTip(repo.LoadAsync(testChain.Genesis).GetAwaiter().GetResult());

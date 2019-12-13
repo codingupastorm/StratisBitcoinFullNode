@@ -4,7 +4,7 @@ using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.NodeStorage.Interfaces;
+using Stratis.Bitcoin.Interfaces;
 using Xunit;
 
 namespace Stratis.Bitcoin.Features.BlockStore.Tests
@@ -15,7 +15,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
 
         private void SetBlockKeyValueStore(string dir)
         {
-            this.keyValueStore = new BlockKeyValueStore(this.Network, new DataFolder(dir), this.LoggerFactory.Object, DateTimeProvider.Default);
+            this.keyValueStore = new BlockKeyValueStore(new DBreezeSerializer(this.Network.Consensus.ConsensusFactory), new DataFolder(dir), this.LoggerFactory.Object, DateTimeProvider.Default);
         }
 
         [Fact]

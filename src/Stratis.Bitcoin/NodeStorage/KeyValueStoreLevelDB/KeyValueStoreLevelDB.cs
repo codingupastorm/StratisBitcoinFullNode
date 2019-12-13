@@ -4,26 +4,33 @@ using System.Linq;
 using System.Text;
 using DBreeze.Utils;
 using LevelDB;
+using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.NodeStorage.Interfaces;
-using Stratis.Features.NodeStorage.KeyValueStore;
 
-namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
+namespace Stratis.Bitcoin.KeyValueStoreLevelDB
 {
     public class KeyValueStoreLevelDB : KeyValueStoreRepository
     {
-        private class KeyValueStoreLDBTransaction : KeyValueStoreTransaction
+        internal class KeyValueStoreLDBTransaction : KeyValueStoreTransaction
         {
-            public SnapShot Snapshot;
+            public SnapShot Snapshot { get; private set; }
+
             public ReadOptions ReadOptions => (this.Snapshot == null) ? new ReadOptions() : new ReadOptions() { Snapshot = this.Snapshot };
 
-            public KeyValueStoreLDBTransaction(IKeyValueStoreRepository repository, KeyValueStoreTransactionMode mode, params string[] tables)
+            public KeyValueStoreLDBTransaction(KeyValueStoreLevelDB repository, KeyValueStoreTransactionMode mode, params string[] tables)
                 : base(repository, mode, tables)
             {
+                this.Snapshot = (mode == KeyValueStoreTransactionMode.Read) ? repository.Storage.CreateSnapshot() : null;
             }
 
-            internal ConcurrentBag<string> TablesCleared => this.tablesCleared;
-            internal ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>> TableUpdates => this.tableUpdates;
+            protected override void Dispose(bool disposing)
+            {
+                if (disposing)
+                    this.Snapshot?.Dispose();
+
+                base.Dispose(disposing);
+            }
         }
 
         /// <summary>
@@ -37,15 +44,18 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
             public byte KeyPrefix { get; internal set; }
         }
 
-        private DB Storage;
+        internal DB Storage { get; private set; }
+
         private int nextTablePrefix;
-        private SingleThreadResource TransactionLock;
+        private SingleThreadResource transactionLock;
+        private ByteArrayComparer byteArrayComparer;
 
         public KeyValueStoreLevelDB(KeyValueStore.KeyValueStore keyValueStore) : base(keyValueStore)
         {
-            var logger = this.KeyValueStore.LoggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
+            var logger = keyValueStore.LoggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
 
-            this.TransactionLock = new SingleThreadResource($"{nameof(this.TransactionLock)}", logger);
+            this.transactionLock = new SingleThreadResource($"{nameof(this.transactionLock)}", logger);
+            this.byteArrayComparer = new ByteArrayComparer();
         }
 
         public override void Init(string rootPath)
@@ -105,10 +115,10 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
                 {
                     var keyBytes = new byte[] { keyPrefix }.Concat(key).ToArray();
                     iterator.Seek(keyBytes);
-                    return iterator.IsValid();
+                    return iterator.IsValid() && this.byteArrayComparer.Equals(iterator.Key(), keyBytes);
                 }
 
-                (byte[] k, int n)[] orderedKeys = keys.Select((k, n) => (k, n)).OrderBy(t => t.k, new ByteListComparer()).ToArray();
+                (byte[] k, int n)[] orderedKeys = keys.Select((k, n) => (k, n)).OrderBy(t => t.k, this.byteArrayComparer).ToArray();
                 var exists = new bool[keys.Length];
                 for (int i = 0; i < orderedKeys.Length; i++)
                     exists[orderedKeys[i].n] = Exist(orderedKeys[i].k);
@@ -128,11 +138,14 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
             return res;
         }
 
-        public override IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction tran, KeyValueStoreTable table, bool keysOnly = false)
+        public override IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction tran, KeyValueStoreTable table, bool keysOnly = false, bool backwards = false)
         {
             using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).ReadOptions))
             {
-                iterator.SeekToFirst();
+                if (backwards)
+                    iterator.SeekToLast();
+                else
+                    iterator.SeekToFirst();
 
                 while (iterator.IsValid())
                 {
@@ -141,7 +154,10 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
                     if (keyBytes[0] == ((KeyValueStoreLDBTable)table).KeyPrefix)
                         yield return (keyBytes.Skip(1).ToArray(), keysOnly ? null : iterator.Value());
 
-                    iterator.Next();
+                    if (backwards)
+                        iterator.Prev();
+                    else
+                        iterator.Next();
                 }
             }
         }
@@ -174,10 +190,8 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
         {
             if (mode == KeyValueStoreTransactionMode.ReadWrite)
             {
-                this.TransactionLock.Wait();
+                this.transactionLock.Wait();
             }
-
-            ((KeyValueStoreLDBTransaction)keyValueStoreTransaction).Snapshot = (mode == KeyValueStoreTransactionMode.Read) ? this.Storage.CreateSnapshot() : null;
         }
 
         public override void OnCommit(KeyValueStoreTransaction keyValueStoreTransaction)
@@ -222,15 +236,13 @@ namespace Stratis.Features.NodeStorage.KeyValueStoreLevelDB
             }
             finally
             {
-                ((KeyValueStoreLDBTransaction)keyValueStoreTransaction).Snapshot?.Dispose();
-                this.TransactionLock.Release();
+                this.transactionLock.Release();
             }
         }
 
         public override void OnRollback(KeyValueStoreTransaction keyValueStoreTransaction)
         {
-            ((KeyValueStoreLDBTransaction)keyValueStoreTransaction).Snapshot?.Dispose();
-            this.TransactionLock.Release();
+            this.transactionLock.Release();
         }
 
         public override void Close()

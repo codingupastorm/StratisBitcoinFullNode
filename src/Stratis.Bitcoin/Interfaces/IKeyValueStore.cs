@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Stratis.Features.NodeStorage.Interfaces
+namespace Stratis.Bitcoin.Interfaces
 {
     /// <summary>Supported transaction modes.</summary>
     public enum KeyValueStoreTransactionMode

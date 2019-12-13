@@ -1,13 +1,26 @@
 ﻿using System;
-using System.IO;
 using System.Text;
-using DBreeze;
-using DBreeze.DataTypes;
+using Microsoft.Extensions.Logging;
+using NBitcoin;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Bitcoin.Utilities.JsonConverters;
 
 namespace Stratis.Bitcoin.Utilities
 {
+    public interface IKeyValueRepositoryStore : IKeyValueStore
+    {
+    }
+
+    public class KeyValueRepositoryStore : KeyValueStore<KeyValueStoreLevelDB.KeyValueStoreLevelDB>, IKeyValueRepositoryStore
+    {
+        public KeyValueRepositoryStore(Network network, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
+            : base(dataFolder.KeyValueRepositoryPath, loggerFactory, dateTimeProvider, new DBreezeSerializer(network.Consensus.ConsensusFactory))
+        {
+        }
+    }
+
     /// <summary>Allows saving and loading single values to and from key-value storage.</summary>
     public interface IKeyValueRepository : IDisposable
     {
@@ -33,20 +46,15 @@ namespace Stratis.Bitcoin.Utilities
     public class KeyValueRepository : IKeyValueRepository
     {
         /// <summary>Access to DBreeze database.</summary>
-        private readonly DBreezeEngine dbreeze;
+        private readonly IKeyValueStore keyValueStore;
 
         private const string TableName = "common";
 
         private readonly DBreezeSerializer dBreezeSerializer;
 
-        public KeyValueRepository(DataFolder dataFolder, DBreezeSerializer dBreezeSerializer) : this (dataFolder.KeyValueRepositoryPath, dBreezeSerializer)
+        public KeyValueRepository(IKeyValueRepositoryStore keyValueRepositoryStore, DBreezeSerializer dBreezeSerializer)
         {
-        }
-
-        public KeyValueRepository(string folder, DBreezeSerializer dBreezeSerializer)
-        {
-            Directory.CreateDirectory(folder);
-            this.dbreeze = new DBreezeEngine(folder);
+            this.keyValueStore = keyValueRepositoryStore;
             this.dBreezeSerializer = dBreezeSerializer;
         }
 
@@ -55,7 +63,7 @@ namespace Stratis.Bitcoin.Utilities
         {
             byte[] keyBytes = Encoding.ASCII.GetBytes(key);
 
-            using (DBreeze.Transactions.Transaction transaction = this.dbreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 transaction.Insert<byte[], byte[]>(TableName, keyBytes, bytes);
 
@@ -83,16 +91,12 @@ namespace Stratis.Bitcoin.Utilities
         {
             byte[] keyBytes = Encoding.ASCII.GetBytes(key);
 
-            using (DBreeze.Transactions.Transaction transaction = this.dbreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                transaction.ValuesLazyLoadingIsOn = false;
-
-                Row<byte[], byte[]> row = transaction.Select<byte[], byte[]>(TableName, keyBytes);
-
-                if (!row.Exists)
+                if (!transaction.Select(TableName, keyBytes, out byte[] value))
                     return null;
 
-                return row.Value;
+                return value;
             }
         }
 
@@ -126,7 +130,7 @@ namespace Stratis.Bitcoin.Utilities
         /// <inheritdoc />
         public void Dispose()
         {
-            this.dbreeze.Dispose();
+            this.keyValueStore.Dispose();
         }
     }
 }

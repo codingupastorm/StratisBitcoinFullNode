@@ -2,9 +2,8 @@
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Features.NodeStorage.Interfaces;
-using Stratis.Features.NodeStorage.KeyValueStore;
-using Stratis.Features.NodeStorage.KeyValueStoreLevelDB;
+using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.KeyValueStore;
 
 namespace Stratis.Bitcoin.Features.BlockStore
 {
@@ -12,10 +11,10 @@ namespace Stratis.Bitcoin.Features.BlockStore
     {
     }
 
-    public class BlockKeyValueStore : KeyValueStore<KeyValueStoreLevelDB>, IBlockKeyValueStore
+    public class BlockKeyValueStore : KeyValueStore<KeyValueStoreLevelDB.KeyValueStoreLevelDB>, IBlockKeyValueStore
     {
-        public BlockKeyValueStore(Network network, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
-            :base(dataFolder.BlockPath, loggerFactory, dateTimeProvider, new DBreezeSerializer(network.Consensus.ConsensusFactory))
+        public BlockKeyValueStore(IRepositorySerializer repositorySerializer, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
+            :base(dataFolder.BlockPath, loggerFactory, dateTimeProvider, repositorySerializer)
         {
         }
     }
