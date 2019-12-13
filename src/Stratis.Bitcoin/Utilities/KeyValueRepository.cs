@@ -15,8 +15,8 @@ namespace Stratis.Bitcoin.Utilities
 
     public class KeyValueRepositoryStore : KeyValueStore<KeyValueStoreLevelDB.KeyValueStoreLevelDB>, IKeyValueRepositoryStore
     {
-        public KeyValueRepositoryStore(Network network, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
-            : base(dataFolder.KeyValueRepositoryPath, loggerFactory, dateTimeProvider, new DBreezeSerializer(network.Consensus.ConsensusFactory))
+        public KeyValueRepositoryStore(IRepositorySerializer repositorySerializer, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
+            : base(dataFolder.KeyValueRepositoryPath, loggerFactory, dateTimeProvider, repositorySerializer)
         {
         }
     }
@@ -50,12 +50,12 @@ namespace Stratis.Bitcoin.Utilities
 
         private const string TableName = "common";
 
-        private readonly DBreezeSerializer dBreezeSerializer;
+        private readonly IRepositorySerializer repositorySerializer;
 
-        public KeyValueRepository(IKeyValueRepositoryStore keyValueRepositoryStore, DBreezeSerializer dBreezeSerializer)
+        public KeyValueRepository(IKeyValueRepositoryStore keyValueRepositoryStore, IRepositorySerializer repositorySerializer)
         {
             this.keyValueStore = keyValueRepositoryStore;
-            this.dBreezeSerializer = dBreezeSerializer;
+            this.repositorySerializer = repositorySerializer;
         }
 
         /// <inheritdoc />
@@ -74,7 +74,7 @@ namespace Stratis.Bitcoin.Utilities
         /// <inheritdoc />
         public void SaveValue<T>(string key, T value)
         {
-            this.SaveBytes(key, this.dBreezeSerializer.Serialize(value));
+            this.SaveBytes(key, this.repositorySerializer.Serialize(value));
         }
 
         /// <inheritdoc />
@@ -108,7 +108,7 @@ namespace Stratis.Bitcoin.Utilities
             if (bytes == null)
                 return default(T);
 
-            T value = this.dBreezeSerializer.Deserialize<T>(bytes);
+            T value = (T)this.repositorySerializer.Deserialize(bytes, typeof(T));
             return value;
         }
 

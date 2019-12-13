@@ -372,6 +372,7 @@ namespace Stratis.Bitcoin.Base
                 .FeatureServices(services =>
                 {
                     services.AddSingleton(fullNodeBuilder.Network.Consensus.ConsensusFactory);
+                    services.AddSingleton<IRepositorySerializer, DBreezeSerializer>();
                     services.AddSingleton<DBreezeSerializer>();
                     services.AddSingleton(fullNodeBuilder.NodeSettings.LoggerFactory);
                     services.AddSingleton(fullNodeBuilder.NodeSettings.DataFolder);
