@@ -206,10 +206,12 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         private void UpdateLogsBloom(ISmartContractBlockHeader scHeader)
         {
             var logsBloom = new Bloom();
+
             foreach (Receipt receipt in this.receipts)
             {
                 logsBloom.Or(receipt.Bloom);
             }
+
             scHeader.LogsBloom = logsBloom;
         }
 
@@ -217,15 +219,15 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         /// Execute the contract and add all relevant fees and refunds to the block.
         /// </summary>
         /// <param name="mempoolEntry">The mempool entry containing the smart contract transaction.</param>
+        /// <returns>The result of the smart contract execution.</returns>
         private IContractExecutionResult ExecuteSmartContract(TxMempoolEntry mempoolEntry)
         {
             GetSenderResult getSenderResult = this.tokenlessSigner.GetSender(mempoolEntry.Transaction);
-            IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)this.height, new uint160(0), mempoolEntry.Fee, getSenderResult.Sender, mempoolEntry.Transaction);
+            IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)this.height, new uint160(0), Money.Zero, getSenderResult.Sender, mempoolEntry.Transaction);
             IContractExecutor executor = this.executorFactory.CreateExecutor(this.stateSnapshot, transactionContext);
             IContractExecutionResult result = executor.Execute(transactionContext);
             Result<ContractTxData> deserializedCallData = this.callDataSerializer.Deserialize(transactionContext.Data);
 
-            // Store all fields. We will reuse these in CoinviewRule.
             var receipt = new Receipt(
                 new uint256(this.stateSnapshot.Root),
                 result.GasConsumed,

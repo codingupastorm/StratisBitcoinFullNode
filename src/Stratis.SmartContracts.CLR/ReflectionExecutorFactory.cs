@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using Stratis.SmartContracts.CLR.ResultProcessors;
+﻿using Stratis.SmartContracts.CLR.ResultProcessors;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.State;
@@ -11,7 +10,6 @@ namespace Stratis.SmartContracts.CLR
     /// </summary>
     public class ReflectionExecutorFactory : IContractExecutorFactory
     {
-        private readonly ILoggerFactory loggerFactory;
         private readonly IContractRefundProcessor refundProcessor;
         private readonly IContractTransferProcessor transferProcessor;
         private readonly ICallDataSerializer serializer;
@@ -19,15 +17,13 @@ namespace Stratis.SmartContracts.CLR
         private readonly IStateProcessor stateProcessor;
         private readonly IContractPrimitiveSerializer contractPrimitiveSerializer;
 
-        public ReflectionExecutorFactory(ILoggerFactory loggerFactory,
-            ICallDataSerializer serializer,
+        public ReflectionExecutorFactory(ICallDataSerializer serializer,
             IContractRefundProcessor refundProcessor,
             IContractTransferProcessor transferProcessor,
             IStateFactory stateFactory,
             IStateProcessor stateProcessor,
             IContractPrimitiveSerializer contractPrimitiveSerializer)
         {
-            this.loggerFactory = loggerFactory;
             this.refundProcessor = refundProcessor;
             this.transferProcessor = transferProcessor;
             this.serializer = serializer;

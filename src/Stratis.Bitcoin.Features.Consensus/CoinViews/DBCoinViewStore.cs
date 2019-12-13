@@ -13,8 +13,8 @@ namespace Stratis.Bitcoin.Features.Consensus
 
     public class DBCoinViewStore : KeyValueStore<KeyValueStoreLevelDB.KeyValueStoreLevelDB>, IDBCoinViewStore
     {
-        public DBCoinViewStore(Network network, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
-            : base(dataFolder.CoinViewPath, loggerFactory, dateTimeProvider, new DBreezeSerializer(network.Consensus.ConsensusFactory))
+        public DBCoinViewStore(IRepositorySerializer repositorySerializer, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
+            : base(dataFolder.CoinViewPath, loggerFactory, dateTimeProvider, repositorySerializer)
         {
         }
     }

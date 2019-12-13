@@ -24,7 +24,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var dataFolder = new DataFolder(dataFolderPath);
 
             var dBreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
-            var keyValueStore = new BlockKeyValueStore(this.Network, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
+            var keyValueStore = new BlockKeyValueStore(dBreezeSerializer, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
             var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore);
 
@@ -56,7 +56,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var dataFolder = new DataFolder(dataFolderPath);
 
             var dBreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
-            var keyValueStore = new BlockKeyValueStore(this.Network, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
+            var keyValueStore = new BlockKeyValueStore(dBreezeSerializer, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
             var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore);
 
@@ -97,7 +97,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var dataFolder = new DataFolder(dataFolderPath);
 
             var dBreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
-            var keyValueStore = new BlockKeyValueStore(this.Network, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
+            var keyValueStore = new BlockKeyValueStore(dBreezeSerializer, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
             var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore);
 

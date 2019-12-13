@@ -222,7 +222,7 @@ namespace Stratis.SmartContracts.IntegrationTests.PoW
 
                 this.InitializeSmartContractComponents(callingMethod);
 
-                var keyValueStore = new PersistentReceiptKVStore(this.network, new DataFolder(this.Folder), this.loggerFactory, DateTimeProvider.Default);
+                var keyValueStore = new PersistentReceiptKVStore(new DBreezeSerializer(this.network.Consensus.ConsensusFactory), new DataFolder(this.Folder), this.loggerFactory, DateTimeProvider.Default);
                 var receiptRepository = new PersistentReceiptRepository(keyValueStore);
 
                 var signals = new Signals(this.loggerFactory, null);
@@ -352,7 +352,7 @@ namespace Stratis.SmartContracts.IntegrationTests.PoW
                 this.serializer = new Serializer(this.primitiveSerializer);
                 this.smartContractStateFactory = new SmartContractStateFactory(this.primitiveSerializer, this.internalTxExecutorFactory, this.serializer);
                 this.stateFactory = new StateFactory(this.smartContractStateFactory);
-                this.ExecutorFactory = new ReflectionExecutorFactory(this.loggerFactory, this.callDataSerializer, this.refundProcessor, this.transferProcessor, this.stateFactory, this.stateProcessor, this.primitiveSerializer);
+                this.ExecutorFactory = new ReflectionExecutorFactory(this.callDataSerializer, this.refundProcessor, this.transferProcessor, this.stateFactory, this.stateProcessor, this.primitiveSerializer);
             }
         }
 
