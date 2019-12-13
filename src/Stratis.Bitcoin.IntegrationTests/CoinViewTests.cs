@@ -285,7 +285,7 @@ namespace Stratis.Bitcoin.IntegrationTests
         {
             DataFolder dataFolder = new DataFolder(TestBase.CreateTestDir(this));
 
-            using (var repo = new ChainRepository(new ChainRepositoryStore(this.network, dataFolder, this.loggerFactory, DateTimeProvider.Default), this.loggerFactory))
+            using (var repo = new ChainRepository(new ChainRepositoryStore(new DBreezeSerializer(this.network.Consensus.ConsensusFactory), dataFolder, this.loggerFactory, DateTimeProvider.Default), this.loggerFactory))
             {
                 var chain = new ChainIndexer(this.regTest);
 

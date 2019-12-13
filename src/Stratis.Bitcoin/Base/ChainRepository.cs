@@ -128,7 +128,6 @@ namespace Stratis.Bitcoin.Base
         /// <inheritdoc />
         public void Dispose()
         {
-            this.keyValueStore?.Dispose();
         }
     }
 }
