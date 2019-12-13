@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DBreeze.Utils;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -146,7 +145,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
 
             using (IKeyValueStoreTransaction txn = store.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, ProvenBlockHeaderTable, BlockHashTable))
             {
-                txn.Insert(ProvenBlockHeaderTable, 1.ToBytes(), CreateNewProvenBlockHeaderMock());
+                txn.Insert(ProvenBlockHeaderTable, 1, CreateNewProvenBlockHeaderMock());
                 txn.Insert(BlockHashTable, new byte[0], new HashHeightPair(new uint256(), 1));
                 txn.Commit();
             }
