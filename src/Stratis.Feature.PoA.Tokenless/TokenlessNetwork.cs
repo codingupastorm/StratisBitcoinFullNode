@@ -203,7 +203,7 @@ namespace Stratis.Feature.PoA.Tokenless
             consensus.ConsensusRules
                 .Register<BlockSizeRule>()
                 .Register<IsSmartContractWellFormedPartialValidationRule>()
-                .Register<CanSmartContractSenderBeRetrievedPartialValidationRule>();
+                .Register<CanSenderBeRetrievedPartialValidationRule>();
 
             // IFullValidationConsensusRule
             consensus.ConsensusRules
@@ -218,7 +218,7 @@ namespace Stratis.Feature.PoA.Tokenless
             {
                 typeof(CreateTokenlessMempoolEntryRule),
                 typeof(IsSmartContractWellFormedMempoolRule),
-                typeof(CanSmartContractSenderBeRetrievedMempoolRule)
+                typeof(CanSenderBeRetrievedMempoolRule)
             };
         }
 

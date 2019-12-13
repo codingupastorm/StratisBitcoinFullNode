@@ -83,7 +83,7 @@ namespace Stratis.SmartContracts.Core.State
     /// </summary>
     public class DBreezeContractStateStore : DBreezeByteStore
     {
-        public DBreezeContractStateStore(DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, IRepositorySerializer repositorySerializer)
+        public DBreezeContractStateStore(DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, DBreezeSerializer repositorySerializer)
             : base(new ContractStateTableStore(dataFolder.SmartContractStatePath, loggerFactory, dateTimeProvider, repositorySerializer), "state") { }
     }
 }

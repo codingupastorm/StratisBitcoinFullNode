@@ -24,11 +24,10 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
         {
             foreach (Transaction transaction in context.ValidationContext.BlockToValidate.Transactions)
             {
-                TxOut scTxOut = transaction.TryGetSmartContractTxOut();
-
                 // If the TxOut is null then this transaction does not contain any smart contract execution code.
+                TxOut scTxOut = transaction.TryGetSmartContractTxOut();
                 if (scTxOut == null)
-                    return Task.CompletedTask;
+                    continue;
 
                 ContractTransactionChecker.GetContractTxData(this.callDataSerializer, scTxOut);
             }
