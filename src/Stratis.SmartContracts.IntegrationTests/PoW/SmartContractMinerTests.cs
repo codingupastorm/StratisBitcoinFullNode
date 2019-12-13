@@ -222,7 +222,7 @@ namespace Stratis.SmartContracts.IntegrationTests.PoW
 
                 this.InitializeSmartContractComponents(callingMethod);
 
-                var keyValueStore = new PersistentReceiptKVStore(this.network, new DataFolder(this.Folder), this.loggerFactory, DateTimeProvider.Default);
+                var keyValueStore = new PersistentReceiptKVStore(new DBreezeSerializer(this.network.Consensus.ConsensusFactory), new DataFolder(this.Folder), this.loggerFactory, DateTimeProvider.Default);
                 var receiptRepository = new PersistentReceiptRepository(keyValueStore);
 
                 var signals = new Signals(this.loggerFactory, null);
