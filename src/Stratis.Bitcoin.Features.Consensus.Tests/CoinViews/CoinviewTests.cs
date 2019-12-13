@@ -23,7 +23,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.CoinViews
         private readonly IDateTimeProvider dateTimeProvider;
         private readonly ILoggerFactory loggerFactory;
         private readonly INodeStats nodeStats;
-        private readonly DBCoinView dbreezeCoinview;
+        private readonly DBCoinView dbCoinview;
 
         private readonly ChainIndexer chainIndexer;
         private readonly StakeChainStore stakeChainStore;
@@ -41,16 +41,16 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.CoinViews
 
             var keyValueStore = new DBCoinViewStore(new RepositorySerializer(this.network.Consensus.ConsensusFactory), this.dataFolder, this.loggerFactory, this.dateTimeProvider);
 
-            this.dbreezeCoinview = new DBCoinView(this.network, keyValueStore, this.dateTimeProvider, this.loggerFactory, this.nodeStats, new RepositorySerializer(this.network.Consensus.ConsensusFactory));
-            this.dbreezeCoinview.Initialize();
+            this.dbCoinview = new DBCoinView(this.network, keyValueStore, this.dateTimeProvider, this.loggerFactory, this.nodeStats, new RepositorySerializer(this.network.Consensus.ConsensusFactory));
+            this.dbCoinview.Initialize();
 
             this.chainIndexer = new ChainIndexer(this.network);
-            this.stakeChainStore = new StakeChainStore(this.network, this.chainIndexer, this.dbreezeCoinview, this.loggerFactory);
+            this.stakeChainStore = new StakeChainStore(this.network, this.chainIndexer, this.dbCoinview, this.loggerFactory);
             this.stakeChainStore.Load();
 
             this.rewindDataIndexCache = new RewindDataIndexCache(this.dateTimeProvider, this.network);
 
-            this.cachedCoinView = new CachedCoinView(this.dbreezeCoinview, this.dateTimeProvider, this.loggerFactory, this.nodeStats, new ConsensusSettings(new NodeSettings(this.network)), this.stakeChainStore, this.rewindDataIndexCache);
+            this.cachedCoinView = new CachedCoinView(this.dbCoinview, this.dateTimeProvider, this.loggerFactory, this.nodeStats, new ConsensusSettings(new NodeSettings(this.network)), this.stakeChainStore, this.rewindDataIndexCache);
 
             this.rewindDataIndexCache.Initialize(this.chainIndexer.Height, this.cachedCoinView);
 

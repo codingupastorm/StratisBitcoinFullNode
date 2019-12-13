@@ -17,14 +17,14 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
     {
         private readonly ILoggerFactory loggerFactory;
         private readonly Network network;
-        private readonly RepositorySerializer dBreezeSerializer;
+        private readonly RepositorySerializer repositorySerializer;
 
         public BlockStoreTests()
         {
             this.loggerFactory = new LoggerFactory();
 
             this.network = new BitcoinRegTest();
-            this.dBreezeSerializer = new RepositorySerializer(this.network.Consensus.ConsensusFactory);
+            this.repositorySerializer = new RepositorySerializer(this.network.Consensus.ConsensusFactory);
         }
 
         [Fact]

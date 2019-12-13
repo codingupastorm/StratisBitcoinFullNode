@@ -77,7 +77,7 @@
                 Status status = this.db.Read(ref coinKey, ref dbInput, ref output, Empty.Default, 1);
                 if (status == Status.PENDING) this.db.CompletePending(true);
 
-                uint256 outputs = status == Status.OK ? this.dBreezeSerializer.Deserialize<uint256>(output.Value.Value) : null;
+                uint256 outputs = status == Status.OK ? this.repositorySerializer.Deserialize<uint256>(output.Value.Value) : null;
 
                 result.Add(outputs);
             }

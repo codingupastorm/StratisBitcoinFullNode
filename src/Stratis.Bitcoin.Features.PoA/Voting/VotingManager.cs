@@ -52,7 +52,7 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
         private bool isInitialized;
 
         public VotingManager(IFederationManager federationManager, ILoggerFactory loggerFactory, ISlotsManager slotsManager, IPollResultExecutor pollResultExecutor,
-            INodeStats nodeStats, DataFolder dataFolder, RepositorySerializer dBreezeSerializer, ISignals signals, IFinalizedBlockInfoRepository finalizedBlockInfo)
+            INodeStats nodeStats, DataFolder dataFolder, RepositorySerializer repositorySerializer, ISignals signals, IFinalizedBlockInfoRepository finalizedBlockInfo)
         {
             this.federationManager = Guard.NotNull(federationManager, nameof(federationManager));
             this.slotsManager = Guard.NotNull(slotsManager, nameof(slotsManager));
@@ -64,7 +64,7 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
             this.locker = new object();
             this.votingDataEncoder = new VotingDataEncoder(loggerFactory);
             this.scheduledVotingData = new List<VotingData>();
-            this.pollsRepository = new PollsRepository(dataFolder, loggerFactory, dBreezeSerializer);
+            this.pollsRepository = new PollsRepository(dataFolder, loggerFactory, repositorySerializer);
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
 
             this.isInitialized = false;

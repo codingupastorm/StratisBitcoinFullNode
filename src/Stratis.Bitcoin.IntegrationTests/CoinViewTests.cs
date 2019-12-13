@@ -29,7 +29,7 @@ namespace Stratis.Bitcoin.IntegrationTests
         protected readonly ILoggerFactory loggerFactory;
         private readonly Network network;
         private readonly Network regTest;
-        private readonly RepositorySerializer dBreezeSerializer;
+        private readonly RepositorySerializer repositorySerializer;
 
         /// <summary>
         /// Initializes logger factory for tests in this class.
@@ -39,11 +39,11 @@ namespace Stratis.Bitcoin.IntegrationTests
             this.loggerFactory = new LoggerFactory();
             this.network = KnownNetworks.Main;
             this.regTest = KnownNetworks.RegTest;
-            this.dBreezeSerializer = new RepositorySerializer(this.network.Consensus.ConsensusFactory);
+            this.repositorySerializer = new RepositorySerializer(this.network.Consensus.ConsensusFactory);
         }
 
         [Fact]
-        public void TestDBreezeSerialization()
+        public void TestDBSerialization()
         {
             using (NodeContext ctx = NodeContext.Create(this))
             {

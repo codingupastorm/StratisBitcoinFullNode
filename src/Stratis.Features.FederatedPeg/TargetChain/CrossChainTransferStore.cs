@@ -61,7 +61,7 @@ namespace Stratis.Features.FederatedPeg.TargetChain
         /// <summary>Access to DBreeze database.</summary>
         private readonly DBreezeEngine DBreeze;
 
-        private readonly RepositorySerializer dBreezeSerializer;
+        private readonly RepositorySerializer repositorySerializer;
         private readonly Network network;
         private readonly ChainIndexer chainIndexer;
         private readonly IWithdrawalExtractor withdrawalExtractor;
@@ -78,7 +78,7 @@ namespace Stratis.Features.FederatedPeg.TargetChain
 
         public CrossChainTransferStore(Network network, DataFolder dataFolder, ChainIndexer chainIndexer, IFederatedPegSettings settings, IDateTimeProvider dateTimeProvider,
             ILoggerFactory loggerFactory, IWithdrawalExtractor withdrawalExtractor, IBlockRepository blockRepository, IFederationWalletManager federationWalletManager,
-            IWithdrawalTransactionBuilder withdrawalTransactionBuilder, RepositorySerializer dBreezeSerializer, ISignals signals, IStateRepositoryRoot stateRepositoryRoot = null)
+            IWithdrawalTransactionBuilder withdrawalTransactionBuilder, RepositorySerializer repositorySerializer, ISignals signals, IStateRepositoryRoot stateRepositoryRoot = null)
         {
             if (!settings.IsMainChain)
             {
@@ -102,7 +102,7 @@ namespace Stratis.Features.FederatedPeg.TargetChain
             this.federationWalletManager = federationWalletManager;
             this.withdrawalTransactionBuilder = withdrawalTransactionBuilder;
             this.withdrawalExtractor = withdrawalExtractor;
-            this.dBreezeSerializer = dBreezeSerializer;
+            this.repositorySerializer = repositorySerializer;
             this.lockObj = new object();
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.TipHashAndHeight = this.chainIndexer.GetHeader(0);
@@ -1171,7 +1171,7 @@ namespace Stratis.Features.FederatedPeg.TargetChain
         {
             Guard.NotNull(crossChainTransfer, nameof(crossChainTransfer));
 
-            byte[] crossChainTransferBytes = this.dBreezeSerializer.Serialize(crossChainTransfer);
+            byte[] crossChainTransferBytes = this.repositorySerializer.Serialize(crossChainTransfer);
 
             dbreezeTransaction.Insert<byte[], byte[]>(transferTableName, crossChainTransfer.DepositTransactionId.ToBytes(), crossChainTransferBytes);
         }
@@ -1191,7 +1191,7 @@ namespace Stratis.Features.FederatedPeg.TargetChain
             // Write each transfer in order.
             foreach (ICrossChainTransfer transfer in orderedTransfers)
             {
-                byte[] transferBytes = this.dBreezeSerializer.Serialize(transfer);
+                byte[] transferBytes = this.repositorySerializer.Serialize(transfer);
                 dbreezeTransaction.Insert<byte[], byte[]>(transferTableName, transfer.DepositTransactionId.ToBytes(), transferBytes);
             }
         }

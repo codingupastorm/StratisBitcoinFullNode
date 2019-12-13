@@ -75,7 +75,7 @@
                 foreach (uint256 input in this.data.OrderBy(d => Guid.NewGuid()).Take(this.N))
                 {
                     var coin = collection.FindById(input.ToString());
-                    uint256 outputs = coin != null ? this.dBreezeSerializer.Deserialize<uint256>(coin.Value) : null;
+                    uint256 outputs = coin != null ? this.repositorySerializer.Deserialize<uint256>(coin.Value) : null;
 
                     result.Add(outputs);
                 }

@@ -13,11 +13,11 @@ namespace Stratis.Bitcoin.Tests.Base
 {
     public class ChainRepositoryTest : TestBase
     {
-        private readonly RepositorySerializer dBreezeSerializer;
+        private readonly RepositorySerializer repositorySerializer;
 
         public ChainRepositoryTest() : base(KnownNetworks.StratisRegTest)
         {
-            this.dBreezeSerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
+            this.repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
         }
 
         [Fact]
@@ -27,7 +27,7 @@ namespace Stratis.Bitcoin.Tests.Base
             var chain = new ChainIndexer(KnownNetworks.StratisRegTest);
             this.AppendBlock(chain);
 
-            var keyValueStore = new ChainRepositoryStore(this.dBreezeSerializer, new DataFolder(dir), new LoggerFactory(), DateTimeProvider.Default);
+            var keyValueStore = new ChainRepositoryStore(this.repositorySerializer, new DataFolder(dir), new LoggerFactory(), DateTimeProvider.Default);
 
             using (var repo = new ChainRepository(keyValueStore, new LoggerFactory()))
             {
@@ -54,7 +54,7 @@ namespace Stratis.Bitcoin.Tests.Base
             var chain = new ChainIndexer(KnownNetworks.StratisRegTest);
             ChainedHeader tip = this.AppendBlock(chain);
 
-            var keyValueStore = new ChainRepositoryStore(this.dBreezeSerializer, new DataFolder(dir), new LoggerFactory(), DateTimeProvider.Default);
+            var keyValueStore = new ChainRepositoryStore(this.repositorySerializer, new DataFolder(dir), new LoggerFactory(), DateTimeProvider.Default);
 
             using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(Interfaces.KeyValueStoreTransactionMode.ReadWrite))
             {

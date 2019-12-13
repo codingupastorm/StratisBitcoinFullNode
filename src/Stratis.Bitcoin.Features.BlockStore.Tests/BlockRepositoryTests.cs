@@ -47,7 +47,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             // Initialize the repo.
             using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
-                transaction.Insert<byte[], byte[]>("Common", new byte[0], this.DBreezeSerializer.Serialize(new HashHeightPair(new uint256(56), 1)));
+                transaction.Insert<byte[], byte[]>("Common", new byte[0], this.RepositorySerializer.Serialize(new HashHeightPair(new uint256(56), 1)));
                 transaction.Insert<byte[], byte[]>("Common", new byte[1], new byte[] { 1 });
                 transaction.Commit();
             }
