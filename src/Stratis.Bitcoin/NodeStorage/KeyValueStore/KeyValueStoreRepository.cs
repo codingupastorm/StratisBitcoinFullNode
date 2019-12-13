@@ -11,6 +11,7 @@ namespace Stratis.Bitcoin.KeyValueStore
     public abstract class KeyValueStoreRepository : IKeyValueStoreRepository
     {
         public KeyValueStore KeyValueStore { get; protected set; }
+
         public Dictionary<string, KeyValueStoreTable> Tables { get; protected set; }
 
         public KeyValueStoreRepository(KeyValueStore keyValueStore)

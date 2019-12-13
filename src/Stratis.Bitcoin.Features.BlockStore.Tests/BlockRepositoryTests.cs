@@ -15,7 +15,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
 
         private void SetBlockKeyValueStore(string dir)
         {
-            this.keyValueStore = new BlockKeyValueStore(this.Network, new DataFolder(dir), this.LoggerFactory.Object, DateTimeProvider.Default);
+            this.keyValueStore = new BlockKeyValueStore(new DBreezeSerializer(this.Network.Consensus.ConsensusFactory), new DataFolder(dir), this.LoggerFactory.Object, DateTimeProvider.Default);
         }
 
         [Fact]

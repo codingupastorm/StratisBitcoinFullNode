@@ -15,8 +15,8 @@ namespace Stratis.SmartContracts.Core.Receipts
 
     public class PersistentReceiptKVStore : KeyValueStore<KeyValueStoreLevelDB>, IReceiptKVStore
     {
-        public PersistentReceiptKVStore(Network network, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
-            : base(Path.Combine(dataFolder.SmartContractStatePath, PersistentReceiptRepository.TableName), loggerFactory, dateTimeProvider, new DBreezeSerializer(network.Consensus.ConsensusFactory))
+        public PersistentReceiptKVStore(IRepositorySerializer repositorySerializer, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
+            : base(Path.Combine(dataFolder.SmartContractStatePath, PersistentReceiptRepository.TableName), loggerFactory, dateTimeProvider, repositorySerializer)
         {
         }
     }
