@@ -47,7 +47,7 @@ namespace Stratis.SmartContracts.Tests.Common
                 })
                 .ReplaceTimeProvider(this.timeProvider)
                 .MockIBD()
-                .AddFastMiningCapability();
+                .AddTokenlessFastMiningCapability();
 
             if (!this.EnablePeerDiscovery)
             {

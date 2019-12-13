@@ -84,17 +84,18 @@ namespace Stratis.Feature.PoA.Tokenless
                 new FederationMember(this.FederationKeys[2].PubKey)  // 02d6792cf941b68edd1e9056653573917cbaf974d46e9eeb9801d6fcedf846477a
             };
 
+            // TODO-TL: Implement new TokenlessConsensusOptions?
             var consensusOptions = new PoAConsensusOptions(
                 maxBlockBaseSize: 1_000_000,
                 maxStandardVersion: 2,
                 maxStandardTxWeight: 100_000,
-                maxBlockSigopsCost: 20_000, // TODO-TL: Check
-                maxStandardTxSigopsCost: 20_000 / 5, // TODO-TL: Check
+                0,
+                0,
                 genesisFederationMembers: genesisFederationMembers,
                 targetSpacingSeconds: 16,
-                votingEnabled: true,
-                autoKickIdleMembers: true,
-                enablePermissionedMembership: true
+                votingEnabled: false,
+                autoKickIdleMembers: false,
+                enablePermissionedMembership: false
             );
 
             // TODO-TL: Check
@@ -183,7 +184,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
             // TODO-TL: Add Smart Contract State Root Hash
 
-            if ((this.ConsensusOptions.GenesisFederationMembers == null) || (this.ConsensusOptions.GenesisFederationMembers.Count == 0))
+            if ((consensusOptions.GenesisFederationMembers == null) || (consensusOptions.GenesisFederationMembers.Count == 0))
                 throw new Exception("No keys for initial federation are configured!");
 
             this.RegisterRules(this.Consensus);
@@ -196,7 +197,7 @@ namespace Stratis.Feature.PoA.Tokenless
             consensus.ConsensusRules
                 .Register<HeaderTimeChecksPoARule>()
                 .Register<PoAHeaderDifficultyRule>()
-                .Register<PoAHeaderSignatureRule>();
+                .Register<TokenlessHeaderSignatureRule>();
 
             // IIntegrityValidationConsensusRules
             consensus.ConsensusRules
