@@ -23,8 +23,9 @@ namespace Stratis.Bitcoin.Tests
         public async Task FinalizedHeightSavedOnDiskAsync()
         {
             string dir = CreateTestDir(this);
-            var keyValueStore = new KeyValueRepositoryStore(this.Network, new DataFolder(dir), this.loggerFactory, DateTimeProvider.Default);
-            var kvRepo = new KeyValueRepository(keyValueStore, new DBreezeSerializer(this.Network.Consensus.ConsensusFactory));
+            var dbreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
+            var keyValueStore = new KeyValueRepositoryStore(dbreezeSerializer, new DataFolder(dir), this.loggerFactory, DateTimeProvider.Default);
+            var kvRepo = new KeyValueRepository(keyValueStore, dbreezeSerializer);
             var asyncMock = new Mock<IAsyncProvider>();
             asyncMock.Setup(a => a.RegisterTask(It.IsAny<string>(), It.IsAny<Task>()));
 
@@ -44,8 +45,9 @@ namespace Stratis.Bitcoin.Tests
         public async Task FinalizedHeightCantBeDecreasedAsync()
         {
             string dir = CreateTestDir(this);
-            var keyValueStore = new KeyValueRepositoryStore(this.Network, new DataFolder(dir), this.loggerFactory, DateTimeProvider.Default);
-            var kvRepo = new KeyValueRepository(keyValueStore, new DBreezeSerializer(this.Network.Consensus.ConsensusFactory));
+            var dbreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
+            var keyValueStore = new KeyValueRepositoryStore(dbreezeSerializer, new DataFolder(dir), this.loggerFactory, DateTimeProvider.Default);
+            var kvRepo = new KeyValueRepository(keyValueStore, dbreezeSerializer);
             var asyncMock = new Mock<IAsyncProvider>();
             asyncMock.Setup(a => a.RegisterTask(It.IsAny<string>(), It.IsAny<Task>()));
 
