@@ -9,11 +9,11 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
     /// <summary>
     /// Checks that the sender can be retrieved from the signature in the <see cref="TxIn"></see> as well as checking that they have the required CA role for CREATE or CALL.
     /// </summary>
-    public sealed class CanSmartContractSenderBeRetrievedMempoolRule : MempoolRule
+    public sealed class CanSenderBeRetrievedMempoolRule : MempoolRule
     {
         private readonly ITokenlessSigner tokenlessSigner;
 
-        public CanSmartContractSenderBeRetrievedMempoolRule(
+        public CanSenderBeRetrievedMempoolRule(
             Network network,
             ITxMempool mempool,
             MempoolSettings settings,

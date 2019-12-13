@@ -9,11 +9,11 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
     /// <summary>
     /// Checks that the sender can be retrieved from the signature in the <see cref="TxIn"></see> as well as checking that they have the required CA role for CREATE or CALL.
     /// </summary>
-    public sealed class CanSmartContractSenderBeRetrievedPartialValidationRule : PartialValidationConsensusRule
+    public sealed class CanSenderBeRetrievedPartialValidationRule : PartialValidationConsensusRule
     {
         private readonly ITokenlessSigner tokenlessSigner;
 
-        public CanSmartContractSenderBeRetrievedPartialValidationRule(ITokenlessSigner tokenlessSigner)
+        public CanSenderBeRetrievedPartialValidationRule(ITokenlessSigner tokenlessSigner)
         {
             this.tokenlessSigner = tokenlessSigner;
         }
