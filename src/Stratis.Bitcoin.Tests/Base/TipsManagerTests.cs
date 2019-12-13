@@ -23,7 +23,7 @@ namespace Stratis.Bitcoin.Tests.Base
         {
             this.loggerFactory = new LoggerFactory();
             string dir = CreateTestDir(this);
-            var dbreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
+            var dbreezeSerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
             var keyValueStore = new KeyValueRepositoryStore(dbreezeSerializer, new DataFolder(dir), this.loggerFactory, DateTimeProvider.Default);
             this.keyValueRepo = new KeyValueRepository(keyValueStore, dbreezeSerializer);
 

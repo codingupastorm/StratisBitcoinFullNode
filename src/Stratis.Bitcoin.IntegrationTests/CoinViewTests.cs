@@ -29,7 +29,7 @@ namespace Stratis.Bitcoin.IntegrationTests
         protected readonly ILoggerFactory loggerFactory;
         private readonly Network network;
         private readonly Network regTest;
-        private readonly DBreezeSerializer dBreezeSerializer;
+        private readonly RepositorySerializer dBreezeSerializer;
 
         /// <summary>
         /// Initializes logger factory for tests in this class.
@@ -39,7 +39,7 @@ namespace Stratis.Bitcoin.IntegrationTests
             this.loggerFactory = new LoggerFactory();
             this.network = KnownNetworks.Main;
             this.regTest = KnownNetworks.RegTest;
-            this.dBreezeSerializer = new DBreezeSerializer(this.network.Consensus.ConsensusFactory);
+            this.dBreezeSerializer = new RepositorySerializer(this.network.Consensus.ConsensusFactory);
         }
 
         [Fact]
@@ -285,7 +285,7 @@ namespace Stratis.Bitcoin.IntegrationTests
         {
             DataFolder dataFolder = new DataFolder(TestBase.CreateTestDir(this));
 
-            using (var repo = new ChainRepository(new ChainRepositoryStore(new DBreezeSerializer(this.network.Consensus.ConsensusFactory), dataFolder, this.loggerFactory, DateTimeProvider.Default), this.loggerFactory))
+            using (var repo = new ChainRepository(new ChainRepositoryStore(new RepositorySerializer(this.network.Consensus.ConsensusFactory), dataFolder, this.loggerFactory, DateTimeProvider.Default), this.loggerFactory))
             {
                 var chain = new ChainIndexer(this.regTest);
 

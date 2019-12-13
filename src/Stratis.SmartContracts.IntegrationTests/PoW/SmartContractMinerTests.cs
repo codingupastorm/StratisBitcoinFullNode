@@ -222,7 +222,7 @@ namespace Stratis.SmartContracts.IntegrationTests.PoW
 
                 this.InitializeSmartContractComponents(callingMethod);
 
-                var keyValueStore = new PersistentReceiptKVStore(new DBreezeSerializer(this.network.Consensus.ConsensusFactory), new DataFolder(this.Folder), this.loggerFactory, DateTimeProvider.Default);
+                var keyValueStore = new PersistentReceiptKVStore(new RepositorySerializer(this.network.Consensus.ConsensusFactory), new DataFolder(this.Folder), this.loggerFactory, DateTimeProvider.Default);
                 var receiptRepository = new PersistentReceiptRepository(keyValueStore);
 
                 var signals = new Signals(this.loggerFactory, null);
@@ -326,8 +326,8 @@ namespace Stratis.SmartContracts.IntegrationTests.PoW
                 this.keyEncodingStrategy = BasicKeyEncodingStrategy.Default;
 
                 this.Folder = TestBase.AssureEmptyDir(Path.Combine(AppContext.BaseDirectory, "TestCase", callingMethod));
-                var engine = new ContractStateTableStore(Path.Combine(this.Folder, "contracts"), this.loggerFactory, DateTimeProvider.Default, new DBreezeSerializer(this.network.Consensus.ConsensusFactory));
-                var byteStore = new DBreezeByteStore(engine, "ContractState1");
+                var engine = new ContractStateTableStore(Path.Combine(this.Folder, "contracts"), this.loggerFactory, DateTimeProvider.Default, new RepositorySerializer(this.network.Consensus.ConsensusFactory));
+                var byteStore = new KeyValueByteStore(engine, "ContractState1");
                 byteStore.Empty();
                 ISource<byte[], byte[]> stateDB = new NoDeleteSource<byte[], byte[]>(byteStore);
 

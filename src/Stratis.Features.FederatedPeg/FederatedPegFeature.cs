@@ -443,7 +443,7 @@ namespace Stratis.Features.FederatedPeg
                 .FeatureServices(services =>
                 {
                     services.AddSingleton<IDBCoinViewStore, DBCoinViewStore>();
-                    services.AddSingleton<DBreezeCoinView>();
+                    services.AddSingleton<DBCoinView>();
                     services.AddSingleton<ICoinView, CachedCoinView>();
                     services.AddSingleton<IChainState, ChainState>();
                     services.AddSingleton<ConsensusQuery>()

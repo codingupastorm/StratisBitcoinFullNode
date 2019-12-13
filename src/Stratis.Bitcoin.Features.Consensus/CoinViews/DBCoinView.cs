@@ -16,7 +16,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
     /// <summary>
     /// Persistent implementation of coinview using dBreeze database.
     /// </summary>
-    public class DBreezeCoinView : ICoinView, IDisposable
+    public class DBCoinView : ICoinView, IDisposable
     {
         /// <summary>Database key under which the block hash of the coin view's current tip is stored.</summary>
         private static readonly byte[] blockHashKey = new byte[0];
@@ -38,7 +38,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
         /// <summary>Access to dBreeze database.</summary>
         private readonly IDBCoinViewStore keyValueStore;
 
-        private DBreezeSerializer dBreezeSerializer;
+        private RepositorySerializer dBreezeSerializer;
 
         /// <summary>
         /// Initializes a new instance of the object.
@@ -49,8 +49,8 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
         /// <param name="loggerFactory">Factory to be used to create logger for the puller.</param>
         /// <param name="nodeStats"></param>
         /// <param name="dBreezeSerializer">The serializer to use for <see cref="IBitcoinSerializable"/> objects.</param>
-        public DBreezeCoinView(Network network, IDBCoinViewStore dBCoinViewStore, IDateTimeProvider dateTimeProvider,
-            ILoggerFactory loggerFactory, INodeStats nodeStats, DBreezeSerializer dBreezeSerializer)
+        public DBCoinView(Network network, IDBCoinViewStore dBCoinViewStore, IDateTimeProvider dateTimeProvider,
+            ILoggerFactory loggerFactory, INodeStats nodeStats, RepositorySerializer dBreezeSerializer)
         {
             Guard.NotNull(network, nameof(network));
             Guard.NotNull(dBCoinViewStore, nameof(dBCoinViewStore));

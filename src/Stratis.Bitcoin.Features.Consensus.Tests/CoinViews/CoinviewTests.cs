@@ -23,7 +23,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.CoinViews
         private readonly IDateTimeProvider dateTimeProvider;
         private readonly ILoggerFactory loggerFactory;
         private readonly INodeStats nodeStats;
-        private readonly DBreezeCoinView dbreezeCoinview;
+        private readonly DBCoinView dbreezeCoinview;
 
         private readonly ChainIndexer chainIndexer;
         private readonly StakeChainStore stakeChainStore;
@@ -39,9 +39,9 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.CoinViews
             this.loggerFactory = new ExtendedLoggerFactory();
             this.nodeStats = new NodeStats(this.dateTimeProvider, this.loggerFactory);
 
-            var keyValueStore = new DBCoinViewStore(new DBreezeSerializer(this.network.Consensus.ConsensusFactory), this.dataFolder, this.loggerFactory, this.dateTimeProvider);
+            var keyValueStore = new DBCoinViewStore(new RepositorySerializer(this.network.Consensus.ConsensusFactory), this.dataFolder, this.loggerFactory, this.dateTimeProvider);
 
-            this.dbreezeCoinview = new DBreezeCoinView(this.network, keyValueStore, this.dateTimeProvider, this.loggerFactory, this.nodeStats, new DBreezeSerializer(this.network.Consensus.ConsensusFactory));
+            this.dbreezeCoinview = new DBCoinView(this.network, keyValueStore, this.dateTimeProvider, this.loggerFactory, this.nodeStats, new RepositorySerializer(this.network.Consensus.ConsensusFactory));
             this.dbreezeCoinview.Initialize();
 
             this.chainIndexer = new ChainIndexer(this.network);

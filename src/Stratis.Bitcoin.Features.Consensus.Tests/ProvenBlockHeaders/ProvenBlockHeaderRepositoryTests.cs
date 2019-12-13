@@ -19,14 +19,14 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
     public class ProvenBlockHeaderRepositoryTests : LogsTestBase
     {
         private readonly Mock<ILoggerFactory> loggerFactory;
-        private readonly DBreezeSerializer dBreezeSerializer;
+        private readonly RepositorySerializer dBreezeSerializer;
         private const string ProvenBlockHeaderTable = "ProvenBlockHeader";
         private const string BlockHashTable = "BlockHashHeight";
 
         public ProvenBlockHeaderRepositoryTests() : base(KnownNetworks.StratisTest)
         {
             this.loggerFactory = new Mock<ILoggerFactory>();
-            this.dBreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
+            this.dBreezeSerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
         }
 
         [Fact]

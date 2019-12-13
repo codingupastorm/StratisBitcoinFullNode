@@ -27,7 +27,7 @@ namespace Stratis.Bitcoin.Utilities
         /// <summary>Persists byte array to the database.</summary>
         void SaveBytes(string key, byte[] bytes);
 
-        /// <summary>Persists any object that <see cref="DBreezeSerializer"/> can serialize to the database.</summary>
+        /// <summary>Persists any object that <see cref="RepositorySerializer"/> can serialize to the database.</summary>
         void SaveValue<T>(string key, T value);
 
         /// <summary>Persists any object to the database. Object is stored as JSON.</summary>
@@ -36,7 +36,7 @@ namespace Stratis.Bitcoin.Utilities
         /// <summary>Loads byte array from the database.</summary>
         byte[] LoadBytes(string key);
 
-        /// <summary>Loads an object that <see cref="DBreezeSerializer"/> can deserialize from the database.</summary>
+        /// <summary>Loads an object that <see cref="RepositorySerializer"/> can deserialize from the database.</summary>
         T LoadValue<T>(string key);
 
         /// <summary>Loads JSON from the database and deserializes it.</summary>

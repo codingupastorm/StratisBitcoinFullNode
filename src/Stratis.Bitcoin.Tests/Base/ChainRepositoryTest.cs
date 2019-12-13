@@ -13,11 +13,11 @@ namespace Stratis.Bitcoin.Tests.Base
 {
     public class ChainRepositoryTest : TestBase
     {
-        private readonly DBreezeSerializer dBreezeSerializer;
+        private readonly RepositorySerializer dBreezeSerializer;
 
         public ChainRepositoryTest() : base(KnownNetworks.StratisRegTest)
         {
-            this.dBreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
+            this.dBreezeSerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
         }
 
         [Fact]

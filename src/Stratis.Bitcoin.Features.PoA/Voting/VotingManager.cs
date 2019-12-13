@@ -52,7 +52,7 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
         private bool isInitialized;
 
         public VotingManager(IFederationManager federationManager, ILoggerFactory loggerFactory, ISlotsManager slotsManager, IPollResultExecutor pollResultExecutor,
-            INodeStats nodeStats, DataFolder dataFolder, DBreezeSerializer dBreezeSerializer, ISignals signals, IFinalizedBlockInfoRepository finalizedBlockInfo)
+            INodeStats nodeStats, DataFolder dataFolder, RepositorySerializer dBreezeSerializer, ISignals signals, IFinalizedBlockInfoRepository finalizedBlockInfo)
         {
             this.federationManager = Guard.NotNull(federationManager, nameof(federationManager));
             this.slotsManager = Guard.NotNull(slotsManager, nameof(slotsManager));

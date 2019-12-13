@@ -57,7 +57,7 @@ namespace Stratis.Features.FederatedPeg.Tests
         protected IAsyncProvider asyncProvider;
         protected INodeLifetime nodeLifetime;
         protected IConnectionManager connectionManager;
-        protected DBreezeSerializer dBreezeSerializer;
+        protected RepositorySerializer dBreezeSerializer;
         protected Dictionary<uint256, Block> blockDict;
         protected List<Transaction> fundingTransactions;
         protected FederationWallet wallet;
@@ -101,7 +101,7 @@ namespace Stratis.Features.FederatedPeg.Tests
             this.connectionManager = Substitute.For<IConnectionManager>();
             this.federatedPegBroadcaster = Substitute.For<IFederatedPegBroadcaster>();
             this.inputConsolidator = Substitute.For<IInputConsolidator>();
-            this.dBreezeSerializer = new DBreezeSerializer(this.network.Consensus.ConsensusFactory);
+            this.dBreezeSerializer = new RepositorySerializer(this.network.Consensus.ConsensusFactory);
             this.ibdState = Substitute.For<IInitialBlockDownloadState>();
             this.wallet = null;
             this.federatedPegSettings = Substitute.For<IFederatedPegSettings>();

@@ -24,9 +24,9 @@ namespace Stratis.Bitcoin.IntegrationTests
             this.Network = network;
             this.FolderName = TestBase.CreateTestDir(caller, name);
             var dateTimeProvider = new DateTimeProvider();
-            var serializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
+            var serializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
             var keyValueStore = new DBCoinViewStore(serializer, new Configuration.DataFolder(this.FolderName), this.loggerFactory, dateTimeProvider);
-            this.PersistentCoinView = new DBreezeCoinView(network, keyValueStore, dateTimeProvider, this.loggerFactory, new NodeStats(dateTimeProvider, this.loggerFactory), serializer);
+            this.PersistentCoinView = new DBCoinView(network, keyValueStore, dateTimeProvider, this.loggerFactory, new NodeStats(dateTimeProvider, this.loggerFactory), serializer);
             this.PersistentCoinView.Initialize();
             this.cleanList = new List<IDisposable> { this.PersistentCoinView };
         }
@@ -43,7 +43,7 @@ namespace Stratis.Bitcoin.IntegrationTests
             }
         }
 
-        public DBreezeCoinView PersistentCoinView { get; private set; }
+        public DBCoinView PersistentCoinView { get; private set; }
 
         public string FolderName { get; }
 
@@ -63,9 +63,9 @@ namespace Stratis.Bitcoin.IntegrationTests
             this.PersistentCoinView.Dispose();
             this.cleanList.Remove(this.PersistentCoinView);
             var dateTimeProvider = new DateTimeProvider();
-            var serializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
+            var serializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
             var keyValueStore = new DBCoinViewStore(serializer, new Configuration.DataFolder(this.FolderName), this.loggerFactory, dateTimeProvider);
-            this.PersistentCoinView = new DBreezeCoinView(this.Network, keyValueStore, dateTimeProvider, this.loggerFactory, new NodeStats(dateTimeProvider, this.loggerFactory), serializer);
+            this.PersistentCoinView = new DBCoinView(this.Network, keyValueStore, dateTimeProvider, this.loggerFactory, new NodeStats(dateTimeProvider, this.loggerFactory), serializer);
             this.PersistentCoinView.Initialize();
             this.cleanList.Add(this.PersistentCoinView);
         }

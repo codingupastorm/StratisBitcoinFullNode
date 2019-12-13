@@ -23,7 +23,7 @@ namespace Stratis.Bitcoin.Features.Consensus
 
         private readonly ChainIndexer chainIndexer;
 
-        private readonly DBreezeCoinView dBreezeCoinView;
+        private readonly DBCoinView dBreezeCoinView;
 
         private readonly int threshold;
 
@@ -33,7 +33,7 @@ namespace Stratis.Bitcoin.Features.Consensus
 
         private readonly BlockStake genesis;
 
-        public StakeChainStore(Network network, ChainIndexer chainIndexer, DBreezeCoinView dBreezeCoinView, ILoggerFactory loggerFactory)
+        public StakeChainStore(Network network, ChainIndexer chainIndexer, DBCoinView dBreezeCoinView, ILoggerFactory loggerFactory)
         {
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.network = network;

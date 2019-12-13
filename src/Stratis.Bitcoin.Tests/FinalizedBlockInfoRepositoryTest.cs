@@ -23,7 +23,7 @@ namespace Stratis.Bitcoin.Tests
         public async Task FinalizedHeightSavedOnDiskAsync()
         {
             string dir = CreateTestDir(this);
-            var dbreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
+            var dbreezeSerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
             var keyValueStore = new KeyValueRepositoryStore(dbreezeSerializer, new DataFolder(dir), this.loggerFactory, DateTimeProvider.Default);
             var kvRepo = new KeyValueRepository(keyValueStore, dbreezeSerializer);
             var asyncMock = new Mock<IAsyncProvider>();
@@ -45,7 +45,7 @@ namespace Stratis.Bitcoin.Tests
         public async Task FinalizedHeightCantBeDecreasedAsync()
         {
             string dir = CreateTestDir(this);
-            var dbreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
+            var dbreezeSerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
             var keyValueStore = new KeyValueRepositoryStore(dbreezeSerializer, new DataFolder(dir), this.loggerFactory, DateTimeProvider.Default);
             var kvRepo = new KeyValueRepository(keyValueStore, dbreezeSerializer);
             var asyncMock = new Mock<IAsyncProvider>();

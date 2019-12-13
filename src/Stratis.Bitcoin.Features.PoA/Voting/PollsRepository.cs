@@ -17,7 +17,7 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
 
         private readonly ILogger logger;
 
-        private readonly DBreezeSerializer dBreezeSerializer;
+        private readonly RepositorySerializer dBreezeSerializer;
 
         internal const string TableName = "DataTable";
 
@@ -25,12 +25,12 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
 
         private int highestPollId;
 
-        public PollsRepository(DataFolder dataFolder, ILoggerFactory loggerFactory, DBreezeSerializer dBreezeSerializer)
+        public PollsRepository(DataFolder dataFolder, ILoggerFactory loggerFactory, RepositorySerializer dBreezeSerializer)
             : this(dataFolder.PollsPath, loggerFactory, dBreezeSerializer)
         {
         }
 
-        public PollsRepository(string folder, ILoggerFactory loggerFactory, DBreezeSerializer dBreezeSerializer)
+        public PollsRepository(string folder, ILoggerFactory loggerFactory, RepositorySerializer dBreezeSerializer)
         {
             Guard.NotEmpty(folder, nameof(folder));
 

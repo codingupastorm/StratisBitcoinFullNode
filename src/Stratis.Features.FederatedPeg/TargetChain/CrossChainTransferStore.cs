@@ -61,7 +61,7 @@ namespace Stratis.Features.FederatedPeg.TargetChain
         /// <summary>Access to DBreeze database.</summary>
         private readonly DBreezeEngine DBreeze;
 
-        private readonly DBreezeSerializer dBreezeSerializer;
+        private readonly RepositorySerializer dBreezeSerializer;
         private readonly Network network;
         private readonly ChainIndexer chainIndexer;
         private readonly IWithdrawalExtractor withdrawalExtractor;
@@ -78,7 +78,7 @@ namespace Stratis.Features.FederatedPeg.TargetChain
 
         public CrossChainTransferStore(Network network, DataFolder dataFolder, ChainIndexer chainIndexer, IFederatedPegSettings settings, IDateTimeProvider dateTimeProvider,
             ILoggerFactory loggerFactory, IWithdrawalExtractor withdrawalExtractor, IBlockRepository blockRepository, IFederationWalletManager federationWalletManager,
-            IWithdrawalTransactionBuilder withdrawalTransactionBuilder, DBreezeSerializer dBreezeSerializer, ISignals signals, IStateRepositoryRoot stateRepositoryRoot = null)
+            IWithdrawalTransactionBuilder withdrawalTransactionBuilder, RepositorySerializer dBreezeSerializer, ISignals signals, IStateRepositoryRoot stateRepositoryRoot = null)
         {
             if (!settings.IsMainChain)
             {

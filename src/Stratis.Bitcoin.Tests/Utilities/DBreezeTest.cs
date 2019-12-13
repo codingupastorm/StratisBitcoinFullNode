@@ -14,19 +14,19 @@ using Xunit;
 namespace Stratis.Bitcoin.Tests.Utilities
 {
     /// <summary>
-    /// Tests of DBreeze database and <see cref="DBreezeSerializer"/> class.
+    /// Tests of DBreeze database and <see cref="RepositorySerializer"/> class.
     /// </summary>
     public class DBreezeTest : TestBase
     {
         /// <summary>Provider of binary (de)serialization for data stored in the database.</summary>
-        private readonly DBreezeSerializer dbreezeSerializer;
+        private readonly RepositorySerializer dbreezeSerializer;
 
         /// <summary>
         /// Initializes the DBreeze serializer.
         /// </summary>
         public DBreezeTest() : base(KnownNetworks.StratisRegTest)
         {
-            this.dbreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
+            this.dbreezeSerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
         }
 
         [Fact]

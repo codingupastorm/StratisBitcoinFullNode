@@ -96,7 +96,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts
                         preOptions?.Invoke(new SmartContractOptions(services, fullNodeBuilder.Network));
 
                         // STATE ----------------------------------------------------------------------------
-                        services.AddSingleton<DBreezeContractStateStore>();
+                        services.AddSingleton<ContractStateKeyValueStore>();
                         services.AddSingleton<NoDeleteContractStateSource>();
                         services.AddSingleton<IStateRepositoryRoot, StateRepositoryRoot>();
 

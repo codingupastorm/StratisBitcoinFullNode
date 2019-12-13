@@ -31,7 +31,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
         {
             var nodeStats = new NodeStats(DateTimeProvider.Default, this.LoggerFactory.Object);
 
-            var dBreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
+            var dBreezeSerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
 
             var ibdMock = new Mock<IInitialBlockDownloadState>();
             ibdMock.Setup(s => s.IsInitialBlockDownload()).Returns(false);

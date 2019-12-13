@@ -36,7 +36,7 @@ namespace Stratis.Bitcoin.Features.PoA.Tests
         protected readonly Mock<IPollResultExecutor> resultExecutorMock;
         protected readonly Mock<ChainIndexer> chainIndexerMock;
         protected readonly ISignals signals;
-        protected readonly DBreezeSerializer dBreezeSerializer;
+        protected readonly RepositorySerializer dBreezeSerializer;
         protected readonly ChainState chainState;
         protected readonly IAsyncProvider asyncProvider;
 
@@ -46,7 +46,7 @@ namespace Stratis.Bitcoin.Features.PoA.Tests
             this.signals = new Signals.Signals(this.loggerFactory, null);
             this.network = network == null ? new TestPoANetwork() : network;
             this.consensusOptions = this.network.ConsensusOptions;
-            this.dBreezeSerializer = new DBreezeSerializer(this.network.Consensus.ConsensusFactory);
+            this.dBreezeSerializer = new RepositorySerializer(this.network.Consensus.ConsensusFactory);
 
             this.ChainIndexer = new ChainIndexer(this.network);
             IDateTimeProvider timeProvider = new DateTimeProvider();
@@ -88,7 +88,7 @@ namespace Stratis.Bitcoin.Features.PoA.Tests
         public static IFederationManager CreateFederationManager(object caller, Network network, LoggerFactory loggerFactory, ISignals signals)
         {
             string dir = TestBase.CreateTestDir(caller);
-            var dbreezeSerializer = new DBreezeSerializer(network.Consensus.ConsensusFactory);
+            var dbreezeSerializer = new RepositorySerializer(network.Consensus.ConsensusFactory);
             var keyValueStore = new KeyValueRepositoryStore(dbreezeSerializer, new DataFolder(dir), loggerFactory, DateTimeProvider.Default);
             var keyValueRepo = new KeyValueRepository(keyValueStore, dbreezeSerializer);
 

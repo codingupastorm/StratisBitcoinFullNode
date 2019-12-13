@@ -33,7 +33,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoS
                     .FeatureServices(services =>
                     {
                         services.AddSingleton<IDBCoinViewStore, DBCoinViewStore>();
-                        services.AddSingleton<DBreezeCoinView>();
+                        services.AddSingleton<DBCoinView>();
                         services.AddSingleton<ICoinView, CachedCoinView>();
                         services.AddSingleton<StakeChainStore>().AddSingleton<IStakeChain, StakeChainStore>(provider => provider.GetService<StakeChainStore>());
                         services.AddSingleton<IStakeValidator, StakeValidator>();

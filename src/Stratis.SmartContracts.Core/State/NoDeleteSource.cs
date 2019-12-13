@@ -40,6 +40,6 @@ namespace Stratis.SmartContracts.Core.State
     /// </summary>
     public class NoDeleteContractStateSource : NoDeleteSource<byte[], byte[]>
     {
-        public NoDeleteContractStateSource(DBreezeContractStateStore src) : base(src) {}
+        public NoDeleteContractStateSource(ContractStateKeyValueStore src) : base(src) {}
     }
 }
