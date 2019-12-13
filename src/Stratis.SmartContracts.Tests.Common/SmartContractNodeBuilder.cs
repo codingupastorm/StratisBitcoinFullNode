@@ -53,12 +53,12 @@ namespace Stratis.SmartContracts.Tests.Common
 
             CoreNode node = this.CreateNode(new FullTokenlessRunner(dataFolder, network, this.TimeProvider), "poa.conf");
 
-            var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder });
-
-            var tool = new KeyTool(settings.DataFolder);
-            tool.SavePrivateKey(network.FederationKeys[nodeIndex]);
-
-            return node;
+            using (var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder }))
+            {
+                var tool = new KeyTool(settings.DataFolder);
+                tool.SavePrivateKey(network.FederationKeys[nodeIndex]);
+                return node;
+            }
         }
 
         public CoreNode CreateWhitelistedContractPoANode(SmartContractsPoAWhitelistRegTest network, int nodeIndex)
