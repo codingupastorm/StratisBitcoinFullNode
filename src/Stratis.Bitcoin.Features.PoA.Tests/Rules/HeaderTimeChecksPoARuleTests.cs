@@ -19,7 +19,7 @@ namespace Stratis.Bitcoin.Features.PoA.Tests.Rules
 
         public HeaderTimeChecksPoARuleTests()
         {
-            this.timeChecksRule = new HeaderTimeChecksPoARule();
+            this.timeChecksRule = new HeaderTimeChecksPoARule(this.slotsManager);
             this.InitRule(this.timeChecksRule);
         }
 
@@ -111,7 +111,7 @@ namespace Stratis.Bitcoin.Features.PoA.Tests.Rules
                 this.consensusSettings, new Checkpoints(this.network, this.consensusSettings), new Mock<ICoinView>().Object, this.chainState, new InvalidBlockHashStore(timeProvider.Object),
                 new NodeStats(timeProvider.Object, this.loggerFactory), this.slotsManager, this.poaHeaderValidator, this.votingManager, this.federationManager, this.asyncProvider, new ConsensusRulesContainer());
 
-            var timeRule = new HeaderTimeChecksPoARule();
+            var timeRule = new HeaderTimeChecksPoARule(this.slotsManager);
             this.InitRule(timeRule);
 
             ChainedHeader prevHeader = this.currentHeader.Previous;

@@ -63,7 +63,7 @@ namespace Stratis.Feature.PoA.Tokenless
                     .FeatureServices(services =>
                     {
                         // Base
-                        services.AddSingleton<DBreezeCoinView>();
+                        services.AddSingleton<DBCoinView>();
                         services.AddSingleton<IDBCoinViewStore, DBCoinViewStore>();
                         services.AddSingleton<ICoinView, CachedCoinView>();
                         services.AddSingleton<IConsensusRuleEngine, TokenlessConsensusRuleEngine>();
