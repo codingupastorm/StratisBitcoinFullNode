@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Text;
 using Microsoft.Extensions.Logging;
-using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStore;
@@ -45,7 +44,7 @@ namespace Stratis.Bitcoin.Utilities
 
     public class KeyValueRepository : IKeyValueRepository
     {
-        /// <summary>Access to DBreeze database.</summary>
+        /// <summary>Access to database.</summary>
         private readonly IKeyValueStore keyValueStore;
 
         private const string TableName = "common";
@@ -130,7 +129,6 @@ namespace Stratis.Bitcoin.Utilities
         /// <inheritdoc />
         public void Dispose()
         {
-            this.keyValueStore.Dispose();
         }
     }
 }

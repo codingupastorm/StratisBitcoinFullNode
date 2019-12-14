@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using DBreeze.Utils;
 using LevelDB;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStore;
@@ -130,7 +129,7 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
         public override byte[][] Get(KeyValueStoreTransaction tran, KeyValueStoreTable table, byte[][] keys)
         {
             var keyBytes = keys.Select(key => new byte[] { ((KeyValueStoreLDBTable)table).KeyPrefix }.Concat(key).ToArray()).ToArray();
-            (byte[] k, int n)[] orderedKeys = keyBytes.Select((k, n) => (k, n)).OrderBy(t => t.k, new ByteListComparer()).ToArray();
+            (byte[] k, int n)[] orderedKeys = keyBytes.Select((k, n) => (k, n)).OrderBy(t => t.k, new ByteArrayComparer()).ToArray();
             var res = new byte[keys.Length][];
             for (int i = 0; i < orderedKeys.Length; i++)
                 res[orderedKeys[i].n] = this.Storage.Get(orderedKeys[i].k, ((KeyValueStoreLDBTransaction)tran).ReadOptions);
