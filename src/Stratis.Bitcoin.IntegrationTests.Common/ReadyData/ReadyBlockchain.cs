@@ -1,5 +1,4 @@
-﻿
-namespace Stratis.Bitcoin.IntegrationTests.Common.ReadyData
+﻿namespace Stratis.Bitcoin.IntegrationTests.Common.ReadyData
 {
     /// <summary>
     /// A list of paths to readily available blockchain data in zipped folders.
@@ -41,5 +40,10 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.ReadyData
 
         public static string StratisXMainnet15K = @"ReadyData/StratisXOver15K.zip";
         public static string StratisMainnet9500 = @"ReadyData/StratisMain9500.zip";
+
+        public static string[] StratisRegTestAll = {StratisRegTest10Miner, StratisRegTest10Listener, StratisRegTest10NoWallet, StratisRegTest100Miner, StratisRegTest100Listener,
+            StratisRegTest100NoWallet, StratisRegTest150Miner, StratisRegTest150Listener, StratisRegTest150NoWallet };
+        public static string[] BitcoinRegTestAll = {BitcoinRegTest10Miner, BitcoinRegTest10Listener, BitcoinRegTest10NoWallet, BitcoinRegTest100Miner, BitcoinRegTest100Listener,
+            BitcoinRegTest100NoWallet, BitcoinRegTest150Miner, BitcoinRegTest150Listener, BitcoinRegTest150NoWallet };
     }
 }

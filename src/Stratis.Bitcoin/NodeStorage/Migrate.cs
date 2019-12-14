@@ -54,9 +54,9 @@ namespace Stratis.Bitcoin.NodeStorage
             }
 
             // Copy ProvenBlockHeader.
-            using (var provenDBreeze = new KeyValueStore<TFrom>(sourceDataFolder.CoinViewPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
+            using (var provenDBreeze = new KeyValueStore<TFrom>(sourceDataFolder.ProvenBlockHeaderPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
             {
-                using (var provenLevelDB = new KeyValueStore<TTo>(targetDataFolder.CoinViewPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
+                using (var provenLevelDB = new KeyValueStore<TTo>(targetDataFolder.ProvenBlockHeaderPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
                 {
                     // Primitive types must be used.
                     CopyTable<int, byte[]>(provenDBreeze, provenLevelDB, "ProvenBlockHeader");
