@@ -1,12 +1,8 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.IO.Compression;
-using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
-using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Bitcoin.NodeStorage;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
