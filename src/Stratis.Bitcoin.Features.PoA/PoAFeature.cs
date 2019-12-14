@@ -196,7 +196,7 @@ namespace Stratis.Bitcoin.Features.PoA
                     .FeatureServices(services =>
                     {
                         services.AddSingleton<IDBCoinViewStore, DBCoinViewStore>();
-                        services.AddSingleton<DBreezeCoinView>();
+                        services.AddSingleton<DBCoinView>();
                         services.AddSingleton<ICoinView, CachedCoinView>();
                         services.AddSingleton<IConsensusRuleEngine, PoAConsensusRuleEngine>();
                         services.AddSingleton<IChainState, ChainState>();

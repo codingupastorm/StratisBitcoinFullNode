@@ -143,14 +143,14 @@ namespace Stratis.SmartContracts.Core.Tests
         [Fact]
         public void Test20DBreeze()
         {
-            var engine = new ContractStateTableStore(DbreezeTestLocation, new LoggerFactory(), DateTimeProvider.Default, new DBreezeSerializer(KnownNetworks.StratisRegTest.Consensus.ConsensusFactory));
+            var engine = new ContractStateTableStore(DbreezeTestLocation, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(KnownNetworks.StratisRegTest.Consensus.ConsensusFactory));
             using (IKeyValueStoreTransaction t = engine.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 t.RemoveAllKeys(DbreezeTestDb);
                 t.Commit();
             }
 
-            ISource<byte[], byte[]> stateDB = new NoDeleteSource<byte[], byte[]>(new DBreezeByteStore(engine, DbreezeTestDb));
+            ISource<byte[], byte[]> stateDB = new NoDeleteSource<byte[], byte[]>(new KeyValueByteStore(engine, DbreezeTestDb));
             StateRepositoryRoot repository = new StateRepositoryRoot(stateDB);
             byte[] root = repository.Root;
 

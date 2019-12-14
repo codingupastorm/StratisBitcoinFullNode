@@ -15,7 +15,7 @@ namespace Stratis.Bitcoin.Tests.Common
     public class TestBase
     {
         public Network Network { get; protected set; }
-        public DBreezeSerializer DBreezeSerializer { get; }
+        public RepositorySerializer RepositorySerializer { get; }
 
         /// <summary>
         /// Initializes logger factory for inherited tests.
@@ -23,7 +23,7 @@ namespace Stratis.Bitcoin.Tests.Common
         public TestBase(Network network)
         {
             this.Network = network;
-            this.DBreezeSerializer = new DBreezeSerializer(network.Consensus.ConsensusFactory);
+            this.RepositorySerializer = new RepositorySerializer(network.Consensus.ConsensusFactory);
         }
 
         public static string AssureEmptyDir(string dir)
@@ -78,7 +78,7 @@ namespace Stratis.Bitcoin.Tests.Common
         /// <returns>The path of the directory.</returns>
         public static string GetTestDirectoryPath(object caller, [System.Runtime.CompilerServices.CallerMemberName] string callingMethod = "")
         {
-            return GetTestDirectoryPath(Path.Combine(caller.GetType().Name, callingMethod));
+            return GetTestDirectoryPath(Path.Combine(Path.GetTempPath(), caller.GetType().Name, callingMethod));
         }
 
         /// <summary>

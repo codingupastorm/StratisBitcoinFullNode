@@ -37,20 +37,16 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
 
         public override T Deserialize<T>(byte[] objBytes)
         {
-            if (typeof(T) == typeof(int))
-            {
-                return (T)(object)DBreeze.DataTypes.DataTypesConvertor.ConvertBack<int>(objBytes);
-            }
+            if (typeof(T).IsValueType)
+                return (T)(object)DBreeze.DataTypes.DataTypesConvertor.ConvertBack<T>(objBytes);
 
             return base.Deserialize<T>(objBytes);
         }
 
         public override byte[] Serialize<T>(T obj)
         {
-            if (typeof(T) == typeof(int))
-            {
-                return DBreeze.DataTypes.DataTypesConvertor.ConvertKey((int)(object)obj);
-            }
+            if (typeof(T).IsValueType)
+                return ((T)obj).ToBytes();
 
             return base.Serialize(obj);
         }
