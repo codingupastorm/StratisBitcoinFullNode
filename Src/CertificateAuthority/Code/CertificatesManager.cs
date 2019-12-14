@@ -7,6 +7,10 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using OpenSSL.Core;
+using OpenSSL.Crypto;
+using OpenSSL.X509;
+using X509Certificate = OpenSSL.X509.X509Certificate;
 
 namespace CertificateAuthority.Code
 {
@@ -23,14 +27,14 @@ namespace CertificateAuthority.Code
         private string certificateKeyPath;
 
         private string certificatesDirectory;
-
-        private Random random;
-
+        
         private readonly DataCacheLayer repository;
 
         private readonly Settings settings;
 
         private readonly Logger logger = LogManager.GetCurrentClassLogger();
+
+        private X509CertificateAuthority certificateAuthority;
 
         public CertificatesManager(DataCacheLayer cache, Settings settings)
         {
@@ -48,11 +52,21 @@ namespace CertificateAuthority.Code
 
             this.certificatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, CertificateFileName);
             this.certificateKeyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, CertificateKey);
+            
+            string privateKeyPem = File.ReadAllText(this.certificateKeyPath);
 
-            this.random = new Random();
+            CryptoKey privateKey = CryptoKey.FromPrivateKey(privateKeyPem, "");
+
+            var caCert = new X509Certificate(BIO.File(this.certificatePath, "r"));
+
+            int nextSerialNumber = this.repository.CertStatusesByThumbprint.Count;
+
+            this.certificateAuthority = new X509CertificateAuthority(caCert, privateKey, new SimpleSerialNumber(nextSerialNumber));
         }
 
-        /// <summary>Issues a new certificate using provided certificate request.</summary>
+        /// <summary>
+        /// Issues a new certificate using provided certificate request.
+        /// </summary>
         public async Task<CertificateInfoModel> IssueCertificateAsync(CredentialsAccessWithModel<IssueCertificateFromRequestModel> model)
         {
             this.repository.VerifyCredentialsAndAccessLevel(model, out AccountModel creator);
@@ -60,55 +74,66 @@ namespace CertificateAuthority.Code
             if (model.Model.CertificateRequestFile.Length == 0)
                 throw new Exception("Empty file!");
 
-            string requestFileName = $"certRequest_{random.Next(0, int.MaxValue).ToString()}.csr";
-            var requestFullPath = Path.Combine(this.tempDirectory, requestFileName);
+            var ms = new MemoryStream();
 
-            using (var stream = new FileStream(requestFullPath, FileMode.Create))
-                model.Model.CertificateRequestFile.CopyTo(stream);
+            model.Model.CertificateRequestFile.CopyTo(ms);
 
-            int nextSerialNumber = repository.CertStatusesByThumbprint.Count;
+            BIO requestStream = BIO.MemoryBuffer();
+            requestStream.Write(ms.ToArray());
 
-            return await this.IssueCertificate(requestFullPath, nextSerialNumber, creator.Id);
+            var certRequest = new X509Request(requestStream);
+
+            requestStream.Dispose();
+            ms.Dispose();
+
+            return await this.IssueCertificate(certRequest, creator.Id);
         }
 
-        /// <summary>Issues a new certificate using provided certificate request.</summary>
+        /// <summary>
+        /// Issues a new certificate using provided certificate request.
+        /// </summary>
         public async Task<CertificateInfoModel> IssueCertificateAsync(CredentialsAccessWithModel<IssueCertificateFromFileContentsModel> model)
         {
             this.repository.VerifyCredentialsAndAccessLevel(model, out AccountModel creator);
-
-            string requestFileName = $"certRequest_{random.Next(0, int.MaxValue).ToString()}.csr";
-            var requestFullPath = Path.Combine(this.tempDirectory, requestFileName);
-
-            List<string> certificateRequestLines = DataHelper.GetCertificateRequestLines(model.Model.CertificateRequestFileContents);
-
-            File.WriteAllLines(requestFullPath, certificateRequestLines);
-
+            
             this.logger.Info("Issuing certificate from the following request: '{0}'.", model.Model.CertificateRequestFileContents);
 
-            int nextSerialNumber = repository.CertStatusesByThumbprint.Count;
+            BIO requestStream = BIO.MemoryBuffer();
+            requestStream.Write(string.Join("\n", DataHelper.GetCertificateRequestLines(model.Model.CertificateRequestFileContents)));
 
-            return await this.IssueCertificate(requestFullPath, nextSerialNumber, creator.Id);
+            var certRequest = new X509Request(requestStream);
+
+            requestStream.Dispose();
+
+            return await this.IssueCertificate(certRequest, creator.Id);
         }
 
-        /// <summary>Issues a new certificate using provided certificate request.</summary>
-        private async Task<CertificateInfoModel> IssueCertificate(string certificateRequestFilePath, int nextSerialNumber, int creatorId)
+        /// <summary>
+        /// Issues a new certificate using provided certificate request.
+        /// </summary>
+        private async Task<CertificateInfoModel> IssueCertificate(X509Request certRequest, int creatorId)
         {
             int issueForDays = this.settings.DefaultIssuanceCertificateDays;
 
-            string crtGeneratedPath = Path.Combine(this.certificatesDirectory, $"certificate_{nextSerialNumber.ToString()}.crt");
-            string createCertCommand = $"\"{this.settings.OpenSslPath}\" x509 -req -days {issueForDays} -in \"{certificateRequestFilePath}\" -CA \"{certificatePath}\" -CAkey \"{certificateKeyPath}\" -set_serial {nextSerialNumber.ToString()} -out \"{crtGeneratedPath}\"";
+            DateTime start = DateTime.Today.AddDays(-1);
+            DateTime end = start.AddDays(issueForDays);
 
-            this.RunCmdCommand(createCertCommand);
+            X509CertificateAuthority ca = this.GetCertificateAuthority();
 
-            await this.WaitTillFileCreatedAsync(crtGeneratedPath, 2000);
+            // TODO: Research whether it is necessary to supply a configuration
+            Configuration cfg = null;
+            string section = null;
 
-            X509Certificate2 createdCertificate = new X509Certificate2(crtGeneratedPath);
+            X509Certificate cert = ca.ProcessRequest(certRequest, start, end, cfg, section);
+
+            // We need some data from the certificate that is not directly exposed by the OpenSSL version of the object.
+            var createdCertificate = new X509Certificate2(cert.DER);
 
             var infoModel = new CertificateInfoModel()
             {
                 Status = CertificateStatus.Good,
                 Thumbprint = createdCertificate.Thumbprint,
-                CertificateContent = string.Join(" ", File.ReadAllLines(crtGeneratedPath)),
+                CertificateContent = cert.PEM,
                 IssuerAccountId = creatorId
             };
 
@@ -116,18 +141,23 @@ namespace CertificateAuthority.Code
 
             this.logger.Info("New certificate was issued by account id {0}; certificate: '{1}'.", creatorId, infoModel);
 
-            File.Delete(certificateRequestFilePath);
+            certRequest.Dispose();
+            cfg?.Dispose();
 
             return infoModel;
         }
 
-        /// <summary>Provides collection of all issued certificates.</summary>
+        /// <summary>
+        /// Provides collection of all issued certificates.
+        /// </summary>
         public List<CertificateInfoModel> GetAllCertificates(CredentialsAccessModel accessModelInfo)
         {
             return this.repository.ExecuteQuery(accessModelInfo, (dbContext) => { return dbContext.Certificates.ToList(); });
         }
 
-        /// <summary>Finds issued certificate by thumbprint and returns it or null if it wasn't found.</summary>
+        /// <summary>
+        /// Finds issued certificate by thumbprint and returns it or null if it wasn't found.
+        /// </summary>
         public CertificateInfoModel GetCertificateByThumbprint(CredentialsAccessWithModel<CredentialsModelWithThumbprintModel> model)
         {
             return this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Certificates.SingleOrDefault(x => x.Thumbprint == model.Model.Thumbprint); });
@@ -145,7 +175,9 @@ namespace CertificateAuthority.Code
             return CertificateStatus.Unknown;
         }
 
-        /// <summary> Returns all revoked certificates.</summary>
+        /// <summary>
+        /// Returns all revoked certificates.
+        /// </summary>
         public HashSet<string> GetRevokedCertificates()
         {
             return this.repository.RevokedCertificates;
@@ -181,30 +213,9 @@ namespace CertificateAuthority.Code
             });
         }
 
-        /// <summary>Executes command line command.</summary>
-        private void RunCmdCommand(string arguments)
+        private X509CertificateAuthority GetCertificateAuthority()
         {
-            System.Diagnostics.Process process = new System.Diagnostics.Process();
-            System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo
-            {
-                WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden,
-                CreateNoWindow = true,
-                FileName = "cmd.exe",
-                Arguments = $"/c \"{arguments}\""
-            };
-            process.StartInfo = startInfo;
-            process.Start();
-        }
-
-        private async Task WaitTillFileCreatedAsync(string path, int maxWaitMs)
-        {
-            int msWaited = 0;
-
-            while (!File.Exists(path) && msWaited < maxWaitMs)
-            {
-                await Task.Delay(200);
-                msWaited += 200;
-            }
+            return this.certificateAuthority;
         }
     }
 }

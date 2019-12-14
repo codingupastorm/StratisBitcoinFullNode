@@ -18,8 +18,6 @@ namespace CertificateAuthority.Code
 
             CreateAdminAccountOnCleanStart = configReader.GetOrDefault<bool>("createadmin", true);
             DefaultAdminPasswordHash = configReader.GetOrDefault<string>("adminpasshash", "6085fee2997a53fe15f195d907590238ec1f717adf6ac7fd4d7ed137f91892aa");
-
-            OpenSslPath = configReader.GetOrDefault<string>("opensslpath", @"C:\Program Files\OpenSSL-Win64\bin\openssl.exe");
         }
 
         private TextFileConfiguration configReader;
@@ -31,7 +29,5 @@ namespace CertificateAuthority.Code
         public bool CreateAdminAccountOnCleanStart { get; private set; }
 
         public string DefaultAdminPasswordHash { get; private set; }
-
-        public string OpenSslPath { get; private set; }
     }
 }
