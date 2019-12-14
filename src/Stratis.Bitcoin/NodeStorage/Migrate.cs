@@ -14,13 +14,13 @@ namespace Stratis.Bitcoin.NodeStorage
         public void MigrateKeyValueStore<TFrom, TTo>(Network network, DataFolder sourceDataFolder, DataFolder targetDataFolder) where TFrom : KeyValueStoreRepository where TTo : KeyValueStoreRepository
         {
             // Copy Block Store.
-            using (var blockStoreDBreeze = new KeyValueStore<TFrom>(sourceDataFolder.BlockPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
+            using (var blockStoreSource = new KeyValueStore<TFrom>(sourceDataFolder.BlockPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
             {
-                using (var blockStoreLevelDB = new KeyValueStore<KeyValueStoreLevelDB.KeyValueStoreLevelDB>(targetDataFolder.BlockPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
+                using (var blockStoreTarget = new KeyValueStore<TTo>(targetDataFolder.BlockPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
                 {
-                    CopyTable<byte[], byte[]>(blockStoreDBreeze, blockStoreLevelDB, "Block");
-                    CopyTable<byte[], byte[]>(blockStoreDBreeze, blockStoreLevelDB, "Transaction");
-                    CopyTable<byte[], byte[]>(blockStoreDBreeze, blockStoreLevelDB, "Common", (tableName, from, to) =>
+                    CopyTable<byte[], byte[]>(blockStoreSource, blockStoreTarget, "Block");
+                    CopyTable<byte[], byte[]>(blockStoreSource, blockStoreTarget, "Transaction");
+                    CopyTable<byte[], byte[]>(blockStoreSource, blockStoreTarget, "Common", (tableName, from, to) =>
                     {
                         byte[] txIndexKey = new byte[1];
 
@@ -31,36 +31,36 @@ namespace Stratis.Bitcoin.NodeStorage
             }
 
             // Copy Chain Repository.
-            using (var chainRepoDBreeze = new KeyValueStore<TFrom>(sourceDataFolder.ChainPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
+            using (var chainRepoSource = new KeyValueStore<TFrom>(sourceDataFolder.ChainPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
             {
-                using (var chainRepoLevelDB = new KeyValueStore<TTo>(targetDataFolder.ChainPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
+                using (var chainRepoTarget = new KeyValueStore<TTo>(targetDataFolder.ChainPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
                 {
                     // Primitive types must be used.
-                    CopyTable<int, byte[]>(chainRepoDBreeze, chainRepoLevelDB, "Chain");
+                    CopyTable<int, byte[]>(chainRepoSource, chainRepoTarget, "Chain");
                 }
             }
 
             // Copy CoinView.
-            using (var coinViewDBreeze = new KeyValueStore<TFrom>(sourceDataFolder.CoinViewPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
+            using (var coinViewSource = new KeyValueStore<TFrom>(sourceDataFolder.CoinViewPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
             {
-                using (var coinViewLevelDB = new KeyValueStore<TTo>(targetDataFolder.CoinViewPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
+                using (var coinViewTarget = new KeyValueStore<TTo>(targetDataFolder.CoinViewPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
                 {
-                    CopyTable<byte[], byte[]>(coinViewDBreeze, coinViewLevelDB, "Coins");
+                    CopyTable<byte[], byte[]>(coinViewSource, coinViewTarget, "Coins");
                     // Primitive types must be used.
-                    CopyTable<int, byte[]>(coinViewDBreeze, coinViewLevelDB, "Rewind");
-                    CopyTable<byte[], byte[]>(coinViewDBreeze, coinViewLevelDB, "Stake");
-                    CopyTable<byte[], byte[]>(coinViewDBreeze, coinViewLevelDB, "BlockHash");
+                    CopyTable<int, byte[]>(coinViewSource, coinViewTarget, "Rewind");
+                    CopyTable<byte[], byte[]>(coinViewSource, coinViewTarget, "Stake");
+                    CopyTable<byte[], byte[]>(coinViewSource, coinViewTarget, "BlockHash");
                 }
             }
 
             // Copy ProvenBlockHeader.
-            using (var provenDBreeze = new KeyValueStore<TFrom>(sourceDataFolder.ProvenBlockHeaderPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
+            using (var provenSource = new KeyValueStore<TFrom>(sourceDataFolder.ProvenBlockHeaderPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
             {
-                using (var provenLevelDB = new KeyValueStore<TTo>(targetDataFolder.ProvenBlockHeaderPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
+                using (var provenTarget = new KeyValueStore<TTo>(targetDataFolder.ProvenBlockHeaderPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
                 {
                     // Primitive types must be used.
-                    CopyTable<int, byte[]>(provenDBreeze, provenLevelDB, "ProvenBlockHeader");
-                    CopyTable<byte[], byte[]>(provenDBreeze, provenLevelDB, "BlockHashHeight");
+                    CopyTable<int, byte[]>(provenSource, provenTarget, "ProvenBlockHeader");
+                    CopyTable<byte[], byte[]>(provenSource, provenTarget, "BlockHashHeight");
                 }
             }
 
