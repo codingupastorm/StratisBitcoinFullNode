@@ -23,7 +23,15 @@ namespace CertificateAuthority.Code.Controllers
         public ActionResult<AccountInfo> GetAccountInfoById([FromBody]CredentialsModelWithTargetId model)
         {
             var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AccessAccountInfo);
-            return this.repository.GetAccountInfoById(credentials);
+
+            try
+            {
+                return this.repository.GetAccountInfoById(credentials);
+            }
+            catch (InvalidCredentialsException)
+            {
+                return this.Forbid();
+            }
         }
 
         /// <summary>Provides account information of the account with id specified. AccessAccountInfo access level required.</summary>
@@ -33,7 +41,15 @@ namespace CertificateAuthority.Code.Controllers
         public ActionResult<List<AccountModel>> GetAllAccounts([FromBody]CredentialsModel model)
         {
             var credentials = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAccountInfo);
-            return this.repository.GetAllAccounts(credentials);
+
+            try
+            {
+                return this.repository.GetAllAccounts(credentials);
+            }
+            catch (InvalidCredentialsException)
+            {
+                return this.Forbid();
+            }
         }
 
         /// <summary>Creates new account.</summary>
@@ -43,7 +59,15 @@ namespace CertificateAuthority.Code.Controllers
         public ActionResult<int> CreateAccount([FromBody]CreateAccount model)
         {
             var credentials = new CredentialsAccessWithModel<CreateAccount>(model, AccountAccessFlags.CreateAccounts);
-            return this.repository.CreateAccount(credentials);
+
+            try
+            {
+                return this.repository.CreateAccount(credentials);
+            }
+            catch (InvalidCredentialsException)
+            {
+                return this.Forbid();
+            }
         }
 
         /// <summary>Provides collection of all certificates issued by account with specified id. AccessAnyCertificate access level is required.</summary>
@@ -53,7 +77,15 @@ namespace CertificateAuthority.Code.Controllers
         public ActionResult<List<CertificateInfoModel>> GetCertificatesIssuedByAccountId([FromBody]CredentialsModelWithTargetId model)
         {
             var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AccessAnyCertificate);
-            return this.repository.GetCertificatesIssuedByAccountId(credentials);
+
+            try
+            {
+                return this.repository.GetCertificatesIssuedByAccountId(credentials);
+            }
+            catch (InvalidCredentialsException)
+            {
+                return this.Forbid();
+            }
         }
 
         /// <summary>Deletes existing account with id specified. DeleteAccounts access level is required. Can't delete Admin.</summary>
@@ -61,8 +93,17 @@ namespace CertificateAuthority.Code.Controllers
         public ActionResult DeleteAccountByAccountId([FromBody]CredentialsModelWithTargetId model)
         {
             var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.DeleteAccounts);
-            this.repository.DeleteAccount(credentials);
-            return this.Ok();
+
+            try
+            {
+                this.repository.DeleteAccount(credentials);
+
+                return this.Ok();
+            }
+            catch (InvalidCredentialsException)
+            {
+                return this.Forbid();
+            }
         }
 
         /// <summary>
@@ -74,8 +115,17 @@ namespace CertificateAuthority.Code.Controllers
         public ActionResult ChangeAccountAccessLevel([FromBody]ChangeAccountAccessLevel model)
         {
             var credentials = new CredentialsAccessWithModel<ChangeAccountAccessLevel>(model, AccountAccessFlags.ChangeAccountAccessLevel);
-            this.repository.ChangeAccountAccessLevel(credentials);
-            return this.Ok();
+
+            try
+            {
+                this.repository.ChangeAccountAccessLevel(credentials);
+
+                return this.Ok();
+            }
+            catch (InvalidCredentialsException)
+            {
+                return this.Forbid();
+            }
         }
     }
 }
