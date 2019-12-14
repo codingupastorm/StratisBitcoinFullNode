@@ -56,7 +56,7 @@ namespace CertificateAuthority
         {
             // Settings
             {
-                string configurationFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ConfigurationFile.txt");
+                string configurationFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ca.conf");
                 string configData = string.Empty;
 
                 if (File.Exists(configurationFilePath))
