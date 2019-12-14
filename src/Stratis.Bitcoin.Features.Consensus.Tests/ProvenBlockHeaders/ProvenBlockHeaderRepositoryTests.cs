@@ -17,11 +17,15 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
 {
     public class ProvenBlockHeaderRepositoryTests : LogsTestBase
     {
+        private readonly Mock<ILoggerFactory> loggerFactory;
+        private readonly RepositorySerializer repositorySerializer;
         private const string ProvenBlockHeaderTable = "ProvenBlockHeader";
         private const string BlockHashTable = "BlockHashHeight";
 
         public ProvenBlockHeaderRepositoryTests() : base(KnownNetworks.StratisTest)
         {
+            this.loggerFactory = new Mock<ILoggerFactory>();
+            this.repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
         }
 
         [Fact]
@@ -205,8 +209,8 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
             var loggerFactory = new LoggerFactory();
             var dateTimeProvider = new DateTimeProvider();
 
-            var store = new ProvenBlockHeaderKeyValueStore(network, new DataFolder(folder), loggerFactory, dateTimeProvider);
-            var repo = new ProvenBlockHeaderRepository(store, network, folder, loggerFactory);
+            var store = new ProvenBlockHeaderKeyValueStore(network, new DataFolder(folder), loggerFactory, dateTimeProvider, this.repositorySerializer);
+            var repo = new ProvenBlockHeaderRepository(store, network, folder, loggerFactory, this.repositorySerializer);
 
             Task task = repo.InitializeAsync();
 

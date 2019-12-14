@@ -16,7 +16,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
     /// <summary>
     /// Persistent implementation of coinview using dBreeze database.
     /// </summary>
-    public class DBreezeCoinView : ICoinView, IDisposable
+    public class DBCoinView : ICoinView, IDisposable
     {
         /// <summary>Database key under which the block hash of the coin view's current tip is stored.</summary>
         private static readonly byte[] blockHashKey = new byte[0];
@@ -38,7 +38,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
         /// <summary>Access to dBreeze database.</summary>
         private readonly IDBCoinViewStore keyValueStore;
 
-        private DBreezeSerializer dBreezeSerializer;
+        private RepositorySerializer repositorySerializer;
 
         /// <summary>
         /// Initializes a new instance of the object.
@@ -49,13 +49,13 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
         /// <param name="loggerFactory">Factory to be used to create logger for the puller.</param>
         /// <param name="nodeStats"></param>
         /// <param name="dBreezeSerializer">The serializer to use for <see cref="IBitcoinSerializable"/> objects.</param>
-        public DBreezeCoinView(Network network, IDBCoinViewStore dBCoinViewStore, IDateTimeProvider dateTimeProvider,
-            ILoggerFactory loggerFactory, INodeStats nodeStats, DBreezeSerializer dBreezeSerializer)
+        public DBCoinView(Network network, IDBCoinViewStore dBCoinViewStore, IDateTimeProvider dateTimeProvider,
+            ILoggerFactory loggerFactory, INodeStats nodeStats, RepositorySerializer dBreezeSerializer)
         {
             Guard.NotNull(network, nameof(network));
             Guard.NotNull(dBCoinViewStore, nameof(dBCoinViewStore));
 
-            this.dBreezeSerializer = dBreezeSerializer;
+            this.repositorySerializer = dBreezeSerializer;
 
             // Create the coinview folder if it does not exist.
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
@@ -197,7 +197,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
                         var coin = toInsert[i];
                         this.logger.LogDebug("Outputs of transaction ID '{0}' are NOT PRUNABLE and will be inserted into the database. {1}/{2}.", coin.TransactionId, i, toInsert.Count);
 
-                        transaction.Insert("Coins", coin.TransactionId.ToBytes(false), this.dBreezeSerializer.Serialize(coin.ToCoins()));
+                        transaction.Insert("Coins", coin.TransactionId.ToBytes(false), this.repositorySerializer.Serialize(coin.ToCoins()));
                     }
 
                     if (rewindDataList != null)
@@ -207,7 +207,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
                         {
                             this.logger.LogDebug("Rewind state #{0} created.", nextRewindIndex);
 
-                            transaction.Insert("Rewind", nextRewindIndex, this.dBreezeSerializer.Serialize(rewindData));
+                            transaction.Insert("Rewind", nextRewindIndex, this.repositorySerializer.Serialize(rewindData));
                             nextRewindIndex++;
                         }
                     }
@@ -223,7 +223,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
         /// <summary>
         /// Obtains order number of the last saved rewind state in the database.
         /// </summary>
-        /// <param name="transaction">Open dBreeze transaction.</param>
+        /// <param name="transaction">Open transaction.</param>
         /// <returns>Order number of the last saved rewind state, or <c>0</c> if no rewind state is found in the database.</returns>
         /// <remarks>TODO: Using <c>0</c> is hacky here, and <see cref="SaveChanges"/> exploits that in a way that if no such rewind data exist
         /// the order number of the first rewind data is 0 + 1 = 1.</remarks>
@@ -261,7 +261,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
                 {
                     (int Key, byte[] Value) firstRow = transaction.SelectBackward<int, byte[]>("Rewind").FirstOrDefault();
                     transaction.RemoveKey("Rewind", firstRow.Key, firstRow.Value);
-                    var rewindData = this.dBreezeSerializer.Deserialize<RewindData>(firstRow.Value);
+                    var rewindData = this.repositorySerializer.Deserialize<RewindData>(firstRow.Value);
                     this.SetBlockHash(transaction, rewindData.PreviousBlockHash);
 
                     foreach (uint256 txId in rewindData.TransactionsToRemove)
@@ -273,7 +273,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
                     foreach (UnspentOutputs coin in rewindData.OutputsToRestore)
                     {
                         this.logger.LogDebug("Outputs of transaction ID '{0}' will be restored.", coin.TransactionId);
-                        transaction.Insert("Coins", coin.TransactionId.ToBytes(false), this.dBreezeSerializer.Serialize(coin.ToCoins()));
+                        transaction.Insert("Coins", coin.TransactionId.ToBytes(false), this.repositorySerializer.Serialize(coin.ToCoins()));
                     }
 
                     res = rewindData.PreviousBlockHash;
@@ -301,7 +301,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
         /// <summary>
         /// Persists unsaved POS blocks information to the database.
         /// </summary>
-        /// <param name="transaction">Open dBreeze transaction.</param>
+        /// <param name="transaction">Open transaction.</param>
         /// <param name="stakeEntries">List of POS block information to be examined and persists if unsaved.</param>
         private void PutStakeInternal(IKeyValueStoreTransaction transaction, IEnumerable<StakeItem> stakeEntries)
         {
@@ -309,7 +309,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
             {
                 if (!stakeEntry.InStore)
                 {
-                    transaction.Insert("Stake", stakeEntry.BlockId.ToBytes(false), this.dBreezeSerializer.Serialize(stakeEntry.BlockStake));
+                    transaction.Insert("Stake", stakeEntry.BlockId.ToBytes(false), this.repositorySerializer.Serialize(stakeEntry.BlockStake));
                     stakeEntry.InStore = true;
                 }
             }
@@ -337,7 +337,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
 
         private void AddBenchStats(StringBuilder log)
         {
-            log.AppendLine("======DBreezeCoinView Bench======");
+            log.AppendLine("======DBCoinView Bench======");
 
             BackendPerformanceSnapshot snapShot = this.performanceCounter.Snapshot();
 

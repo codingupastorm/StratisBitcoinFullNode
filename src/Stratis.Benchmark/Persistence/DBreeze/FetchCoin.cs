@@ -78,7 +78,7 @@ namespace Stratis.Benchmark.Persistence.DBreeze
                     foreach (uint256 input in this.data)
                     {
                         Row<byte[], byte[]> row = transaction.Select<byte[], byte[]>("Coins", input.ToBytes(false));
-                        uint256 outputs = row.Exists ? this.dBreezeSerializer.Deserialize<uint256>(row.Value) : null;
+                        uint256 outputs = row.Exists ? this.repositorySerializer.Deserialize<uint256>(row.Value) : null;
 
                         result.Add(outputs);
                     }
@@ -104,7 +104,7 @@ namespace Stratis.Benchmark.Persistence.DBreeze
                         for (int i = range.Item1; i < range.Item2; i++)
                         {
                             Row<byte[], byte[]> row = transaction.Select<byte[], byte[]>("Coins", this.data[i].ToBytes(false));
-                            uint256 outputs = row.Exists ? this.dBreezeSerializer.Deserialize<uint256>(row.Value) : null;
+                            uint256 outputs = row.Exists ? this.repositorySerializer.Deserialize<uint256>(row.Value) : null;
 
                             result.Add(outputs);
                         }
@@ -134,7 +134,7 @@ namespace Stratis.Benchmark.Persistence.DBreeze
                         rawValues.Add(row.Value);
                     }
 
-                    return rawValues.AsParallel().Select(rawValue => this.dBreezeSerializer.Deserialize<uint256>(rawValue)).ToList();
+                    return rawValues.AsParallel().Select(rawValue => this.repositorySerializer.Deserialize<uint256>(rawValue)).ToList();
                 }
             }
         }
@@ -167,7 +167,7 @@ namespace Stratis.Benchmark.Persistence.DBreeze
                         List<uint256> partialResult = new List<uint256>(range.Item2 - range.Item1);
                         for (int i = range.Item1; i < range.Item2; i++)
                         {
-                            partialResult.Add(this.dBreezeSerializer.Deserialize<uint256>(rawValues[i]));
+                            partialResult.Add(this.repositorySerializer.Deserialize<uint256>(rawValues[i]));
                         }
 
                         lock (innerLock)

@@ -30,7 +30,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoA
                     .FeatureServices(services =>
                     {
                         services.AddSingleton<IDBCoinViewStore, DBCoinViewStore>();
-                        services.AddSingleton<DBreezeCoinView>();
+                        services.AddSingleton<DBCoinView>();
                         services.AddSingleton<ICoinView, CachedCoinView>();
                         services.AddSingleton<VotingManager>();
                         services.AddSingleton<IWhitelistedHashesRepository, WhitelistedHashesRepository>();

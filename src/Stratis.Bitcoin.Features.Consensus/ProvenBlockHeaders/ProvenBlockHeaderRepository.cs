@@ -17,8 +17,8 @@ namespace Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders
 
     public class ProvenBlockHeaderKeyValueStore : KeyValueStore<KeyValueStoreLevelDB.KeyValueStoreLevelDB>, IProvenBlockHeaderKeyValueStore
     {
-        public ProvenBlockHeaderKeyValueStore(Network network, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
-            : base(dataFolder.ProvenBlockHeaderPath, loggerFactory, dateTimeProvider, new DBreezeSerializer(network.Consensus.ConsensusFactory))
+        public ProvenBlockHeaderKeyValueStore(Network network, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, IRepositorySerializer repositorySerializer)
+            : base(dataFolder.ProvenBlockHeaderPath, loggerFactory, dateTimeProvider, repositorySerializer)
         {
         }
     }
@@ -58,7 +58,9 @@ namespace Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders
         /// Current <see cref="ProvenBlockHeader"/> tip.
         /// </summary>
         private ProvenBlockHeader provenBlockHeaderTip;
-        
+
+        private readonly RepositorySerializer repositorySerializer;
+
         /// <inheritdoc />
         public HashHeightPair TipHashHeight { get; private set; }
 
@@ -67,10 +69,12 @@ namespace Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders
         /// </summary>
         /// <param name="provenBlockHeaderKeyValueStore">The key-value database to use.</param>
         /// <param name="network">Specification of the network the node runs on - RegTest/TestNet/MainNet.</param>
-        /// <param name="folder"><see cref="ProvenBlockHeaderRepository"/> folder path to the DBreeze database files.</param>
+        /// <param name="folder"><see cref="ProvenBlockHeaderRepository"/> folder path to the database files.</param>
         /// <param name="loggerFactory">Factory to create a logger for this type.</param>
-        public ProvenBlockHeaderRepository(IProvenBlockHeaderKeyValueStore provenBlockHeaderKeyValueStore, Network network, DataFolder folder, ILoggerFactory loggerFactory)
-        : this(provenBlockHeaderKeyValueStore, network, folder.ProvenBlockHeaderPath, loggerFactory)
+        /// <param name="repositorySerializer">The serializer to use for <see cref="IBitcoinSerializable"/> objects.</param>
+        public ProvenBlockHeaderRepository(IProvenBlockHeaderKeyValueStore provenBlockHeaderKeyValueStore, Network network, DataFolder folder, ILoggerFactory loggerFactory,
+            RepositorySerializer repositorySerializer)
+        : this(provenBlockHeaderKeyValueStore, network, folder.ProvenBlockHeaderPath, loggerFactory, repositorySerializer)
         {
         }
 
@@ -79,13 +83,16 @@ namespace Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders
         /// </summary>
         /// <param name="provenBlockHeaderKeyValueStore">The key-value database to use.</param>
         /// <param name="network">Specification of the network the node runs on - RegTest/TestNet/MainNet.</param>
-        /// <param name="folder"><see cref="ProvenBlockHeaderRepository"/> folder path to the DBreeze database files.</param>
+        /// <param name="folder"><see cref="ProvenBlockHeaderRepository"/> folder path to the database files.</param>
         /// <param name="loggerFactory">Factory to create a logger for this type.</param>
-        public ProvenBlockHeaderRepository(IProvenBlockHeaderKeyValueStore provenBlockHeaderKeyValueStore, Network network, string folder, ILoggerFactory loggerFactory)
+        /// <param name="repositorySerializer">The serializer to use for <see cref="IBitcoinSerializable"/> objects.</param>
+        public ProvenBlockHeaderRepository(IProvenBlockHeaderKeyValueStore provenBlockHeaderKeyValueStore, Network network, string folder, ILoggerFactory loggerFactory,
+            RepositorySerializer repositorySerializer)
         {
             Guard.NotNull(provenBlockHeaderKeyValueStore, nameof(provenBlockHeaderKeyValueStore));
             Guard.NotNull(network, nameof(network));
             Guard.NotNull(folder, nameof(folder));
+            this.repositorySerializer = repositorySerializer;
 
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
 
