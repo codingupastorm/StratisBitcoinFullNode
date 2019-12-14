@@ -2,6 +2,7 @@
 using CertificateAuthority.Code.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Http;
 
 namespace CertificateAuthority.Code.Controllers
 {
@@ -30,7 +31,7 @@ namespace CertificateAuthority.Code.Controllers
             }
             catch (InvalidCredentialsException)
             {
-                return this.Forbid();
+                return StatusCode(StatusCodes.Status403Forbidden);
             }
         }
 
@@ -48,7 +49,7 @@ namespace CertificateAuthority.Code.Controllers
             }
             catch (InvalidCredentialsException)
             {
-                return this.Forbid();
+                return StatusCode(StatusCodes.Status403Forbidden);
             }
         }
 
@@ -66,7 +67,7 @@ namespace CertificateAuthority.Code.Controllers
             }
             catch (InvalidCredentialsException)
             {
-                return this.Forbid();
+                return StatusCode(StatusCodes.Status403Forbidden);
             }
         }
 
@@ -84,7 +85,7 @@ namespace CertificateAuthority.Code.Controllers
             }
             catch (InvalidCredentialsException)
             {
-                return this.Forbid();
+                return StatusCode(StatusCodes.Status403Forbidden);
             }
         }
 
@@ -102,7 +103,7 @@ namespace CertificateAuthority.Code.Controllers
             }
             catch (InvalidCredentialsException)
             {
-                return this.Forbid();
+                return StatusCode(StatusCodes.Status403Forbidden);
             }
         }
 
@@ -124,7 +125,7 @@ namespace CertificateAuthority.Code.Controllers
             }
             catch (InvalidCredentialsException)
             {
-                return this.Forbid();
+                return StatusCode(StatusCodes.Status403Forbidden);
             }
         }
     }

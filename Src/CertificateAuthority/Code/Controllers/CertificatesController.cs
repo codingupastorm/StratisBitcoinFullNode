@@ -4,6 +4,7 @@ using NLog;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 
 namespace CertificateAuthority.Code.Controllers
 {
@@ -36,7 +37,7 @@ namespace CertificateAuthority.Code.Controllers
             }
             catch (InvalidCredentialsException)
             {
-                return this.Forbid();
+                return StatusCode(StatusCodes.Status403Forbidden);
             }
         }
 
@@ -53,7 +54,7 @@ namespace CertificateAuthority.Code.Controllers
             }
             catch (InvalidCredentialsException)
             {
-                return this.Forbid();
+                return StatusCode(StatusCodes.Status403Forbidden);
             }
         }
 
@@ -71,7 +72,7 @@ namespace CertificateAuthority.Code.Controllers
             }
             catch (InvalidCredentialsException)
             {
-                return this.Forbid();
+                return StatusCode(StatusCodes.Status403Forbidden);
             }
         }
 
@@ -90,7 +91,7 @@ namespace CertificateAuthority.Code.Controllers
             }
             catch (InvalidCredentialsException)
             {
-                return this.Forbid();
+                return StatusCode(StatusCodes.Status403Forbidden);
             }
             catch (Exception)
             {
@@ -120,7 +121,7 @@ namespace CertificateAuthority.Code.Controllers
             }
             catch (InvalidCredentialsException)
             {
-                return this.Forbid();
+                return StatusCode(StatusCodes.Status403Forbidden);
             }
             catch (Exception e)
             {
