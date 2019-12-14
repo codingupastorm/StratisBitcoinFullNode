@@ -160,9 +160,16 @@ namespace Stratis.Bitcoin.KeyValueStore
         /// <inheritdoc />
         public bool Select<TKey, TObject>(string tableName, TKey key, out TObject obj)
         {
-            obj = this.SelectMultiple<TKey, TObject>(tableName, new[] { key })[0];
+            byte[] keyBytes = this.Serialize(key);
+            byte[] valueBytes;
 
-            return obj != null;
+            if (!this.TableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> kv) || !kv.TryGetValue(keyBytes, out valueBytes))
+                valueBytes = this.TablesCleared.Contains(tableName) ? null : this.repository.Get(this, this.GetTable(tableName), new[] { keyBytes }).First();
+
+            obj = this.Deserialize<TObject>(valueBytes);
+
+            // Return false if value did not exist.
+            return valueBytes != null;
         }
 
         /// <inheritdoc />
@@ -229,7 +236,7 @@ namespace Stratis.Bitcoin.KeyValueStore
             // Not sorted?
             if (backwards == null)
             {
-                res = upd?.Where(k => k.Key != null).Select(k => (k.Key, k.Value));
+                res = upd?.Where(k => k.Value != null).Select(k => (k.Key, k.Value));
 
                 if (!ignoreDB)
                 {
