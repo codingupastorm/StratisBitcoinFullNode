@@ -22,22 +22,11 @@ namespace CertificateAuthority.Code.Controllers
         /// <response code="201">Instance of string.</response>
         [HttpPost("get_sha256_hash")]
         [ProducesResponseType(typeof(string), 200)]
-        public ActionResult<string> GetSha256(CredentialsModelWithStringModel model)
+        public ActionResult<string> GetSha256(string data)
         {
-            var accessModelInfo = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.BasicAccess);
+            string hash = DataHelper.ComputeSha256Hash(data);
 
-            try
-            {
-                this.cache.VerifyCredentialsAndAccessLevel(accessModelInfo, out AccountModel _);
-
-                string hash = DataHelper.ComputeSha256Hash(model.Value);
-
-                return hash;
-            }
-            catch (InvalidCredentialsException)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden);
-            }
+            return hash;
         }
 
         /// <summary>Provides collection of all access flags. To combine several flags into a single one just sum their integer representations.</summary>
