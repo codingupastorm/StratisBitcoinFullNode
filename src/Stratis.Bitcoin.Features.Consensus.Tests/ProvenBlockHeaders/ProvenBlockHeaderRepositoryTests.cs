@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using DBreeze;
-using DBreeze.Utils;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
+using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
@@ -35,12 +34,16 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
             string folder = CreateTestDir(this);
 
             // Initialise the repository - this will set-up the genesis blockHash (blockId).
-            using (IProvenBlockHeaderRepository repository = this.SetupRepository(this.Network, folder))
+            (IProvenBlockHeaderRepository repo, IProvenBlockHeaderKeyValueStore store) = this.SetupRepository(this.Network, folder);
+
+            using (repo)
             {
                 // Check the BlockHash (blockId) exists.
-                repository.TipHashHeight.Height.Should().Be(0);
-                repository.TipHashHeight.Hash.Should().Be(this.Network.GetGenesis().GetHash());
+                repo.TipHashHeight.Height.Should().Be(0);
+                repo.TipHashHeight.Hash.Should().Be(this.Network.GetGenesis().GetHash());
             }
+
+            store.Dispose();
         }
 
         [Fact]
@@ -53,25 +56,23 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
             var blockHashHeightPair = new HashHeightPair(provenBlockHeaderIn.GetHash(), 0);
             var items = new SortedDictionary<int, ProvenBlockHeader>() { { 0, provenBlockHeaderIn } };
 
-            using (IProvenBlockHeaderRepository repo = this.SetupRepository(this.Network, folder))
+            (IProvenBlockHeaderRepository repo, IProvenBlockHeaderKeyValueStore store) = this.SetupRepository(this.Network, folder);
+
+            using (repo)
             {
                 await repo.PutAsync(items, blockHashHeightPair);
-            }
 
-            using (var engine = new DBreezeEngine(folder))
-            {
-                DBreeze.Transactions.Transaction txn = engine.GetTransaction();
-                txn.SynchronizeTables(ProvenBlockHeaderTable);
-                txn.ValuesLazyLoadingIsOn = false;
+                using (IKeyValueStoreTransaction txn = store.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, ProvenBlockHeaderTable, BlockHashTable))
+                {
+                    txn.Select(ProvenBlockHeaderTable, blockHashHeightPair.Height, out ProvenBlockHeader headerOut);
+                    txn.Select(BlockHashTable, new byte[0], out HashHeightPair hashHeightPairOut);
 
-                var headerOut = this.repositorySerializer.Deserialize<ProvenBlockHeader>(txn.Select<byte[], byte[]>(ProvenBlockHeaderTable, blockHashHeightPair.Height.ToBytes()).Value);
-                var hashHeightPairOut = this.RepositorySerializer.Deserialize<HashHeightPair>(txn.Select<byte[], byte[]>(BlockHashTable, new byte[0].ToBytes()).Value);
+                    headerOut.Should().NotBeNull();
+                    headerOut.GetHash().Should().Be(provenBlockHeaderIn.GetHash());
 
-                headerOut.Should().NotBeNull();
-                headerOut.GetHash().Should().Be(provenBlockHeaderIn.GetHash());
-
-                hashHeightPairOut.Should().NotBeNull();
-                hashHeightPairOut.Hash.Should().Be(provenBlockHeaderIn.GetHash());
+                    hashHeightPairOut.Should().NotBeNull();
+                    hashHeightPairOut.Hash.Should().Be(provenBlockHeaderIn.GetHash());
+                }
             }
         }
 
@@ -87,23 +88,21 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
             var items = new SortedDictionary<int, ProvenBlockHeader>() { { 0, header1 }, { 1, header2 } };
 
             // Put the items in the repository.
-            using (IProvenBlockHeaderRepository repo = this.SetupRepository(this.Network, folder))
+            (IProvenBlockHeaderRepository repo, IProvenBlockHeaderKeyValueStore store) = this.SetupRepository(this.Network, folder);
+
+            using (repo)
             {
                 await repo.PutAsync(items, new HashHeightPair(header2.GetHash(), items.Count - 1));
-            }
 
-            // Check the ProvenBlockHeader exists in the database.
-            using (var engine = new DBreezeEngine(folder))
-            {
-                DBreeze.Transactions.Transaction txn = engine.GetTransaction();
-                txn.SynchronizeTables(ProvenBlockHeaderTable);
-                txn.ValuesLazyLoadingIsOn = false;
+                // Check the ProvenBlockHeader exists in the database.
+                using (IKeyValueStoreTransaction txn = store.CreateTransaction(KeyValueStoreTransactionMode.Read, ProvenBlockHeaderTable))
+                {
+                    var headersOut = txn.SelectDictionary<int, ProvenBlockHeader>(ProvenBlockHeaderTable);
 
-                var headersOut = txn.SelectDictionary<byte[], byte[]>(ProvenBlockHeaderTable);
-
-                headersOut.Keys.Count.Should().Be(2);
-                this.repositorySerializer.Deserialize<ProvenBlockHeader>(headersOut.First().Value).GetHash().Should().Be(items[0].GetHash());
-                this.repositorySerializer.Deserialize<ProvenBlockHeader>(headersOut.Last().Value).GetHash().Should().Be(items[1].GetHash());
+                    headersOut.Keys.Count.Should().Be(2);
+                    headersOut.First().Value.GetHash().Should().Be(items[0].GetHash());
+                    headersOut.Last().Value.GetHash().Should().Be(items[1].GetHash());
+                }
             }
         }
 
@@ -116,21 +115,29 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
 
             int blockHeight = 1;
 
-            using (var engine = new DBreezeEngine(folder))
+            (IProvenBlockHeaderRepository repo, IProvenBlockHeaderKeyValueStore store) = this.SetupRepository(this.Network, folder);
+
+            using (IKeyValueStoreTransaction txn = store.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, ProvenBlockHeaderTable))
             {
-                DBreeze.Transactions.Transaction txn = engine.GetTransaction();
-                txn.Insert<byte[], byte[]>(ProvenBlockHeaderTable, blockHeight.ToBytes(), this.repositorySerializer.Serialize(headerIn));
+                txn.Insert(ProvenBlockHeaderTable, blockHeight, headerIn);
                 txn.Commit();
             }
 
+            repo.Dispose();
+            store.Dispose();
+
+            (repo, store) = this.SetupRepository(this.Network, folder);
+
             // Query the repository for the item that was inserted in the above code.
-            using (ProvenBlockHeaderRepository repo = this.SetupRepository(this.Network, folder))
+            using (repo)
             {
                 var headerOut = await repo.GetAsync(blockHeight).ConfigureAwait(false);
 
                 headerOut.Should().NotBeNull();
                 uint256.Parse(headerOut.ToString()).Should().Be(headerOut.GetHash());
             }
+
+            store.Dispose();
         }
 
         [Fact]
@@ -138,15 +145,21 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
         {
             string folder = CreateTestDir(this);
 
-            using (var engine = new DBreezeEngine(folder))
+            (IProvenBlockHeaderRepository repo, IProvenBlockHeaderKeyValueStore store) = this.SetupRepository(this.Network, folder);
+
+            using (IKeyValueStoreTransaction txn = store.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, ProvenBlockHeaderTable, BlockHashTable))
             {
-                DBreeze.Transactions.Transaction txn = engine.GetTransaction();
-                txn.Insert<byte[], byte[]>(ProvenBlockHeaderTable, 1.ToBytes(), this.repositorySerializer.Serialize(CreateNewProvenBlockHeaderMock()));
-                txn.Insert<byte[], byte[]>(BlockHashTable, new byte[0], this.RepositorySerializer.Serialize(new HashHeightPair(new uint256(), 1)));
+                txn.Insert(ProvenBlockHeaderTable, 1, CreateNewProvenBlockHeaderMock());
+                txn.Insert(BlockHashTable, new byte[0], new HashHeightPair(new uint256(), 1));
                 txn.Commit();
             }
 
-            using (ProvenBlockHeaderRepository repo = this.SetupRepository(this.Network, folder))
+            repo.Dispose();
+            store.Dispose();
+
+            (repo, store) = this.SetupRepository(this.Network, folder);
+
+            using (repo)
             {
                 // Select a different block height.
                 ProvenBlockHeader outHeader = await repo.GetAsync(2).ConfigureAwait(false);
@@ -172,27 +185,38 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
             }
 
             // Put the items in the repository.
-            using (IProvenBlockHeaderRepository repo = this.SetupRepository(this.Network, folder))
+            (IProvenBlockHeaderRepository repo, IProvenBlockHeaderKeyValueStore store) = this.SetupRepository(this.Network, folder);
+
+            using (repo)
             {
                 await repo.PutAsync(headers, new HashHeightPair(headers.Last().Value.GetHash(), headers.Count - 1));
             }
 
-            using (IProvenBlockHeaderRepository newRepo = this.SetupRepository(this.Network, folder))
+            repo.Dispose();
+            store.Dispose();
+
+            (IProvenBlockHeaderRepository newRepo, IProvenBlockHeaderKeyValueStore newStore) = this.SetupRepository(this.Network, folder);
+
+            using (newRepo)
             {
                 newRepo.TipHashHeight.Hash.Should().Be(headers.Last().Value.GetHash());
                 newRepo.TipHashHeight.Height.Should().Be(headers.Count - 1);
             }
         }
 
-        private ProvenBlockHeaderRepository SetupRepository(Network network, string folder)
+        private (ProvenBlockHeaderRepository, ProvenBlockHeaderKeyValueStore) SetupRepository(Network network, string folder)
         {
-            var repo = new ProvenBlockHeaderRepository(network, folder, this.LoggerFactory.Object, this.repositorySerializer);
+            var loggerFactory = new LoggerFactory();
+            var dateTimeProvider = new DateTimeProvider();
+
+            var store = new ProvenBlockHeaderKeyValueStore(network, new DataFolder(folder), loggerFactory, dateTimeProvider, this.repositorySerializer);
+            var repo = new ProvenBlockHeaderRepository(store, network, folder, loggerFactory, this.repositorySerializer);
 
             Task task = repo.InitializeAsync();
 
             task.Wait();
 
-            return repo;
+            return (repo, store);
         }
     }
 }

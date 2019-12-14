@@ -65,6 +65,7 @@ namespace Stratis.Bitcoin.Features.Consensus
                             .AddSingleton<IGetUnspentTransaction, ConsensusQuery>(provider => provider.GetService<ConsensusQuery>());
                         services.AddSingleton<IProvenBlockHeaderStore, ProvenBlockHeaderStore>();
                         services.AddSingleton<IProvenBlockHeaderRepository, ProvenBlockHeaderRepository>();
+                        services.AddSingleton<IProvenBlockHeaderKeyValueStore, ProvenBlockHeaderKeyValueStore>();
                     });
             });
 
