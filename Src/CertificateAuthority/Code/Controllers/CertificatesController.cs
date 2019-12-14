@@ -29,7 +29,15 @@ namespace CertificateAuthority.Code.Controllers
         public ActionResult<bool> RevokeCertificate([FromBody]CredentialsModelWithThumbprintModel model)
         {
             var data = new CredentialsAccessWithModel<CredentialsModelWithThumbprintModel>(model, AccountAccessFlags.RevokeCertificates);
-            return this.certificateManager.RevokeCertificate(data);
+
+            try
+            {
+                return this.certificateManager.RevokeCertificate(data);
+            }
+            catch (InvalidCredentialsException)
+            {
+                return this.Forbid();
+            }
         }
 
         /// <summary>Finds issued certificate by thumbprint and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
@@ -38,7 +46,15 @@ namespace CertificateAuthority.Code.Controllers
         public ActionResult<CertificateInfoModel> GetCertificateByThumbprint([FromBody]CredentialsModelWithThumbprintModel model)
         {
             var data = new CredentialsAccessWithModel<CredentialsModelWithThumbprintModel>(model, AccountAccessFlags.AccessAnyCertificate);
-            return this.certificateManager.GetCertificateByThumbprint(data);
+
+            try
+            {
+                return this.certificateManager.GetCertificateByThumbprint(data);
+            }
+            catch (InvalidCredentialsException)
+            {
+                return this.Forbid();
+            }
         }
 
         /// <summary>Provides collection of all issued certificates. AccessAnyCertificate access level is required.</summary>
@@ -48,7 +64,15 @@ namespace CertificateAuthority.Code.Controllers
         public ActionResult<List<CertificateInfoModel>> GetAllCertificates([FromBody]CredentialsModel model)
         {
             var data = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAnyCertificate);
-            return this.certificateManager.GetAllCertificates(data);
+
+            try
+            {
+                return this.certificateManager.GetAllCertificates(data);
+            }
+            catch (InvalidCredentialsException)
+            {
+                return this.Forbid();
+            }
         }
 
         /// <summary>Issues a new certificate using provided certificate request. IssueCertificates access level is required.</summary>
@@ -64,10 +88,9 @@ namespace CertificateAuthority.Code.Controllers
                 CertificateInfoModel infoModel = await this.certificateManager.IssueCertificateAsync(data);
                 return infoModel;
             }
-            catch (InvalidCredentialsException e)
+            catch (InvalidCredentialsException)
             {
-                // Rethrow.
-                throw e;
+                return this.Forbid();
             }
             catch (Exception)
             {
@@ -95,14 +118,14 @@ namespace CertificateAuthority.Code.Controllers
 
                 return infoModel;
             }
-            catch (InvalidCredentialsException e)
+            catch (InvalidCredentialsException)
             {
-                // Rethrow.
-                throw e;
+                return this.Forbid();
             }
             catch (Exception e)
             {
                 this.logger.Error(e);
+
                 return StatusCode(500, "Internal server error");
             }
         }

@@ -23,13 +23,20 @@ namespace CertificateAuthority.Code.Controllers
         [ProducesResponseType(typeof(string), 200)]
         public ActionResult<string> GetSha256(CredentialsModelWithStringModel model)
         {
-            CredentialsAccessModel accessModelInfo = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.BasicAccess);
+            var accessModelInfo = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.BasicAccess);
 
-            this.cache.VerifyCredentialsAndAccessLevel(accessModelInfo, out AccountModel _);
+            try
+            {
+                this.cache.VerifyCredentialsAndAccessLevel(accessModelInfo, out AccountModel _);
 
-            string hash = DataHelper.ComputeSha256Hash(model.Value);
+                string hash = DataHelper.ComputeSha256Hash(model.Value);
 
-            return hash;
+                return hash;
+            }
+            catch (InvalidCredentialsException)
+            {
+                return this.Forbid();
+            }
         }
 
         /// <summary>Provides collection of all access flags. To combine several flags into a single one just sum their integer representations.</summary>
@@ -39,17 +46,25 @@ namespace CertificateAuthority.Code.Controllers
         [ProducesResponseType(typeof(Dictionary<int, string>), 200)]
         public ActionResult<string> GetAllAccessLevels(CredentialsModel model)
         {
-            CredentialsAccessModel accessModelInfo = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.BasicAccess);
+            var accessModelInfo = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.BasicAccess);
 
-            this.cache.VerifyCredentialsAndAccessLevel(accessModelInfo, out AccountModel _);
+            try
+            {
+                this.cache.VerifyCredentialsAndAccessLevel(accessModelInfo, out AccountModel _);
 
-            Dictionary<int, string> accesses = new Dictionary<int, string>();
+                Dictionary<int, string> accesses = new Dictionary<int, string>();
 
-            foreach (AccountAccessFlags flag in DataHelper.AllAccessFlags)
-                accesses.Add((int)flag, flag.ToString());
+                foreach (AccountAccessFlags flag in DataHelper.AllAccessFlags)
+                    accesses.Add((int)flag, flag.ToString());
 
-            string output = JsonConvert.SerializeObject(accesses);
-            return output;
+                string output = JsonConvert.SerializeObject(accesses);
+
+                return output;
+            }
+            catch (InvalidCredentialsException)
+            {
+                return this.Forbid();
+            }
         }
     }
 }
