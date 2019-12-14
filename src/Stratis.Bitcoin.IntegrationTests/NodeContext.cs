@@ -17,6 +17,8 @@ namespace Stratis.Bitcoin.IntegrationTests
 
         private readonly List<IDisposable> cleanList;
 
+        private readonly DBCoinViewStore dBCoinViewStore;
+
         public NodeContext(object caller, string name, Network network, bool clean)
         {
             network = network ?? KnownNetworks.RegTest;
@@ -25,8 +27,8 @@ namespace Stratis.Bitcoin.IntegrationTests
             this.FolderName = TestBase.CreateTestDir(caller, name);
             var dateTimeProvider = new DateTimeProvider();
             var serializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
-            var keyValueStore = new DBCoinViewStore(serializer, new Configuration.DataFolder(this.FolderName), this.loggerFactory, dateTimeProvider);
-            this.PersistentCoinView = new DBCoinView(network, keyValueStore, dateTimeProvider, this.loggerFactory, new NodeStats(dateTimeProvider, this.loggerFactory), serializer);
+            this.dBCoinViewStore = new DBCoinViewStore(serializer, new Configuration.DataFolder(this.FolderName), this.loggerFactory, dateTimeProvider);
+            this.PersistentCoinView = new DBCoinView(network, this.dBCoinViewStore, dateTimeProvider, this.loggerFactory, new NodeStats(dateTimeProvider, this.loggerFactory), serializer);
             this.PersistentCoinView.Initialize();
             this.cleanList = new List<IDisposable> { this.PersistentCoinView };
         }
@@ -61,6 +63,7 @@ namespace Stratis.Bitcoin.IntegrationTests
         public void ReloadPersistentCoinView()
         {
             this.PersistentCoinView.Dispose();
+            this.dBCoinViewStore.Dispose();
             this.cleanList.Remove(this.PersistentCoinView);
             var dateTimeProvider = new DateTimeProvider();
             var serializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
