@@ -38,7 +38,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
             ibdMock.Setup(s => s.IsInitialBlockDownload()).Returns(false);
 
             var folder = CreateTestDir(this);
-            var store = new ProvenBlockHeaderKeyValueStore(this.Network, new DataFolder(folder), this.LoggerFactory.Object, new DateTimeProvider());
+            var store = new ProvenBlockHeaderKeyValueStore(this.Network, new DataFolder(folder), this.LoggerFactory.Object, new DateTimeProvider(), repositorySerializer);
             this.provenBlockHeaderRepository = new ProvenBlockHeaderRepository(store, this.Network, folder, this.LoggerFactory.Object, repositorySerializer);
 
             this.provenBlockHeaderStore = new ProvenBlockHeaderStore(DateTimeProvider.Default, this.LoggerFactory.Object, this.provenBlockHeaderRepository, nodeStats, ibdMock.Object);
