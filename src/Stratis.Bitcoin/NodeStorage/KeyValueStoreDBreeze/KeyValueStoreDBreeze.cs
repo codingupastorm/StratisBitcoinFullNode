@@ -53,6 +53,7 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
 
         public override void Init(string rootPath)
         {
+            this.Close();
             this.storage = new DBreezeEngine(rootPath);
         }
 
@@ -219,6 +220,8 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
 
         public override void Close()
         {
+            this.storage?.Dispose();
+            this.storage = null;
         }
     }
 }
