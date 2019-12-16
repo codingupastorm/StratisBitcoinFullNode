@@ -43,6 +43,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Transaction transaction = this.CreateBasicOpReturnTransaction(node1);
 
                 node1.AddToStratisMempool(transaction);
+                node1.Broadcast(transaction);
 
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
 
