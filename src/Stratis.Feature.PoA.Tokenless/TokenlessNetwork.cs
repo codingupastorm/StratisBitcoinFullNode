@@ -54,8 +54,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.MaxTimeOffsetSeconds = 25 * 60;
             this.CoinTicker = "POATL";
 
-            // TODO-TL: Is the CF any different for tokenless?
-            var consensusFactory = new SmartContractPoAConsensusFactory();
+            var consensusFactory = new TokenlessContractConsensusFactory();
 
             // Create the genesis block.
             this.GenesisTime = 1513622125;
@@ -64,6 +63,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.GenesisVersion = 1;
             this.GenesisReward = Money.Zero;
 
+            // TODO-TL: This creates a block that has a transaction in it. We don't need that, right?
             Block genesisBlock = CreateGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion);
 
             this.Genesis = genesisBlock;
@@ -172,7 +172,8 @@ namespace Stratis.Feature.PoA.Tokenless
             this.StandardScriptsRegistry = new PoAStandardScriptsRegistry();
 
             // TODO-TL: Generate new Genesis
-            Assert(this.Consensus.HashGenesisBlock == uint256.Parse("690a702893d30a75739b52d9e707f05e5c7da38df0500aa791468a5e609244ba"));
+            // TODO-TL: This is different now because the consensus factory is different.
+            // Assert(this.Consensus.HashGenesisBlock == uint256.Parse("690a702893d30a75739b52d9e707f05e5c7da38df0500aa791468a5e609244ba"));
             //Assert(this.Genesis.Header.HashMerkleRoot == uint256.Parse("0x9928b372fd9e4cf62a31638607344c03c48731ba06d24576342db9c8591e1432"));
 
             // TODO-TL: Add Smart Contract State Root Hash

@@ -1,6 +1,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using NBitcoin;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core.Util;
@@ -79,6 +80,29 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             transaction.Inputs[0].ScriptSig = new Script(finalisedInputScript);
 
             Assert.False(this.signer.Verify(transaction));
+        }
+
+        [Fact]
+        public void TimeIsIncludedInSignature()
+        {
+            var key = new Key();
+            BitcoinSecret secret = key.GetBitcoinSecret(this.network);
+            Script outputScript = TxNullDataTemplate.Instance.GenerateScriptPubKey(new byte[] { 0, 1, 2, 3 });
+
+            Transaction transaction1 = this.network.CreateTransaction();
+            transaction1.Outputs.Add(new TxOut(Money.Zero, outputScript));
+
+            // Transaction hash is now dependent on time, so put a bit of time between the transactions.
+            Thread.Sleep(2000);
+
+            Transaction transaction2 = this.network.CreateTransaction();
+            transaction2.Outputs.Add(new TxOut(Money.Zero, outputScript));
+
+            this.signer.InsertSignedTxIn(transaction1, secret);
+            this.signer.InsertSignedTxIn(transaction2, secret);
+
+            // We've built 2 identical transactions (except for time). We need their hashes to be different,  as hashes are used to prevent duplicates in DLT.
+            Assert.NotEqual(transaction1.GetHash(), transaction2.GetHash());
         }
     }
 }
