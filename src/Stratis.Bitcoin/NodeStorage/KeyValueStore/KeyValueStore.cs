@@ -96,7 +96,7 @@ namespace Stratis.Bitcoin.KeyValueStore
 
             if (disposing)
             {
-                this.Repository.Close();
+                this.Repository.Dispose();
             }
 
             this.disposed = true;

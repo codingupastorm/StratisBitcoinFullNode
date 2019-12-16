@@ -64,7 +64,10 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
                 CreateIfMissing = true,
             };
 
+            this.Close();
             this.Storage = new DB(options, rootPath);
+
+            Guard.NotNull(this.Storage, nameof(this.Storage));
 
             for (this.nextTablePrefix = 1; ; this.nextTablePrefix++)
             {
@@ -246,7 +249,8 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
 
         public override void Close()
         {
-            this.Storage.Close();
+            this.Storage?.Dispose();
+            this.Storage = null;
         }
     }
 }

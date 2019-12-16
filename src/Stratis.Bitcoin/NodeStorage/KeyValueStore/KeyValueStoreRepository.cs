@@ -119,5 +119,20 @@ namespace Stratis.Bitcoin.KeyValueStore
 
         /// <inheritdoc />
         public abstract void Close();
+
+        // Public implementation of Dispose pattern callable by consumers.
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>Protected implementation of Dispose pattern.</summary>
+        /// <param name="disposing">Indicates whether disposing.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+                this.Close();
+        }
     }
 }

@@ -297,6 +297,9 @@ namespace Stratis.Bitcoin
             this.logger.LogInformation("Disposing settings.");
             this.Settings.Dispose();
 
+            // Dispose the node storage.
+            this.DisposeNodeStorage();
+
             // Fire INodeLifetime.Stopped.
             this.logger.LogInformation("Notify application has stopped.");
             this.nodeLifetime.NotifyStopped();
@@ -304,6 +307,32 @@ namespace Stratis.Bitcoin
             this.nodeRunningLock.UnlockNodeFolder();
 
             this.State = FullNodeState.Disposed;
+        }
+
+        /// <summary>
+        /// Due to the potential shared nature of node storage it can't be up to any given
+        /// feature to deal with the disposal thereof. Instead we do it here for all
+        /// singleton storage objects during shutdown.
+        /// </summary>
+        private void DisposeNodeStorage()
+        {
+            // Identify classes that support the IKeyValueStore interface.
+            var storageClasses = AppDomain.CurrentDomain.GetAssemblies()
+                .SelectMany(x => x.GetTypes())
+                .Where(x => typeof(IKeyValueStore).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract);
+
+            // Find the class interfaces that are derived from IKeyValueStore...
+            foreach (Type type in storageClasses.SelectMany(x => x.GetInterfaces().Where(i => i.GetInterfaces().Any(i2 => i2.UnderlyingSystemType == typeof(IKeyValueStore)))))
+            {
+                // ...that are disposable...
+                var obj = this.Services.ServiceProvider.GetService(type) as IDisposable;
+                if (obj == null)
+                    continue;
+
+                // ...and dispose them.
+                this.logger.LogInformation("Disposing node storage '{0}'.", obj.GetType().Name);
+                obj.Dispose();
+            }
         }
     }
 }
