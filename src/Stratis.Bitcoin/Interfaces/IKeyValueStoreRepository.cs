@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Stratis.Bitcoin.KeyValueStore;
 
 namespace Stratis.Bitcoin.Interfaces
@@ -6,7 +7,7 @@ namespace Stratis.Bitcoin.Interfaces
     /// <summary>
     /// Represents a glue-layer containing the basic methods that all key-value databases should support.
     /// </summary>
-    public interface IKeyValueStoreRepository
+    public interface IKeyValueStoreRepository : IDisposable
     {
         /// <summary>
         /// Initialize the underlying database / glue-layer.
