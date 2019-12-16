@@ -77,9 +77,9 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         public MempoolPerformanceCounter PerformanceCounter => this.Validator.PerformanceCounter;
 
         /// <inheritdoc />
-        public async Task<Transaction> GetTransaction(uint256 trxid)
+        public Task<Transaction> GetTransaction(uint256 txId)
         {
-            return (await this.InfoAsync(trxid))?.Trx;
+            return this.MempoolLock.ReadAsync(() => this.memPool.MapTx.TryGet(txId).Transaction);
         }
 
         /// <summary>
