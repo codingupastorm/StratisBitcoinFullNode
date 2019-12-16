@@ -129,7 +129,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
         /// <param name="consensusSettings">Settings for the consensus feature.</param>
         /// <param name="stakeChainStore">Storage of POS block information.</param>
         /// <param name="rewindDataIndexCache">Rewind data index store.</param>
-        public CachedCoinView(DBreezeCoinView inner, IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, INodeStats nodeStats, ConsensusSettings consensusSettings, StakeChainStore stakeChainStore = null, IRewindDataIndexCache rewindDataIndexCache = null) :
+        public CachedCoinView(DBCoinView inner, IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, INodeStats nodeStats, ConsensusSettings consensusSettings, StakeChainStore stakeChainStore = null, IRewindDataIndexCache rewindDataIndexCache = null) :
             this(dateTimeProvider, loggerFactory, nodeStats, consensusSettings, stakeChainStore, rewindDataIndexCache)
         {
             Guard.NotNull(inner, nameof(inner));

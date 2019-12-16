@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Bitcoin.KeyValueStore
 {
@@ -11,6 +12,7 @@ namespace Stratis.Bitcoin.KeyValueStore
     public abstract class KeyValueStoreRepository : IKeyValueStoreRepository
     {
         public KeyValueStore KeyValueStore { get; protected set; }
+
         public Dictionary<string, KeyValueStoreTable> Tables { get; protected set; }
 
         public KeyValueStoreRepository(KeyValueStore keyValueStore)
@@ -21,16 +23,16 @@ namespace Stratis.Bitcoin.KeyValueStore
 
         public virtual byte[] Serialize<T>(T obj)
         {
+            if (typeof(T) == typeof(byte[]))
+                return (byte[])(object)obj;
+
             if (obj == null)
                 return new byte[] { };
 
-            if (obj.GetType() == typeof(byte[]))
-                return (byte[])(object)obj;
-
-            if (obj.GetType() == typeof(bool) || obj.GetType() == typeof(bool?))
+            if (typeof(T) == typeof(bool) || typeof(T) == typeof(bool?))
                 return new byte[] { (byte)((bool)(object)obj ? 1 : 0) };
 
-            if (obj.GetType() == typeof(int))
+            if (typeof(T) == typeof(int) || typeof(T) == typeof(int?))
             {
                 byte[] bytes = BitConverter.GetBytes((int)(object)obj);
                 if (BitConverter.IsLittleEndian)
@@ -38,32 +40,50 @@ namespace Stratis.Bitcoin.KeyValueStore
                 return bytes;
             }
 
+            if (typeof(T) == typeof(uint) || typeof(T) == typeof(uint?))
+            {
+                byte[] bytes = BitConverter.GetBytes((uint)(object)obj);
+                if (BitConverter.IsLittleEndian)
+                    bytes = bytes.Reverse().ToArray();
+                return bytes;
+            }
+
+            Guard.Assert(!typeof(T).IsValueType);
+
             return this.KeyValueStore.RepositorySerializer.Serialize(obj);
         }
 
         public virtual T Deserialize<T>(byte[] objBytes)
         {
             if (objBytes == null)
-                return default(T);
+                return default;
 
-            Type objType = typeof(T);
-
-            if (objType == typeof(byte[]))
+            if (typeof(T) == typeof(byte[]))
                 return (T)(object)objBytes;
 
             if (objBytes.Length == 0)
-                return default(T);
+                return default;
 
-            if (objType == typeof(bool) || objType == typeof(bool?))
+            if (typeof(T) == typeof(bool) || typeof(T) == typeof(bool?))
                 return (T)(object)(objBytes[0] != 0);
 
-            if (objType == typeof(int))
+            if (typeof(T) == typeof(int) || typeof(T) == typeof(int?))
             {
                 var bytes = (byte[])objBytes.Clone();
                 if (BitConverter.IsLittleEndian)
                     bytes = bytes.Reverse().ToArray();
                 return (T)(object)BitConverter.ToInt32(bytes, 0);
             }
+
+            if (typeof(T) == typeof(uint) || typeof(T) == typeof(uint?))
+            {
+                var bytes = (byte[])objBytes.Clone();
+                if (BitConverter.IsLittleEndian)
+                    bytes = bytes.Reverse().ToArray();
+                return (T)(object)BitConverter.ToUInt32(bytes, 0);
+            }
+
+            Guard.Assert(!typeof(T).IsValueType);
 
             return (T)this.KeyValueStore.RepositorySerializer.Deserialize(objBytes, typeof(T));
         }
@@ -99,5 +119,20 @@ namespace Stratis.Bitcoin.KeyValueStore
 
         /// <inheritdoc />
         public abstract void Close();
+
+        // Public implementation of Dispose pattern callable by consumers.
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>Protected implementation of Dispose pattern.</summary>
+        /// <param name="disposing">Indicates whether disposing.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+                this.Close();
+        }
     }
 }

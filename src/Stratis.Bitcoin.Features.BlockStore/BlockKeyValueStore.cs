@@ -13,8 +13,8 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
     public class BlockKeyValueStore : KeyValueStore<KeyValueStoreLevelDB.KeyValueStoreLevelDB>, IBlockKeyValueStore
     {
-        public BlockKeyValueStore(Network network, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
-            :base(dataFolder.BlockPath, loggerFactory, dateTimeProvider, new DBreezeSerializer(network.Consensus.ConsensusFactory))
+        public BlockKeyValueStore(IRepositorySerializer repositorySerializer, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
+            :base(dataFolder.BlockPath, loggerFactory, dateTimeProvider, repositorySerializer)
         {
         }
     }

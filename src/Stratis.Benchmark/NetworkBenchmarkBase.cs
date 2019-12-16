@@ -14,13 +14,13 @@ namespace Stratis.Benchmark
     {
         protected readonly string dataFolder;
         protected readonly Network network;
-        protected readonly DBreezeSerializer dBreezeSerializer;
+        protected readonly RepositorySerializer repositorySerializer;
         protected const int DataSize = 1_000_000;
 
         public NetworkBenchmarkBase(Network network)
         {
             this.network = Guard.NotNull(network, nameof(network));
-            this.dBreezeSerializer = new DBreezeSerializer(this.network.Consensus.ConsensusFactory);
+            this.repositorySerializer = new RepositorySerializer(this.network.Consensus.ConsensusFactory);
 
             this.dataFolder = System.IO.Path.GetDirectoryName(this.GetType().Assembly.Location);
         }

@@ -17,7 +17,7 @@ namespace Stratis.SmartContracts.Core.Tests.Receipts
         public PersistentReceiptRepositoryTests()
         {
             var dataFolder = TestBase.CreateDataFolder(this);
-            var keyValueStore = new PersistentReceiptKVStore(KnownNetworks.StratisTest, dataFolder, new LoggerFactory(), DateTimeProvider.Default);
+            var keyValueStore = new PersistentReceiptKVStore(new RepositorySerializer(KnownNetworks.StratisTest.Consensus.ConsensusFactory), dataFolder, new LoggerFactory(), DateTimeProvider.Default);
 
             this.db = new PersistentReceiptRepository(keyValueStore);
         }

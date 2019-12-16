@@ -31,7 +31,7 @@ namespace Stratis.SmartContracts.Tests.Common
             this.timeProvider = timeProvider;
         }
 
-        // Note: At the moment this is identical to the PoA runner, but we expect it might change later on.
+        // This is used to test the ability to execute TokenlessSmartContracts but is not actually tokenless itself.
 
         public override void BuildNode()
         {

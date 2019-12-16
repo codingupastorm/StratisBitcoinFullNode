@@ -23,19 +23,22 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly RevocationChecker revocationChecker;
 
         public TokenlessFeature(
-            ICoreComponent coreComponent,
             CertificatesManager certificatesManager,
+            ICoreComponent coreComponent,
             IFederationManager federationManager,
             IPoAMiner miner,
             PayloadProvider payloadProvider,
-            RevocationChecker revocationChecker)
+            RevocationChecker revocationChecker,
+            StoreSettings storeSettings)
         {
-            this.coreComponent = coreComponent;
-
             this.certificatesManager = certificatesManager;
+            this.coreComponent = coreComponent;
             this.federationManager = federationManager;
             this.miner = miner;
             this.revocationChecker = revocationChecker;
+
+            // TODO: Is there a better place to do this?
+            storeSettings.TxIndex = true;
 
             payloadProvider.DiscoverPayloads(this.GetType().Assembly);
         }

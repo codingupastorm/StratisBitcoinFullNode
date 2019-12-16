@@ -23,8 +23,8 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var dataFolderPath = CreateTestDir(this);
             var dataFolder = new DataFolder(dataFolderPath);
 
-            var dBreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
-            var keyValueStore = new BlockKeyValueStore(this.Network, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
+            var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
+            var keyValueStore = new BlockKeyValueStore(repositorySerializer, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
             var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore);
 
@@ -35,7 +35,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
                 AmountOfBlocksToKeep = 10
             };
 
-            var prunedBlockRepository = new PrunedBlockRepository(blockRepository, dBreezeSerializer, this.LoggerFactory.Object, storeSettings);
+            var prunedBlockRepository = new PrunedBlockRepository(blockRepository, repositorySerializer, this.LoggerFactory.Object, storeSettings);
             prunedBlockRepository.Initialize();
             prunedBlockRepository.PruneAndCompactDatabase(chainedHeaderTip.GetAncestor(50), this.Network, true);
 
@@ -55,8 +55,8 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var dataFolderPath = CreateTestDir(this);
             var dataFolder = new DataFolder(dataFolderPath);
 
-            var dBreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
-            var keyValueStore = new BlockKeyValueStore(this.Network, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
+            var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
+            var keyValueStore = new BlockKeyValueStore(repositorySerializer, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
             var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore);
 
@@ -67,7 +67,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
                 AmountOfBlocksToKeep = 50
             };
 
-            var prunedBlockRepository = new PrunedBlockRepository(blockRepository, dBreezeSerializer, this.LoggerFactory.Object, storeSettings);
+            var prunedBlockRepository = new PrunedBlockRepository(blockRepository, repositorySerializer, this.LoggerFactory.Object, storeSettings);
             prunedBlockRepository.Initialize();
 
             // The first prune will delete blocks from 50 to 0.
@@ -96,8 +96,8 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var dataFolderPath = CreateTestDir(this);
             var dataFolder = new DataFolder(dataFolderPath);
 
-            var dBreezeSerializer = new DBreezeSerializer(this.Network.Consensus.ConsensusFactory);
-            var keyValueStore = new BlockKeyValueStore(this.Network, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
+            var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
+            var keyValueStore = new BlockKeyValueStore(repositorySerializer, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
             var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore);
 
@@ -108,7 +108,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
                 AmountOfBlocksToKeep = 10
             };
 
-            var prunedBlockRepository = new PrunedBlockRepository(blockRepository, dBreezeSerializer, this.LoggerFactory.Object, storeSettings);
+            var prunedBlockRepository = new PrunedBlockRepository(blockRepository, repositorySerializer, this.LoggerFactory.Object, storeSettings);
             prunedBlockRepository.Initialize();
 
             // Delete blocks 30 to 0 from the repo, this would have been done by the service before shutdown was initiated.

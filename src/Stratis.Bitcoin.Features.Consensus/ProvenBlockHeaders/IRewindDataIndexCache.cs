@@ -13,7 +13,7 @@ namespace Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders
     public interface IRewindDataIndexCache
     {
         /// <summary>
-        /// Initializes the rewind data index store by loading rewind data from the cache or dbreeze for the last 500 blocks.
+        /// Initializes the rewind data index store by loading rewind data from the cache or db for the last 500 blocks.
         /// </summary>
         /// <param name="tipHeight">The chain tip height.</param>
         /// <param name="coinView">The coin view to be used for getting rewind data.</param>

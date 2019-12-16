@@ -15,7 +15,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
 
         private void SetBlockKeyValueStore(string dir)
         {
-            this.keyValueStore = new BlockKeyValueStore(this.Network, new DataFolder(dir), this.LoggerFactory.Object, DateTimeProvider.Default);
+            this.keyValueStore = new BlockKeyValueStore(new RepositorySerializer(this.Network.Consensus.ConsensusFactory), new DataFolder(dir), this.LoggerFactory.Object, DateTimeProvider.Default);
         }
 
         [Fact]
@@ -47,7 +47,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             // Initialize the repo.
             using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
-                transaction.Insert<byte[], byte[]>("Common", new byte[0], this.DBreezeSerializer.Serialize(new HashHeightPair(new uint256(56), 1)));
+                transaction.Insert<byte[], byte[]>("Common", new byte[0], this.RepositorySerializer.Serialize(new HashHeightPair(new uint256(56), 1)));
                 transaction.Insert<byte[], byte[]>("Common", new byte[1], new byte[] { 1 });
                 transaction.Commit();
             }

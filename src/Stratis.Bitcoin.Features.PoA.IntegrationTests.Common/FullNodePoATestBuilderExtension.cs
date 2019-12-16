@@ -22,5 +22,21 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
 
             return fullNodeBuilder;
         }
+
+        public static IFullNodeBuilder AddTokenlessFastMiningCapability(this IFullNodeBuilder fullNodeBuilder)
+        {
+            fullNodeBuilder.ConfigureFeature(features =>
+            {
+                foreach (IFeatureRegistration feature in features.FeatureRegistrations)
+                {
+                    feature.FeatureServices(services =>
+                    {
+                        services.Replace(new ServiceDescriptor(typeof(IPoAMiner), typeof(TokenlessPoAMiner), ServiceLifetime.Singleton));
+                    });
+                }
+            });
+
+            return fullNodeBuilder;
+        }
     }
 }
