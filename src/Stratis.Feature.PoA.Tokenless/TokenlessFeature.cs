@@ -36,7 +36,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.miner = miner;
             this.revocationChecker = revocationChecker;
 
-            payloadProvider.DiscoverPayloads(this.GetType().Assembly);
+            payloadProvider.DiscoverPayloads(typeof(PoAFeature).Assembly);
         }
 
         /// <inheritdoc />
