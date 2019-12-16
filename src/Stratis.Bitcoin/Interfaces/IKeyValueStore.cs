@@ -15,6 +15,12 @@ namespace Stratis.Bitcoin.Interfaces
     public interface IKeyValueStore : IDisposable
     {
         /// <summary>
+        /// Get the names of the tables in the repository.
+        /// </summary>
+        /// <returns></returns>
+        string[] GetTables();
+
+        /// <summary>
         /// The transaction factory for this key-store type.
         /// </summary>
         /// <param name="mode">The transaction mode.</param>

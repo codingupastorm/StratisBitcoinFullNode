@@ -69,6 +69,7 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
 
             Guard.NotNull(this.Storage, nameof(this.Storage));
 
+            this.Tables.Clear();
             for (this.nextTablePrefix = 1; ; this.nextTablePrefix++)
             {
                 byte[] tableNameBytes = this.Storage.Get(new byte[] { 0, (byte)this.nextTablePrefix });
