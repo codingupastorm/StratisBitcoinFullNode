@@ -1,5 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using NBitcoin;
+using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
@@ -33,7 +35,35 @@ namespace Stratis.SmartContracts.IntegrationTests
                 
                 TestBase.WaitLoop(() => node1.FullNode.ConnectionManager.ConnectedPeers.Count() == 1);
                 TestBase.WaitLoop(() => node2.FullNode.ConnectionManager.ConnectedPeers.Count() == 1);
+
+                Transaction transaction = this.CreateBasicOpReturnTransaction(node1);
+
+                node1.AddToStratisMempool(transaction);
+
+                TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+
+                // TODO: This fails. Are nodes not sharing transactions?
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+
+                // TODO: Afterwards, run these and see if blocks mine + propagate fine.
+                await node1.MineBlocksAsync(1);
+                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 1);
+
             }
+        }
+
+        private Transaction CreateBasicOpReturnTransaction(CoreNode node)
+        {
+            Transaction transaction = this.network.CreateTransaction();
+            Script outputScript = TxNullDataTemplate.Instance.GenerateScriptPubKey(new byte[] { 0, 1, 2, 3 });
+            transaction.Outputs.Add(new TxOut(Money.Zero, outputScript));
+
+            var key = new Key();
+
+            ITokenlessSigner signer = node.FullNode.NodeService<ITokenlessSigner>();
+            signer.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
+
+            return transaction;
         }
     }
 }
