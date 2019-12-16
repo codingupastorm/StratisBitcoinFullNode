@@ -64,19 +64,19 @@ namespace Stratis.Bitcoin.NodeStorage
                 }
             }
 
-            if (Directory.Exists(Path.Combine(sourceDataFolder.RootPath, "finalizedBlock")))
+            // Copy KeyValueRepository.
+            using (var kvSource = new KeyValueStore<TFrom>(sourceDataFolder.KeyValueRepositoryPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
             {
-                string targetFolder = Path.Combine(targetDataFolder.RootPath, "finalizedBlock");
-                if (Directory.Exists(targetFolder))
-                    Directory.Delete(targetFolder, true);
-                Directory.CreateDirectory(targetFolder);
-                foreach (string file in Directory.EnumerateFiles(Path.Combine(sourceDataFolder.RootPath, "finalizedBlock"), "*.*", SearchOption.TopDirectoryOnly))
-                    File.Copy(file, file.Replace("ReadyData", "ReadyDataLevelDB"));
+                using (var kvTarget = new KeyValueStore<TTo>(targetDataFolder.KeyValueRepositoryPath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
+                {
+                    // Primitive types must be used.
+                    CopyTable<byte[], byte[]>(kvSource, kvTarget, "common");
+                }
             }
 
             foreach (string file in Directory.EnumerateFiles(sourceDataFolder.RootPath, "*.*", SearchOption.TopDirectoryOnly))
             {
-                string targetName = file.Replace("ReadyData", "ReadyDataLevelDB");
+                string targetName = Path.Combine(targetDataFolder.RootPath, Path.GetFileName(file));
                 if (File.Exists(targetName))
                     File.Delete(targetName);
                 File.Copy(file, targetName);
