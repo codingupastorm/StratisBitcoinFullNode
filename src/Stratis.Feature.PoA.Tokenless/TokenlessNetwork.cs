@@ -212,7 +212,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
             // IFullValidationConsensusRule
             consensus.ConsensusRules
-                .Register<NoDuplicateTransactionExistOnChainRule>() // TODO-TL: Add to mempool.
+                .Register<NoDuplicateTransactionExistOnChainRule>()
                 .Register<TokenlessCoinviewRule>();
             // ------------------------------------------------------
         }
@@ -221,6 +221,7 @@ namespace Stratis.Feature.PoA.Tokenless
         {
             consensus.MempoolRules = new List<Type>()
             {
+                typeof(NoDuplicateTransactionExistOnChainMempoolRule),
                 typeof(CreateTokenlessMempoolEntryRule),
                 typeof(IsSmartContractWellFormedMempoolRule),
                 typeof(CanSenderBeRetrievedMempoolRule)
