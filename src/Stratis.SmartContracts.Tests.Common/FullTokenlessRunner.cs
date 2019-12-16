@@ -37,7 +37,6 @@ namespace Stratis.SmartContracts.Tests.Common
                 .UseNodeSettings(settings)
                 .UseBlockStore()
                 .UseTokenlessPoaConsenus(this.Network)
-                .AsTokenlessNetwork()
                 .UseMempool()
                 .AddRPC()
                 .AddSmartContracts(options =>
@@ -45,6 +44,7 @@ namespace Stratis.SmartContracts.Tests.Common
                     options.UseTokenlessReflectionExecutor();
                     options.UseSmartContractType<TokenlessSmartContract>();
                 })
+                .AsTokenlessNetwork()
                 .ReplaceTimeProvider(this.timeProvider)
                 .MockIBD()
                 .AddTokenlessFastMiningCapability();
