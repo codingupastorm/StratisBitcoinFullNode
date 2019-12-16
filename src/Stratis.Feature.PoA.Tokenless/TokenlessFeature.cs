@@ -5,6 +5,7 @@ using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.Behaviors;
+using Stratis.Bitcoin.Features.PoA.Payloads;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
@@ -37,10 +38,13 @@ namespace Stratis.Feature.PoA.Tokenless
             this.miner = miner;
             this.revocationChecker = revocationChecker;
 
-            // TODO: Is there a better place to do this?
+            // TODO-TL: Is there a better place to do this?
             storeSettings.TxIndex = true;
 
             payloadProvider.DiscoverPayloads(this.GetType().Assembly);
+
+            // TODO-TL: We need to find a better way to add this payload.
+            payloadProvider.AddPayload(typeof(PoAHeadersPayload));
         }
 
         /// <inheritdoc />
