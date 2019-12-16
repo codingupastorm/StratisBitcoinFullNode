@@ -621,9 +621,9 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             {
                 repository.SetTxIndex(true);
 
-                Assert.True(repository.TransactionExist(tx1.GetHash()));
-                Assert.True(repository.TransactionExist(tx2.GetHash()));
-                Assert.True(repository.TransactionExist(tx3.GetHash()));
+                Assert.True(repository.TransactionExists(tx1.GetHash()));
+                Assert.True(repository.TransactionExists(tx2.GetHash()));
+                Assert.True(repository.TransactionExists(tx3.GetHash()));
             }
         }
 

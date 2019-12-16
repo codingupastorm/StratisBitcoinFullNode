@@ -63,7 +63,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
         /// </summary>
         /// <param name="hashes">The transaction hash to check.</param>
         /// <returns><c>true</c> if the transaction already exists.</returns>
-        bool TransactionExist(uint256 hashes);
+        bool TransactionExists(uint256 hashes);
 
         /// <summary>
         /// Iterate over every block in the database.
@@ -447,7 +447,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
         }
 
         /// <inheritdoc />
-        public bool TransactionExist(uint256 transactionHash)
+        public bool TransactionExists(uint256 transactionHash)
         {
             using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {

@@ -9,15 +9,15 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
     /// <summary>
     /// Ensures that the chain does not already contain the given transaction in a block.
     /// </summary>
-    public sealed class NoDuplicateTransactionExistOnChain : FullValidationConsensusRule
+    public sealed class NoDuplicateTransactionExistOnChainRule : FullValidationConsensusRule
     {
         private readonly IBlockRepository blockRepository;
-        private readonly ILogger<NoDuplicateTransactionExistOnChain> logger;
+        private readonly ILogger<NoDuplicateTransactionExistOnChainRule> logger;
 
-        public NoDuplicateTransactionExistOnChain(IBlockRepository blockRepository, ILoggerFactory loggerFactory)
+        public NoDuplicateTransactionExistOnChainRule(IBlockRepository blockRepository, ILoggerFactory loggerFactory)
         {
             this.blockRepository = blockRepository;
-            this.logger = loggerFactory.CreateLogger<NoDuplicateTransactionExistOnChain>();
+            this.logger = loggerFactory.CreateLogger<NoDuplicateTransactionExistOnChainRule>();
         }
 
         /// <inheritdoc/>
@@ -27,7 +27,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             {
                 uint256 txId = transaction.GetHash();
 
-                bool exists = this.blockRepository.TransactionExist(txId);
+                bool exists = this.blockRepository.TransactionExists(txId);
                 if (exists)
                 {
                     this.logger.LogDebug("'{0}' already exists.", txId);
