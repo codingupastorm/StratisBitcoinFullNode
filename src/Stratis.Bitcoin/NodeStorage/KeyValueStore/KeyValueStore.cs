@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities;
@@ -10,6 +11,8 @@ namespace Stratis.Bitcoin.KeyValueStore
     /// </summary>
     public abstract class KeyValueStore : IKeyValueStore
     {
+        public IKeyValueStoreRepository Repository { get; protected set; }
+
         private readonly IDateTimeProvider dateTimeProvider;
         private readonly string rootPath;
 
@@ -37,6 +40,11 @@ namespace Stratis.Bitcoin.KeyValueStore
 
         public abstract IKeyValueStoreTransaction CreateTransaction(KeyValueStoreTransactionMode mode, params string[] tables);
 
+        public string[] GetTables()
+        {
+            return ((KeyValueStoreRepository)this.Repository).Tables.Select(t => t.Value.TableName).ToArray();
+        }
+
         /// <inheritdoc/>
         public void SetLookups(IKeyValueStoreTrackers keyValueStoreTrackers)
         {
@@ -63,8 +71,6 @@ namespace Stratis.Bitcoin.KeyValueStore
     /// <typeparam name="R">The database-specific repository class.</typeparam>
     public class KeyValueStore<R> : KeyValueStore where R : KeyValueStoreRepository
     {
-        public IKeyValueStoreRepository Repository { get; private set; }
-
         /// <summary>
         /// Creates a key-value store.
         /// </summary>

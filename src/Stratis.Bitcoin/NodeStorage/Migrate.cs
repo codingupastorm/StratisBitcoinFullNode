@@ -74,6 +74,18 @@ namespace Stratis.Bitcoin.NodeStorage
                 }
             }
 
+            // Copy SmartContractState.
+            using (var kvSource = new KeyValueStore<TFrom>(sourceDataFolder.SmartContractStatePath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
+            {
+                using (var kvTarget = new KeyValueStore<TTo>(targetDataFolder.SmartContractStatePath, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(network.Consensus.ConsensusFactory)))
+                {
+                    foreach (string tableName in kvSource.GetTables())
+                    {
+                        CopyTable<byte[], byte[]>(kvSource, kvTarget, tableName);
+                    }
+                }
+            }
+
             foreach (string file in Directory.EnumerateFiles(sourceDataFolder.RootPath, "*.*", SearchOption.TopDirectoryOnly))
             {
                 string targetName = Path.Combine(targetDataFolder.RootPath, Path.GetFileName(file));
