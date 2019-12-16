@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using NBitcoin;
+using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
@@ -21,7 +22,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task TokenlessNodeStarts()
+        public async Task TokenlessNodeStarts_Async()
         {
             using (SmartContractNodeBuilder builder = SmartContractNodeBuilder.Create(this))
             {
@@ -31,11 +32,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 node1.Start();
                 node2.Start();
 
-                var storeSettings = node.FullNode.NodeService<StoreSettings>();
-                Assert.True(storeSettings.TxIndex);
+                Assert.True(node1.FullNode.NodeService<StoreSettings>().TxIndex);
+                Assert.True(node2.FullNode.NodeService<StoreSettings>().TxIndex);
 
                 TestHelper.Connect(node1, node2);
-                
+
                 TestBase.WaitLoop(() => node1.FullNode.ConnectionManager.ConnectedPeers.Count() == 1);
                 TestBase.WaitLoop(() => node2.FullNode.ConnectionManager.ConnectedPeers.Count() == 1);
 
@@ -51,7 +52,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // TODO: Afterwards, run these and see if blocks mine + propagate fine.
                 await node1.MineBlocksAsync(1);
                 TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 1);
-
             }
         }
 
