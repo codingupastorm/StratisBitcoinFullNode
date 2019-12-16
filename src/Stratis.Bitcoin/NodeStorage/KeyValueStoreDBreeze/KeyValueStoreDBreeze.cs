@@ -57,6 +57,8 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
             this.storage = new DBreezeEngine(rootPath);
 
             // Enumerate the tables.
+            this.Tables.Clear();
+
             foreach (string tableName in this.storage.Scheme.GetUserTableNamesStartingWith(string.Empty))
             {
                 this.Tables.Add(tableName, new KeyValueStoreTable() { TableName = tableName, Repository = this });
