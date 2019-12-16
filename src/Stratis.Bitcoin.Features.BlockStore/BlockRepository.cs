@@ -59,11 +59,11 @@ namespace Stratis.Bitcoin.Features.BlockStore
         bool Exist(uint256 hash);
 
         /// <summary>
-        /// Determine if transactions already exist in a block.
+        /// Determine if a transaction already exists in a block.
         /// </summary>
-        /// <param name="hashes">A list of transaction hashes to test.</param>
-        /// <returns>A matching array of bools whether or not these transactions already exist.</returns>
-        bool[] TransactionsExist(uint256[] hashes);
+        /// <param name="hashes">The transaction hash to check.</param>
+        /// <returns><c>true</c> if the transaction already exists.</returns>
+        bool TransactionExist(uint256 hashes);
 
         /// <summary>
         /// Iterate over every block in the database.
@@ -147,9 +147,9 @@ namespace Stratis.Bitcoin.Features.BlockStore
         }
 
         /// <inheritdoc />
-        public Transaction GetTransactionById(uint256 trxid)
+        public Transaction GetTransactionById(uint256 trxId)
         {
-            Guard.NotNull(trxid, nameof(trxid));
+            Guard.NotNull(trxId, nameof(trxId));
 
             if (!this.TxIndex)
             {
@@ -157,7 +157,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
                 return default(Transaction);
             }
 
-            if (this.genesisTransactions.TryGetValue(trxid, out Transaction genesisTransaction))
+            if (this.genesisTransactions.TryGetValue(trxId, out Transaction genesisTransaction))
             {
                 return genesisTransaction;
             }
@@ -165,15 +165,15 @@ namespace Stratis.Bitcoin.Features.BlockStore
             Transaction res = null;
             using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                if (!transaction.Select(TransactionTableName, trxid, out uint256 blockHash))
+                if (!transaction.Select(TransactionTableName, trxId, out uint256 blockHash))
                 {
-                    this.logger.LogTrace("(-)[NO_BLOCK]:null");
+                    this.logger.LogTrace("(-)[TX_DOES_NOT_EXIST]:'{0}'", trxId);
                     return null;
                 }
 
                 if (transaction.Select(BlockTableName, blockHash, out Block block))
                 {
-                    res = block.Transactions.FirstOrDefault(t => t.GetHash() == trxid);
+                    res = block.Transactions.FirstOrDefault(t => t.GetHash() == trxId);
                 }
             }
 
@@ -432,25 +432,26 @@ namespace Stratis.Bitcoin.Features.BlockStore
         }
 
         /// <inheritdoc />
-        public bool Exist(uint256 hash)
+        public bool Exist(uint256 blockHash)
         {
-            Guard.NotNull(hash, nameof(hash));
+            Guard.NotNull(blockHash, nameof(blockHash));
 
             bool res = false;
             using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                if (transaction.Exists(BlockTableName, hash))
+                if (transaction.Exists(BlockTableName, blockHash))
                     res = true;
             }
 
             return res;
         }
 
-        public bool[] TransactionsExist(uint256[] hashes)
+        /// <inheritdoc />
+        public bool TransactionExist(uint256 transactionHash)
         {
             using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                return transaction.ExistsMultiple(TransactionTableName, hashes);
+                return transaction.Exists(TransactionTableName, transactionHash);
             }
         }
 

@@ -2,9 +2,9 @@
 using System.Linq;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Interfaces;
 using Xunit;
 
 namespace Stratis.Bitcoin.Features.BlockStore.Tests
@@ -123,7 +123,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
                 transaction.Insert<uint256, Block>("Block", block.Header.GetHash(), block);
                 transaction.Insert<uint256, uint256>("Transaction", trans.GetHash(), block.Header.GetHash());
                 transaction.Insert<byte[], HashHeightPair>("Common", new byte[0], new HashHeightPair(uint256.Zero, 1));
-                transaction.Insert<byte[], bool>("Common", new byte[1], true );
+                transaction.Insert<byte[], bool>("Common", new byte[1], true);
                 transaction.Commit();
             }
 
@@ -596,13 +596,14 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         [Fact]
         public void TransactionsExist()
         {
-            string dir = CreateTestDir(this);
-            SetBlockKeyValueStore(dir);
+            SetBlockKeyValueStore(CreateTestDir(this));
 
             Block block = this.Network.CreateBlock();
+
             Transaction tx1 = this.Network.CreateTransaction();
-            Transaction tx2= this.Network.CreateTransaction();
+            Transaction tx2 = this.Network.CreateTransaction();
             Transaction tx3 = this.Network.CreateTransaction();
+
             block.AddTransaction(tx1);
             block.AddTransaction(tx2);
             block.AddTransaction(tx3);
@@ -620,11 +621,9 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             {
                 repository.SetTxIndex(true);
 
-                // How come all of these are true, even the last one?
-                bool[] transactionsExist = repository.TransactionsExist(new uint256[] {tx1.GetHash(), tx2.GetHash(), new uint256(42) });
-                Assert.True(transactionsExist[0]);
-                Assert.True(transactionsExist[1]);
-                Assert.False(transactionsExist[2]);
+                Assert.True(repository.TransactionExist(tx1.GetHash()));
+                Assert.True(repository.TransactionExist(tx2.GetHash()));
+                Assert.True(repository.TransactionExist(tx3.GetHash()));
             }
         }
 
