@@ -1,4 +1,5 @@
-﻿using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+﻿using Stratis.Bitcoin.Features.BlockStore;
+using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;
@@ -22,6 +23,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CoreNode node = builder.CreateFullTokenlessNode(this.network, 0);
 
                 node.Start();
+
+                var storeSettings = node.FullNode.NodeService<StoreSettings>();
+                Assert.True(storeSettings.TxIndex);
+
+                // TODO: Check that transactions are retrievable.
             }
         }
     }
