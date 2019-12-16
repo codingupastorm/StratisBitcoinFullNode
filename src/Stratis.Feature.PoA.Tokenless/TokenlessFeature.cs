@@ -23,16 +23,15 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly RevocationChecker revocationChecker;
 
         public TokenlessFeature(
-            ICoreComponent coreComponent,
             CertificatesManager certificatesManager,
+            ICoreComponent coreComponent,
             IFederationManager federationManager,
             IPoAMiner miner,
             PayloadProvider payloadProvider,
             RevocationChecker revocationChecker)
         {
-            this.coreComponent = coreComponent;
-
             this.certificatesManager = certificatesManager;
+            this.coreComponent = coreComponent;
             this.federationManager = federationManager;
             this.miner = miner;
             this.revocationChecker = revocationChecker;

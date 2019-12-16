@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
-using NBitcoin;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStore;
+using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Bitcoin.Features.Consensus
 {

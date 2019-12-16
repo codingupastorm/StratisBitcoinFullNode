@@ -127,7 +127,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts
 
                         services.AddSingleton<IMethodParameterSerializer, MethodParameterByteSerializer>();
                         services.AddSingleton<IMethodParameterStringSerializer, MethodParameterStringSerializer>();
-                        services.AddSingleton<ICallDataSerializer, CallDataSerializer>();
 
                         // Registers the ScriptAddressReader concrete type and replaces the IScriptAddressReader implementation
                         // with SmartContractScriptAddressReader, which depends on the ScriptAddressReader concrete type.
@@ -160,9 +159,31 @@ namespace Stratis.Bitcoin.Features.SmartContracts
             services.AddSingleton<IContractTransferProcessor, ContractTransferProcessor>();
             services.AddSingleton<IKeyEncodingStrategy, BasicKeyEncodingStrategy>();
             services.AddSingleton<IContractExecutorFactory, ReflectionExecutorFactory>();
-            services.AddSingleton<IMethodParameterSerializer, MethodParameterByteSerializer>();
             services.AddSingleton<IContractPrimitiveSerializer, ContractPrimitiveSerializer>();
             services.AddSingleton<ISerializer, Serializer>();
+
+            services.AddSingleton<ICallDataSerializer, CallDataSerializer>();
+
+            // Controllers + utils
+            services.AddSingleton<CSharpContractDecompiler>();
+
+            return options;
+        }
+
+        public static SmartContractOptions UseTokenlessReflectionExecutor(this SmartContractOptions options)
+        {
+            IServiceCollection services = options.Services;
+
+            // Validator
+            services.AddSingleton<ISmartContractValidator, SmartContractValidator>();
+
+            // Executor et al.
+            services.AddSingleton<IKeyEncodingStrategy, BasicKeyEncodingStrategy>();
+            services.AddSingleton<IContractExecutorFactory, TokenlessReflectionExecutorFactory>();
+            services.AddSingleton<IContractPrimitiveSerializer, ContractPrimitiveSerializer>();
+            services.AddSingleton<ISerializer, Serializer>();
+
+            services.AddSingleton<ICallDataSerializer, NoGasCallDataSerializer>();
 
             // Controllers + utils
             services.AddSingleton<CSharpContractDecompiler>();

@@ -5,6 +5,7 @@ using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Feature.PoA.Tokenless;
 using Stratis.SmartContracts.Networks;
 
 namespace Stratis.SmartContracts.Tests.Common
@@ -44,6 +45,20 @@ namespace Stratis.SmartContracts.Tests.Common
             tool.SavePrivateKey(network.FederationKeys[nodeIndex]);
 
             return node;
+        }
+
+        public CoreNode CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex)
+        {
+            string dataFolder = this.GetNextDataFolderName();
+
+            CoreNode node = this.CreateNode(new FullTokenlessRunner(dataFolder, network, this.TimeProvider), "poa.conf");
+
+            using (var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder }))
+            {
+                var tool = new KeyTool(settings.DataFolder);
+                tool.SavePrivateKey(network.FederationKeys[nodeIndex]);
+                return node;
+            }
         }
 
         public CoreNode CreateWhitelistedContractPoANode(SmartContractsPoAWhitelistRegTest network, int nodeIndex)

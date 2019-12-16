@@ -6,8 +6,8 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.BitcoinCore;
-using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Bitcoin.Features.Consensus.CoinViews
 {
@@ -62,7 +62,6 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
             this.performanceCounter = new BackendPerformanceCounter(dateTimeProvider);
 
             nodeStats.RegisterStats(this.AddBenchStats, StatsType.Benchmark, this.GetType().Name, 400);
-
         }
 
         /// <summary>

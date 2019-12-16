@@ -15,13 +15,15 @@ using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
-    public sealed class TokenlessNetwork : Network
+    public sealed class TokenlessNetwork : PoANetwork
     {
         /// <summary> The name of the root folder containing the different PoA blockchains.</summary>
         private const string NetworkRootFolderName = "tokenless";
 
         /// <summary> The default name used for the Stratis configuration file. </summary>
         private const string NetworkDefaultConfigFilename = "tokenless.conf";
+
+        public Key[] FederationKeys { get; private set; }
 
         public TokenlessNetwork()
         {
@@ -68,27 +70,32 @@ namespace Stratis.Feature.PoA.Tokenless
 
             this.Genesis = genesisBlock;
 
-            // Configure federation.
-            // Keep in mind that order in which keys are added to this list is important
-            // and should be the same for all nodes operating on this network.
-            var genesisFederationMembers = new List<IFederationMember>()
+            this.FederationKeys = new Key[]
             {
-                new FederationMember(new PubKey("03025fcadedd28b12665de0542c8096f4cd5af8e01791a4d057f67e2866ca66ba7")),
-                new FederationMember(new PubKey("027724a9ecc54417ff0250c3355d300cee008747b630f43e791cd02c2b35294d2f")),
-                new FederationMember(new PubKey("022f8ad1799fd281fc9519814d20a407ed120ba84ec24cca8e869b811e6f6d4590"))
+                new Mnemonic("lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom").DeriveExtKey().PrivateKey,
+                new Mnemonic("idle power swim wash diesel blouse photo among eager reward govern menu").DeriveExtKey().PrivateKey,
+                new Mnemonic("high neither night category fly wasp inner kitchen phone current skate hair").DeriveExtKey().PrivateKey
             };
 
+            var genesisFederationMembers = new List<IFederationMember>
+            {
+                new FederationMember(this.FederationKeys[0].PubKey), // 029528e83f065153d7fa655e73a07fc96fc759162f1e2c8936fa592f2942f39af0
+                new FederationMember(this.FederationKeys[1].PubKey), // 03b539807c64abafb2d14c52a0d1858cc29d7c7fad0598f92a1274789c18d74d2d
+                new FederationMember(this.FederationKeys[2].PubKey)  // 02d6792cf941b68edd1e9056653573917cbaf974d46e9eeb9801d6fcedf846477a
+            };
+
+            // TODO-TL: Implement new TokenlessConsensusOptions?
             var consensusOptions = new PoAConsensusOptions(
                 maxBlockBaseSize: 1_000_000,
                 maxStandardVersion: 2,
                 maxStandardTxWeight: 100_000,
-                maxBlockSigopsCost: 20_000, // TODO-TL: Check
-                maxStandardTxSigopsCost: 20_000 / 5, // TODO-TL: Check
+                0,
+                0,
                 genesisFederationMembers: genesisFederationMembers,
                 targetSpacingSeconds: 16,
-                votingEnabled: true,
-                autoKickIdleMembers: true,
-                enablePermissionedMembership: true
+                votingEnabled: false,
+                autoKickIdleMembers: false,
+                enablePermissionedMembership: false
             );
 
             // TODO-TL: Check
@@ -177,22 +184,20 @@ namespace Stratis.Feature.PoA.Tokenless
 
             // TODO-TL: Add Smart Contract State Root Hash
 
-            if ((this.ConsensusOptions.GenesisFederationMembers == null) || (this.ConsensusOptions.GenesisFederationMembers.Count == 0))
+            if ((consensusOptions.GenesisFederationMembers == null) || (consensusOptions.GenesisFederationMembers.Count == 0))
                 throw new Exception("No keys for initial federation are configured!");
 
             this.RegisterRules(this.Consensus);
             this.RegisterMempoolRules(this.Consensus);
         }
 
-        public PoAConsensusOptions ConsensusOptions => this.Consensus.Options as PoAConsensusOptions;
-
-        public void RegisterRules(IConsensus consensus)
+        protected override void RegisterRules(IConsensus consensus)
         {
             // IHeaderValidationConsensusRules
             consensus.ConsensusRules
                 .Register<HeaderTimeChecksPoARule>()
                 .Register<PoAHeaderDifficultyRule>()
-                .Register<PoAHeaderSignatureRule>();
+                .Register<TokenlessHeaderSignatureRule>();
 
             // IIntegrityValidationConsensusRules
             consensus.ConsensusRules
@@ -211,8 +216,7 @@ namespace Stratis.Feature.PoA.Tokenless
             // ------------------------------------------------------
         }
 
-        // TODO-TL: What other rules are required?
-        public void RegisterMempoolRules(IConsensus consensus)
+        protected override void RegisterMempoolRules(IConsensus consensus)
         {
             consensus.MempoolRules = new List<Type>()
             {
