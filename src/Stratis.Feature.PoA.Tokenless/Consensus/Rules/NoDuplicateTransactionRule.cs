@@ -6,17 +6,21 @@ using Stratis.Bitcoin.Features.BlockStore;
 
 namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 {
-    public sealed class NoDuplicateTransactionRule : FullValidationConsensusRule
+    /// <summary>
+    /// Ensures that the chain does not already contain the given transaction in a block.
+    /// </summary>
+    public sealed class NoDuplicateTransactionExistOnChain : FullValidationConsensusRule
     {
         private readonly IBlockRepository blockRepository;
-        private readonly ILogger<NoDuplicateTransactionRule> logger;
+        private readonly ILogger<NoDuplicateTransactionExistOnChain> logger;
 
-        public NoDuplicateTransactionRule(IBlockRepository blockRepository, ILoggerFactory loggerFactory)
+        public NoDuplicateTransactionExistOnChain(IBlockRepository blockRepository, ILoggerFactory loggerFactory)
         {
             this.blockRepository = blockRepository;
-            this.logger = loggerFactory.CreateLogger<NoDuplicateTransactionRule>();
+            this.logger = loggerFactory.CreateLogger<NoDuplicateTransactionExistOnChain>();
         }
 
+        /// <inheritdoc/>
         public override Task RunAsync(RuleContext context)
         {
             foreach (Transaction transaction in context.ValidationContext.BlockToValidate.Transactions)
