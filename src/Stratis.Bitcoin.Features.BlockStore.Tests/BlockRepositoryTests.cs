@@ -2,9 +2,9 @@
 using System.Linq;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Interfaces;
 using Xunit;
 
 namespace Stratis.Bitcoin.Features.BlockStore.Tests
@@ -123,7 +123,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
                 transaction.Insert<uint256, Block>("Block", block.Header.GetHash(), block);
                 transaction.Insert<uint256, uint256>("Transaction", trans.GetHash(), block.Header.GetHash());
                 transaction.Insert<byte[], HashHeightPair>("Common", new byte[0], new HashHeightPair(uint256.Zero, 1));
-                transaction.Insert<byte[], bool>("Common", new byte[1], true );
+                transaction.Insert<byte[], bool>("Common", new byte[1], true);
                 transaction.Commit();
             }
 
@@ -590,6 +590,41 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
                     Assert.NotNull(result);
                     Assert.Equal(this.Network.GenesisHash, result);
                 }
+            }
+        }
+
+        [Fact]
+        public void TransactionsExist()
+        {
+            SetBlockKeyValueStore(CreateTestDir(this));
+
+            Block block = this.Network.CreateBlock();
+
+            Transaction tx1 = this.Network.CreateTransaction();
+            Transaction tx2 = this.Network.CreateTransaction();
+            Transaction tx3 = this.Network.CreateTransaction();
+
+            block.AddTransaction(tx1);
+            block.AddTransaction(tx2);
+            block.AddTransaction(tx3);
+
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
+            {
+                transaction.Insert<uint256, Block>("Block", block.Header.GetHash(), block);
+                transaction.Insert<uint256, uint256>("Transaction", tx1.GetHash(), block.Header.GetHash());
+                transaction.Insert<uint256, uint256>("Transaction", tx2.GetHash(), block.Header.GetHash());
+                transaction.Insert<uint256, uint256>("Transaction", tx3.GetHash(), block.Header.GetHash());
+                transaction.Commit();
+            }
+
+            using (IBlockRepository repository = this.SetupRepository(this.Network))
+            {
+                repository.SetTxIndex(true);
+
+                Assert.True(repository.TransactionExists(tx1.GetHash()));
+                Assert.True(repository.TransactionExists(tx2.GetHash()));
+                Assert.True(repository.TransactionExists(tx3.GetHash()));
+                Assert.False(repository.TransactionExists(new uint256(0)));
             }
         }
 
