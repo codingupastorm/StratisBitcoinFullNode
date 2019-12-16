@@ -31,6 +31,9 @@ namespace Stratis.SmartContracts.IntegrationTests
                 node1.Start();
                 node2.Start();
 
+                var storeSettings = node.FullNode.NodeService<StoreSettings>();
+                Assert.True(storeSettings.TxIndex);
+
                 TestHelper.Connect(node1, node2);
                 
                 TestBase.WaitLoop(() => node1.FullNode.ConnectionManager.ConnectedPeers.Count() == 1);

@@ -28,7 +28,8 @@ namespace Stratis.Feature.PoA.Tokenless
             IFederationManager federationManager,
             IPoAMiner miner,
             PayloadProvider payloadProvider,
-            RevocationChecker revocationChecker)
+            RevocationChecker revocationChecker,
+            StoreSettings storeSettings)
         {
             this.certificatesManager = certificatesManager;
             this.coreComponent = coreComponent;
@@ -36,7 +37,10 @@ namespace Stratis.Feature.PoA.Tokenless
             this.miner = miner;
             this.revocationChecker = revocationChecker;
 
-            payloadProvider.DiscoverPayloads(typeof(PoAFeature).Assembly);
+            // TODO: Is there a better place to do this?
+            storeSettings.TxIndex = true;
+
+            payloadProvider.DiscoverPayloads(this.GetType().Assembly);
         }
 
         /// <inheritdoc />
