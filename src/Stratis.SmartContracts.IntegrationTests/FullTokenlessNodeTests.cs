@@ -49,7 +49,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
 
-                // TODO: This currently fails. Continue working from here.
                 await node1.MineBlocksAsync(1);
                 TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 1);
             }

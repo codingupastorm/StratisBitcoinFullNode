@@ -29,7 +29,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
         {
             GetSenderResult getSenderResult = this.tokenlessSigner.GetSender(context.Transaction);
             if (!getSenderResult.Success)
-                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "cannot-derive-sender-for-transaction"), $"Cannot derive the sender from transaction '{context.Transaction.GetHash()}'").Throw();
+                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "cannot-derive-sender-for-transaction"), $"Cannot derive the sender from transaction '{context.Transaction.GetHash()}': {getSenderResult.Error}").Throw();
         }
     }
 }
