@@ -85,48 +85,48 @@ namespace Stratis.Bitcoin.Features.BlockStore
         bool TxIndex { get; }
     }
 
+    internal class BlockTableKey : IBitcoinSerializable
+    {
+        public int Height;
+        public uint256 Hash;
+
+        public BlockTableKey(int height, uint256 hash)
+        {
+            this.Height = height;
+            this.Hash = hash;
+        }
+
+        public BlockTableKey()
+        {
+        }
+
+        public BlockTableKey(BlockRepository blockRepository, Block block)
+        {
+            uint256 hash = block.GetHash();
+
+            if (!blockRepository.heightByHash.TryGetValue(hash, out this.Height))
+            {
+                if (block.Header.HashPrevBlock == blockRepository.network.GenesisHash)
+                    this.Height = 1;
+                else
+                    this.Height = blockRepository.heightByHash[block.Header.HashPrevBlock] + 1;
+
+                blockRepository.heightByHash[hash] = this.Height;
+            }
+
+            this.Hash = hash;
+        }
+
+        public void ReadWrite(BitcoinStream s)
+        {
+            s.ReadWrite(ref this.Height);
+            s.ReadWrite(ref this.Hash);
+        }
+    }
+
     public class BlockRepository : IBlockRepository
     {
         internal Dictionary<uint256, int> heightByHash;
-
-        internal class BlockTableKey : IBitcoinSerializable
-        {
-            public int Height;
-            public uint256 Hash;
-
-            public BlockTableKey(int height, uint256 hash)
-            {
-                this.Height = height;
-                this.Hash = hash;
-            }
-
-            public BlockTableKey()
-            {
-            }
-
-            public BlockTableKey(BlockRepository blockRepository, Block block)
-            {
-                uint256 hash = block.GetHash();
-
-                if (!blockRepository.heightByHash.TryGetValue(hash, out this.Height))
-                {
-                    if (block.Header.HashPrevBlock == blockRepository.network.GenesisHash)
-                        this.Height = 1;
-                    else
-                        this.Height = blockRepository.heightByHash[block.Header.HashPrevBlock] + 1;
-
-                    blockRepository.heightByHash[hash] = this.Height;
-                }
-
-                this.Hash = hash;
-            }
-
-            public void ReadWrite(BitcoinStream s)
-            {
-                s.ReadWrite(ref this.Height);
-                s.ReadWrite(ref this.Hash);
-            }
-        }
 
         internal const string BlockTableName = "Block";
 
@@ -138,7 +138,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
         private readonly ILogger logger;
 
-        private readonly Network network;
+        internal readonly Network network;
 
         private static readonly byte[] RepositoryTipKey = new byte[0];
 
@@ -225,7 +225,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
                     return null;
                 }
 
-                if (transaction.Select(BlockTableName, blockHash, out Block block))
+                if (this.heightByHash.TryGetValue(blockHash, out int height) && transaction.Select(BlockTableName, new BlockTableKey(height, blockHash), out Block block))
                 {
                     res = block.Transactions.FirstOrDefault(t => t.GetHash() == trxId);
                 }
@@ -314,15 +314,20 @@ namespace Stratis.Bitcoin.Features.BlockStore
             return res;
         }
 
-        protected virtual void OnInsertBlocks(IKeyValueStoreTransaction dbTransaction, List<Block> blocks)
+        protected virtual void OnInsertBlocks(IKeyValueStoreTransaction dbTransaction, List<Block> blocks, HashHeightPair newTip)
         {
             var transactions = new List<(Transaction, Block)>();
+
+            var heights = new int[blocks.Count()];
+            for (int i = 0; i < heights.Length; i++)
+                heights[i] = newTip.Height - (heights.Length - 1) + i;
 
             bool[] blockExists = blocks.Select(b => this.heightByHash.ContainsKey(b.GetHash())).ToArray();
 
             blocks = blocks.Where((b, n) => !blockExists[n]).ToList();
+            heights = heights.Where((b, n) => !blockExists[n]).ToArray();
 
-            dbTransaction.InsertMultiple(BlockTableName, blocks.Select(b => (new BlockTableKey(this, b), b)).ToArray());
+            dbTransaction.InsertMultiple(BlockTableName, blocks.Select((b, n) => (new BlockTableKey(heights[n], b.GetHash()), b)).ToArray());
 
             // Index blocks.
             if (this.TxIndex)
@@ -367,7 +372,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
                     foreach ((BlockTableKey blockKey, Block block) in dbTransaction.SelectForward<BlockTableKey, Block>(BlockTableName))
                     {
-                        dbTransaction.InsertMultiple(TransactionTableName, block.Transactions.Select(t => (t.GetHash(), blockKey)).ToArray());
+                        dbTransaction.InsertMultiple(TransactionTableName, block.Transactions.Select(t => (t.GetHash(), blockKey.Hash)).ToArray());
 
                         // inform the user about the ongoing operation
                         if (++rowCount % 10000 == 0)
@@ -402,7 +407,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
             // however we need to find how byte arrays are sorted in DBreeze.
             using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, BlockTableName, TransactionTableName, CommonTableName))
             {
-                this.OnInsertBlocks(transaction, blocks);
+                this.OnInsertBlocks(transaction, blocks, newTip);
 
                 // Commit additions
                 this.SaveTipHashAndHeight(transaction, newTip);
