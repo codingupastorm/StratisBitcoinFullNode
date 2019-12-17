@@ -9,7 +9,7 @@ using Stratis.Feature.PoA.Tokenless.Core;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
-    public sealed class TokenlessPoAMiner : PoAMiner
+    public class TokenlessPoAMiner : PoAMiner
     {
         public TokenlessPoAMiner(
             ICoreComponent coreComponent,
