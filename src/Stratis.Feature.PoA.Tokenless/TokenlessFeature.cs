@@ -37,10 +37,10 @@ namespace Stratis.Feature.PoA.Tokenless
             this.miner = miner;
             this.revocationChecker = revocationChecker;
 
-            // TODO: Is there a better place to do this?
+            // TODO-TL: Is there a better place to do this?
             storeSettings.TxIndex = true;
 
-            payloadProvider.DiscoverPayloads(this.GetType().Assembly);
+            payloadProvider.DiscoverPayloads(typeof(PoAFeature).Assembly);
         }
 
         /// <inheritdoc />

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
+using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
@@ -42,14 +43,13 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 Transaction transaction = this.CreateBasicOpReturnTransaction(node1);
 
-                node1.AddToStratisMempool(transaction);
+                var broadcasterManager = node1.FullNode.NodeService<IBroadcasterManager>();
+                await broadcasterManager.BroadcastTransactionAsync(transaction);
 
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
-
-                // TODO: This fails. Are nodes not sharing transactions?
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
 
-                // TODO: Afterwards, run these and see if blocks mine + propagate fine.
+                // TODO: This currently fails. Continue working from here.
                 await node1.MineBlocksAsync(1);
                 TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 1);
             }
