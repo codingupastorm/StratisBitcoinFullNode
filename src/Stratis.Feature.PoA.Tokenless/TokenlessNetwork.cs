@@ -54,7 +54,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.MaxTimeOffsetSeconds = 25 * 60;
             this.CoinTicker = "POATL";
 
-            var consensusFactory = new TokenlessContractConsensusFactory();
+            var consensusFactory = new TokenlessConsensusFactory();
 
             // Create the genesis block.
             this.GenesisTime = 1513622125;
