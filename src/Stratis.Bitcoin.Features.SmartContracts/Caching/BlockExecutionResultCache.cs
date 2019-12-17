@@ -20,7 +20,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Caching
 
     public class BlockExecutionResultCache : IBlockExecutionResultCache
     {
-        private Dictionary<uint256, BlockExecutionResultModel> cachedExecutions;
+        private readonly Dictionary<uint256, BlockExecutionResultModel> cachedExecutions;
 
         public BlockExecutionResultCache()
         {

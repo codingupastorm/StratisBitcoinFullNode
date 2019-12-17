@@ -19,4 +19,10 @@
     <ProjectReference Include="..\Stratis.Feature.PoA.Tokenless\Stratis.Feature.PoA.Tokenless.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="SmartContracts\TokenlessExample.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
+  </ItemGroup>
+
 </Project>
