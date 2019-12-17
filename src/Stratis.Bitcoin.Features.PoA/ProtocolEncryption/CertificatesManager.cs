@@ -47,7 +47,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         /// <exception cref="CertificateConfigurationException">Thrown in case required certificates are not found or are not valid.</exception>
         public async Task InitializeAsync()
         {
-            string acPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, AuthorityCertificateName);
+            string acPath = Path.Combine(this.dataFolder.RootPath, AuthorityCertificateName);
             string clientCertPath = Path.Combine(this.dataFolder.RootPath, ClientCertificateName);
 
             if (!File.Exists(acPath))
