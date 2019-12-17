@@ -161,13 +161,14 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         /// <returns>Transaction information.</returns>
         public TxMempoolInfo Info(uint256 hash)
         {
+            // TODO-TL: Both of these item.Fee null checks are to allow tokenless messages to be sent between nodes.
             TxMempoolEntry item = this.memPool.MapTx.TryGet(hash);
             var infoItem = item == null ? null : new TxMempoolInfo
             {
                 Trx = item.Transaction,
                 Time = item.Time,
                 FeeRate = item.Fee != null ? new FeeRate(item.Fee, (int)item.GetTxSize()) : FeeRate.Zero,
-                FeeDelta = item.Fee != null ? item.ModifiedFee - item.Fee : 0 // Both of these item.Fee null checks are to allow tokenless messages to be sent between nodes.
+                FeeDelta = item.Fee != null ? item.ModifiedFee - item.Fee : 0
             };
 
             return infoItem;
