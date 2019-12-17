@@ -300,7 +300,7 @@ namespace Stratis.Bitcoin.Features.PoA
         }
 
         /// <summary>Gets scriptPubKey from the wallet.</summary>
-        private Script GetScriptPubKeyFromWallet()
+        protected virtual Script GetScriptPubKeyFromWallet()
         {
             string walletName = this.walletManager.GetWalletsNames().FirstOrDefault();
 

@@ -4,6 +4,7 @@ using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Feature.PoA.Tokenless.Core
 {
@@ -14,9 +15,11 @@ namespace Stratis.Feature.PoA.Tokenless.Core
         IChainState ChainState { get; }
         IConnectionManager ConnectionManager { get; }
         IConsensusManager ConsensusManager { get; }
+        IDateTimeProvider DateTimeProvider { get; }
         IInitialBlockDownloadState InitialBlockDownloadState { get; }
         ILoggerFactory LoggerFactory { get; }
         Network Network { get; }
+        INodeLifetime NodeLifetime { get; }
         IPeerBanning PeerBanning { get; }
     }
 
@@ -32,11 +35,15 @@ namespace Stratis.Feature.PoA.Tokenless.Core
 
         public IConsensusManager ConsensusManager { get; }
 
+        public IDateTimeProvider DateTimeProvider { get; }
+
         public IInitialBlockDownloadState InitialBlockDownloadState { get; }
 
         public ILoggerFactory LoggerFactory { get; }
 
         public Network Network { get; }
+
+        public INodeLifetime NodeLifetime { get; }
 
         public IPeerBanning PeerBanning { get; }
 
@@ -46,9 +53,11 @@ namespace Stratis.Feature.PoA.Tokenless.Core
             IChainState chainState,
             IConnectionManager connectionManager,
             IConsensusManager consensusManager,
+            IDateTimeProvider dateTimeProvider,
             IInitialBlockDownloadState initialBlockDownloadState,
             ILoggerFactory loggerFactory,
             Network network,
+            INodeLifetime nodeLifetime,
             IPeerBanning peerBanning)
         {
             this.BlockStoreQueue = blockStoreQueue;
@@ -56,9 +65,11 @@ namespace Stratis.Feature.PoA.Tokenless.Core
             this.ChainState = chainState;
             this.ConnectionManager = connectionManager;
             this.ConsensusManager = consensusManager;
+            this.DateTimeProvider = dateTimeProvider;
             this.InitialBlockDownloadState = initialBlockDownloadState;
             this.LoggerFactory = loggerFactory;
             this.Network = network;
+            this.NodeLifetime = nodeLifetime;
             this.PeerBanning = peerBanning;
         }
     }

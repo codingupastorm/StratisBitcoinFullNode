@@ -9,7 +9,16 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
     {
         public static async Task MineBlocksAsync(this CoreNode node, int count)
         {
-            await (node.FullNode.NodeService<IPoAMiner>() as TestPoAMiner).MineBlocksAsync(count);
+            var miner = node.FullNode.NodeService<IPoAMiner>();
+
+            if (miner is TestPoAMiner poaMiner)
+            {
+                await poaMiner.MineBlocksAsync(count);
+            }
+            else
+            {
+                await (miner as TokenlessTestPoAMiner).MineBlocksAsync(count);
+            }
         }
 
         public static void WaitTillSynced(params CoreNode[] nodes)

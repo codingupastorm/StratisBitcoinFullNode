@@ -79,7 +79,7 @@ namespace Stratis.Feature.PoA.Tokenless
                         // PoA Specific
                         services.AddSingleton<IFederationManager, FederationManager>();
                         services.AddSingleton<PoABlockHeaderValidator>();
-                        services.AddSingleton<IPoAMiner, PoAMiner>();
+                        services.AddSingleton<IPoAMiner, TokenlessPoAMiner>();
                         services.AddSingleton<MinerSettings>();
                         services.AddSingleton<PoAMinerSettings>();
                         services.AddSingleton<ISlotsManager, SlotsManager>();

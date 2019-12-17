@@ -31,7 +31,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
                 {
                     feature.FeatureServices(services =>
                     {
-                        services.Replace(new ServiceDescriptor(typeof(IPoAMiner), typeof(TokenlessPoAMiner), ServiceLifetime.Singleton));
+                        services.Replace(new ServiceDescriptor(typeof(IPoAMiner), typeof(TokenlessTestPoAMiner), ServiceLifetime.Singleton));
                     });
                 }
             });

@@ -10,6 +10,7 @@ using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Features.Miner;
+using Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Caching;
 using Stratis.Bitcoin.Mining;
@@ -180,7 +181,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         {
             this.UpdateBaseHeaders();
 
-            this.BlockTemplate.Block.Header.Bits = this.BlockTemplate.Block.Header.GetWorkRequired(this.Network, this.ChainTip);
+            this.BlockTemplate.Block.Header.Bits = PoAHeaderDifficultyRule.PoABlockDifficulty;
 
             var scHeader = (ISmartContractBlockHeader)this.BlockTemplate.Block.Header;
             scHeader.HashStateRoot = new uint256(this.stateSnapshot.Root);
