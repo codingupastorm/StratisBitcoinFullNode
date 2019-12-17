@@ -17,6 +17,7 @@ using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.Wallet;
+using Stratis.Bitcoin.Features.Wallet.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P.Peer;
@@ -46,6 +47,9 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<BlockDefinition, TokenlessBlockDefinition>();
                         services.AddSingleton<ITokenlessSigner, TokenlessSigner>();
                         services.AddSingleton<ICoreComponent, CoreComponent>();
+
+                        // In place of wallet.
+                        services.AddSingleton<IBroadcasterManager, FullNodeBroadcasterManager>();
                     });
             });
 

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
+using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
@@ -42,8 +43,8 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 Transaction transaction = this.CreateBasicOpReturnTransaction(node1);
 
-                node1.AddToStratisMempool(transaction);
-                node1.Broadcast(transaction);
+                var broadcasterManager = node1.FullNode.NodeService<IBroadcasterManager>();
+                await broadcasterManager.BroadcastTransactionAsync(transaction);
 
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
 

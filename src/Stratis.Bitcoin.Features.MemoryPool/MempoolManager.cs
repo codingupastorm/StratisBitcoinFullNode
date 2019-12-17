@@ -166,8 +166,8 @@ namespace Stratis.Bitcoin.Features.MemoryPool
             {
                 Trx = item.Transaction,
                 Time = item.Time,
-                FeeRate = new FeeRate(item.Fee, (int)item.GetTxSize()),
-                FeeDelta = item.ModifiedFee - item.Fee
+                FeeRate = item.Fee != null ? new FeeRate(item.Fee, (int)item.GetTxSize()) : FeeRate.Zero,
+                FeeDelta = item.Fee != null ? item.ModifiedFee - item.Fee : 0 // Both of these item.Fee null checks are to allow tokenless messages to be sent between nodes.
             };
 
             return infoItem;
