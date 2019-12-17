@@ -47,11 +47,9 @@ namespace Stratis.SmartContracts.IntegrationTests
                 await broadcasterManager.BroadcastTransactionAsync(transaction);
 
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
-
-                // TODO: This fails. Are nodes not sharing transactions?
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
 
-                // TODO: Afterwards, run these and see if blocks mine + propagate fine.
+                // TODO: This currently fails. Continue working from here.
                 await node1.MineBlocksAsync(1);
                 TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 1);
             }
