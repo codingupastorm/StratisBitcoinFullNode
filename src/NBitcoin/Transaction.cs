@@ -1159,7 +1159,7 @@ namespace NBitcoin
             }
         }
 
-        private uint nTime = Utils.DateTimeToUnixTime(DateTime.UtcNow);
+        protected uint nTime = Utils.DateTimeToUnixTime(DateTime.UtcNow);
 
         public uint Time
         {
@@ -1173,9 +1173,9 @@ namespace NBitcoin
             }
         }
 
-        private TxInList vin;
-        private TxOutList vout;
-        private LockTime nLockTime;
+        protected TxInList vin;
+        protected TxOutList vout;
+        protected LockTime nLockTime;
 
         public Transaction()
         {

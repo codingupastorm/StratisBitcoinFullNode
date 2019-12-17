@@ -20,7 +20,7 @@ namespace NBitcoin
         public Transaction Transaction
         {
             get;
-            internal set;
+            set;
         }
 
         public UnsignedList(IEnumerable<T> collection)
