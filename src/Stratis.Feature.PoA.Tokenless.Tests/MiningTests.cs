@@ -4,7 +4,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using CSharpFunctionalExtensions;
 using NBitcoin;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Base;
@@ -93,8 +92,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var contractTxData = new ContractTxData(0, 0, (Gas)0, compilationResult.Compilation);
             byte[] outputScript = this.helper.CallDataSerializer.Serialize(contractTxData);
             transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
-
-            Result<ContractTxData> res = this.helper.CallDataSerializer.Deserialize(outputScript);
 
             var key = new Key();
             this.helper.TokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.helper.Network));
