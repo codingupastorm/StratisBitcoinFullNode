@@ -125,7 +125,7 @@ namespace Stratis.CirrusPegD
                 .UseNodeSettings(nodeSettings)
                 .UseBlockStore()
                 .SetCounterChainNetwork(MainChainNetworks[nodeSettings.Network.NetworkType]())
-                .UseFederatedPegPoAMining()
+                .UseFederatedPegPoAMining(nodeSettings.Network)
                 .AddFederatedPeg(fedPegOptions)
                 .CheckForPoAMembersCollateral()
                 .UseTransactionNotification()
