@@ -1,23 +1,22 @@
 using System;
 using System.Threading.Tasks;
-using NBitcoin.Protocol;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.Api;
 using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.SignalR;
 using Stratis.Bitcoin.Features.SignalR.Broadcasters;
 using Stratis.Bitcoin.Features.SignalR.Events;
-using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Features.Diagnostic;
+using Stratis.Feature.PoA.Tokenless;
+using Stratis.Bitcoin.Features.SmartContracts;
+using Stratis.SmartContracts.Tokenless;
 
-namespace Stratis.StratisD
+namespace Stratis.TokenlessD
 {
     public class Program
     {
@@ -25,20 +24,23 @@ namespace Stratis.StratisD
         {
             try
             {
-                var nodeSettings = new NodeSettings(networksSelector: Networks.Stratis,
-                    protocolVersion: ProtocolVersion.PROVEN_HEADER_VERSION, args: args)
-                {
-                    MinProtocolVersion = ProtocolVersion.ALT_PROTOCOL_VERSION
-                };
+                // Use TokenlessNetwork.
+                var network = new TokenlessNetwork();
+                var nodeSettings = new NodeSettings(network, args: args);
 
                 IFullNodeBuilder nodeBuilder = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings)
                     .UseBlockStore()
-                    .UsePosConsensus()
+                    .UseTokenlessPoaConsenus(network)
                     .UseMempool()
-                    .AddPowPosMining()
                     .UseApi()
                     .AddRPC()
+                    .AddSmartContracts(options =>
+                    {
+                        options.UseTokenlessReflectionExecutor();
+                        options.UseSmartContractType<TokenlessSmartContract>();
+                    })
+                    .AsTokenlessNetwork()
                     .UseDiagnosticFeature();
 
                 if (nodeSettings.EnableSignalR)
