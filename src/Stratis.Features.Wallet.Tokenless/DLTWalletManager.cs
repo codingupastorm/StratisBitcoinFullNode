@@ -3,12 +3,15 @@ using System.IO;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Utilities;
+using TracerAttributes;
 
 namespace Stratis.Features.Wallet.Tokenless
 {
     public interface IDLTWalletManager
     {
         PubKey GetPubKey(int accountIndex, int addressType = 0);
+
+        BitcoinExtKey GetPrivateKey(string password, int accountIndex, int addressType = 0);
     }
 
     public class DLTWalletManager : IDLTWalletManager
@@ -54,6 +57,23 @@ namespace Stratis.Features.Wallet.Tokenless
 
             ExtPubKey extPubKey = this.extPubKeys[accountIndex].Derive(keyPath);
             return extPubKey.PubKey;
+        }
+
+        public BitcoinExtKey GetPrivateKey(string password, int accountIndex, int addressType = 0)
+        {
+            int addressIndex = this.walletSettings.AddressIndex;
+            string hdPath = $"m/44'/{this.network.Consensus.CoinType}'/{accountIndex}/{addressType}/{addressIndex}'";
+
+            var seedExtKey = this.GetExtKey(password);
+
+            ExtKey addressExtKey = seedExtKey.Derive(new KeyPath(hdPath));
+            return addressExtKey.GetWif(this.network);
+        }
+
+        [NoTrace]
+        public ExtKey GetExtKey(string password)
+        {
+            return new ExtKey(Key.Parse(this.wallet.EncryptedSeed, password, this.network), Convert.FromBase64String(this.wallet.ChainCode));
         }
 
         public (DLTWallet, Mnemonic) CreateWallet(string password, string passphrase, Mnemonic mnemonic = null)
