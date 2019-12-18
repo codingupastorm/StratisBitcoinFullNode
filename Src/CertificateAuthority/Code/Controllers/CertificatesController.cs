@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using NLog;
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Org.BouncyCastle.Pkcs;
 
 namespace CertificateAuthority.Code.Controllers
 {

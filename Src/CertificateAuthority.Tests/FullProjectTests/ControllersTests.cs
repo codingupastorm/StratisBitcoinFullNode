@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Pkcs;
 using Xunit;
 using AccountAccessFlags = CertificateAuthority.Code.Models.AccountAccessFlags;
 using AccountInfo = CertificateAuthority.Code.Models.AccountInfo;
@@ -115,12 +117,26 @@ namespace CertificateAuthority.Tests.FullProjectTests
             AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates | AccountAccessFlags.RevokeCertificates | AccountAccessFlags.AccessAnyCertificate;
             CredentialsModel credentials1 = this.CreateAccount(credentials1Access);
 
+            byte[] clientOid141 = { 0x01, 0x02, 0x03, 0x04, 0x05 };
+            string clientName = "O=Stratis, CN=DLT Node Run By Iain McCain, OU=Administration";
+            int clientAddressIndex = 0;
+
+            HDWalletAddressSpace clientAddressSpace = new HDWalletAddressSpace("habit misery swarm tape viable toddler young shoe immense usual faculty edge", "node");
+            AsymmetricCipherKeyPair clientKey = clientAddressSpace.GetCertificateKeyPair($"m/44'/105'/0'/0/{clientAddressIndex}");
+
+            Pkcs10CertificationRequest certificateSigningRequest = CertificatesManager.CreateCertificateSigningRequest(clientName, clientKey, new string[0], clientOid141);
+
             // IssueCertificate_UsingRequestString
             CertificateInfoModel certificate1 = (await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
-                new IssueCertificateFromFileContentsModel(TestDataResource.CertificateRequest1, credentials1.AccountId, credentials1.Password))).Value;
+                new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest.GetDerEncoded()), credentials1.AccountId, credentials1.Password))).Value;
+            
+            HDWalletAddressSpace clientAddressSpace2 = new HDWalletAddressSpace("habit misery swarm tape viable toddler young shoe immense usual faculty edge", "node");
+            AsymmetricCipherKeyPair clientKey2 = clientAddressSpace2.GetCertificateKeyPair($"m/44'/105'/0'/0/{clientAddressIndex}");
+
+            Pkcs10CertificationRequest certificateSigningRequest2 = CertificatesManager.CreateCertificateSigningRequest(clientName, clientKey2, new string[0], clientOid141);
 
             CertificateInfoModel certificate2 = (await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
-                new IssueCertificateFromFileContentsModel(TestDataResource.CertificateRequest2, this.adminCredentials.AccountId, this.adminCredentials.Password))).Value;
+                new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest.GetDerEncoded()), this.adminCredentials.AccountId, this.adminCredentials.Password))).Value;
 
             Assert.Empty(this.certificatesController.GetRevokedCertificates().Value);
 
@@ -201,6 +217,23 @@ namespace CertificateAuthority.Tests.FullProjectTests
             int id = this.accountsController.CreateAccount(new CreateAccount(TestsHelper.GenerateRandomString(), passHash, (int)access, credentialsModel.AccountId, credentialsModel.Password)).Value;
 
             return new CredentialsModel(id, password);
+        }
+
+        private void Returns403IfNoAccess(Func<int, string, ActionResult<AccountInfo>> action, AccountAccessFlags requiredAccess)
+        {
+            // TODO: WIP
+            CredentialsModel noAccessCredentials = this.CreateAccount();
+
+            var response = action.Invoke(noAccessCredentials.AccountId, noAccessCredentials.Password);
+
+            Assert.True((response.Result as StatusCodeResult).StatusCode == 403);
+            
+            CredentialsModel accessCredentials = this.CreateAccount(requiredAccess);
+
+            response = action.Invoke(accessCredentials.AccountId, accessCredentials.Password);
+
+            if (!(response.Value is AccountInfo))
+                Assert.False((response.Result as StatusCodeResult).StatusCode == 403);
         }
 
         private void CheckThrowsIfNoAccess(Action<int, string> action, AccountAccessFlags requiredAccess)
