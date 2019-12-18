@@ -164,6 +164,9 @@
     <Compile Update="SmartContracts\TokenlessExample.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
+    <Compile Update="SmartContracts\TokenlessSimpleContract.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
     <Compile Update="SmartContracts\TransferFromConstructor.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>
