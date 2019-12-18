@@ -67,6 +67,10 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
         // TODO: Method params
 
+        // TODO: Some error handling? Have not tested any failure cases at all.
+
+        // TODO: Was this the plan to create a new controller or should this be happening in a replacement Wallet ? etc.
+
         [Route("tokenless-create")]
         public IActionResult BuildCreateContractTransaction(string mnemonic, byte[] contractCode)
         {
