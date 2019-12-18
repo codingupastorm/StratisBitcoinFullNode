@@ -30,16 +30,17 @@ namespace Stratis.TokenlessD
                 // Use TokenlessNetwork.
                 var network = new TokenlessNetwork();
                 var nodeSettings = new NodeSettings(network, args: args);
+                var walletSettings = new DLTWalletSettings(nodeSettings);
 
                 if (!File.Exists(Path.Combine(nodeSettings.DataFolder.RootPath, DLTWalletManager.WalletFileName)))
                 {
-                    var walletManager = new DLTWalletManager(network, nodeSettings.DataFolder, new DLTWalletSettings(nodeSettings));
+                    var walletManager = new DLTWalletManager(network, nodeSettings.DataFolder, walletSettings);
 
                     var password = nodeSettings.ConfigReader.GetOrDefault<string>("password", null);
 
                     if (password == null)
                     {
-                        Console.WriteLine($"Run this daeomon with a -password=<password> argument so that the wallet file ({DLTWalletManager.WalletFileName}) can be created.");
+                        Console.WriteLine($"Run this daemon with a -password=<password> argument so that the wallet file ({DLTWalletManager.WalletFileName}) can be created.");
                         return;
                     }
 
@@ -49,6 +50,26 @@ namespace Stratis.TokenlessD
                     Console.WriteLine($"Record the mnemonic ({mnemonic}) in a safe place. You will need it to recover the wallet.");
                     Console.WriteLine($"Restart the daemon after recording the mnemonic.");
                     return;
+                }
+
+                if (!File.Exists(walletSettings.CertPath))
+                {
+                    if (walletSettings.UserFullName == null)
+                    {
+                        Console.WriteLine("Run this daemon with the certificate details configured in the configuration file or on the command line so that a certificate can be requested.");
+                        return;
+                    }
+
+                    // TODO: Generate a certificate request.
+                }
+                else
+                {
+                    // TODO: Check certificate validity and expiry.
+
+                    // TODO: Request Mnemonic words and create the wallet if the certificate does not match the wallet's private keys.
+
+                    // var mnemonic = nodeSettings.ConfigReader.GetOrDefault<string>("mnemonic", null);
+                    // walletManager.CreateWallet(password, password, mnemonic);
                 }
 
                 IFullNodeBuilder nodeBuilder = new FullNodeBuilder()

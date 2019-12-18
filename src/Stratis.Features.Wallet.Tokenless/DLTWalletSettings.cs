@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Logging;
@@ -12,6 +13,8 @@ namespace Stratis.Features.Wallet.Tokenless
     {
         /// <summary>Instance logger.</summary>
         private readonly ILogger logger;
+
+        public string CertPath { get; set; }
 
         public Dictionary<string, string> CertificateAttributes { get; set; }
 
@@ -39,9 +42,13 @@ namespace Stratis.Features.Wallet.Tokenless
 
             TextFileConfiguration config = nodeSettings.ConfigReader;
 
-            IEnumerable<string> cert = config.GetOrDefault<string>("cert", string.Empty, this.logger).Replace("\\,", "\0").Split(',').Select(t => t.Replace("\0", ",").Trim());
+            this.CertPath = config.GetOrDefault<string>("certpath", "cert.crt", this.logger);
+            if (!this.CertPath.Contains(":\\") && !this.CertPath.Contains(":/"))
+                this.CertPath = Path.Combine(nodeSettings.DataFolder.RootPath, this.CertPath);
+
+            IEnumerable<string> certInfo = config.GetOrDefault<string>("certinfo", string.Empty, this.logger).Replace("\\,", "\0").Split(',').Select(t => t.Replace("\0", ",").Trim());
             this.CertificateAttributes = new Dictionary<string, string>();
-            foreach ((string key, string value) in cert.Where(t => !string.IsNullOrEmpty(t)).Select(t => t.Split(':')).Select(a => (a[0].Trim(), string.Join(":", a.Skip(1)).Trim())))
+            foreach ((string key, string value) in certInfo.Where(t => !string.IsNullOrEmpty(t)).Select(t => t.Split(':')).Select(a => (a[0].Trim(), string.Join(":", a.Skip(1)).Trim())))
                 this.CertificateAttributes[key] = value;
             this.UserFullName = config.GetOrDefault<string>("userfullname", null, this.logger);
             this.UserEMail = config.GetOrDefault<string>("useremail", null, this.logger);
@@ -59,7 +66,7 @@ namespace Stratis.Features.Wallet.Tokenless
             NodeSettings defaults = NodeSettings.Default(network);
             var builder = new StringBuilder();
 
-            builder.AppendLine("-cert=<string>                  Certificate attributes - e.g. 'CN:Sample Cert, OU:R&D, O:Company Ltd., L:Dublin 4, S:Dublin, C:IE'.");
+            builder.AppendLine("-certinfo=<string>              Certificate attributes - e.g. 'CN:Sample Cert, OU:R&D, O:Company Ltd., L:Dublin 4, S:Dublin, C:IE'.");
             builder.AppendLine("-userfullname=<string>          The full name of the user.");
             builder.AppendLine("-useremail=<string>             The e-mail address of the user.");
             builder.AppendLine("-userphone=<phone number>       The phone number of the user.");
