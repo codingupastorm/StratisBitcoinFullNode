@@ -37,17 +37,23 @@ namespace Stratis.TokenlessD
                     var walletManager = new DLTWalletManager(network, nodeSettings.DataFolder, walletSettings);
 
                     var password = nodeSettings.ConfigReader.GetOrDefault<string>("password", null);
+                    var strMnemonic = nodeSettings.ConfigReader.GetOrDefault<string>("mnemonic", null);
 
                     if (password == null)
                     {
                         Console.WriteLine($"Run this daemon with a -password=<password> argument so that the wallet file ({DLTWalletManager.WalletFileName}) can be created.");
+                        Console.WriteLine($"If you are re-creating a wallet then also pass a -mnemonic=<mnemonic> argument.");
                         return;
                     }
 
-                    (DLTWallet wallet, Mnemonic mnemonic) = walletManager.CreateWallet(password, password);
+                    DLTWallet wallet;
+                    Mnemonic mnemonic = (strMnemonic == null) ? null : new Mnemonic(strMnemonic);
+
+                    (wallet, mnemonic) = walletManager.CreateWallet(password, password, mnemonic);
 
                     Console.WriteLine($"The wallet file ({DLTWalletManager.WalletFileName}) has been created.");
-                    Console.WriteLine($"Record the mnemonic ({mnemonic}) in a safe place. You will need it to recover the wallet.");
+                    Console.WriteLine($"Record the mnemonic ({mnemonic}) in a safe place.");
+                    Console.WriteLine($"IMPORTANT: You will need the mnemonic to recover the wallet.");
                     Console.WriteLine($"Restart the daemon after recording the mnemonic.");
                     return;
                 }
