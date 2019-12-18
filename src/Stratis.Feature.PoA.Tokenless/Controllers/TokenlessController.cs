@@ -11,6 +11,7 @@ using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.Utilities.JsonErrors;
 using Stratis.SmartContracts.CLR;
+using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.RuntimeObserver;
 using State = Stratis.Bitcoin.Features.Wallet.Broadcasting.State;
 
@@ -26,6 +27,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         private readonly IAddressGenerator addressGenerator;
         private readonly IConnectionManager connectionManager;
         private readonly IBroadcasterManager broadcasterManager;
+        private readonly IMethodParameterStringSerializer methodParameterSerializer;
         private readonly ILogger logger;
 
         public TokenlessController(Network network,
@@ -34,6 +36,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             IAddressGenerator addressGenerator,
             IConnectionManager connectionManager,
             IBroadcasterManager broadcasterManager,
+            IMethodParameterStringSerializer methodParameterSerializer,
             ILoggerFactory loggerFactory)
         {
             this.network = network;
@@ -42,6 +45,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             this.addressGenerator = addressGenerator;
             this.connectionManager = connectionManager;
             this.broadcasterManager = broadcasterManager;
+            this.methodParameterSerializer = methodParameterSerializer;
             this.logger = loggerFactory.CreateLogger(this.GetType());
         }
 
@@ -65,18 +69,30 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             });
         }
 
-        // TODO: Method params
-
         // TODO: Some error handling? Have not tested any failure cases at all.
 
         // TODO: Was this the plan to create a new controller or should this be happening in a replacement Wallet ? etc.
 
         [Route("tokenless-create")]
-        public IActionResult BuildCreateContractTransaction(string mnemonic, byte[] contractCode)
+        public IActionResult BuildCreateContractTransaction(string mnemonic, byte[] contractCode, string[] parameters = null)
         {
+            object[] methodParameters = null;
+
+            if (parameters != null && parameters.Length > 0)
+            {
+                try
+                {
+                    methodParameters = this.methodParameterSerializer.Deserialize(parameters);
+                }
+                catch (MethodParameterStringSerializerException exception)
+                {
+                    return Json(BuildCreateContractTransactionResponse.Failed(exception.Message));
+                }
+            }
+
             Transaction transaction = this.network.CreateTransaction();
 
-            var contractTxData = new ContractTxData(0, 0, (Gas)0, contractCode);
+            var contractTxData = new ContractTxData(0, 0, (Gas)0, contractCode, methodParameters);
             byte[] outputScript = this.callDataSerializer.Serialize(contractTxData);
             transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
 
@@ -92,11 +108,25 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         }
 
         [Route("tokenless-call")]
-        public IActionResult BuildCallContractTransaction(string mnemonic, string address, string method)
+        public IActionResult BuildCallContractTransaction(string mnemonic, string address, string method, string[] parameters = null)
         {
+            object[] methodParameters = null;
+
+            if (parameters != null && parameters.Length > 0)
+            {
+                try
+                {
+                    methodParameters = this.methodParameterSerializer.Deserialize(parameters);
+                }
+                catch (MethodParameterStringSerializerException exception)
+                {
+                    return Json(BuildCreateContractTransactionResponse.Failed(exception.Message));
+                }
+            }
+
             Transaction transaction = this.network.CreateTransaction();
 
-            var contractTxData = new ContractTxData(0, 0, (Gas)0, address.ToUint160(this.network), method);
+            var contractTxData = new ContractTxData(0, 0, (Gas)0, address.ToUint160(this.network), method, methodParameters);
             byte[] outputScript = this.callDataSerializer.Serialize(contractTxData);
             transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
 
