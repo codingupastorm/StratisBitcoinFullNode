@@ -57,7 +57,7 @@ namespace Stratis.TokenlessD
                     if (walletSettings.UserFullName == null)
                     {
                         Console.WriteLine("Run this daemon with the certificate details configured in the configuration file or on the command line so that a certificate can be requested.");
-                        return;
+                        //return;
                     }
 
                     // TODO: Generate a certificate request.

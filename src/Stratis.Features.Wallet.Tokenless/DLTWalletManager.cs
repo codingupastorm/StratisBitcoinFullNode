@@ -30,7 +30,8 @@ namespace Stratis.Features.Wallet.Tokenless
             this.fileStorage = new FileStorage<DLTWallet>(dataFolder.RootPath);
             this.wallet = this.LoadWallet();
             this.walletSettings = walletSettings;
-            this.extPubKeys = new ExtPubKey[] { ExtPubKey.Parse(this.wallet.ExtPubKey0), ExtPubKey.Parse(this.wallet.ExtPubKey1), ExtPubKey.Parse(this.wallet.ExtPubKey2) };
+            if (this.wallet != null)
+                this.extPubKeys = new ExtPubKey[] { ExtPubKey.Parse(this.wallet.ExtPubKey0), ExtPubKey.Parse(this.wallet.ExtPubKey1), ExtPubKey.Parse(this.wallet.ExtPubKey2) };
         }
 
         public DLTWallet LoadWallet()
@@ -38,9 +39,9 @@ namespace Stratis.Features.Wallet.Tokenless
             string fileName = WalletFileName;
 
             if (!this.fileStorage.Exists(fileName))
-                throw new FileNotFoundException($"Wallet file ({fileName}) not found in data folder.");
+                return null;
 
-            return this.wallet;
+            return (DLTWallet)this.fileStorage.LoadByFileName(fileName);
         }
 
         public static ExtKey GetExtendedKey(Mnemonic mnemonic, string passphrase = null)

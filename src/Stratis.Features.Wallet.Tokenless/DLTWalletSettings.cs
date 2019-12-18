@@ -66,6 +66,7 @@ namespace Stratis.Features.Wallet.Tokenless
             NodeSettings defaults = NodeSettings.Default(network);
             var builder = new StringBuilder();
 
+            builder.AppendLine("-certpath=<string>              Path to certificate.");
             builder.AppendLine("-certinfo=<string>              Certificate attributes - e.g. 'CN:Sample Cert, OU:R&D, O:Company Ltd., L:Dublin 4, S:Dublin, C:IE'.");
             builder.AppendLine("-userfullname=<string>          The full name of the user.");
             builder.AppendLine("-useremail=<string>             The e-mail address of the user.");
@@ -86,8 +87,10 @@ namespace Stratis.Features.Wallet.Tokenless
         public static void BuildDefaultConfigurationFile(StringBuilder builder, Network network)
         {
             builder.AppendLine("####Tokenless Wallet Settings####");
+            builder.AppendLine("#Path to certificate. Defaults to 'cert.crt'.");
+            builder.AppendLine("#certpath=cert.crt");
             builder.AppendLine("#Certificate attributes - e.g. 'CN:Sample Cert, OU:R&D, O:Company Ltd., L:Dublin 4, S:Dublin, C:IE'.");
-            builder.AppendLine("#cert=");
+            builder.AppendLine("#certinfo=");
             builder.AppendLine("#The full name of the user.");
             builder.AppendLine("#userfullname=");
             builder.AppendLine("#The e-mail address of the user.");
