@@ -1,7 +1,8 @@
 {
   "profiles": {
     "Stratis.TokenlessD": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "-password=test"
     },
     "Stratis.TokenlessD Test": {
       "commandName": "Project",

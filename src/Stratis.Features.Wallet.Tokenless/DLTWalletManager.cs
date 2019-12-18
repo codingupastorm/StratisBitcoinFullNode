@@ -1,0 +1,105 @@
+﻿using System;
+using System.IO;
+using NBitcoin;
+using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Utilities;
+
+namespace Stratis.Features.Wallet.Tokenless
+{
+    public interface IDLTWalletManager
+    {
+        PubKey GetPubKey(int accountIndex, int addressType = 0);
+    }
+
+    public class DLTWalletManager : IDLTWalletManager
+    {
+        public const string WalletFileName = "nodeid.json";
+
+        private readonly Network network;
+        private readonly FileStorage<DLTWallet> fileStorage;
+        private readonly DLTWallet wallet;
+        private readonly ExtPubKey[] extPubKeys;
+        private readonly DLTWalletSettings walletSettings;
+
+        public DLTWalletManager(Network network, DataFolder dataFolder, DLTWalletSettings walletSettings)
+        {
+            this.network = network;
+            this.fileStorage = new FileStorage<DLTWallet>(dataFolder.RootPath);
+            this.wallet = this.LoadWallet();
+            this.walletSettings = walletSettings;
+            this.extPubKeys = new ExtPubKey[] { ExtPubKey.Parse(this.wallet.ExtPubKey0), ExtPubKey.Parse(this.wallet.ExtPubKey1), ExtPubKey.Parse(this.wallet.ExtPubKey2) };
+        }
+
+        public DLTWallet LoadWallet()
+        {
+            string fileName = WalletFileName;
+
+            if (!this.fileStorage.Exists(fileName))
+                throw new FileNotFoundException($"Wallet file ({fileName}) not found in data folder.");
+
+            return this.wallet;
+        }
+
+        public static ExtKey GetExtendedKey(Mnemonic mnemonic, string passphrase = null)
+        {
+            Guard.NotNull(mnemonic, nameof(mnemonic));
+
+            return mnemonic.DeriveExtKey(passphrase);
+        }
+
+        public PubKey GetPubKey(int accountIndex, int addressType = 0)
+        {
+            int addressIndex = this.walletSettings.AddressIndex;
+            var keyPath = new KeyPath($"{addressType}/{addressIndex}");
+
+            ExtPubKey extPubKey = this.extPubKeys[accountIndex].Derive(keyPath);
+            return extPubKey.PubKey;
+        }
+
+        public (DLTWallet, Mnemonic) CreateWallet(string password, string passphrase, Mnemonic mnemonic = null)
+        {
+            Guard.NotEmpty(password, nameof(password));
+            Guard.NotNull(passphrase, nameof(passphrase));
+
+            // Generate the root seed used to generate keys from a mnemonic picked at random
+            // and a passphrase optionally provided by the user.
+            mnemonic = mnemonic ?? new Mnemonic(Wordlist.English, WordCount.Twelve);
+
+            ExtKey extendedKey = GetExtendedKey(mnemonic, passphrase);
+
+            // Create a wallet file.
+            string encryptedSeed = extendedKey.PrivateKey.GetEncryptedBitcoinSecret(password, this.network).ToWif();
+            string chainCode = Convert.ToBase64String(extendedKey.ChainCode);
+
+            Key privateKey = Key.Parse(encryptedSeed, password, this.network);
+            var seedExtKey = new ExtKey(privateKey, extendedKey.ChainCode);
+
+            /*
+            - transaction signing (m/44'/105'/0'/0/N) where N is a zero based key ID
+            - block signing (m/44'/105'/1'/0/N) where N is a zero based key ID
+            - P2P certificates (m/44'/105'/2'/K/N) where N is a zero based key ID
+            */
+
+            ExtKey addressExtKey0 = seedExtKey.Derive(new KeyPath($"m/44'/{this.network.Consensus.CoinType}'/0'"));
+            ExtKey addressExtKey1 = seedExtKey.Derive(new KeyPath($"m/44'/{this.network.Consensus.CoinType}'/1'"));
+            ExtKey addressExtKey2 = seedExtKey.Derive(new KeyPath($"m/44'/{this.network.Consensus.CoinType}'/2'"));
+
+            ExtPubKey extPubKey0 = addressExtKey0.Neuter();
+            ExtPubKey extPubKey1 = addressExtKey1.Neuter();
+            ExtPubKey extPubKey2 = addressExtKey2.Neuter();
+
+            var wallet = new DLTWallet()
+            {
+                EncryptedSeed = encryptedSeed,
+                ChainCode = chainCode,
+                ExtPubKey0 = extPubKey0.ToString(this.network),
+                ExtPubKey1 = extPubKey1.ToString(this.network),
+                ExtPubKey2 = extPubKey2.ToString(this.network)
+            };
+
+            this.fileStorage.SaveToFile(wallet, WalletFileName);
+
+            return (wallet, mnemonic);
+        }
+    }
+}
