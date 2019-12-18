@@ -119,7 +119,9 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
         public void ReadWrite(BitcoinStream s)
         {
-            s.ReadWrite(ref this.Height);
+            using (var scope = s.BigEndianScope())
+                s.ReadWrite(ref this.Height);
+
             s.ReadWrite(ref this.Hash);
         }
     }
