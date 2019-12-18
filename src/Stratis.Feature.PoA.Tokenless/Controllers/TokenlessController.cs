@@ -119,6 +119,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         }
 
         [Route("build/createcontract")]
+        [HttpPost]
         public IActionResult BuildCreateContractTransaction([FromBody] BuildCreateContractTransactionModel model)
         {
             try
