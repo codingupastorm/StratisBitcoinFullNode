@@ -30,6 +30,11 @@ namespace Stratis.Features.Wallet.Tokenless
 
         public string EncryptedSeed { get; set; }
 
+        private bool IsRelativePath(string path)
+        {
+            return !this.CertPath.Contains(":\\") && !this.CertPath.StartsWith("/");
+        }
+
         /// <summary>
         /// Initializes an instance of the object from the node configuration.
         /// </summary>
@@ -43,7 +48,7 @@ namespace Stratis.Features.Wallet.Tokenless
             TextFileConfiguration config = nodeSettings.ConfigReader;
 
             this.CertPath = config.GetOrDefault<string>("certpath", "cert.crt", this.logger);
-            if (!this.CertPath.Contains(":\\") && !this.CertPath.Contains(":/"))
+            if (this.IsRelativePath(this.CertPath))
                 this.CertPath = Path.Combine(nodeSettings.DataFolder.RootPath, this.CertPath);
 
             IEnumerable<string> certInfo = config.GetOrDefault<string>("certinfo", string.Empty, this.logger).Replace("\\,", "\0").Split(',').Select(t => t.Replace("\0", ",").Trim());
