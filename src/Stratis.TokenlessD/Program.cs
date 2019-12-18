@@ -52,26 +52,6 @@ namespace Stratis.TokenlessD
                     return;
                 }
 
-                if (!File.Exists(walletSettings.CertPath))
-                {
-                    if (walletSettings.UserFullName == null)
-                    {
-                        Console.WriteLine("Run this daemon with the certificate details configured in the configuration file or on the command line so that a certificate can be requested.");
-                        //return;
-                    }
-
-                    // TODO: Generate a certificate request.
-                }
-                else
-                {
-                    // TODO: Check certificate validity and expiry.
-
-                    // TODO: Request Mnemonic words and create the wallet if the certificate does not match the wallet's private keys.
-
-                    // var mnemonic = nodeSettings.ConfigReader.GetOrDefault<string>("mnemonic", null);
-                    // walletManager.CreateWallet(password, password, mnemonic);
-                }
-
                 IFullNodeBuilder nodeBuilder = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings)
                     .UseBlockStore()
