@@ -1,14 +1,17 @@
 ﻿using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
+using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
+using Stratis.Feature.PoA.Tokenless.Controllers;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.Core.Receipts;
@@ -97,6 +100,49 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.True(callReceipt.Success);
                 
                 Assert.NotNull(stateRepo.GetStorageValue(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("Increment")));
+            }
+        }
+
+        [Fact]
+        public async Task TokenlessNodesCreateAndCallWithController()
+        {
+            using (SmartContractNodeBuilder builder = SmartContractNodeBuilder.Create(this))
+            {
+                CoreNode node1 = builder.CreateFullTokenlessNode(this.network, 0);
+                CoreNode node2 = builder.CreateFullTokenlessNode(this.network, 1);
+
+                node1.Start();
+                node2.Start();
+
+                TestHelper.Connect(node1, node2);
+
+                // Broadcast from node1, check state of node2.
+                var node1Controller = node1.FullNode.NodeController<TokenlessController>();
+                var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
+
+                ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/TokenlessSimpleContract.cs");
+                JsonResult createResult = (JsonResult) node1Controller.BuildCreateContractTransaction("lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom", compilationResult.Compilation);
+                BuildCreateContractTransactionResponse createResponse = (BuildCreateContractTransactionResponse) createResult.Value;
+
+                node1Controller.SendTransaction(createResponse.Hex);
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                await node1.MineBlocksAsync(1);
+                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 1);
+
+                Receipt createReceipt = receiptRepository.Retrieve(createResponse.TransactionId);
+                Assert.True(createReceipt.Success);
+
+                JsonResult callResult = (JsonResult)node1Controller.BuildCallContractTransaction("lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom", 
+                    createReceipt.NewContractAddress.ToBase58Address(this.network), "CallMe");
+                BuildCallContractTransactionResponse callResponse = (BuildCallContractTransactionResponse)callResult.Value;
+
+                node1Controller.SendTransaction(callResponse.Hex);
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                await node1.MineBlocksAsync(1);
+                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 2);
+
+                Receipt callReceipt = receiptRepository.Retrieve(callResponse.TransactionId);
+                Assert.True(callReceipt.Success);
             }
         }
 

@@ -67,8 +67,8 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
         // TODO: Method params
 
-        [Route("tokenless-call")]
-        public IActionResult BuildCallContractTransaction(string mnemonic, byte[] contractCode)
+        [Route("tokenless-create")]
+        public IActionResult BuildCreateContractTransaction(string mnemonic, byte[] contractCode)
         {
             Transaction transaction = this.network.CreateTransaction();
 
@@ -87,8 +87,8 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                     this.addressGenerator.GenerateAddress(transaction.GetHash(), 0).ToBase58Address(this.network)));
         }
 
-        [Route("tokenless-create")]
-        public IActionResult BuildCreateContractTransaction(string mnemonic, string address, string method)
+        [Route("tokenless-call")]
+        public IActionResult BuildCallContractTransaction(string mnemonic, string address, string method)
         {
             Transaction transaction = this.network.CreateTransaction();
 
