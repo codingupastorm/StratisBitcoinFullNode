@@ -52,7 +52,12 @@ namespace CertificateAuthority.Code.Controllers
 
             try
             {
-                return this.certificateManager.GetCertificateByThumbprint(data);
+                CertificateInfoModel certificate = this.certificateManager.GetCertificateByThumbprint(data);
+
+                if (certificate == null)
+                    return StatusCode(StatusCodes.Status404NotFound);
+
+                return certificate;
             }
             catch (InvalidCredentialsException)
             {

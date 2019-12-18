@@ -1,4 +1,5 @@
-﻿using CertificateAuthority.Code.Database;
+﻿using System;
+using CertificateAuthority.Code.Database;
 using CertificateAuthority.Code.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
@@ -69,6 +70,11 @@ namespace CertificateAuthority.Code.Controllers
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
+            catch (Exception)
+            {
+                // TODO: This is generally the case where an account is being created with a higher access level than the creator. Create a distinct exception type for this scenario?
+                return StatusCode(StatusCodes.Status403Forbidden);
+            }
         }
 
         /// <summary>Provides collection of all certificates issued by account with specified id. AccessAnyCertificate access level is required.</summary>
@@ -105,6 +111,11 @@ namespace CertificateAuthority.Code.Controllers
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
+            catch (Exception)
+            {
+                // TODO: Add distinct exception type for attempting to delete the admin account?
+                return StatusCode(StatusCodes.Status403Forbidden);
+            }
         }
 
         /// <summary>
@@ -125,6 +136,11 @@ namespace CertificateAuthority.Code.Controllers
             }
             catch (InvalidCredentialsException)
             {
+                return StatusCode(StatusCodes.Status403Forbidden);
+            }
+            catch (Exception)
+            {
+                // TODO: Add distinct exception type for attempting to change access level?
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
         }
