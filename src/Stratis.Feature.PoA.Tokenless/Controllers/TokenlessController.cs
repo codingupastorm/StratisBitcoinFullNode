@@ -16,8 +16,10 @@ using Stratis.Bitcoin.Features.Wallet.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Utilities.JsonErrors;
 using Stratis.Bitcoin.Utilities.ModelStateErrors;
+using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Decompilation;
@@ -85,97 +87,88 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
         // TODO: This might be slightly ridiculous, that it passes the mnemonic in. This is just to get it to a testable state for now.
 
-        [Route("data")]
-        public IActionResult BuildOpReturnTransaction(string mnemonic, byte[] data)
+        [Route("build/opreturn")]
+        [HttpPost]
+        public IActionResult BuildOpReturnTransaction([FromBody] BuildOpReturnTransactionModel model)
         {
-            Transaction transaction = this.network.CreateTransaction();
-            Script outputScript = TxNullDataTemplate.Instance.GenerateScriptPubKey(data);
-            transaction.Outputs.Add(new TxOut(Money.Zero, outputScript));
+            if (!this.ModelState.IsValid)
+                return ModelStateErrors.BuildErrorResponse(this.ModelState);
 
-            Key key = new Mnemonic(mnemonic).DeriveExtKey().PrivateKey;
-
-            this.tokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
-
-            return Json(new WalletBuildTransactionModel
+            try
             {
-                Hex = transaction.ToHex(),
-                TransactionId = transaction.GetHash()
-            });
+                Transaction transaction = this.network.CreateTransaction();
+                Script outputScript = TxNullDataTemplate.Instance.GenerateScriptPubKey(model.OpReturnData);
+                transaction.Outputs.Add(new TxOut(Money.Zero, outputScript));
+
+                Key key = new Mnemonic(model.Mnemonic).DeriveExtKey().PrivateKey;
+
+                this.tokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
+
+                // TODO-TL: Perhaps not use a Wallet Model here?
+                return Json(new WalletBuildTransactionModel
+                {
+                    Hex = transaction.ToHex(),
+                    TransactionId = transaction.GetHash()
+                });
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError("Exception occurred: {0}", ex.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, ex.Message, ex.ToString());
+            }
         }
 
-        // TODO: Some error handling? Have not tested any failure cases at all.
-
-        // TODO: Was this the plan to create a new controller or should this be happening in a replacement Wallet ? etc.
-
-        [Route("create")]
-        public IActionResult BuildCreateContractTransaction(string mnemonic, byte[] contractCode, string[] parameters = null)
+        [Route("build/createcontract")]
+        public IActionResult BuildCreateContractTransaction([FromBody] BuildCreateContractTransactionModel model)
         {
-            object[] methodParameters = null;
-
-            if (parameters != null && parameters.Length > 0)
+            try
             {
-                try
-                {
-                    methodParameters = this.methodParameterSerializer.Deserialize(parameters);
-                }
-                catch (MethodParameterStringSerializerException exception)
-                {
-                    return Json(BuildCreateContractTransactionResponse.Failed(exception.Message));
-                }
+                var methodParameters = ExtractMethodParameters(model.Parameters);
+                var contractTxData = new ContractTxData(0, 0, (Gas)0, model.ContractCode, methodParameters);
+
+                Transaction transaction = CreateAndSignTransaction(contractTxData, model.Mnemonic);
+
+                return Json(BuildCreateContractTransactionResponse.Succeeded(transaction, 0, this.addressGenerator.GenerateAddress(transaction.GetHash(), 0).ToBase58Address(this.network)));
             }
-
-            Transaction transaction = this.network.CreateTransaction();
-
-            var contractTxData = new ContractTxData(0, 0, (Gas)0, contractCode, methodParameters);
-            byte[] outputScript = this.callDataSerializer.Serialize(contractTxData);
-            transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
-
-            Key key = new Mnemonic(mnemonic).DeriveExtKey().PrivateKey;
-
-            this.tokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
-
-            return Json(
-                BuildCreateContractTransactionResponse.Succeeded(
-                    transaction, 
-                    0, 
-                    this.addressGenerator.GenerateAddress(transaction.GetHash(), 0).ToBase58Address(this.network)));
+            catch (MethodParameterStringSerializerException exception)
+            {
+                return Json(BuildCreateContractTransactionResponse.Failed(exception.Message));
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError("Exception occurred: '{0}'", ex.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, ex.Message, ex.ToString());
+            }
         }
 
-        [Route("call")]
-        public IActionResult BuildCallContractTransaction(string mnemonic, string address, string method, string[] parameters = null)
+        [Route("build/callcontract")]
+        [HttpPost]
+        public IActionResult BuildCallContractTransaction([FromBody] BuildCallContractTransactionModel model)
         {
-            object[] methodParameters = null;
-
-            if (parameters != null && parameters.Length > 0)
+            try
             {
-                try
-                {
-                    methodParameters = this.methodParameterSerializer.Deserialize(parameters);
-                }
-                catch (MethodParameterStringSerializerException exception)
-                {
-                    return Json(BuildCreateContractTransactionResponse.Failed(exception.Message));
-                }
+                var methodParameters = ExtractMethodParameters(model.Parameters);
+                var contractTxData = new ContractTxData(0, 0, (Gas)0, model.Address.ToUint160(this.network), model.MethodName, methodParameters);
+
+                Transaction transaction = CreateAndSignTransaction(contractTxData, model.Mnemonic);
+
+                return Json(BuildCallContractTransactionResponse.Succeeded(model.MethodName, transaction, 0));
             }
-
-            Transaction transaction = this.network.CreateTransaction();
-
-            var contractTxData = new ContractTxData(0, 0, (Gas)0, address.ToUint160(this.network), method, methodParameters);
-            byte[] outputScript = this.callDataSerializer.Serialize(contractTxData);
-            transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
-
-            Key key = new Mnemonic(mnemonic).DeriveExtKey().PrivateKey;
-
-            this.tokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
-
-            return Json(BuildCallContractTransactionResponse.Succeeded(method, transaction, 0));
+            catch (MethodParameterStringSerializerException exception)
+            {
+                return Json(BuildCallContractTransactionResponse.Failed(exception.Message));
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError("Exception occurred: '{0}'", ex.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, ex.Message, ex.ToString());
+            }
         }
 
         [Route("send")]
         [HttpPost]
         public IActionResult SendTransaction([FromBody] string hex)
         {
-
             if (!this.connectionManager.ConnectedPeers.Any())
             {
                 this.logger.LogTrace("(-)[NO_CONNECTED_PEERS]");
@@ -347,6 +340,39 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             }
 
             return this.Json(result);
+        }
+
+        /// <summary>
+        /// Creates and signs the transaction.
+        /// </summary>
+        /// <param name="contractTxData">The contract data to be serialized.</param>
+        /// <param name="mnemonic">The mnemonic to derive the ExtKey.</param>
+        /// <returns>The signed transaction</returns>
+        private Transaction CreateAndSignTransaction(ContractTxData contractTxData, string mnemonic)
+        {
+            byte[] outputScript = this.callDataSerializer.Serialize(contractTxData);
+
+            Transaction transaction = this.network.CreateTransaction();
+            transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
+
+            Key key = new Mnemonic(mnemonic).DeriveExtKey().PrivateKey;
+
+            this.tokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
+
+            return transaction;
+        }
+
+        /// <summary>
+        /// Extracts the method parameters to be passed and converts them to an object array.
+        /// </summary>
+        /// <param name="parameters">The string array of method parameters.</param>
+        /// <returns>The converted array of method parameters.</returns>
+        private object[] ExtractMethodParameters(string[] parameters)
+        {
+            if (parameters != null && parameters.Length > 0)
+                return this.methodParameterSerializer.Deserialize(parameters);
+
+            return null;
         }
 
         private List<LogResponse> MapLogResponses(Receipt receipt, Assembly assembly, ApiLogDeserializer deserializer)

@@ -12,6 +12,7 @@ using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Controllers;
+using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.Core.Receipts;
@@ -64,7 +65,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task TokenlessNodesCreateAndCallAContract()
+        public async Task TokenlessNodesCreateAndCallAContractAsync()
         {
             using (SmartContractNodeBuilder builder = SmartContractNodeBuilder.Create(this))
             {
@@ -98,13 +99,13 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 Receipt callReceipt = receiptRepository.Retrieve(callTransaction.GetHash());
                 Assert.True(callReceipt.Success);
-                
+
                 Assert.NotNull(stateRepo.GetStorageValue(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("Increment")));
             }
         }
 
         [Fact]
-        public async Task TokenlessNodesCreateAndCallWithController()
+        public async Task TokenlessNodesCreateAndCallWithControllerAsync()
         {
             using (SmartContractNodeBuilder builder = SmartContractNodeBuilder.Create(this))
             {
@@ -121,8 +122,15 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
 
                 ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/TokenlessSimpleContract.cs");
-                JsonResult createResult = (JsonResult) node1Controller.BuildCreateContractTransaction("lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom", compilationResult.Compilation);
-                BuildCreateContractTransactionResponse createResponse = (BuildCreateContractTransactionResponse) createResult.Value;
+
+                var createModel = new BuildCreateContractTransactionModel()
+                {
+                    Mnemonic = "lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom",
+                    ContractCode = compilationResult.Compilation
+                };
+
+                var createResult = (JsonResult)node1Controller.BuildCreateContractTransaction(createModel);
+                var createResponse = (BuildCreateContractTransactionResponse)createResult.Value;
 
                 node1Controller.SendTransaction(createResponse.Hex);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
@@ -132,9 +140,15 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Receipt createReceipt = receiptRepository.Retrieve(createResponse.TransactionId);
                 Assert.True(createReceipt.Success);
 
-                JsonResult callResult = (JsonResult)node1Controller.BuildCallContractTransaction("lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom", 
-                    createReceipt.NewContractAddress.ToBase58Address(this.network), "CallMe");
-                BuildCallContractTransactionResponse callResponse = (BuildCallContractTransactionResponse)callResult.Value;
+                var callModel = new BuildCallContractTransactionModel()
+                {
+                    Mnemonic = "lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom",
+                    Address = createReceipt.NewContractAddress.ToBase58Address(this.network),
+                    MethodName = "CallMe"
+                };
+
+                var callResult = (JsonResult)node1Controller.BuildCallContractTransaction(callModel);
+                var callResponse = (BuildCallContractTransactionResponse)callResult.Value;
 
                 node1Controller.SendTransaction(callResponse.Hex);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
@@ -168,7 +182,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         {
             Transaction transaction = this.network.CreateTransaction();
 
-            var contractTxData = new ContractTxData(0,0,(Gas)0, address, "CallMe");
+            var contractTxData = new ContractTxData(0, 0, (Gas)0, address, "CallMe");
             byte[] outputScript = node.FullNode.NodeService<ICallDataSerializer>().Serialize(contractTxData);
             transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
 
