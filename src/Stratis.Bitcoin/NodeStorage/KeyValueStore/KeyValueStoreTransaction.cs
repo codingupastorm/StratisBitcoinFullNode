@@ -183,7 +183,7 @@ namespace Stratis.Bitcoin.KeyValueStore
             {
                 for (int i = 0; i < objects.Length; i++)
                 {
-                    if (kv.TryGetValue(serKeys[i], out byte[] value))
+                    if (serKeys[i] != null && kv.TryGetValue(serKeys[i], out byte[] value))
                         objects[i] = value;
                 }
             }

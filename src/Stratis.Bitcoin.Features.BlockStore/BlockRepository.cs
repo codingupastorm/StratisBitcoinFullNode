@@ -6,6 +6,7 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Bitcoin.Features.BlockStore
@@ -84,8 +85,49 @@ namespace Stratis.Bitcoin.Features.BlockStore
         bool TxIndex { get; }
     }
 
+    internal class BlockTableKey : IBitcoinSerializable
+    {
+        public int Height;
+        public uint256 Hash;
+
+        public BlockTableKey(int height, uint256 hash)
+        {
+            this.Height = height;
+            this.Hash = hash;
+        }
+
+        public BlockTableKey()
+        {
+        }
+
+        public BlockTableKey(BlockRepository blockRepository, Block block)
+        {
+            uint256 hash = block.GetHash();
+
+            if (!blockRepository.heightByHash.TryGetValue(hash, out this.Height))
+            {
+                if (block.Header.HashPrevBlock == blockRepository.network.GenesisHash)
+                    this.Height = 1;
+                else
+                    this.Height = blockRepository.heightByHash[block.Header.HashPrevBlock] + 1;
+
+                blockRepository.heightByHash[hash] = this.Height;
+            }
+
+            this.Hash = hash;
+        }
+
+        public void ReadWrite(BitcoinStream s)
+        {
+            s.ReadWrite(ref this.Height);
+            s.ReadWrite(ref this.Hash);
+        }
+    }
+
     public class BlockRepository : IBlockRepository
     {
+        internal Dictionary<uint256, int> heightByHash;
+
         internal const string BlockTableName = "Block";
 
         internal const string CommonTableName = "Common";
@@ -96,7 +138,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
         private readonly ILogger logger;
 
-        private readonly Network network;
+        internal readonly Network network;
 
         private static readonly byte[] RepositoryTipKey = new byte[0];
 
@@ -119,6 +161,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.network = network;
             this.genesisTransactions = network.GetGenesis().Transactions.ToDictionary(k => k.GetHash());
+            this.heightByHash = new Dictionary<uint256, int>();
         }
 
         /// <inheritdoc />
@@ -143,6 +186,17 @@ namespace Stratis.Bitcoin.Features.BlockStore
                 }
 
                 if (doCommit) transaction.Commit();
+            }
+
+            using (KeyValueStoreTransaction tran = (KeyValueStoreTransaction)this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
+            {
+                var repo = ((KeyValueStore.KeyValueStore)this.KeyValueStore).Repository;
+
+                foreach ((byte[] key, byte[] value) in repo.GetAll(tran, repo.GetTable("Block"), true))
+                {
+                    var blockTableKey = (BlockTableKey)((BlockKeyValueStore)this.KeyValueStore).RepositorySerializer.Deserialize(key, typeof(BlockTableKey));
+                    this.heightByHash[blockTableKey.Hash] = blockTableKey.Height;
+                }
             }
         }
 
@@ -171,7 +225,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
                     return null;
                 }
 
-                if (transaction.Select(BlockTableName, blockHash, out Block block))
+                if (this.heightByHash.TryGetValue(blockHash, out int height) && transaction.Select(BlockTableName, new BlockTableKey(height, blockHash), out Block block))
                 {
                     res = block.Transactions.FirstOrDefault(t => t.GetHash() == trxId);
                 }
@@ -260,15 +314,20 @@ namespace Stratis.Bitcoin.Features.BlockStore
             return res;
         }
 
-        protected virtual void OnInsertBlocks(IKeyValueStoreTransaction dbTransaction, List<Block> blocks)
+        protected virtual void OnInsertBlocks(IKeyValueStoreTransaction dbTransaction, List<Block> blocks, HashHeightPair newTip)
         {
             var transactions = new List<(Transaction, Block)>();
 
-            bool[] blockExists = dbTransaction.ExistsMultiple<uint256>(BlockTableName, blocks.Select(b => b.GetHash()).ToArray());
+            var heights = new int[blocks.Count()];
+            for (int i = 0; i < heights.Length; i++)
+                heights[i] = newTip.Height - (heights.Length - 1) + i;
+
+            bool[] blockExists = blocks.Select(b => this.heightByHash.ContainsKey(b.GetHash())).ToArray();
 
             blocks = blocks.Where((b, n) => !blockExists[n]).ToList();
+            heights = heights.Where((b, n) => !blockExists[n]).ToArray();
 
-            dbTransaction.InsertMultiple(BlockTableName, blocks.Select(b => (b.GetHash(), b)).ToArray());
+            dbTransaction.InsertMultiple(BlockTableName, blocks.Select((b, n) => (new BlockTableKey(heights[n], b.GetHash()), b)).ToArray());
 
             // Index blocks.
             if (this.TxIndex)
@@ -311,9 +370,9 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
                     this.logger.LogInformation(warningMessage.ToString());
 
-                    foreach ((uint256 blockHash, Block block) in dbTransaction.SelectForward<uint256, Block>(BlockTableName))
+                    foreach ((BlockTableKey blockKey, Block block) in dbTransaction.SelectForward<BlockTableKey, Block>(BlockTableName))
                     {
-                        dbTransaction.InsertMultiple(TransactionTableName, block.Transactions.Select(t => (t.GetHash(), blockHash)).ToArray());
+                        dbTransaction.InsertMultiple(TransactionTableName, block.Transactions.Select(t => (t.GetHash(), blockKey.Hash)).ToArray());
 
                         // inform the user about the ongoing operation
                         if (++rowCount % 10000 == 0)
@@ -348,7 +407,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
             // however we need to find how byte arrays are sorted in DBreeze.
             using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, BlockTableName, TransactionTableName, CommonTableName))
             {
-                this.OnInsertBlocks(transaction, blocks);
+                this.OnInsertBlocks(transaction, blocks, newTip);
 
                 // Commit additions
                 this.SaveTipHashAndHeight(transaction, newTip);
@@ -409,7 +468,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
             Block res = null;
             using (IKeyValueStoreTransaction dbTransaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                if (dbTransaction.Select(BlockTableName, hash, out Block block))
+                if (this.heightByHash.TryGetValue(hash, out int height) && dbTransaction.Select(BlockTableName, new BlockTableKey(height, hash), out Block block))
                     res = block;
             }
 
@@ -436,14 +495,10 @@ namespace Stratis.Bitcoin.Features.BlockStore
         {
             Guard.NotNull(blockHash, nameof(blockHash));
 
-            bool res = false;
             using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                if (transaction.Exists(BlockTableName, blockHash))
-                    res = true;
+                return this.heightByHash.ContainsKey(blockHash);
             }
-
-            return res;
         }
 
         /// <inheritdoc />
@@ -475,12 +530,20 @@ namespace Stratis.Bitcoin.Features.BlockStore
             }
 
             foreach (Block block in blocks)
-                dbTransaction.RemoveKey(BlockTableName, block.GetHash(), block);
+            {
+                uint256 hash = block.GetHash();
+                if (this.heightByHash.TryGetValue(hash, out int height))
+                {
+                    dbTransaction.RemoveKey(BlockTableName, new BlockTableKey(height, hash), block);
+                    this.heightByHash.Remove(hash);
+                }
+            }
         }
 
         public List<Block> GetBlocksFromHashes(IKeyValueStoreTransaction dbTransaction, List<uint256> hashes)
         {
-            List<Block> blocks = dbTransaction.SelectMultiple<uint256, Block>(BlockTableName, hashes.ToArray());
+            BlockTableKey[] keys = hashes.Select(h => this.heightByHash.TryGetValue(h, out int height) ? new BlockTableKey(height, h) : null).ToArray();
+            List<Block> blocks = dbTransaction.SelectMultiple<BlockTableKey, Block>(BlockTableName, keys);
             for (int i = 0; i < blocks.Count; i++)
             {
                 if (hashes[i] == this.network.GenesisHash)
