@@ -50,7 +50,7 @@ namespace Stratis.Bitcoin.IntegrationTests
             ZipFile.CreateFromDirectory(workDir, zipTarget);
         }
 
-        [Fact]//(Skip="Run this manually when needed")]
+        [Fact(Skip="Run this manually when needed")]
         public void MigrateFromDBreezeToLevelDb()
         {
             foreach (string readyDataName in ReadyBlockchain.StratisRegTestAll)
