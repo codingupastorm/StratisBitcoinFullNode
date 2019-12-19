@@ -38,6 +38,7 @@ namespace Stratis.SmartContracts.Tests.Common
                 .UseBlockStore()
                 .UseTokenlessPoaConsenus(this.Network)
                 .UseMempool()
+                .UseTokenlessWallet()
                 .AddRPC()
                 .AddSmartContracts(options =>
                 {
