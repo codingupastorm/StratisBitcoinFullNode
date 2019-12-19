@@ -41,6 +41,9 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
 
             CoreNode node = this.CreateNode(new PoANodeRunner(dataFolder, network, this.TimeProvider), "poa.conf", configParameters: config);
 
+            // Ensures that the network-specific folder-structure is created.
+            new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder });
+
             File.Copy(authorityCertificatePath, Path.Combine(dataFolder, "poa", network.Name, Path.GetFileName(authorityCertificatePath)));
             File.Copy(clientCertificatePath, Path.Combine(dataFolder, "poa", network.Name, Path.GetFileName(clientCertificatePath)));
 
