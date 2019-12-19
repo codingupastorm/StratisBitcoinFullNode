@@ -120,7 +120,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
                 block.Header.GetHash();
                 block.Transactions.Add(trans);
 
-                transaction.Insert<uint256, Block>("Block", block.Header.GetHash(), block);
+                transaction.Insert("Block", new BlockTableKey(1, block.Header.GetHash()), block);
                 transaction.Insert<uint256, uint256>("Transaction", trans.GetHash(), block.Header.GetHash());
                 transaction.Insert<byte[], HashHeightPair>("Common", new byte[0], new HashHeightPair(uint256.Zero, 1));
                 transaction.Insert<byte[], bool>("Common", new byte[1], true);
@@ -232,16 +232,16 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             using (IKeyValueStoreTransaction trans = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
                 Assert.True(trans.Select<byte[], HashHeightPair>("Common", new byte[0], out HashHeightPair blockHashKey));
-                var blockDict = trans.SelectDictionary<uint256, Block>("Block");
+                var blockDict = trans.SelectDictionary<BlockTableKey, Block>("Block");
                 var transDict = trans.SelectDictionary<uint256, uint256>("Transaction");
 
                 Assert.Equal(new HashHeightPair(nextBlockHash, 100), blockHashKey);
                 Assert.Equal(2, blockDict.Count);
                 Assert.Equal(3, transDict.Count);
 
-                foreach (KeyValuePair<uint256, Block> item in blockDict)
+                foreach (KeyValuePair<BlockTableKey, Block> item in blockDict)
                 {
-                    Block bl = blocks.Single(b => b.GetHash() == item.Key);
+                    Block bl = blocks.Single(b => b.GetHash() == item.Key.Hash);
                     Assert.Equal(bl.Header.GetHash(), item.Value.Header.GetHash());
                 }
 
@@ -284,10 +284,11 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             SetBlockKeyValueStore(dir);
 
             Block block = this.Network.Consensus.ConsensusFactory.CreateBlock();
+            var blockTableKey = new BlockTableKey(1, block.GetHash());
 
             using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
-                transaction.Insert<uint256, Block>("Block", block.GetHash(), block);
+                transaction.Insert("Block", blockTableKey, block);
                 transaction.Commit();
             }
 
@@ -315,7 +316,11 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 for (int i = 0; i < blocks.Length; i++)
-                    transaction.Insert<uint256, Block>("Block", blocks[i].GetHash(), blocks[i]);
+                {
+                    var blockTableKey = new BlockTableKey(i + 1, blocks[i].GetHash());
+                    transaction.Insert("Block", blockTableKey, blocks[i]);
+                }
+
                 transaction.Commit();
             }
 
@@ -348,11 +353,12 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             SetBlockKeyValueStore(dir);
 
             Block block = this.Network.Consensus.ConsensusFactory.CreateBlock();
+            BlockTableKey blockTableKey = new BlockTableKey(1, block.GetHash());
 
             // Initialize the repo.
             using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
-                transaction.Insert<uint256, Block>("Block", block.GetHash(), block);
+                transaction.Insert("Block", blockTableKey, block);
                 transaction.Commit();
             }
 
@@ -383,10 +389,12 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             Block block = this.Network.CreateBlock();
             block.Transactions.Add(this.Network.CreateTransaction());
 
+            BlockTableKey blockTableKey = new BlockTableKey(1, block.GetHash());
+
             // Initialize the repo.
             using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
-                transaction.Insert<uint256, Block>("Block", block.GetHash(), block);
+                transaction.Insert<BlockTableKey, Block>("Block", blockTableKey, block);
                 transaction.Insert<uint256, uint256>("Transaction", block.Transactions[0].GetHash(), block.GetHash());
                 transaction.Insert<byte[], byte[]>("Common", new byte[1], new byte[] { 1 });
                 transaction.Commit();
@@ -421,10 +429,12 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             Transaction transaction = this.Network.CreateTransaction();
             block.Transactions.Add(transaction);
 
+            var blockTableKey = new BlockTableKey(1, block.GetHash());
+
             // Set up database to mimic that created when TxIndex was off. No transactions stored.
             using (IKeyValueStoreTransaction trans = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
-                trans.Insert<uint256, Block>("Block", block.GetHash(), block);
+                trans.Insert("Block", blockTableKey, block);
                 trans.Commit();
             }
 
@@ -438,7 +448,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             // Check that after indexing database, the transaction inside the block is now indexed.
             using (IKeyValueStoreTransaction trans = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
-                var blockDict = trans.SelectDictionary<uint256, Block>("Block");
+                var blockDict = trans.SelectDictionary<BlockTableKey, Block>("Block");
                 var transDict = trans.SelectDictionary<uint256, uint256>("Transaction");
 
                 // Block stored as expected.
@@ -463,10 +473,12 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             Transaction transaction = this.Network.CreateTransaction();
             block.Transactions.Add(transaction);
 
+            var blockTableKey = new BlockTableKey(1, block.GetHash());
+
             // Set up database to mimic that created when TxIndex was on. Transaction from block is stored.
             using (IKeyValueStoreTransaction trans = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
-                trans.Insert<uint256, Block>("Block", block.GetHash(), block);
+                trans.Insert<BlockTableKey, Block>("Block", blockTableKey, block);
                 trans.Insert<uint256, uint256>("Transaction", transaction.GetHash(), block.GetHash());
                 trans.Commit();
             }
@@ -481,7 +493,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             // Check that after indexing database, the transaction is no longer stored.
             using (IKeyValueStoreTransaction trans = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                var blockDict = trans.SelectDictionary<uint256, Block>("Block");
+                var blockDict = trans.SelectDictionary<BlockTableKey, Block>("Block");
                 var transDict = trans.SelectDictionary<uint256, uint256>("Transaction");
 
                 // Block still stored as expected.
@@ -600,6 +612,8 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
 
             Block block = this.Network.CreateBlock();
 
+            var blockTableKey = new BlockTableKey(1, block.GetHash());
+
             Transaction tx1 = this.Network.CreateTransaction();
             Transaction tx2 = this.Network.CreateTransaction();
             Transaction tx3 = this.Network.CreateTransaction();
@@ -610,7 +624,8 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
 
             using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
-                transaction.Insert<uint256, Block>("Block", block.Header.GetHash(), block);
+
+                transaction.Insert("Block", blockTableKey, block);
                 transaction.Insert<uint256, uint256>("Transaction", tx1.GetHash(), block.Header.GetHash());
                 transaction.Insert<uint256, uint256>("Transaction", tx2.GetHash(), block.Header.GetHash());
                 transaction.Insert<uint256, uint256>("Transaction", tx3.GetHash(), block.Header.GetHash());

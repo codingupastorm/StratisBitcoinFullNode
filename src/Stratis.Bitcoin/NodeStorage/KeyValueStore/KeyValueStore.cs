@@ -18,7 +18,7 @@ namespace Stratis.Bitcoin.KeyValueStore
 
         internal ILoggerFactory LoggerFactory { get; private set; }
 
-        internal IRepositorySerializer RepositorySerializer { get; private set; }
+        public IRepositorySerializer RepositorySerializer { get; private set; }
 
         internal IKeyValueStoreTrackers Lookups { get; private set; }
 

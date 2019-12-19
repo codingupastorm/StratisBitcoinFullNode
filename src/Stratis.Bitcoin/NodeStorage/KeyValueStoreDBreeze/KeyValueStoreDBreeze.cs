@@ -105,8 +105,11 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
             for (int i = 0; i < orderedKeys.Length; i++)
             {
                 var key = orderedKeys[i].k;
-                var row = dbTransaction.Select<byte[], byte[]>(table.TableName, key);
-                res[orderedKeys[i].n] = row.Exists ? row.Value : null;
+                if (key != null)
+                {
+                    var row = dbTransaction.Select<byte[], byte[]>(table.TableName, key);
+                    res[orderedKeys[i].n] = row.Exists ? row.Value : null;
+                }
             }
 
             return res;
