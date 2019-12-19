@@ -31,12 +31,13 @@ namespace Stratis.Bitcoin.IntegrationTests
             string temp = Path.GetTempPath();
             string dir = Path.Combine(temp, readyDataName.Substring(0, readyDataName.LastIndexOf('.')));
             string workDir = dir.Replace("ReadyData", "ReadyDataLevelDB");
+            string zipSource = Path.GetFullPath(readyDataName);
             string zipTarget = Path.Combine(temp, readyDataName.Replace("ReadyData", "ReadyDataLevelDB"));
             string typeName = network.IsBitcoin() ? "bitcoin" : "stratis";
 
             Directory.CreateDirectory("ReadyDataLevelDB");
 
-            ZipFile.ExtractToDirectory(Path.GetFullPath(readyDataName), dir, true);
+            ZipFile.ExtractToDirectory(zipSource, dir, true);
 
             var dataFolderDBZ = new DataFolder(Path.Combine(dir, typeName, network.Name));
             var dataFolderLDB = new DataFolder(Path.Combine(workDir, typeName, network.Name));
@@ -49,7 +50,7 @@ namespace Stratis.Bitcoin.IntegrationTests
             ZipFile.CreateFromDirectory(workDir, zipTarget);
         }
 
-        [Fact(Skip="Run this manually when needed")]
+        [Fact]//(Skip="Run this manually when needed")]
         public void MigrateFromDBreezeToLevelDb()
         {
             foreach (string readyDataName in ReadyBlockchain.StratisRegTestAll)
