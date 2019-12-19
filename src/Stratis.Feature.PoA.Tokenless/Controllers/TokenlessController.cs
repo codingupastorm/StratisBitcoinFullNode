@@ -52,7 +52,8 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         private readonly ISerializer serializer;
         private readonly ILogger logger;
 
-        public TokenlessController(Network network,
+        public TokenlessController(
+            Network network,
             ITokenlessSigner tokenlessSigner,
             ICallDataSerializer callDataSerializer,
             IAddressGenerator addressGenerator,
@@ -84,8 +85,6 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             this.serializer = serializer;
             this.logger = loggerFactory.CreateLogger(this.GetType());
         }
-
-        // TODO: This might be slightly ridiculous, that it passes the mnemonic in. This is just to get it to a testable state for now.
 
         [Route("build/opreturn")]
         [HttpPost]
@@ -168,7 +167,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
         [Route("send")]
         [HttpPost]
-        public IActionResult SendTransaction([FromBody] string hex)
+        public async Task<IActionResult> SendTransactionAsync([FromBody] string transactionHex)
         {
             if (!this.connectionManager.ConnectedPeers.Any())
             {
@@ -178,7 +177,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
             try
             {
-                Transaction transaction = this.network.CreateTransaction(hex);
+                Transaction transaction = this.network.CreateTransaction(transactionHex);
 
                 var model = new WalletSendTransactionModel
                 {
@@ -187,7 +186,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
                 // TODO: Show some outputs or something?
 
-                this.broadcasterManager.BroadcastTransactionAsync(transaction).GetAwaiter().GetResult();
+                await this.broadcasterManager.BroadcastTransactionAsync(transaction);
 
                 TransactionBroadcastEntry transactionBroadCastEntry = this.broadcasterManager.GetTransaction(transaction.GetHash());
 
@@ -215,9 +214,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         /// If the key does not exist or deserialization fails, the method returns the default value for
         /// the specified type.
         /// </summary>
-        /// 
         /// <param name="request">An object containing the necessary parameters to perform a retrieve stored data request.</param>
-        ///
         /// <returns>A single piece of stored smart contract data.</returns>
         [Route("storage")]
         [HttpGet]
@@ -236,7 +233,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             {
                 return this.Json(new
                 {
-                    Message = string.Format("No data at storage with key {0}", request.StorageKey)
+                    Message = string.Format("No data at storage with key '{0}'", request.StorageKey)
                 });
             }
 
@@ -252,49 +249,48 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         /// Gets a smart contract transaction receipt. Receipts contain information about how a smart contract transaction was executed.
         /// This includes the value returned from a smart contract call and how much gas was used.  
         /// </summary>
-        /// 
-        /// <param name="txHash">A hash of the smart contract transaction (the transaction ID).</param>
-        /// 
+        /// <param name="transactionId">A hash of the smart contract transaction (the transaction ID).</param>
         /// <returns>The receipt for the smart contract.</returns> 
         [Route("receipt")]
         [HttpGet]
-        public IActionResult GetReceipt([FromQuery] string txHash)
+        public IActionResult GetReceipt([FromQuery] string transactionId)
         {
-            uint256 txHashNum = new uint256(txHash);
-            Receipt receipt = this.receiptRepository.Retrieve(txHashNum);
-
-            if (receipt == null)
+            try
             {
-                this.logger.LogTrace("(-)[RECEIPT_NOT_FOUND]");
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest,
-                    "The receipt was not found.",
-                    "No stored transaction could be found for the supplied hash.");
+                var txHashNum = new uint256(transactionId);
+                Receipt receipt = this.receiptRepository.Retrieve(txHashNum);
+                if (receipt == null)
+                {
+                    this.logger.LogTrace("(-)[RECEIPT_NOT_FOUND]:{0}='{1}'", nameof(transactionId), transactionId);
+                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, "The receipt was not found.", "No stored transaction could be found for the supplied hash.");
+                }
+
+                uint160 address = receipt.NewContractAddress ?? receipt.To;
+
+                if (!receipt.Logs.Any())
+                {
+                    return this.Json(new ReceiptResponse(receipt, new List<LogResponse>(), this.network));
+                }
+
+                byte[] contractCode = this.stateRoot.GetCode(address);
+                var assembly = Assembly.Load(contractCode);
+                var deserializer = new ApiLogDeserializer(this.primitiveSerializer, this.network);
+
+                List<LogResponse> logResponses = this.MapLogResponses(receipt, assembly, deserializer);
+                var receiptResponse = new ReceiptResponse(receipt, logResponses, this.network);
+
+                return this.Json(receiptResponse);
             }
-
-            uint160 address = receipt.NewContractAddress ?? receipt.To;
-
-            if (!receipt.Logs.Any())
+            catch (Exception e)
             {
-                return this.Json(new ReceiptResponse(receipt, new List<LogResponse>(), this.network));
+                this.logger.LogError("Exception occurred: '{0}'", e.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
             }
-
-            byte[] contractCode = this.stateRoot.GetCode(address);
-
-            Assembly assembly = Assembly.Load(contractCode);
-
-            var deserializer = new ApiLogDeserializer(this.primitiveSerializer, this.network);
-
-            List<LogResponse> logResponses = this.MapLogResponses(receipt, assembly, deserializer);
-
-            var receiptResponse = new ReceiptResponse(receipt, logResponses, this.network);
-
-            return this.Json(receiptResponse);
         }
 
         // Note: We may not know exactly how to best structure "receipt search" queries until we start building 
         // a web3-like library. For now the following method serves as a very basic example of how we can query the block
         // bloom filters to retrieve events.
-
 
         /// <summary>
         /// Searches a smart contract's receipts for those which match a specific event. The SmartContract.Log() function
@@ -312,35 +308,82 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         /// <returns>A list of receipts for transactions relating to a specific smart contract and a specific event in that smart contract.</returns>
         [Route("receipt-search")]
         [HttpGet]
-        public async Task<IActionResult> ReceiptSearch([FromQuery] string contractAddress, [FromQuery] string eventName)
+        public IActionResult ReceiptSearch([FromQuery] string contractAddress, [FromQuery] string eventName)
         {
-            uint160 address = contractAddress.ToUint160(this.network);
-
-            byte[] contractCode = this.stateRoot.GetCode(address);
-
-            if (contractCode == null || !contractCode.Any())
+            try
             {
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.InternalServerError, "No code exists", $"No contract execution code exists at {address}");
+                uint160 address = contractAddress.ToUint160(this.network);
+
+                byte[] contractCode = this.stateRoot.GetCode(address);
+
+                if (contractCode == null || !contractCode.Any())
+                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.InternalServerError, "No code exists", $"No contract execution code exists at {address}");
+
+                var assembly = Assembly.Load(contractCode);
+                var deserializer = new ApiLogDeserializer(this.primitiveSerializer, this.network);
+                List<Receipt> receipts = this.SearchReceipts(contractAddress, eventName);
+
+                var result = new List<ReceiptResponse>();
+
+                foreach (Receipt receipt in receipts)
+                {
+                    List<LogResponse> logResponses = this.MapLogResponses(receipt, assembly, deserializer);
+
+                    var receiptResponse = new ReceiptResponse(receipt, logResponses, this.network);
+
+                    result.Add(receiptResponse);
+                }
+
+                return this.Json(result);
             }
-
-            Assembly assembly = Assembly.Load(contractCode);
-
-            var deserializer = new ApiLogDeserializer(this.primitiveSerializer, this.network);
-
-            List<Receipt> receipts = this.SearchReceipts(contractAddress, eventName);
-
-            var result = new List<ReceiptResponse>();
-
-            foreach (Receipt receipt in receipts)
+            catch (Exception e)
             {
-                List<LogResponse> logResponses = this.MapLogResponses(receipt, assembly, deserializer);
-
-                var receiptResponse = new ReceiptResponse(receipt, logResponses, this.network);
-
-                result.Add(receiptResponse);
+                this.logger.LogError("Exception occurred: '{0}'", e.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
             }
+        }
 
-            return this.Json(result);
+        /// <summary>
+        /// Gets the bytecode for a smart contract as a hexadecimal string. The bytecode is decompiled to
+        /// C# source, which is returned as well. Be aware, it is the bytecode which is being executed,
+        /// so this is the "source of truth".
+        /// </summary>
+        /// <param name="contractAddress">The address of the smart contract to retrieve as bytecode and C# source.</param>
+        /// <returns>A response object containing the bytecode and the decompiled C# code.</returns>
+        [Route("code")]
+        [HttpGet]
+        public IActionResult GetCode([FromQuery]string contractAddress)
+        {
+            try
+            {
+                uint160 addressNumeric = contractAddress.ToUint160(this.network);
+                byte[] contractCode = this.stateRoot.GetCode(addressNumeric);
+
+                if (contractCode == null || !contractCode.Any())
+                {
+                    return this.Json(new GetCodeResponse
+                    {
+                        Message = string.Format("No contract execution code exists at {0}", contractAddress)
+                    });
+                }
+
+                string typeName = this.stateRoot.GetContractType(addressNumeric);
+
+                Result<string> sourceResult = this.contractDecompiler.GetSource(contractCode);
+
+                return this.Json(new GetCodeResponse
+                {
+                    Message = string.Format("Contract execution code retrieved at {0}", contractAddress),
+                    Bytecode = contractCode.ToHexString(),
+                    Type = typeName,
+                    CSharp = sourceResult.IsSuccess ? sourceResult.Value : sourceResult.Error // Show the source, or the reason why the source couldn't be retrieved.
+                });
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError("Exception occurred: '{0}'", e.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
+            }
         }
 
         /// <summary>
@@ -372,6 +415,35 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         {
             if (parameters != null && parameters.Length > 0)
                 return this.methodParameterSerializer.Deserialize(parameters);
+
+            return null;
+        }
+
+        private object InterpretStorageValue(MethodParameterDataType dataType, byte[] bytes)
+        {
+            switch (dataType)
+            {
+                case MethodParameterDataType.Bool:
+                    return this.serializer.ToBool(bytes);
+                case MethodParameterDataType.Byte:
+                    return bytes[0];
+                case MethodParameterDataType.Char:
+                    return this.serializer.ToChar(bytes);
+                case MethodParameterDataType.String:
+                    return this.serializer.ToString(bytes);
+                case MethodParameterDataType.UInt:
+                    return this.serializer.ToUInt32(bytes);
+                case MethodParameterDataType.Int:
+                    return this.serializer.ToInt32(bytes);
+                case MethodParameterDataType.ULong:
+                    return this.serializer.ToUInt64(bytes);
+                case MethodParameterDataType.Long:
+                    return this.serializer.ToInt64(bytes);
+                case MethodParameterDataType.Address:
+                    return this.serializer.ToAddress(bytes);
+                case MethodParameterDataType.ByteArray:
+                    return bytes.ToHexString();
+            }
 
             return null;
         }
@@ -453,72 +525,6 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             }
 
             return receiptResponses;
-        }
-
-        /// <summary>
-        /// Gets the bytecode for a smart contract as a hexadecimal string. The bytecode is decompiled to
-        /// C# source, which is returned as well. Be aware, it is the bytecode which is being executed,
-        /// so this is the "source of truth".
-        /// </summary>
-        ///
-        /// <param name="address">The address of the smart contract to retrieve as bytecode and C# source.</param>
-        ///
-        /// <returns>A response object containing the bytecode and the decompiled C# code.</returns>
-        [Route("code")]
-        [HttpGet]
-        public IActionResult GetCode([FromQuery]string address)
-        {
-            uint160 addressNumeric = address.ToUint160(this.network);
-            byte[] contractCode = this.stateRoot.GetCode(addressNumeric);
-
-            if (contractCode == null || !contractCode.Any())
-            {
-                return this.Json(new GetCodeResponse
-                {
-                    Message = string.Format("No contract execution code exists at {0}", address)
-                });
-            }
-
-            string typeName = this.stateRoot.GetContractType(addressNumeric);
-
-            Result<string> sourceResult = this.contractDecompiler.GetSource(contractCode);
-
-            return this.Json(new GetCodeResponse
-            {
-                Message = string.Format("Contract execution code retrieved at {0}", address),
-                Bytecode = contractCode.ToHexString(),
-                Type = typeName,
-                CSharp = sourceResult.IsSuccess ? sourceResult.Value : sourceResult.Error // Show the source, or the reason why the source couldn't be retrieved.
-            });
-        }
-
-        private object InterpretStorageValue(MethodParameterDataType dataType, byte[] bytes)
-        {
-            switch (dataType)
-            {
-                case MethodParameterDataType.Bool:
-                    return this.serializer.ToBool(bytes);
-                case MethodParameterDataType.Byte:
-                    return bytes[0];
-                case MethodParameterDataType.Char:
-                    return this.serializer.ToChar(bytes);
-                case MethodParameterDataType.String:
-                    return this.serializer.ToString(bytes);
-                case MethodParameterDataType.UInt:
-                    return this.serializer.ToUInt32(bytes);
-                case MethodParameterDataType.Int:
-                    return this.serializer.ToInt32(bytes);
-                case MethodParameterDataType.ULong:
-                    return this.serializer.ToUInt64(bytes);
-                case MethodParameterDataType.Long:
-                    return this.serializer.ToInt64(bytes);
-                case MethodParameterDataType.Address:
-                    return this.serializer.ToAddress(bytes);
-                case MethodParameterDataType.ByteArray:
-                    return bytes.ToHexString();
-            }
-
-            return null;
         }
     }
 }
