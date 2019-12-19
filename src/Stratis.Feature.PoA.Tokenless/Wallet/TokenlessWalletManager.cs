@@ -6,41 +6,41 @@ using TracerAttributes;
 
 namespace Stratis.Feature.PoA.Tokenless.Wallet
 {
-    public interface IDLTWalletManager
+    public interface ITokenlessWalletManager
     {
         PubKey GetPubKey(int accountIndex, int addressType = 0);
 
         BitcoinExtKey GetPrivateKey(string password, int accountIndex, int addressType = 0);
     }
 
-    public class WalletManager : IDLTWalletManager
+    public class TokenlessWalletManager : ITokenlessWalletManager
     {
         public const string WalletFileName = "nodeid.json";
 
         private readonly Network network;
-        private readonly FileStorage<Wallet> fileStorage;
-        private readonly Wallet wallet;
+        private readonly FileStorage<TokenlessWallet> fileStorage;
+        private readonly TokenlessWallet wallet;
         private readonly ExtPubKey[] extPubKeys;
-        private readonly WalletSettings walletSettings;
+        private readonly TokenlessWalletSettings walletSettings;
 
-        public WalletManager(Network network, DataFolder dataFolder, WalletSettings walletSettings)
+        public TokenlessWalletManager(Network network, DataFolder dataFolder, TokenlessWalletSettings walletSettings)
         {
             this.network = network;
-            this.fileStorage = new FileStorage<Wallet>(dataFolder.RootPath);
+            this.fileStorage = new FileStorage<TokenlessWallet>(dataFolder.RootPath);
             this.wallet = this.LoadWallet();
             this.walletSettings = walletSettings;
             if (this.wallet != null)
                 this.extPubKeys = new ExtPubKey[] { ExtPubKey.Parse(this.wallet.ExtPubKey0), ExtPubKey.Parse(this.wallet.ExtPubKey1), ExtPubKey.Parse(this.wallet.ExtPubKey2) };
         }
 
-        public Wallet LoadWallet()
+        public TokenlessWallet LoadWallet()
         {
             string fileName = WalletFileName;
 
             if (!this.fileStorage.Exists(fileName))
                 return null;
 
-            return (Wallet)this.fileStorage.LoadByFileName(fileName);
+            return (TokenlessWallet)this.fileStorage.LoadByFileName(fileName);
         }
 
         public static ExtKey GetExtendedKey(Mnemonic mnemonic, string passphrase = null)
@@ -76,7 +76,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return new ExtKey(Key.Parse(this.wallet.EncryptedSeed, password, this.network), Convert.FromBase64String(this.wallet.ChainCode));
         }
 
-        public (Wallet, Mnemonic) CreateWallet(string password, string passphrase, Mnemonic mnemonic = null)
+        public (TokenlessWallet, Mnemonic) CreateWallet(string password, string passphrase, Mnemonic mnemonic = null)
         {
             Guard.NotEmpty(password, nameof(password));
             Guard.NotNull(passphrase, nameof(passphrase));
@@ -108,7 +108,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             ExtPubKey extPubKey1 = addressExtKey1.Neuter();
             ExtPubKey extPubKey2 = addressExtKey2.Neuter();
 
-            var wallet = new Wallet()
+            var wallet = new TokenlessWallet()
             {
                 EncryptedSeed = encryptedSeed,
                 ChainCode = chainCode,

@@ -11,33 +11,24 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
     /// Feature for HD Wallet functionality.
     /// </summary>
     /// <seealso cref="Stratis.Bitcoin.Builder.Feature.FullNodeFeature" />
-    public class WalletFeature : FullNodeFeature
+    public class TokenlessWalletFeature : FullNodeFeature
     {
-        /// <summary>Logger factory to create loggers.</summary>
-        private readonly ILoggerFactory loggerFactory;
-
         /// <summary>Instance logger.</summary>
         private readonly ILogger logger;
 
-        /// <summary>Global application life cycle control - triggers when application shuts down.</summary>
-        private readonly INodeLifetime nodeLifetime;
-
         /// <summary>The wallet manager.</summary>
-        private readonly IDLTWalletManager walletManager;
+        private readonly ITokenlessWalletManager walletManager;
 
         /// <summary>The wallet settings.</summary>
-        private readonly WalletSettings walletSettings;
+        private readonly TokenlessWalletSettings walletSettings;
 
-        public WalletFeature(
-            INodeLifetime nodeLifetime,
+        public TokenlessWalletFeature(
             ILoggerFactory loggerFactory,
-            IDLTWalletManager walletManager,
-            WalletSettings walletSettings,
+            ITokenlessWalletManager walletManager,
+            TokenlessWalletSettings walletSettings,
             INodeStats nodeStats)
         {
-            this.nodeLifetime = nodeLifetime;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
-            this.loggerFactory = loggerFactory;
             this.walletSettings = walletSettings;
             this.walletManager = walletManager;
 
@@ -51,7 +42,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         /// <param name="network">The network to extract values from.</param>
         public static void PrintHelp(Network network)
         {
-            WalletSettings.PrintHelp(network);
+            TokenlessWalletSettings.PrintHelp(network);
         }
         
         /// <summary>
@@ -61,7 +52,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         /// <param name="network">The network to base the defaults off.</param>
         public static void BuildDefaultConfigurationFile(StringBuilder builder, Network network)
         {
-            WalletSettings.BuildDefaultConfigurationFile(builder, network);
+            TokenlessWalletSettings.BuildDefaultConfigurationFile(builder, network);
         }
 
         /// <inheritdoc />

@@ -104,12 +104,12 @@ namespace Stratis.Feature.PoA.Tokenless
             fullNodeBuilder.ConfigureFeature(features =>
             {
                 features
-                    .AddFeature<WalletFeature>()
+                    .AddFeature<TokenlessWalletFeature>()
                     .FeatureServices(services =>
                     {
-                        services.AddSingleton<WalletSettings>();
-                        services.AddSingleton<IDLTWalletManager, WalletManager>();
-                        services.AddSingleton<IMiningKeyProvider, MiningKeyProvider>();
+                        services.AddSingleton<TokenlessWalletSettings>();
+                        services.AddSingleton<ITokenlessWalletManager, TokenlessWalletManager>();
+                        services.AddSingleton<IMiningKeyProvider, TokenlessMiningKeyProvider>();
                     });
             });
 

@@ -3,11 +3,11 @@ using Stratis.Bitcoin.Features.Wallet.Interfaces;
 
 namespace Stratis.Feature.PoA.Tokenless.Wallet
 {
-    public class MiningKeyProvider : IMiningKeyProvider
+    public class TokenlessMiningKeyProvider : IMiningKeyProvider
     {
-        private readonly IDLTWalletManager walletManager;
+        private readonly ITokenlessWalletManager walletManager;
 
-        public MiningKeyProvider(IDLTWalletManager walletManager)
+        public TokenlessMiningKeyProvider(ITokenlessWalletManager walletManager)
         {
             this.walletManager = walletManager;
         }
