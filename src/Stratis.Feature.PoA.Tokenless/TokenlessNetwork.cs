@@ -49,9 +49,6 @@ namespace Stratis.Feature.PoA.Tokenless
             this.DefaultRPCPort = 16474;
             this.DefaultAPIPort = 30000;
             this.MaxTipAge = 2 * 60 * 60;
-            this.MinTxFee = 10000;
-            this.FallbackFee = 10000;
-            this.MinRelayTxFee = 10000;
             this.RootFolderName = NetworkRootFolderName;
             this.DefaultConfigFilename = NetworkDefaultConfigFilename;
             this.MaxTimeOffsetSeconds = 25 * 60;
@@ -99,37 +96,27 @@ namespace Stratis.Feature.PoA.Tokenless
                 enablePermissionedMembership: false
             );
 
-            // TODO-TL: Check
-            var buriedDeployments = new BuriedDeploymentsArray
-            {
-                [BuriedDeployments.BIP34] = 0,
-                [BuriedDeployments.BIP65] = 0,
-                [BuriedDeployments.BIP66] = 0
-            };
-
-            var bip9Deployments = new NoBIP9Deployments();
-
             this.Consensus = new NBitcoin.Consensus(
                 consensusFactory: consensusFactory,
                 consensusOptions: consensusOptions,
-                coinType: 105, // TODO-TL: Check
+                coinType: 500,
                 hashGenesisBlock: genesisBlock.GetHash(),
-                subsidyHalvingInterval: 210000, // TODO-TL: Check
-                majorityEnforceBlockUpgrade: 750, // TODO-TL: Check
-                majorityRejectBlockOutdated: 950, // TODO-TL: Check
-                majorityWindow: 1000, // TODO-TL: Check
-                buriedDeployments: buriedDeployments,
-                bip9Deployments: bip9Deployments,
-                bip34Hash: new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"),
-                minerConfirmationWindow: 2016, // TODO-TL: Check
+                subsidyHalvingInterval: 0,
+                majorityEnforceBlockUpgrade: 0,
+                majorityRejectBlockOutdated: 0,
+                majorityWindow: 0,
+                buriedDeployments: new BuriedDeploymentsArray(),
+                bip9Deployments: new NoBIP9Deployments(),
+                bip34Hash: null,
+                minerConfirmationWindow: 0,
                 maxReorgLength: 500, // TODO-TL: Check
                 defaultAssumeValid: null,
-                maxMoney: long.MaxValue, // TODO-TL: Check
+                maxMoney: long.MinValue,
                 coinbaseMaturity: 2, // TODO-TL: Check
-                premineHeight: 10, // TODO-TL: Check
-                premineReward: Money.Coins(100_000_000), // TODO-TL: Check
-                proofOfWorkReward: Money.Coins(0), // TODO-TL: Check
-                powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
+                premineHeight: 0,
+                premineReward: Money.Coins(0),
+                proofOfWorkReward: Money.Coins(0),
+                powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60),
                 powTargetSpacing: TimeSpan.FromSeconds(60),
                 powAllowMinDifficultyBlocks: false,
                 posNoRetargeting: true,
@@ -140,7 +127,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 lastPowBlock: 0,
                 proofOfStakeLimit: null,
                 proofOfStakeLimitV2: null,
-                proofOfStakeReward: Money.Zero // TODO-TL: Check
+                proofOfStakeReward: Money.Zero
             );
 
             // https://en.bitcoin.it/wiki/List_of_address_prefixes
@@ -158,23 +145,15 @@ namespace Stratis.Feature.PoA.Tokenless
             this.Base58Prefixes[(int)Base58Type.ASSET_ID] = new byte[] { 23 };
             this.Base58Prefixes[(int)Base58Type.COLORED_ADDRESS] = new byte[] { 0x13 };
 
-            // TODO-TL: Not needed?
-            this.Checkpoints = new Dictionary<int, CheckpointInfo>
-            {
-                { 0, new CheckpointInfo(new uint256("0x0621b88fb7a99c985d695be42e606cb913259bace2babe92970547fa033e4076")) },
-            };
+            this.Checkpoints = new Dictionary<int, CheckpointInfo>();
 
             var encoder = new Bech32Encoder("bc");
             this.Bech32Encoders = new Bech32Encoder[2];
             this.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS] = encoder;
             this.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS] = encoder;
 
-            // TODO-TL: Not needed?
             this.DNSSeeds = new List<DNSSeedData> { };
-
-            // TODO-TL: Not needed?
-            string[] seedNodes = { };
-            this.SeedNodes = this.ConvertToNetworkAddresses(seedNodes, this.DefaultPort).ToList();
+            this.SeedNodes = this.ConvertToNetworkAddresses(new string[] { }, this.DefaultPort).ToList();
 
             // TODO-TL: Not needed?
             this.StandardScriptsRegistry = new PoAStandardScriptsRegistry();

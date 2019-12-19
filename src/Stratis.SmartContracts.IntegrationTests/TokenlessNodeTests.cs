@@ -24,11 +24,11 @@ using Xunit;
 
 namespace Stratis.SmartContracts.IntegrationTests
 {
-    public class FullTokenlessNodeTests
+    public sealed class TokenlessNodeTests
     {
         private readonly TokenlessNetwork network;
 
-        public FullTokenlessNodeTests()
+        public TokenlessNodeTests()
         {
             this.network = new TokenlessNetwork();
         }
