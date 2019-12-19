@@ -13,8 +13,8 @@ using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Core;
+using Stratis.Feature.PoA.Tokenless.Mining;
 
 namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
 {

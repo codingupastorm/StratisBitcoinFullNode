@@ -1,7 +1,7 @@
 ﻿using NBitcoin;
 using Stratis.SmartContracts.Core.Util;
 
-namespace Stratis.Feature.PoA.Tokenless
+namespace Stratis.Feature.PoA.Tokenless.Consensus
 {
     public interface ITokenlessSigner
     {

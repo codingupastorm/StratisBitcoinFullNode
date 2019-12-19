@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Bitcoin.Features.PoA;
 
-namespace Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules
+namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 {
     /// <summary>
     /// Estimates which public key should be used for timestamp of a header being
