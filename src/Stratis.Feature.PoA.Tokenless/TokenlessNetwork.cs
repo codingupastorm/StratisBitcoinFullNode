@@ -209,7 +209,7 @@ namespace Stratis.Feature.PoA.Tokenless
             consensus.ConsensusRules
                 .Register<BlockSizeRule>()
                 .Register<IsSmartContractWellFormedPartialValidationRule>()
-                .Register<CanSenderBeRetrievedPartialValidationRule>();
+                .Register<SenderInputPartialValidationRule>();
 
             // IFullValidationConsensusRule
             consensus.ConsensusRules
