@@ -9,8 +9,8 @@ using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules;
 using Stratis.Bitcoin.Features.PoA.Policies;
 using Stratis.Bitcoin.Features.SmartContracts.PoA;
+using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Consensus.Rules;
-using Stratis.Feature.PoA.Tokenless.Core.Rules;
 using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
 
 namespace Stratis.Feature.PoA.Tokenless

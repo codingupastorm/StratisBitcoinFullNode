@@ -20,7 +20,7 @@ using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Util;
 
-namespace Stratis.Feature.PoA.Tokenless.Core.Rules
+namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 {
     public sealed class TokenlessCoinviewRule : CoinViewRule
     {
