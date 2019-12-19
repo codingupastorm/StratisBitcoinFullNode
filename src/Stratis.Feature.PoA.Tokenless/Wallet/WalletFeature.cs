@@ -1,19 +1,17 @@
 ﻿using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Utilities;
 
-namespace Stratis.Features.Wallet.Tokenless
+namespace Stratis.Feature.PoA.Tokenless.Wallet
 {
     /// <summary>
     /// Feature for HD Wallet functionality.
     /// </summary>
     /// <seealso cref="Stratis.Bitcoin.Builder.Feature.FullNodeFeature" />
-    public class DLTWalletFeature : FullNodeFeature
+    public class WalletFeature : FullNodeFeature
     {
         /// <summary>Logger factory to create loggers.</summary>
         private readonly ILoggerFactory loggerFactory;
@@ -28,13 +26,13 @@ namespace Stratis.Features.Wallet.Tokenless
         private readonly IDLTWalletManager walletManager;
 
         /// <summary>The wallet settings.</summary>
-        private readonly DLTWalletSettings walletSettings;
+        private readonly WalletSettings walletSettings;
 
-        public DLTWalletFeature(
+        public WalletFeature(
             INodeLifetime nodeLifetime,
             ILoggerFactory loggerFactory,
             IDLTWalletManager walletManager,
-            DLTWalletSettings walletSettings,
+            WalletSettings walletSettings,
             INodeStats nodeStats)
         {
             this.nodeLifetime = nodeLifetime;
@@ -53,7 +51,7 @@ namespace Stratis.Features.Wallet.Tokenless
         /// <param name="network">The network to extract values from.</param>
         public static void PrintHelp(Network network)
         {
-            DLTWalletSettings.PrintHelp(network);
+            WalletSettings.PrintHelp(network);
         }
         
         /// <summary>
@@ -63,7 +61,7 @@ namespace Stratis.Features.Wallet.Tokenless
         /// <param name="network">The network to base the defaults off.</param>
         public static void BuildDefaultConfigurationFile(StringBuilder builder, Network network)
         {
-            DLTWalletSettings.BuildDefaultConfigurationFile(builder, network);
+            WalletSettings.BuildDefaultConfigurationFile(builder, network);
         }
 
         /// <inheritdoc />
@@ -83,28 +81,6 @@ namespace Stratis.Features.Wallet.Tokenless
 
         public void AddComponentStats(StringBuilder log)
         {
-        }
-    }
-
-    /// <summary>
-    /// A class providing extension methods for <see cref="IFullNodeBuilder"/>.
-    /// </summary>
-    public static class FullNodeBuilderTokenlessWalletExtension
-    {
-        public static IFullNodeBuilder UseTokenlessWallet(this IFullNodeBuilder fullNodeBuilder)
-        {
-            fullNodeBuilder.ConfigureFeature(features =>
-            {
-                features
-                    .AddFeature<DLTWalletFeature>()
-                    .FeatureServices(services =>
-                    {
-                        services.AddSingleton<DLTWalletSettings>();
-                        services.AddSingleton<IDLTWalletManager, DLTWalletManager>();
-                    });
-            });
-
-            return fullNodeBuilder;
         }
     }
 }

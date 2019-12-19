@@ -1,6 +1,6 @@
-﻿namespace Stratis.Features.Wallet.Tokenless
+﻿namespace Stratis.Feature.PoA.Tokenless.Wallet
 {
-    public class DLTWallet
+    public class Wallet
     {
         public string EncryptedSeed { get; set; }
 

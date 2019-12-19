@@ -4,9 +4,9 @@ using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Utilities;
 
-namespace Stratis.Features.Wallet.Tokenless
+namespace Stratis.Feature.PoA.Tokenless.Wallet
 {
-    public class DLTWalletSettings
+    public class WalletSettings
     {
         /// <summary>Instance logger.</summary>
         private readonly ILogger logger;
@@ -19,11 +19,11 @@ namespace Stratis.Features.Wallet.Tokenless
         /// Initializes an instance of the object from the node configuration.
         /// </summary>
         /// <param name="nodeSettings">The node configuration.</param>
-        public DLTWalletSettings(NodeSettings nodeSettings)
+        public WalletSettings(NodeSettings nodeSettings)
         {
             Guard.NotNull(nodeSettings, nameof(nodeSettings));
 
-            this.logger = nodeSettings.LoggerFactory.CreateLogger(typeof(DLTWalletSettings).FullName);
+            this.logger = nodeSettings.LoggerFactory.CreateLogger(typeof(WalletSettings).FullName);
 
             TextFileConfiguration config = nodeSettings.ConfigReader;
 
@@ -53,7 +53,7 @@ namespace Stratis.Features.Wallet.Tokenless
         /// <param name="network">The network to base the defaults off.</param>
         public static void BuildDefaultConfigurationFile(StringBuilder builder, Network network)
         {
-            builder.AppendLine("####Tokenless Wallet Settings####");
+            builder.AppendLine("####Wallet Settings####");
             builder.AppendLine("#The address index.");
             builder.AppendLine("#addressindex=0");
         }

@@ -16,14 +16,13 @@ using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Features.SmartContracts;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mining;
+using Stratis.Feature.PoA.Tokenless.Wallet;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -40,8 +39,6 @@ namespace Stratis.Feature.PoA.Tokenless
                     .AddFeature<TokenlessFeature>()
                     .FeatureServices(services =>
                     {
-                        services.Replace(ServiceDescriptor.Singleton<IWalletManager, TokenlessWalletManagerStub>());
-
                         services.Replace(ServiceDescriptor.Singleton<ITxMempool, TokenlessMempool>());
                         services.Replace(ServiceDescriptor.Singleton<IMempoolValidator, TokenlessMempoolValidator>());
                         services.AddSingleton<BlockDefinition, TokenlessBlockDefinition>();
@@ -49,7 +46,7 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<ICoreComponent, CoreComponent>();
 
                         // In place of wallet.
-                        services.AddSingleton<IBroadcasterManager, FullNodeBroadcasterManager>();
+                        //services.AddSingleton<IBroadcasterManager, FullNodeBroadcasterManager>();
                     });
             });
 
@@ -103,8 +100,25 @@ namespace Stratis.Feature.PoA.Tokenless
 
             return fullNodeBuilder;
         }
-    }
 
+        public static IFullNodeBuilder UseTokenlessWallet(this IFullNodeBuilder fullNodeBuilder)
+        {
+            fullNodeBuilder.ConfigureFeature(features =>
+            {
+                features
+                    .AddFeature<WalletFeature>()
+                    .FeatureServices(services =>
+                    {
+                        services.AddSingleton<WalletSettings>();
+                        services.AddSingleton<IDLTWalletManager, WalletManager>();
+                        services.AddSingleton<IMiningKeyProvider, MiningKeyProvider>();
+                    });
+            });
+
+            return fullNodeBuilder;
+        }
+    }
+    /*
     public sealed class TokenlessWalletManagerStub : IWalletManager
     {
         public uint256 WalletTipHash => throw new NotImplementedException();
@@ -365,4 +379,5 @@ namespace Stratis.Feature.PoA.Tokenless
             throw new NotImplementedException();
         }
     }
+    */
 }
