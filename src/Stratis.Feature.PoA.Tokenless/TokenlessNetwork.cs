@@ -30,6 +30,7 @@ namespace Stratis.Feature.PoA.Tokenless
             // The message start string is designed to be unlikely to occur in normal data.
             // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
             // a large 4-byte int at any alignment.
+
             // TODO-TL: Change/update.
             var messageStart = new byte[4];
             messageStart[0] = 0x76;
@@ -46,7 +47,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.DefaultMaxOutboundConnections = 16;
             this.DefaultMaxInboundConnections = 109;
             this.DefaultRPCPort = 16474;
-            this.DefaultAPIPort = 37221;
+            this.DefaultAPIPort = 30000;
             this.MaxTipAge = 2 * 60 * 60;
             this.MinTxFee = 10000;
             this.FallbackFee = 10000;
