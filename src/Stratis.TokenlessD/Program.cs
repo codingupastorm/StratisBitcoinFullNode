@@ -9,15 +9,11 @@ using Stratis.Bitcoin.Features.Api;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.RPC;
-using Stratis.Bitcoin.Features.SignalR;
-using Stratis.Bitcoin.Features.SignalR.Broadcasters;
-using Stratis.Bitcoin.Features.SignalR.Events;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Features.Diagnostic;
-using Stratis.Feature.PoA.Tokenless;
-using Stratis.Features.Wallet.Tokenless;
 using Stratis.Bitcoin.Features.SmartContracts;
+using Stratis.Bitcoin.Utilities;
+using Stratis.Feature.PoA.Tokenless;
 using Stratis.SmartContracts.Tokenless;
+using Stratis.Features.Wallet.Tokenless;
 
 namespace Stratis.TokenlessD
 {
@@ -27,7 +23,6 @@ namespace Stratis.TokenlessD
         {
             try
             {
-                // Use TokenlessNetwork.
                 var network = new TokenlessNetwork();
                 var nodeSettings = new NodeSettings(network, args: args);
                 var walletSettings = new DLTWalletSettings(nodeSettings);
@@ -42,7 +37,7 @@ namespace Stratis.TokenlessD
                     if (password == null)
                     {
                         Console.WriteLine($"Run this daemon with a -password=<password> argument so that the wallet file ({DLTWalletManager.WalletFileName}) can be created.");
-                        Console.WriteLine($"If you are re-creating a wallet then also pass a -mnemonic=<mnemonic> argument.");
+                        Console.WriteLine($"If you are re-creating a wallet then also pass a -mnemonic=\"<mnemonic words>\" argument.");
                         return;
                     }
 
@@ -71,32 +66,7 @@ namespace Stratis.TokenlessD
                         options.UseTokenlessReflectionExecutor();
                         options.UseSmartContractType<TokenlessSmartContract>();
                     })
-                    .AsTokenlessNetwork()
-                    .UseDiagnosticFeature();
-
-                if (nodeSettings.EnableSignalR)
-                {
-                    nodeBuilder.AddSignalR(options =>
-                    {
-                        options.EventsToHandle = new[]
-                        {
-                            (IClientEvent) new BlockConnectedClientEvent(),
-                            new TransactionReceivedClientEvent()
-                        };
-
-                        options.ClientEventBroadcasters = new[]
-                        {
-                            (Broadcaster: typeof(StakingBroadcaster), ClientEventBroadcasterSettings: new ClientEventBroadcasterSettings
-                                {
-                                    BroadcastFrequencySeconds = 5
-                                }),
-                            (Broadcaster: typeof(WalletInfoBroadcaster), ClientEventBroadcasterSettings: new ClientEventBroadcasterSettings
-                                {
-                                    BroadcastFrequencySeconds = 5
-                                })
-                        };
-                    });
-                }
+                    .AsTokenlessNetwork();
 
                 IFullNode node = nodeBuilder.Build();
 
