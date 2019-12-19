@@ -331,6 +331,9 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
             dbTransaction.InsertMultiple(BlockTableName, blocks.Select((b, n) => (new BlockTableKey(heights[n], b.GetHash()), b)).ToArray());
 
+            for (int i = 0; i < blocks.Count; i++)
+                this.heightByHash[blocks[i].GetHash()] = heights[i];
+
             // Index blocks.
             if (this.TxIndex)
             {
