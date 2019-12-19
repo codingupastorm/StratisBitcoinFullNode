@@ -12,9 +12,13 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             this.walletManager = walletManager;
         }
 
+        /// <summary>
+        /// Returning null ensures that an empty script is used to build blocks.
+        /// </summary>
+        /// <returns>Returns a <c>null</c> script.</returns>
         public Script GetScriptPubKeyFromWallet()
         {
-            return this.walletManager.GetPubKey(1).ScriptPubKey;
+            return null;
         }
     }
 }
