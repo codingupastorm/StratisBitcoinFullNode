@@ -79,7 +79,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         /// <inheritdoc />
         public Task<Transaction> GetTransaction(uint256 txId)
         {
-            return this.MempoolLock.ReadAsync(() => this.memPool.MapTx.TryGet(txId).Transaction);
+            return this.MempoolLock.ReadAsync(() => this.memPool.MapTx.TryGet(txId)?.Transaction);
         }
 
         /// <summary>
