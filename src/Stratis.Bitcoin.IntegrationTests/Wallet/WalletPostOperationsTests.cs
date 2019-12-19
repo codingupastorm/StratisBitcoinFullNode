@@ -5,7 +5,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
-using DBreeze.Utils;
 using FluentAssertions;
 using Flurl;
 using Flurl.Http;
@@ -738,7 +737,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                 var script = opReturnOutputFromBlock.ScriptPubKey.Asm;
                 string[] ops = script.Split(" ");
                 ops[0].Should().Be("OP_RETURN");
-                Encoders.Hex.DecodeData(ops[1]).Should().BeEquivalentTo("some data to send".ToBytes());
+                Encoders.ASCII.EncodeData(Encoders.Hex.DecodeData(ops[1])).Should().BeEquivalentTo("some data to send");
             }
         }
 
