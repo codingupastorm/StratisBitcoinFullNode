@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NBitcoin;
+using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core.Util;
 using Xunit;
@@ -24,7 +25,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public void SignTransactionThenVerifyThenGetSender()
         {
             Transaction transaction = this.network.CreateTransaction();
-            Script outputScript = TxNullDataTemplate.Instance.GenerateScriptPubKey(new byte[] {0, 1, 2, 3});
+            Script outputScript = TxNullDataTemplate.Instance.GenerateScriptPubKey(new byte[] { 0, 1, 2, 3 });
             transaction.Outputs.Add(new TxOut(Money.Zero, outputScript));
 
             var key = new Key();

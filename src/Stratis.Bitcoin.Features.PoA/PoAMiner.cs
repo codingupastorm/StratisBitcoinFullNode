@@ -67,7 +67,7 @@ namespace Stratis.Bitcoin.Features.PoA
 
         private readonly IIntegrityValidator integrityValidator;
 
-        private readonly IWalletManager walletManager;
+        private readonly IMiningKeyProvider miningKeyProvider;
 
         private readonly VotingManager votingManager;
 
@@ -92,7 +92,7 @@ namespace Stratis.Bitcoin.Features.PoA
             PoABlockHeaderValidator poaHeaderValidator,
             IFederationManager federationManager,
             IIntegrityValidator integrityValidator,
-            IWalletManager walletManager,
+            IMiningKeyProvider miningKeyProvider,
             INodeStats nodeStats,
             VotingManager votingManager,
             PoAMinerSettings poAMinerSettings,
@@ -108,7 +108,7 @@ namespace Stratis.Bitcoin.Features.PoA
             this.poaHeaderValidator = poaHeaderValidator;
             this.federationManager = federationManager;
             this.integrityValidator = integrityValidator;
-            this.walletManager = walletManager;
+            this.miningKeyProvider = miningKeyProvider;
             this.votingManager = votingManager;
             this.settings = poAMinerSettings;
             this.asyncProvider = asyncProvider;
@@ -302,21 +302,7 @@ namespace Stratis.Bitcoin.Features.PoA
         /// <summary>Gets scriptPubKey from the wallet.</summary>
         protected virtual Script GetScriptPubKeyFromWallet()
         {
-            string walletName = this.walletManager.GetWalletsNames().FirstOrDefault();
-
-            if (walletName == null)
-                return null;
-
-            HdAccount account = this.walletManager.GetAccounts(walletName).FirstOrDefault();
-
-            if (account == null)
-                return null;
-
-            var walletAccountReference = new WalletAccountReference(walletName, account.Name);
-
-            HdAddress address = this.walletManager.GetUnusedAddress(walletAccountReference);
-
-            return address.Pubkey;
+            return this.miningKeyProvider.GetScriptPubKeyFromWallet();
         }
 
         /// <summary>Adds OP_RETURN output to a coinbase transaction which contains encoded voting data.</summary>

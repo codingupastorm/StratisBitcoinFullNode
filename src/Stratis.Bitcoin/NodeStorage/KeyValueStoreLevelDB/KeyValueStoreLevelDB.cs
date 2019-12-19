@@ -136,7 +136,12 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             (byte[] k, int n)[] orderedKeys = keyBytes.Select((k, n) => (k, n)).OrderBy(t => t.k, new ByteArrayComparer()).ToArray();
             var res = new byte[keys.Length][];
             for (int i = 0; i < orderedKeys.Length; i++)
+            {
+                if (orderedKeys[i].k == null)
+                    continue;
+
                 res[orderedKeys[i].n] = this.Storage.Get(orderedKeys[i].k, ((KeyValueStoreLDBTransaction)tran).ReadOptions);
+            }
 
             return res;
         }
