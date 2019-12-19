@@ -1,7 +1,7 @@
 ﻿using NBitcoin;
 using NBitcoin.DataEncoders;
 
-namespace Stratis.Feature.PoA.Tokenless
+namespace Stratis.Feature.PoA.Tokenless.Consensus
 {
     /// <summary>
     /// Transaction type used on tokenless networks.

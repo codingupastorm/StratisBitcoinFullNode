@@ -6,7 +6,7 @@ using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Utilities.Extensions;
 using Stratis.SmartContracts.Core.Util;
 
-namespace Stratis.Feature.PoA.Tokenless
+namespace Stratis.Feature.PoA.Tokenless.Consensus
 {
     public class TokenlessSigner : ITokenlessSigner
     {
@@ -46,7 +46,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
             // A bit of Bitcoin Script magic. Use OP_CODESEPARATOR to ensure the signature is still valid, but allow us to append to the input.
             byte[] finalisedInputScript = transaction.Inputs[0].ScriptSig.ToBytes()
-                .Concat(new byte[]{(byte)OpcodeType.OP_CODESEPARATOR})
+                .Concat(new byte[] { (byte)OpcodeType.OP_CODESEPARATOR })
                 .Concat(senderScript.ToBytes()).ToArray();
 
             transaction.Inputs[0].ScriptSig = new Script(finalisedInputScript);

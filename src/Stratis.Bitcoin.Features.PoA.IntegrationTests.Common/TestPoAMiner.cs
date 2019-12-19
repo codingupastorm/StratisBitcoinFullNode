@@ -13,8 +13,8 @@ using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Core;
+using Stratis.Feature.PoA.Tokenless.Mining;
 
 namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
 {
@@ -39,12 +39,12 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
             PoABlockHeaderValidator poaHeaderValidator,
             IFederationManager federationManager,
             IIntegrityValidator integrityValidator,
-            IWalletManager walletManager,
+            IMiningKeyProvider miningKeyProvider,
             INodeStats nodeStats,
             VotingManager votingManager,
             PoAMinerSettings poAMinerSettings,
             IAsyncProvider asyncProvider) : base(consensusManager, dateTimeProvider, network, nodeLifetime, loggerFactory, ibdState, blockDefinition, slotsManager,
-                connectionManager, poaHeaderValidator, federationManager, integrityValidator, walletManager, nodeStats, votingManager, poAMinerSettings, asyncProvider)
+                connectionManager, poaHeaderValidator, federationManager, integrityValidator, miningKeyProvider, nodeStats, votingManager, poAMinerSettings, asyncProvider)
         {
             this.cancellation = new CancellationTokenSource();
             this.timeProvider = dateTimeProvider as EditableTimeProvider;
@@ -106,11 +106,11 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
             PoABlockHeaderValidator poaHeaderValidator,
             IFederationManager federationManager,
             IIntegrityValidator integrityValidator,
-            IWalletManager walletManager,
+            IMiningKeyProvider miningKeyProvider,
             INodeStats nodeStats,
             PoAMinerSettings poAMinerSettings,
             IAsyncProvider asyncProvider)
-            : base(coreComponent, blockDefinition, slotsManager, poaHeaderValidator, federationManager, integrityValidator, walletManager, nodeStats, poAMinerSettings, asyncProvider)
+            : base(coreComponent, blockDefinition, slotsManager, poaHeaderValidator, federationManager, integrityValidator, miningKeyProvider, nodeStats, poAMinerSettings, asyncProvider)
         {
             this.dateTimeProvider = coreComponent.DateTimeProvider as EditableTimeProvider;
             this.slotsManager = slotsManager;

@@ -1,7 +1,7 @@
 ﻿using NBitcoin;
 using Stratis.Bitcoin.Features.SmartContracts.PoA;
 
-namespace Stratis.Feature.PoA.Tokenless
+namespace Stratis.Feature.PoA.Tokenless.Consensus
 {
     public class TokenlessConsensusFactory : SmartContractPoAConsensusFactory
     {

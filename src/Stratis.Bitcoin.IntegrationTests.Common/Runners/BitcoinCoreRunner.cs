@@ -68,7 +68,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.Runners
                 try
                 {
                     this.process = Process.Start(new FileInfo(this.bitcoinDPath).FullName,
-                        $"-conf=bitcoin.conf -datadir={this.DataFolder} {logMode}");
+                        $"-conf=bitcoin.conf -datadir=\"{this.DataFolder}\" {logMode}");
                     return true;
                 }
                 catch
