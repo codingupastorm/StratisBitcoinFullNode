@@ -218,12 +218,12 @@ namespace CertificateAuthority.Code
                                                            KeyPurposeID[] usages,
                                                            byte[] oid141)
         {
-            X509V3CertificateGenerator certificateGenerator = new X509V3CertificateGenerator();
+            var certificateGenerator = new X509V3CertificateGenerator();
             certificateGenerator.SetSerialNumber(subjectSerialNumber);
 
             certificateGenerator.SetSignatureAlgorithm("SHA256WithECDSA");
 
-            X509Name issuerDN = new X509Name(issuerName);
+            var issuerDN = new X509Name(issuerName);
             certificateGenerator.SetIssuerDN(issuerDN);
 
             // Note: The subject can be omitted if you specify a subject alternative name (SAN).

@@ -3,6 +3,18 @@ using System.IO;
 
 namespace CertificateAuthority.Code
 {
+    internal static class NormalizeDirectorySeparatorExt
+    {
+        /// <summary>
+        /// Fixes incorrect directory separator characters in path (if any).
+        /// </summary>
+        public static string NormalizeDirectorySeparator(this string path)
+        {
+            // Replace incorrect with correct
+            return path.Replace((Path.DirectorySeparatorChar == '/') ? '\\' : '/', Path.DirectorySeparatorChar);
+        }
+    }
+
     public class Settings
     {
         public const string AdminName = "Admin";
@@ -11,7 +23,7 @@ namespace CertificateAuthority.Code
         {
             configReader = textFileConfiguration;
 
-            string defaultPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SQLiteDatabase.db");
+            string defaultPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SQLiteDatabase.db").NormalizeDirectorySeparator();
             DatabasePath = configReader.GetOrDefault<string>("dbpath", defaultPath);
 
             DefaultIssuanceCertificateDays = configReader.GetOrDefault<int>("defaultCertDays", 10 * 365);
