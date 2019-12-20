@@ -58,6 +58,8 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         /// <inheritdoc />
         public override Task InitializeAsync()
         {
+            this.walletManager.Initialize();
+
             return Task.CompletedTask;
         }
 

@@ -15,6 +15,12 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         public string EncryptedSeed { get; set; }
 
+        public string Password { get; set; }
+
+        public string Mnemonic { get; set; }
+
+        public string RootPath { get; set; }
+
         /// <summary>
         /// Initializes an instance of the object from the node configuration.
         /// </summary>
@@ -28,6 +34,9 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             TextFileConfiguration config = nodeSettings.ConfigReader;
 
             this.AddressIndex = config.GetOrDefault<int>("addressindex", 0, this.logger);
+            this.Password = config.GetOrDefault<string>("password", null, this.logger);
+            this.Mnemonic = config.GetOrDefault<string>("mnemonic", null, this.logger);
+            this.RootPath = nodeSettings.DataFolder.RootPath;
         }
 
         /// <summary>
@@ -39,6 +48,8 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             NodeSettings defaults = NodeSettings.Default(network);
             var builder = new StringBuilder();
 
+            builder.AppendLine("-password=<string>              Provides a password when creating or using the wallet.");
+            builder.AppendLine("-mnemonic=<string>              Provides a mnemonic when creating the wallet.");
             builder.AppendLine("-addressindex=<number>          The index (N) used for the transaction signing key at HD Path (m/44'/105'/0'/0/N) where N is a zero based key ID.");
             builder.AppendLine("                                The index (N) used for the block signing key at HD Path (m/44'/105'/1'/0/N) where N is a zero based key ID.");
             builder.AppendLine("                                The index (N) used for the P2P certificate key at HD Path (m/44'/105'/2'/0/N) where N is a zero based key ID.");
