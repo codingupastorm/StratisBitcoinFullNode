@@ -73,6 +73,21 @@ namespace CertificateAuthority.Code.Models
         }
     }
 
+    public class CredentialsModelWithAddressModel : CredentialsModel
+    {
+        /// <summary>Certificate's P2PKH address, stored in extension OID 1.4.1.</summary>
+        public string Address { get; set; }
+
+        public CredentialsModelWithAddressModel(string address, int accountId, string password) : base(accountId, password)
+        {
+            this.Address = address;
+        }
+
+        public CredentialsModelWithAddressModel()
+        {
+        }
+    }
+
     public class CredentialsModelWithMnemonicModel : CredentialsModel
     {
         /// <summary>Mnemonic words used to derive certificate authority's private key.</summary>

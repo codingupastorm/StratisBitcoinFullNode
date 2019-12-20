@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Pkcs;
@@ -122,12 +123,16 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             this.certificatesController.InitializeCertificateAuthority(new CredentialsModelWithMnemonicModel("young shoe immense usual faculty edge habit misery swarm tape viable toddler", "node", credentials1.AccountId, credentials1.Password));
 
-            byte[] clientOid141 = { 0x01, 0x02, 0x03, 0x04, 0x05 };
             string clientName = "O=Stratis, CN=DLT Node Run By Iain McCain, OU=Administration";
             int clientAddressIndex = 0;
+            string hdPath = $"m/44'/105'/0'/0/{clientAddressIndex}";
 
-            HDWalletAddressSpace clientAddressSpace = new HDWalletAddressSpace("habit misery swarm tape viable toddler young shoe immense usual faculty edge", "node");
-            AsymmetricCipherKeyPair clientKey = clientAddressSpace.GetCertificateKeyPair($"m/44'/105'/0'/0/{clientAddressIndex}");
+            HDWalletAddressSpace clientAddressSpace = new HDWalletAddressSpace("tape viable toddler young shoe immense usual faculty edge habit misery swarm", "node");
+            byte[] clientPublicKey = clientAddressSpace.GetKey(hdPath).PrivateKey.PubKey.ToBytes();
+            AsymmetricCipherKeyPair clientKey = clientAddressSpace.GetCertificateKeyPair(hdPath);
+
+            string clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
+            byte[] clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
 
             Pkcs10CertificationRequest certificateSigningRequest = CertificatesManager.CreateCertificateSigningRequest(clientName, clientKey, new string[0], clientOid141);
 
@@ -136,7 +141,11 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest.GetDerEncoded()), credentials1.AccountId, credentials1.Password))).Value;
             
             HDWalletAddressSpace clientAddressSpace2 = new HDWalletAddressSpace("habit misery swarm tape viable toddler young shoe immense usual faculty edge", "node");
-            AsymmetricCipherKeyPair clientKey2 = clientAddressSpace2.GetCertificateKeyPair($"m/44'/105'/0'/0/{clientAddressIndex}");
+            clientPublicKey = clientAddressSpace.GetKey(hdPath).PrivateKey.PubKey.ToBytes();
+            AsymmetricCipherKeyPair clientKey2 = clientAddressSpace2.GetCertificateKeyPair(hdPath);
+
+            clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
+            clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
 
             Pkcs10CertificationRequest certificateSigningRequest2 = CertificatesManager.CreateCertificateSigningRequest(clientName, clientKey2, new string[0], clientOid141);
 

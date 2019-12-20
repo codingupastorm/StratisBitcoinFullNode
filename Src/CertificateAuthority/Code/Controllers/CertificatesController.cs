@@ -83,6 +83,28 @@ namespace CertificateAuthority.Code.Controllers
             }
         }
 
+        /// <summary>Finds issued certificate by P2PKH address and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
+        [HttpPost("get_certificate_for_address")]
+        [ProducesResponseType(typeof(CertificateInfoModel), 200)]
+        public ActionResult<CertificateInfoModel> GetCertificateByAddress([FromBody]CredentialsModelWithAddressModel model)
+        {
+            var data = new CredentialsAccessWithModel<CredentialsModelWithAddressModel>(model, AccountAccessFlags.AccessAnyCertificate);
+
+            try
+            {
+                CertificateInfoModel certificate = this.certificateManager.GetCertificateByAddress(data);
+
+                if (certificate == null)
+                    return StatusCode(StatusCodes.Status404NotFound);
+
+                return certificate;
+            }
+            catch (InvalidCredentialsException)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden);
+            }
+        }
+
         /// <summary>Provides collection of all issued certificates. AccessAnyCertificate access level is required.</summary>
         /// <response code="201">Collection of <see cref="CertificateInfoModel"/> instances."/>.</response>
         [HttpPost("get_all_certificates")]
