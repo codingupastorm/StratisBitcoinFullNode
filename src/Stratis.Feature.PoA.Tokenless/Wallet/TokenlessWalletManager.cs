@@ -10,7 +10,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
     {
         PubKey GetPubKey(TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0);
 
-        BitcoinExtKey GetPrivateKey(string password, TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0);
+        ExtKey GetExtKey(string password, TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0);
     }
 
     /// <summary>
@@ -72,15 +72,15 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return extPubKey.PubKey;
         }
 
-        public BitcoinExtKey GetPrivateKey(string password, TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0)
+        public ExtKey GetExtKey(string password, TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0)
         {
             int addressIndex = this.walletSettings.AddressIndex;
-            string hdPath = $"m/44'/{this.network.Consensus.CoinType}'/{(int)tokenlessWalletAccount}/{addressType}/{addressIndex}'";
+            string hdPath = $"m/44'/{this.network.Consensus.CoinType}'/{(int)tokenlessWalletAccount}'/{addressType}/{addressIndex}";
 
-            var seedExtKey = this.GetExtKey(password);
+            ExtKey seedExtKey = this.GetExtKey(password);
+            ExtKey pathExtKey = seedExtKey.Derive(new KeyPath(hdPath));
 
-            ExtKey addressExtKey = seedExtKey.Derive(new KeyPath(hdPath));
-            return addressExtKey.GetWif(this.network);
+            return pathExtKey;
         }
 
         [NoTrace]

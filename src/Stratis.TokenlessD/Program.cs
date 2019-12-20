@@ -30,6 +30,8 @@ namespace Stratis.TokenlessD
                 var walletSettings = new TokenlessWalletSettings(nodeSettings);
                 var password = nodeSettings.ConfigReader.GetOrDefault<string>("password", null);
 
+                bool stopNode = false;
+
                 if (!File.Exists(Path.Combine(nodeSettings.DataFolder.RootPath, TokenlessWalletManager.WalletFileName)))
                 {
                     var walletManager = new TokenlessWalletManager(network, nodeSettings.DataFolder, walletSettings);
@@ -51,8 +53,8 @@ namespace Stratis.TokenlessD
                     Console.WriteLine($"The wallet file ({TokenlessWalletManager.WalletFileName}) has been created.");
                     Console.WriteLine($"Record the mnemonic ({mnemonic}) in a safe place.");
                     Console.WriteLine($"IMPORTANT: You will need the mnemonic to recover the wallet.");
-                    Console.WriteLine($"Restart the daemon after recording the mnemonic.");
-                    return;
+
+                    stopNode = true;
                 }
 
                 if (!File.Exists(Path.Combine(nodeSettings.DataFolder.RootPath, KeyTool.KeyFileDefaultName)))
@@ -64,9 +66,12 @@ namespace Stratis.TokenlessD
                     }
 
                     var walletManager = new TokenlessWalletManager(network, nodeSettings.DataFolder, walletSettings);
-                    Key key = walletManager.GetPrivateKey(password, TokenlessWalletAccount.BlockSigning).PrivateKey;
+                    Key key = walletManager.GetExtKey(password, TokenlessWalletAccount.BlockSigning).PrivateKey;
                     var keyTool = new KeyTool(nodeSettings.DataFolder);
                     keyTool.SavePrivateKey(key);
+
+                    Console.WriteLine($"The federation key ({KeyTool.KeyFileDefaultName}) has been created.");
+                    stopNode = true;
                 }
 
                 if (!File.Exists(Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.ClientCertificateName)))
@@ -79,6 +84,13 @@ namespace Stratis.TokenlessD
 
                     // TODO: 4693 - Generate certificate request.
                 }
+                else
+                {
+                    // TODO: 4693 - Generate certificate request.
+                }
+
+                if (stopNode)
+                    return;
 
                 IFullNodeBuilder nodeBuilder = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings)
