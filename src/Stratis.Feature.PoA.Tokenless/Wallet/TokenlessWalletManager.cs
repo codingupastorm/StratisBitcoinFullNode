@@ -50,79 +50,15 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         public bool Initialize()
         {
-            var password = this.walletSettings.Password;
+            bool walletOk = this.CheckWallet();
+            bool keyFileOk = this.CheckKeyFile();
+            bool certOk = this.CheckCertificate();
 
-            bool stopNode = false;
+            if (walletOk && keyFileOk && certOk)
+                return true;
 
-            if (!File.Exists(Path.Combine(this.walletSettings.RootPath, WalletFileName)))
-            {
-                var strMnemonic = this.walletSettings.Mnemonic;
-
-                if (password == null)
-                {
-                    Console.WriteLine($"Run this daemon with a -password=<password> argument so that the wallet file ({TokenlessWalletManager.WalletFileName}) can be created.");
-                    Console.WriteLine($"If you are re-creating a wallet then also pass a -mnemonic=\"<mnemonic words>\" argument.");
-                    return false;
-                }
-
-                TokenlessWallet wallet;
-                Mnemonic mnemonic = (strMnemonic == null) ? null : new Mnemonic(strMnemonic);
-
-                (wallet, mnemonic) = this.CreateWallet(password, password, mnemonic);
-
-                this.Wallet = wallet;
-
-                Console.WriteLine($"The wallet file ({TokenlessWalletManager.WalletFileName}) has been created.");
-                Console.WriteLine($"Record the mnemonic ({mnemonic}) in a safe place.");
-                Console.WriteLine($"IMPORTANT: You will need the mnemonic to recover the wallet.");
-
-                stopNode = true;
-            }
-            else
-            {
-                this.Wallet = this.LoadWallet();
-            }
-
-            this.extPubKeys = new ExtPubKey[] { ExtPubKey.Parse(this.Wallet.ExtPubKey0), ExtPubKey.Parse(this.Wallet.ExtPubKey1), ExtPubKey.Parse(this.Wallet.ExtPubKey2) };
-
-            if (!File.Exists(Path.Combine(this.walletSettings.RootPath, KeyTool.KeyFileDefaultName)))
-            {
-                if (password == null)
-                {
-                    Console.WriteLine($"Run this daemon with a -password=<password> argument so that the federation key ({KeyTool.KeyFileDefaultName}) can be created.");
-                    return false;
-                }
-
-                Key key = this.GetExtKey(password, TokenlessWalletAccount.BlockSigning).PrivateKey;
-                var keyTool = new KeyTool(this.walletSettings.RootPath);
-                keyTool.SavePrivateKey(key);
-
-                Console.WriteLine($"The federation key ({KeyTool.KeyFileDefaultName}) has been created.");
-                stopNode = true;
-            }
-
-            if (!File.Exists(Path.Combine(this.walletSettings.RootPath, CertificatesManager.ClientCertificateName)))
-            {
-                if (password == null)
-                {
-                    Console.WriteLine($"Run this daemon with a -password=<password> argument so that the client certificate ({CertificatesManager.ClientCertificateName}) can be requested.");
-                    return false;
-                }
-
-                // TODO: 4693 - Generate certificate request.
-            }
-            else
-            {
-                // TODO: 4693 - Generate certificate request.
-            }
-
-            if (stopNode)
-            {
-                Console.WriteLine($"Restart the daemon.");
-                return false;
-            }
-
-            return true;
+            Console.WriteLine($"Restart the daemon.");
+            return false;
         }
 
         public TokenlessWallet LoadWallet()
@@ -212,6 +148,96 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             this.fileStorage.SaveToFile(wallet, WalletFileName);
 
             return (wallet, mnemonic);
+        }
+
+        internal bool CheckWallet()
+        {
+            bool canStart = true;
+
+            if (!File.Exists(Path.Combine(this.walletSettings.RootPath, WalletFileName)))
+            {
+                var strMnemonic = this.walletSettings.Mnemonic;
+                var password = this.walletSettings.Password;
+
+                if (password == null)
+                {
+                    Console.WriteLine($"Run this daemon with a -password=<password> argument so that the wallet file ({TokenlessWalletManager.WalletFileName}) can be created.");
+                    Console.WriteLine($"If you are re-creating a wallet then also pass a -mnemonic=\"<mnemonic words>\" argument.");
+                    return false;
+                }
+
+                TokenlessWallet wallet;
+                Mnemonic mnemonic = (strMnemonic == null) ? null : new Mnemonic(strMnemonic);
+
+                (wallet, mnemonic) = this.CreateWallet(password, password, mnemonic);
+
+                this.Wallet = wallet;
+
+                Console.WriteLine($"The wallet file ({TokenlessWalletManager.WalletFileName}) has been created.");
+                Console.WriteLine($"Record the mnemonic ({mnemonic}) in a safe place.");
+                Console.WriteLine($"IMPORTANT: You will need the mnemonic to recover the wallet.");
+
+                // Stop the node so that the user can record the mnemonic.
+                canStart = false;
+            }
+            else
+            {
+                this.Wallet = this.LoadWallet();
+            }
+
+            this.extPubKeys = new ExtPubKey[] { ExtPubKey.Parse(this.Wallet.ExtPubKey0), ExtPubKey.Parse(this.Wallet.ExtPubKey1), ExtPubKey.Parse(this.Wallet.ExtPubKey2) };
+
+            return canStart;
+        }
+
+        internal bool CheckKeyFile()
+        {
+            var password = this.walletSettings.Password;
+
+            if (!File.Exists(Path.Combine(this.walletSettings.RootPath, KeyTool.KeyFileDefaultName)))
+            {
+                if (password == null)
+                {
+                    Console.WriteLine($"Run this daemon with a -password=<password> argument so that the federation key ({KeyTool.KeyFileDefaultName}) can be created.");
+                    return false;
+                }
+
+                Guard.Assert(this.Wallet != null);
+
+                Key key = this.GetExtKey(password, TokenlessWalletAccount.BlockSigning).PrivateKey;
+                var keyTool = new KeyTool(this.walletSettings.RootPath);
+                keyTool.SavePrivateKey(key);
+
+                Console.WriteLine($"The federation key ({KeyTool.KeyFileDefaultName}) has been created.");
+
+                return false;
+            }
+
+            return true;
+        }
+
+        internal bool CheckCertificate()
+        {
+            var password = this.walletSettings.Password;
+
+            if (!File.Exists(Path.Combine(this.walletSettings.RootPath, CertificatesManager.ClientCertificateName)))
+            {
+                if (password == null)
+                {
+                    Console.WriteLine($"Run this daemon with a -password=<password> argument so that the client certificate ({CertificatesManager.ClientCertificateName}) can be requested.");
+                    //return false;
+                }
+
+                Guard.Assert(this.Wallet != null);
+
+                // TODO: 4693 - Generate certificate request.
+            }
+            else
+            {
+                // TODO: 4693 - Generate certificate request.
+            }
+
+            return true;
         }
     }
 }
