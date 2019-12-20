@@ -73,6 +73,23 @@ namespace CertificateAuthority.Code.Models
         }
     }
 
+    public class CredentialsModelWithMnemonicModel : CredentialsModel
+    {
+        public string Mnemonic { get; set; }
+
+        public string MnemonicPassword { get; set; }
+
+        public CredentialsModelWithMnemonicModel(string mnemonic, string mnemonicPassword, int accountId, string password) : base(accountId, password)
+        {
+            this.Mnemonic = mnemonic;
+            this.MnemonicPassword = mnemonicPassword;
+        }
+
+        public CredentialsModelWithMnemonicModel()
+        {
+        }
+    }
+
     /// <summary>Model that combines credentials information and a file sent in request.</summary>
     public class IssueCertificateFromRequestModel : CredentialsModel
     {

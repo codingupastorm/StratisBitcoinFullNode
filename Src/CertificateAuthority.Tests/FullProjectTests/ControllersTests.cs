@@ -120,6 +120,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
             AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates | AccountAccessFlags.RevokeCertificates | AccountAccessFlags.AccessAnyCertificate;
             CredentialsModel credentials1 = this.CreateAccount(credentials1Access);
 
+            this.certificatesController.InitializeCertificateAuthority(new CredentialsModelWithMnemonicModel("young shoe immense usual faculty edge habit misery swarm tape viable toddler", "node", credentials1.AccountId, credentials1.Password));
+
             byte[] clientOid141 = { 0x01, 0x02, 0x03, 0x04, 0x05 };
             string clientName = "O=Stratis, CN=DLT Node Run By Iain McCain, OU=Administration";
             int clientAddressIndex = 0;

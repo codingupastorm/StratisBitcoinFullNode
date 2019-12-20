@@ -6,9 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.WebSockets;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading.Tasks;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Pkcs;
@@ -27,19 +25,7 @@ using X509Extension = Org.BouncyCastle.Asn1.X509.X509Extension;
 namespace CertificateAuthority.Code
 {
     public class CertificatesManager
-    {
-        private const string CertificateFileName = "RootCertificate.crt";
-
-        private const string CertificateKey = "RootCertificateKey.key";
-
-        private string tempDirectory;
-
-        private string certificatePath;
-
-        private string certificateKeyPath;
-
-        private string certificatesDirectory;
-        
+    {          
         private readonly DataCacheLayer repository;
 
         private readonly Settings settings;
@@ -50,6 +36,8 @@ namespace CertificateAuthority.Code
 
         private X509Certificate2 caCertificate;
 
+        const int CaAddressIndex = 0;
+
         public CertificatesManager(DataCacheLayer cache, Settings settings)
         {
             this.repository = cache;
@@ -57,25 +45,30 @@ namespace CertificateAuthority.Code
         }
 
         public void Initialize()
+        {                     
+        }
+
+        public bool InitializeCertificateAuthority(string mnemonic, string password)
         {
-            this.certificatesDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "IssuedCertificates");
-            Directory.CreateDirectory(this.certificatesDirectory);
+            try
+            {
+                byte[] caOid141 = { 0x05, 0x04, 0x03, 0x09, 0x0a }; // TODO: Move to config?
+                string caSubjectName = $"O={settings.CaSubjectNameOrganization}, CN={settings.CaSubjectNameCommonName}, OU={settings.CaSubjectNameOrganizationUnit}";
 
-            this.tempDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Temp");
-            Directory.CreateDirectory(this.tempDirectory);
+                HDWalletAddressSpace caAddressSpace = new HDWalletAddressSpace(mnemonic, password);
 
-            this.certificatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, CertificateFileName);
-            this.certificateKeyPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, CertificateKey);
-            
-            byte[] caOid141 = { 0x05, 0x04, 0x03, 0x09, 0x0a };
-            string caSubjectName = "O=Stratis, CN=DLT Root Certificate (ECDSA), OU=Administration";
-            int caAddressIndex = 0;
+                this.caKey = caAddressSpace.GetCertificateKeyPair($"m/44'/105'/0'/0/{CaAddressIndex}");
+                this.caCertificate = CreateCertificateAuthorityCertificate(this.caKey, caSubjectName, null, null, caOid141);
+            }
+            catch (Exception e)
+            {
+                this.caKey = null;
+                this.caCertificate = null;
 
-            // TODO: API function to initialise the CA certificate by providing mnemonic
-            HDWalletAddressSpace caAddressSpace = new HDWalletAddressSpace("edge habit misery swarm tape viable toddler young shoe immense usual faculty", "node");
+                return false;
+            }
 
-            this.caKey = caAddressSpace.GetCertificateKeyPair($"m/44'/105'/0'/0/{caAddressIndex}");
-            this.caCertificate = CreateCertificateAuthorityCertificate(this.caKey, caSubjectName, null, null, caOid141);
+            return true;
         }
 
         private static X509Certificate2 CreateCertificateAuthorityCertificate(AsymmetricCipherKeyPair subjectKeyPair, string subjectName, string[] subjectAlternativeNames, KeyPurposeID[] usages, byte[] oid141)

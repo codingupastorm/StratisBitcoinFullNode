@@ -3,10 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using NLog;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using Org.BouncyCastle.Pkcs;
 
 namespace CertificateAuthority.Code.Controllers
 {
@@ -20,6 +18,26 @@ namespace CertificateAuthority.Code.Controllers
         public CertificatesController(CertificatesManager certificateManager)
         {
             this.certificateManager = certificateManager;
+        }
+
+        [HttpPost("initialize_ca")]
+        [ProducesResponseType(typeof(bool), 200)]
+        public ActionResult<bool> InitializeCertificateAuthority([FromBody]CredentialsModelWithMnemonicModel model)
+        {
+            var data = new CredentialsAccessWithModel<CredentialsModelWithMnemonicModel>(model, AccountAccessFlags.InitializeCertificateAuthority);
+
+            try
+            {
+                return this.certificateManager.InitializeCertificateAuthority(data.Model.Mnemonic, data.Model.MnemonicPassword);
+            }
+            catch (InvalidCredentialsException)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal server error");
+            }
         }
 
         /// <summary>
