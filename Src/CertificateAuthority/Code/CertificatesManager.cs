@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -158,34 +159,46 @@ namespace CertificateAuthority.Code
             AsymmetricKeyParameter publicKey = certificateSigningRequest.GetPublicKey();
 
             byte[] oid141 = new byte[0];
-            DerSet set = (DerSet)certificationRequestInfo.Attributes;
 
-            /*
-            foreach (AttributePkcs att in set)
+            // TODO: Surely BouncyCastle has a more direct way of extracting an extension by OID?
+            // http://unitstep.net/blog/2008/10/27/extracting-x509-extensions-from-a-csr-using-the-bouncy-castle-apis/
+            // http://bouncy-castle.1462172.n4.nabble.com/Parsing-Certificate-and-CSR-Extension-Data-td3859749.html
+            foreach (Asn1Encodable encodable in certificationRequestInfo.Attributes)
             {
-                foreach (X509Extensions extensions in att.AttrValues)
+                if (!(encodable is DerSequence sequence))
+                    continue;
+
+                if (!(sequence[0] is DerObjectIdentifier oid) || !(sequence[1] is DerSet set))
+                    continue;
+
+                if (oid.Id != PkcsObjectIdentifiers.Pkcs9AtExtensionRequest.Id)
+                    continue;
+
+                foreach (DerSequence seq1 in set)
                 {
-                    X509Extension extension = extensions.GetExtension(new DerObjectIdentifier("1.4.1"));
-                    oid141 = (extension).Value.GetOctets();
+                    // TODO: Is the hierarchy for extensions always this depth or is it possible to 'flatten' it first to simplify lookup?
+                    foreach (var item in seq1)
+                    {
+                        if (!(item is DerSequence itemSeq))
+                            continue;
+
+                        if (!(itemSeq[0] is DerObjectIdentifier oid1) || oid1.Id != "1.4.1")
+                            continue;
+
+                        // [0] = oid
+                        // [1] = critical flag
+                        // [2] = value
+                        if (itemSeq[2] is DerOctetString octets)
+                            oid141 = octets.GetOctets();
+                    }
                 }
             }
-            */
+
             X509Certificate certificate = GenerateCertificate(random,
                 subjectName, publicKey, subjectSerialNumber, subjectAlternativeNames,
                 issuerCertificate.Subject, issuerKeyPair, issuerSerialNumber,
                 false, usages, oid141);
-
-            //ECPublicKeyParameters p = new ECPublicKeyParameters()
-            //var subjectKeyPair = certificationRequestInfo.SubjectPublicKeyInfo.PublicKeyData.GetBytes();
-            //var subjectAlternativeNames;
-
-            /*
-            X509Certificate certificate = GenerateCertificate(random,
-                subjectName, subjectKeyPair, subjectSerialNumber, subjectAlternativeNames,
-                issuerCertificate.Subject, issuerKeyPair, issuerSerialNumber,
-                false, usages);
-                */
-
+            
             return ConvertCertificate(certificate, random);
         }
 

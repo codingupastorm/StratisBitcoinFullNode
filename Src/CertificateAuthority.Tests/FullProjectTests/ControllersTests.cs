@@ -224,7 +224,6 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
         private void Returns403IfNoAccess(Func<int, string, object> action, AccountAccessFlags requiredAccess)
         {
-            // TODO: WIP
             CredentialsModel noAccessCredentials = this.CreateAccount();
 
             var response = action.Invoke(noAccessCredentials.AccountId, noAccessCredentials.Password);
@@ -286,10 +285,6 @@ namespace CertificateAuthority.Tests.FullProjectTests
                         Assert.True((result6b.Result as StatusCodeResult).StatusCode == 404);
                     if (result6b.Result is ObjectResult)
                         Assert.True((result6b.Result as ObjectResult).StatusCode == 500);
-                    break;
-                default:
-                    //Assert.Null(response.Result);
-                    //Assert.NotNull(result4b.Value);
                     break;
             }
         }
