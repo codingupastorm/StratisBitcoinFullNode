@@ -90,7 +90,10 @@ namespace Stratis.TokenlessD
                 }
 
                 if (stopNode)
+                {
+                    Console.WriteLine($"Restart the daemon.");
                     return;
+                }
 
                 IFullNodeBuilder nodeBuilder = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings)
