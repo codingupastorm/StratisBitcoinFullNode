@@ -220,9 +220,7 @@ namespace CertificateAuthority.Code
         {
             var certificateGenerator = new X509V3CertificateGenerator();
             certificateGenerator.SetSerialNumber(subjectSerialNumber);
-
-            certificateGenerator.SetSignatureAlgorithm("SHA256WithECDSA");
-
+            
             var issuerDN = new X509Name(issuerName);
             certificateGenerator.SetIssuerDN(issuerDN);
 
@@ -453,7 +451,7 @@ namespace CertificateAuthority.Code
 
             // Generate a certificate signing request
             Pkcs10CertificationRequest certificateRequest = new Pkcs10CertificationRequest(
-                "SHA1withECDSA",
+                "SHA256withECDSA",
                 new X509Name(subjectName),
                 subjectKeyPair.Public,
                 new DerSet(attribute),
