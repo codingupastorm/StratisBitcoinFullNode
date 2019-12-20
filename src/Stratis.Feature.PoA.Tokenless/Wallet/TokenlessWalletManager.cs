@@ -8,18 +8,31 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 {
     public interface ITokenlessWalletManager
     {
-        PubKey GetPubKey(int accountIndex, int addressType = 0);
+        PubKey GetPubKey(TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0);
 
-        BitcoinExtKey GetPrivateKey(string password, int accountIndex, int addressType = 0);
+        BitcoinExtKey GetPrivateKey(string password, TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0);
+    }
+
+    /// <summary>
+    /// - transaction signing (m/44'/105'/0'/0/N) where N is a zero based key ID
+    /// - block signing(m/44'/105'/1'/0/N) where N is a zero based key ID
+    /// - P2P certificates (m/44'/105'/2'/K/N) where N is a zero based key ID
+    /// </summary>
+    public enum TokenlessWalletAccount
+    {
+        TransactionSigning = 0,
+        BlockSigning = 1,
+        P2PCertificates = 2
     }
 
     public class TokenlessWalletManager : ITokenlessWalletManager
     {
         public const string WalletFileName = "nodeid.json";
 
+        public TokenlessWallet Wallet { get; private set; }
+
         private readonly Network network;
         private readonly FileStorage<TokenlessWallet> fileStorage;
-        private readonly TokenlessWallet wallet;
         private readonly ExtPubKey[] extPubKeys;
         private readonly TokenlessWalletSettings walletSettings;
 
@@ -27,10 +40,10 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         {
             this.network = network;
             this.fileStorage = new FileStorage<TokenlessWallet>(dataFolder.RootPath);
-            this.wallet = this.LoadWallet();
+            this.Wallet = this.LoadWallet();
             this.walletSettings = walletSettings;
-            if (this.wallet != null)
-                this.extPubKeys = new ExtPubKey[] { ExtPubKey.Parse(this.wallet.ExtPubKey0), ExtPubKey.Parse(this.wallet.ExtPubKey1), ExtPubKey.Parse(this.wallet.ExtPubKey2) };
+            if (this.Wallet != null)
+                this.extPubKeys = new ExtPubKey[] { ExtPubKey.Parse(this.Wallet.ExtPubKey0), ExtPubKey.Parse(this.Wallet.ExtPubKey1), ExtPubKey.Parse(this.Wallet.ExtPubKey2) };
         }
 
         public TokenlessWallet LoadWallet()
@@ -50,19 +63,19 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return mnemonic.DeriveExtKey(passphrase);
         }
 
-        public PubKey GetPubKey(int accountIndex, int addressType = 0)
+        public PubKey GetPubKey(TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0)
         {
             int addressIndex = this.walletSettings.AddressIndex;
             var keyPath = new KeyPath($"{addressType}/{addressIndex}");
 
-            ExtPubKey extPubKey = this.extPubKeys[accountIndex].Derive(keyPath);
+            ExtPubKey extPubKey = this.extPubKeys[(int)tokenlessWalletAccount].Derive(keyPath);
             return extPubKey.PubKey;
         }
 
-        public BitcoinExtKey GetPrivateKey(string password, int accountIndex, int addressType = 0)
+        public BitcoinExtKey GetPrivateKey(string password, TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0)
         {
             int addressIndex = this.walletSettings.AddressIndex;
-            string hdPath = $"m/44'/{this.network.Consensus.CoinType}'/{accountIndex}/{addressType}/{addressIndex}'";
+            string hdPath = $"m/44'/{this.network.Consensus.CoinType}'/{(int)tokenlessWalletAccount}/{addressType}/{addressIndex}'";
 
             var seedExtKey = this.GetExtKey(password);
 
@@ -73,7 +86,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         [NoTrace]
         public ExtKey GetExtKey(string password)
         {
-            return new ExtKey(Key.Parse(this.wallet.EncryptedSeed, password, this.network), Convert.FromBase64String(this.wallet.ChainCode));
+            return new ExtKey(Key.Parse(this.Wallet.EncryptedSeed, password, this.network), Convert.FromBase64String(this.Wallet.ChainCode));
         }
 
         public (TokenlessWallet, Mnemonic) CreateWallet(string password, string passphrase, Mnemonic mnemonic = null)

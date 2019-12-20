@@ -8,6 +8,8 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.Api;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.MemoryPool;
+using Stratis.Bitcoin.Features.PoA;
+using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Utilities;
@@ -26,12 +28,12 @@ namespace Stratis.TokenlessD
                 var network = new TokenlessNetwork();
                 var nodeSettings = new NodeSettings(network, args: args);
                 var walletSettings = new TokenlessWalletSettings(nodeSettings);
+                var password = nodeSettings.ConfigReader.GetOrDefault<string>("password", null);
 
                 if (!File.Exists(Path.Combine(nodeSettings.DataFolder.RootPath, TokenlessWalletManager.WalletFileName)))
                 {
                     var walletManager = new TokenlessWalletManager(network, nodeSettings.DataFolder, walletSettings);
 
-                    var password = nodeSettings.ConfigReader.GetOrDefault<string>("password", null);
                     var strMnemonic = nodeSettings.ConfigReader.GetOrDefault<string>("mnemonic", null);
 
                     if (password == null)
@@ -51,6 +53,31 @@ namespace Stratis.TokenlessD
                     Console.WriteLine($"IMPORTANT: You will need the mnemonic to recover the wallet.");
                     Console.WriteLine($"Restart the daemon after recording the mnemonic.");
                     return;
+                }
+
+                if (!File.Exists(Path.Combine(nodeSettings.DataFolder.RootPath, KeyTool.KeyFileDefaultName)))
+                {
+                    if (password == null)
+                    {
+                        Console.WriteLine($"Run this daemon with a -password=<password> argument so that the federation key ({KeyTool.KeyFileDefaultName}) can be created.");
+                        return;
+                    }
+
+                    var walletManager = new TokenlessWalletManager(network, nodeSettings.DataFolder, walletSettings);
+                    Key key = walletManager.GetPrivateKey(password, TokenlessWalletAccount.BlockSigning).PrivateKey;
+                    var keyTool = new KeyTool(nodeSettings.DataFolder);
+                    keyTool.SavePrivateKey(key);
+                }
+
+                if (!File.Exists(Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.ClientCertificateName)))
+                {
+                    if (password == null)
+                    {
+                        Console.WriteLine($"Run this daemon with a -password=<password> argument so that the client certificate ({CertificatesManager.ClientCertificateName}) can be requested.");
+                        return;
+                    }
+
+                    // TODO: 4693 - Generate certificate request.
                 }
 
                 IFullNodeBuilder nodeBuilder = new FullNodeBuilder()
