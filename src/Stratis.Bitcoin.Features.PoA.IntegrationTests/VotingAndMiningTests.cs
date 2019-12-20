@@ -13,7 +13,6 @@ using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
@@ -309,7 +308,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
                 {
                     long balanceAfterPremine = walletManager.GetBalances(walletName, "account 0").Sum(x => x.AmountConfirmed);
 
-                    return network.Consensus.PremineReward.Satoshi ==  balanceAfterPremine;
+                    return network.Consensus.PremineReward.Satoshi == balanceAfterPremine;
                 });
             }
         }
