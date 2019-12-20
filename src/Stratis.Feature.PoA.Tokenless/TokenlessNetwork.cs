@@ -205,7 +205,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 typeof(NoDuplicateTransactionExistOnChainMempoolRule),
                 typeof(CreateTokenlessMempoolEntryRule),
                 typeof(IsSmartContractWellFormedMempoolRule),
-                typeof(CanSenderBeRetrievedMempoolRule)
+                typeof(SenderInputMempoolRule)
             };
         }
 

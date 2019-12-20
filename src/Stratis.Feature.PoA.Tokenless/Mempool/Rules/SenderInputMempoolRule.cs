@@ -10,11 +10,11 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
     /// <summary>
     /// Checks that the sender can be retrieved from the signature in the <see cref="TxIn"></see> as well as checking that they have the required CA role for CREATE or CALL.
     /// </summary>
-    public sealed class CanSenderBeRetrievedMempoolRule : MempoolRule
+    public sealed class SenderInputMempoolRule : MempoolRule
     {
         private readonly ITokenlessSigner tokenlessSigner;
 
-        public CanSenderBeRetrievedMempoolRule(
+        public SenderInputMempoolRule(
             Network network,
             ITxMempool mempool,
             MempoolSettings settings,
@@ -31,6 +31,10 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
             GetSenderResult getSenderResult = this.tokenlessSigner.GetSender(context.Transaction);
             if (!getSenderResult.Success)
                 context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "cannot-derive-sender-for-transaction"), $"Cannot derive the sender from transaction '{context.Transaction.GetHash()}': {getSenderResult.Error}").Throw();
+
+            // We also need to check that the sender given is indeed the one who signed the transaction.
+            if (!this.tokenlessSigner.Verify(context.Transaction))
+                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, $"The signature for transaction {context.Transaction.GetHash()} is invalid."));
         }
     }
 }
