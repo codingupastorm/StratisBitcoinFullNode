@@ -49,7 +49,7 @@ namespace Stratis.Features.FederatedPeg.IntegrationTests.Utils
                 .UseNodeSettings(settings)
                 .UseBlockStore()
                 .SetCounterChainNetwork(this.counterChainNetwork)
-                .UseFederatedPegPoAMining()
+                .UseFederatedPegPoAMining(settings.Network)
                 .AddFederatedPeg()
                 .CheckForPoAMembersCollateral()
                 .UseTransactionNotification()
