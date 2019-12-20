@@ -1,7 +1,5 @@
 using System;
-using System.IO;
 using System.Threading.Tasks;
-using NBitcoin;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
@@ -25,33 +23,9 @@ namespace Stratis.TokenlessD
             {
                 var network = new TokenlessNetwork();
                 var nodeSettings = new NodeSettings(network, args: args);
-                var walletSettings = new TokenlessWalletSettings(nodeSettings);
-
-                if (!File.Exists(Path.Combine(nodeSettings.DataFolder.RootPath, TokenlessWalletManager.WalletFileName)))
-                {
-                    var walletManager = new TokenlessWalletManager(network, nodeSettings.DataFolder, walletSettings);
-
-                    var password = nodeSettings.ConfigReader.GetOrDefault<string>("password", null);
-                    var strMnemonic = nodeSettings.ConfigReader.GetOrDefault<string>("mnemonic", null);
-
-                    if (password == null)
-                    {
-                        Console.WriteLine($"Run this daemon with a -password=<password> argument so that the wallet file ({TokenlessWalletManager.WalletFileName}) can be created.");
-                        Console.WriteLine($"If you are re-creating a wallet then also pass a -mnemonic=\"<mnemonic words>\" argument.");
-                        return;
-                    }
-
-                    TokenlessWallet wallet;
-                    Mnemonic mnemonic = (strMnemonic == null) ? null : new Mnemonic(strMnemonic);
-
-                    (wallet, mnemonic) = walletManager.CreateWallet(password, password, mnemonic);
-
-                    Console.WriteLine($"The wallet file ({TokenlessWalletManager.WalletFileName}) has been created.");
-                    Console.WriteLine($"Record the mnemonic ({mnemonic}) in a safe place.");
-                    Console.WriteLine($"IMPORTANT: You will need the mnemonic to recover the wallet.");
-                    Console.WriteLine($"Restart the daemon after recording the mnemonic.");
+                var walletManager = new TokenlessWalletManager(network, nodeSettings.DataFolder, new TokenlessWalletSettings(nodeSettings));
+                if (!walletManager.Initialize())
                     return;
-                }
 
                 IFullNodeBuilder nodeBuilder = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings)
