@@ -52,14 +52,14 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             if (!File.Exists(acPath))
             {
-                this.logger.LogTrace("(-)[AC_NOT_FOUND]");
-                throw new CertificateConfigurationException($"Authority certificate wasn't found! Make sure you place '{AuthorityCertificateName}' in node's root directory.");
+                this.logger.LogTrace("(-)[AC_NOT_FOUND]:{0}='{1}'", nameof(acPath), acPath);
+                throw new CertificateConfigurationException($"Authority certificate not located at '{acPath}'. Make sure you place '{AuthorityCertificateName}' in the node's root directory.");
             }
 
             if (!File.Exists(clientCertPath))
             {
-                this.logger.LogTrace("(-)[CC_NOT_FOUND]");
-                throw new CertificateConfigurationException($"Client certificate wasn't found! Make sure you place '{ClientCertificateName}' in node's root directory.");
+                this.logger.LogTrace("(-)[CC_NOT_FOUND]:{0}='{1}'", nameof(clientCertPath), clientCertPath);
+                throw new CertificateConfigurationException($"Client certificate not located at '{clientCertPath}'. Make sure you place '{ClientCertificateName}' in the node's root directory.");
             }
 
             string clientCertificatePassword = this.configuration.GetOrDefault<string>(ClientCertificateConfigurationKey, null);
