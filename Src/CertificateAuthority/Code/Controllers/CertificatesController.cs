@@ -20,6 +20,26 @@ namespace CertificateAuthority.Code.Controllers
             this.certificateManager = certificateManager;
         }
 
+        [HttpPost("initialize_ca")]
+        [ProducesResponseType(typeof(bool), 200)]
+        public ActionResult<bool> InitializeCertificateAuthority([FromBody]CredentialsModelWithMnemonicModel model)
+        {
+            var data = new CredentialsAccessWithModel<CredentialsModelWithMnemonicModel>(model, AccountAccessFlags.InitializeCertificateAuthority);
+
+            try
+            {
+                return this.certificateManager.InitializeCertificateAuthority(data.Model.Mnemonic, data.Model.MnemonicPassword);
+            }
+            catch (InvalidCredentialsException)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
         /// <summary>
         /// Sets certificate status with the provided thumbprint to <see cref="CertificateStatus.Revoked"/>
         /// if certificate was found and it's status is <see cref="CertificateStatus.Good"/>.
@@ -50,7 +70,12 @@ namespace CertificateAuthority.Code.Controllers
 
             try
             {
-                return this.certificateManager.GetCertificateByThumbprint(data);
+                CertificateInfoModel certificate = this.certificateManager.GetCertificateByThumbprint(data);
+
+                if (certificate == null)
+                    return StatusCode(StatusCodes.Status404NotFound);
+
+                return certificate;
             }
             catch (InvalidCredentialsException)
             {

@@ -73,6 +73,26 @@ namespace CertificateAuthority.Code.Models
         }
     }
 
+    public class CredentialsModelWithMnemonicModel : CredentialsModel
+    {
+        /// <summary>Mnemonic words used to derive certificate authority's private key.</summary>
+        public string Mnemonic { get; set; }
+
+        /// <summary>Password to be used with the mnemonic words, used to derive certificate authority's private key.
+        /// This is a separate password to the actual user account to allow the user account password to be changed without affecting the CA.</summary>
+        public string MnemonicPassword { get; set; }
+
+        public CredentialsModelWithMnemonicModel(string mnemonic, string mnemonicPassword, int accountId, string password) : base(accountId, password)
+        {
+            this.Mnemonic = mnemonic;
+            this.MnemonicPassword = mnemonicPassword;
+        }
+
+        public CredentialsModelWithMnemonicModel()
+        {
+        }
+    }
+
     /// <summary>Model that combines credentials information and a file sent in request.</summary>
     public class IssueCertificateFromRequestModel : CredentialsModel
     {

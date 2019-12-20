@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Pkcs;
 using Xunit;
 using AccountAccessFlags = CertificateAuthority.Code.Models.AccountAccessFlags;
 using AccountInfo = CertificateAuthority.Code.Models.AccountInfo;
@@ -63,7 +65,9 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 Assert.Equal(Settings.AdminName, info2.Name);
 
                 // Guy without rights fails.
-                Assert.ThrowsAny<Exception>(() => this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(credentials1.AccountId, credentials2.AccountId, credentials2.Password)));
+                var result = this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(credentials1.AccountId, credentials2.AccountId, credentials2.Password));
+
+                Assert.True((((StatusCodeResult)result.Result).StatusCode == 403));
             }
 
             // GetAllAccounts
@@ -75,7 +79,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 this.accountsController.DeleteAccountByAccountId(new CredentialsModelWithTargetId(accToDelete.AccountId, credentials2.AccountId, credentials2.Password));
                 Assert.Equal(3, this.accountsController.GetAllAccounts(this.adminCredentials).Value.Count);
 
-                Assert.ThrowsAny<Exception>(() => this.accountsController.DeleteAccountByAccountId(new CredentialsModelWithTargetId(credentials2.AccountId, credentials1.AccountId, credentials1.Password)));
+                var result = this.accountsController.DeleteAccountByAccountId(new CredentialsModelWithTargetId(credentials2.AccountId, credentials1.AccountId, credentials1.Password));
+                Assert.True(((StatusCodeResult)result).StatusCode == 403);
             }
 
             // ChangeAccountAccessLevel
@@ -115,12 +120,28 @@ namespace CertificateAuthority.Tests.FullProjectTests
             AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates | AccountAccessFlags.RevokeCertificates | AccountAccessFlags.AccessAnyCertificate;
             CredentialsModel credentials1 = this.CreateAccount(credentials1Access);
 
+            this.certificatesController.InitializeCertificateAuthority(new CredentialsModelWithMnemonicModel("young shoe immense usual faculty edge habit misery swarm tape viable toddler", "node", credentials1.AccountId, credentials1.Password));
+
+            byte[] clientOid141 = { 0x01, 0x02, 0x03, 0x04, 0x05 };
+            string clientName = "O=Stratis, CN=DLT Node Run By Iain McCain, OU=Administration";
+            int clientAddressIndex = 0;
+
+            HDWalletAddressSpace clientAddressSpace = new HDWalletAddressSpace("habit misery swarm tape viable toddler young shoe immense usual faculty edge", "node");
+            AsymmetricCipherKeyPair clientKey = clientAddressSpace.GetCertificateKeyPair($"m/44'/105'/0'/0/{clientAddressIndex}");
+
+            Pkcs10CertificationRequest certificateSigningRequest = CertificatesManager.CreateCertificateSigningRequest(clientName, clientKey, new string[0], clientOid141);
+
             // IssueCertificate_UsingRequestString
             CertificateInfoModel certificate1 = (await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
-                new IssueCertificateFromFileContentsModel(TestDataResource.CertificateRequest1, credentials1.AccountId, credentials1.Password))).Value;
+                new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest.GetDerEncoded()), credentials1.AccountId, credentials1.Password))).Value;
+            
+            HDWalletAddressSpace clientAddressSpace2 = new HDWalletAddressSpace("habit misery swarm tape viable toddler young shoe immense usual faculty edge", "node");
+            AsymmetricCipherKeyPair clientKey2 = clientAddressSpace2.GetCertificateKeyPair($"m/44'/105'/0'/0/{clientAddressIndex}");
+
+            Pkcs10CertificationRequest certificateSigningRequest2 = CertificatesManager.CreateCertificateSigningRequest(clientName, clientKey2, new string[0], clientOid141);
 
             CertificateInfoModel certificate2 = (await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
-                new IssueCertificateFromFileContentsModel(TestDataResource.CertificateRequest2, this.adminCredentials.AccountId, this.adminCredentials.Password))).Value;
+                new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest.GetDerEncoded()), this.adminCredentials.AccountId, this.adminCredentials.Password))).Value;
 
             Assert.Empty(this.certificatesController.GetRevokedCertificates().Value);
 
@@ -157,38 +178,38 @@ namespace CertificateAuthority.Tests.FullProjectTests
         private void TestAccessLevels()
         {
             // Accounts.
-            this.CheckThrowsIfNoAccess((int accountId, string password) => this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(1, accountId, password)),
+            this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(1, accountId, password)),
                 AccountAccessFlags.AccessAccountInfo);
 
-            this.CheckThrowsIfNoAccess((int accountId, string password) => this.accountsController.GetAllAccounts(new CredentialsModel(accountId, password)),
+            this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.GetAllAccounts(new CredentialsModel(accountId, password)),
                 AccountAccessFlags.AccessAccountInfo);
 
-            this.CheckThrowsIfNoAccess((int accountId, string password) => this.accountsController.CreateAccount(new CreateAccount("", "", 1, accountId, password)),
-                AccountAccessFlags.CreateAccounts);
+            this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.CreateAccount(new CreateAccount("", "", (int)AccountAccessFlags.DeleteAccounts, accountId, password)),
+                AccountAccessFlags.CreateAccounts | AccountAccessFlags.DeleteAccounts);
 
-            this.CheckThrowsIfNoAccess((int accountId, string password) => this.accountsController.GetCertificatesIssuedByAccountId(new CredentialsModelWithTargetId(1, accountId, password)),
+            this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.GetCertificatesIssuedByAccountId(new CredentialsModelWithTargetId(1, accountId, password)),
                 AccountAccessFlags.AccessAnyCertificate);
 
-            this.CheckThrowsIfNoAccess((int accountId, string password) => this.accountsController.DeleteAccountByAccountId(new CredentialsModelWithTargetId(1, accountId, password)),
+            this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.DeleteAccountByAccountId(new CredentialsModelWithTargetId(1, accountId, password)),
                 AccountAccessFlags.DeleteAccounts);
 
-            this.CheckThrowsIfNoAccess((int accountId, string password) => this.accountsController.ChangeAccountAccessLevel(new ChangeAccountAccessLevel(1, 1, accountId, password)),
+            this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.ChangeAccountAccessLevel(new ChangeAccountAccessLevel(1, 1, accountId, password)),
                 AccountAccessFlags.ChangeAccountAccessLevel);
 
             // Certificates.
-            this.CheckThrowsIfNoAccess((int accountId, string password) => this.certificatesController.RevokeCertificate(new CredentialsModelWithThumbprintModel("123", accountId, password)),
+            this.Returns403IfNoAccess((int accountId, string password) => this.certificatesController.RevokeCertificate(new CredentialsModelWithThumbprintModel("123", accountId, password)),
                 AccountAccessFlags.RevokeCertificates);
 
-            this.CheckThrowsIfNoAccess((int accountId, string password) => this.certificatesController.GetCertificateByThumbprint(new CredentialsModelWithThumbprintModel("123", accountId, password)),
+            this.Returns403IfNoAccess((int accountId, string password) => this.certificatesController.GetCertificateByThumbprint(new CredentialsModelWithThumbprintModel("123", accountId, password)),
                 AccountAccessFlags.AccessAnyCertificate);
 
-            this.CheckThrowsIfNoAccess((int accountId, string password) => this.certificatesController.GetAllCertificates(new CredentialsModelWithThumbprintModel("123", accountId, password)),
+            this.Returns403IfNoAccess((int accountId, string password) => this.certificatesController.GetAllCertificates(new CredentialsModelWithThumbprintModel("123", accountId, password)),
                 AccountAccessFlags.AccessAnyCertificate);
 
-            this.CheckThrowsIfNoAccess((int accountId, string password) => this.certificatesController.IssueCertificate_UsingRequestFileAsync(new IssueCertificateFromRequestModel(null, accountId, password)).GetAwaiter().GetResult(),
+            this.Returns403IfNoAccess((int accountId, string password) => this.certificatesController.IssueCertificate_UsingRequestFileAsync(new IssueCertificateFromRequestModel(null, accountId, password)).GetAwaiter().GetResult(),
                 AccountAccessFlags.IssueCertificates);
 
-            this.CheckThrowsIfNoAccess((int accountId, string password) => this.certificatesController.IssueCertificate_UsingRequestStringAsync(new IssueCertificateFromFileContentsModel("123", accountId, password)).GetAwaiter().GetResult(),
+            this.Returns403IfNoAccess((int accountId, string password) => this.certificatesController.IssueCertificate_UsingRequestStringAsync(new IssueCertificateFromFileContentsModel("123", accountId, password)).GetAwaiter().GetResult(),
                 AccountAccessFlags.IssueCertificates);
         }
 
@@ -201,6 +222,73 @@ namespace CertificateAuthority.Tests.FullProjectTests
             int id = this.accountsController.CreateAccount(new CreateAccount(TestsHelper.GenerateRandomString(), passHash, (int)access, credentialsModel.AccountId, credentialsModel.Password)).Value;
 
             return new CredentialsModel(id, password);
+        }
+
+        private void Returns403IfNoAccess(Func<int, string, object> action, AccountAccessFlags requiredAccess)
+        {
+            CredentialsModel noAccessCredentials = this.CreateAccount();
+
+            var response = action.Invoke(noAccessCredentials.AccountId, noAccessCredentials.Password);
+
+            switch (response)
+            {
+                case ActionResult<AccountInfo> result1:
+                    Assert.True(((result1.Result as StatusCodeResult).StatusCode == 403));
+                    break;
+                case ActionResult<List<AccountModel>> result2:
+                    Assert.True(((result2.Result as StatusCodeResult).StatusCode == 403));
+                    break;
+                case ActionResult<int> result3:
+                    Assert.True(((result3.Result as StatusCodeResult).StatusCode == 403));
+                    break;
+                case ActionResult<List<CertificateInfoModel>> result4:
+                    Assert.True(((result4.Result as StatusCodeResult).StatusCode == 403));
+                    break;
+                case ActionResult<bool> result5:
+                    Assert.True(((result5.Result as StatusCodeResult).StatusCode == 403));
+                    break;
+                case ActionResult<CertificateInfoModel> result6:
+                    Assert.True(((result6.Result as StatusCodeResult).StatusCode == 403));
+                    break;
+                default:
+                    Assert.True(((response as StatusCodeResult).StatusCode == 403));
+                    break;
+            }
+
+            CredentialsModel accessCredentials = this.CreateAccount(requiredAccess);
+
+            response = action.Invoke(accessCredentials.AccountId, accessCredentials.Password);
+
+            switch (response)
+            {
+                case ActionResult<AccountInfo> result1b:
+                    Assert.Null(result1b.Result);
+                    Assert.NotNull(result1b.Value);
+                    break;
+                case ActionResult<List<AccountModel>> result2b:
+                    Assert.Null(result2b.Result);
+                    Assert.NotNull(result2b.Value);
+                    break;
+                case ActionResult<int> result3b:
+                    Assert.Null(result3b.Result);
+                    Assert.NotNull(result3b.Value);
+                    break;
+                case ActionResult<List<CertificateInfoModel>> result4b:
+                    Assert.Null(result4b.Result);
+                    Assert.NotNull(result4b.Value);
+                    break;
+                case ActionResult<bool> result5b:
+                    Assert.Null(result5b.Result);
+                    Assert.NotNull(result5b.Value);
+                    break;
+                case ActionResult<CertificateInfoModel> result6b:
+                    // The certificate may not have been found or could not be issued, in which case the response is a 404 or 500
+                    if (result6b.Result is StatusCodeResult)
+                        Assert.True((result6b.Result as StatusCodeResult).StatusCode == 404);
+                    if (result6b.Result is ObjectResult)
+                        Assert.True((result6b.Result as ObjectResult).StatusCode == 500);
+                    break;
+            }
         }
 
         private void CheckThrowsIfNoAccess(Action<int, string> action, AccountAccessFlags requiredAccess)

@@ -15,6 +15,18 @@ using System.Threading.Tasks;
 
 namespace CertificateAuthority.Tests.FullProjectTests.Helpers
 {
+    internal static class NormalizeDirectorySeparatorExt
+    {
+        /// <summary>
+        /// Fixes incorrect directory separator characters in path (if any).
+        /// </summary>
+        public static string NormalizeDirectorySeparator(this string path)
+        {
+            // Replace incorrect with correct
+            return path.Replace((Path.DirectorySeparatorChar == '/') ? '\\' : '/', Path.DirectorySeparatorChar);
+        }
+    }
+
     public static class StartupContainer
     {
         private static object locker = new object();
@@ -85,7 +97,7 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
-            string testDbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"test_only_db_{new Random().Next(0, int.MaxValue)}.db");
+            string testDbPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"test_only_db_{new Random().Next(0, int.MaxValue)}.db").NormalizeDirectorySeparator();
             string testConfigData = $"dbpath={testDbPath}";
 
             this.Settings = app.ApplicationServices.GetService<Settings>();
