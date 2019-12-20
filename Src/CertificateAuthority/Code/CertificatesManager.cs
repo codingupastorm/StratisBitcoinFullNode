@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading.Tasks;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Pkcs;
@@ -36,7 +37,11 @@ namespace CertificateAuthority.Code
 
         private X509Certificate2 caCertificate;
 
-        const int CaAddressIndex = 0;
+        public const int CaAddressIndex = 0;
+
+        public const string CaCertFilename = "CaCertificate.crt";
+
+        public const string P2pkhExtensionOid = "1.4.1";
 
         public CertificatesManager(DataCacheLayer cache, Settings settings)
         {
@@ -52,13 +57,18 @@ namespace CertificateAuthority.Code
         {
             try
             {
-                byte[] caOid141 = { 0x05, 0x04, 0x03, 0x09, 0x0a }; // TODO: Move to config?
                 string caSubjectName = $"O={settings.CaSubjectNameOrganization}, CN={settings.CaSubjectNameCommonName}, OU={settings.CaSubjectNameOrganizationUnit}";
+                string hdPath = $"m/44'/105'/0'/0/{CaAddressIndex}";
 
                 HDWalletAddressSpace caAddressSpace = new HDWalletAddressSpace(mnemonic, password);
+                byte[] caPubKey = caAddressSpace.GetKey(hdPath).PrivateKey.PubKey.ToBytes();
+                string caAddress = HDWalletAddressSpace.GetAddress(caPubKey, 63);
+                byte[] caOid141 = Encoding.UTF8.GetBytes(caAddress);
 
-                this.caKey = caAddressSpace.GetCertificateKeyPair($"m/44'/105'/0'/0/{CaAddressIndex}");
+                this.caKey = caAddressSpace.GetCertificateKeyPair(hdPath);
                 this.caCertificate = CreateCertificateAuthorityCertificate(this.caKey, caSubjectName, null, null, caOid141);
+
+                File.WriteAllBytes(Path.Combine(this.settings.DataDirectory, CaCertFilename), this.caCertificate.RawData);
             }
             catch (Exception e)
             {
@@ -81,7 +91,9 @@ namespace CertificateAuthority.Code
                 subjectName, subjectKeyPair, subjectSerialNumber,
                 true, usages, oid141);
 
-            return ConvertCertificate(certificate, random);
+            X509Certificate2 convertedCert = ConvertCertificate(certificate, random);
+
+            return convertedCert;
         }
 
         /// <summary>
@@ -125,16 +137,24 @@ namespace CertificateAuthority.Code
         private async Task<CertificateInfoModel> IssueCertificate(Pkcs10CertificationRequest certRequest, int creatorId)
         {
             X509Certificate2 certificateFromReq = IssueCertificateFromRequest(certRequest, caCertificate, caKey, new string[0], new[] { KeyPurposeID.AnyExtendedKeyUsage });
-            
+
+            string p2pkh = Encoding.UTF8.GetString(ExtractExtensionFromCsr(certRequest.GetCertificationRequestInfo().Attributes, P2pkhExtensionOid));
+
             var infoModel = new CertificateInfoModel()
             {
                 Status = CertificateStatus.Good,
                 Thumbprint = certificateFromReq.Thumbprint,
+                Address = p2pkh,
                 CertificateContent = DataHelper.ConvertToPEM(certificateFromReq),
                 IssuerAccountId = creatorId
             };
 
             repository.AddNewCertificate(infoModel);
+
+            // TODO: Include timestamp and possibly thumbprint to distinguish between multiple versions of the same certificate for a given address
+            string certFilename = $"{p2pkh}.crt";
+
+            File.WriteAllBytes(Path.Combine(this.settings.DataDirectory, certFilename), certificateFromReq.RawData);
 
             this.logger.Info("New certificate was issued by account id {0}; certificate: '{1}'.", creatorId, infoModel);
 
@@ -144,19 +164,30 @@ namespace CertificateAuthority.Code
         private static X509Certificate2 IssueCertificateFromRequest(Pkcs10CertificationRequest certificateSigningRequest, X509Certificate2 issuerCertificate, AsymmetricCipherKeyPair issuerKeyPair, string[] subjectAlternativeNames, KeyPurposeID[] usages)
         {
             SecureRandom random = GetSecureRandom();
-            BigInteger issuerSerialNumber = new BigInteger(issuerCertificate.GetSerialNumber());
+            byte[] serialNumber = issuerCertificate.GetSerialNumber();
+            var issuerSerialNumber = new BigInteger(serialNumber);
             BigInteger subjectSerialNumber = GenerateSerialNumber(random);
 
             CertificationRequestInfo certificationRequestInfo = certificateSigningRequest.GetCertificationRequestInfo();
             string subjectName = certificateSigningRequest.GetCertificationRequestInfo().Subject.ToString();
             AsymmetricKeyParameter publicKey = certificateSigningRequest.GetPublicKey();
 
-            byte[] oid141 = new byte[0];
+            byte[] oid141 = ExtractExtensionFromCsr(certificationRequestInfo.Attributes, P2pkhExtensionOid);
 
+            X509Certificate certificate = GenerateCertificate(random,
+                subjectName, publicKey, subjectSerialNumber, subjectAlternativeNames,
+                issuerCertificate.Subject, issuerKeyPair, issuerSerialNumber,
+                false, usages, oid141);
+            
+            return ConvertCertificate(certificate, random);
+        }
+
+        private static byte[] ExtractExtensionFromCsr(Asn1Set csrAttributes, string oidToExtract)
+        {
             // TODO: Surely BouncyCastle has a more direct way of extracting an extension by OID?
             // http://unitstep.net/blog/2008/10/27/extracting-x509-extensions-from-a-csr-using-the-bouncy-castle-apis/
             // http://bouncy-castle.1462172.n4.nabble.com/Parsing-Certificate-and-CSR-Extension-Data-td3859749.html
-            foreach (Asn1Encodable encodable in certificationRequestInfo.Attributes)
+            foreach (Asn1Encodable encodable in csrAttributes)
             {
                 if (!(encodable is DerSequence sequence))
                     continue;
@@ -175,24 +206,19 @@ namespace CertificateAuthority.Code
                         if (!(item is DerSequence itemSeq))
                             continue;
 
-                        if (!(itemSeq[0] is DerObjectIdentifier oid1) || oid1.Id != "1.4.1")
+                        if (!(itemSeq[0] is DerObjectIdentifier oid1) || oid1.Id != oidToExtract)
                             continue;
 
                         // [0] = oid
                         // [1] = critical flag
                         // [2] = value
                         if (itemSeq[2] is DerOctetString octets)
-                            oid141 = octets.GetOctets();
+                            return octets.GetOctets();
                     }
                 }
             }
 
-            X509Certificate certificate = GenerateCertificate(random,
-                subjectName, publicKey, subjectSerialNumber, subjectAlternativeNames,
-                issuerCertificate.Subject, issuerKeyPair, issuerSerialNumber,
-                false, usages, oid141);
-            
-            return ConvertCertificate(certificate, random);
+            return null;
         }
 
         private static SecureRandom GetSecureRandom()
@@ -346,13 +372,13 @@ namespace CertificateAuthority.Code
             // Now to convert the Bouncy Castle certificate to a .NET certificate.
             // See http://web.archive.org/web/20100504192226/http://www.fkollmann.de/v2/post/Creating-certificates-using-BouncyCastle.aspx
             // ...but, basically, we create a PKCS12 store (a .PFX file) in memory, and add the public and private key to that.
-            Pkcs12Store store = new Pkcs12Store();
+            var store = new Pkcs12Store();
 
             // What Bouncy Castle calls "alias" is the same as what Windows terms the "friendly name".
             string friendlyName = certificate.SubjectDN.ToString();
 
             // Add the certificate.
-            X509CertificateEntry certificateEntry = new X509CertificateEntry(certificate);
+            var certificateEntry = new X509CertificateEntry(certificate);
             store.SetCertificateEntry(friendlyName, certificateEntry);
 
             X509Certificate2 convertedCertificate;
@@ -379,6 +405,14 @@ namespace CertificateAuthority.Code
         public CertificateInfoModel GetCertificateByThumbprint(CredentialsAccessWithModel<CredentialsModelWithThumbprintModel> model)
         {
             return this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Certificates.SingleOrDefault(x => x.Thumbprint == model.Model.Thumbprint); });
+        }
+
+        /// <summary>
+        /// Finds issued certificate by address and returns it or null if it wasn't found.
+        /// </summary>
+        public CertificateInfoModel GetCertificateByAddress(CredentialsAccessWithModel<CredentialsModelWithAddressModel> model)
+        {
+            return this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Certificates.SingleOrDefault(x => x.Address == model.Model.Address); });
         }
 
         /// <summary>

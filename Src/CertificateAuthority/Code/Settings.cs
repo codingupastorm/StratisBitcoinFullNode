@@ -23,6 +23,9 @@ namespace CertificateAuthority.Code
         {
             configReader = textFileConfiguration;
 
+            string dataDir = AppDomain.CurrentDomain.BaseDirectory.NormalizeDirectorySeparator();
+            DataDirectory = configReader.GetOrDefault<string>("datadir", dataDir);
+
             string defaultPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SQLiteDatabase.db").NormalizeDirectorySeparator();
             DatabasePath = configReader.GetOrDefault<string>("dbpath", defaultPath);
 
@@ -40,6 +43,8 @@ namespace CertificateAuthority.Code
         }
 
         private TextFileConfiguration configReader;
+
+        public string DataDirectory { get; private set; }
 
         public string DatabasePath { get; private set; }
 
