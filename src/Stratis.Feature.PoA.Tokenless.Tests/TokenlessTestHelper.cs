@@ -66,7 +66,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                     yield return (IMempoolRule)Activator.CreateInstance(ruleType, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.CallDataSerializer);
                 else if (ruleType == typeof(NoDuplicateTransactionExistOnChainMempoolRule))
                     yield return (IMempoolRule)Activator.CreateInstance(ruleType, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.blockRepository);
-                else if (ruleType == typeof(CanSenderBeRetrievedMempoolRule))
+                else if (ruleType == typeof(SenderInputMempoolRule))
                     yield return (IMempoolRule)Activator.CreateInstance(ruleType, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.TokenlessSigner);
                 else
                     yield return (IMempoolRule)Activator.CreateInstance(ruleType, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory);
