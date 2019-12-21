@@ -17,6 +17,8 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
     {
         private readonly CertificatesManager certManager;
 
+        private X509Certificate peerCertificate;
+
         private readonly bool isServer;
 
         public TlsEnabledNetworkPeerConnection(Network network, INetworkPeer peer, TcpClient client, int clientId, ProcessMessageAsync<IncomingMessage> processMessageAsync,
@@ -27,6 +29,11 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             this.isServer = isServer;
         }
 
+        public X509Certificate GetPeerCertificate()
+        {
+            return this.peerCertificate;
+        }
+
         protected override Stream GetStream()
         {
             if (this.stream != null)
@@ -34,6 +41,8 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             NetworkStream tcpClientStream = this.tcpClient.GetStream();
             var sslStream = new SslStream(tcpClientStream, false, this.certManager.ValidateCertificate, null);
+
+            this.peerCertificate = sslStream.RemoteCertificate;
 
             try
             {

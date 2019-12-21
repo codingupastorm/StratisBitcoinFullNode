@@ -84,7 +84,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             if (!clientCertValid)
                 throw new Exception("Provided client certificate isn't signed by the authority certificate!");
 
-            bool revoked = await this.revocationChecker.IsCertificateRevokedAsync(this.ClientCertificate.Thumbprint).ConfigureAwait(false);
+            bool revoked = await this.revocationChecker.IsCertificateRevokedAsync(this.ClientCertificate.Thumbprint, false).ConfigureAwait(false);
 
             if (revoked)
                 throw new Exception("Provided client certificate was revoked!");
@@ -160,9 +160,22 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             if (!valid)
                 throw new Exception("Trust chain did not complete to the known authority anchor. Thumbprints did not match.");
 
-            bool revoked = this.revocationChecker.IsCertificateRevokedAsync(this.ClientCertificate.Thumbprint).ConfigureAwait(false).GetAwaiter().GetResult();
+            bool revoked = this.revocationChecker.IsCertificateRevokedAsync(this.ClientCertificate.Thumbprint, false).ConfigureAwait(false).GetAwaiter().GetResult();
 
             return !revoked;
+        }
+
+        public static byte[] ExtractCertificateExtension(X509Certificate certificate, string oid)
+        {
+            var cert = new X509Certificate2(certificate);
+
+            foreach (X509Extension extension in cert.Extensions)
+            {
+                if (extension.Oid.Value == oid)
+                    return extension.RawData;
+            }
+
+            return new byte[0];
         }
     }
 
