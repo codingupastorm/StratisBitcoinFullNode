@@ -12,7 +12,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 {
     public class RevocationChecker : IDisposable
     {
-        private const string kvRepoKey = "revocedcerts";
+        private const string kvRepoKey = "revokedcerts";
 
         private readonly NodeSettings nodeSettings;
 
@@ -58,8 +58,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             // First try to ask CA server directly.
             try
             {
-                var requestModel = new GetCertificateStatusModel() {AsString = true, Thumbprint = thumbprint};
-                string status = await this.client.GetCertificateStatusAsync(requestModel).ConfigureAwait(false);
+                string status = await this.client.Get_certificate_statusAsync(thumbprint, true).ConfigureAwait(false);
 
                 return status != "Good";
             }
@@ -79,7 +78,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         {
             try
             {
-                ICollection<string> result = await this.client.GetRevokedCertificatesAsync().ConfigureAwait(false);
+                ICollection<string> result = await this.client.Get_revoked_certificatesAsync().ConfigureAwait(false);
                 this.revokedCertsCache = new HashSet<string>(result);
             }
             catch (Exception e)
