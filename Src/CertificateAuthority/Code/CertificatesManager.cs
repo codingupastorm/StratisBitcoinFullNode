@@ -6,10 +6,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Org.BouncyCastle.Asn1;
+using Org.BouncyCastle.Asn1.Ocsp;
 using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
@@ -465,10 +467,8 @@ namespace CertificateAuthority.Code
             });
         }
 
-        public static Pkcs10CertificationRequest CreateCertificateSigningRequest(string subjectName, AsymmetricCipherKeyPair subjectKeyPair, string[] subjectAlternativeNames, byte[] oid141)
+        public static Pkcs10CertificationRequestDelaySigned CreatedUnsignedCertificateSigningRequest(string subjectName, AsymmetricKeyParameter publicKey, string[] subjectAlternativeNames, byte[] oid141)
         {
-            // TODO: Is it possible for the CA to generate the CSR without a signature, and the client then signs it?
-
             IList oids = new ArrayList();
             IList values = new ArrayList();
 
@@ -480,11 +480,35 @@ namespace CertificateAuthority.Code
             DerSequence subjectAlternativeNamesExtension = new DerSequence(altnames);
             values.Add(new X509Extension(true, new DerOctetString(subjectAlternativeNamesExtension)));
 
-            AttributePkcs attribute = new AttributePkcs(PkcsObjectIdentifiers.Pkcs9AtExtensionRequest,
-                new DerSet(new X509Extensions(oids, values)));
+            var attribute = new AttributePkcs(PkcsObjectIdentifiers.Pkcs9AtExtensionRequest, new DerSet(new X509Extensions(oids, values)));
+
+            var certificateRequest = new Pkcs10CertificationRequestDelaySigned(
+                "SHA256withECDSA",
+                new X509Name(subjectName),
+                publicKey,
+                new DerSet(attribute)
+            );
+
+            return certificateRequest;
+        }
+
+        public static Pkcs10CertificationRequest CreateCertificateSigningRequest(string subjectName, AsymmetricCipherKeyPair subjectKeyPair, string[] subjectAlternativeNames, byte[] oid141)
+        {
+            IList oids = new ArrayList();
+            IList values = new ArrayList();
+
+            oids.Add(new DerObjectIdentifier("1.4.1"));
+            values.Add(new X509Extension(true, new DerOctetString(oid141)));
+
+            oids.Add(new DerObjectIdentifier(X509Extensions.SubjectAlternativeName.Id));
+            Asn1Encodable[] altnames = subjectAlternativeNames.Select(name => new GeneralName(GeneralName.DnsName, name)).ToArray<Asn1Encodable>();
+            DerSequence subjectAlternativeNamesExtension = new DerSequence(altnames);
+            values.Add(new X509Extension(true, new DerOctetString(subjectAlternativeNamesExtension)));
+
+            var attribute = new AttributePkcs(PkcsObjectIdentifiers.Pkcs9AtExtensionRequest, new DerSet(new X509Extensions(oids, values)));
 
             // Generate a certificate signing request
-            Pkcs10CertificationRequest certificateRequest = new Pkcs10CertificationRequest(
+            var certificateRequest = new Pkcs10CertificationRequest(
                 "SHA256withECDSA",
                 new X509Name(subjectName),
                 subjectKeyPair.Public,
@@ -493,5 +517,17 @@ namespace CertificateAuthority.Code
 
             return certificateRequest;
         }
+
+        #region Utility methods for delayed-signing of CSRS
+        public static byte[] GenerateCSRSignature(byte[] data, string signerAlgorithm, AsymmetricKeyParameter privateSigningKey)
+        {
+            ISigner signer = SignerUtilities.GetSigner(signerAlgorithm);
+            signer.Init(true, privateSigningKey);
+            signer.BlockUpdate(data, 0, data.Length);
+            byte[] signature = signer.GenerateSignature();
+
+            return signature;
+        }
+        #endregion
     }
 }
