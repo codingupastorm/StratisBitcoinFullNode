@@ -108,6 +108,23 @@ namespace CertificateAuthority.Code.Models
         }
     }
 
+    public class GenerateCertificateSigningRequestModel : CredentialsModel
+    {
+        public string Address { get; set; }
+
+        public string PubKey { get; set; }
+
+        public GenerateCertificateSigningRequestModel(string address, string pubKey, int accountId, string password) : base(accountId, password)
+        {
+            this.Address = address;
+            this.PubKey = pubKey;
+        }
+
+        public GenerateCertificateSigningRequestModel()
+        {
+        }
+    }
+
     /// <summary>Model that combines credentials information and a file sent in request.</summary>
     public class IssueCertificateFromRequestModel : CredentialsModel
     {

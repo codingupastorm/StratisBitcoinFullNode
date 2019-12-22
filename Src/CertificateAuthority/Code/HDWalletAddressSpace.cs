@@ -65,14 +65,16 @@ namespace CertificateAuthority.Code
             ExtKey addressKey = GetKey(hdPath);
             BigInteger privateKey = new BigInteger(addressKey.PrivateKey.ToBytes());
 
-            //Set curve parameters
+            // Set curve parameters
             X9ECParameters ecdsaCurve = ECNamedCurveTable.GetByName(ecdsaCurveFriendlyName);
             ECDomainParameters ecdsaDomainParams = new ECDomainParameters(ecdsaCurve.Curve, ecdsaCurve.G, ecdsaCurve.N, ecdsaCurve.H, ecdsaCurve.GetSeed());
 
-            //Create private/public key pair parameters
-            ECPrivateKeyParameters privateParameter = new ECPrivateKeyParameters(privateKey, ecdsaDomainParams);
-            ECPoint q = ecdsaDomainParams.G.Multiply(privateKey);
-            ECPublicKeyParameters publicParameter = new ECPublicKeyParameters(q, ecdsaDomainParams);
+            X9ECPoint q = new X9ECPoint(ecdsaCurve.Curve, addressKey.PrivateKey.PubKey.ToBytes());
+
+            // Create private/public key pair parameters
+            var privateParameter = new ECPrivateKeyParameters(privateKey, ecdsaDomainParams);
+            //ECPoint q = ecdsaDomainParams.G.Multiply(privateKey);
+            var publicParameter = new ECPublicKeyParameters(q.Point, ecdsaDomainParams);
 
             //Return key pair
             AsymmetricCipherKeyPair keyPair = new AsymmetricCipherKeyPair(publicParameter, privateParameter);
@@ -97,8 +99,6 @@ namespace CertificateAuthority.Code
             public string PublicKey { get; set; }
             
             public string PrivateKey { get; set; }
-            
-            public string Other { get; set; }
         }
 
         public static EcdsaKey GetKeyInfo(string mnemonicWords, string password, string hdPath, byte addressPrefix)
