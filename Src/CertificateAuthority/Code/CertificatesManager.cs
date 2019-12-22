@@ -6,12 +6,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Org.BouncyCastle.Asn1;
-using Org.BouncyCastle.Asn1.Ocsp;
 using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
@@ -366,7 +364,7 @@ namespace CertificateAuthority.Code
 
         private static void AddDltInformation(X509V3CertificateGenerator certificateGenerator, byte[] oid141)
         {
-            certificateGenerator.AddExtension("1.4.1", true, oid141);
+            certificateGenerator.AddExtension(P2pkhExtensionOid, true, oid141);
         }
 
         private static X509Certificate2 ConvertCertificate(X509Certificate certificate, SecureRandom random)
@@ -472,12 +470,12 @@ namespace CertificateAuthority.Code
             IList oids = new ArrayList();
             IList values = new ArrayList();
 
-            oids.Add(new DerObjectIdentifier("1.4.1"));
+            oids.Add(new DerObjectIdentifier(P2pkhExtensionOid));
             values.Add(new X509Extension(true, new DerOctetString(oid141)));
 
             oids.Add(new DerObjectIdentifier(X509Extensions.SubjectAlternativeName.Id));
             Asn1Encodable[] altnames = subjectAlternativeNames.Select(name => new GeneralName(GeneralName.DnsName, name)).ToArray<Asn1Encodable>();
-            DerSequence subjectAlternativeNamesExtension = new DerSequence(altnames);
+            var subjectAlternativeNamesExtension = new DerSequence(altnames);
             values.Add(new X509Extension(true, new DerOctetString(subjectAlternativeNamesExtension)));
 
             var attribute = new AttributePkcs(PkcsObjectIdentifiers.Pkcs9AtExtensionRequest, new DerSet(new X509Extensions(oids, values)));
@@ -497,7 +495,7 @@ namespace CertificateAuthority.Code
             IList oids = new ArrayList();
             IList values = new ArrayList();
 
-            oids.Add(new DerObjectIdentifier("1.4.1"));
+            oids.Add(new DerObjectIdentifier(P2pkhExtensionOid));
             values.Add(new X509Extension(true, new DerOctetString(oid141)));
 
             oids.Add(new DerObjectIdentifier(X509Extensions.SubjectAlternativeName.Id));
@@ -518,7 +516,7 @@ namespace CertificateAuthority.Code
             return certificateRequest;
         }
 
-        #region Utility methods for delayed-signing of CSRS
+        #region Utility methods for delayed-signing of CSRs
         public static byte[] GenerateCSRSignature(byte[] data, string signerAlgorithm, AsymmetricKeyParameter privateSigningKey)
         {
             ISigner signer = SignerUtilities.GetSigner(signerAlgorithm);

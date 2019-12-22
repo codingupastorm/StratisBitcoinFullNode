@@ -3,8 +3,15 @@ using Microsoft.AspNetCore.Mvc;
 using NLog;
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using NBitcoin;
+using Org.BouncyCastle.Asn1.X9;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Parameters;
+using Org.BouncyCastle.Math.EC;
+using Org.BouncyCastle.Pkcs;
 
 namespace CertificateAuthority.Code.Controllers
 {
@@ -123,6 +130,47 @@ namespace CertificateAuthority.Code.Controllers
             }
         }
 
+        /// <summary>Creates a template certificate request without a signature. IssueCertificates access level is required.</summary>
+        /// <response code="200">Instance of <see cref="CertificateSigningRequestModel"/>.</response>
+        [HttpPost("generate_certificate_signing_request")]
+        [ProducesResponseType(typeof(CertificateSigningRequestModel), 200)]
+        public async Task<ActionResult<CertificateSigningRequestModel>> GenerateCertificateSigningRequestAsync([FromBody]GenerateCertificateSigningRequestModel model)
+        {
+            var data = new CredentialsAccessWithModel<GenerateCertificateSigningRequestModel>(model, AccountAccessFlags.IssueCertificates);
+
+            byte[] oid141 = Encoding.UTF8.GetBytes(data.Model.Address);
+
+            byte[] pubKeyBytes = Convert.FromBase64String(data.Model.PubKey);
+
+            X9ECParameters ecdsaCurve = ECNamedCurveTable.GetByName("secp256k1");
+            ECDomainParameters ecdsaDomainParams = new ECDomainParameters(ecdsaCurve.Curve, ecdsaCurve.G, ecdsaCurve.N, ecdsaCurve.H, ecdsaCurve.GetSeed());
+            X9ECPoint q = new X9ECPoint(ecdsaCurve.Curve, pubKeyBytes);
+
+            AsymmetricKeyParameter publicKey = new ECPublicKeyParameters(q.Point, ecdsaDomainParams);
+
+            try
+            {
+                string subjectName = $"CN={data.Model.Address}";
+
+                Pkcs10CertificationRequestDelaySigned unsignedCsr = CertificatesManager.CreatedUnsignedCertificateSigningRequest(subjectName, publicKey, new string[0], oid141);
+
+                // Important workaround - fill in a dummy signature so that when the CSR is reconstituted on the far side, the decoding does not fail with DerNull errors.
+                unsignedCsr.SignRequest(new byte[] { });
+
+                var csrModel = new CertificateSigningRequestModel(unsignedCsr);
+
+                return csrModel;
+            }
+            catch (InvalidCredentialsException)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
         /// <summary>Issues a new certificate using provided certificate request. IssueCertificates access level is required.</summary>
         /// <response code="201">Instance of <see cref="CertificateInfoModel"/>.</response>
         [HttpPost("issue_certificate_using_request_file")]
@@ -182,7 +230,7 @@ namespace CertificateAuthority.Code.Controllers
         /// Gets status of the certificate with the provided thumbprint or
         /// returns <see cref="CertificateStatus.Unknown"/> if certificate wasn't found.
         /// </summary>
-        /// <response code="201">Certificate status string.</response>
+        /// <response code="200">Certificate status string.</response>
         [HttpGet]
         [Route("get_certificate_status")]
         [ProducesResponseType(typeof(string), 200)]
@@ -197,7 +245,7 @@ namespace CertificateAuthority.Code.Controllers
         }
 
         /// <summary>Returns a collection of thumbprints of revoked certificates.</summary>
-        /// <response code="201">Collection of <see cref="string"/>.</response>
+        /// <response code="200">Collection of <see cref="string"/>.</response>
         [HttpGet]
         [Route("get_revoked_certificates")]
         [ProducesResponseType(typeof(ICollection<string>), 200)]

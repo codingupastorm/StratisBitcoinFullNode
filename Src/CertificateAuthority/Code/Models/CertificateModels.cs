@@ -1,4 +1,7 @@
-﻿namespace CertificateAuthority.Code.Models
+﻿using System.Text;
+using Org.BouncyCastle.Pkcs;
+
+namespace CertificateAuthority.Code.Models
 {
     /// <summary>Model that contains information related to a specific certificate.</summary>
     public class CertificateInfoModel
@@ -26,6 +29,22 @@
             return $"{nameof(this.Id)}:{this.Id},{nameof(this.Thumbprint)}:{this.Thumbprint},{nameof(this.Address)}:{this.Address}," +
                    $"{nameof(this.Status)}:{this.Status},{nameof(this.IssuerAccountId)}:{this.IssuerAccountId}," +
                    $"{nameof(this.RevokerAccountId)}:{this.RevokerAccountId}";
+        }
+    }
+
+    public class CertificateSigningRequestModel
+    {
+        /// <summary>Certificate signing request in base64 format.</summary>
+        public string CertificateSigningRequestContent { get; set; }
+
+        public CertificateSigningRequestModel(Pkcs10CertificationRequestDelaySigned request)
+        {
+            this.CertificateSigningRequestContent = System.Convert.ToBase64String(request.GetDerEncoded());
+        }
+
+        public override string ToString()
+        {
+            return $"{nameof(this.CertificateSigningRequestContent)}={this.CertificateSigningRequestContent}";
         }
     }
 
