@@ -179,7 +179,7 @@ namespace CertificateAuthority.Code.Controllers
         }
 
         /// <summary>
-        /// Get's status of the certificate with the provided thumbprint or
+        /// Gets status of the certificate with the provided thumbprint or
         /// returns <see cref="CertificateStatus.Unknown"/> if certificate wasn't found.
         /// </summary>
         /// <response code="201">Certificate status string.</response>
@@ -196,7 +196,7 @@ namespace CertificateAuthority.Code.Controllers
             return ((int)status).ToString();
         }
 
-        /// <summary>Provides a collection of thumbprints of revoked certificates.</summary>
+        /// <summary>Returns a collection of thumbprints of revoked certificates.</summary>
         /// <response code="201">Collection of <see cref="string"/>.</response>
         [HttpGet]
         [Route("get_revoked_certificates")]

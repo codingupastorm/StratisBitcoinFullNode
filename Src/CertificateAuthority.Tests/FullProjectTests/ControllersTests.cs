@@ -139,9 +139,11 @@ namespace CertificateAuthority.Tests.FullProjectTests
             // IssueCertificate_UsingRequestString
             CertificateInfoModel certificate1 = (await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
                 new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest.GetDerEncoded()), credentials1.AccountId, credentials1.Password))).Value;
-            
+
+            Assert.Equal(clientAddress, certificate1.Address);
+
             HDWalletAddressSpace clientAddressSpace2 = new HDWalletAddressSpace("habit misery swarm tape viable toddler young shoe immense usual faculty edge", "node");
-            clientPublicKey = clientAddressSpace.GetKey(hdPath).PrivateKey.PubKey.ToBytes();
+            clientPublicKey = clientAddressSpace2.GetKey(hdPath).PrivateKey.PubKey.ToBytes();
             AsymmetricCipherKeyPair clientKey2 = clientAddressSpace2.GetCertificateKeyPair(hdPath);
 
             clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
@@ -150,7 +152,9 @@ namespace CertificateAuthority.Tests.FullProjectTests
             Pkcs10CertificationRequest certificateSigningRequest2 = CertificatesManager.CreateCertificateSigningRequest(clientName, clientKey2, new string[0], clientOid141);
 
             CertificateInfoModel certificate2 = (await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
-                new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest.GetDerEncoded()), this.adminCredentials.AccountId, this.adminCredentials.Password))).Value;
+                new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest2.GetDerEncoded()), this.adminCredentials.AccountId, this.adminCredentials.Password))).Value;
+
+            Assert.Equal(clientAddress, certificate2.Address);
 
             Assert.Empty(this.certificatesController.GetRevokedCertificates().Value);
 
@@ -181,6 +185,30 @@ namespace CertificateAuthority.Tests.FullProjectTests
             List<string> revoked = this.certificatesController.GetRevokedCertificates().Value.ToList();
             Assert.Single(revoked);
             Assert.Equal(certificate1.Thumbprint, revoked[0]);
+
+            // Now check that we can obtain an unsigned CSR template from the CA, which we then sign locally and receive a certificate for.
+
+            HDWalletAddressSpace clientAddressSpace3 = new HDWalletAddressSpace("usual young shoe immense habit misery swarm tape viable toddler faculty edge", "node");
+            clientPublicKey = clientAddressSpace3.GetKey(hdPath).PrivateKey.PubKey.ToBytes();
+            AsymmetricCipherKeyPair clientKey3 = clientAddressSpace2.GetCertificateKeyPair(hdPath);
+
+            clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
+            clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
+
+            var unsignedCsr = CertificatesManager.CreatedUnsignedCertificateSigningRequest(clientName, clientKey2.Public, new string[0], clientOid141);
+            var signature = CertificatesManager.GenerateCSRSignature(unsignedCsr.GetDataToSign(), "SHA256withECDSA", clientKey2.Private);
+            unsignedCsr.SignRequest(signature);
+
+            Assert.True(unsignedCsr.Verify(clientKey2.Public));
+
+            var signedCsr = new Pkcs10CertificationRequest(unsignedCsr.GetDerEncoded());
+
+            Assert.True(signedCsr.Verify());
+
+            CertificateInfoModel certificate3 = (await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
+                new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(signedCsr.GetDerEncoded()), credentials1.AccountId, credentials1.Password))).Value;
+
+            Assert.Equal(clientAddress, certificate3.Address);
         }
 
         [Fact]
