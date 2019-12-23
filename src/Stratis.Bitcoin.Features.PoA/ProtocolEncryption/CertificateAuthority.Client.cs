@@ -875,6 +875,79 @@ namespace CertificateAuthority.Client
             }
         }
 
+        /// <summary>Creates a template certificate request without a signature. IssueCertificates access level is required.</summary>
+        /// <returns>Instance of CertificateAuthority.Code.Models.CertificateSigningRequestModel.</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public System.Threading.Tasks.Task<CertificateSigningRequestModel> Generate_certificate_signing_requestAsync(GenerateCertificateSigningRequestModel body)
+        {
+            return Generate_certificate_signing_requestAsync(body, System.Threading.CancellationToken.None);
+        }
+
+        /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>Creates a template certificate request without a signature. IssueCertificates access level is required.</summary>
+        /// <returns>Instance of CertificateAuthority.Code.Models.CertificateSigningRequestModel.</returns>
+        /// <exception cref="ApiException">A server side error occurred.</exception>
+        public async System.Threading.Tasks.Task<CertificateSigningRequestModel> Generate_certificate_signing_requestAsync(GenerateCertificateSigningRequestModel body, System.Threading.CancellationToken cancellationToken)
+        {
+            var urlBuilder_ = new System.Text.StringBuilder();
+            urlBuilder_.Append(BaseUrl != null ? BaseUrl.TrimEnd('/') : "").Append("/api/certificates/generate_certificate_signing_request");
+
+            var client_ = _httpClient;
+            try
+            {
+                using (var request_ = new System.Net.Http.HttpRequestMessage())
+                {
+                    var content_ = new System.Net.Http.StringContent(Newtonsoft.Json.JsonConvert.SerializeObject(body, _settings.Value));
+                    content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
+                    request_.Content = content_;
+                    request_.Method = new System.Net.Http.HttpMethod("POST");
+                    request_.Headers.Accept.Add(System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("text/plain"));
+
+                    PrepareRequest(client_, request_, urlBuilder_);
+                    var url_ = urlBuilder_.ToString();
+                    request_.RequestUri = new System.Uri(url_, System.UriKind.RelativeOrAbsolute);
+                    PrepareRequest(client_, request_, url_);
+
+                    var response_ = await client_.SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                    try
+                    {
+                        var headers_ = System.Linq.Enumerable.ToDictionary(response_.Headers, h_ => h_.Key, h_ => h_.Value);
+                        if (response_.Content != null && response_.Content.Headers != null)
+                        {
+                            foreach (var item_ in response_.Content.Headers)
+                                headers_[item_.Key] = item_.Value;
+                        }
+
+                        ProcessResponse(client_, response_);
+
+                        var status_ = ((int)response_.StatusCode).ToString();
+                        if (status_ == "200")
+                        {
+                            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            var result_ = (CertificateSigningRequestModel)System.Convert.ChangeType(responseData_, typeof(CertificateSigningRequestModel));
+                            return result_;
+                        }
+                        else
+                        if (status_ != "200" && status_ != "204")
+                        {
+                            var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
+                            throw new ApiException("The HTTP status code of the response was not expected (" + (int)response_.StatusCode + ").", (int)response_.StatusCode, responseData_, headers_, null);
+                        }
+
+                        return default(CertificateSigningRequestModel);
+                    }
+                    finally
+                    {
+                        if (response_ != null)
+                            response_.Dispose();
+                    }
+                }
+            }
+            finally
+            {
+            }
+        }
+
         /// <summary>Issues a new certificate using provided certificate request. IssueCertificates access level is required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
@@ -1033,11 +1106,11 @@ namespace CertificateAuthority.Client
             }
         }
 
-        /// <summary>Get's status of the certificate with the provided thumbprint or
+        /// <summary>Gets status of the certificate with the provided thumbprint or
         /// returns CertificateAuthority.Code.Models.CertificateStatus.Unknown if certificate wasn't found.</summary>
         /// <param name="thumbprint">Certificate's thumbprint.</param>
         /// <param name="asString">Set to {true} for 'Good\Revoked\Unknown' format, or {false} for '1\2\3' format.</param>
-        /// <returns>Success</returns>
+        /// <returns>Certificate status string.</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task<string> Get_certificate_statusAsync(string thumbprint, bool? asString)
         {
@@ -1045,11 +1118,11 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Get's status of the certificate with the provided thumbprint or
+        /// <summary>Gets status of the certificate with the provided thumbprint or
         /// returns CertificateAuthority.Code.Models.CertificateStatus.Unknown if certificate wasn't found.</summary>
         /// <param name="thumbprint">Certificate's thumbprint.</param>
         /// <param name="asString">Set to {true} for 'Good\Revoked\Unknown' format, or {false} for '1\2\3' format.</param>
-        /// <returns>Success</returns>
+        /// <returns>Certificate status string.</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task<string> Get_certificate_statusAsync(string thumbprint, bool? asString, System.Threading.CancellationToken cancellationToken)
         {
@@ -1098,12 +1171,6 @@ namespace CertificateAuthority.Client
                             return result_;
                         }
                         else
-                        if (status_ == "201")
-                        {
-                            string responseText_ = (response_.Content == null) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            throw new ApiException("Certificate status string.", (int)response_.StatusCode, responseText_, headers_, null);
-                        }
-                        else
                         if (status_ != "200" && status_ != "204")
                         {
                             var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -1124,8 +1191,8 @@ namespace CertificateAuthority.Client
             }
         }
 
-        /// <summary>Provides a collection of thumbprints of revoked certificates.</summary>
-        /// <returns>Success</returns>
+        /// <summary>Returns a collection of thumbprints of revoked certificates.</summary>
+        /// <returns>Collection of System.String.</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task<System.Collections.Generic.ICollection<string>> Get_revoked_certificatesAsync()
         {
@@ -1133,8 +1200,8 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Provides a collection of thumbprints of revoked certificates.</summary>
-        /// <returns>Success</returns>
+        /// <summary>Returns a collection of thumbprints of revoked certificates.</summary>
+        /// <returns>Collection of System.String.</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<string>> Get_revoked_certificatesAsync(System.Threading.CancellationToken cancellationToken)
         {
@@ -1172,12 +1239,6 @@ namespace CertificateAuthority.Client
                             var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
                             var result_ = (System.Collections.Generic.ICollection<string>)System.Convert.ChangeType(responseData_, typeof(System.Collections.Generic.ICollection<string>));
                             return result_;
-                        }
-                        else
-                        if (status_ == "201")
-                        {
-                            string responseText_ = (response_.Content == null) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            throw new ApiException("Collection of System.String.", (int)response_.StatusCode, responseText_, headers_, null);
                         }
                         else
                         if (status_ != "200" && status_ != "204")
@@ -1694,6 +1755,36 @@ namespace CertificateAuthority.Client
         /// <summary>Caller's password.</summary>
         [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Password { get; set; }
+
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "10.1.2.0 (Newtonsoft.Json v11.0.0.0)")]
+    public partial class GenerateCertificateSigningRequestModel
+    {
+        [Newtonsoft.Json.JsonProperty("address", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Address { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("pubKey", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string PubKey { get; set; }
+
+        /// <summary>Caller's account Id.</summary>
+        [Newtonsoft.Json.JsonProperty("accountId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public int AccountId { get; set; }
+
+        /// <summary>Caller's password.</summary>
+        [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Password { get; set; }
+
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "10.1.2.0 (Newtonsoft.Json v11.0.0.0)")]
+    public partial class CertificateSigningRequestModel
+    {
+        /// <summary>Certificate signing request in base64 format.</summary>
+        [Newtonsoft.Json.JsonProperty("certificateSigningRequestContent", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string CertificateSigningRequestContent { get; set; }
 
 
     }
