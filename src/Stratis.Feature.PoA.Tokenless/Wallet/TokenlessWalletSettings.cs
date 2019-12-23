@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
@@ -77,6 +78,8 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                 this.CertificateAttributes[key] = value;
             this.UserFullName = config.GetOrDefault<string>("userfullname", null, this.logger);
             this.UserEMail = config.GetOrDefault<string>("useremail", null, this.logger);
+            if (this.UserEMail != null && !IsEmail(this.UserEMail))
+                throw new ConfigurationException($"The supplied e-mail address ('{ this.UserEMail }') syntax is invalid.");
             this.UserTelephone = config.GetOrDefault<string>("userphone", null, this.logger);
             this.UserFacsimile = config.GetOrDefault<string>("userfax", null, this.logger);
         }
@@ -136,6 +139,31 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             builder.AppendLine("#userphone=");
             builder.AppendLine("#The fax number of the user.");
             builder.AppendLine("#userfax=");
+        }
+
+        /// <summary>
+        /// Regular expression, which is used to validate an E-Mail address.
+        /// See https://www.codeproject.com/Articles/22777/Email-Address-Validation-Using-Regular-Expression.
+        /// </summary>
+        private const string MatchEmailPattern =
+            @"^(([\w-]+\.)+[\w-]+|([a-zA-Z]{1}|[\w-]{2,}))@"
+            + @"((([0-1]?[0-9]{1,2}|25[0-5]|2[0-4][0-9])\.([0-1]?
+			[0-9]{1,2}|25[0-5]|2[0-4][0-9])\."
+            + @"([0-1]?[0-9]{1,2}|25[0-5]|2[0-4][0-9])\.([0-1]?
+			[0-9]{1,2}|25[0-5]|2[0-4][0-9])){1}|"
+            + @"([a-zA-Z0-9]+[\w-]+\.)+[a-zA-Z]{1}[a-zA-Z0-9-]{1,23})$";
+
+        /// <summary>
+        /// Checks whether the given Email-Parameter is a valid E-Mail address.
+        /// </summary>
+        /// <param name="email">Parameter-string that contains an E-Mail address.</param>
+        /// <returns>True, when Parameter-string is not null and 
+        /// contains a valid E-Mail address;
+        /// otherwise false.</returns>
+        private static bool IsEmail(string email)
+        {
+            if (email != null) return Regex.IsMatch(email, MatchEmailPattern);
+            else return false;
         }
     }
 }
