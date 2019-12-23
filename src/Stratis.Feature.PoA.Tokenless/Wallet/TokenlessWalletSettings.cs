@@ -81,7 +81,11 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             if (this.UserEMail != null && !IsEmail(this.UserEMail))
                 throw new ConfigurationException($"The supplied e-mail address ('{ this.UserEMail }') syntax is invalid.");
             this.UserTelephone = config.GetOrDefault<string>("userphone", null, this.logger);
+            if (this.UserTelephone != null && !IsPhone(this.UserTelephone))
+                throw new ConfigurationException($"The supplied phone number ('{ this.UserTelephone }') syntax is invalid.");
             this.UserFacsimile = config.GetOrDefault<string>("userfax", null, this.logger);
+            if (this.UserFacsimile != null && !IsPhone(this.UserFacsimile))
+                throw new ConfigurationException($"The supplied fax number ('{ this.UserFacsimile }') syntax is invalid.");
         }
 
         /// <summary>
@@ -143,27 +147,42 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         /// <summary>
         /// Regular expression, which is used to validate an E-Mail address.
-        /// See https://www.codeproject.com/Articles/22777/Email-Address-Validation-Using-Regular-Expression.
+        /// See https://www.oreilly.com/library/view/regular-expressions-cookbook/9780596802837/ch04.html
         /// </summary>
-        private const string MatchEmailPattern =
-            @"^(([\w-]+\.)+[\w-]+|([a-zA-Z]{1}|[\w-]{2,}))@"
-            + @"((([0-1]?[0-9]{1,2}|25[0-5]|2[0-4][0-9])\.([0-1]?
-			[0-9]{1,2}|25[0-5]|2[0-4][0-9])\."
-            + @"([0-1]?[0-9]{1,2}|25[0-5]|2[0-4][0-9])\.([0-1]?
-			[0-9]{1,2}|25[0-5]|2[0-4][0-9])){1}|"
-            + @"([a-zA-Z0-9]+[\w-]+\.)+[a-zA-Z]{1}[a-zA-Z0-9-]{1,23})$";
+        private const string matchEmailPattern =
+            @"^[\w!#$%&'*+/=?`{|}~^-]+(?:\.[\w!#$%&'*+/=?`{|}~^-]+)*@(?:[A-Z0-9-]+\.)+[A-Z]{2,6}$";
 
         /// <summary>
-        /// Checks whether the given Email-Parameter is a valid E-Mail address.
+        /// Checks whether the given e-mail address is a valid e-mail address.
         /// </summary>
-        /// <param name="email">Parameter-string that contains an E-Mail address.</param>
+        /// <param name="email">An e-Mail address.</param>
         /// <returns>True, when Parameter-string is not null and 
         /// contains a valid E-Mail address;
         /// otherwise false.</returns>
         private static bool IsEmail(string email)
         {
-            if (email != null) return Regex.IsMatch(email, MatchEmailPattern);
-            else return false;
+            if (email != null) 
+                return Regex.IsMatch(email, matchEmailPattern);
+
+            return false;
+        }
+
+        /// <summary>
+        /// https://www.oreilly.com/library/view/regular-expressions-cookbook/9781449327453/ch04s03.html
+        /// </summary>
+        private const string matchPhonePattern = "^\\+(?:[0-9] ?){6,14}[0-9]$";
+
+        /// <summary>
+        /// Checks whether the given phone number parameter is a valid phone number.
+        /// </summary>
+        /// <param name="phone">A phone number.</param>
+        /// <returns><c>True</c>, when phone number is not null and contains a valid phone number; otherwise false.</returns>
+        private static bool IsPhone(string phone)
+        {
+            if (phone != null) 
+                return Regex.IsMatch(phone, matchPhonePattern);
+
+            return false;
         }
     }
 }
