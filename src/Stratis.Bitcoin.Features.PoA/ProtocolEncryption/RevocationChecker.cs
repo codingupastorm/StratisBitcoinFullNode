@@ -113,6 +113,8 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             {
                 this.logger.LogWarning("Failed to reach certificate authority server.");
                 this.logger.LogDebug(e.ToString());
+
+                this.revokedCertsCache = new Dictionary<string, RevocationRecord>();
             }
         }
 
