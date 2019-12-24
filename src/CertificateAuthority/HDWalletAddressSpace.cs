@@ -7,9 +7,8 @@ using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Math;
-using ECPoint = Org.BouncyCastle.Math.EC.ECPoint;
 
-namespace CertificateAuthority.Code
+namespace CertificateAuthority
 {
     public class HDWalletAddressSpace
     {

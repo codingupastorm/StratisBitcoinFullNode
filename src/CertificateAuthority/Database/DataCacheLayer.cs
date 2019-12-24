@@ -1,10 +1,10 @@
-﻿using CertificateAuthority.Code.Models;
-using NLog;
+﻿using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CertificateAuthority.Models;
 
-namespace CertificateAuthority.Code.Database
+namespace CertificateAuthority.Database
 {
     public class DataCacheLayer
     {

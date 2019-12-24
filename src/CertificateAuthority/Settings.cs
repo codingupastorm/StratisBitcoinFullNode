@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace CertificateAuthority.Code
+namespace CertificateAuthority
 {
     internal static class NormalizeDirectorySeparatorExt
     {

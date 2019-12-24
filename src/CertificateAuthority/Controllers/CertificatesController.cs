@@ -1,19 +1,17 @@
-﻿using CertificateAuthority.Code.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using NLog;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
-using NBitcoin;
 using Org.BouncyCastle.Asn1.X9;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Math.EC;
 using Org.BouncyCastle.Pkcs;
 
-namespace CertificateAuthority.Code.Controllers
+namespace CertificateAuthority.Controllers
 {
     [Route("api/certificates")]
     [ApiController]

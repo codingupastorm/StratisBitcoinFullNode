@@ -1,7 +1,6 @@
-﻿using CertificateAuthority.Code;
-using CertificateAuthority.Code.Controllers;
-using CertificateAuthority.Code.Database;
-using CertificateAuthority.Code.Models;
+﻿using CertificateAuthority.Controllers;
+using CertificateAuthority.Database;
+using CertificateAuthority.Models;
 using CertificateAuthority.Tests.FullProjectTests.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -12,10 +11,10 @@ using System.Threading.Tasks;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Pkcs;
 using Xunit;
-using AccountAccessFlags = CertificateAuthority.Code.Models.AccountAccessFlags;
-using AccountInfo = CertificateAuthority.Code.Models.AccountInfo;
-using CertificateInfoModel = CertificateAuthority.Code.Models.CertificateInfoModel;
-using CertificateStatus = CertificateAuthority.Code.Models.CertificateStatus;
+using AccountAccessFlags = CertificateAuthority.Models.AccountAccessFlags;
+using AccountInfo = CertificateAuthority.Models.AccountInfo;
+using CertificateInfoModel = CertificateAuthority.Models.CertificateInfoModel;
+using CertificateStatus = CertificateAuthority.Models.CertificateStatus;
 
 namespace CertificateAuthority.Tests.FullProjectTests
 {

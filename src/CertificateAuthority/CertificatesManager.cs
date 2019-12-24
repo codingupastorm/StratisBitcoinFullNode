@@ -1,6 +1,4 @@
-﻿using CertificateAuthority.Code.Database;
-using CertificateAuthority.Code.Models;
-using NLog;
+﻿using NLog;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,6 +7,8 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using CertificateAuthority.Database;
+using CertificateAuthority.Models;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
@@ -23,7 +23,7 @@ using Org.BouncyCastle.X509;
 using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 using X509Extension = Org.BouncyCastle.Asn1.X509.X509Extension;
 
-namespace CertificateAuthority.Code
+namespace CertificateAuthority
 {
     public class CertificatesManager
     {          

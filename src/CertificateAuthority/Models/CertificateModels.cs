@@ -1,7 +1,6 @@
-﻿using System.Text;
-using Org.BouncyCastle.Pkcs;
+﻿using Org.BouncyCastle.Pkcs;
 
-namespace CertificateAuthority.Code.Models
+namespace CertificateAuthority.Models
 {
     /// <summary>Model that contains information related to a specific certificate.</summary>
     public class CertificateInfoModel

@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
-using CertificateAuthority.Code.Database;
-using CertificateAuthority.Code.Models;
+using CertificateAuthority.Database;
+using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
-namespace CertificateAuthority.Code.Controllers
+namespace CertificateAuthority.Controllers
 {
     [Route("api/helpers")]
     [ApiController]

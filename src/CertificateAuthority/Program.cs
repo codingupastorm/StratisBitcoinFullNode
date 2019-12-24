@@ -1,5 +1,5 @@
-﻿using CertificateAuthority.Code;
-using CertificateAuthority.Code.Database;
+﻿using CertificateAuthority;
+using CertificateAuthority.Database;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
