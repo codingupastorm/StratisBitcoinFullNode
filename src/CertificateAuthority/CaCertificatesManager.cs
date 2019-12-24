@@ -25,7 +25,7 @@ using X509Extension = Org.BouncyCastle.Asn1.X509.X509Extension;
 
 namespace CertificateAuthority
 {
-    public class CertificatesManager
+    public class CaCertificatesManager
     {          
         private readonly DataCacheLayer repository;
 
@@ -43,7 +43,7 @@ namespace CertificateAuthority
 
         public const string P2pkhExtensionOid = "1.4.1";
 
-        public CertificatesManager(DataCacheLayer cache, Settings settings)
+        public CaCertificatesManager(DataCacheLayer cache, Settings settings)
         {
             this.repository = cache;
             this.settings = settings;

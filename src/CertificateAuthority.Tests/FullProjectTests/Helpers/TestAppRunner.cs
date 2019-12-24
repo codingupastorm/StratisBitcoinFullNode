@@ -74,7 +74,7 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
     {
         public DataCacheLayer DataCacheLayer { get; private set; }
 
-        public CertificatesManager CertificatesManager { get; private set; }
+        public CaCertificatesManager CaCertificatesManager { get; private set; }
 
         public Settings Settings { get; private set; }
 
@@ -91,7 +91,7 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
 
             services.AddSingleton<Settings>();
             services.AddSingleton<DataCacheLayer>();
-            services.AddSingleton<CertificatesManager>();
+            services.AddSingleton<CaCertificatesManager>();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -105,8 +105,8 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
             this.DataCacheLayer = app.ApplicationServices.GetService<DataCacheLayer>();
             this.DataCacheLayer.Initialize();
 
-            this.CertificatesManager = app.ApplicationServices.GetService<CertificatesManager>();
-            this.CertificatesManager.Initialize();
+            this.CaCertificatesManager = app.ApplicationServices.GetService<CaCertificatesManager>();
+            this.CaCertificatesManager.Initialize();
 
             app.UseDeveloperExceptionPage();
             app.UseHttpsRedirection();
@@ -122,7 +122,7 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
 
         public CertificatesController CreateCertificatesController()
         {
-            return new CertificatesController(this.CertificatesManager);
+            return new CertificatesController(this.CaCertificatesManager);
         }
     }
 }

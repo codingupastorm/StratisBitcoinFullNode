@@ -48,7 +48,7 @@ namespace CertificateAuthority
             services.AddSingleton<Settings>();
 
             services.AddSingleton<DataCacheLayer>();
-            services.AddSingleton<CertificatesManager>();
+            services.AddSingleton<CaCertificatesManager>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -68,7 +68,7 @@ namespace CertificateAuthority
             }
 
             app.ApplicationServices.GetService<DataCacheLayer>().Initialize();
-            app.ApplicationServices.GetService<CertificatesManager>().Initialize();
+            app.ApplicationServices.GetService<CaCertificatesManager>().Initialize();
 
             // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();

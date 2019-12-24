@@ -117,14 +117,16 @@ namespace CertificateAuthority
             {
                 ChainCode = BitConverter.ToString(chainCode).Replace("-", string.Empty),
 
-                SeedPrivateKey = seedExtKey.PrivateKey.ToHex(),
+                // TODO: Fix this
+                SeedPrivateKey = null, //seedExtKey.PrivateKey.ToHex(),
                 SeedPublicKey = seedExtKey.PrivateKey.PubKey.ToHex(),
 
                 HdPath = keyPath.ToString(),
                 Address = GetAddress(addressKey.PrivateKey.PubKey.ToBytes(false), addressPrefix),
                 PublicKeyCompressed = addressKey.PrivateKey.PubKey.ToHex(),
                 PublicKey = addressKey.PrivateKey.PubKey.Decompress().ToHex(),
-                PrivateKey = addressKey.PrivateKey.ToHex(),
+                // TODO: Fix this
+                PrivateKey = null, //addressKey.PrivateKey.ToHex(),
             };
 
             return key;
