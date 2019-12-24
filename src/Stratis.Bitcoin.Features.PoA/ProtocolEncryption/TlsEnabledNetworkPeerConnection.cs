@@ -42,8 +42,6 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             NetworkStream tcpClientStream = this.tcpClient.GetStream();
             var sslStream = new SslStream(tcpClientStream, false, this.certManager.ValidateCertificate, null);
 
-            this.peerCertificate = sslStream.RemoteCertificate;
-
             try
             {
                 if (this.isServer)
@@ -67,6 +65,9 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
                 this.logger.LogTrace("(-)[AUTH_FAILED]");
                 return this.stream;
             }
+
+            // Can only be retrieved after the authentication has been performed above.
+            this.peerCertificate = sslStream.RemoteCertificate;
 
             this.stream = sslStream;
 

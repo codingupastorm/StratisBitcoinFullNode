@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace CertificateAuthority.Code.Models
+namespace CertificateAuthority.Models
 {
     public class CredentialsModelWithTargetId : CredentialsModel
     {

@@ -1,7 +1,6 @@
-﻿using CertificateAuthority.Code;
-using CertificateAuthority.Code.Controllers;
-using CertificateAuthority.Code.Database;
-using CertificateAuthority.Code.Models;
+﻿using CertificateAuthority.Controllers;
+using CertificateAuthority.Database;
+using CertificateAuthority.Models;
 using CertificateAuthority.Tests.FullProjectTests.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using System;
@@ -12,10 +11,10 @@ using System.Threading.Tasks;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Pkcs;
 using Xunit;
-using AccountAccessFlags = CertificateAuthority.Code.Models.AccountAccessFlags;
-using AccountInfo = CertificateAuthority.Code.Models.AccountInfo;
-using CertificateInfoModel = CertificateAuthority.Code.Models.CertificateInfoModel;
-using CertificateStatus = CertificateAuthority.Code.Models.CertificateStatus;
+using AccountAccessFlags = CertificateAuthority.Models.AccountAccessFlags;
+using AccountInfo = CertificateAuthority.Models.AccountInfo;
+using CertificateInfoModel = CertificateAuthority.Models.CertificateInfoModel;
+using CertificateStatus = CertificateAuthority.Models.CertificateStatus;
 
 namespace CertificateAuthority.Tests.FullProjectTests
 {
@@ -134,7 +133,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             string clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
             byte[] clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
 
-            Pkcs10CertificationRequest certificateSigningRequest = CertificatesManager.CreateCertificateSigningRequest(clientName, clientKey, new string[0], clientOid141);
+            Pkcs10CertificationRequest certificateSigningRequest = CaCertificatesManager.CreateCertificateSigningRequest(clientName, clientKey, new string[0], clientOid141);
 
             // IssueCertificate_UsingRequestString
             CertificateInfoModel certificate1 = (await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
@@ -149,7 +148,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
             clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
 
-            Pkcs10CertificationRequest certificateSigningRequest2 = CertificatesManager.CreateCertificateSigningRequest(clientName, clientKey2, new string[0], clientOid141);
+            Pkcs10CertificationRequest certificateSigningRequest2 = CaCertificatesManager.CreateCertificateSigningRequest(clientName, clientKey2, new string[0], clientOid141);
 
             CertificateInfoModel certificate2 = (await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
                 new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest2.GetDerEncoded()), this.adminCredentials.AccountId, this.adminCredentials.Password))).Value;
@@ -195,8 +194,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
             clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
             clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
 
-            var unsignedCsr = CertificatesManager.CreatedUnsignedCertificateSigningRequest(clientName, clientKey2.Public, new string[0], clientOid141);
-            var signature = CertificatesManager.GenerateCSRSignature(unsignedCsr.GetDataToSign(), "SHA256withECDSA", clientKey2.Private);
+            var unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(clientName, clientKey2.Public, new string[0], clientOid141);
+            var signature = CaCertificatesManager.GenerateCSRSignature(unsignedCsr.GetDataToSign(), "SHA256withECDSA", clientKey2.Private);
             unsignedCsr.SignRequest(signature);
 
             Assert.True(unsignedCsr.Verify(clientKey2.Public));
@@ -218,7 +217,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             byte[] csrTemp = Convert.FromBase64String(unsignedCsrModel.CertificateSigningRequestContent);
 
             unsignedCsr = new Pkcs10CertificationRequestDelaySigned(csrTemp);
-            signature = CertificatesManager.GenerateCSRSignature(unsignedCsr.GetDataToSign(), "SHA256withECDSA", clientKey3.Private);
+            signature = CaCertificatesManager.GenerateCSRSignature(unsignedCsr.GetDataToSign(), "SHA256withECDSA", clientKey3.Private);
             unsignedCsr.SignRequest(signature);
 
             Assert.True(unsignedCsr.Verify(clientKey3.Public));

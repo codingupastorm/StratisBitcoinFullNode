@@ -1,30 +1,28 @@
-﻿using CertificateAuthority.Code.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using NLog;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
-using NBitcoin;
 using Org.BouncyCastle.Asn1.X9;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
-using Org.BouncyCastle.Math.EC;
 using Org.BouncyCastle.Pkcs;
 
-namespace CertificateAuthority.Code.Controllers
+namespace CertificateAuthority.Controllers
 {
     [Route("api/certificates")]
     [ApiController]
     public class CertificatesController : Controller
     {
-        private readonly CertificatesManager certificateManager;
+        private readonly CaCertificatesManager caCertificateManager;
         private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        public CertificatesController(CertificatesManager certificateManager)
+        public CertificatesController(CaCertificatesManager caCertificateManager)
         {
-            this.certificateManager = certificateManager;
+            this.caCertificateManager = caCertificateManager;
         }
 
         [HttpPost("initialize_ca")]
@@ -35,7 +33,7 @@ namespace CertificateAuthority.Code.Controllers
 
             try
             {
-                return this.certificateManager.InitializeCertificateAuthority(data.Model.Mnemonic, data.Model.MnemonicPassword);
+                return this.caCertificateManager.InitializeCertificateAuthority(data.Model.Mnemonic, data.Model.MnemonicPassword);
             }
             catch (InvalidCredentialsException)
             {
@@ -60,7 +58,7 @@ namespace CertificateAuthority.Code.Controllers
 
             try
             {
-                return this.certificateManager.RevokeCertificate(data);
+                return this.caCertificateManager.RevokeCertificate(data);
             }
             catch (InvalidCredentialsException)
             {
@@ -77,7 +75,7 @@ namespace CertificateAuthority.Code.Controllers
 
             try
             {
-                CertificateInfoModel certificate = this.certificateManager.GetCertificateByThumbprint(data);
+                CertificateInfoModel certificate = this.caCertificateManager.GetCertificateByThumbprint(data);
 
                 if (certificate == null)
                     return StatusCode(StatusCodes.Status404NotFound);
@@ -99,7 +97,7 @@ namespace CertificateAuthority.Code.Controllers
 
             try
             {
-                CertificateInfoModel certificate = this.certificateManager.GetCertificateByAddress(data);
+                CertificateInfoModel certificate = this.caCertificateManager.GetCertificateByAddress(data);
 
                 if (certificate == null)
                     return StatusCode(StatusCodes.Status404NotFound);
@@ -122,7 +120,7 @@ namespace CertificateAuthority.Code.Controllers
 
             try
             {
-                return this.certificateManager.GetAllCertificates(data);
+                return this.caCertificateManager.GetAllCertificates(data);
             }
             catch (InvalidCredentialsException)
             {
@@ -152,7 +150,7 @@ namespace CertificateAuthority.Code.Controllers
             {
                 string subjectName = $"CN={data.Model.Address}";
 
-                Pkcs10CertificationRequestDelaySigned unsignedCsr = CertificatesManager.CreatedUnsignedCertificateSigningRequest(subjectName, publicKey, new string[0], oid141);
+                Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(subjectName, publicKey, new string[0], oid141);
 
                 // Important workaround - fill in a dummy signature so that when the CSR is reconstituted on the far side, the decoding does not fail with DerNull errors.
                 unsignedCsr.SignRequest(new byte[] { });
@@ -181,7 +179,7 @@ namespace CertificateAuthority.Code.Controllers
 
             try
             {
-                CertificateInfoModel infoModel = await this.certificateManager.IssueCertificateAsync(data);
+                CertificateInfoModel infoModel = await this.caCertificateManager.IssueCertificateAsync(data);
                 return infoModel;
             }
             catch (InvalidCredentialsException)
@@ -210,7 +208,7 @@ namespace CertificateAuthority.Code.Controllers
                 if (string.IsNullOrEmpty(data.Model.CertificateRequestFileContents))
                     return BadRequest();
 
-                CertificateInfoModel infoModel = await this.certificateManager.IssueCertificateAsync(data);
+                CertificateInfoModel infoModel = await this.caCertificateManager.IssueCertificateAsync(data);
 
                 return infoModel;
             }
@@ -236,7 +234,7 @@ namespace CertificateAuthority.Code.Controllers
         [ProducesResponseType(typeof(string), 200)]
         public ActionResult<string> GetCertificateStatus([FromQuery]GetCertificateStatusModel model)
         {
-            CertificateStatus status = this.certificateManager.GetCertificateStatusByThumbprint(model.Thumbprint);
+            CertificateStatus status = this.caCertificateManager.GetCertificateStatusByThumbprint(model.Thumbprint);
 
             if (model.AsString)
                 return status.ToString();
@@ -251,7 +249,7 @@ namespace CertificateAuthority.Code.Controllers
         [ProducesResponseType(typeof(ICollection<string>), 200)]
         public ActionResult<ICollection<string>> GetRevokedCertificates()
         {
-            return certificateManager.GetRevokedCertificates();
+            return this.caCertificateManager.GetRevokedCertificates();
         }
     }
 }
