@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -316,8 +317,12 @@ namespace Stratis.Bitcoin
         /// </summary>
         private void DisposeNodeStorage()
         {
+            IEnumerable<Assembly> assemblies = this.Services.Features
+                .Select(f => f.GetType().Assembly)
+                .Distinct();
+
             // Identify classes that support the IKeyValueStore interface.
-            var storageClasses = AppDomain.CurrentDomain.GetAssemblies()
+            IEnumerable<Type> storageClasses = assemblies
                 .SelectMany(x => x.GetTypes())
                 .Where(x => typeof(IKeyValueStore).IsAssignableFrom(x) && !x.IsInterface && !x.IsAbstract);
 

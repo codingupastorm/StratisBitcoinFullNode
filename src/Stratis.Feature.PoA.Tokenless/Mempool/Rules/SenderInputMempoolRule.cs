@@ -3,6 +3,7 @@ using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
+using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.SmartContracts.Core.Util;
 
 namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
@@ -44,6 +45,10 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
                 GetSenderResult getSenderResult = this.tokenlessSigner.GetSender(context.Transaction);
             if (!getSenderResult.Success)
                 context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "cannot-derive-sender-for-transaction"), $"Cannot derive the sender from transaction '{context.Transaction.GetHash()}': {getSenderResult.Error}").Throw();
+
+            // We also need to check that the sender given is indeed the one who signed the transaction.
+            if (!this.tokenlessSigner.Verify(context.Transaction))
+                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, $"The signature for transaction {context.Transaction.GetHash()} is invalid."));
         }
     }
 }

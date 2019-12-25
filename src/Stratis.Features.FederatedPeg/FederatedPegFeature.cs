@@ -21,6 +21,7 @@ using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.Notifications;
 using Stratis.Bitcoin.Features.PoA;
+using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
@@ -411,7 +412,7 @@ namespace Stratis.Features.FederatedPeg
             return fullNodeBuilder;
         }
 
-        public static IFullNodeBuilder UseFederatedPegPoAMining(this IFullNodeBuilder fullNodeBuilder)
+        public static IFullNodeBuilder UseFederatedPegPoAMining(this IFullNodeBuilder fullNodeBuilder, Network network)
         {
             fullNodeBuilder.ConfigureFeature(features =>
             {
@@ -454,6 +455,19 @@ namespace Stratis.Features.FederatedPeg
                     services.AddSingleton<IPollResultExecutor, PollResultExecutor>();
                     services.AddSingleton<IWhitelistedHashesRepository, WhitelistedHashesRepository>();
                     services.AddSingleton<IdleFederationMembersKicker>();
+
+                    // Permissioned membership.
+                    services.AddSingleton<CertificatesManager>();
+                    services.AddSingleton<RevocationChecker>();
+
+                    var options = (PoAConsensusOptions)network.Consensus.Options;
+                    if (options.EnablePermissionedMembership)
+                    {
+                        ServiceDescriptor descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(INetworkPeerFactory));
+                        services.Remove(descriptor);
+                        services.AddSingleton<INetworkPeerFactory, TlsEnabledNetworkPeerFactory>();
+                    }
+
                     services.AddSingleton<PoAMinerSettings>();
                     services.AddSingleton<MinerSettings>();
 

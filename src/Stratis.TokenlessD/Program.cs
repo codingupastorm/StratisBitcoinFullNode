@@ -7,13 +7,10 @@ using Stratis.Bitcoin.Features.Api;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.RPC;
-using Stratis.Bitcoin.Features.SignalR;
-using Stratis.Bitcoin.Features.SignalR.Broadcasters;
-using Stratis.Bitcoin.Features.SignalR.Events;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Features.Diagnostic;
-using Stratis.Feature.PoA.Tokenless;
 using Stratis.Bitcoin.Features.SmartContracts;
+using Stratis.Bitcoin.Utilities;
+using Stratis.Feature.PoA.Tokenless;
+using Stratis.Feature.PoA.Tokenless.Wallet;
 using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.TokenlessD
@@ -24,15 +21,18 @@ namespace Stratis.TokenlessD
         {
             try
             {
-                // Use TokenlessNetwork.
                 var network = new TokenlessNetwork();
                 var nodeSettings = new NodeSettings(network, args: args);
+                var walletManager = new TokenlessWalletManager(network, nodeSettings.DataFolder, new TokenlessWalletSettings(nodeSettings));
+                if (!walletManager.Initialize())
+                    return;
 
                 IFullNodeBuilder nodeBuilder = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings)
                     .UseBlockStore()
                     .UseTokenlessPoaConsenus(network)
                     .UseMempool()
+                    .UseTokenlessWallet()
                     .UseApi()
                     .AddRPC()
                     .AddSmartContracts(options =>
@@ -40,32 +40,7 @@ namespace Stratis.TokenlessD
                         options.UseTokenlessReflectionExecutor();
                         options.UseSmartContractType<TokenlessSmartContract>();
                     })
-                    .AsTokenlessNetwork()
-                    .UseDiagnosticFeature();
-
-                if (nodeSettings.EnableSignalR)
-                {
-                    nodeBuilder.AddSignalR(options =>
-                    {
-                        options.EventsToHandle = new[]
-                        {
-                            (IClientEvent) new BlockConnectedClientEvent(),
-                            new TransactionReceivedClientEvent()
-                        };
-
-                        options.ClientEventBroadcasters = new[]
-                        {
-                            (Broadcaster: typeof(StakingBroadcaster), ClientEventBroadcasterSettings: new ClientEventBroadcasterSettings
-                                {
-                                    BroadcastFrequencySeconds = 5
-                                }),
-                            (Broadcaster: typeof(WalletInfoBroadcaster), ClientEventBroadcasterSettings: new ClientEventBroadcasterSettings
-                                {
-                                    BroadcastFrequencySeconds = 5
-                                })
-                        };
-                    });
-                }
+                    .AsTokenlessNetwork();
 
                 IFullNode node = nodeBuilder.Build();
 

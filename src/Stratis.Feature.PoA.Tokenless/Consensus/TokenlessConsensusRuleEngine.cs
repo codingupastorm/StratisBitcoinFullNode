@@ -8,9 +8,10 @@ using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.Consensus.Rules;
+using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Utilities;
 
-namespace Stratis.Bitcoin.Features.PoA
+namespace Stratis.Feature.PoA.Tokenless.Consensus
 {
     /// <inheritdoc />
     public sealed class TokenlessConsensusRuleEngine : PowConsensusRuleEngine
