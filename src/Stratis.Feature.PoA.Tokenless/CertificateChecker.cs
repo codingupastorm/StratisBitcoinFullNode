@@ -30,12 +30,12 @@ namespace Stratis.Feature.PoA.Tokenless
                 return false;
 
 
-            throw new NotImplementedException();
+            throw new NotImplementedException("Functionality to validate certificate isn't ready yet.'");
         }
 
         private X509Certificate2 GetCertificateFromCA(uint160 address)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("Functionality to query CA isn't ready yet.");
         }
     }
 }

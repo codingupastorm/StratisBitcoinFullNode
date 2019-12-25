@@ -86,6 +86,8 @@ namespace Stratis.Feature.PoA.Tokenless
                         // Permissioned membership.
                         services.AddSingleton<CertificatesManager>();
                         services.AddSingleton<RevocationChecker>();
+                        services.AddSingleton<ICertificateChecker, CertificateChecker>();
+                        services.AddSingleton<ICertificateCache, CertificateCache>();
 
                         var options = (PoAConsensusOptions)network.Consensus.Options;
                         if (options.EnablePermissionedMembership)
