@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 using Stratis.Feature.PoA.Tokenless.Consensus;
@@ -14,6 +13,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
     public sealed class SenderInputMempoolRule : MempoolRule
     {
         private readonly ITokenlessSigner tokenlessSigner;
+        private readonly ICertificateChecker certificateChecker;
 
         public SenderInputMempoolRule(
             Network network,
@@ -21,10 +21,12 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
             MempoolSettings settings,
             ChainIndexer chainIndexer,
             ILoggerFactory loggerFactory,
-            ITokenlessSigner tokenlessSigner)
+            ITokenlessSigner tokenlessSigner,
+            ICertificateChecker certificateChecker)
             : base(network, mempool, settings, chainIndexer, loggerFactory)
         {
             this.tokenlessSigner = tokenlessSigner;
+            this.certificateChecker = certificateChecker;
         }
 
         public override void CheckTransaction(MempoolValidationContext context)
@@ -32,23 +34,16 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
             // Firstly we need to check that the transaction is in the correct format. Can we get the sender?
             GetSenderResult getSenderResult = this.tokenlessSigner.GetSender(context.Transaction);
             if (!getSenderResult.Success)
-                new ConsensusError("error-getting-sender", string.Format("Unable to determine the sender for transaction '{0}'.", transaction.GetHash())).Throw();
-
-            // We also need to check that the sender given is indeed the one who signed the transaction.
-            if (!this.tokenlessSigner.Verify(context.Transaction))
-                new ConsensusError("error-signature-invalid", $"The signature for transaction {context.Transaction.GetHash()} is invalid.");
-
-            // Now that we have the sender address, lets get their certificate.
-            // Note that we can do for other permissions too. Contract permissions etc.
-            if (!this.certificateChecker.CheckSenderCertificateHasPermission(getSenderResult.Sender))
-
-                GetSenderResult getSenderResult = this.tokenlessSigner.GetSender(context.Transaction);
-            if (!getSenderResult.Success)
                 context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "cannot-derive-sender-for-transaction"), $"Cannot derive the sender from transaction '{context.Transaction.GetHash()}': {getSenderResult.Error}").Throw();
 
             // We also need to check that the sender given is indeed the one who signed the transaction.
             if (!this.tokenlessSigner.Verify(context.Transaction))
                 context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, $"The signature for transaction {context.Transaction.GetHash()} is invalid."));
+
+            // Now that we have the sender address, lets get their certificate and check they have necessary permissions.
+            if (!this.certificateChecker.CheckSenderCertificateHasPermission(getSenderResult.Sender)) 
+                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "The sender of this transaction is not authorised by the CA to send transactions."));
+
         }
     }
 }
