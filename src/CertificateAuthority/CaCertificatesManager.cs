@@ -1,6 +1,4 @@
-﻿using CertificateAuthority.Code.Database;
-using CertificateAuthority.Code.Models;
-using NLog;
+﻿using NLog;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,11 +7,16 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using CertificateAuthority.Database;
+using CertificateAuthority.Models;
+using NBitcoin;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
+using Org.BouncyCastle.Asn1.X9;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Operators;
+using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto.Prng;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Pkcs;
@@ -23,9 +26,9 @@ using Org.BouncyCastle.X509;
 using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 using X509Extension = Org.BouncyCastle.Asn1.X509.X509Extension;
 
-namespace CertificateAuthority.Code
+namespace CertificateAuthority
 {
-    public class CertificatesManager
+    public class CaCertificatesManager
     {          
         private readonly DataCacheLayer repository;
 
@@ -43,7 +46,7 @@ namespace CertificateAuthority.Code
 
         public const string P2pkhExtensionOid = "1.4.1";
 
-        public CertificatesManager(DataCacheLayer cache, Settings settings)
+        public CaCertificatesManager(DataCacheLayer cache, Settings settings)
         {
             this.repository = cache;
             this.settings = settings;
@@ -145,7 +148,7 @@ namespace CertificateAuthority.Code
                 Status = CertificateStatus.Good,
                 Thumbprint = certificateFromReq.Thumbprint,
                 Address = p2pkh,
-                CertificateContent = DataHelper.ConvertToPEM(certificateFromReq),
+                CertificateContentDer = Convert.ToBase64String(certificateFromReq.RawData),
                 IssuerAccountId = creatorId
             };
 
@@ -488,6 +491,25 @@ namespace CertificateAuthority.Code
             );
 
             return certificateRequest;
+        }
+
+        public static string SignCertificateSigningRequest(string base64csr, Key privateKey, string ecdsaCurveFriendlyName = "secp256k1")
+        {
+            byte[] csrTemp = Convert.FromBase64String(base64csr);
+
+            var unsignedCsr = new Pkcs10CertificationRequestDelaySigned(csrTemp);
+            var privateKeyScalar = new BigInteger(privateKey.ToBytes());
+
+            X9ECParameters ecdsaCurve = ECNamedCurveTable.GetByName(ecdsaCurveFriendlyName);
+            var ecdsaDomainParams = new ECDomainParameters(ecdsaCurve.Curve, ecdsaCurve.G, ecdsaCurve.N, ecdsaCurve.H, ecdsaCurve.GetSeed());
+            var privateKeyParameter = new ECPrivateKeyParameters(privateKeyScalar, ecdsaDomainParams);
+
+            byte[] signature = CaCertificatesManager.GenerateCSRSignature(unsignedCsr.GetDataToSign(), "SHA256withECDSA", privateKeyParameter);
+            unsignedCsr.SignRequest(signature);
+
+            var signedCsr = new Pkcs10CertificationRequest(unsignedCsr.GetDerEncoded());
+
+            return Convert.ToBase64String(signedCsr.GetDerEncoded());
         }
 
         public static Pkcs10CertificationRequest CreateCertificateSigningRequest(string subjectName, AsymmetricCipherKeyPair subjectKeyPair, string[] subjectAlternativeNames, byte[] oid141)

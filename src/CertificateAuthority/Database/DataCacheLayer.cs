@@ -1,10 +1,10 @@
-﻿using CertificateAuthority.Code.Models;
-using NLog;
+﻿using NLog;
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Generic;
+using CertificateAuthority.Models;
 
-namespace CertificateAuthority.Code.Database
+namespace CertificateAuthority.Database
 {
     public class DataCacheLayer
     {
@@ -221,34 +221,34 @@ namespace CertificateAuthority.Code.Database
         /// <exception cref="InvalidCredentialsException">Thrown in case credentials are invalid.</exception>
         public void VerifyCredentialsAndAccessLevel(CredentialsAccessModel credentialsAccessModel, out AccountModel account)
         {
-            using CADbContext dbContext = this.CreateContext();
+            CADbContext dbContext = this.CreateContext();
             this.VerifyCredentialsAndAccessLevel(credentialsAccessModel, dbContext, out account);
         }
 
         public TResult ExecuteQuery<TAccessModel, TResult>(TAccessModel accessWithModel, Func<CADbContext, TResult> action) where TAccessModel : CredentialsAccessModel
         {
-            using CADbContext dbContext = this.CreateContext();
+            CADbContext dbContext = this.CreateContext();
             this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel account);
             return action(dbContext);
         }
 
         public TResult ExecuteQuery<TAccessModel, TResult>(TAccessModel accessWithModel, Func<CADbContext, AccountModel, TResult> action) where TAccessModel : CredentialsAccessModel
         {
-            using CADbContext dbContext = this.CreateContext();
+            CADbContext dbContext = this.CreateContext();
             this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel account);
             return action(dbContext, account);
         }
 
         public void ExecuteCommand<TAccessModel>(TAccessModel accessWithModel, Action<CADbContext, AccountModel> action) where TAccessModel : CredentialsAccessModel
         {
-            using CADbContext dbContext = this.CreateContext();
+            CADbContext dbContext = this.CreateContext();
             this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel account);
             action(dbContext, account);
         }
 
         public TResult ExecuteCommand<TAccessModel, TResult>(TAccessModel accessWithModel, Func<CADbContext, AccountModel, TResult> action) where TAccessModel : CredentialsAccessModel
         {
-            using CADbContext dbContext = this.CreateContext();
+            CADbContext dbContext = this.CreateContext();
             this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel account);
             return action(dbContext, account);
         }

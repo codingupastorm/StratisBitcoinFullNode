@@ -52,9 +52,8 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         {
             bool walletOk = this.CheckWallet();
             bool keyFileOk = this.CheckKeyFile();
-            bool certOk = this.CheckCertificate();
 
-            if (walletOk && keyFileOk && certOk)
+            if (walletOk && keyFileOk)
                 return true;
 
             Console.WriteLine($"Restart the daemon.");
@@ -211,30 +210,6 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                 Console.WriteLine($"The federation key ({KeyTool.KeyFileDefaultName}) has been created.");
 
                 return false;
-            }
-
-            return true;
-        }
-
-        internal bool CheckCertificate()
-        {
-            var password = this.walletSettings.Password;
-
-            if (!File.Exists(Path.Combine(this.walletSettings.RootPath, CertificatesManager.ClientCertificateName)))
-            {
-                if (password == null)
-                {
-                    Console.WriteLine($"Run this daemon with a -password=<password> argument so that the client certificate ({CertificatesManager.ClientCertificateName}) can be requested.");
-                    //return false;
-                }
-
-                Guard.Assert(this.Wallet != null);
-
-                // TODO: 4693 - Generate certificate request.
-            }
-            else
-            {
-                // TODO: 4693 - Generate certificate request.
             }
 
             return true;

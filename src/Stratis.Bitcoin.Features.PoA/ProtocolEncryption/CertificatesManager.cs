@@ -4,8 +4,12 @@ using System.Linq;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using CertificateAuthority;
+using CertificateAuthority.Client;
 using Microsoft.Extensions.Logging;
+using NBitcoin;
 using Stratis.Bitcoin.Configuration;
+using TextFileConfiguration = Stratis.Bitcoin.Configuration.TextFileConfiguration;
 
 namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 {
@@ -32,13 +36,20 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         private readonly ILogger logger;
 
+        private readonly Network network;
+
         private readonly TextFileConfiguration configuration;
 
-        public CertificatesManager(DataFolder dataFolder, NodeSettings nodeSettings, ILoggerFactory loggerFactory, RevocationChecker revocationChecker)
+        private string caUrl;
+
+        public CertificatesManager(DataFolder dataFolder, NodeSettings nodeSettings, ILoggerFactory loggerFactory, RevocationChecker revocationChecker, Network network)
         {
             this.dataFolder = dataFolder;
             this.configuration = nodeSettings.ConfigReader;
             this.revocationChecker = revocationChecker;
+            this.network = network;
+
+            this.caUrl = this.configuration.GetOrDefault<string>("caurl", "https://localhost:5001");
 
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
@@ -84,7 +95,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             if (!clientCertValid)
                 throw new Exception("Provided client certificate isn't signed by the authority certificate!");
 
-            bool revoked = await this.revocationChecker.IsCertificateRevokedAsync(this.ClientCertificate.Thumbprint).ConfigureAwait(false);
+            bool revoked = await this.revocationChecker.IsCertificateRevokedAsync(this.ClientCertificate.Thumbprint, false).ConfigureAwait(false);
 
             if (revoked)
                 throw new Exception("Provided client certificate was revoked!");
@@ -96,12 +107,17 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         /// <exception cref="Exception">Thrown in case authority chain build failed.</exception>
         private bool IsSignedByAuthorityCertificate(X509Certificate2 certificateToValidate, X509Certificate2 authorityCertificate)
         {
-            var chain = new X509Chain();
-            chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
-            chain.ChainPolicy.RevocationFlag = X509RevocationFlag.ExcludeRoot;
-            chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
-            chain.ChainPolicy.VerificationTime = DateTime.Now;
-            chain.ChainPolicy.UrlRetrievalTimeout = new TimeSpan(0, 0, 0);
+            var chain = new X509Chain
+            {
+                ChainPolicy =
+                {
+                    RevocationMode = X509RevocationMode.NoCheck,
+                    RevocationFlag = X509RevocationFlag.ExcludeRoot,
+                    VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority,
+                    VerificationTime = DateTime.Now,
+                    UrlRetrievalTimeout = new TimeSpan(0, 0, 0)
+                }
+            };
 
             chain.ChainPolicy.ExtraStore.Add(authorityCertificate);
 
@@ -131,12 +147,17 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             var certificateToValidate = new X509Certificate2(certificate);
 
-            X509Chain chain = new X509Chain();
-            chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
-            chain.ChainPolicy.RevocationFlag = X509RevocationFlag.ExcludeRoot;
-            chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
-            chain.ChainPolicy.VerificationTime = DateTime.Now;
-            chain.ChainPolicy.UrlRetrievalTimeout = new TimeSpan(0, 0, 0);
+            X509Chain chain = new X509Chain
+            {
+                ChainPolicy =
+                {
+                    RevocationMode = X509RevocationMode.NoCheck,
+                    RevocationFlag = X509RevocationFlag.ExcludeRoot,
+                    VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority,
+                    VerificationTime = DateTime.Now,
+                    UrlRetrievalTimeout = new TimeSpan(0, 0, 0)
+                }
+            };
 
             // Add root certificate.
             chain.ChainPolicy.ExtraStore.Add(this.AuthorityCertificate);
@@ -160,9 +181,63 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             if (!valid)
                 throw new Exception("Trust chain did not complete to the known authority anchor. Thumbprints did not match.");
 
-            bool revoked = this.revocationChecker.IsCertificateRevokedAsync(this.ClientCertificate.Thumbprint).ConfigureAwait(false).GetAwaiter().GetResult();
+            bool revoked = this.revocationChecker.IsCertificateRevokedAsync(this.ClientCertificate.Thumbprint, false).ConfigureAwait(false).GetAwaiter().GetResult();
 
             return !revoked;
+        }
+
+        public X509Certificate RequestNewCertificate(Client caClient, int accountId, string password, Key privateKey)
+        {
+            PubKey pubKey = privateKey.PubKey;
+            BitcoinPubKeyAddress address = pubKey.GetAddress(this.network);
+
+            var generateCsrModel = new GenerateCertificateSigningRequestModel()
+            {
+                AccountId = accountId, Address = address.ToString(), Password = password, PubKey = Convert.ToBase64String(pubKey.ToBytes())
+            };
+
+            CertificateSigningRequestModel csrModel = caClient.Generate_certificate_signing_requestAsync(generateCsrModel).ConfigureAwait(false).GetAwaiter().GetResult();
+            string signedCsr = CaCertificatesManager.SignCertificateSigningRequest(csrModel.CertificateSigningRequestContent, privateKey, "secp256k1");
+
+            var issueCertModel = new IssueCertificateFromFileContentsModel()
+            {
+                AccountId = accountId, CertificateRequestFileContents = signedCsr, Password = password
+            };
+
+            CertificateInfoModel issuedCertificate = caClient.Issue_certificate_using_request_stringAsync(issueCertModel).GetAwaiter().GetResult();
+            
+            var certificate = new X509Certificate(Convert.FromBase64String(issuedCertificate.CertificateContentDer));
+
+            return certificate;
+        }
+
+        public X509Certificate GetCertificateForAddress(Client caClient, int accountId, string password, string address)
+        {
+            var model = new CredentialsModelWithAddressModel()
+            {
+                AccountId = accountId,
+                Address = address,
+                Password = password
+            };
+
+            CertificateInfoModel retrievedCertModel = caClient.Get_certificate_for_addressAsync(model).GetAwaiter().GetResult();
+
+            var certificate = new X509Certificate(Convert.FromBase64String(retrievedCertModel.CertificateContentDer));
+
+            return certificate;
+        }
+
+        public static byte[] ExtractCertificateExtension(X509Certificate certificate, string oid)
+        {
+            var cert = new X509Certificate2(certificate);
+
+            foreach (X509Extension extension in cert.Extensions)
+            {
+                if (extension.Oid.Value == oid)
+                    return extension.RawData;
+            }
+
+            return new byte[0];
         }
     }
 

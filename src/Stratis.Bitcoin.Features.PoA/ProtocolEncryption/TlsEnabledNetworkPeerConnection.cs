@@ -17,6 +17,8 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
     {
         private readonly CertificatesManager certManager;
 
+        private X509Certificate peerCertificate;
+
         private readonly bool isServer;
 
         public TlsEnabledNetworkPeerConnection(Network network, INetworkPeer peer, TcpClient client, int clientId, ProcessMessageAsync<IncomingMessage> processMessageAsync,
@@ -25,6 +27,11 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         {
             this.certManager = certManager;
             this.isServer = isServer;
+        }
+
+        public X509Certificate GetPeerCertificate()
+        {
+            return this.peerCertificate;
         }
 
         protected override Stream GetStream()
@@ -58,6 +65,9 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
                 this.logger.LogTrace("(-)[AUTH_FAILED]");
                 return this.stream;
             }
+
+            // Can only be retrieved after the authentication has been performed above.
+            this.peerCertificate = sslStream.RemoteCertificate;
 
             this.stream = sslStream;
 

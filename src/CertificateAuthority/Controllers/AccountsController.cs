@@ -1,11 +1,11 @@
 ﻿using System;
-using CertificateAuthority.Code.Database;
-using CertificateAuthority.Code.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using CertificateAuthority.Database;
+using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
 
-namespace CertificateAuthority.Code.Controllers
+namespace CertificateAuthority.Controllers
 {
     [Route("api/accounts")]
     [ApiController]
