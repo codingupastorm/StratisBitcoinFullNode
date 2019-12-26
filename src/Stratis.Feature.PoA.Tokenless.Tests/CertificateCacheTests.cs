@@ -28,8 +28,10 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             Assert.NotNull(returnCert);
 
+            // It's a different reference so the objects are different, but the values are identical.
             Assert.Equal(cert.FriendlyName, returnCert.FriendlyName);
-            Assert.Equal(cert.PublicKey, returnCert.PublicKey);
+            Assert.Equal(cert.PublicKey.Oid.Value, returnCert.PublicKey.Oid.Value);
+            Assert.Equal(cert.IssuerName.Name, returnCert.IssuerName.Name);
         }
     }
 }
