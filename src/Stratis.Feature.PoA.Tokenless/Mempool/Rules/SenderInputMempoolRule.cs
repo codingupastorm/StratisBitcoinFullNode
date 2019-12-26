@@ -13,7 +13,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
     public sealed class SenderInputMempoolRule : MempoolRule
     {
         private readonly ITokenlessSigner tokenlessSigner;
-        private readonly ICertificateChecker certificateChecker;
+        private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
 
         public SenderInputMempoolRule(
             Network network,
@@ -22,11 +22,11 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
             ChainIndexer chainIndexer,
             ILoggerFactory loggerFactory,
             ITokenlessSigner tokenlessSigner,
-            ICertificateChecker certificateChecker)
+            ICertificatePermissionsChecker certificatePermissionsChecker)
             : base(network, mempool, settings, chainIndexer, loggerFactory)
         {
             this.tokenlessSigner = tokenlessSigner;
-            this.certificateChecker = certificateChecker;
+            this.certificatePermissionsChecker = certificatePermissionsChecker;
         }
 
         public override void CheckTransaction(MempoolValidationContext context)
@@ -41,7 +41,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
                 context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, $"The signature for transaction {context.Transaction.GetHash()} is invalid."));
 
             // Now that we have the sender address, lets get their certificate and check they have necessary permissions.
-            if (!this.certificateChecker.CheckSenderCertificateHasPermission(getSenderResult.Sender)) 
+            if (!this.certificatePermissionsChecker.CheckSenderCertificateHasPermission(getSenderResult.Sender)) 
                 context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "The sender of this transaction is not authorised by the CA to send transactions."));
 
         }

@@ -11,14 +11,14 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
     /// </summary>
     public sealed class SenderInputPartialValidationRule : PartialValidationConsensusRule
     {
-        private readonly ICertificateChecker certificateChecker;
+        private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
         private readonly ITokenlessSigner tokenlessSigner;
 
         public SenderInputPartialValidationRule(
-            ICertificateChecker certificateChecker,
+            ICertificatePermissionsChecker certificatePermissionsChecker,
             ITokenlessSigner tokenlessSigner)
         {
-            this.certificateChecker = certificateChecker;
+            this.certificatePermissionsChecker = certificatePermissionsChecker;
             this.tokenlessSigner = tokenlessSigner;
         }
 
