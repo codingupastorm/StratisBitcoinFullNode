@@ -99,15 +99,15 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
                 // Add fake certificates using data repository.
                 this.dataCacheLayer.AddNewCertificate(new CertificateInfoModel()
-                { IssuerAccountId = issuerId, CertificateContent = TestsHelper.GenerateRandomString(50), Status = CertificateStatus.Good, Thumbprint = print1 });
+                { IssuerAccountId = issuerId, CertificateContentDer = TestsHelper.GenerateRandomString(50), Status = CertificateStatus.Good, Thumbprint = print1 });
 
                 this.dataCacheLayer.AddNewCertificate(new CertificateInfoModel()
-                { IssuerAccountId = issuerId, CertificateContent = TestsHelper.GenerateRandomString(50), Status = CertificateStatus.Good, Thumbprint = print2 });
+                { IssuerAccountId = issuerId, CertificateContentDer = TestsHelper.GenerateRandomString(50), Status = CertificateStatus.Good, Thumbprint = print2 });
 
                 List<CertificateInfoModel> certs = this.accountsController.GetCertificatesIssuedByAccountId(new CredentialsModelWithTargetId(issuerId, this.adminCredentials.AccountId, this.adminCredentials.Password)).Value;
 
                 Assert.Equal(2, certs.Count);
-                Assert.Equal(50, certs[0].CertificateContent.Length);
+                Assert.Equal(50, certs[0].CertificateContentDer.Length);
             }
         }
 

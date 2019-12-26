@@ -1,4 +1,4 @@
-﻿using CertificateAuthority;
+﻿using CertificateAuthority.Controllers;
 using CertificateAuthority.Database;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
@@ -34,7 +34,11 @@ namespace CertificateAuthority
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc(option => option.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+            services.AddMvc(option => option.EnableEndpointRouting = false)
+                .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
+                .AddApplicationPart(typeof(AccountsController).GetTypeInfo().Assembly)
+                .AddApplicationPart(typeof(CertificatesController).GetTypeInfo().Assembly)
+                .AddApplicationPart(typeof(HelpersController).GetTypeInfo().Assembly);
 
             services.AddSwaggerGen(c =>
             {

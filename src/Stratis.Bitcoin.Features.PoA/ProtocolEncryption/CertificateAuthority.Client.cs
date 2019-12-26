@@ -45,8 +45,7 @@ namespace CertificateAuthority.Client
         partial void PrepareRequest(System.Net.Http.HttpClient client, System.Net.Http.HttpRequestMessage request, string url);
         partial void PrepareRequest(System.Net.Http.HttpClient client, System.Net.Http.HttpRequestMessage request, System.Text.StringBuilder urlBuilder);
         partial void ProcessResponse(System.Net.Http.HttpClient client, System.Net.Http.HttpResponseMessage response);
-
-        /// <summary>Provides account information of the account with id specified. AccessAccountInfo access level required.</summary>
+        
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task<AccountInfo> Get_account_info_by_idAsync(CredentialsModelWithTargetId body)
@@ -55,7 +54,6 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Provides account information of the account with id specified. AccessAccountInfo access level required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task<AccountInfo> Get_account_info_by_idAsync(CredentialsModelWithTargetId body, System.Threading.CancellationToken cancellationToken)
@@ -99,12 +97,6 @@ namespace CertificateAuthority.Client
                             return result_;
                         }
                         else
-                        if (status_ == "201")
-                        {
-                            string responseText_ = (response_.Content == null) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            throw new ApiException("Instance of CertificateAuthority.Code.Models.AccountInfo.", (int)response_.StatusCode, responseText_, headers_, null);
-                        }
-                        else
                         if (status_ != "200" && status_ != "204")
                         {
                             var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -125,7 +117,6 @@ namespace CertificateAuthority.Client
             }
         }
 
-        /// <summary>Provides account information of the account with id specified. AccessAccountInfo access level required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AccountModel>> List_accountsAsync(CredentialsModel body)
@@ -134,7 +125,6 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Provides account information of the account with id specified. AccessAccountInfo access level required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<AccountModel>> List_accountsAsync(CredentialsModel body, System.Threading.CancellationToken cancellationToken)
@@ -178,12 +168,6 @@ namespace CertificateAuthority.Client
                             return result_;
                         }
                         else
-                        if (status_ == "201")
-                        {
-                            string responseText_ = (response_.Content == null) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            throw new ApiException("Collection of CertificateAuthority.Code.Models.AccountModel instances.", (int)response_.StatusCode, responseText_, headers_, null);
-                        }
-                        else
                         if (status_ != "200" && status_ != "204")
                         {
                             var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -204,7 +188,6 @@ namespace CertificateAuthority.Client
             }
         }
 
-        /// <summary>Creates new account.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task<int> Create_accountAsync(CreateAccount body)
@@ -213,7 +196,6 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Creates new account.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task<int> Create_accountAsync(CreateAccount body, System.Threading.CancellationToken cancellationToken)
@@ -257,12 +239,6 @@ namespace CertificateAuthority.Client
                             return result_;
                         }
                         else
-                        if (status_ == "201")
-                        {
-                            string responseText_ = (response_.Content == null) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            throw new ApiException("Account id as integer. CreateAccounts access level is required.", (int)response_.StatusCode, responseText_, headers_, null);
-                        }
-                        else
                         if (status_ != "200" && status_ != "204")
                         {
                             var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -283,7 +259,6 @@ namespace CertificateAuthority.Client
             }
         }
 
-        /// <summary>Provides collection of all certificates issued by account with specified id. AccessAnyCertificate access level is required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task<System.Collections.Generic.ICollection<CertificateInfoModel>> Get_certificates_issued_by_account_idAsync(CredentialsModelWithTargetId body)
@@ -292,7 +267,6 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Provides collection of all certificates issued by account with specified id. AccessAnyCertificate access level is required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<CertificateInfoModel>> Get_certificates_issued_by_account_idAsync(CredentialsModelWithTargetId body, System.Threading.CancellationToken cancellationToken)
@@ -336,12 +310,6 @@ namespace CertificateAuthority.Client
                             return result_;
                         }
                         else
-                        if (status_ == "201")
-                        {
-                            string responseText_ = (response_.Content == null) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            throw new ApiException("Collection of CertificateAuthority.Code.Models.CertificateInfoModel instances.", (int)response_.StatusCode, responseText_, headers_, null);
-                        }
-                        else
                         if (status_ != "200" && status_ != "204")
                         {
                             var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -362,7 +330,6 @@ namespace CertificateAuthority.Client
             }
         }
 
-        /// <summary>Deletes existing account with id specified. DeleteAccounts access level is required. Can't delete Admin.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task Delete_account_by_account_idAsync(CredentialsModelWithTargetId body)
@@ -371,7 +338,6 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Deletes existing account with id specified. DeleteAccounts access level is required. Can't delete Admin.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task Delete_account_by_account_idAsync(CredentialsModelWithTargetId body, System.Threading.CancellationToken cancellationToken)
@@ -430,9 +396,6 @@ namespace CertificateAuthority.Client
             }
         }
 
-        /// <summary>Sets access level of a specified account to a given value.
-        /// You can't change your own or Admin's access level. You can't set account's access level to be higher than yours.
-        /// ChangeAccountAccessLevel access level is required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task Change_account_access_levelAsync(ChangeAccountAccessLevel body)
@@ -441,9 +404,6 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Sets access level of a specified account to a given value.
-        /// You can't change your own or Admin's access level. You can't set account's access level to be higher than yours.
-        /// ChangeAccountAccessLevel access level is required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task Change_account_access_levelAsync(ChangeAccountAccessLevel body, System.Threading.CancellationToken cancellationToken)
@@ -573,9 +533,6 @@ namespace CertificateAuthority.Client
             }
         }
 
-        /// <summary>Sets certificate status with the provided thumbprint to CertificateAuthority.Code.Models.CertificateStatus.Revoked
-        /// if certificate was found and it's status is CertificateAuthority.Code.Models.CertificateStatus.Good.
-        /// RevokeCertificates access level is required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task<bool> Revoke_certificateAsync(CredentialsModelWithThumbprintModel body)
@@ -584,9 +541,6 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Sets certificate status with the provided thumbprint to CertificateAuthority.Code.Models.CertificateStatus.Revoked
-        /// if certificate was found and it's status is CertificateAuthority.Code.Models.CertificateStatus.Good.
-        /// RevokeCertificates access level is required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task<bool> Revoke_certificateAsync(CredentialsModelWithThumbprintModel body, System.Threading.CancellationToken cancellationToken)
@@ -650,7 +604,6 @@ namespace CertificateAuthority.Client
             }
         }
 
-        /// <summary>Finds issued certificate by thumbprint and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task<CertificateInfoModel> Get_certificateAsync(CredentialsModelWithThumbprintModel body)
@@ -659,7 +612,6 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Finds issued certificate by thumbprint and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task<CertificateInfoModel> Get_certificateAsync(CredentialsModelWithThumbprintModel body, System.Threading.CancellationToken cancellationToken)
@@ -723,7 +675,6 @@ namespace CertificateAuthority.Client
             }
         }
 
-        /// <summary>Finds issued certificate by P2PKH address and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task<CertificateInfoModel> Get_certificate_for_addressAsync(CredentialsModelWithAddressModel body)
@@ -732,7 +683,6 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Finds issued certificate by P2PKH address and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task<CertificateInfoModel> Get_certificate_for_addressAsync(CredentialsModelWithAddressModel body, System.Threading.CancellationToken cancellationToken)
@@ -796,7 +746,6 @@ namespace CertificateAuthority.Client
             }
         }
 
-        /// <summary>Provides collection of all issued certificates. AccessAnyCertificate access level is required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task<System.Collections.Generic.ICollection<CertificateInfoModel>> Get_all_certificatesAsync(CredentialsModel body)
@@ -805,7 +754,6 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Provides collection of all issued certificates. AccessAnyCertificate access level is required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<CertificateInfoModel>> Get_all_certificatesAsync(CredentialsModel body, System.Threading.CancellationToken cancellationToken)
@@ -849,12 +797,6 @@ namespace CertificateAuthority.Client
                             return result_;
                         }
                         else
-                        if (status_ == "201")
-                        {
-                            string responseText_ = (response_.Content == null) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            throw new ApiException("Collection of CertificateAuthority.Code.Models.CertificateInfoModel instances.\"/&gt;.", (int)response_.StatusCode, responseText_, headers_, null);
-                        }
-                        else
                         if (status_ != "200" && status_ != "204")
                         {
                             var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -875,8 +817,7 @@ namespace CertificateAuthority.Client
             }
         }
 
-        /// <summary>Creates a template certificate request without a signature. IssueCertificates access level is required.</summary>
-        /// <returns>Instance of CertificateAuthority.Code.Models.CertificateSigningRequestModel.</returns>
+        /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task<CertificateSigningRequestModel> Generate_certificate_signing_requestAsync(GenerateCertificateSigningRequestModel body)
         {
@@ -884,8 +825,7 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Creates a template certificate request without a signature. IssueCertificates access level is required.</summary>
-        /// <returns>Instance of CertificateAuthority.Code.Models.CertificateSigningRequestModel.</returns>
+        /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task<CertificateSigningRequestModel> Generate_certificate_signing_requestAsync(GenerateCertificateSigningRequestModel body, System.Threading.CancellationToken cancellationToken)
         {
@@ -948,7 +888,6 @@ namespace CertificateAuthority.Client
             }
         }
 
-        /// <summary>Issues a new certificate using provided certificate request. IssueCertificates access level is required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task<CertificateInfoModel> Issue_certificate_using_request_fileAsync(IssueCertificateFromRequestModel body)
@@ -957,7 +896,6 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Issues a new certificate using provided certificate request. IssueCertificates access level is required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task<CertificateInfoModel> Issue_certificate_using_request_fileAsync(IssueCertificateFromRequestModel body, System.Threading.CancellationToken cancellationToken)
@@ -1001,12 +939,6 @@ namespace CertificateAuthority.Client
                             return result_;
                         }
                         else
-                        if (status_ == "201")
-                        {
-                            string responseText_ = (response_.Content == null) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            throw new ApiException("Instance of CertificateAuthority.Code.Models.CertificateInfoModel.", (int)response_.StatusCode, responseText_, headers_, null);
-                        }
-                        else
                         if (status_ != "200" && status_ != "204")
                         {
                             var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -1027,7 +959,6 @@ namespace CertificateAuthority.Client
             }
         }
 
-        /// <summary>Issues a new certificate using provided certificate request string. IssueCertificates access level is required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task<CertificateInfoModel> Issue_certificate_using_request_stringAsync(IssueCertificateFromFileContentsModel body)
@@ -1036,7 +967,6 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Issues a new certificate using provided certificate request string. IssueCertificates access level is required.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task<CertificateInfoModel> Issue_certificate_using_request_stringAsync(IssueCertificateFromFileContentsModel body, System.Threading.CancellationToken cancellationToken)
@@ -1080,12 +1010,6 @@ namespace CertificateAuthority.Client
                             return result_;
                         }
                         else
-                        if (status_ == "201")
-                        {
-                            string responseText_ = (response_.Content == null) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            throw new ApiException("Instance of CertificateAuthority.Code.Models.CertificateInfoModel.", (int)response_.StatusCode, responseText_, headers_, null);
-                        }
-                        else
                         if (status_ != "200" && status_ != "204")
                         {
                             var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -1106,11 +1030,7 @@ namespace CertificateAuthority.Client
             }
         }
 
-        /// <summary>Gets status of the certificate with the provided thumbprint or
-        /// returns CertificateAuthority.Code.Models.CertificateStatus.Unknown if certificate wasn't found.</summary>
-        /// <param name="thumbprint">Certificate's thumbprint.</param>
-        /// <param name="asString">Set to {true} for 'Good\Revoked\Unknown' format, or {false} for '1\2\3' format.</param>
-        /// <returns>Certificate status string.</returns>
+        /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task<string> Get_certificate_statusAsync(string thumbprint, bool? asString)
         {
@@ -1118,11 +1038,7 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Gets status of the certificate with the provided thumbprint or
-        /// returns CertificateAuthority.Code.Models.CertificateStatus.Unknown if certificate wasn't found.</summary>
-        /// <param name="thumbprint">Certificate's thumbprint.</param>
-        /// <param name="asString">Set to {true} for 'Good\Revoked\Unknown' format, or {false} for '1\2\3' format.</param>
-        /// <returns>Certificate status string.</returns>
+        /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task<string> Get_certificate_statusAsync(string thumbprint, bool? asString, System.Threading.CancellationToken cancellationToken)
         {
@@ -1191,8 +1107,7 @@ namespace CertificateAuthority.Client
             }
         }
 
-        /// <summary>Returns a collection of thumbprints of revoked certificates.</summary>
-        /// <returns>Collection of System.String.</returns>
+        /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task<System.Collections.Generic.ICollection<string>> Get_revoked_certificatesAsync()
         {
@@ -1200,8 +1115,7 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Returns a collection of thumbprints of revoked certificates.</summary>
-        /// <returns>Collection of System.String.</returns>
+        /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<string>> Get_revoked_certificatesAsync(System.Threading.CancellationToken cancellationToken)
         {
@@ -1261,7 +1175,6 @@ namespace CertificateAuthority.Client
             }
         }
 
-        /// <summary>Calculates sha256 hash of a given string.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task<string> Get_sha256_hashAsync(string data)
@@ -1270,7 +1183,6 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Calculates sha256 hash of a given string.</summary>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task<string> Get_sha256_hashAsync(string data, System.Threading.CancellationToken cancellationToken)
@@ -1317,12 +1229,6 @@ namespace CertificateAuthority.Client
                             return result_;
                         }
                         else
-                        if (status_ == "201")
-                        {
-                            string responseText_ = (response_.Content == null) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            throw new ApiException("Instance of string.", (int)response_.StatusCode, responseText_, headers_, null);
-                        }
-                        else
                         if (status_ != "200" && status_ != "204")
                         {
                             var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -1343,8 +1249,6 @@ namespace CertificateAuthority.Client
             }
         }
 
-        /// <summary>Provides collection of all access flags. To combine several flags into a single one just sum their integer representations.</summary>
-        /// <param name="body">Your Id and password. CertificateAuthority.Code.Models.AccountAccessFlags.BasicAccess access level is required.</param>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<string, string>> Get_all_access_level_valuesAsync(CredentialsModel body)
@@ -1353,8 +1257,6 @@ namespace CertificateAuthority.Client
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
-        /// <summary>Provides collection of all access flags. To combine several flags into a single one just sum their integer representations.</summary>
-        /// <param name="body">Your Id and password. CertificateAuthority.Code.Models.AccountAccessFlags.BasicAccess access level is required.</param>
         /// <returns>Success</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public async System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<string, string>> Get_all_access_level_valuesAsync(CredentialsModel body, System.Threading.CancellationToken cancellationToken)
@@ -1396,12 +1298,6 @@ namespace CertificateAuthority.Client
                             var responseData_ = response_.Content == null ? null : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
                             var result_ = (System.Collections.Generic.IDictionary<string, string>)System.Convert.ChangeType(responseData_, typeof(System.Collections.Generic.IDictionary<string, string>));
                             return result_;
-                        }
-                        else
-                        if (status_ == "201")
-                        {
-                            string responseText_ = (response_.Content == null) ? string.Empty : await response_.Content.ReadAsStringAsync().ConfigureAwait(false);
-                            throw new ApiException("Dictionary with access flag as key and access string as value.", (int)response_.StatusCode, responseText_, headers_, null);
                         }
                         else
                         if (status_ != "200" && status_ != "204")
@@ -1521,15 +1417,12 @@ namespace CertificateAuthority.Client
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "10.1.2.0 (Newtonsoft.Json v11.0.0.0)")]
     public partial class CredentialsModelWithTargetId
     {
-        /// <summary>Id of an account you want to get information for.</summary>
         [Newtonsoft.Json.JsonProperty("targetAccountId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int TargetAccountId { get; set; }
 
-        /// <summary>Caller's account Id.</summary>
         [Newtonsoft.Json.JsonProperty("accountId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int AccountId { get; set; }
 
-        /// <summary>Caller's password.</summary>
         [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Password { get; set; }
 
@@ -1559,7 +1452,6 @@ namespace CertificateAuthority.Client
 
     }
 
-    /// <summary>General information about user's account.</summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "10.1.2.0 (Newtonsoft.Json v11.0.0.0)")]
     public partial class AccountInfo
     {
@@ -1575,15 +1467,12 @@ namespace CertificateAuthority.Client
 
     }
 
-    /// <summary>Credentials needed for API endpoints with restricted access.</summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "10.1.2.0 (Newtonsoft.Json v11.0.0.0)")]
     public partial class CredentialsModel
     {
-        /// <summary>Caller's account Id.</summary>
         [Newtonsoft.Json.JsonProperty("accountId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int AccountId { get; set; }
 
-        /// <summary>Caller's password.</summary>
         [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Password { get; set; }
 
@@ -1614,23 +1503,18 @@ namespace CertificateAuthority.Client
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "10.1.2.0 (Newtonsoft.Json v11.0.0.0)")]
     public partial class CreateAccount
     {
-        /// <summary>Account name for a new account. Can't be a a nickname that is already taken.</summary>
         [Newtonsoft.Json.JsonProperty("newAccountName", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string NewAccountName { get; set; }
 
-        /// <summary>Sha256 hash of new account's password.</summary>
         [Newtonsoft.Json.JsonProperty("newAccountPasswordHash", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string NewAccountPasswordHash { get; set; }
 
-        /// <summary>Access level flag for a new account.</summary>
         [Newtonsoft.Json.JsonProperty("newAccountAccess", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int NewAccountAccess { get; set; }
 
-        /// <summary>Caller's account Id.</summary>
         [Newtonsoft.Json.JsonProperty("accountId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int AccountId { get; set; }
 
-        /// <summary>Caller's password.</summary>
         [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Password { get; set; }
 
@@ -1648,7 +1532,6 @@ namespace CertificateAuthority.Client
 
     }
 
-    /// <summary>Model that contains information related to a specific certificate.</summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "10.1.2.0 (Newtonsoft.Json v11.0.0.0)")]
     public partial class CertificateInfoModel
     {
@@ -1658,13 +1541,14 @@ namespace CertificateAuthority.Client
         [Newtonsoft.Json.JsonProperty("thumbprint", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Thumbprint { get; set; }
 
-        /// <summary>The P2PKH address corresponding to the private key of the certificate.</summary>
         [Newtonsoft.Json.JsonProperty("address", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Address { get; set; }
 
-        /// <summary>Certificate in the following format: {-----BEGIN CERTIFICATE----- MIIE1jCCAr ... 7w1gjwn -----END CERTIFICATE-----}.</summary>
         [Newtonsoft.Json.JsonProperty("certificateContent", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string CertificateContent { get; set; }
+
+        [Newtonsoft.Json.JsonProperty("certificateContentDer", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string CertificateContentDer { get; set; }
 
         [Newtonsoft.Json.JsonProperty("status", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public CertificateStatus Status { get; set; }
@@ -1681,19 +1565,15 @@ namespace CertificateAuthority.Client
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "10.1.2.0 (Newtonsoft.Json v11.0.0.0)")]
     public partial class ChangeAccountAccessLevel
     {
-        /// <summary>New access flags to set.</summary>
         [Newtonsoft.Json.JsonProperty("accessFlags", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int AccessFlags { get; set; }
 
-        /// <summary>Id of an account you want to get information for.</summary>
         [Newtonsoft.Json.JsonProperty("targetAccountId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int TargetAccountId { get; set; }
 
-        /// <summary>Caller's account Id.</summary>
         [Newtonsoft.Json.JsonProperty("accountId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int AccountId { get; set; }
 
-        /// <summary>Caller's password.</summary>
         [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Password { get; set; }
 
@@ -1703,20 +1583,15 @@ namespace CertificateAuthority.Client
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "10.1.2.0 (Newtonsoft.Json v11.0.0.0)")]
     public partial class CredentialsModelWithMnemonicModel
     {
-        /// <summary>Mnemonic words used to derive certificate authority's private key.</summary>
         [Newtonsoft.Json.JsonProperty("mnemonic", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Mnemonic { get; set; }
 
-        /// <summary>Password to be used with the mnemonic words, used to derive certificate authority's private key.
-        ///             This is a separate password to the actual user account to allow the user account password to be changed without affecting the CA.</summary>
         [Newtonsoft.Json.JsonProperty("mnemonicPassword", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string MnemonicPassword { get; set; }
 
-        /// <summary>Caller's account Id.</summary>
         [Newtonsoft.Json.JsonProperty("accountId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int AccountId { get; set; }
 
-        /// <summary>Caller's password.</summary>
         [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Password { get; set; }
 
@@ -1726,15 +1601,12 @@ namespace CertificateAuthority.Client
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "10.1.2.0 (Newtonsoft.Json v11.0.0.0)")]
     public partial class CredentialsModelWithThumbprintModel
     {
-        /// <summary>Certificate's thumbprint.</summary>
         [Newtonsoft.Json.JsonProperty("thumbprint", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Thumbprint { get; set; }
 
-        /// <summary>Caller's account Id.</summary>
         [Newtonsoft.Json.JsonProperty("accountId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int AccountId { get; set; }
 
-        /// <summary>Caller's password.</summary>
         [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Password { get; set; }
 
@@ -1744,15 +1616,12 @@ namespace CertificateAuthority.Client
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "10.1.2.0 (Newtonsoft.Json v11.0.0.0)")]
     public partial class CredentialsModelWithAddressModel
     {
-        /// <summary>Certificate's P2PKH address, stored in extension OID 1.4.1.</summary>
         [Newtonsoft.Json.JsonProperty("address", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Address { get; set; }
 
-        /// <summary>Caller's account Id.</summary>
         [Newtonsoft.Json.JsonProperty("accountId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int AccountId { get; set; }
 
-        /// <summary>Caller's password.</summary>
         [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Password { get; set; }
 
@@ -1768,11 +1637,9 @@ namespace CertificateAuthority.Client
         [Newtonsoft.Json.JsonProperty("pubKey", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string PubKey { get; set; }
 
-        /// <summary>Caller's account Id.</summary>
         [Newtonsoft.Json.JsonProperty("accountId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int AccountId { get; set; }
 
-        /// <summary>Caller's password.</summary>
         [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Password { get; set; }
 
@@ -1782,25 +1649,21 @@ namespace CertificateAuthority.Client
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "10.1.2.0 (Newtonsoft.Json v11.0.0.0)")]
     public partial class CertificateSigningRequestModel
     {
-        /// <summary>Certificate signing request in base64 format.</summary>
         [Newtonsoft.Json.JsonProperty("certificateSigningRequestContent", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string CertificateSigningRequestContent { get; set; }
 
 
     }
 
-    /// <summary>Model that combines credentials information and a file sent in request.</summary>
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "10.1.2.0 (Newtonsoft.Json v11.0.0.0)")]
     public partial class IssueCertificateFromRequestModel
     {
         [Newtonsoft.Json.JsonProperty("certificateRequestFile", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public byte[] CertificateRequestFile { get; set; }
 
-        /// <summary>Caller's account Id.</summary>
         [Newtonsoft.Json.JsonProperty("accountId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int AccountId { get; set; }
 
-        /// <summary>Caller's password.</summary>
         [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Password { get; set; }
 
@@ -1813,11 +1676,9 @@ namespace CertificateAuthority.Client
         [Newtonsoft.Json.JsonProperty("certificateRequestFileContents", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string CertificateRequestFileContents { get; set; }
 
-        /// <summary>Caller's account Id.</summary>
         [Newtonsoft.Json.JsonProperty("accountId", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public int AccountId { get; set; }
 
-        /// <summary>Caller's password.</summary>
         [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Password { get; set; }
 

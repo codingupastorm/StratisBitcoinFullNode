@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using CertificateAuthority;
 using CertificateAuthority.Models;
 using Xunit;
 

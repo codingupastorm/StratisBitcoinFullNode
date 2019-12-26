@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -187,22 +186,45 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return !revoked;
         }
 
-        public void RequestCertificate(int accountId, string password, PubKey pubKey)
+        public X509Certificate RequestNewCertificate(Client caClient, int accountId, string password, Key privateKey)
         {
+            PubKey pubKey = privateKey.PubKey;
             BitcoinPubKeyAddress address = pubKey.GetAddress(this.network);
 
-            var model = new GenerateCertificateSigningRequestModel()
+            var generateCsrModel = new GenerateCertificateSigningRequestModel()
             {
                 AccountId = accountId, Address = address.ToString(), Password = password, PubKey = Convert.ToBase64String(pubKey.ToBytes())
             };
 
-            var client = new Client(this.caUrl, new HttpClient());
+            CertificateSigningRequestModel csrModel = caClient.Generate_certificate_signing_requestAsync(generateCsrModel).ConfigureAwait(false).GetAwaiter().GetResult();
+            string signedCsr = CaCertificatesManager.SignCertificateSigningRequest(csrModel.CertificateSigningRequestContent, privateKey, "secp256k1");
 
-            CertificateSigningRequestModel csrModel = client.Generate_certificate_signing_requestAsync(model).ConfigureAwait(false).GetAwaiter().GetResult();
-            //CaCertificatesManager.
-            //csrModel.CertificateSigningRequestContent
+            var issueCertModel = new IssueCertificateFromFileContentsModel()
+            {
+                AccountId = accountId, CertificateRequestFileContents = signedCsr, Password = password
+            };
 
-            // WIP - adding a method to CaCertificatesManager to sign a base64 CSR using an NBitcoin PubKey
+            CertificateInfoModel issuedCertificate = caClient.Issue_certificate_using_request_stringAsync(issueCertModel).GetAwaiter().GetResult();
+            
+            var certificate = new X509Certificate(Convert.FromBase64String(issuedCertificate.CertificateContentDer));
+
+            return certificate;
+        }
+
+        public X509Certificate GetCertificateForAddress(Client caClient, int accountId, string password, string address)
+        {
+            var model = new CredentialsModelWithAddressModel()
+            {
+                AccountId = accountId,
+                Address = address,
+                Password = password
+            };
+
+            CertificateInfoModel retrievedCertModel = caClient.Get_certificate_for_addressAsync(model).GetAwaiter().GetResult();
+
+            var certificate = new X509Certificate(Convert.FromBase64String(retrievedCertModel.CertificateContentDer));
+
+            return certificate;
         }
 
         public static byte[] ExtractCertificateExtension(X509Certificate certificate, string oid)

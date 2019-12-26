@@ -14,8 +14,8 @@ namespace CertificateAuthority.Models
         /// </summary>
         public string Address { get; set; }
 
-        /// <summary>Certificate in the following format: <c>-----BEGIN CERTIFICATE----- MIIE1jCCAr ... 7w1gjwn -----END CERTIFICATE-----</c>.</summary>
-        public string CertificateContent { get; set; }
+        /// <summary>Certificate data encoded in DER format, converted to base64.</summary>
+        public string CertificateContentDer { get; set; }
 
         public CertificateStatus Status { get; set; }
 
