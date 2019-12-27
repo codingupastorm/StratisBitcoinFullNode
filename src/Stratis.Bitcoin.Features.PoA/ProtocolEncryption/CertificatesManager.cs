@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -24,6 +25,8 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         public const string ClientCertificateConfigurationKey = "certificatepassword";
 
+        public const string AccountIdKey = "certificateaccountid";
+
         /// <summary>Root certificate of the certificate authority for the current network.</summary>
         public X509Certificate2 AuthorityCertificate { get; private set; }
 
@@ -41,6 +44,10 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         private readonly TextFileConfiguration configuration;
 
         private string caUrl;
+
+        private string caPassword;
+
+        private int caAccountId;
 
         public CertificatesManager(DataFolder dataFolder, NodeSettings nodeSettings, ILoggerFactory loggerFactory, RevocationChecker revocationChecker, Network network)
         {
@@ -73,16 +80,24 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
                 throw new CertificateConfigurationException($"Client certificate not located at '{clientCertPath}'. Make sure you place '{ClientCertificateName}' in the node's root directory.");
             }
 
-            string clientCertificatePassword = this.configuration.GetOrDefault<string>(ClientCertificateConfigurationKey, null);
+            this.caPassword = this.configuration.GetOrDefault<string>(ClientCertificateConfigurationKey, null);
 
-            if (clientCertificatePassword == null)
+            if (this.caPassword == null)
             {
                 this.logger.LogTrace("(-)[NO_PASSWORD]");
                 throw new CertificateConfigurationException($"You have to provide password for the client certificate! Use '{ClientCertificateConfigurationKey}' configuration key to provide a password.");
             }
 
+            this.caAccountId = this.configuration.GetOrDefault<int>(AccountIdKey, 0);
+
+            if (this.caAccountId == 0)
+            {
+                this.logger.LogTrace("(-)[NO_ACCOUNT_ID]");
+                throw new CertificateConfigurationException($"You have to provide account id to query the CA! Use '{AccountIdKey}' configuration key to provide an account id.");
+            }
+
             this.AuthorityCertificate = new X509Certificate2(acPath);
-            this.ClientCertificate = new X509Certificate2(clientCertPath, clientCertificatePassword);
+            this.ClientCertificate = new X509Certificate2(clientCertPath, this.caPassword);
 
             if (this.ClientCertificate == null)
             {
@@ -186,43 +201,47 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return !revoked;
         }
 
-        public X509Certificate RequestNewCertificate(Client caClient, int accountId, string password, Key privateKey)
+        public X509Certificate2 RequestNewCertificate(Key privateKey)
         {
+            var client = new Client(this.caUrl, new HttpClient());
+
             PubKey pubKey = privateKey.PubKey;
             BitcoinPubKeyAddress address = pubKey.GetAddress(this.network);
 
             var generateCsrModel = new GenerateCertificateSigningRequestModel()
             {
-                AccountId = accountId, Address = address.ToString(), Password = password, PubKey = Convert.ToBase64String(pubKey.ToBytes())
+                AccountId = this.caAccountId, Address = address.ToString(), Password = this.caPassword, PubKey = Convert.ToBase64String(pubKey.ToBytes())
             };
 
-            CertificateSigningRequestModel csrModel = caClient.Generate_certificate_signing_requestAsync(generateCsrModel).ConfigureAwait(false).GetAwaiter().GetResult();
+            CertificateSigningRequestModel csrModel = client.Generate_certificate_signing_requestAsync(generateCsrModel).ConfigureAwait(false).GetAwaiter().GetResult();
             string signedCsr = CaCertificatesManager.SignCertificateSigningRequest(csrModel.CertificateSigningRequestContent, privateKey, "secp256k1");
 
             var issueCertModel = new IssueCertificateFromFileContentsModel()
             {
-                AccountId = accountId, CertificateRequestFileContents = signedCsr, Password = password
+                AccountId = this.caAccountId, CertificateRequestFileContents = signedCsr, Password = caPassword
             };
 
-            CertificateInfoModel issuedCertificate = caClient.Issue_certificate_using_request_stringAsync(issueCertModel).GetAwaiter().GetResult();
+            CertificateInfoModel issuedCertificate = client.Issue_certificate_using_request_stringAsync(issueCertModel).GetAwaiter().GetResult();
             
-            var certificate = new X509Certificate(Convert.FromBase64String(issuedCertificate.CertificateContentDer));
+            var certificate = new X509Certificate2(Convert.FromBase64String(issuedCertificate.CertificateContentDer));
 
             return certificate;
         }
 
-        public X509Certificate GetCertificateForAddress(Client caClient, int accountId, string password, string address)
+        public X509Certificate2 GetCertificateForAddress(string address)
         {
+            var client = new Client(this.caUrl, new HttpClient());
+
             var model = new CredentialsModelWithAddressModel()
             {
-                AccountId = accountId,
+                AccountId = this.caAccountId,
                 Address = address,
-                Password = password
+                Password = this.caPassword
             };
 
-            CertificateInfoModel retrievedCertModel = caClient.Get_certificate_for_addressAsync(model).GetAwaiter().GetResult();
+            CertificateInfoModel retrievedCertModel = client.Get_certificate_for_addressAsync(model).GetAwaiter().GetResult();
 
-            var certificate = new X509Certificate(Convert.FromBase64String(retrievedCertModel.CertificateContentDer));
+            var certificate = new X509Certificate2(Convert.FromBase64String(retrievedCertModel.CertificateContentDer));
 
             return certificate;
         }

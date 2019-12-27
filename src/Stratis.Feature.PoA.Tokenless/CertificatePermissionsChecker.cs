@@ -1,7 +1,7 @@
-﻿using System;
-using System.Security.Cryptography.X509Certificates;
+﻿using System.Security.Cryptography.X509Certificates;
 using NBitcoin;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
+using Stratis.SmartContracts.CLR;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -14,10 +14,16 @@ namespace Stratis.Feature.PoA.Tokenless
         public const string SendPermission = "SendPermission";
 
         private readonly ICertificateCache certificateCache;
+        private readonly CertificatesManager certificatesManager;
+        private readonly Network network;
 
-        public CertificatePermissionsChecker(ICertificateCache certificateCache)
+        public CertificatePermissionsChecker(ICertificateCache certificateCache,
+            CertificatesManager certificatesManager,
+            Network network)
         {
             this.certificateCache = certificateCache;
+            this.certificatesManager = certificatesManager;
+            this.network = network;
         }
 
         public bool CheckSenderCertificateHasPermission(uint160 address)
@@ -28,17 +34,15 @@ namespace Stratis.Feature.PoA.Tokenless
 
         private X509Certificate2 GetCertificate(uint160 address)
         {
-            X509Certificate2 certificate = this.certificateCache.GetCertificate(address);
-
-            if (certificate == null)
-                certificate = GetCertificateFromCA(address);
+            X509Certificate2 certificate = this.certificateCache.GetCertificate(address) 
+                                           ?? GetCertificateFromCA(address);
 
             return certificate;
         }
 
         private X509Certificate2 GetCertificateFromCA(uint160 address)
         {
-            throw new NotImplementedException("Functionality to query CA isn't ready yet.");
+            return this.certificatesManager.GetCertificateForAddress(address.ToBase58Address(this.network));
         }
 
         public static bool ValidateCertificateHasPermission(X509Certificate2 certificate)
@@ -49,7 +53,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 return false;
 
             byte[] result = CertificatesManager.ExtractCertificateExtension(certificate, SendPermission);
-            return result.Length != 0;
+            return result != null;
         }
     }
 }
