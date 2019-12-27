@@ -256,7 +256,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
                     return extension.RawData;
             }
 
-            return new byte[0];
+            return null;
         }
     }
 
