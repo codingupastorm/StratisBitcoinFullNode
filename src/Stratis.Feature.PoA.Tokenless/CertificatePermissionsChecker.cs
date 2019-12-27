@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography.X509Certificates;
 using NBitcoin;
+using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -47,15 +48,8 @@ namespace Stratis.Feature.PoA.Tokenless
             if (certificate == null)
                 return false;
 
-            foreach (X509Extension extension in certificate.Extensions)
-            {
-                if (extension.Oid.FriendlyName == SendPermission)
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            byte[] result = CertificatesManager.ExtractCertificateExtension(certificate, SendPermission);
+            return result.Length != 0;
         }
     }
 }
