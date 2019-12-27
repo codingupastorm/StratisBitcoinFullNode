@@ -52,7 +52,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
                 return;
             }
 
-            byte[] certificateP2pkhExtension = CertificatesManager.ExtractCertificateExtension(peerCertificate, "1.4.1");
+            byte[] certificateP2pkhExtension = CertificatesManager.ExtractCertificateExtension(peerCertificate, "1.4.1") ?? new byte[0];
 
             string certificateP2pkh = Encoding.UTF8.GetString(certificateP2pkhExtension);
 
