@@ -62,7 +62,7 @@ namespace CertificateAuthority
         public AsymmetricCipherKeyPair GetCertificateKeyPair(string hdPath, string ecdsaCurveFriendlyName = "secp256k1")
         {
             ExtKey addressKey = GetKey(hdPath);
-            var privateKey = new BigInteger(addressKey.PrivateKey.ToBytes());
+            var privateKey = new BigInteger(1, addressKey.PrivateKey.GetBytes());
 
             // Set curve parameters
             X9ECParameters ecdsaCurve = ECNamedCurveTable.GetByName(ecdsaCurveFriendlyName);

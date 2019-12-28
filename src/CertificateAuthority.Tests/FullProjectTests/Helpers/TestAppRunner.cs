@@ -87,7 +87,7 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc(option => option.EnableEndpointRouting = false).SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             services.AddSingleton<Settings>();
             services.AddSingleton<DataCacheLayer>();

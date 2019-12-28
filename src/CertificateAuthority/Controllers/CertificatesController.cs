@@ -67,7 +67,7 @@ namespace CertificateAuthority.Controllers
         }
 
         /// <summary>Finds issued certificate by thumbprint and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
-        [HttpPost("get_certificate")]
+        [HttpPost("get_certificate_for_thumbprint")]
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
         public ActionResult<CertificateInfoModel> GetCertificateByThumbprint([FromBody]CredentialsModelWithThumbprintModel model)
         {
@@ -141,8 +141,8 @@ namespace CertificateAuthority.Controllers
             byte[] pubKeyBytes = Convert.FromBase64String(data.Model.PubKey);
 
             X9ECParameters ecdsaCurve = ECNamedCurveTable.GetByName("secp256k1");
-            ECDomainParameters ecdsaDomainParams = new ECDomainParameters(ecdsaCurve.Curve, ecdsaCurve.G, ecdsaCurve.N, ecdsaCurve.H, ecdsaCurve.GetSeed());
-            X9ECPoint q = new X9ECPoint(ecdsaCurve.Curve, pubKeyBytes);
+            var ecdsaDomainParams = new ECDomainParameters(ecdsaCurve.Curve, ecdsaCurve.G, ecdsaCurve.N, ecdsaCurve.H, ecdsaCurve.GetSeed());
+            var q = new X9ECPoint(ecdsaCurve.Curve, pubKeyBytes);
 
             AsymmetricKeyParameter publicKey = new ECPublicKeyParameters(q.Point, ecdsaDomainParams);
 
