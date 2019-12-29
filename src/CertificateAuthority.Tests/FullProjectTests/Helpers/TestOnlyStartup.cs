@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using CertificateAuthority.API;
 using CertificateAuthority.Controllers;
 using Microsoft.Extensions.Configuration;
@@ -29,7 +30,11 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
 
         private string GetTestDirectoryPath(object caller, [System.Runtime.CompilerServices.CallerMemberName] string callingMethod = "")
         {
-            return Path.Combine(Path.GetTempPath(), caller.GetType().Name, callingMethod);
+            string timeStamp = DateTime.Now.ToString("yyyyMMddHHmmssfff");
+
+            string randomString = TestsHelper.GenerateRandomString(6);
+
+            return Path.Combine(Path.GetTempPath(), caller.GetType().Name, callingMethod, timeStamp + randomString);
         }
     }
 }

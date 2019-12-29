@@ -89,7 +89,7 @@ namespace CertificateAuthority.API
                     configurationFile = Path.Combine(dataDir, ConfigFileName);
 
                 if (!File.Exists(configurationFile))
-                    File.Create(configurationFile);
+                    File.Create(configurationFile).Close();
 
                 app.ApplicationServices.GetService<Settings>().Initialize(dataDir, configurationFile);
             }
