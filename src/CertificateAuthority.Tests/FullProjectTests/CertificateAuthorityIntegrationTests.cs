@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
-using CertificateAuthority.API;
 using CertificateAuthority.Models;
+using CertificateAuthority.Tests.FullProjectTests.Helpers;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -14,7 +14,7 @@ using Xunit;
 
 namespace CertificateAuthority.Tests.FullProjectTests
 {
-    public class IntegrationTests
+    public class CertificateAuthorityIntegrationTests
     {
         private const int TestAccountId = 1;
         private const string TestPassword = "4815162342";
@@ -23,18 +23,16 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
         private readonly Network network;
 
-        public IntegrationTests()
+        public CertificateAuthorityIntegrationTests()
         {
             this.network = new StratisRegTest();
-
-            // TODO: Make a clean data folder for each CA startup, and specify it in the CA settings.
         }
         
         [Fact]
         public async Task CertificateAuthorityTestServerStartsUpAsync()
         {
             IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseStartup<Startup>();
+            builder.UseStartup<TestOnlyStartup>();
 
             var server = new TestServer(builder);
             var client = new CaClient(server.BaseAddress, server.CreateClient(), TestAccountId, TestPassword);
@@ -50,7 +48,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
         public async Task CertificateAuthorityTestServerGetsInitializedAsync()
         {
             IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseStartup<Startup>();
+            builder.UseStartup<TestOnlyStartup>();
 
             var server = new TestServer(builder);
             var client = new CaClient(server.BaseAddress, server.CreateClient(), TestAccountId, TestPassword);
@@ -64,7 +62,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
         public async Task CertificateAuthorityCanGenerateCertificateSigningRequestAsync()
         {
             IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseStartup<Startup>();
+            builder.UseStartup<TestOnlyStartup>();
 
             var server = new TestServer(builder);
             var client = new CaClient(server.BaseAddress, server.CreateClient(), TestAccountId, TestPassword);
@@ -92,7 +90,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
         public async Task CertificateAuthorityCanIssueCertificateAsync()
         {
             IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseStartup<Startup>();
+            builder.UseStartup<TestOnlyStartup>();
 
             var server = new TestServer(builder);
             var client = new CaClient(server.BaseAddress, server.CreateClient(), TestAccountId, TestPassword);

@@ -1,11 +1,7 @@
 ﻿using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CertificateAuthority;
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.TestHost;
 using NBitcoin;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
@@ -31,9 +27,6 @@ namespace Stratis.SmartContracts.IntegrationTests
     public sealed class TokenlessNodeTests
     {
         private readonly TokenlessNetwork network;
-
-        private const int TestAccountId = 1;
-        private const string TestPassword = "4815162342";
 
         public TokenlessNodeTests()
         {

@@ -1,13 +1,16 @@
-﻿using CertificateAuthority.Controllers;
-using CertificateAuthority.Database;
-using CertificateAuthority.Models;
-using CertificateAuthority.Tests.FullProjectTests.Helpers;
-using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CertificateAuthority.Controllers;
+using CertificateAuthority.Database;
+using CertificateAuthority.Models;
+using CertificateAuthority.Tests.FullProjectTests.Helpers;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.TestHost;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Pkcs;
 using Xunit;
@@ -30,15 +33,16 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
         public ControllersTests()
         {
-            StartupContainer.RequestStartupCreation();
+            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
+            builder.UseStartup<TestOnlyStartup>();
 
-            TestOnlyStartup startup = StartupContainer.GetStartupWhenReady();
+            var server = new TestServer(builder);
 
             this.adminCredentials = new CredentialsModel(1, "4815162342");
 
-            this.accountsController = startup.CreateAccountsController();
-            this.certificatesController = startup.CreateCertificatesController();
-            this.dataCacheLayer = startup.DataCacheLayer;
+            this.accountsController = (AccountsController) server.Host.Services.GetService(typeof(AccountsController));
+            this.certificatesController = (CertificatesController) server.Host.Services.GetService(typeof(CertificatesController));
+            this.dataCacheLayer = (DataCacheLayer) server.Host.Services.GetService(typeof(DataCacheLayer));
         }
 
         [Fact]
