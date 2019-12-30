@@ -1,9 +1,17 @@
-﻿using System.Linq;
+﻿using System;
+using System.IO;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using CertificateAuthority;
+using CertificateAuthority.Models;
+using CertificateAuthority.Tests.FullProjectTests;
+using CertificateAuthority.Tests.FullProjectTests.Helpers;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.TestHost;
 using NBitcoin;
-using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
@@ -36,33 +44,71 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesConnectAndMineOpReturnAsync()
         {
-            using (SmartContractNodeBuilder builder = SmartContractNodeBuilder.Create(this))
+            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
+            builder.UseStartup<TestOnlyStartup>();
+
+            using (var server = new TestServer(builder))
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
-                CoreNode node1 = builder.CreateFullTokenlessNode(this.network, 0);
-                CoreNode node2 = builder.CreateFullTokenlessNode(this.network, 1);
+                // Start + Initialize CA.
+                var client = new CaClient(server.BaseAddress, server.CreateClient(), CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword));
+
+                // Get Authority Certificate.
+                Settings settings = (Settings)server.Host.Services.GetService(typeof(Settings));
+                var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
+                X509Certificate2 ac = new X509Certificate2(File.ReadAllBytes(acLocation));
+
+
+                // Create 2 new client certificates.
+                var privKey1 = new Key();
+                PubKey pubKey1 = privKey1.PubKey;
+                BitcoinPubKeyAddress address1 = pubKey1.GetAddress(this.network);
+                X509Certificate2 certificate1 = IssueCertificate(client, privKey1, pubKey1, address1);
+                Assert.NotNull(certificate1);
+
+                var privKey2 = new Key();
+                PubKey pubKey2 = privKey2.PubKey;
+                BitcoinPubKeyAddress address2 = pubKey2.GetAddress(this.network);
+                X509Certificate2 certificate2 = IssueCertificate(client, privKey2, pubKey2, address2);
+                Assert.NotNull(certificate2);
+
+                // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.  
+                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, certificate1);
+                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, certificate2);
 
                 node1.Start();
                 node2.Start();
-
-                Assert.True(node1.FullNode.NodeService<StoreSettings>().TxIndex);
-                Assert.True(node2.FullNode.NodeService<StoreSettings>().TxIndex);
-
                 TestHelper.Connect(node1, node2);
 
-                TestBase.WaitLoop(() => node1.FullNode.ConnectionManager.ConnectedPeers.Count() == 1);
-                TestBase.WaitLoop(() => node2.FullNode.ConnectionManager.ConnectedPeers.Count() == 1);
-
+                // Build and send a transaction from one node.
                 Transaction transaction = this.CreateBasicOpReturnTransaction(node1);
-
                 var broadcasterManager = node1.FullNode.NodeService<IBroadcasterManager>();
                 await broadcasterManager.BroadcastTransactionAsync(transaction);
 
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
 
-                await node1.MineBlocksAsync(1);
-                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 1);
+
+                // Other node receives and mines transaction, validating it came from a permitted sender.
+                await node2.MineBlocksAsync(1);
+                TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 1);
+                Assert.Equal(2, node1.FullNode.ChainIndexer.GetHeader(1).Block.Transactions.Count); // TODO: Double check we have a coinbase? Otherwise this is just 1.
             }
+        }
+
+        private X509Certificate2 IssueCertificate(CaClient client, Key privKey, PubKey pubKey, BitcoinPubKeyAddress address)
+        {
+            CertificateSigningRequestModel response = client.GenerateCertificateSigningRequest(Convert.ToBase64String(pubKey.ToBytes()), address.ToString());
+
+            string signedCsr = CaCertificatesManager.SignCertificateSigningRequest(response.CertificateSigningRequestContent, privKey);
+
+            CertificateInfoModel certInfo = client.IssueCertificate(signedCsr);
+
+            Assert.NotNull(certInfo);
+            Assert.Equal(address.ToString(), certInfo.Address);
+
+            return new X509Certificate2(Convert.FromBase64String(certInfo.CertificateContentDer));
         }
 
         [Fact]

@@ -48,6 +48,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CertificateAuthority.API\CertificateAuthority.API.csproj" />
+    <ProjectReference Include="..\CertificateAuthority.Tests\CertificateAuthority.Tests.csproj" />
     <ProjectReference Include="..\NBitcoin\NBitcoin.csproj" />
     <ProjectReference Include="..\Stratis.Bitcoin.Features.PoA.IntegrationTests.Common\Stratis.Bitcoin.Features.PoA.IntegrationTests.Common.csproj" />
     <ProjectReference Include="..\Stratis.Bitcoin.Features.SmartContracts\Stratis.Bitcoin.Features.SmartContracts.csproj" />

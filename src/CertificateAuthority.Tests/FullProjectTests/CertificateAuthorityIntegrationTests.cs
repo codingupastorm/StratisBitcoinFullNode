@@ -17,10 +17,10 @@ namespace CertificateAuthority.Tests.FullProjectTests
 {
     public class CertificateAuthorityIntegrationTests
     {
-        private const int TestAccountId = 1;
-        private const string TestPassword = "4815162342";
-        private const string CaMnemonic = "young shoe immense usual faculty edge habit misery swarm tape viable toddler";
-        private const string CaMnemonicPassword = "node";
+        public const int TestAccountId = 1;
+        public const string TestPassword = "4815162342";
+        public const string CaMnemonic = "young shoe immense usual faculty edge habit misery swarm tape viable toddler";
+        public const string CaMnemonicPassword = "node";
 
         private readonly Network network;
 

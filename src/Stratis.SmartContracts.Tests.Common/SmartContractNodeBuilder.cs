@@ -1,8 +1,11 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.IO;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
+using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
@@ -33,8 +36,9 @@ namespace Stratis.SmartContracts.Tests.Common
             return node;
         }
 
-        public CoreNode CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex)
+        public CoreNode CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate2 authorityCertificate = null, X509Certificate2 clientCertificate = null)
         {
+            // TODO: Shouldn't need default params. Just helps soln build.
             string dataFolder = this.GetNextDataFolderName();
 
             CoreNode node = this.CreateNode(new FullTokenlessRunner(dataFolder, network, this.TimeProvider), "poa.conf");
@@ -43,6 +47,13 @@ namespace Stratis.SmartContracts.Tests.Common
             {
                 var tool = new KeyTool(settings.DataFolder);
                 tool.SavePrivateKey(network.FederationKeys[nodeIndex]);
+
+                if (authorityCertificate != null && clientCertificate != null)
+                {
+                    File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.AuthorityCertificateName), authorityCertificate.RawData);
+                    File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), clientCertificate.RawData);
+                }
+
                 return node;
             }
         }
