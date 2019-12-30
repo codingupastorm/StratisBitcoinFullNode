@@ -396,6 +396,21 @@ namespace CertificateAuthority
             return convertedCertificate;
         }
 
+        public CertificateInfoModel GetCaCertificate(CredentialsAccessModel accessModelInfo)
+        {
+            return new CertificateInfoModel()
+            {
+                // TODO: Technically there is an address associated with the CA's pubkey, should we use it?
+                Address = "",
+                CertificateContentDer = Convert.ToBase64String(this.caCertificate.RawData),
+                Id = 0,
+                IssuerAccountId = 0,
+                RevokerAccountId = 0,
+                Status = CertificateStatus.Good,
+                Thumbprint = this.caCertificate.Thumbprint
+            };
+        }
+
         /// <summary>
         /// Provides collection of all issued certificates.
         /// </summary>
@@ -524,7 +539,7 @@ namespace CertificateAuthority
 
             oids.Add(new DerObjectIdentifier(X509Extensions.SubjectAlternativeName.Id));
             Asn1Encodable[] altnames = subjectAlternativeNames.Select(name => new GeneralName(GeneralName.DnsName, name)).ToArray<Asn1Encodable>();
-            DerSequence subjectAlternativeNamesExtension = new DerSequence(altnames);
+            var subjectAlternativeNamesExtension = new DerSequence(altnames);
             values.Add(new X509Extension(true, new DerOctetString(subjectAlternativeNamesExtension)));
 
             var attribute = new AttributePkcs(PkcsObjectIdentifiers.Pkcs9AtExtensionRequest, new DerSet(new X509Extensions(oids, values)));

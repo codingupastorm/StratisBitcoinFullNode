@@ -10,6 +10,7 @@ namespace CertificateAuthority
     public class CaClient
     {
         private const string InitializeCertificateAuthorityEndpoint = "api/certificates/initialize_ca";
+        private const string GetCaCertificateEndpoint = "api/certificates/get_ca_certificate";
         private const string GetAllCertificatesEndpoint = "api/certificates/get_all_certificates";
         private const string GetRevokedCertificatesEndpoint = "api/certificates/get_revoked_certificates";
         private const string GetCertificateForAddressEndpoint = "api/certificates/get_certificate_for_address";
@@ -49,6 +50,23 @@ namespace CertificateAuthority
             bool initialized = JsonConvert.DeserializeObject<bool>(responseString);
 
             return initialized;
+        }
+
+        public CertificateInfoModel GetCaCertificate()
+        {
+            var credentialsModel = new CredentialsModel()
+            {
+                AccountId = this.accountId,
+                Password = this.password
+            };
+
+            HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{GetCaCertificateEndpoint}", credentialsModel).GetAwaiter().GetResult();
+
+            string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+            CertificateInfoModel caCert = JsonConvert.DeserializeObject<CertificateInfoModel>(responseString);
+
+            return caCert;
         }
 
         public List<CertificateInfoModel> GetAllCertificates()

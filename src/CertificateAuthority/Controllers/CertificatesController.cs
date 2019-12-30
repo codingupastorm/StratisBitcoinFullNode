@@ -66,6 +66,27 @@ namespace CertificateAuthority.Controllers
             }
         }
 
+        [HttpPost("get_ca_certificate")]
+        [ProducesResponseType(typeof(CertificateInfoModel), 200)]
+        public ActionResult<CertificateInfoModel> GetCaCertificate([FromBody]CredentialsModel model)
+        {
+            var data = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAnyCertificate);
+
+            try
+            {
+                CertificateInfoModel certificate = this.caCertificateManager.GetCaCertificate(data);
+
+                if (certificate == null)
+                    return StatusCode(StatusCodes.Status404NotFound);
+
+                return certificate;
+            }
+            catch (InvalidCredentialsException)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden);
+            }
+        }
+
         /// <summary>Finds issued certificate by thumbprint and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
         [HttpPost("get_certificate_for_thumbprint")]
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
