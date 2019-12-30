@@ -152,43 +152,11 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             var certificateToValidate = new X509Certificate2(certificate);
 
-            X509Chain chain = new X509Chain
-            {
-                ChainPolicy =
-                {
-                    RevocationMode = X509RevocationMode.NoCheck,
-                    RevocationFlag = X509RevocationFlag.ExcludeRoot,
-                    VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority,
-                    VerificationTime = DateTime.Now,
-                    UrlRetrievalTimeout = new TimeSpan(0, 0, 0)
-                }
-            };
-
-            // Add root certificate.
-            chain.ChainPolicy.ExtraStore.Add(this.AuthorityCertificate);
-
-            bool isChainValid = chain.Build(certificateToValidate);
-
-            if (!isChainValid)
-            {
-                string[] errors = chain.ChainStatus.Select(x => String.Format("{0} ({1})", x.StatusInformation.Trim(), x.Status)).ToArray();
-                string certificateErrorsString = "Unknown errors.";
-
-                if (errors.Length > 0)
-                    certificateErrorsString = String.Join(", ", errors);
-
-                throw new Exception("Trust chain did not complete to the known authority anchor. Errors: " + certificateErrorsString);
-            }
-
-            // This piece makes sure it actually matches your known root
-            bool valid = chain.ChainElements.Cast<X509ChainElement>().Any(x => x.Certificate.Thumbprint == this.AuthorityCertificate.Thumbprint);
-
-            if (!valid)
-                throw new Exception("Trust chain did not complete to the known authority anchor. Thumbprints did not match.");
+            bool isValid = IsSignedByAuthorityCertificate(certificateToValidate, this.AuthorityCertificate);
 
             bool revoked = this.revocationChecker.IsCertificateRevokedAsync(this.ClientCertificate.Thumbprint, false).ConfigureAwait(false).GetAwaiter().GetResult();
 
-            return !revoked;
+            return isValid && !revoked;
         }
 
         public X509Certificate RequestNewCertificate(CaClient caClient, Key privateKey)
