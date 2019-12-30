@@ -20,11 +20,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CertificateAuthority.Client" Version="1.0.3" />
     <PackageReference Include="Tracer.Fody" Version="3.1.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CertificateAuthority\CertificateAuthority.csproj" />
     <ProjectReference Include="..\Stratis.Bitcoin.Features.Consensus\Stratis.Bitcoin.Features.Consensus.csproj" />
     <ProjectReference Include="..\Stratis.Bitcoin.Features.Miner\Stratis.Bitcoin.Features.Miner.csproj" />
     <ProjectReference Include="..\Stratis.Bitcoin\Stratis.Bitcoin.csproj" />
