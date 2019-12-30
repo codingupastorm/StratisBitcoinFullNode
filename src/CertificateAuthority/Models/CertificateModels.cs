@@ -1,7 +1,7 @@
-﻿using System.Text;
+﻿using Newtonsoft.Json;
 using Org.BouncyCastle.Pkcs;
 
-namespace CertificateAuthority.Code.Models
+namespace CertificateAuthority.Models
 {
     /// <summary>Model that contains information related to a specific certificate.</summary>
     public class CertificateInfoModel
@@ -15,8 +15,8 @@ namespace CertificateAuthority.Code.Models
         /// </summary>
         public string Address { get; set; }
 
-        /// <summary>Certificate in the following format: <c>-----BEGIN CERTIFICATE----- MIIE1jCCAr ... 7w1gjwn -----END CERTIFICATE-----</c>.</summary>
-        public string CertificateContent { get; set; }
+        /// <summary>Certificate data encoded in DER format, converted to base64.</summary>
+        public string CertificateContentDer { get; set; }
 
         public CertificateStatus Status { get; set; }
 
@@ -36,6 +36,12 @@ namespace CertificateAuthority.Code.Models
     {
         /// <summary>Certificate signing request in base64 format.</summary>
         public string CertificateSigningRequestContent { get; set; }
+
+        [JsonConstructor]
+        public CertificateSigningRequestModel(string base64csr)
+        {
+            this.CertificateSigningRequestContent = base64csr;
+        }
 
         public CertificateSigningRequestModel(Pkcs10CertificationRequestDelaySigned request)
         {

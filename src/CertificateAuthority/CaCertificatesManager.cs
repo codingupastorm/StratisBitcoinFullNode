@@ -1,6 +1,4 @@
-﻿using CertificateAuthority.Code.Database;
-using CertificateAuthority.Code.Models;
-using NLog;
+﻿using NLog;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -9,11 +7,16 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using CertificateAuthority.Database;
+using CertificateAuthority.Models;
+using NBitcoin;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
+using Org.BouncyCastle.Asn1.X9;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Operators;
+using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto.Prng;
 using Org.BouncyCastle.Math;
 using Org.BouncyCastle.Pkcs;
@@ -23,9 +26,9 @@ using Org.BouncyCastle.X509;
 using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 using X509Extension = Org.BouncyCastle.Asn1.X509.X509Extension;
 
-namespace CertificateAuthority.Code
+namespace CertificateAuthority
 {
-    public class CertificatesManager
+    public class CaCertificatesManager
     {          
         private readonly DataCacheLayer repository;
 
@@ -44,7 +47,7 @@ namespace CertificateAuthority.Code
         public const string P2pkhExtensionOid = "1.4.1";
         public const string PubKeyExtensionOid = "1.4.2";
 
-        public CertificatesManager(DataCacheLayer cache, Settings settings)
+        public CaCertificatesManager(DataCacheLayer cache, Settings settings)
         {
             this.repository = cache;
             this.settings = settings;
@@ -59,9 +62,10 @@ namespace CertificateAuthority.Code
             try
             {
                 string caSubjectName = $"O={settings.CaSubjectNameOrganization}, CN={settings.CaSubjectNameCommonName}, OU={settings.CaSubjectNameOrganizationUnit}";
+                // TODO: Make coin type configurable?
                 string hdPath = $"m/44'/105'/0'/0/{CaAddressIndex}";
 
-                HDWalletAddressSpace caAddressSpace = new HDWalletAddressSpace(mnemonic, password);
+                var caAddressSpace = new HDWalletAddressSpace(mnemonic, password);
                 byte[] caPubKey = caAddressSpace.GetKey(hdPath).PrivateKey.PubKey.ToBytes();
                 string caAddress = HDWalletAddressSpace.GetAddress(caPubKey, 63);
                 byte[] caOid141 = Encoding.UTF8.GetBytes(caAddress);
@@ -70,6 +74,7 @@ namespace CertificateAuthority.Code
                 this.caKey = caAddressSpace.GetCertificateKeyPair(hdPath);
                 this.caCertificate = CreateCertificateAuthorityCertificate(this.caKey, caSubjectName, null, null, caOid141, caOid142);
 
+                // TODO: If the CA has already been initialized, we shouldn't need to re-create the files on disk.
                 File.WriteAllBytes(Path.Combine(this.settings.DataDirectory, CaCertFilename), this.caCertificate.RawData);
             }
             catch (Exception e)
@@ -147,7 +152,7 @@ namespace CertificateAuthority.Code
                 Status = CertificateStatus.Good,
                 Thumbprint = certificateFromReq.Thumbprint,
                 Address = p2pkh,
-                CertificateContent = DataHelper.ConvertToPEM(certificateFromReq),
+                CertificateContentDer = Convert.ToBase64String(certificateFromReq.RawData),
                 IssuerAccountId = creatorId
             };
 
@@ -401,6 +406,21 @@ namespace CertificateAuthority.Code
             return convertedCertificate;
         }
 
+        public CertificateInfoModel GetCaCertificate(CredentialsAccessModel accessModelInfo)
+        {
+            return new CertificateInfoModel()
+            {
+                // TODO: Technically there is an address associated with the CA's pubkey, should we use it?
+                Address = "",
+                CertificateContentDer = Convert.ToBase64String(this.caCertificate.RawData),
+                Id = 0,
+                IssuerAccountId = 0,
+                RevokerAccountId = 0,
+                Status = CertificateStatus.Good,
+                Thumbprint = this.caCertificate.Thumbprint
+            };
+        }
+
         /// <summary>
         /// Provides collection of all issued certificates.
         /// </summary>
@@ -500,6 +520,25 @@ namespace CertificateAuthority.Code
             return certificateRequest;
         }
 
+        public static string SignCertificateSigningRequest(string base64csr, Key privateKey, string ecdsaCurveFriendlyName = "secp256k1")
+        {
+            byte[] csrTemp = Convert.FromBase64String(base64csr);
+
+            var unsignedCsr = new Pkcs10CertificationRequestDelaySigned(csrTemp);
+            var privateKeyScalar = new BigInteger(1, privateKey.GetBytes());
+
+            X9ECParameters ecdsaCurve = ECNamedCurveTable.GetByName(ecdsaCurveFriendlyName);
+            var ecdsaDomainParams = new ECDomainParameters(ecdsaCurve.Curve, ecdsaCurve.G, ecdsaCurve.N, ecdsaCurve.H, ecdsaCurve.GetSeed());
+            var privateKeyParameter = new ECPrivateKeyParameters(privateKeyScalar, ecdsaDomainParams);
+
+            byte[] signature = CaCertificatesManager.GenerateCSRSignature(unsignedCsr.GetDataToSign(), "SHA256withECDSA", privateKeyParameter);
+            unsignedCsr.SignRequest(signature);
+
+            var signedCsr = new Pkcs10CertificationRequest(unsignedCsr.GetDerEncoded());
+
+            return Convert.ToBase64String(signedCsr.GetDerEncoded());
+        }
+
         public static Pkcs10CertificationRequest CreateCertificateSigningRequest(string subjectName, AsymmetricCipherKeyPair subjectKeyPair, string[] subjectAlternativeNames, byte[] oid141)
         {
             IList oids = new ArrayList();
@@ -510,7 +549,7 @@ namespace CertificateAuthority.Code
 
             oids.Add(new DerObjectIdentifier(X509Extensions.SubjectAlternativeName.Id));
             Asn1Encodable[] altnames = subjectAlternativeNames.Select(name => new GeneralName(GeneralName.DnsName, name)).ToArray<Asn1Encodable>();
-            DerSequence subjectAlternativeNamesExtension = new DerSequence(altnames);
+            var subjectAlternativeNamesExtension = new DerSequence(altnames);
             values.Add(new X509Extension(true, new DerOctetString(subjectAlternativeNamesExtension)));
 
             var attribute = new AttributePkcs(PkcsObjectIdentifiers.Pkcs9AtExtensionRequest, new DerSet(new X509Extensions(oids, values)));

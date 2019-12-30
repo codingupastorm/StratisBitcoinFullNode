@@ -1,7 +1,7 @@
-﻿using CertificateAuthority.Code.Models;
+﻿using CertificateAuthority.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace CertificateAuthority.Code.Database
+namespace CertificateAuthority.Database
 {
     public class CADbContext : DbContext
     {
@@ -18,7 +18,7 @@ namespace CertificateAuthority.Code.Database
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite($"Data Source={settings.DatabasePath};");
+            optionsBuilder.UseSqlite($"Data Source=\"{settings.DatabasePath}\";");
 
             base.OnConfiguring(optionsBuilder);
         }

@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using Stratis.Bitcoin.Builder.Feature;
+using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.PoA;
@@ -21,6 +22,7 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly IFederationManager federationManager;
         private readonly IPoAMiner miner;
         private readonly RevocationChecker revocationChecker;
+        private readonly NodeSettings nodeSettings;
 
         public TokenlessFeature(
             CertificatesManager certificatesManager,
@@ -29,13 +31,15 @@ namespace Stratis.Feature.PoA.Tokenless
             IPoAMiner miner,
             PayloadProvider payloadProvider,
             RevocationChecker revocationChecker,
-            StoreSettings storeSettings)
+            StoreSettings storeSettings,
+            NodeSettings nodeSettings)
         {
             this.certificatesManager = certificatesManager;
             this.coreComponent = coreComponent;
             this.federationManager = federationManager;
             this.miner = miner;
             this.revocationChecker = revocationChecker;
+            this.nodeSettings = nodeSettings;
 
             // TODO-TL: Is there a better place to do this?
             storeSettings.TxIndex = true;
@@ -79,7 +83,7 @@ namespace Stratis.Feature.PoA.Tokenless
             connectionParameters.TemplateBehaviors.Add(new PoAConsensusManagerBehavior(this.coreComponent.ChainIndexer, this.coreComponent.InitialBlockDownloadState, this.coreComponent.ConsensusManager, this.coreComponent.PeerBanning, this.coreComponent.LoggerFactory));
         }
 
-        /// <summary>Replaces default <see cref="PoABlockStoreBehavior"/> with <see cref="PoABlockStoreBehavior"/>.</summary>
+        /// <summary>Replaces default <see cref="BlockStoreBehavior"/> with <see cref="PoABlockStoreBehavior"/>.</summary>
         private void ReplaceBlockStoreBehavior(NetworkPeerConnectionParameters connectionParameters)
         {
             INetworkPeerBehavior defaultBlockStoreBehavior = connectionParameters.TemplateBehaviors.FirstOrDefault(behavior => behavior is BlockStoreBehavior);
@@ -91,6 +95,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
             connectionParameters.TemplateBehaviors.Remove(defaultBlockStoreBehavior);
             connectionParameters.TemplateBehaviors.Add(new PoABlockStoreBehavior(this.coreComponent.ChainIndexer, this.coreComponent.ChainState, this.coreComponent.LoggerFactory, this.coreComponent.ConsensusManager, this.coreComponent.BlockStoreQueue));
+            connectionParameters.TemplateBehaviors.Add(new RevocationBehavior(this.nodeSettings, this.coreComponent.Network, this.coreComponent.LoggerFactory, this.revocationChecker));
         }
 
         /// <inheritdoc />
