@@ -52,9 +52,8 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         {
             bool walletOk = this.CheckWallet();
             bool keyFileOk = this.CheckKeyFile();
-            bool certOk = this.CheckCertificate();
 
-            if (walletOk && keyFileOk && certOk)
+            if (walletOk && keyFileOk)
                 return true;
 
             Console.WriteLine($"Restart the daemon.");

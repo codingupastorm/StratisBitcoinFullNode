@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
-using CertificateAuthority.Code;
-using CertificateAuthority.Code.Models;
+using CertificateAuthority.Models;
 using Xunit;
 
 namespace CertificateAuthority.Tests

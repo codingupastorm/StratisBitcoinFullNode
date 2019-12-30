@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CertificateAuthority.Code.Models
+namespace CertificateAuthority.Models
 {
     /// <summary>General information about user's account.</summary>
     public class AccountInfo
