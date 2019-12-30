@@ -42,6 +42,7 @@ namespace CertificateAuthority.Code
         public const string CaCertFilename = "CaCertificate.crt";
 
         public const string P2pkhExtensionOid = "1.4.1";
+        public const string PubKeyExtensionOid = "1.4.2";
 
         public CertificatesManager(DataCacheLayer cache, Settings settings)
         {
@@ -64,9 +65,10 @@ namespace CertificateAuthority.Code
                 byte[] caPubKey = caAddressSpace.GetKey(hdPath).PrivateKey.PubKey.ToBytes();
                 string caAddress = HDWalletAddressSpace.GetAddress(caPubKey, 63);
                 byte[] caOid141 = Encoding.UTF8.GetBytes(caAddress);
+                byte[] caOid142 = caPubKey;
 
                 this.caKey = caAddressSpace.GetCertificateKeyPair(hdPath);
-                this.caCertificate = CreateCertificateAuthorityCertificate(this.caKey, caSubjectName, null, null, caOid141);
+                this.caCertificate = CreateCertificateAuthorityCertificate(this.caKey, caSubjectName, null, null, caOid141, caOid142);
 
                 File.WriteAllBytes(Path.Combine(this.settings.DataDirectory, CaCertFilename), this.caCertificate.RawData);
             }
@@ -81,7 +83,7 @@ namespace CertificateAuthority.Code
             return true;
         }
 
-        private static X509Certificate2 CreateCertificateAuthorityCertificate(AsymmetricCipherKeyPair subjectKeyPair, string subjectName, string[] subjectAlternativeNames, KeyPurposeID[] usages, byte[] oid141)
+        private static X509Certificate2 CreateCertificateAuthorityCertificate(AsymmetricCipherKeyPair subjectKeyPair, string subjectName, string[] subjectAlternativeNames, KeyPurposeID[] usages, byte[] oid141, byte[] oid142)
         {
             SecureRandom random = GetSecureRandom();
             BigInteger subjectSerialNumber = GenerateSerialNumber(random);
@@ -89,7 +91,7 @@ namespace CertificateAuthority.Code
             X509Certificate certificate = GenerateCertificate(random,
                 subjectName, subjectKeyPair.Public, subjectSerialNumber, subjectAlternativeNames,
                 subjectName, subjectKeyPair, subjectSerialNumber,
-                true, usages, oid141);
+                true, usages, oid141, oid142);
 
             X509Certificate2 convertedCert = ConvertCertificate(certificate, random);
 
@@ -173,11 +175,12 @@ namespace CertificateAuthority.Code
             AsymmetricKeyParameter publicKey = certificateSigningRequest.GetPublicKey();
 
             byte[] oid141 = ExtractExtensionFromCsr(certificationRequestInfo.Attributes, P2pkhExtensionOid);
+            byte[] oid142 = ExtractExtensionFromCsr(certificationRequestInfo.Attributes, PubKeyExtensionOid);
 
             X509Certificate certificate = GenerateCertificate(random,
                 subjectName, publicKey, subjectSerialNumber, subjectAlternativeNames,
                 issuerCertificate.Subject, issuerKeyPair, issuerSerialNumber,
-                false, usages, oid141);
+                false, usages, oid141, oid142);
             
             return ConvertCertificate(certificate, random);
         }
@@ -242,7 +245,8 @@ namespace CertificateAuthority.Code
                                                            BigInteger issuerSerialNumber,
                                                            bool isCertificateAuthority,
                                                            KeyPurposeID[] usages,
-                                                           byte[] oid141)
+                                                           byte[] oid141,
+                                                           byte[] oid142)
         {
             var certificateGenerator = new X509V3CertificateGenerator();
             certificateGenerator.SetSerialNumber(subjectSerialNumber);
@@ -275,6 +279,7 @@ namespace CertificateAuthority.Code
                 AddSubjectAlternativeNames(certificateGenerator, subjectAlternativeNames);
 
             AddDltInformation(certificateGenerator, oid141);
+            AddDltPubKeyInformation(certificateGenerator, oid142);
 
             // The certificate is signed with the issuer's private key.
             ISignatureFactory signatureFactory = new Asn1SignatureFactory("SHA256WithECDSA", issuerKeyPair.Private, random);
@@ -365,6 +370,11 @@ namespace CertificateAuthority.Code
         private static void AddDltInformation(X509V3CertificateGenerator certificateGenerator, byte[] oid141)
         {
             certificateGenerator.AddExtension(P2pkhExtensionOid, true, oid141);
+        }
+
+        private static void AddDltPubKeyInformation(X509V3CertificateGenerator certificateGenerator, byte[] oid142)
+        {
+            certificateGenerator.AddExtension(PubKeyExtensionOid, true, oid142);
         }
 
         private static X509Certificate2 ConvertCertificate(X509Certificate certificate, SecureRandom random)
