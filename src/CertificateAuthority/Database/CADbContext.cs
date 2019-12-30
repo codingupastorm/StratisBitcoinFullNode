@@ -18,7 +18,7 @@ namespace CertificateAuthority.Database
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite($"Data Source={settings.DatabasePath};");
+            optionsBuilder.UseSqlite($"Data Source=\"{settings.DatabasePath}\";");
 
             base.OnConfiguring(optionsBuilder);
         }

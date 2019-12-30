@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using CertificateAuthority.Client;
+using CertificateAuthority;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Utilities;
+using TextFileConfiguration = Stratis.Bitcoin.Configuration.TextFileConfiguration;
 
 namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 {
@@ -31,7 +32,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         private Dictionary<string, RevocationRecord> revokedCertsCache;
 
-        private Client client;
+        private CaClient client;
 
         private Task cacheUpdatingTask;
 
@@ -55,8 +56,10 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         {
             TextFileConfiguration config = this.nodeSettings.ConfigReader;
             string certificateAuthorityUrl = config.GetOrDefault<string>("caurl", "https://localhost:5001");
+            int certificateAccountId = config.GetOrDefault<int>("certaccountid", -1);
+            string certificateAccountPassword = config.GetOrDefault<string>("certaccountpassword", "");
 
-            this.client = new Client(certificateAuthorityUrl, new HttpClient());
+            this.client = new CaClient(new Uri(certificateAuthorityUrl), new HttpClient(), certificateAccountId, certificateAccountPassword);
 
             this.revokedCertsCache = this.kvRepo.LoadValueJson<Dictionary<string, RevocationRecord>>(kvRepoKey);
 
@@ -66,6 +69,12 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             this.cacheUpdatingTask = this.UpdateRevokedCertsCacheContinuouslyAsync();
         }
 
+        /// <summary>
+        /// As there can be multiple certificates in existence for a given P2PKH address (i.e. e.g. with different expiry dates), we determine revocation via thumbprint.
+        /// </summary>
+        /// <param name="thumbprint">The thumbprint of the certificate to check the revocation status of.</param>
+        /// <param name="allowCached">Indicate whether it is acceptable to use the checker's local cache of the status, or force a check with the CA.</param>
+        /// <returns></returns>
         public async Task<bool> IsCertificateRevokedAsync(string thumbprint, bool allowCached = true)
         {
             RevocationRecord record = null;
@@ -82,7 +91,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             // Cannot use cache, or no record existed yet. Ask CA server directly.
             try
             {
-                string status = await this.client.Get_certificate_statusAsync(thumbprint, true).ConfigureAwait(false);
+                string status = this.client.GetCertificateStatus(thumbprint);
 
                 record.LastChecked = this.dateTimeProvider.GetUtcNow();
                 record.LastStatus = status != "Good";
@@ -101,12 +110,12 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         {
             try
             {
-                ICollection<string> result = await this.client.Get_revoked_certificatesAsync().ConfigureAwait(false);
+                ICollection<string> result = this.client.GetRevokedCertificates();
 
-                foreach (string identifier in result)
+                foreach (string thumbprint in result)
                 {
                     // We don't actually care what the previous state was, only that it is revoked now.
-                    this.revokedCertsCache[identifier] = new RevocationRecord() { LastChecked = this.dateTimeProvider.GetUtcNow(), LastStatus = true };
+                    this.revokedCertsCache[thumbprint] = new RevocationRecord() { LastChecked = this.dateTimeProvider.GetUtcNow(), LastStatus = true };
                 }
             }
             catch (Exception e)

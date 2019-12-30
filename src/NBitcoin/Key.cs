@@ -69,6 +69,14 @@ namespace NBitcoin
             this._ECKey = new ECKey(this.vch, true);
         }
 
+        /// <summary>
+        /// Returns the raw bytes of the private key, suitable for usage in ECKey or BigInteger construction outside of the NBitcoin namespace.
+        /// </summary>
+        public byte[] GetBytes()
+        {
+            return this.vch;
+        }
+
         private static bool Check(byte[] vch)
         {
             var candidateKey = new uint256(vch.SafeSubarray(0, KEY_SIZE));

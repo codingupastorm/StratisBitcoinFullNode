@@ -1,4 +1,5 @@
-﻿using Org.BouncyCastle.Pkcs;
+﻿using Newtonsoft.Json;
+using Org.BouncyCastle.Pkcs;
 
 namespace CertificateAuthority.Models
 {
@@ -35,6 +36,12 @@ namespace CertificateAuthority.Models
     {
         /// <summary>Certificate signing request in base64 format.</summary>
         public string CertificateSigningRequestContent { get; set; }
+
+        [JsonConstructor]
+        public CertificateSigningRequestModel(string base64csr)
+        {
+            this.CertificateSigningRequestContent = base64csr;
+        }
 
         public CertificateSigningRequestModel(Pkcs10CertificationRequestDelaySigned request)
         {

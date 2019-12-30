@@ -1,13 +1,16 @@
-﻿using CertificateAuthority.Controllers;
-using CertificateAuthority.Database;
-using CertificateAuthority.Models;
-using CertificateAuthority.Tests.FullProjectTests.Helpers;
-using Microsoft.AspNetCore.Mvc;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CertificateAuthority.Controllers;
+using CertificateAuthority.Database;
+using CertificateAuthority.Models;
+using CertificateAuthority.Tests.FullProjectTests.Helpers;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.TestHost;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Pkcs;
 using Xunit;
@@ -30,15 +33,16 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
         public ControllersTests()
         {
-            StartupContainer.RequestStartupCreation();
+            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
+            builder.UseStartup<TestOnlyStartup>();
 
-            TestOnlyStartup startup = StartupContainer.GetStartupWhenReady();
+            var server = new TestServer(builder);
 
             this.adminCredentials = new CredentialsModel(1, "4815162342");
 
-            this.accountsController = startup.CreateAccountsController();
-            this.certificatesController = startup.CreateCertificatesController();
-            this.dataCacheLayer = startup.DataCacheLayer;
+            this.accountsController = (AccountsController) server.Host.Services.GetService(typeof(AccountsController));
+            this.certificatesController = (CertificatesController) server.Host.Services.GetService(typeof(CertificatesController));
+            this.dataCacheLayer = (DataCacheLayer) server.Host.Services.GetService(typeof(DataCacheLayer));
         }
 
         [Fact]
@@ -126,7 +130,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             int clientAddressIndex = 0;
             string hdPath = $"m/44'/105'/0'/0/{clientAddressIndex}";
 
-            HDWalletAddressSpace clientAddressSpace = new HDWalletAddressSpace("tape viable toddler young shoe immense usual faculty edge habit misery swarm", "node");
+            var clientAddressSpace = new HDWalletAddressSpace("tape viable toddler young shoe immense usual faculty edge habit misery swarm", "node");
             byte[] clientPublicKey = clientAddressSpace.GetKey(hdPath).PrivateKey.PubKey.ToBytes();
             AsymmetricCipherKeyPair clientKey = clientAddressSpace.GetCertificateKeyPair(hdPath);
 
@@ -141,7 +145,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             Assert.Equal(clientAddress, certificate1.Address);
 
-            HDWalletAddressSpace clientAddressSpace2 = new HDWalletAddressSpace("habit misery swarm tape viable toddler young shoe immense usual faculty edge", "node");
+            var clientAddressSpace2 = new HDWalletAddressSpace("habit misery swarm tape viable toddler young shoe immense usual faculty edge", "node");
             clientPublicKey = clientAddressSpace2.GetKey(hdPath).PrivateKey.PubKey.ToBytes();
             AsymmetricCipherKeyPair clientKey2 = clientAddressSpace2.GetCertificateKeyPair(hdPath);
 
@@ -187,14 +191,14 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             // Now check that we can obtain an unsigned CSR template from the CA, which we then sign locally and receive a certificate for.
             // First do it using the manager's methods directly.
-            HDWalletAddressSpace clientAddressSpace3 = new HDWalletAddressSpace("usual young shoe immense habit misery swarm tape viable toddler faculty edge", "node");
+            var clientAddressSpace3 = new HDWalletAddressSpace("usual young shoe immense habit misery swarm tape viable toddler faculty edge", "node");
             clientPublicKey = clientAddressSpace3.GetKey(hdPath).PrivateKey.PubKey.ToBytes();
             AsymmetricCipherKeyPair clientKey3 = clientAddressSpace2.GetCertificateKeyPair(hdPath);
 
             clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
             clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
 
-            var unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(clientName, clientKey2.Public, new string[0], clientOid141);
+            Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(clientName, clientKey2.Public, new string[0], clientOid141);
             var signature = CaCertificatesManager.GenerateCSRSignature(unsignedCsr.GetDataToSign(), "SHA256withECDSA", clientKey2.Private);
             unsignedCsr.SignRequest(signature);
 
@@ -212,7 +216,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             // Now try do it the same way a node would, by populating the relevant model and submitting it to the API.
             var generateModel = new GenerateCertificateSigningRequestModel(clientAddress, Convert.ToBase64String(clientPublicKey), credentials1.AccountId, credentials1.Password);
 
-            var unsignedCsrModel = (await this.certificatesController.GenerateCertificateSigningRequestAsync(generateModel)).Value;
+            CertificateSigningRequestModel unsignedCsrModel = (await this.certificatesController.GenerateCertificateSigningRequestAsync(generateModel)).Value;
 
             byte[] csrTemp = Convert.FromBase64String(unsignedCsrModel.CertificateSigningRequestContent);
 
@@ -224,7 +228,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             signedCsr = new Pkcs10CertificationRequest(unsignedCsr.GetDerEncoded());
 
-            // TODO: Why is this failing?
+            // TODO: Why is this failing? Do a manual verification of the EC maths
             //Assert.True(signedCsr.Verify());
 
             CertificateInfoModel certificate4 = (await this.certificatesController.IssueCertificate_UsingRequestStringAsync(

@@ -19,17 +19,16 @@ namespace CertificateAuthority
     {
         public const string AdminName = "Admin";
 
-        public void Initialize(TextFileConfiguration textFileConfiguration)
+        public void Initialize(string dataDir, string confPath)
         {
-            configReader = textFileConfiguration;
+            DataDirectory = dataDir;
 
-            string dataDir = AppDomain.CurrentDomain.BaseDirectory.NormalizeDirectorySeparator();
-            DataDirectory = configReader.GetOrDefault<string>("datadir", dataDir);
+            configReader = new TextFileConfiguration(File.ReadAllText(confPath));
 
-            string defaultPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "SQLiteDatabase.db").NormalizeDirectorySeparator();
-            DatabasePath = configReader.GetOrDefault<string>("dbpath", defaultPath);
+            string defaultDbPath = Path.Combine(dataDir, "SQLiteDatabase.db");
+            DatabasePath = configReader.GetOrDefault<string>("dbpath", defaultDbPath).NormalizeDirectorySeparator();
 
-            DefaultIssuanceCertificateDays = configReader.GetOrDefault<int>("defaultCertDays", 10 * 365);
+            DefaultIssuanceCertificateDays = configReader.GetOrDefault<int>("defaultcertdays", 10 * 365);
 
             CreateAdminAccountOnCleanStart = configReader.GetOrDefault<bool>("createadmin", true);
             
