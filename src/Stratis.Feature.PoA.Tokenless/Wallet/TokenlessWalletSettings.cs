@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Feature.PoA.Tokenless.Wallet
@@ -68,9 +69,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             this.RootPath = nodeSettings.DataFolder.RootPath;
 
             this.GenerateCertificate = config.GetOrDefault<bool>("generatecertificate", false, this.logger);
-            this.CertPath = config.GetOrDefault<string>("certpath", "cert.crt", this.logger);
-            if (this.IsRelativePath(this.CertPath))
-                this.CertPath = Path.Combine(nodeSettings.DataFolder.RootPath, this.CertPath);
+            this.CertPath = Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.ClientCertificateName);
 
             IEnumerable<string> certInfo = config.GetOrDefault<string>("certinfo", string.Empty, this.logger).Replace("\\,", "\0").Split(',').Select(t => t.Replace("\0", ",").Trim());
             this.CertificateAttributes = new Dictionary<string, string>();
