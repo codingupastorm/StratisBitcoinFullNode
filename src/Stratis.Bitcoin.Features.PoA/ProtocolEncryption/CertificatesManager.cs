@@ -121,23 +121,28 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             chain.ChainPolicy.ExtraStore.Add(authorityCertificate);
 
-            bool isChainValid = chain.Build(certificateToValidate);
+            // Without actually importing the certificate into the local machine's trusted root store this will not return true.
+            chain.Build(certificateToValidate);
 
-            if (!isChainValid)
+            // Therefore, we inspect the ChainStatus directly to see if the certificate chain was nominally valid
+            bool isChainValid = false;
+
+            foreach (X509ChainStatus chainStatus in chain.ChainStatus)
             {
-                string[] errors = chain.ChainStatus.Select(x => $"{x.StatusInformation.Trim()} ({x.Status})").ToArray();
-                string certificateErrorsString = "Unknown errors.";
+                // There are other validation errors getting raised, we should ensure that only 'known' errors are allowed
+                if (chainStatus.Status != X509ChainStatusFlags.UntrustedRoot &&
+                    chainStatus.Status != X509ChainStatusFlags.HasNotSupportedCriticalExtension &&
+                    chainStatus.Status != X509ChainStatusFlags.InvalidExtension)
+                    return false;
 
-                if (errors.Length > 0)
-                    certificateErrorsString = string.Join(", ", errors);
-
-                throw new Exception("Trust chain did not complete to the known authority anchor. Errors: " + certificateErrorsString);
+                if (chainStatus.Status == X509ChainStatusFlags.UntrustedRoot)
+                    isChainValid = true;
             }
 
             // This piece makes sure it actually matches your known root
-            bool valid = chain.ChainElements.Cast<X509ChainElement>().Any(x => x.Certificate.Thumbprint == authorityCertificate.Thumbprint);
+            bool rootValid = chain.ChainElements.Cast<X509ChainElement>().Any(x => x.Certificate.Thumbprint == authorityCertificate.Thumbprint);
 
-            return valid;
+            return isChainValid && rootValid;
         }
 
         public bool ValidateCertificate(object sender, X509Certificate certificate, X509Chain _, SslPolicyErrors sslPolicyErrors)
