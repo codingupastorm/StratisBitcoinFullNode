@@ -103,7 +103,6 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             builder.AppendLine("-certaddressindex=<number>      The index (N) used for the P2P certificate key at HD Path (m/44'/105'/2'/0/N) where N is a zero based key ID.");
             builder.AppendLine("----Certificate Details----");
             builder.AppendLine("-generatecertificate            Requests a new certificate to be generated.");
-            builder.AppendLine("-certpath=<string>              Path to certificate.");
             builder.AppendLine("-certinfo=<string>              Certificate attributes - e.g. 'CN:Sample Cert, OU:R&D, O:Company Ltd., L:Dublin 4, S:Dublin, C:IE'.");
             builder.AppendLine("-userfullname=<string>          The full name of the user.");
             builder.AppendLine("-useremail=<string>             The e-mail address of the user.");
@@ -127,8 +126,6 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             builder.AppendLine("#miningaddressindex=0");
             builder.AppendLine("#The certificate address index.");
             builder.AppendLine("#certaddressindex=0");
-            builder.AppendLine("#Path to certificate. Defaults to 'cert.crt'.");
-            builder.AppendLine("#certpath=cert.crt");
             builder.AppendLine("----Certificate Details----");
             builder.AppendLine("#Requests a new certificate to be generated.");
             builder.AppendLine("#generatecertificate=false");
