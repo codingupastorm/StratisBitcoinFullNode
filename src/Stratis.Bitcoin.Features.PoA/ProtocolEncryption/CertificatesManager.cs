@@ -6,7 +6,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using CertificateAuthority;
-using CertificateAuthority.Client;
+using CertificateAuthority.Models;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
@@ -203,26 +203,17 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         public X509Certificate2 RequestNewCertificate(Key privateKey)
         {
-            var client = new Client(this.caUrl, new HttpClient());
+            var caClient = new CaClient(new Uri(this.caUrl), new HttpClient(), this.caAccountId, this.caPassword);
 
             PubKey pubKey = privateKey.PubKey;
             BitcoinPubKeyAddress address = pubKey.GetAddress(this.network);
 
-            var generateCsrModel = new GenerateCertificateSigningRequestModel()
-            {
-                AccountId = this.caAccountId, Address = address.ToString(), Password = this.caPassword, PubKey = Convert.ToBase64String(pubKey.ToBytes())
-            };
+            CertificateSigningRequestModel csrModel = caClient.GenerateCertificateSigningRequest(Convert.ToBase64String(pubKey.ToBytes()), address.ToString());
 
-            CertificateSigningRequestModel csrModel = client.Generate_certificate_signing_requestAsync(generateCsrModel).ConfigureAwait(false).GetAwaiter().GetResult();
             string signedCsr = CaCertificatesManager.SignCertificateSigningRequest(csrModel.CertificateSigningRequestContent, privateKey, "secp256k1");
 
-            var issueCertModel = new IssueCertificateFromFileContentsModel()
-            {
-                AccountId = this.caAccountId, CertificateRequestFileContents = signedCsr, Password = caPassword
-            };
+            CertificateInfoModel issuedCertificate = caClient.IssueCertificate(signedCsr);
 
-            CertificateInfoModel issuedCertificate = client.Issue_certificate_using_request_stringAsync(issueCertModel).GetAwaiter().GetResult();
-            
             var certificate = new X509Certificate2(Convert.FromBase64String(issuedCertificate.CertificateContentDer));
 
             return certificate;
@@ -230,16 +221,10 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         public X509Certificate2 GetCertificateForAddress(string address)
         {
-            var client = new Client(this.caUrl, new HttpClient());
+            var caClient = new CaClient(new Uri(this.caUrl), new HttpClient(), this.caAccountId, this.caPassword);
 
-            var model = new CredentialsModelWithAddressModel()
-            {
-                AccountId = this.caAccountId,
-                Address = address,
-                Password = this.caPassword
-            };
+            CertificateInfoModel retrievedCertModel = caClient.GetCertificateForAddress(address);
 
-            CertificateInfoModel retrievedCertModel = client.Get_certificate_for_addressAsync(model).GetAwaiter().GetResult();
 
             var certificate = new X509Certificate2(Convert.FromBase64String(retrievedCertModel.CertificateContentDer));
 

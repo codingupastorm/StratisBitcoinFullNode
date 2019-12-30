@@ -61,9 +61,10 @@ namespace CertificateAuthority
             try
             {
                 string caSubjectName = $"O={settings.CaSubjectNameOrganization}, CN={settings.CaSubjectNameCommonName}, OU={settings.CaSubjectNameOrganizationUnit}";
+                // TODO: Make coin type configurable?
                 string hdPath = $"m/44'/105'/0'/0/{CaAddressIndex}";
 
-                HDWalletAddressSpace caAddressSpace = new HDWalletAddressSpace(mnemonic, password);
+                var caAddressSpace = new HDWalletAddressSpace(mnemonic, password);
                 byte[] caPubKey = caAddressSpace.GetKey(hdPath).PrivateKey.PubKey.ToBytes();
                 string caAddress = HDWalletAddressSpace.GetAddress(caPubKey, 63);
                 byte[] caOid141 = Encoding.UTF8.GetBytes(caAddress);
@@ -71,6 +72,7 @@ namespace CertificateAuthority
                 this.caKey = caAddressSpace.GetCertificateKeyPair(hdPath);
                 this.caCertificate = CreateCertificateAuthorityCertificate(this.caKey, caSubjectName, null, null, caOid141);
 
+                // TODO: If the CA has already been initialized, we shouldn't need to re-create the files on disk.
                 File.WriteAllBytes(Path.Combine(this.settings.DataDirectory, CaCertFilename), this.caCertificate.RawData);
             }
             catch (Exception e)
@@ -498,7 +500,7 @@ namespace CertificateAuthority
             byte[] csrTemp = Convert.FromBase64String(base64csr);
 
             var unsignedCsr = new Pkcs10CertificationRequestDelaySigned(csrTemp);
-            var privateKeyScalar = new BigInteger(privateKey.ToBytes());
+            var privateKeyScalar = new BigInteger(1, privateKey.GetBytes());
 
             X9ECParameters ecdsaCurve = ECNamedCurveTable.GetByName(ecdsaCurveFriendlyName);
             var ecdsaDomainParams = new ECDomainParameters(ecdsaCurve.Curve, ecdsaCurve.G, ecdsaCurve.N, ecdsaCurve.H, ecdsaCurve.GetSeed());

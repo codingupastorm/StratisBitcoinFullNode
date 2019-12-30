@@ -32,7 +32,7 @@ namespace CertificateAuthority.Database
                         adminAttrs |= attr;
 
                     // Create Admin.
-                    AccountModel admin = new AccountModel()
+                    var admin = new AccountModel()
                     {
                         Name = Settings.AdminName,
                         PasswordHash = settings.DefaultAdminPasswordHash,

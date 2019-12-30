@@ -43,7 +43,9 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             if (!(peer.Connection is TlsEnabledNetworkPeerConnection connection))
                 return;
 
-            X509Certificate peerCertificate = connection.GetPeerCertificate();
+            // TODO: Check the connection sequence, presumably this gets run after the version handshake (bad). If so, we want to ban/disconnect rogue peers as early as possible.
+
+            X509Certificate2 peerCertificate = connection.GetPeerCertificate();
 
             if (peerCertificate == null)
             {
@@ -81,7 +83,9 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
                 return;
             }
 
-            bool revoked = await this.RevocationChecker.IsCertificateRevokedAsync(certificateP2pkh, true);
+            // TODO: Apart from the existence of the P2PKH address in the certificate, do we need to verify it against anything?
+
+            bool revoked = await this.RevocationChecker.IsCertificateRevokedAsync(peerCertificate.Thumbprint, true);
 
             if (revoked)
                 peer.Disconnect("Peer certificate is revoked.");
