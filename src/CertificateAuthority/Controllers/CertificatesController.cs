@@ -274,8 +274,8 @@ namespace CertificateAuthority.Controllers
             return this.caCertificateManager.GetRevokedCertificates();
         }
 
-        /// <summary>Returns a collection of thumbprints of revoked certificates.</summary>
-        /// <response code="200">Collection of <see cref="string"/>.</response>
+        /// <summary>Returns the public key value (oid142) for all non-revoked certificates.</summary>
+        /// <response code="200">Collection of <see cref="string"/> with the hex representations of the public keys.</response>
         [HttpGet]
         [Route("get_certificate_public_keys")]
         [ProducesResponseType(typeof(ICollection<PubKey>), 200)]
