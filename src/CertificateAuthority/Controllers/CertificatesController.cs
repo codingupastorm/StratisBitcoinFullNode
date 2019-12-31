@@ -1,11 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using NLog;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
+using NLog;
 using Org.BouncyCastle.Asn1.X9;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -171,7 +172,7 @@ namespace CertificateAuthority.Controllers
             {
                 string subjectName = $"CN={data.Model.Address}";
 
-                Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(subjectName, publicKey, new string[0], oid141);
+                Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(subjectName, publicKey, new string[0], oid141, pubKeyBytes);
 
                 // Important workaround - fill in a dummy signature so that when the CSR is reconstituted on the far side, the decoding does not fail with DerNull errors.
                 unsignedCsr.SignRequest(new byte[] { });
@@ -271,6 +272,16 @@ namespace CertificateAuthority.Controllers
         public ActionResult<ICollection<string>> GetRevokedCertificates()
         {
             return this.caCertificateManager.GetRevokedCertificates();
+        }
+
+        /// <summary>Returns the public key value (oid142) for all non-revoked certificates.</summary>
+        /// <response code="200">Collection of <see cref="string"/> with the hex representations of the public keys.</response>
+        [HttpGet]
+        [Route("get_certificate_public_keys")]
+        [ProducesResponseType(typeof(ICollection<PubKey>), 200)]
+        public ActionResult<ICollection<PubKey>> GetCertificatePublicKeys()
+        {
+            return this.caCertificateManager.GetCertificatePublicKeys();
         }
     }
 }

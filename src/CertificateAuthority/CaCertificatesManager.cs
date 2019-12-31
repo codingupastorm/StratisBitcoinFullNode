@@ -45,6 +45,7 @@ namespace CertificateAuthority
         public const string CaCertFilename = "CaCertificate.crt";
 
         public const string P2pkhExtensionOid = "1.4.1";
+        public const string PubKeyExtensionOid = "1.4.2";
 
         public CaCertificatesManager(DataCacheLayer cache, Settings settings)
         {
@@ -68,9 +69,10 @@ namespace CertificateAuthority
                 byte[] caPubKey = caAddressSpace.GetKey(hdPath).PrivateKey.PubKey.ToBytes();
                 string caAddress = HDWalletAddressSpace.GetAddress(caPubKey, 63);
                 byte[] caOid141 = Encoding.UTF8.GetBytes(caAddress);
+                byte[] caOid142 = caPubKey;
 
                 this.caKey = caAddressSpace.GetCertificateKeyPair(hdPath);
-                this.caCertificate = CreateCertificateAuthorityCertificate(this.caKey, caSubjectName, null, null, caOid141);
+                this.caCertificate = CreateCertificateAuthorityCertificate(this.caKey, caSubjectName, null, null, caOid141, caOid142);
 
                 // TODO: If the CA has already been initialized, we shouldn't need to re-create the files on disk.
                 File.WriteAllBytes(Path.Combine(this.settings.DataDirectory, CaCertFilename), this.caCertificate.RawData);
@@ -86,7 +88,7 @@ namespace CertificateAuthority
             return true;
         }
 
-        private static X509Certificate2 CreateCertificateAuthorityCertificate(AsymmetricCipherKeyPair subjectKeyPair, string subjectName, string[] subjectAlternativeNames, KeyPurposeID[] usages, byte[] oid141)
+        private static X509Certificate2 CreateCertificateAuthorityCertificate(AsymmetricCipherKeyPair subjectKeyPair, string subjectName, string[] subjectAlternativeNames, KeyPurposeID[] usages, byte[] oid141, byte[] oid142)
         {
             SecureRandom random = GetSecureRandom();
             BigInteger subjectSerialNumber = GenerateSerialNumber(random);
@@ -94,7 +96,7 @@ namespace CertificateAuthority
             X509Certificate certificate = GenerateCertificate(random,
                 subjectName, subjectKeyPair.Public, subjectSerialNumber, subjectAlternativeNames,
                 subjectName, subjectKeyPair, subjectSerialNumber,
-                true, usages, oid141);
+                true, usages, oid141, oid142);
 
             X509Certificate2 convertedCert = ConvertCertificate(certificate, random);
 
@@ -144,12 +146,14 @@ namespace CertificateAuthority
             X509Certificate2 certificateFromReq = IssueCertificateFromRequest(certRequest, caCertificate, caKey, new string[0], new[] { KeyPurposeID.AnyExtendedKeyUsage });
 
             string p2pkh = Encoding.UTF8.GetString(ExtractExtensionFromCsr(certRequest.GetCertificationRequestInfo().Attributes, P2pkhExtensionOid));
+            var pubKey = new PubKey(ExtractExtensionFromCsr(certRequest.GetCertificationRequestInfo().Attributes, PubKeyExtensionOid));
 
             var infoModel = new CertificateInfoModel()
             {
                 Status = CertificateStatus.Good,
                 Thumbprint = certificateFromReq.Thumbprint,
                 Address = p2pkh,
+                PubKey = pubKey.ToHex(),
                 CertificateContentDer = Convert.ToBase64String(certificateFromReq.RawData),
                 IssuerAccountId = creatorId
             };
@@ -178,11 +182,12 @@ namespace CertificateAuthority
             AsymmetricKeyParameter publicKey = certificateSigningRequest.GetPublicKey();
 
             byte[] oid141 = ExtractExtensionFromCsr(certificationRequestInfo.Attributes, P2pkhExtensionOid);
+            byte[] oid142 = ExtractExtensionFromCsr(certificationRequestInfo.Attributes, PubKeyExtensionOid);
 
             X509Certificate certificate = GenerateCertificate(random,
                 subjectName, publicKey, subjectSerialNumber, subjectAlternativeNames,
                 issuerCertificate.Subject, issuerKeyPair, issuerSerialNumber,
-                false, usages, oid141);
+                false, usages, oid141, oid142);
             
             return ConvertCertificate(certificate, random);
         }
@@ -247,7 +252,8 @@ namespace CertificateAuthority
                                                            BigInteger issuerSerialNumber,
                                                            bool isCertificateAuthority,
                                                            KeyPurposeID[] usages,
-                                                           byte[] oid141)
+                                                           byte[] oid141,
+                                                           byte[] oid142)
         {
             var certificateGenerator = new X509V3CertificateGenerator();
             certificateGenerator.SetSerialNumber(subjectSerialNumber);
@@ -279,7 +285,7 @@ namespace CertificateAuthority
             if (subjectAlternativeNames != null && subjectAlternativeNames.Any())
                 AddSubjectAlternativeNames(certificateGenerator, subjectAlternativeNames);
 
-            AddDltInformation(certificateGenerator, oid141);
+            AddDltInformation(certificateGenerator, oid141, oid142);
 
             // The certificate is signed with the issuer's private key.
             ISignatureFactory signatureFactory = new Asn1SignatureFactory("SHA256WithECDSA", issuerKeyPair.Private, random);
@@ -367,9 +373,10 @@ namespace CertificateAuthority
             certificateGenerator.AddExtension(X509Extensions.SubjectKeyIdentifier.Id, false, subjectKeyIdentifierExtension);
         }
 
-        private static void AddDltInformation(X509V3CertificateGenerator certificateGenerator, byte[] oid141)
+        private static void AddDltInformation(X509V3CertificateGenerator certificateGenerator, byte[] oid141, byte[] oid142)
         {
             certificateGenerator.AddExtension(P2pkhExtensionOid, true, oid141);
+            certificateGenerator.AddExtension(PubKeyExtensionOid, true, oid142);
         }
 
         private static X509Certificate2 ConvertCertificate(X509Certificate certificate, SecureRandom random)
@@ -402,6 +409,7 @@ namespace CertificateAuthority
             {
                 // TODO: Technically there is an address associated with the CA's pubkey, should we use it?
                 Address = "",
+                PubKey = null,
                 CertificateContentDer = Convert.ToBase64String(this.caCertificate.RawData),
                 Id = 0,
                 IssuerAccountId = 0,
@@ -417,6 +425,14 @@ namespace CertificateAuthority
         public List<CertificateInfoModel> GetAllCertificates(CredentialsAccessModel accessModelInfo)
         {
             return this.repository.ExecuteQuery(accessModelInfo, (dbContext) => { return dbContext.Certificates.ToList(); });
+        }
+
+        /// <summary>
+        /// Provides the collection of public keys of all non-revoked certificates.
+        /// </summary>
+        public List<PubKey> GetCertificatePublicKeys()
+        {
+            return this.repository.PublicKeys.Select(pk => new PubKey(pk)).ToList();
         }
 
         /// <summary>
@@ -478,6 +494,9 @@ namespace CertificateAuthority
                 dbContext.Update(certToEdit);
                 dbContext.SaveChanges();
 
+                if (!dbContext.Certificates.Any(c => c.PubKey == certToEdit.PubKey && certToEdit.Status != CertificateStatus.Revoked))
+                    this.repository.PublicKeys.Remove(certToEdit.PubKey);
+
                 this.repository.RevokedCertificates.Add(thumbprint);
                 this.logger.Info("Certificate id {0}, thumbprint {1} was revoked.", certToEdit.Id, certToEdit.Thumbprint);
 
@@ -485,13 +504,15 @@ namespace CertificateAuthority
             });
         }
 
-        public static Pkcs10CertificationRequestDelaySigned CreatedUnsignedCertificateSigningRequest(string subjectName, AsymmetricKeyParameter publicKey, string[] subjectAlternativeNames, byte[] oid141)
+        public static Pkcs10CertificationRequestDelaySigned CreatedUnsignedCertificateSigningRequest(string subjectName, AsymmetricKeyParameter publicKey, string[] subjectAlternativeNames, byte[] oid141, byte[] oid142)
         {
             IList oids = new ArrayList();
             IList values = new ArrayList();
 
             oids.Add(new DerObjectIdentifier(P2pkhExtensionOid));
             values.Add(new X509Extension(true, new DerOctetString(oid141)));
+            oids.Add(new DerObjectIdentifier(PubKeyExtensionOid));
+            values.Add(new X509Extension(true, new DerOctetString(oid142)));
 
             oids.Add(new DerObjectIdentifier(X509Extensions.SubjectAlternativeName.Id));
             Asn1Encodable[] altnames = subjectAlternativeNames.Select(name => new GeneralName(GeneralName.DnsName, name)).ToArray<Asn1Encodable>();
@@ -529,13 +550,15 @@ namespace CertificateAuthority
             return Convert.ToBase64String(signedCsr.GetDerEncoded());
         }
 
-        public static Pkcs10CertificationRequest CreateCertificateSigningRequest(string subjectName, AsymmetricCipherKeyPair subjectKeyPair, string[] subjectAlternativeNames, byte[] oid141)
+        public static Pkcs10CertificationRequest CreateCertificateSigningRequest(string subjectName, AsymmetricCipherKeyPair subjectKeyPair, string[] subjectAlternativeNames, byte[] oid141,  byte[] oid142)
         {
             IList oids = new ArrayList();
             IList values = new ArrayList();
 
             oids.Add(new DerObjectIdentifier(P2pkhExtensionOid));
             values.Add(new X509Extension(true, new DerOctetString(oid141)));
+            oids.Add(new DerObjectIdentifier(PubKeyExtensionOid));
+            values.Add(new X509Extension(true, new DerOctetString(oid142)));
 
             oids.Add(new DerObjectIdentifier(X509Extensions.SubjectAlternativeName.Id));
             Asn1Encodable[] altnames = subjectAlternativeNames.Select(name => new GeneralName(GeneralName.DnsName, name)).ToArray<Asn1Encodable>();
