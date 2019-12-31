@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net.Http;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,7 +11,6 @@ using CertificateAuthority.Tests.FullProjectTests.Helpers;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.TestHost;
 using NBitcoin;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
@@ -47,18 +47,25 @@ namespace Stratis.SmartContracts.IntegrationTests
             IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
             builder.UseStartup<TestOnlyStartup>();
 
-            using (var server = new TestServer(builder))
+            using (IWebHost server = builder.Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
+                server.Start();
+
+                // TODO: This is a massive stupid hack to test with self signed certs.
+                var handler = new HttpClientHandler();
+                handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
+                var httpClient = new HttpClient(handler);
+                string baseAddress = "https://localhost:5001";
+
                 // Start + Initialize CA.
-                var client = new CaClient(server.BaseAddress, server.CreateClient(), CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+                var client = new CaClient(new Uri(baseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword));
 
                 // Get Authority Certificate.
-                Settings settings = (Settings)server.Host.Services.GetService(typeof(Settings));
+                Settings settings = (Settings)server.Services.GetService(typeof(Settings));
                 var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
                 X509Certificate2 ac = new X509Certificate2(File.ReadAllBytes(acLocation));
-
 
                 // Create 2 new client certificates.
                 var privKey1 = new Key();
@@ -82,18 +89,18 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TestHelper.Connect(node1, node2);
 
                 // Build and send a transaction from one node.
-                Transaction transaction = this.CreateBasicOpReturnTransaction(node1);
+                Transaction transaction = this.CreateBasicOpReturnTransaction(node1, privKey1);
                 var broadcasterManager = node1.FullNode.NodeService<IBroadcasterManager>();
                 await broadcasterManager.BroadcastTransactionAsync(transaction);
 
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
 
-
                 // Other node receives and mines transaction, validating it came from a permitted sender.
                 await node2.MineBlocksAsync(1);
                 TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 1);
-                Assert.Equal(2, node1.FullNode.ChainIndexer.GetHeader(1).Block.Transactions.Count); // TODO: Double check we have a coinbase? Otherwise this is just 1.
+                var block = node1.FullNode.ChainIndexer.GetHeader(1).Block;
+                Assert.Single(block.Transactions);
             }
         }
 
@@ -241,13 +248,16 @@ namespace Stratis.SmartContracts.IntegrationTests
             return transaction;
         }
 
-        private Transaction CreateBasicOpReturnTransaction(CoreNode node)
+        private Transaction CreateBasicOpReturnTransaction(CoreNode node, Key key = null)
         {
+            if (key == null)
+            {
+                key = new Key();
+            }
+
             Transaction transaction = this.network.CreateTransaction();
             Script outputScript = TxNullDataTemplate.Instance.GenerateScriptPubKey(new byte[] { 0, 1, 2, 3 });
             transaction.Outputs.Add(new TxOut(Money.Zero, outputScript));
-
-            var key = new Key();
 
             ITokenlessSigner signer = node.FullNode.NodeService<ITokenlessSigner>();
             signer.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));

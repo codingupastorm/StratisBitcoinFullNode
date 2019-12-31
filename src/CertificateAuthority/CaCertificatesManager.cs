@@ -1,5 +1,4 @@
-﻿using NLog;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +9,7 @@ using System.Threading.Tasks;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
 using NBitcoin;
+using NLog;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
@@ -45,6 +45,8 @@ namespace CertificateAuthority
         public const string CaCertFilename = "CaCertificate.crt";
 
         public const string P2pkhExtensionOid = "1.4.1";
+
+        public const string SendPermission = "1.4.2";
 
         public CaCertificatesManager(DataCacheLayer cache, Settings settings)
         {
@@ -370,6 +372,7 @@ namespace CertificateAuthority
         private static void AddDltInformation(X509V3CertificateGenerator certificateGenerator, byte[] oid141)
         {
             certificateGenerator.AddExtension(P2pkhExtensionOid, true, oid141);
+            certificateGenerator.AddExtension(SendPermission, true, new byte[] {1});
         }
 
         private static X509Certificate2 ConvertCertificate(X509Certificate certificate, SecureRandom random)
@@ -394,6 +397,21 @@ namespace CertificateAuthority
             }
 
             return convertedCertificate;
+        }
+
+        public CertificateInfoModel GetCaCertificate(CredentialsAccessModel accessModelInfo)
+        {
+            return new CertificateInfoModel()
+            {
+                // TODO: Technically there is an address associated with the CA's pubkey, should we use it?
+                Address = "",
+                CertificateContentDer = Convert.ToBase64String(this.caCertificate.RawData),
+                Id = 0,
+                IssuerAccountId = 0,
+                RevokerAccountId = 0,
+                Status = CertificateStatus.Good,
+                Thumbprint = this.caCertificate.Thumbprint
+            };
         }
 
         /// <summary>
@@ -476,7 +494,9 @@ namespace CertificateAuthority
             IList values = new ArrayList();
 
             oids.Add(new DerObjectIdentifier(P2pkhExtensionOid));
+            oids.Add(new DerObjectIdentifier(SendPermission));
             values.Add(new X509Extension(true, new DerOctetString(oid141)));
+            values.Add(new X509Extension(true, new DerOctetString(new byte[] {1})));
 
             oids.Add(new DerObjectIdentifier(X509Extensions.SubjectAlternativeName.Id));
             Asn1Encodable[] altnames = subjectAlternativeNames.Select(name => new GeneralName(GeneralName.DnsName, name)).ToArray<Asn1Encodable>();
@@ -520,11 +540,13 @@ namespace CertificateAuthority
             IList values = new ArrayList();
 
             oids.Add(new DerObjectIdentifier(P2pkhExtensionOid));
+            oids.Add(new DerObjectIdentifier(SendPermission));
             values.Add(new X509Extension(true, new DerOctetString(oid141)));
+            values.Add(new X509Extension(true, new DerOctetString(new byte[] { 1 })));
 
             oids.Add(new DerObjectIdentifier(X509Extensions.SubjectAlternativeName.Id));
             Asn1Encodable[] altnames = subjectAlternativeNames.Select(name => new GeneralName(GeneralName.DnsName, name)).ToArray<Asn1Encodable>();
-            DerSequence subjectAlternativeNamesExtension = new DerSequence(altnames);
+            var subjectAlternativeNamesExtension = new DerSequence(altnames);
             values.Add(new X509Extension(true, new DerOctetString(subjectAlternativeNamesExtension)));
 
             var attribute = new AttributePkcs(PkcsObjectIdentifiers.Pkcs9AtExtensionRequest, new DerSet(new X509Extensions(oids, values)));

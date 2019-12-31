@@ -9,14 +9,10 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
 {
     public class TestOnlyStartup : Startup
     {
-        public string DataDir { get; set; }
-
         public TestOnlyStartup(IConfiguration configuration) : base(configuration)
         {
-            this.DataDir = GetTestDirectoryPath(this);
-
             configuration["conf"] = "ca.conf";
-            configuration["datadir"] = this.DataDir;
+            configuration["datadir"] = GetTestDirectoryPath(this);
         }
 
         public override void ConfigureServices(IServiceCollection services)

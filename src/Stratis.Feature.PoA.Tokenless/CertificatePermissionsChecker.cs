@@ -1,4 +1,5 @@
 ﻿using System.Security.Cryptography.X509Certificates;
+using CertificateAuthority;
 using NBitcoin;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.SmartContracts.CLR;
@@ -11,8 +12,6 @@ namespace Stratis.Feature.PoA.Tokenless
     }
     public class CertificatePermissionsChecker : ICertificatePermissionsChecker
     {
-        public const string SendPermission = "SendPermission";
-
         private readonly ICertificateCache certificateCache;
         private readonly CertificatesManager certificatesManager;
         private readonly Network network;
@@ -52,7 +51,7 @@ namespace Stratis.Feature.PoA.Tokenless
             if (certificate == null)
                 return false;
 
-            byte[] result = CertificatesManager.ExtractCertificateExtension(certificate, SendPermission);
+            byte[] result = CertificatesManager.ExtractCertificateExtension(certificate, CaCertificatesManager.SendPermission);
             return result != null;
         }
     }

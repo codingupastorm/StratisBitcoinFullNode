@@ -9,6 +9,7 @@ using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
+using Stratis.Feature.PoA.Tokenless.Wallet;
 using Stratis.SmartContracts.Networks;
 
 namespace Stratis.SmartContracts.Tests.Common
@@ -42,9 +43,16 @@ namespace Stratis.SmartContracts.Tests.Common
             string dataFolder = this.GetNextDataFolderName();
 
             CoreNode node = this.CreateNode(new FullTokenlessRunner(dataFolder, network, this.TimeProvider), "poa.conf");
+            Mnemonic[] mnemonics = {
+                    new Mnemonic("lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom"),
+                    new Mnemonic("idle power swim wash diesel blouse photo among eager reward govern menu"),
+                    new Mnemonic("high neither night category fly wasp inner kitchen phone current skate hair") };
 
-            using (var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder }))
+            using (var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder, "-password=test", $"-mnemonic={ mnemonics[nodeIndex] }" }))
             {
+                var walletManager = new TokenlessWalletManager(network, settings.DataFolder, new TokenlessWalletSettings(settings));
+                walletManager.Initialize();
+
                 var tool = new KeyTool(settings.DataFolder);
                 tool.SavePrivateKey(network.FederationKeys[nodeIndex]);
 

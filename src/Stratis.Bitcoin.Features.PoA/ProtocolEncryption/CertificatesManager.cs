@@ -136,23 +136,28 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             chain.ChainPolicy.ExtraStore.Add(authorityCertificate);
 
-            bool isChainValid = chain.Build(certificateToValidate);
+            // Without actually importing the certificate into the local machine's trusted root store this will not return true.
+            chain.Build(certificateToValidate);
 
-            if (!isChainValid)
+            // Therefore, we inspect the ChainStatus directly to see if the certificate chain was nominally valid
+            bool isChainValid = false;
+
+            foreach (X509ChainStatus chainStatus in chain.ChainStatus)
             {
-                string[] errors = chain.ChainStatus.Select(x => $"{x.StatusInformation.Trim()} ({x.Status})").ToArray();
-                string certificateErrorsString = "Unknown errors.";
+                // There are other validation errors getting raised, we should ensure that only 'known' errors are allowed
+                if (chainStatus.Status != X509ChainStatusFlags.UntrustedRoot &&
+                    chainStatus.Status != X509ChainStatusFlags.HasNotSupportedCriticalExtension &&
+                    chainStatus.Status != X509ChainStatusFlags.InvalidExtension)
+                    return false;
 
-                if (errors.Length > 0)
-                    certificateErrorsString = string.Join(", ", errors);
-
-                throw new Exception("Trust chain did not complete to the known authority anchor. Errors: " + certificateErrorsString);
+                if (chainStatus.Status == X509ChainStatusFlags.UntrustedRoot)
+                    isChainValid = true;
             }
 
             // This piece makes sure it actually matches your known root
-            bool valid = chain.ChainElements.Cast<X509ChainElement>().Any(x => x.Certificate.Thumbprint == authorityCertificate.Thumbprint);
+            bool rootValid = chain.ChainElements.Cast<X509ChainElement>().Any(x => x.Certificate.Thumbprint == authorityCertificate.Thumbprint);
 
-            return valid;
+            return isChainValid && rootValid;
         }
 
         public bool ValidateCertificate(object sender, X509Certificate certificate, X509Chain _, SslPolicyErrors sslPolicyErrors)
@@ -162,48 +167,20 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             var certificateToValidate = new X509Certificate2(certificate);
 
-            X509Chain chain = new X509Chain
-            {
-                ChainPolicy =
-                {
-                    RevocationMode = X509RevocationMode.NoCheck,
-                    RevocationFlag = X509RevocationFlag.ExcludeRoot,
-                    VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority,
-                    VerificationTime = DateTime.Now,
-                    UrlRetrievalTimeout = new TimeSpan(0, 0, 0)
-                }
-            };
-
-            // Add root certificate.
-            chain.ChainPolicy.ExtraStore.Add(this.AuthorityCertificate);
-
-            bool isChainValid = chain.Build(certificateToValidate);
-
-            if (!isChainValid)
-            {
-                string[] errors = chain.ChainStatus.Select(x => String.Format("{0} ({1})", x.StatusInformation.Trim(), x.Status)).ToArray();
-                string certificateErrorsString = "Unknown errors.";
-
-                if (errors.Length > 0)
-                    certificateErrorsString = String.Join(", ", errors);
-
-                throw new Exception("Trust chain did not complete to the known authority anchor. Errors: " + certificateErrorsString);
-            }
-
-            // This piece makes sure it actually matches your known root
-            bool valid = chain.ChainElements.Cast<X509ChainElement>().Any(x => x.Certificate.Thumbprint == this.AuthorityCertificate.Thumbprint);
-
-            if (!valid)
-                throw new Exception("Trust chain did not complete to the known authority anchor. Thumbprints did not match.");
+            bool isValid = IsSignedByAuthorityCertificate(certificateToValidate, this.AuthorityCertificate);
 
             bool revoked = this.revocationChecker.IsCertificateRevokedAsync(this.ClientCertificate.Thumbprint, false).ConfigureAwait(false).GetAwaiter().GetResult();
 
-            return !revoked;
+            return isValid && !revoked;
         }
 
         public X509Certificate2 RequestNewCertificate(Key privateKey)
         {
-            var caClient = new CaClient(new Uri(this.caUrl), new HttpClient(), this.caAccountId, this.caPassword);
+            // TODO: This is a massive stupid hack to test with self signed certs.
+            var handler = new HttpClientHandler();
+            handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
+            var httpClient = new HttpClient(handler);
+            var caClient = new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
 
             PubKey pubKey = privateKey.PubKey;
             BitcoinPubKeyAddress address = pubKey.GetAddress(this.network);
@@ -221,7 +198,12 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         public X509Certificate2 GetCertificateForAddress(string address)
         {
-            var caClient = new CaClient(new Uri(this.caUrl), new HttpClient(), this.caAccountId, this.caPassword);
+            // TODO: This is a massive stupid hack to test with self signed certs.
+            var handler = new HttpClientHandler();
+            handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
+            var httpClient = new HttpClient(handler);
+
+            var caClient = new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
 
             CertificateInfoModel retrievedCertModel = caClient.GetCertificateForAddress(address);
 
