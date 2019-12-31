@@ -275,7 +275,7 @@ namespace CertificateAuthority.Controllers
         }
 
         /// <summary>Returns the public key value (oid142) for all non-revoked certificates.</summary>
-        /// <response code="200">Collection of <see cref="string"/> with the hex representations of the public keys.</response>
+        /// <response code="200">Collection of <see cref="PubKey"/>.</response>
         [HttpGet]
         [Route("get_certificate_public_keys")]
         [ProducesResponseType(typeof(ICollection<PubKey>), 200)]
