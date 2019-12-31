@@ -146,12 +146,14 @@ namespace CertificateAuthority
             X509Certificate2 certificateFromReq = IssueCertificateFromRequest(certRequest, caCertificate, caKey, new string[0], new[] { KeyPurposeID.AnyExtendedKeyUsage });
 
             string p2pkh = Encoding.UTF8.GetString(ExtractExtensionFromCsr(certRequest.GetCertificationRequestInfo().Attributes, P2pkhExtensionOid));
+            var pubKey = new PubKey(ExtractExtensionFromCsr(certRequest.GetCertificationRequestInfo().Attributes, PubKeyExtensionOid));
 
             var infoModel = new CertificateInfoModel()
             {
                 Status = CertificateStatus.Good,
                 Thumbprint = certificateFromReq.Thumbprint,
                 Address = p2pkh,
+                PubKey = pubKey.ToHex(),
                 CertificateContentDer = Convert.ToBase64String(certificateFromReq.RawData),
                 IssuerAccountId = creatorId
             };
@@ -283,8 +285,7 @@ namespace CertificateAuthority
             if (subjectAlternativeNames != null && subjectAlternativeNames.Any())
                 AddSubjectAlternativeNames(certificateGenerator, subjectAlternativeNames);
 
-            AddDltInformation(certificateGenerator, oid141);
-            AddDltPubKeyInformation(certificateGenerator, oid142);
+            AddDltInformation(certificateGenerator, oid141, oid142);
 
             // The certificate is signed with the issuer's private key.
             ISignatureFactory signatureFactory = new Asn1SignatureFactory("SHA256WithECDSA", issuerKeyPair.Private, random);
@@ -372,13 +373,9 @@ namespace CertificateAuthority
             certificateGenerator.AddExtension(X509Extensions.SubjectKeyIdentifier.Id, false, subjectKeyIdentifierExtension);
         }
 
-        private static void AddDltInformation(X509V3CertificateGenerator certificateGenerator, byte[] oid141)
+        private static void AddDltInformation(X509V3CertificateGenerator certificateGenerator, byte[] oid141, byte[] oid142)
         {
             certificateGenerator.AddExtension(P2pkhExtensionOid, true, oid141);
-        }
-
-        private static void AddDltPubKeyInformation(X509V3CertificateGenerator certificateGenerator, byte[] oid142)
-        {
             certificateGenerator.AddExtension(PubKeyExtensionOid, true, oid142);
         }
 
@@ -412,6 +409,7 @@ namespace CertificateAuthority
             {
                 // TODO: Technically there is an address associated with the CA's pubkey, should we use it?
                 Address = "",
+                PubKey = null,
                 CertificateContentDer = Convert.ToBase64String(this.caCertificate.RawData),
                 Id = 0,
                 IssuerAccountId = 0,
@@ -427,6 +425,14 @@ namespace CertificateAuthority
         public List<CertificateInfoModel> GetAllCertificates(CredentialsAccessModel accessModelInfo)
         {
             return this.repository.ExecuteQuery(accessModelInfo, (dbContext) => { return dbContext.Certificates.ToList(); });
+        }
+
+        /// <summary>
+        /// Provides the collection of public keys of all non-revoked certificates.
+        /// </summary>
+        public List<PubKey> GetCertificatePublicKeys()
+        {
+            return this.repository.PublicKeys.Select(pk => new PubKey(pk)).ToList();
         }
 
         /// <summary>
@@ -488,6 +494,9 @@ namespace CertificateAuthority
                 dbContext.Update(certToEdit);
                 dbContext.SaveChanges();
 
+                if (!dbContext.Certificates.Any(c => c.PubKey == certToEdit.PubKey && certToEdit.Status != CertificateStatus.Revoked))
+                    this.repository.PublicKeys.Remove(certToEdit.PubKey);
+
                 this.repository.RevokedCertificates.Add(thumbprint);
                 this.logger.Info("Certificate id {0}, thumbprint {1} was revoked.", certToEdit.Id, certToEdit.Thumbprint);
 
@@ -495,13 +504,15 @@ namespace CertificateAuthority
             });
         }
 
-        public static Pkcs10CertificationRequestDelaySigned CreatedUnsignedCertificateSigningRequest(string subjectName, AsymmetricKeyParameter publicKey, string[] subjectAlternativeNames, byte[] oid141)
+        public static Pkcs10CertificationRequestDelaySigned CreatedUnsignedCertificateSigningRequest(string subjectName, AsymmetricKeyParameter publicKey, string[] subjectAlternativeNames, byte[] oid141, byte[] oid142)
         {
             IList oids = new ArrayList();
             IList values = new ArrayList();
 
             oids.Add(new DerObjectIdentifier(P2pkhExtensionOid));
             values.Add(new X509Extension(true, new DerOctetString(oid141)));
+            oids.Add(new DerObjectIdentifier(PubKeyExtensionOid));
+            values.Add(new X509Extension(true, new DerOctetString(oid142)));
 
             oids.Add(new DerObjectIdentifier(X509Extensions.SubjectAlternativeName.Id));
             Asn1Encodable[] altnames = subjectAlternativeNames.Select(name => new GeneralName(GeneralName.DnsName, name)).ToArray<Asn1Encodable>();
@@ -539,13 +550,15 @@ namespace CertificateAuthority
             return Convert.ToBase64String(signedCsr.GetDerEncoded());
         }
 
-        public static Pkcs10CertificationRequest CreateCertificateSigningRequest(string subjectName, AsymmetricCipherKeyPair subjectKeyPair, string[] subjectAlternativeNames, byte[] oid141)
+        public static Pkcs10CertificationRequest CreateCertificateSigningRequest(string subjectName, AsymmetricCipherKeyPair subjectKeyPair, string[] subjectAlternativeNames, byte[] oid141,  byte[] oid142)
         {
             IList oids = new ArrayList();
             IList values = new ArrayList();
 
             oids.Add(new DerObjectIdentifier(P2pkhExtensionOid));
             values.Add(new X509Extension(true, new DerOctetString(oid141)));
+            oids.Add(new DerObjectIdentifier(PubKeyExtensionOid));
+            values.Add(new X509Extension(true, new DerOctetString(oid142)));
 
             oids.Add(new DerObjectIdentifier(X509Extensions.SubjectAlternativeName.Id));
             Asn1Encodable[] altnames = subjectAlternativeNames.Select(name => new GeneralName(GeneralName.DnsName, name)).ToArray<Asn1Encodable>();
