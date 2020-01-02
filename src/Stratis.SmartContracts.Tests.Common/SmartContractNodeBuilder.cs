@@ -37,9 +37,8 @@ namespace Stratis.SmartContracts.Tests.Common
             return node;
         }
 
-        public CoreNode CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate2 authorityCertificate = null, X509Certificate2 clientCertificate = null)
+        public CoreNode CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate2 authorityCertificate, X509Certificate2 clientCertificate)
         {
-            // TODO: Shouldn't need default params. Just helps soln build.
             string dataFolder = this.GetNextDataFolderName();
 
             CoreNode node = this.CreateNode(new FullTokenlessRunner(dataFolder, network, this.TimeProvider), "poa.conf");

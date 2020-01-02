@@ -121,10 +121,44 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesCreateAndCallAContractAsync()
         {
-            using (SmartContractNodeBuilder builder = SmartContractNodeBuilder.Create(this))
+            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
+            builder.UseStartup<TestOnlyStartup>();
+
+            using (IWebHost server = builder.Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
-                CoreNode node1 = builder.CreateFullTokenlessNode(this.network, 0);
-                CoreNode node2 = builder.CreateFullTokenlessNode(this.network, 1);
+                server.Start();
+
+                // TODO: This is a massive stupid hack to test with self signed certs.
+                var handler = new HttpClientHandler();
+                handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
+                var httpClient = new HttpClient(handler);
+                string baseAddress = "https://localhost:5001";
+
+                // Start + Initialize CA.
+                var client = new CaClient(new Uri(baseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword));
+
+                // Get Authority Certificate.
+                Settings settings = (Settings)server.Services.GetService(typeof(Settings));
+                var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
+                X509Certificate2 ac = new X509Certificate2(File.ReadAllBytes(acLocation));
+
+                // Create 2 new client certificates.
+                var privKey1 = new Key();
+                PubKey pubKey1 = privKey1.PubKey;
+                BitcoinPubKeyAddress address1 = pubKey1.GetAddress(this.network);
+                X509Certificate2 certificate1 = IssueCertificate(client, privKey1, pubKey1, address1);
+                Assert.NotNull(certificate1);
+
+                var privKey2 = new Key();
+                PubKey pubKey2 = privKey2.PubKey;
+                BitcoinPubKeyAddress address2 = pubKey2.GetAddress(this.network);
+                X509Certificate2 certificate2 = IssueCertificate(client, privKey2, pubKey2, address2);
+                Assert.NotNull(certificate2);
+
+                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, certificate1);
+                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, certificate2);
 
                 node1.Start();
                 node2.Start();
@@ -136,7 +170,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
                 var stateRepo = node2.FullNode.NodeService<IStateRepositoryRoot>();
 
-                Transaction createTransaction = this.CreateContractCreateTransaction(node1);
+                Transaction createTransaction = this.CreateContractCreateTransaction(node1, privKey1);
                 await broadcasterManager.BroadcastTransactionAsync(createTransaction);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
@@ -145,7 +179,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Receipt createReceipt = receiptRepository.Retrieve(createTransaction.GetHash());
                 Assert.True(createReceipt.Success);
 
-                Transaction callTransaction = CreateContractCallTransaction(node1, createReceipt.NewContractAddress);
+                Transaction callTransaction = CreateContractCallTransaction(node1, createReceipt.NewContractAddress, privKey1);
                 await broadcasterManager.BroadcastTransactionAsync(callTransaction);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
@@ -161,10 +195,47 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesCreateAndCallWithControllerAsync()
         {
-            using (SmartContractNodeBuilder builder = SmartContractNodeBuilder.Create(this))
+
+            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
+            builder.UseStartup<TestOnlyStartup>();
+
+            using (IWebHost server = builder.Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
-                CoreNode node1 = builder.CreateFullTokenlessNode(this.network, 0);
-                CoreNode node2 = builder.CreateFullTokenlessNode(this.network, 1);
+                server.Start();
+
+                // TODO: This is a massive stupid hack to test with self signed certs.
+                var handler = new HttpClientHandler();
+                handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
+                var httpClient = new HttpClient(handler);
+                string baseAddress = "https://localhost:5001";
+
+                // Start + Initialize CA.
+                var client = new CaClient(new Uri(baseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword));
+
+                // Get Authority Certificate.
+                Settings settings = (Settings)server.Services.GetService(typeof(Settings));
+                var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
+                X509Certificate2 ac = new X509Certificate2(File.ReadAllBytes(acLocation));
+
+                // Create 2 new client certificates.
+                string mnemonicString = "lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom";
+                Mnemonic mnemonic = new Mnemonic(mnemonicString);
+                var privKey1 = mnemonic.DeriveExtKey().PrivateKey;
+                PubKey pubKey1 = privKey1.PubKey;
+                BitcoinPubKeyAddress address1 = pubKey1.GetAddress(this.network);
+                X509Certificate2 certificate1 = IssueCertificate(client, privKey1, pubKey1, address1);
+                Assert.NotNull(certificate1);
+
+                var privKey2 = new Key();
+                PubKey pubKey2 = privKey2.PubKey;
+                BitcoinPubKeyAddress address2 = pubKey2.GetAddress(this.network);
+                X509Certificate2 certificate2 = IssueCertificate(client, privKey2, pubKey2, address2);
+                Assert.NotNull(certificate2);
+
+                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, certificate1);
+                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, certificate2);
 
                 node1.Start();
                 node2.Start();
@@ -179,14 +250,14 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 var createModel = new BuildCreateContractTransactionModel()
                 {
-                    Mnemonic = "lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom",
+                    Mnemonic = mnemonicString,
                     ContractCode = compilationResult.Compilation
                 };
 
                 var createResult = (JsonResult)node1Controller.BuildCreateContractTransaction(createModel);
                 var createResponse = (BuildCreateContractTransactionResponse)createResult.Value;
 
-                node1Controller.SendTransactionAsync(createResponse.Hex);
+                await node1Controller.SendTransactionAsync(createResponse.Hex);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
                 TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 1);
@@ -196,7 +267,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 var callModel = new BuildCallContractTransactionModel()
                 {
-                    Mnemonic = "lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom",
+                    Mnemonic = mnemonicString,
                     Address = createReceipt.NewContractAddress.ToBase58Address(this.network),
                     MethodName = "CallMe"
                 };
@@ -204,7 +275,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var callResult = (JsonResult)node1Controller.BuildCallContractTransaction(callModel);
                 var callResponse = (BuildCallContractTransactionResponse)callResult.Value;
 
-                node1Controller.SendTransactionAsync(callResponse.Hex);
+                await node1Controller.SendTransactionAsync(callResponse.Hex);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
                 TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 2);
@@ -214,7 +285,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             }
         }
 
-        private Transaction CreateContractCreateTransaction(CoreNode node)
+        private Transaction CreateContractCreateTransaction(CoreNode node, Key key)
         {
             Transaction transaction = this.network.CreateTransaction();
             ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/TokenlessSimpleContract.cs");
@@ -224,15 +295,13 @@ namespace Stratis.SmartContracts.IntegrationTests
             byte[] outputScript = node.FullNode.NodeService<ICallDataSerializer>().Serialize(contractTxData);
             transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
 
-            var key = new Key();
-
             ITokenlessSigner signer = node.FullNode.NodeService<ITokenlessSigner>();
             signer.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
 
             return transaction;
         }
 
-        private Transaction CreateContractCallTransaction(CoreNode node, uint160 address)
+        private Transaction CreateContractCallTransaction(CoreNode node, uint160 address, Key key)
         {
             Transaction transaction = this.network.CreateTransaction();
 
@@ -240,21 +309,14 @@ namespace Stratis.SmartContracts.IntegrationTests
             byte[] outputScript = node.FullNode.NodeService<ICallDataSerializer>().Serialize(contractTxData);
             transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
 
-            var key = new Key();
-
             ITokenlessSigner signer = node.FullNode.NodeService<ITokenlessSigner>();
             signer.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
 
             return transaction;
         }
 
-        private Transaction CreateBasicOpReturnTransaction(CoreNode node, Key key = null)
+        private Transaction CreateBasicOpReturnTransaction(CoreNode node, Key key)
         {
-            if (key == null)
-            {
-                key = new Key();
-            }
-
             Transaction transaction = this.network.CreateTransaction();
             Script outputScript = TxNullDataTemplate.Instance.GenerateScriptPubKey(new byte[] { 0, 1, 2, 3 });
             transaction.Outputs.Add(new TxOut(Money.Zero, outputScript));

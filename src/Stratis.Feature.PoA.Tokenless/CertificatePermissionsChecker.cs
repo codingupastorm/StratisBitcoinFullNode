@@ -52,7 +52,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 return false;
 
             byte[] result = CertificatesManager.ExtractCertificateExtension(certificate, CaCertificatesManager.SendPermission);
-            return result != null;
+            return result != null && result[0] == 1;
         }
     }
 }

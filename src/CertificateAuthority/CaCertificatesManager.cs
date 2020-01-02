@@ -46,7 +46,7 @@ namespace CertificateAuthority
 
         public const string P2pkhExtensionOid = "1.4.1";
 
-        public const string SendPermission = "1.4.2";
+        public const string SendPermission = "1.4.3";
 
         public CaCertificatesManager(DataCacheLayer cache, Settings settings)
         {
