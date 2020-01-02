@@ -12,6 +12,8 @@ namespace CertificateAuthority.Database
 
         public HashSet<string> RevokedCertificates;
 
+        public HashSet<string> PublicKeys;
+
         private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         private readonly Settings settings;
@@ -60,6 +62,7 @@ namespace CertificateAuthority.Database
             // Fill cache.
             this.CertStatusesByThumbprint = new Dictionary<string, CertificateStatus>();
             this.RevokedCertificates = new HashSet<string>();
+            this.PublicKeys = new HashSet<string>();
 
             using (CADbContext dbContext = this.CreateContext())
             {
@@ -69,6 +72,8 @@ namespace CertificateAuthority.Database
 
                     if (info.Status == CertificateStatus.Revoked)
                         RevokedCertificates.Add(info.Thumbprint);
+                    else
+                        this.PublicKeys.Add(info.PubKey);
                 }
             }
 
@@ -82,6 +87,7 @@ namespace CertificateAuthority.Database
         public void AddNewCertificate(CertificateInfoModel certificate)
         {
             this.CertStatusesByThumbprint.Add(certificate.Thumbprint, certificate.Status);
+            this.PublicKeys.Add(certificate.PubKey);
 
             using (CADbContext dbContext = this.CreateContext())
             {

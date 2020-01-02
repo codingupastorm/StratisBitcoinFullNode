@@ -15,6 +15,11 @@ namespace CertificateAuthority.Models
         /// </summary>
         public string Address { get; set; }
 
+        /// <summary>
+        /// The public key corresponding to the private key of the certificate.
+        /// </summary>
+        public string PubKey { get; set; }
+
         /// <summary>Certificate data encoded in DER format, converted to base64.</summary>
         public string CertificateContentDer { get; set; }
 
@@ -26,7 +31,7 @@ namespace CertificateAuthority.Models
 
         public override string ToString()
         {
-            return $"{nameof(this.Id)}:{this.Id},{nameof(this.Thumbprint)}:{this.Thumbprint},{nameof(this.Address)}:{this.Address}," +
+            return $"{nameof(this.Id)}:{this.Id},{nameof(this.Thumbprint)}:{this.Thumbprint},{nameof(this.Address)}:{this.Address},{nameof(this.PubKey)}:{this.PubKey}," +
                    $"{nameof(this.Status)}:{this.Status},{nameof(this.IssuerAccountId)}:{this.IssuerAccountId}," +
                    $"{nameof(this.RevokerAccountId)}:{this.RevokerAccountId}";
         }

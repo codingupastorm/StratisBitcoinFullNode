@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using CertificateAuthority.Models;
+using NBitcoin;
 using Newtonsoft.Json;
 
 namespace CertificateAuthority
@@ -17,7 +18,8 @@ namespace CertificateAuthority
         private const string GetCertificateStatusEndpoint = "api/certificates/get_certificate_status";
         private const string GenerateCertificateSigningRequestEndpoint = "api/certificates/generate_certificate_signing_request";
         private const string IssueCertificateEndpoint = "api/certificates/issue_certificate_using_request_string";
-        
+        private const string GetCertificatePublicKeysEndpoint = "api/certificates/get_certificate_public_keys";
+
         private const string JsonContentType = "application/json";
         private Uri baseApiUrl;
         private HttpClient httpClient;
@@ -84,6 +86,23 @@ namespace CertificateAuthority
             List<CertificateInfoModel> certList = JsonConvert.DeserializeObject<List<CertificateInfoModel>>(responseString);
 
             return certList;
+        }
+
+        public List<PubKey> GetCertificatePublicKeys()
+        {
+            var credentialsModel = new CredentialsModel()
+            {
+                AccountId = this.accountId,
+                Password = this.password
+            };
+
+            HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{GetCertificatePublicKeysEndpoint}", credentialsModel).GetAwaiter().GetResult();
+
+            string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+            List<PubKey> pubKeyList = JsonConvert.DeserializeObject<List<PubKey>>(responseString);
+
+            return pubKeyList;
         }
 
         public List<string> GetRevokedCertificates()
