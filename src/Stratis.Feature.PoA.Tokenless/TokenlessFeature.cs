@@ -98,8 +98,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         private void SynchoronizeMembers()
         {
-            // TODO: Fix this once PR 71 is merged.
-            List<PubKey> allowedMembers = this.certificatesManager.GetCertificatePublicKeys(null);
+            List<PubKey> allowedMembers = this.certificatesManager.GetCertificatePublicKeys();
             List<IFederationMember> currentMembers = this.federationManager.GetFederationMembers();
 
             // Check for differences and kick members without valid certificates.                
