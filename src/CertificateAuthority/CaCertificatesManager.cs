@@ -48,6 +48,8 @@ namespace CertificateAuthority
         public const string PubKeyExtensionOid = "1.4.2";
 
         public const string SendPermission = "1.4.3";
+        public const string CallContractPermissionOid = "1.4.4";
+        public const string CreateContractPermissionOid = "1.4.5";
 
         public CaCertificatesManager(DataCacheLayer cache, Settings settings)
         {
@@ -379,7 +381,12 @@ namespace CertificateAuthority
         {
             certificateGenerator.AddExtension(P2pkhExtensionOid, true, oid141);
             certificateGenerator.AddExtension(PubKeyExtensionOid, true, oid142);
+
+            // TODO: Give out these permissions conditionally.
+
             certificateGenerator.AddExtension(SendPermission, true, new byte[] {1});
+            certificateGenerator.AddExtension(CallContractPermissionOid, true, new byte[] {1});
+            certificateGenerator.AddExtension(CreateContractPermissionOid, true, new byte[] { 1 });
         }
 
         private static X509Certificate2 ConvertCertificate(X509Certificate certificate, SecureRandom random)
@@ -515,9 +522,13 @@ namespace CertificateAuthority
             oids.Add(new DerObjectIdentifier(P2pkhExtensionOid));
             oids.Add(new DerObjectIdentifier(PubKeyExtensionOid));
             oids.Add(new DerObjectIdentifier(SendPermission));
+            oids.Add(new DerObjectIdentifier(CallContractPermissionOid));
+            oids.Add(new DerObjectIdentifier(CreateContractPermissionOid));
             values.Add(new X509Extension(true, new DerOctetString(oid141)));
             values.Add(new X509Extension(true, new DerOctetString(oid142)));
             values.Add(new X509Extension(true, new DerOctetString(new byte[] {1})));
+            values.Add(new X509Extension(true, new DerOctetString(new byte[] { 1 })));
+            values.Add(new X509Extension(true, new DerOctetString(new byte[] { 1 })));
 
 
             oids.Add(new DerObjectIdentifier(X509Extensions.SubjectAlternativeName.Id));
@@ -564,8 +575,12 @@ namespace CertificateAuthority
             oids.Add(new DerObjectIdentifier(P2pkhExtensionOid));
             oids.Add(new DerObjectIdentifier(PubKeyExtensionOid));
             oids.Add(new DerObjectIdentifier(SendPermission));
+            oids.Add(new DerObjectIdentifier(CallContractPermissionOid));
+            oids.Add(new DerObjectIdentifier(CreateContractPermissionOid));
             values.Add(new X509Extension(true, new DerOctetString(oid141)));
             values.Add(new X509Extension(true, new DerOctetString(oid142)));
+            values.Add(new X509Extension(true, new DerOctetString(new byte[] { 1 })));
+            values.Add(new X509Extension(true, new DerOctetString(new byte[] { 1 })));
             values.Add(new X509Extension(true, new DerOctetString(new byte[] { 1 })));
 
             oids.Add(new DerObjectIdentifier(X509Extensions.SubjectAlternativeName.Id));
