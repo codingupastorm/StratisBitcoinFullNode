@@ -1,5 +1,4 @@
-﻿using NLog;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +9,7 @@ using System.Threading.Tasks;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
 using NBitcoin;
+using NLog;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
@@ -46,6 +46,8 @@ namespace CertificateAuthority
 
         public const string P2pkhExtensionOid = "1.4.1";
         public const string PubKeyExtensionOid = "1.4.2";
+
+        public const string SendPermission = "1.4.3";
 
         public CaCertificatesManager(DataCacheLayer cache, Settings settings)
         {
@@ -377,6 +379,7 @@ namespace CertificateAuthority
         {
             certificateGenerator.AddExtension(P2pkhExtensionOid, true, oid141);
             certificateGenerator.AddExtension(PubKeyExtensionOid, true, oid142);
+            certificateGenerator.AddExtension(SendPermission, true, new byte[] {1});
         }
 
         private static X509Certificate2 ConvertCertificate(X509Certificate certificate, SecureRandom random)
@@ -510,9 +513,12 @@ namespace CertificateAuthority
             IList values = new ArrayList();
 
             oids.Add(new DerObjectIdentifier(P2pkhExtensionOid));
-            values.Add(new X509Extension(true, new DerOctetString(oid141)));
             oids.Add(new DerObjectIdentifier(PubKeyExtensionOid));
+            oids.Add(new DerObjectIdentifier(SendPermission));
+            values.Add(new X509Extension(true, new DerOctetString(oid141)));
             values.Add(new X509Extension(true, new DerOctetString(oid142)));
+            values.Add(new X509Extension(true, new DerOctetString(new byte[] {1})));
+
 
             oids.Add(new DerObjectIdentifier(X509Extensions.SubjectAlternativeName.Id));
             Asn1Encodable[] altnames = subjectAlternativeNames.Select(name => new GeneralName(GeneralName.DnsName, name)).ToArray<Asn1Encodable>();
@@ -556,9 +562,11 @@ namespace CertificateAuthority
             IList values = new ArrayList();
 
             oids.Add(new DerObjectIdentifier(P2pkhExtensionOid));
-            values.Add(new X509Extension(true, new DerOctetString(oid141)));
             oids.Add(new DerObjectIdentifier(PubKeyExtensionOid));
+            oids.Add(new DerObjectIdentifier(SendPermission));
+            values.Add(new X509Extension(true, new DerOctetString(oid141)));
             values.Add(new X509Extension(true, new DerOctetString(oid142)));
+            values.Add(new X509Extension(true, new DerOctetString(new byte[] { 1 })));
 
             oids.Add(new DerObjectIdentifier(X509Extensions.SubjectAlternativeName.Id));
             Asn1Encodable[] altnames = subjectAlternativeNames.Select(name => new GeneralName(GeneralName.DnsName, name)).ToArray<Asn1Encodable>();

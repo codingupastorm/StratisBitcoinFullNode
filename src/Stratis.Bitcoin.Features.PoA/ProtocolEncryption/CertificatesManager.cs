@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -25,6 +26,8 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         public const string ClientCertificateConfigurationKey = "certificatepassword";
 
+        public const string AccountIdKey = "certificateaccountid";
+
         /// <summary>Root certificate of the certificate authority for the current network.</summary>
         public X509Certificate2 AuthorityCertificate { get; private set; }
 
@@ -42,6 +45,10 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         private readonly TextFileConfiguration configuration;
 
         private string caUrl;
+
+        private string caPassword;
+
+        private int caAccountId;
 
         public CertificatesManager(DataFolder dataFolder, NodeSettings nodeSettings, ILoggerFactory loggerFactory, RevocationChecker revocationChecker, Network network)
         {
@@ -74,16 +81,24 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
                 throw new CertificateConfigurationException($"Client certificate not located at '{clientCertPath}'. Make sure you place '{ClientCertificateName}' in the node's root directory.");
             }
 
-            string clientCertificatePassword = this.configuration.GetOrDefault<string>(ClientCertificateConfigurationKey, null);
+            this.caPassword = this.configuration.GetOrDefault<string>(ClientCertificateConfigurationKey, null);
 
-            if (clientCertificatePassword == null)
+            if (this.caPassword == null)
             {
                 this.logger.LogTrace("(-)[NO_PASSWORD]");
                 throw new CertificateConfigurationException($"You have to provide password for the client certificate! Use '{ClientCertificateConfigurationKey}' configuration key to provide a password.");
             }
 
+            this.caAccountId = this.configuration.GetOrDefault<int>(AccountIdKey, 0);
+
+            if (this.caAccountId == 0)
+            {
+                this.logger.LogTrace("(-)[NO_ACCOUNT_ID]");
+                throw new CertificateConfigurationException($"You have to provide account id to query the CA! Use '{AccountIdKey}' configuration key to provide an account id.");
+            }
+
             this.AuthorityCertificate = new X509Certificate2(acPath);
-            this.ClientCertificate = new X509Certificate2(clientCertPath, clientCertificatePassword);
+            this.ClientCertificate = new X509Certificate2(clientCertPath, this.caPassword);
 
             if (this.ClientCertificate == null)
             {
@@ -160,8 +175,14 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return isValid && !revoked;
         }
 
-        public X509Certificate RequestNewCertificate(CaClient caClient, Key privateKey)
+        public X509Certificate2 RequestNewCertificate(Key privateKey)
         {
+            // TODO: This is a massive stupid hack to test with self signed certs.
+            var handler = new HttpClientHandler();
+            handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
+            var httpClient = new HttpClient(handler);
+            var caClient = new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
+
             PubKey pubKey = privateKey.PubKey;
             BitcoinPubKeyAddress address = pubKey.GetAddress(this.network);
 
@@ -170,17 +191,25 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             string signedCsr = CaCertificatesManager.SignCertificateSigningRequest(csrModel.CertificateSigningRequestContent, privateKey, "secp256k1");
 
             CertificateInfoModel issuedCertificate = caClient.IssueCertificate(signedCsr);
-            
-            var certificate = new X509Certificate(Convert.FromBase64String(issuedCertificate.CertificateContentDer));
+
+            var certificate = new X509Certificate2(Convert.FromBase64String(issuedCertificate.CertificateContentDer));
 
             return certificate;
         }
 
-        public X509Certificate GetCertificateForAddress(CaClient caClient, string address)
+        public X509Certificate2 GetCertificateForAddress(string address)
         {
+            // TODO: This is a massive stupid hack to test with self signed certs.
+            var handler = new HttpClientHandler();
+            handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
+            var httpClient = new HttpClient(handler);
+
+            var caClient = new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
+
             CertificateInfoModel retrievedCertModel = caClient.GetCertificateForAddress(address);
 
-            var certificate = new X509Certificate(Convert.FromBase64String(retrievedCertModel.CertificateContentDer));
+
+            var certificate = new X509Certificate2(Convert.FromBase64String(retrievedCertModel.CertificateContentDer));
 
             return certificate;
         }

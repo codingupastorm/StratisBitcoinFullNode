@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using CertificateAuthority.Models;
@@ -16,10 +17,10 @@ namespace CertificateAuthority.Tests.FullProjectTests
 {
     public class CertificateAuthorityIntegrationTests
     {
-        private const int TestAccountId = 1;
-        private const string TestPassword = "4815162342";
-        private const string CaMnemonic = "young shoe immense usual faculty edge habit misery swarm tape viable toddler";
-        private const string CaMnemonicPassword = "node";
+        public const int TestAccountId = 1;
+        public const string TestPassword = "4815162342";
+        public const string CaMnemonic = "young shoe immense usual faculty edge habit misery swarm tape viable toddler";
+        public const string CaMnemonicPassword = "node";
 
         private readonly Network network;
 
@@ -114,6 +115,15 @@ namespace CertificateAuthority.Tests.FullProjectTests
             var certificate = new X509Certificate(Convert.FromBase64String(certInfo.CertificateContentDer));
 
             Assert.NotNull(certificate);
+
+            //Check that it's in the list of all certificates
+            List<CertificateInfoModel> allCerts = client.GetAllCertificates();
+
+            Assert.Single(allCerts);
+            Assert.Equal(address.ToString(), allCerts.First().Address);
+
+            CertificateInfoModel queryByAddress = client.GetCertificateForAddress(address.ToString());
+            Assert.NotNull(queryByAddress.CertificateContentDer);
 
             server.Dispose();
         }
