@@ -1,8 +1,11 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.IO;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
+using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
@@ -34,7 +37,7 @@ namespace Stratis.SmartContracts.Tests.Common
             return node;
         }
 
-        public CoreNode CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex)
+        public CoreNode CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate2 authorityCertificate, X509Certificate2 clientCertificate)
         {
             string dataFolder = this.GetNextDataFolderName();
 
@@ -50,10 +53,13 @@ namespace Stratis.SmartContracts.Tests.Common
                 walletManager.Initialize();
 
                 var tool = new KeyTool(settings.DataFolder);
-                Key key = tool.LoadPrivateKey();
-                network.FederationKeys[nodeIndex] = key;
-                if (network.Consensus.Options is PoAConsensusOptions options)
-                    options.GenesisFederationMembers.Add(new FederationMember(key.PubKey));
+                tool.SavePrivateKey(network.FederationKeys[nodeIndex]);
+
+                if (authorityCertificate != null && clientCertificate != null)
+                {
+                    File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.AuthorityCertificateName), authorityCertificate.RawData);
+                    File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), clientCertificate.RawData);
+                }
 
                 return node;
             }

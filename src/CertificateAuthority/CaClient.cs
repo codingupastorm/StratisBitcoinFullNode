@@ -44,7 +44,7 @@ namespace CertificateAuthority
         public bool InitializeCertificateAuthority(string mnemonic, string mnemonicPassword)
         {
             var mnemonicModel = new CredentialsModelWithMnemonicModel(mnemonic, mnemonicPassword, this.accountId, this.password);
-            
+
             HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{InitializeCertificateAuthorityEndpoint}", mnemonicModel).GetAwaiter().GetResult();
 
             string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();

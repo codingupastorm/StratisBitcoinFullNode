@@ -11,10 +11,14 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
     /// </summary>
     public sealed class SenderInputPartialValidationRule : PartialValidationConsensusRule
     {
+        private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
         private readonly ITokenlessSigner tokenlessSigner;
 
-        public SenderInputPartialValidationRule(ITokenlessSigner tokenlessSigner)
+        public SenderInputPartialValidationRule(
+            ICertificatePermissionsChecker certificatePermissionsChecker,
+            ITokenlessSigner tokenlessSigner)
         {
+            this.certificatePermissionsChecker = certificatePermissionsChecker;
             this.tokenlessSigner = tokenlessSigner;
         }
 
@@ -38,6 +42,10 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             // We also need to check that the sender given is indeed the one who signed the transaction.
             if (!this.tokenlessSigner.Verify(transaction))
                 new ConsensusError("error-signature-invalid", $"The signature for transaction {transaction.GetHash()} is invalid.");
+
+            // Now that we have the sender address, lets get their certificate.
+            // Note that we can do for other permissions too. Contract permissions etc.
+
         }
     }
 }
