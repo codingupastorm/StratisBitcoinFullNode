@@ -168,7 +168,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
         [Route("send")]
         [HttpPost]
-        public async Task<IActionResult> SendTransactionAsync([FromBody] string transactionHex)
+        public async Task<IActionResult> SendTransactionAsync([FromBody] SendTransactionModel model)
         {
             if (!this.connectionManager.ConnectedPeers.Any())
             {
@@ -178,12 +178,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
             try
             {
-                Transaction transaction = this.network.CreateTransaction(transactionHex);
-
-                var model = new WalletSendTransactionModel
-                {
-                    TransactionId = transaction.GetHash()
-                };
+                Transaction transaction = this.network.CreateTransaction(model.TransactionHex);
 
                 // TODO: Show some outputs or something?
 
@@ -197,7 +192,10 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                     return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, transactionBroadCastEntry.ErrorMessage, "Transaction Exception");
                 }
 
-                return this.Json(model);
+                return this.Json(new WalletSendTransactionModel
+                {
+                    TransactionId = transaction.GetHash()
+                });
             }
             catch (Exception e)
             {

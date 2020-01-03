@@ -133,7 +133,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var createResult = (JsonResult)node1Controller.BuildCreateContractTransaction(createModel);
                 var createResponse = (BuildCreateContractTransactionResponse)createResult.Value;
 
-                node1Controller.SendTransactionAsync(createResponse.Hex);
+                node1Controller.SendTransactionAsync(new SendTransactionModel()
+                {
+                    TransactionHex = createResponse.Hex
+                });
+
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
                 TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 1);
@@ -151,7 +155,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var callResult = (JsonResult)node1Controller.BuildCallContractTransaction(callModel);
                 var callResponse = (BuildCallContractTransactionResponse)callResult.Value;
 
-                node1Controller.SendTransactionAsync(callResponse.Hex);
+                node1Controller.SendTransactionAsync(new SendTransactionModel()
+                {
+                    TransactionHex = callResponse.Hex
+                });
+
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
                 TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 2);
