@@ -8,8 +8,15 @@ namespace Stratis.Feature.PoA.Tokenless
 {
     public interface ICertificatePermissionsChecker
     {
+        /// <summary>
+        /// Determines whether a given sender has the permission required to send transactions on the network by
+        /// checking their certificate. If the certificate isn't known and stored locally, it will be retrieved from the CA.
+        /// </summary>
+        /// <param name="address">The sender that is trying to send a transaction.</param>
+        /// <returns>Whether or not they have the required permissions to send a transaction.</returns>
         bool CheckSenderCertificateHasPermission(uint160 address);
     }
+
     public class CertificatePermissionsChecker : ICertificatePermissionsChecker
     {
         private readonly ICertificateCache certificateCache;
@@ -25,6 +32,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.network = network;
         }
 
+        /// <inheritdoc />
         public bool CheckSenderCertificateHasPermission(uint160 address)
         {
             X509Certificate2 certificate = this.GetCertificate(address); 
