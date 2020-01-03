@@ -93,7 +93,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 targetSpacingSeconds: 16,
                 votingEnabled: false,
                 autoKickIdleMembers: false,
-                enablePermissionedMembership: false
+                enablePermissionedMembership: true
             );
 
             this.Consensus = new NBitcoin.Consensus(

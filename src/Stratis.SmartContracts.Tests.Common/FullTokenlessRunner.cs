@@ -1,4 +1,5 @@
-﻿using NBitcoin;
+﻿using CertificateAuthority.Tests.FullProjectTests;
+using NBitcoin;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
@@ -6,6 +7,7 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
+using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.IntegrationTests.Common;
@@ -31,7 +33,10 @@ namespace Stratis.SmartContracts.Tests.Common
 
         public override void BuildNode()
         {
-            var settings = new NodeSettings(this.Network, args: new string[] { "-conf=poa.conf", "-datadir=" + this.DataFolder });
+            var settings = new NodeSettings(this.Network, args: new string[] { "-conf=poa.conf", "-datadir=" + this.DataFolder,
+                $"-{CertificatesManager.AccountIdKey}={CertificateAuthorityIntegrationTests.TestAccountId}",
+                $"-{CertificatesManager.ClientCertificateConfigurationKey}={CertificateAuthorityIntegrationTests.TestPassword}"
+            });
 
             IFullNodeBuilder builder = new FullNodeBuilder()
                 .UseNodeSettings(settings)
