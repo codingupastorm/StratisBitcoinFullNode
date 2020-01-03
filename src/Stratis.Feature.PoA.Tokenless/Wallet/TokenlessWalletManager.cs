@@ -51,9 +51,12 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         public bool Initialize()
         {
             bool walletOk = this.CheckWallet();
-            bool keyFileOk = this.CheckKeyFile();
 
-            if (walletOk && keyFileOk)
+
+            bool federationWalletKeyFileOk = this.CheckBlockSigningKey();
+            bool transactionKeyFileOk = this.CheckTransactionSigningKeyFile();
+
+            if (walletOk && federationWalletKeyFileOk && transactionKeyFileOk)
                 return true;
 
             Console.WriteLine($"Restart the daemon.");
@@ -67,7 +70,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             if (!this.fileStorage.Exists(fileName))
                 return null;
 
-            return (TokenlessWallet)this.fileStorage.LoadByFileName(fileName);
+            return this.fileStorage.LoadByFileName(fileName);
         }
 
         public static ExtKey GetExtendedKey(Mnemonic mnemonic, string passphrase = null)
@@ -204,25 +207,20 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return canStart;
         }
 
-        internal bool CheckKeyFile()
+        private bool CheckBlockSigningKey()
         {
-            var password = this.walletSettings.Password;
+            if (!CheckPassword(KeyTool.BlockSigningKeyFileName))
+                return false;
 
-            if (!File.Exists(Path.Combine(this.walletSettings.RootPath, KeyTool.KeyFileDefaultName)))
+            if (!File.Exists(Path.Combine(this.walletSettings.RootPath, KeyTool.BlockSigningKeyFileName)))
             {
-                if (password == null)
-                {
-                    Console.WriteLine($"Run this daemon with a -password=<password> argument so that the federation key ({KeyTool.KeyFileDefaultName}) can be created.");
-                    return false;
-                }
-
                 Guard.Assert(this.Wallet != null);
 
-                Key key = this.GetExtKey(password, TokenlessWalletAccount.BlockSigning).PrivateKey;
+                Key key = this.GetExtKey(this.walletSettings.Password, TokenlessWalletAccount.BlockSigning).PrivateKey;
                 var keyTool = new KeyTool(this.walletSettings.RootPath);
-                keyTool.SavePrivateKey(key);
+                keyTool.SavePrivateKey(key, KeyType.FederationKey);
 
-                Console.WriteLine($"The federation key ({KeyTool.KeyFileDefaultName}) has been created.");
+                Console.WriteLine($"The federation key ({KeyTool.BlockSigningKeyFileName}) has been created.");
 
                 return false;
             }
@@ -230,7 +228,28 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return true;
         }
 
-        internal bool CheckCertificate()
+        private bool CheckTransactionSigningKeyFile()
+        {
+            if (!CheckPassword(KeyTool.TransactionSigningKeyFileName))
+                return false;
+
+            if (!File.Exists(Path.Combine(this.walletSettings.RootPath, KeyTool.TransactionSigningKeyFileName)))
+            {
+                Guard.Assert(this.Wallet != null);
+
+                Key key = this.GetExtKey(this.walletSettings.Password, TokenlessWalletAccount.TransactionSigning).PrivateKey;
+                var keyTool = new KeyTool(this.walletSettings.RootPath);
+                keyTool.SavePrivateKey(key, KeyType.TransactionSigningKey);
+
+                Console.WriteLine($"The transaction signing key ({KeyTool.TransactionSigningKeyFileName}) has been created.");
+
+                return false;
+            }
+
+            return true;
+        }
+
+        private bool CheckCertificate()
         {
             var password = this.walletSettings.Password;
 
@@ -249,6 +268,17 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             else
             {
                 // TODO: 4693 - Generate certificate request (Certificate validation).
+            }
+
+            return true;
+        }
+
+        private bool CheckPassword(string fileName)
+        {
+            if (string.IsNullOrEmpty(this.walletSettings.Password))
+            {
+                Console.WriteLine($"Run this daemon with a -password=<password> argument so that the '{fileName}' file can be created.");
+                return false;
             }
 
             return true;

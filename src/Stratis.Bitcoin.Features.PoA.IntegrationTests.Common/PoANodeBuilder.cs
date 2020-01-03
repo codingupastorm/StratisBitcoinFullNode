@@ -57,7 +57,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
 
             var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder });
             var tool = new KeyTool(settings.DataFolder);
-            tool.SavePrivateKey(key);
+            tool.SavePrivateKey(key, KeyType.FederationKey);
 
             return node;
         }
@@ -73,9 +73,9 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
 
             CoreNode node = this.CreateNode(new PoANodeRunner(dataFolder, network, this.TimeProvider), "poa.conf", configParameters: config);
 
-            var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder});
+            var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder });
             var tool = new KeyTool(settings.DataFolder);
-            tool.SavePrivateKey(key);
+            tool.SavePrivateKey(key, KeyType.FederationKey);
 
             File.Copy(authorityCertificatePath, Path.Combine(dataFolder, "poa", network.Name, Path.GetFileName(authorityCertificatePath)));
             File.Copy(clientCertificatePath, Path.Combine(dataFolder, "poa", network.Name, Path.GetFileName(clientCertificatePath)));

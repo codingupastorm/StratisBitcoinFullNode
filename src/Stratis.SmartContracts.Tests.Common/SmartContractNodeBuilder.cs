@@ -32,7 +32,7 @@ namespace Stratis.SmartContracts.Tests.Common
             var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder });
 
             var tool = new KeyTool(settings.DataFolder);
-            tool.SavePrivateKey(network.FederationKeys[nodeIndex]);
+            tool.SavePrivateKey(network.FederationKeys[nodeIndex], KeyType.FederationKey);
 
             return node;
         }
@@ -53,7 +53,7 @@ namespace Stratis.SmartContracts.Tests.Common
                 walletManager.Initialize();
 
                 var tool = new KeyTool(settings.DataFolder);
-                tool.SavePrivateKey(network.FederationKeys[nodeIndex]);
+                tool.SavePrivateKey(network.FederationKeys[nodeIndex], KeyType.FederationKey);
 
                 if (authorityCertificate != null && clientCertificate != null)
                 {
@@ -73,7 +73,7 @@ namespace Stratis.SmartContracts.Tests.Common
             var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder });
 
             var tool = new KeyTool(settings.DataFolder);
-            tool.SavePrivateKey(network.FederationKeys[nodeIndex]);
+            tool.SavePrivateKey(network.FederationKeys[nodeIndex], KeyType.FederationKey);
             return node;
         }
 
