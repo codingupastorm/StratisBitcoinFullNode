@@ -51,12 +51,10 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         public bool Initialize()
         {
             bool walletOk = this.CheckWallet();
-
-
-            bool federationWalletKeyFileOk = this.CheckBlockSigningKey();
+            bool blockSigningKeyFileOk = this.CheckBlockSigningKeyFile();
             bool transactionKeyFileOk = this.CheckTransactionSigningKeyFile();
 
-            if (walletOk && federationWalletKeyFileOk && transactionKeyFileOk)
+            if (walletOk && blockSigningKeyFileOk && transactionKeyFileOk)
                 return true;
 
             Console.WriteLine($"Restart the daemon.");
@@ -178,7 +176,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
                 if (password == null)
                 {
-                    Console.WriteLine($"Run this daemon with a -password=<password> argument so that the wallet file ({TokenlessWalletManager.WalletFileName}) can be created.");
+                    Console.WriteLine($"Run this daemon with a -password=<password> argument so that the wallet file ({WalletFileName}) can be created.");
                     Console.WriteLine($"If you are re-creating a wallet then also pass a -mnemonic=\"<mnemonic words>\" argument.");
                     return false;
                 }
@@ -190,7 +188,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
                 this.Wallet = wallet;
 
-                Console.WriteLine($"The wallet file ({TokenlessWalletManager.WalletFileName}) has been created.");
+                Console.WriteLine($"The wallet file ({WalletFileName}) has been created.");
                 Console.WriteLine($"Record the mnemonic ({mnemonic}) in a safe place.");
                 Console.WriteLine($"IMPORTANT: You will need the mnemonic to recover the wallet.");
 
@@ -207,7 +205,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return canStart;
         }
 
-        private bool CheckBlockSigningKey()
+        private bool CheckBlockSigningKeyFile()
         {
             if (!CheckPassword(KeyTool.BlockSigningKeyFileName))
                 return false;
@@ -218,9 +216,9 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
                 Key key = this.GetExtKey(this.walletSettings.Password, TokenlessWalletAccount.BlockSigning).PrivateKey;
                 var keyTool = new KeyTool(this.walletSettings.RootPath);
-                keyTool.SavePrivateKey(key, KeyType.FederationKey);
+                keyTool.SavePrivateKey(key, KeyType.BlockSigningKey);
 
-                Console.WriteLine($"The federation key ({KeyTool.BlockSigningKeyFileName}) has been created.");
+                Console.WriteLine($"The key file '{KeyTool.BlockSigningKeyFileName}' has been created.");
 
                 return false;
             }
@@ -241,7 +239,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                 var keyTool = new KeyTool(this.walletSettings.RootPath);
                 keyTool.SavePrivateKey(key, KeyType.TransactionSigningKey);
 
-                Console.WriteLine($"The transaction signing key ({KeyTool.TransactionSigningKeyFileName}) has been created.");
+                Console.WriteLine($"The key file '{KeyTool.TransactionSigningKeyFileName}' has been created.");
 
                 return false;
             }
