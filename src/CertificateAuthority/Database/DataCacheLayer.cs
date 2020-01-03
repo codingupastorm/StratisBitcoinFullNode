@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using CertificateAuthority.Models;
+using NBitcoin;
 
 namespace CertificateAuthority.Database
 {
@@ -57,6 +58,23 @@ namespace CertificateAuthority.Database
             return new CADbContext(settings);
         }
 
+        private bool IsValidPubKey(string pubKey)
+        {
+            if (string.IsNullOrEmpty(pubKey))
+                return false;
+
+            try
+            {
+                new PubKey(pubKey);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         public void Initialize()
         {
             // Fill cache.
@@ -72,7 +90,7 @@ namespace CertificateAuthority.Database
 
                     if (info.Status == CertificateStatus.Revoked)
                         RevokedCertificates.Add(info.Thumbprint);
-                    else
+                    else if (this.IsValidPubKey(info.PubKey))
                         this.PublicKeys.Add(info.PubKey);
                 }
             }
@@ -87,7 +105,8 @@ namespace CertificateAuthority.Database
         public void AddNewCertificate(CertificateInfoModel certificate)
         {
             this.CertStatusesByThumbprint.Add(certificate.Thumbprint, certificate.Status);
-            this.PublicKeys.Add(certificate.PubKey);
+            if (this.IsValidPubKey(certificate.PubKey))
+                this.PublicKeys.Add(certificate.PubKey);
 
             using (CADbContext dbContext = this.CreateContext())
             {
