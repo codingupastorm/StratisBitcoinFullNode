@@ -1,7 +1,8 @@
 ﻿using System.IO;
 using System.Runtime.CompilerServices;
-using System.Security.Cryptography.X509Certificates;
+using CertificateAuthority;
 using NBitcoin;
+using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
@@ -37,7 +38,7 @@ namespace Stratis.SmartContracts.Tests.Common
             return node;
         }
 
-        public CoreNode CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate2 authorityCertificate, X509Certificate2 clientCertificate)
+        public CoreNode CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, X509Certificate clientCertificate, Key clientCertificatePrivateKey)
         {
             string dataFolder = this.GetNextDataFolderName();
 
@@ -57,8 +58,8 @@ namespace Stratis.SmartContracts.Tests.Common
 
                 if (authorityCertificate != null && clientCertificate != null)
                 {
-                    File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.AuthorityCertificateName), authorityCertificate.RawData);
-                    File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), clientCertificate.RawData);
+                    File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.AuthorityCertificateName), authorityCertificate.GetEncoded());
+                    File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCertificate, clientCertificatePrivateKey, "test"));
                 }
 
                 return node;

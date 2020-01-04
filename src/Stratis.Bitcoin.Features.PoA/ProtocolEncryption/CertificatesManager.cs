@@ -10,8 +10,15 @@ using CertificateAuthority;
 using CertificateAuthority.Models;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Pkix;
+using Org.BouncyCastle.Security;
+using Org.BouncyCastle.Utilities.Collections;
+using Org.BouncyCastle.X509;
+using Org.BouncyCastle.X509.Store;
 using Stratis.Bitcoin.Configuration;
 using TextFileConfiguration = Stratis.Bitcoin.Configuration.TextFileConfiguration;
+using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 
 namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 {
@@ -29,10 +36,12 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         public const string AccountIdKey = "certificateaccountid";
 
         /// <summary>Root certificate of the certificate authority for the current network.</summary>
-        public X509Certificate2 AuthorityCertificate { get; private set; }
+        public X509Certificate AuthorityCertificate { get; private set; }
 
         /// <summary>Client certificate that is used to establish connections with other peers.</summary>
-        public X509Certificate2 ClientCertificate { get; private set; }
+        public X509Certificate ClientCertificate { get; private set; }
+
+        public AsymmetricKeyParameter ClientCertificatePrivateKey { get; private set; }
 
         private readonly DataFolder dataFolder;
 
@@ -97,8 +106,12 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
                 throw new CertificateConfigurationException($"You have to provide account id to query the CA! Use '{AccountIdKey}' configuration key to provide an account id.");
             }
 
-            this.AuthorityCertificate = new X509Certificate2(acPath);
-            this.ClientCertificate = new X509Certificate2(clientCertPath, this.caPassword);
+            var certParser = new X509CertificateParser();
+            
+            this.AuthorityCertificate = certParser.ReadCertificate(File.ReadAllBytes(acPath));
+            // TODO: Get this password from the correct command line flag
+
+            (this.ClientCertificate, this.ClientCertificatePrivateKey) = CaCertificatesManager.LoadPfx(File.ReadAllBytes(clientCertPath), "test");
 
             if (this.ClientCertificate == null)
             {
@@ -111,7 +124,9 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             if (!clientCertValid)
                 throw new Exception("Provided client certificate isn't signed by the authority certificate!");
 
-            bool revoked = await this.revocationChecker.IsCertificateRevokedAsync(this.ClientCertificate.Thumbprint, false).ConfigureAwait(false);
+            var tempClientCert = CaCertificatesManager.ConvertCertificate(this.ClientCertificate, new SecureRandom());
+
+            bool revoked = await this.revocationChecker.IsCertificateRevokedAsync(tempClientCert.Thumbprint, false).ConfigureAwait(false);
 
             if (revoked)
                 throw new Exception("Provided client certificate was revoked!");
@@ -121,61 +136,14 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         /// Checks if given certificate is signed by the authority certificate.
         /// </summary>
         /// <exception cref="Exception">Thrown in case authority chain build failed.</exception>
-        private bool IsSignedByAuthorityCertificate(X509Certificate2 certificateToValidate, X509Certificate2 authorityCertificate)
+        private bool IsSignedByAuthorityCertificate(X509Certificate certificateToValidate, X509Certificate authorityCertificate)
         {
-            var chain = new X509Chain
-            {
-                ChainPolicy =
-                {
-                    RevocationMode = X509RevocationMode.NoCheck,
-                    RevocationFlag = X509RevocationFlag.ExcludeRoot,
-                    VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority,
-                    VerificationTime = DateTime.Now,
-                    UrlRetrievalTimeout = new TimeSpan(0, 0, 0)
-                }
-            };
+            CaCertificatesManager.ValidateCertificateChain(authorityCertificate, certificateToValidate);
 
-            chain.ChainPolicy.ExtraStore.Add(authorityCertificate);
-
-            // Without actually importing the certificate into the local machine's trusted root store this will not return true.
-            chain.Build(certificateToValidate);
-
-            // Therefore, we inspect the ChainStatus directly to see if the certificate chain was nominally valid
-            bool isChainValid = false;
-
-            foreach (X509ChainStatus chainStatus in chain.ChainStatus)
-            {
-                // There are other validation errors getting raised, we should ensure that only 'known' errors are allowed
-                if (chainStatus.Status != X509ChainStatusFlags.UntrustedRoot &&
-                    chainStatus.Status != X509ChainStatusFlags.HasNotSupportedCriticalExtension &&
-                    chainStatus.Status != X509ChainStatusFlags.InvalidExtension)
-                    return false;
-
-                if (chainStatus.Status == X509ChainStatusFlags.UntrustedRoot)
-                    isChainValid = true;
-            }
-
-            // This piece makes sure it actually matches your known root
-            bool rootValid = chain.ChainElements.Cast<X509ChainElement>().Any(x => x.Certificate.Thumbprint == authorityCertificate.Thumbprint);
-
-            return isChainValid && rootValid;
+            return true;
         }
 
-        public bool ValidateCertificate(object sender, X509Certificate certificate, X509Chain _, SslPolicyErrors sslPolicyErrors)
-        {
-            if (certificate == null)
-                return false;
-
-            var certificateToValidate = new X509Certificate2(certificate);
-
-            bool isValid = IsSignedByAuthorityCertificate(certificateToValidate, this.AuthorityCertificate);
-
-            bool revoked = this.revocationChecker.IsCertificateRevokedAsync(this.ClientCertificate.Thumbprint, false).ConfigureAwait(false).GetAwaiter().GetResult();
-
-            return isValid && !revoked;
-        }
-
-        public X509Certificate2 RequestNewCertificate(Key privateKey)
+        public X509Certificate RequestNewCertificate(Key privateKey)
         {
             // TODO: This is a massive stupid hack to test with self signed certs.
             var handler = new HttpClientHandler();
@@ -192,12 +160,13 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             CertificateInfoModel issuedCertificate = caClient.IssueCertificate(signedCsr);
 
-            var certificate = new X509Certificate2(Convert.FromBase64String(issuedCertificate.CertificateContentDer));
+            var certParser = new X509CertificateParser();
+            X509Certificate certificate = certParser.ReadCertificate(Convert.FromBase64String(issuedCertificate.CertificateContentDer));
 
             return certificate;
         }
 
-        public X509Certificate2 GetCertificateForAddress(string address)
+        public X509Certificate GetCertificateForAddress(string address)
         {
             // TODO: This is a massive stupid hack to test with self signed certs.
             var handler = new HttpClientHandler();
@@ -208,8 +177,8 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             CertificateInfoModel retrievedCertModel = caClient.GetCertificateForAddress(address);
 
-
-            var certificate = new X509Certificate2(Convert.FromBase64String(retrievedCertModel.CertificateContentDer));
+            var certParser = new X509CertificateParser();
+            X509Certificate certificate = certParser.ReadCertificate(Convert.FromBase64String(retrievedCertModel.CertificateContentDer));
 
             return certificate;
         }
@@ -229,7 +198,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         public static byte[] ExtractCertificateExtension(X509Certificate certificate, string oid)
         {
-            var cert = new X509Certificate2(certificate);
+            X509Certificate2 cert = CaCertificatesManager.ConvertCertificate(certificate, new SecureRandom());
 
             foreach (X509Extension extension in cert.Extensions)
             {

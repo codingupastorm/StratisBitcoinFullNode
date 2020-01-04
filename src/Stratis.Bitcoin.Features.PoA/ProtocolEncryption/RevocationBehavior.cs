@@ -10,6 +10,7 @@ using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.Utilities;
 using TracerAttributes;
+using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 
 namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 {
@@ -45,16 +46,18 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             // TODO: Check the connection sequence, presumably this gets run after the version handshake (bad). If so, we want to ban/disconnect rogue peers as early as possible.
 
-            X509Certificate2 peerCertificate = connection.GetPeerCertificate();
+            X509Certificate rawCert = connection.GetPeerCertificate();
 
-            if (peerCertificate == null)
+            if (rawCert == null)
             {
                 peer.Disconnect("Peer has no certificate.");
 
                 return;
             }
 
-            byte[] certificateP2pkhExtension = CertificatesManager.ExtractCertificateExtension(peerCertificate, "1.4.1") ?? new byte[0];
+            var peerCertificate = new X509Certificate2(rawCert.GetEncoded());
+
+            byte[] certificateP2pkhExtension = CertificatesManager.ExtractCertificateExtension(rawCert, "1.4.1") ?? new byte[0];
 
             string certificateP2pkh = Encoding.UTF8.GetString(certificateP2pkhExtension);
 

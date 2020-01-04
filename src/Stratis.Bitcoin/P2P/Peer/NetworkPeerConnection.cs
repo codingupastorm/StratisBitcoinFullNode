@@ -414,7 +414,7 @@ namespace Stratis.Bitcoin.P2P.Peer
         /// <param name="cancellation">Cancellation token that allows aborting the read operation.</param>
         /// <exception cref="OperationCanceledException">Thrown if the operation was cancelled or the end of the stream was reached.</exception>
         /// <remarks>
-        /// Each networkm message starts with the magic value. If the connection stream is in unknown state,
+        /// Each network message starts with the magic value. If the connection stream is in unknown state,
         /// the next bytes to read might not be the magic. Therefore we read from the stream until we find the magic value.
         /// </remarks>
         private async Task ReadMagicAsync(byte[] magic, CancellationToken cancellation)
