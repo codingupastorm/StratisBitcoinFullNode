@@ -77,20 +77,35 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return mnemonic.DeriveExtKey(passphrase);
         }
 
+        private int GetAddressIndex(TokenlessWalletAccount tokenlessWalletAccount)
+        {
+            switch (tokenlessWalletAccount)
+            {
+                case TokenlessWalletAccount.TransactionSigning:
+                    return this.walletSettings.AccountAddressIndex;
+
+                case TokenlessWalletAccount.BlockSigning:
+                    return this.walletSettings.MiningAddressIndex;
+
+                case TokenlessWalletAccount.P2PCertificates:
+                    return this.walletSettings.CertificateAddressIndex;
+            }
+
+            throw new InvalidOperationException("Undefined operation.");
+        }
+
         public PubKey GetPubKey(TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0)
         {
-            int addressIndex = this.walletSettings.AddressIndex;
+            int addressIndex = GetAddressIndex(tokenlessWalletAccount);
             var keyPath = new KeyPath($"{addressType}/{addressIndex}");
-
             ExtPubKey extPubKey = this.extPubKeys[(int)tokenlessWalletAccount].Derive(keyPath);
             return extPubKey.PubKey;
         }
 
         public ExtKey GetExtKey(string password, TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0)
         {
-            int addressIndex = this.walletSettings.AddressIndex;
+            int addressIndex = GetAddressIndex(tokenlessWalletAccount);
             string hdPath = $"m/44'/{this.network.Consensus.CoinType}'/{(int)tokenlessWalletAccount}'/{addressType}/{addressIndex}";
-
             ExtKey seedExtKey = this.GetExtKey(password);
             ExtKey pathExtKey = seedExtKey.Derive(new KeyPath(hdPath));
 
@@ -210,6 +225,30 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                 Console.WriteLine($"The federation key ({KeyTool.KeyFileDefaultName}) has been created.");
 
                 return false;
+            }
+
+            return true;
+        }
+
+        internal bool CheckCertificate()
+        {
+            var password = this.walletSettings.Password;
+
+            if (!File.Exists(this.walletSettings.CertPath) || this.walletSettings.GenerateCertificate)
+            {
+                if (password == null || this.walletSettings.UserFullName == null)
+                {
+                    Console.WriteLine($"Run this daemon with a -password=<password> argument and certificate details configured so that the client certificate ({CertificatesManager.ClientCertificateName}) can be requested.");
+                    //return false;
+                }
+
+                Guard.Assert(this.Wallet != null);
+
+                // TODO: 4693 - Generate certificate request.
+            }
+            else
+            {
+                // TODO: 4693 - Generate certificate request (Certificate validation).
             }
 
             return true;
