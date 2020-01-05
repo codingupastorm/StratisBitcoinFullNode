@@ -27,6 +27,14 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         private readonly bool isServer;
 
+        private CustomTlsServer tlsServer;
+
+        private TlsServerProtocol tlsServerProtocol;
+
+        private CustomTlsClient tlsClient;
+
+        private TlsClientProtocol tlsClientProtocol;
+
         public TlsEnabledNetworkPeerConnection(Network network, INetworkPeer peer, TcpClient client, int clientId, ProcessMessageAsync<IncomingMessage> processMessageAsync,
             IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, PayloadProvider payloadProvider, IAsyncProvider asyncProvider, CertificatesManager certManager, bool isServer)
             : base(network, peer, client, clientId, processMessageAsync, dateTimeProvider, loggerFactory, payloadProvider, asyncProvider)
@@ -45,28 +53,35 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             if (this.stream != null)
                 return this.stream;
 
-            // TODO: Check what needs to be done with this.stream
             this.stream = this.tcpClient.GetStream();
 
-            X509Certificate receivedCert = null;
+            X509Certificate receivedCert;
             if (this.isServer)
             {
                 // We call it a 'client certificate' but for peers connecting to us, we are the server and thus use our client certificate as the server's certificate.
-                var server = new CustomTlsServer(this.certManager.ClientCertificate, this.certManager.ClientCertificatePrivateKey);
-                var serverProtocol = new TlsServerProtocol(this.stream, new SecureRandom());
-                serverProtocol.Accept(server);
-                receivedCert = server.ReceivedCertificate;
+                this.tlsServer = new CustomTlsServer(this.certManager.ClientCertificate, this.certManager.ClientCertificatePrivateKey);
+                this.tlsServerProtocol = new TlsServerProtocol(this.stream, new SecureRandom());
+                this.tlsServerProtocol.Accept(this.tlsServer);
+                receivedCert = this.tlsServer.ReceivedCertificate;
+                this.stream = this.tlsServerProtocol.Stream;
             }
             else
             {
-                var client = new CustomTlsClient(null, this.certManager.ClientCertificate, this.certManager.ClientCertificatePrivateKey);
-                var protocol = new TlsClientProtocol(this.stream, new SecureRandom());
-                protocol.Connect(client);
-                receivedCert = client.Authentication.ReceivedCertificate;
+                this.tlsClient = new CustomTlsClient(null, this.certManager.ClientCertificate, this.certManager.ClientCertificatePrivateKey);
+                this.tlsClientProtocol = new TlsClientProtocol(this.stream, new SecureRandom());
+                this.tlsClientProtocol.Connect(this.tlsClient);
+                receivedCert = this.tlsClient.Authentication.ReceivedCertificate;
+                this.stream = this.tlsClientProtocol.Stream;
             }
 
+            this.peerCertificate = receivedCert;
+
             // TODO: Handle false response
-            CaCertificatesManager.ValidateCertificateChain(this.certManager.AuthorityCertificate, receivedCert);
+            // TODO: Why is the client certificate not being sent back to the server (i.e. this should never be null)?
+            if (this.peerCertificate != null)
+            {
+                CaCertificatesManager.ValidateCertificateChain(this.certManager.AuthorityCertificate, this.peerCertificate);
+            }
 
             return this.stream;
         }

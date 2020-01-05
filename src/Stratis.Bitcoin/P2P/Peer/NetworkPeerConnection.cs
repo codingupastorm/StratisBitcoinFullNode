@@ -469,6 +469,9 @@ namespace Stratis.Bitcoin.P2P.Peer
                     this.logger.LogTrace("(-)[STREAM_END]");
                     throw new OperationCanceledException();
                 }
+                else
+                {
+                }
 
                 offset += chunkSize;
                 bytesToRead -= chunkSize;

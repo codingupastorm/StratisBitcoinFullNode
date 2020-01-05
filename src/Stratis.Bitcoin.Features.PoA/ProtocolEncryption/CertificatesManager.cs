@@ -109,8 +109,8 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             var certParser = new X509CertificateParser();
             
             this.AuthorityCertificate = certParser.ReadCertificate(File.ReadAllBytes(acPath));
-            // TODO: Get this password from the correct command line flag
 
+            // TODO: Get this password from the correct command line flag
             (this.ClientCertificate, this.ClientCertificatePrivateKey) = CaCertificatesManager.LoadPfx(File.ReadAllBytes(clientCertPath), "test");
 
             if (this.ClientCertificate == null)
@@ -143,13 +143,19 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return true;
         }
 
-        public X509Certificate RequestNewCertificate(Key privateKey)
+        public CaClient GetClient()
         {
             // TODO: This is a massive stupid hack to test with self signed certs.
             var handler = new HttpClientHandler();
             handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
             var httpClient = new HttpClient(handler);
-            var caClient = new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
+
+            return new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
+        }
+
+        public X509Certificate RequestNewCertificate(Key privateKey)
+        {
+            CaClient caClient = this.GetClient();
 
             PubKey pubKey = privateKey.PubKey;
             BitcoinPubKeyAddress address = pubKey.GetAddress(this.network);
@@ -168,12 +174,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         public X509Certificate GetCertificateForAddress(string address)
         {
-            // TODO: This is a massive stupid hack to test with self signed certs.
-            var handler = new HttpClientHandler();
-            handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
-            var httpClient = new HttpClient(handler);
-
-            var caClient = new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
+            CaClient caClient = this.GetClient();
 
             CertificateInfoModel retrievedCertModel = caClient.GetCertificateForAddress(address);
 
@@ -185,13 +186,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         public List<PubKey> GetCertificatePublicKeys()
         {
-            // TODO: This is a massive stupid hack to test with self signed certs.
-            var handler = new HttpClientHandler();
-            handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
-
-            var httpClient = new HttpClient(handler);
-
-            var caClient = new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
+            CaClient caClient = this.GetClient();
 
             return caClient.GetCertificatePublicKeys();
         }
