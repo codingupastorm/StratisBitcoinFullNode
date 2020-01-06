@@ -10,6 +10,7 @@ namespace Stratis.Feature.PoA.Tokenless.Core
 {
     public interface ICoreComponent
     {
+        IBlockStore BlockStore { get; }
         IBlockStoreQueue BlockStoreQueue { get; }
         ChainIndexer ChainIndexer { get; }
         IChainState ChainState { get; }
@@ -25,6 +26,8 @@ namespace Stratis.Feature.PoA.Tokenless.Core
 
     public sealed class CoreComponent : ICoreComponent
     {
+        public IBlockStore BlockStore { get; }
+
         public IBlockStoreQueue BlockStoreQueue { get; }
 
         public ChainIndexer ChainIndexer { get; }
@@ -48,6 +51,7 @@ namespace Stratis.Feature.PoA.Tokenless.Core
         public IPeerBanning PeerBanning { get; }
 
         public CoreComponent(
+            IBlockStore blockStore,
             IBlockStoreQueue blockStoreQueue,
             ChainIndexer chainIndexer,
             IChainState chainState,
@@ -60,6 +64,7 @@ namespace Stratis.Feature.PoA.Tokenless.Core
             INodeLifetime nodeLifetime,
             IPeerBanning peerBanning)
         {
+            this.BlockStore = blockStore;
             this.BlockStoreQueue = blockStoreQueue;
             this.ChainIndexer = chainIndexer;
             this.ChainState = chainState;

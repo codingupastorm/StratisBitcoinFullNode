@@ -16,6 +16,12 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         PubKey GetPubKey(TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0);
 
         ExtKey GetExtKey(string password, TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0);
+
+        /// <summary>
+        /// Loads the private key for signing transactions from disk.
+        /// </summary>
+        /// <returns>The loaded private key.</returns>
+        Key LoadTransactionSigningKey();
     }
 
     /// <summary>
@@ -113,6 +119,17 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return pathExtKey;
         }
 
+        /// <inheritdoc/>
+        public Key LoadTransactionSigningKey()
+        {
+            var transactionKeyFilePath = Path.Combine(this.walletSettings.RootPath, KeyTool.TransactionSigningKeyFileName);
+            if (!File.Exists(transactionKeyFilePath))
+                throw new TokenlessWalletException($"{transactionKeyFilePath} does not exist.");
+
+            var keyTool = new KeyTool(transactionKeyFilePath);
+            return keyTool.LoadPrivateKey(KeyType.TransactionSigningKey);
+        }
+
         [NoTrace]
         public ExtKey GetExtKey(string password)
         {
@@ -165,7 +182,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return (wallet, mnemonic);
         }
 
-        internal bool CheckWallet()
+        private bool CheckWallet()
         {
             bool canStart = true;
 
