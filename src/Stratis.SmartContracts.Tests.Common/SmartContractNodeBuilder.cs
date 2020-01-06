@@ -48,7 +48,7 @@ namespace Stratis.SmartContracts.Tests.Common
                     new Mnemonic("idle power swim wash diesel blouse photo among eager reward govern menu"),
                     new Mnemonic("high neither night category fly wasp inner kitchen phone current skate hair") };
 
-            using (var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder, "-password=test", $"-mnemonic={ mnemonics[nodeIndex] }" }))
+            using (var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder, "-password=test", $"-mnemonic={ mnemonics[nodeIndex] }", "-certificatepassword=test" }))
             {
                 var walletManager = new TokenlessWalletManager(network, settings.DataFolder, new TokenlessWalletSettings(settings));
                 walletManager.Initialize();

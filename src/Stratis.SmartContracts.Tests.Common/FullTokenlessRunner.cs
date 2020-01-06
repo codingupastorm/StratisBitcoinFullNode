@@ -34,8 +34,9 @@ namespace Stratis.SmartContracts.Tests.Common
         public override void BuildNode()
         {
             var settings = new NodeSettings(this.Network, args: new string[] { "-conf=poa.conf", "-datadir=" + this.DataFolder,
-                $"-{CertificatesManager.AccountIdKey}={CertificateAuthorityIntegrationTests.TestAccountId}",
-                $"-{CertificatesManager.ClientCertificateConfigurationKey}={CertificateAuthorityIntegrationTests.TestPassword}"
+                $"-{CertificatesManager.CaAccountIdKey}={CertificateAuthorityIntegrationTests.TestAccountId}",
+                $"-{CertificatesManager.CaPasswordKey}={CertificateAuthorityIntegrationTests.TestPassword}",
+                $"-{CertificatesManager.ClientCertificateConfigurationKey}=test"
             });
 
             IFullNodeBuilder builder = new FullNodeBuilder()

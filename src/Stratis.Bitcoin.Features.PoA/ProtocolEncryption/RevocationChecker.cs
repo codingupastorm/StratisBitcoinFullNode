@@ -66,8 +66,8 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         {
             // TODO: Create a common settings class that can be injected
             this.caUrl = this.configuration.GetOrDefault<string>("caurl", "https://localhost:5001");
-            this.caPassword = this.configuration.GetOrDefault<string>(CertificatesManager.ClientCertificateConfigurationKey, null);
-            this.caAccountId = this.configuration.GetOrDefault<int>(CertificatesManager.AccountIdKey, 0);
+            this.caPassword = this.configuration.GetOrDefault<string>(CertificatesManager.CaPasswordKey, null);
+            this.caAccountId = this.configuration.GetOrDefault<int>(CertificatesManager.CaAccountIdKey, 0);
 
             this.client = this.GetClient();
 

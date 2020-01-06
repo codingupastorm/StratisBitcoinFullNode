@@ -275,7 +275,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             Assert.Equal(clientAddress, certificate4.Address);
             Assert.Equal(clientPrivateKey3.PubKey, new PubKey(certificate4.PubKey));
 
-            CaCertificatesManager.ValidateCertificateChain(caCert, cert1);
+            Assert.True(CaCertificatesManager.ValidateCertificateChain(caCert, cert1));
         }
 
         [Fact]

@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
-//using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using CertificateAuthority.Database;
@@ -51,7 +50,6 @@ namespace CertificateAuthority
 
         public const string P2pkhExtensionOid = "1.4.1";
         public const string PubKeyExtensionOid = "1.4.2";
-
         public const string SendPermission = "1.4.3";
 
         public CaCertificatesManager(DataCacheLayer cache, Settings settings)
@@ -309,9 +307,7 @@ namespace CertificateAuthority
         /// <returns></returns>
         private static BigInteger GenerateSerialNumber(SecureRandom random)
         {
-            var serialNumber =
-                BigIntegers.CreateRandomInRange(
-                    BigInteger.One, BigInteger.ValueOf(Int64.MaxValue), random);
+            var serialNumber = BigIntegers.CreateRandomInRange(BigInteger.One, BigInteger.ValueOf(Int64.MaxValue), random);
 
             return serialNumber;
         }
@@ -344,7 +340,7 @@ namespace CertificateAuthority
         private static void AddSubjectAlternativeNames(X509V3CertificateGenerator certificateGenerator, IEnumerable<string> subjectAlternativeNames)
         {
             Asn1Encodable[] altnames = subjectAlternativeNames.Select(name => new GeneralName(GeneralName.DnsName, name)).ToArray<Asn1Encodable>();
-            DerSequence subjectAlternativeNamesExtension = new DerSequence(altnames);
+            var subjectAlternativeNamesExtension = new DerSequence(altnames);
             certificateGenerator.AddExtension(X509Extensions.SubjectAlternativeName.Id, false, subjectAlternativeNamesExtension);
         }
 
@@ -602,18 +598,18 @@ namespace CertificateAuthority
             var ecdsaDomainParams = new ECDomainParameters(ecdsaCurve.Curve, ecdsaCurve.G, ecdsaCurve.N, ecdsaCurve.H, ecdsaCurve.GetSeed());
             var privateKeyParameter = new ECPrivateKeyParameters(privateKeyScalar, ecdsaDomainParams);
 
-            var certEntry = new X509CertificateEntry(certificate);
-
             var builder = new Pkcs12StoreBuilder();
             builder.SetUseDerEncoding(true);
             Pkcs12Store store = builder.Build();
 
-            // TODO: Not sure if this alias is needed or even correct
+            var certEntry = new X509CertificateEntry(certificate);
+
+            // The key entry's alias is not actually used directly for retrieval when loading the pfx, we search using a form of filter instead.
             store.SetKeyEntry("privateKey", new AsymmetricKeyEntry(privateKeyParameter), new X509CertificateEntry[] { certEntry });
 
             byte[] pfxBytes;
             
-            using (MemoryStream stream = new MemoryStream())
+            using (var stream = new MemoryStream())
             {
                 store.Save(stream, password.ToCharArray(), new SecureRandom());
                 pfxBytes = stream.ToArray();
@@ -652,47 +648,46 @@ namespace CertificateAuthority
 
         public static bool ValidateCertificateChain(X509Certificate rootCert, X509Certificate clientCert)
         {
-            var builder = new PkixCertPathBuilder();
-
-            var rootCerts = new HashSet
+            try
             {
-                new TrustAnchor(rootCert, null)
-            };
+                var builder = new PkixCertPathBuilder();
 
-            var certStore = new List<X509Certificate>
+                var rootCerts = new HashSet
+                {
+                    new TrustAnchor(rootCert, null)
+                };
+
+                var certStore = new List<X509Certificate>
+                {
+                    rootCert,
+                    clientCert
+                };
+
+                var selector = new X509CertStoreSelector
+                {
+                    Subject = clientCert.SubjectDN,
+                    IgnoreX509NameOrdering = true
+                };
+
+                var builderParams = new PkixBuilderParameters(rootCerts, selector)
+                {
+                    IsRevocationEnabled = false
+                };
+
+                var certStoreParameters = new X509CollectionStoreParameters(certStore);
+
+                builderParams.AddStore(X509StoreFactory.Create("Certificate/Collection", certStoreParameters));
+                builderParams.Date = new DateTimeObject(DateTime.Now);
+                PkixCertPathBuilderResult result = builder.Build(builderParams);
+            }
+            catch (Exception)
             {
-                rootCert,
-                clientCert
-            };
-
-            var selector = new X509CertStoreSelector
-            {
-                Subject = clientCert.SubjectDN,
-                IgnoreX509NameOrdering = true
-            };
-
-            var builderParams = new PkixBuilderParameters(rootCerts, selector)
-            {
-                IsRevocationEnabled = false
-            };
-
-            var certStoreParameters = new X509CollectionStoreParameters(certStore);
-
-            builderParams.AddStore(X509StoreFactory.Create("Certificate/Collection", certStoreParameters));
-            builderParams.Date = new DateTimeObject(DateTime.Now);
-            PkixCertPathBuilderResult result = builder.Build(builderParams);
-
-            // TODO: Catch exceptions and return false
+                return false;
+            }
 
             return true;
         }
         
-        internal class CustomPkixCertPathValidator : PkixCertPathValidator
-        {
-            // TODO: Complete this implementation? We work around this problem by marking the permission extensions as non-critical. Our CA includes them in the certificate anyway.
-            // Identical to the base class, but do not throw on unknown critical extensions
-        }
-
         #region Utility methods for delayed-signing of CSRs
         public static byte[] GenerateCSRSignature(byte[] data, string signerAlgorithm, AsymmetricKeyParameter privateSigningKey)
         {
