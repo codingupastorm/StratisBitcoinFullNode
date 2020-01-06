@@ -28,11 +28,13 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
 
         /// <summary>
         /// Overriding this ensures that an empty script is used to build blocks.
+        /// It also passes the null check in PoAMiner, so no error message is shown
+        /// about not having rewards.
         /// </summary>
-        /// <returns>Returns a <c>null</c> script.</returns>
+        /// <returns>Returns an empty script.</returns>
         protected override Script GetScriptPubKeyFromWallet()
         {
-            return null;
+            return new Script();
         }
     }
 }
