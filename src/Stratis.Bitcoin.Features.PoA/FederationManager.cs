@@ -93,7 +93,7 @@ namespace Stratis.Bitcoin.Features.PoA
                 this.federationMembers.Count, Environment.NewLine + string.Join(Environment.NewLine, this.federationMembers));
 
             // Load key.
-            Key key = new KeyTool(this.settings.DataFolder).LoadPrivateKey();
+            Key key = new KeyTool(this.settings.DataFolder).LoadPrivateKey(KeyType.FederationKey);
 
             this.CurrentFederationKey = key;
             this.SetIsFederationMember();
@@ -189,7 +189,7 @@ namespace Stratis.Bitcoin.Features.PoA
     public class FederationManager : FederationManagerBase
     {
         public FederationManager(NodeSettings nodeSettings, Network network, ILoggerFactory loggerFactory, IKeyValueRepository keyValueRepo, ISignals signals)
-            :base(nodeSettings, network, loggerFactory, keyValueRepo, signals)
+            : base(nodeSettings, network, loggerFactory, keyValueRepo, signals)
         {
         }
 
