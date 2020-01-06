@@ -13,9 +13,9 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         }
 
         /// <summary>
-        /// Returning null ensures that an empty script is used to build blocks.
+        /// Returns an empty script to be used when building blocks.
         /// <para>
-        /// It also passes the null check in PoAMiner, so no error message is shown
+        /// It passes the null check in PoAMiner, so no error message is shown
         /// about not having rewards.
         /// </para>
         /// </summary>
