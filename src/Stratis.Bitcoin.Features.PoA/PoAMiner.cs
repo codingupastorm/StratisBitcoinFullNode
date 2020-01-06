@@ -12,7 +12,6 @@ using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Validators;
 using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.PoA.Voting;
-using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
@@ -300,7 +299,8 @@ namespace Stratis.Bitcoin.Features.PoA
         }
 
         /// <summary>Gets scriptPubKey from the wallet.</summary>
-        protected virtual Script GetScriptPubKeyFromWallet()
+        /// <returns>In this case an empty <see cref="Script"/> will be returned.</returns>
+        protected Script GetScriptPubKeyFromWallet()
         {
             return this.miningKeyProvider.GetScriptPubKeyFromWallet();
         }

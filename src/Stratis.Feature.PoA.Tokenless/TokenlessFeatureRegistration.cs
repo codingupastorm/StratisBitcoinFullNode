@@ -11,6 +11,7 @@ using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
+using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.Wallet.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
@@ -71,9 +72,13 @@ namespace Stratis.Feature.PoA.Tokenless
                             .AddSingleton<IGetUnspentTransaction, ConsensusQuery>(provider => provider.GetService<ConsensusQuery>());
 
                         // PoA Specific
+                        services.AddSingleton<VotingManager>();
+                        services.AddSingleton<IPollResultExecutor, PollResultExecutor>();
+                        services.AddSingleton<IWhitelistedHashesRepository, WhitelistedHashesRepository>();
+
                         services.AddSingleton<IFederationManager, FederationManager>();
                         services.AddSingleton<PoABlockHeaderValidator>();
-                        services.AddSingleton<IPoAMiner, TokenlessPoAMiner>();
+                        services.AddSingleton<IPoAMiner, PoAMiner>();
                         services.AddSingleton<MinerSettings>();
                         services.AddSingleton<PoAMinerSettings>();
                         services.AddSingleton<ISlotsManager, SlotsManager>();
