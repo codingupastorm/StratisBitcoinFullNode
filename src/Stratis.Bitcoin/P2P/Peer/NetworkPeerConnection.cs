@@ -342,7 +342,9 @@ namespace Stratis.Bitcoin.P2P.Peer
 
                 try
                 {
-                    await innerStream.WriteAsync(data, 0, data.Length, cancellation).ConfigureAwait(false);
+                    // Inexplicably, WriteAsync does not work for the BC TlsStream in this case, but this combination of calls does.
+                    innerStream.Write(data, 0, data.Length);
+                    innerStream.Flush();
                 }
                 catch (Exception e)
                 {
@@ -468,9 +470,6 @@ namespace Stratis.Bitcoin.P2P.Peer
                 {
                     this.logger.LogTrace("(-)[STREAM_END]");
                     throw new OperationCanceledException();
-                }
-                else
-                {
                 }
 
                 offset += chunkSize;

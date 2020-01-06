@@ -48,6 +48,9 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             X509Certificate rawCert = connection.GetPeerCertificate();
 
+            // TODO: Need to fix the faulty certificate retrieval on one 'leg' of the connection
+            return;
+
             if (rawCert == null)
             {
                 peer.Disconnect("Peer has no certificate.");
