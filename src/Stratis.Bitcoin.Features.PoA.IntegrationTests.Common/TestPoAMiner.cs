@@ -14,7 +14,6 @@ using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Core;
-using Stratis.Feature.PoA.Tokenless.Mining;
 
 namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
 {
@@ -92,7 +91,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
         }
     }
 
-    public class TokenlessTestPoAMiner : TokenlessPoAMiner
+    public class TokenlessTestPoAMiner : PoAMiner
     {
         private readonly EditableTimeProvider dateTimeProvider;
 
@@ -109,8 +108,10 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
             IMiningKeyProvider miningKeyProvider,
             INodeStats nodeStats,
             PoAMinerSettings poAMinerSettings,
-            IAsyncProvider asyncProvider)
-            : base(coreComponent, blockDefinition, slotsManager, poaHeaderValidator, federationManager, integrityValidator, miningKeyProvider, nodeStats, poAMinerSettings, asyncProvider)
+            IAsyncProvider asyncProvider,
+            VotingManager votingManager)
+            : base(coreComponent.ConsensusManager, coreComponent.DateTimeProvider, coreComponent.Network, coreComponent.NodeLifetime, coreComponent.LoggerFactory, coreComponent.InitialBlockDownloadState, blockDefinition, slotsManager,
+                  coreComponent.ConnectionManager, poaHeaderValidator, federationManager, integrityValidator, miningKeyProvider, nodeStats, votingManager, poAMinerSettings, asyncProvider)
         {
             this.dateTimeProvider = coreComponent.DateTimeProvider as EditableTimeProvider;
             this.slotsManager = slotsManager;
