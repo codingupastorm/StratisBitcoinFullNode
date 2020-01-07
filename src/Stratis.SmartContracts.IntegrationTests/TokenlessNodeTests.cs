@@ -42,7 +42,62 @@ namespace Stratis.SmartContracts.IntegrationTests
             this.network = new TokenlessNetwork();
         }
 
-        private IWebHostBuilder CreateWebHostBuilder()
+        // TODO: Lots of repetition in this file.
+
+        [Fact]
+        public async Task TokenlessNodesMineAnEmptyBlockAsync()
+        {
+            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
+            builder.UseStartup<TestOnlyStartup>();
+
+            using (IWebHost server = builder.Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            {
+                server.Start();
+
+                // TODO: This is a massive stupid hack to test with self signed certs.
+                var handler = new HttpClientHandler();
+                handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
+                var httpClient = new HttpClient(handler);
+                string baseAddress = "https://localhost:5001";
+
+                // Start + Initialize CA.
+                var client = new CaClient(new Uri(baseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword));
+
+                // Get Authority Certificate.
+                Settings settings = (Settings)server.Services.GetService(typeof(Settings));
+                var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
+                X509Certificate2 ac = new X509Certificate2(File.ReadAllBytes(acLocation));
+
+                // Create 2 new client certificates.
+                var privKey1 = new Key();
+                PubKey pubKey1 = privKey1.PubKey;
+                BitcoinPubKeyAddress address1 = pubKey1.GetAddress(this.network);
+                X509Certificate2 certificate1 = IssueCertificate(client, privKey1, pubKey1, address1);
+                Assert.NotNull(certificate1);
+
+                var privKey2 = new Key();
+                PubKey pubKey2 = privKey2.PubKey;
+                BitcoinPubKeyAddress address2 = pubKey2.GetAddress(this.network);
+                X509Certificate2 certificate2 = IssueCertificate(client, privKey2, pubKey2, address2);
+                Assert.NotNull(certificate2);
+
+                // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.  
+                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, certificate1);
+                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, certificate2);
+
+                node1.Start();
+                node2.Start();
+                TestHelper.Connect(node1, node2);
+
+                await node2.MineBlocksAsync(1);
+                TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 1);
+            }
+        }
+
+        [Fact]
+        public async Task TokenlessNodesConnectAndMineOpReturnAsync()
         {
             IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
             builder.UseUrls(this.BaseAddress);
