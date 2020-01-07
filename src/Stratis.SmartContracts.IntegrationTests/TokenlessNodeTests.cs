@@ -47,10 +47,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesMineAnEmptyBlockAsync()
         {
-            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseStartup<TestOnlyStartup>();
-
-            using (IWebHost server = builder.Build())
+            using (IWebHost server = CreateWebHostBuilder().Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
@@ -59,10 +56,9 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var handler = new HttpClientHandler();
                 handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
                 var httpClient = new HttpClient(handler);
-                string baseAddress = "https://localhost:5001";
 
                 // Start + Initialize CA.
-                var client = new CaClient(new Uri(baseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+                var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword));
 
                 // Get Authority Certificate.
@@ -94,15 +90,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                 await node2.MineBlocksAsync(1);
                 TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 1);
             }
-        }
-
-        [Fact]
-        public async Task TokenlessNodesConnectAndMineOpReturnAsync()
-        {
-            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseUrls(this.BaseAddress);
-            builder.UseStartup<TestOnlyStartup>();
-            return builder;
         }
 
         [Fact]
@@ -330,6 +317,14 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Receipt callReceipt = receiptRepository.Retrieve(callResponse.TransactionId);
                 Assert.True(callReceipt.Success);
             }
+        }
+
+        private IWebHostBuilder CreateWebHostBuilder()
+        {
+            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
+            builder.UseUrls(this.BaseAddress);
+            builder.UseStartup<TestOnlyStartup>();
+            return builder;
         }
 
         private Transaction CreateContractCreateTransaction(CoreNode node, Key key)
