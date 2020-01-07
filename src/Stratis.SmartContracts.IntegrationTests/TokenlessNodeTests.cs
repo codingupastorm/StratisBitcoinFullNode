@@ -42,7 +42,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             this.network = new TokenlessNetwork();
         }
 
-        private IWebHostBuilder CreateBuilder()
+        private IWebHostBuilder CreateWebHostBuilder()
         {
             IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
             builder.UseUrls(this.BaseAddress);
@@ -53,7 +53,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesConnectAndMineOpReturnAsync()
         {
-            using (IWebHost server = CreateBuilder().Build())
+            using (IWebHost server = CreateWebHostBuilder().Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
@@ -114,7 +114,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesCreateAndCallAContractAsync()
         {
-            using (IWebHost server = CreateBuilder().Build())
+            using (IWebHost server = CreateWebHostBuilder().Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
@@ -184,7 +184,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesCreateAndCallWithControllerAsync()
         {
-            using (IWebHost server = CreateBuilder().Build())
+            using (IWebHost server = CreateWebHostBuilder().Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
