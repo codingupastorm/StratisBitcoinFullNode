@@ -79,7 +79,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
 
             base.Configure();
 
-            this.block = this.BlockTemplate.Block.Clone();
+            this.block = this.BlockTemplate.Block;
 
             this.MedianTimePast = Utils.DateTimeToUnixTime(this.ChainTip.GetMedianTimePast());
             this.LockTimeCutoff = MempoolValidator.StandardLocktimeVerifyFlags.HasFlag(Transaction.LockTimeFlags.MedianTimePast) ? this.MedianTimePast : this.BlockTemplate.Block.Header.Time;
