@@ -126,7 +126,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             if (!File.Exists(transactionKeyFilePath))
                 throw new TokenlessWalletException($"{transactionKeyFilePath} does not exist.");
 
-            var keyTool = new KeyTool(transactionKeyFilePath);
+            var keyTool = new KeyTool(this.walletSettings.RootPath);
             return keyTool.LoadPrivateKey(KeyType.TransactionSigningKey);
         }
 

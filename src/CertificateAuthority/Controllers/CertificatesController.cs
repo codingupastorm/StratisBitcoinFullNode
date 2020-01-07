@@ -251,10 +251,10 @@ namespace CertificateAuthority.Controllers
         /// returns <see cref="CertificateStatus.Unknown"/> if certificate wasn't found.
         /// </summary>
         /// <response code="200">Certificate status string.</response>
-        [HttpGet]
+        [HttpPost]
         [Route("get_certificate_status")]
         [ProducesResponseType(typeof(string), 200)]
-        public ActionResult<string> GetCertificateStatus([FromQuery]GetCertificateStatusModel model)
+        public ActionResult<string> GetCertificateStatus([FromBody]GetCertificateStatusModel model)
         {
             CertificateStatus status = this.caCertificateManager.GetCertificateStatusByThumbprint(model.Thumbprint);
 
@@ -266,7 +266,7 @@ namespace CertificateAuthority.Controllers
 
         /// <summary>Returns a collection of thumbprints of revoked certificates.</summary>
         /// <response code="200">Collection of <see cref="string"/>.</response>
-        [HttpGet]
+        [HttpPost]
         [Route("get_revoked_certificates")]
         [ProducesResponseType(typeof(ICollection<string>), 200)]
         public ActionResult<ICollection<string>> GetRevokedCertificates()

@@ -208,7 +208,6 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             CertificateInfoModel retrievedCertModel = caClient.GetCertificateForAddress(address);
 
-
             var certificate = new X509Certificate2(Convert.FromBase64String(retrievedCertModel.CertificateContentDer));
 
             return certificate;
