@@ -79,7 +79,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
 
             base.Configure();
 
-            this.block = this.BlockTemplate.Block;
+            this.block = this.BlockTemplate.Block.Clone();
 
             this.MedianTimePast = Utils.DateTimeToUnixTime(this.ChainTip.GetMedianTimePast());
             this.LockTimeCutoff = MempoolValidator.StandardLocktimeVerifyFlags.HasFlag(Transaction.LockTimeFlags.MedianTimePast) ? this.MedianTimePast : this.BlockTemplate.Block.Header.Time;
@@ -92,7 +92,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
 
             // Cache the results. We don't need to execute these again when validating.
             var cacheModel = new BlockExecutionResultModel(this.stateSnapshot, this.receipts);
-            this.executionCache.StoreExecutionResult(this.BlockTemplate.Block.GetHash(), cacheModel);
+            this.executionCache.StoreExecutionResult(this.block.GetHash(), cacheModel);
 
             return this.BlockTemplate;
         }
