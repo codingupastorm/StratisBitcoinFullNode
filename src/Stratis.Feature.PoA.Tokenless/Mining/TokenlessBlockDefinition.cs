@@ -92,7 +92,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
 
             // Cache the results. We don't need to execute these again when validating.
             var cacheModel = new BlockExecutionResultModel(this.stateSnapshot, this.receipts);
-            this.executionCache.StoreExecutionResult(this.block.GetHash(), cacheModel);
+            this.executionCache.StoreExecutionResult(this.BlockTemplate.Block.GetHash(), cacheModel);
 
             return this.BlockTemplate;
         }
