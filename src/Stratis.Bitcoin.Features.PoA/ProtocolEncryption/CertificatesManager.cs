@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Models;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
@@ -202,7 +206,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         public static byte[] ExtractCertificateExtension(X509Certificate certificate, string oid)
         {
             X509Certificate2 cert = CaCertificatesManager.ConvertCertificate(certificate, new SecureRandom());
-
+            
             foreach (X509Extension extension in cert.Extensions)
             {
                 if (extension.Oid.Value == oid)
@@ -210,6 +214,33 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             }
 
             return null;
+        }
+
+        public static string ExtractCertificateExtensionString(X509Certificate certificate, string oid)
+        {
+            X509Certificate2 cert = CaCertificatesManager.ConvertCertificate(certificate, new SecureRandom());
+
+            foreach (X509Extension extension in cert.Extensions)
+            {
+                if (extension.Oid.Value == oid)
+                {
+                    // This is truly horrible, but it isn't clear how we can correctly go from the DER bytes in the extension, to a relevant BC class, to a string.
+                    // Perhaps we are meant to recursively evaluate the extension data as ASN.1 until we land up with raw data that can't be decoded further?
+                    var temp = extension.RawData.Skip(2).ToArray();
+                    
+                    return Encoding.UTF8.GetString(temp);
+                }
+            }
+
+            return null;
+        }
+
+        private static Asn1Object ToAsn1Object(byte[] data)
+        {
+            var inStream = new MemoryStream(data);
+            var asnInputStream = new Asn1InputStream(inStream);
+
+            return asnInputStream.ReadObject();
         }
     }
 

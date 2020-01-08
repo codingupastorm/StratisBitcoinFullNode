@@ -77,16 +77,13 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             this.peerCertificate = receivedCert;
 
             // TODO: Handle false response
-            // TODO: Why is the client certificate not being sent back to the server (i.e. this should never be null)?
-            if (this.peerCertificate != null)
-            {
-                CaCertificatesManager.ValidateCertificateChain(this.certManager.AuthorityCertificate, this.peerCertificate);
-            }
+            CaCertificatesManager.ValidateCertificateChain(this.certManager.AuthorityCertificate, this.peerCertificate);
 
             return this.stream;
         }
     }
 
+    #region Derived versions of the stock Bouncy Castle TLS classes
     public class CustomTlsAuthentication : TlsAuthentication
     {
         private readonly TlsContext mContext;
@@ -117,7 +114,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         public virtual TlsCredentials GetClientCredentials(CertificateRequest certificateRequest)
         {
             byte[] certificateTypes = certificateRequest.CertificateTypes;
-            if (certificateTypes == null || !Arrays.Contains(certificateTypes, ClientCertificateType.rsa_sign))
+            if (certificateTypes == null || !Arrays.Contains(certificateTypes, ClientCertificateType.ecdsa_sign))
                 return null;
 
             var cert = new Certificate(new X509CertificateStructure[] { this.certificate.CertificateStructure });
@@ -230,16 +227,11 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         public override CertificateRequest GetCertificateRequest()
         {
             byte[] certificateTypes = new byte[]{ ClientCertificateType.ecdsa_sign };
+            
+            // TODO: Do we need to send the actual CA certificate's subject down the wire?
+            IList certificateAuthorities = new ArrayList() { this.certificate.IssuerDN };
 
-            IList serverSigAlgs = null;
-            if (TlsUtilities.IsSignatureAlgorithmsExtensionAllowed(mServerVersion))
-            {
-                serverSigAlgs = TlsUtilities.GetDefaultSupportedSignatureAlgorithms();
-            }
-
-            IList certificateAuthorities = new ArrayList();
-
-            return new CertificateRequest(certificateTypes, serverSigAlgs, certificateAuthorities);
+            return new CertificateRequest(certificateTypes, new[] { new SignatureAndHashAlgorithm(HashAlgorithm.sha256, SignatureAlgorithm.ecdsa) }, certificateAuthorities);
         }
 
         public override void NotifyClientCertificate(Certificate clientCertificate)
@@ -262,4 +254,5 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return new DefaultTlsSignerCredentials(this.mContext, cert, this.privateKey, sigAlg);
         }
     }
+    #endregion
 }

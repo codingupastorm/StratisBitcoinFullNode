@@ -48,9 +48,6 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             X509Certificate rawCert = connection.GetPeerCertificate();
 
-            // TODO: Need to fix the faulty certificate retrieval on one 'leg' of the connection
-            return;
-
             if (rawCert == null)
             {
                 peer.Disconnect("Peer has no certificate.");
@@ -60,9 +57,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             var peerCertificate = new X509Certificate2(rawCert.GetEncoded());
 
-            byte[] certificateP2pkhExtension = CertificatesManager.ExtractCertificateExtension(rawCert, "1.4.1") ?? new byte[0];
-
-            string certificateP2pkh = Encoding.UTF8.GetString(certificateP2pkhExtension);
+            string certificateP2pkh = CertificatesManager.ExtractCertificateExtensionString(rawCert, "1.4.1");
 
             BitcoinAddress address;
 

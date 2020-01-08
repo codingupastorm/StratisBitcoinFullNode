@@ -100,9 +100,6 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         /// <returns><c>true</c> if the given certificate has been revoked.</returns>
         public async Task<bool> IsCertificateRevokedAsync(string thumbprint, bool allowCached = true)
         {
-            // TODO: Fix this to work correctly - the API methods should be POST and should require credentials
-            return false;
-
             RevocationRecord record = null;
 
             if (allowCached && this.revokedCertsCache.TryGetValue(thumbprint, out record))

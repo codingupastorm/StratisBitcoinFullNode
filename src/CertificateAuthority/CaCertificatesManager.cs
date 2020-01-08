@@ -377,8 +377,8 @@ namespace CertificateAuthority
 
         private static void AddDltInformation(X509V3CertificateGenerator certificateGenerator, byte[] oid141, byte[] oid142)
         {
-            certificateGenerator.AddExtension(P2pkhExtensionOid, false, oid141);
-            certificateGenerator.AddExtension(PubKeyExtensionOid, false, oid142);
+            certificateGenerator.AddExtension(P2pkhExtensionOid, false, new DerOctetString(oid141));
+            certificateGenerator.AddExtension(PubKeyExtensionOid, false, new DerOctetString(oid142));
             certificateGenerator.AddExtension(SendPermission, false, new byte[] {1});
         }
 
