@@ -41,7 +41,13 @@ namespace Stratis.SmartContracts.Tests.Common
         {
             string dataFolder = this.GetNextDataFolderName();
 
-            CoreNode node = this.CreateNode(new FullTokenlessRunner(dataFolder, network, this.TimeProvider), "poa.conf");
+            var configParameters = new NodeConfigParameters()
+            {
+                { "caurl" , "http://localhost:5050" }
+            };
+
+            CoreNode node = this.CreateNode(new FullTokenlessRunner(dataFolder, network, this.TimeProvider), "poa.conf", configParameters: configParameters);
+
             Mnemonic[] mnemonics = {
                     new Mnemonic("lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom"),
                     new Mnemonic("idle power swim wash diesel blouse photo among eager reward govern menu"),

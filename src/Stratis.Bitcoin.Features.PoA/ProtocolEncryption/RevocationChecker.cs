@@ -64,7 +64,10 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             this.revokedCertsCache = this.kvRepo.LoadValueJson<Dictionary<string, RevocationRecord>>(kvRepoKey);
 
             if (this.revokedCertsCache == null)
+            {
+                this.revokedCertsCache = new Dictionary<string, RevocationRecord>();
                 await this.UpdateRevokedCertsCacheAsync().ConfigureAwait(false);
+            }
 
             this.cacheUpdatingTask = this.UpdateRevokedCertsCacheContinuouslyAsync();
         }
@@ -74,7 +77,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         /// </summary>
         /// <param name="thumbprint">The thumbprint of the certificate to check the revocation status of.</param>
         /// <param name="allowCached">Indicate whether it is acceptable to use the checker's local cache of the status, or force a check with the CA.</param>
-        /// <returns></returns>
+        /// <returns><c>true</c> if the given certificate has been revoked.</returns>
         public async Task<bool> IsCertificateRevokedAsync(string thumbprint, bool allowCached = true)
         {
             RevocationRecord record = null;
@@ -94,7 +97,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
                 string status = this.client.GetCertificateStatus(thumbprint);
 
                 record.LastChecked = this.dateTimeProvider.GetUtcNow();
-                record.LastStatus = status != "Good";
+                record.LastStatus = status != "1";
             }
             catch (Exception e)
             {

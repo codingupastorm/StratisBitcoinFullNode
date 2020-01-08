@@ -10,16 +10,16 @@ namespace Stratis.Bitcoin.Features.PoA
         public const string FederationKeyFileName = "federationKey.dat";
         public const string TransactionSigningKeyFileName = "transactionSigning.dat";
 
-        private readonly string path;
+        private readonly string rootPath;
 
         public KeyTool(DataFolder dataFolder)
         {
-            this.path = dataFolder.RootPath;
+            this.rootPath = dataFolder.RootPath;
         }
 
-        public KeyTool(string path)
+        public KeyTool(string rootPath)
         {
-            this.path = path;
+            this.rootPath = rootPath;
         }
 
         /// <summary>Generates a new private key.</summary>
@@ -42,13 +42,13 @@ namespace Stratis.Bitcoin.Features.PoA
             switch (keyType)
             {
                 case KeyType.BlockSigningKey:
-                    filePath = Path.Combine(this.path, BlockSigningKeyFileName);
+                    filePath = Path.Combine(this.rootPath, BlockSigningKeyFileName);
                     break;
                 case KeyType.FederationKey:
-                    filePath = Path.Combine(this.path, FederationKeyFileName);
+                    filePath = Path.Combine(this.rootPath, FederationKeyFileName);
                     break;
                 case KeyType.TransactionSigningKey:
-                    filePath = Path.Combine(this.path, TransactionSigningKeyFileName);
+                    filePath = Path.Combine(this.rootPath, TransactionSigningKeyFileName);
                     break;
             }
 
