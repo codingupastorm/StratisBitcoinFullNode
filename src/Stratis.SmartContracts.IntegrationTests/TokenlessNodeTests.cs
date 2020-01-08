@@ -35,6 +35,7 @@ namespace Stratis.SmartContracts.IntegrationTests
     public sealed class TokenlessNodeTests
     {
         private readonly TokenlessNetwork network;
+        private readonly string BaseAddress = "http://localhost:5050";
 
         public TokenlessNodeTests()
         {
@@ -46,10 +47,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesMineAnEmptyBlockAsync()
         {
-            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseStartup<TestOnlyStartup>();
-
-            using (IWebHost server = builder.Build())
+            using (IWebHost server = CreateWebHostBuilder().Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
@@ -58,10 +56,9 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var handler = new HttpClientHandler();
                 handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
                 var httpClient = new HttpClient(handler);
-                string baseAddress = "https://localhost:5001";
 
                 // Start + Initialize CA.
-                var client = new CaClient(new Uri(baseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+                var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword));
 
                 // Get Authority Certificate.
@@ -98,22 +95,20 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesConnectAndMineOpReturnAsync()
         {
-            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseStartup<TestOnlyStartup>();
-
-            using (IWebHost server = builder.Build())
+            using (IWebHost server = CreateWebHostBuilder().Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
 
                 // TODO: This is a massive stupid hack to test with self signed certs.
-                var handler = new HttpClientHandler();
-                handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
+                var handler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true)
+                };
                 var httpClient = new HttpClient(handler);
-                string baseAddress = "https://localhost:5001";
 
                 // Start + Initialize CA.
-                var client = new CaClient(new Uri(baseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+                var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword));
 
                 // Get Authority Certificate.
@@ -158,27 +153,10 @@ namespace Stratis.SmartContracts.IntegrationTests
             }
         }
 
-        private X509Certificate2 IssueCertificate(CaClient client, Key privKey, PubKey pubKey, BitcoinPubKeyAddress address)
-        {
-            CertificateSigningRequestModel response = client.GenerateCertificateSigningRequest(Convert.ToBase64String(pubKey.ToBytes()), address.ToString());
-
-            string signedCsr = CaCertificatesManager.SignCertificateSigningRequest(response.CertificateSigningRequestContent, privKey);
-
-            CertificateInfoModel certInfo = client.IssueCertificate(signedCsr);
-
-            Assert.NotNull(certInfo);
-            Assert.Equal(address.ToString(), certInfo.Address);
-
-            return new X509Certificate2(Convert.FromBase64String(certInfo.CertificateContentDer));
-        }
-
         [Fact]
         public async Task TokenlessNodesCreateAndCallAContractAsync()
         {
-            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseStartup<TestOnlyStartup>();
-
-            using (IWebHost server = builder.Build())
+            using (IWebHost server = CreateWebHostBuilder().Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
@@ -187,10 +165,9 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var handler = new HttpClientHandler();
                 handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
                 var httpClient = new HttpClient(handler);
-                string baseAddress = "https://localhost:5001";
 
                 // Start + Initialize CA.
-                var client = new CaClient(new Uri(baseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+                var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword));
 
                 // Get Authority Certificate.
@@ -249,23 +226,20 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesCreateAndCallWithControllerAsync()
         {
-
-            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseStartup<TestOnlyStartup>();
-
-            using (IWebHost server = builder.Build())
+            using (IWebHost server = CreateWebHostBuilder().Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
 
                 // TODO: This is a massive stupid hack to test with self signed certs.
-                var handler = new HttpClientHandler();
-                handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
+                var handler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true)
+                };
                 var httpClient = new HttpClient(handler);
-                string baseAddress = "https://localhost:5001";
 
                 // Start + Initialize CA.
-                var client = new CaClient(new Uri(baseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+                var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword));
 
                 // Get Authority Certificate.
@@ -304,7 +278,6 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 var createModel = new BuildCreateContractTransactionModel()
                 {
-                    Mnemonic = mnemonicString,
                     ContractCode = compilationResult.Compilation
                 };
 
@@ -325,7 +298,6 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 var callModel = new BuildCallContractTransactionModel()
                 {
-                    Mnemonic = mnemonicString,
                     Address = createReceipt.NewContractAddress.ToBase58Address(this.network),
                     MethodName = "CallMe"
                 };
@@ -345,6 +317,14 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Receipt callReceipt = receiptRepository.Retrieve(callResponse.TransactionId);
                 Assert.True(callReceipt.Success);
             }
+        }
+
+        private IWebHostBuilder CreateWebHostBuilder()
+        {
+            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
+            builder.UseUrls(this.BaseAddress);
+            builder.UseStartup<TestOnlyStartup>();
+            return builder;
         }
 
         private Transaction CreateContractCreateTransaction(CoreNode node, Key key)
@@ -387,6 +367,20 @@ namespace Stratis.SmartContracts.IntegrationTests
             signer.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
 
             return transaction;
+        }
+
+        private X509Certificate2 IssueCertificate(CaClient client, Key privKey, PubKey pubKey, BitcoinPubKeyAddress address)
+        {
+            CertificateSigningRequestModel response = client.GenerateCertificateSigningRequest(Convert.ToBase64String(pubKey.ToBytes()), address.ToString());
+
+            string signedCsr = CaCertificatesManager.SignCertificateSigningRequest(response.CertificateSigningRequestContent, privKey);
+
+            CertificateInfoModel certInfo = client.IssueCertificate(signedCsr);
+
+            Assert.NotNull(certInfo);
+            Assert.Equal(address.ToString(), certInfo.Address);
+
+            return new X509Certificate2(Convert.FromBase64String(certInfo.CertificateContentDer));
         }
     }
 }

@@ -21,11 +21,11 @@ namespace CertificateAuthority
         private const string GetCertificatePublicKeysEndpoint = "api/certificates/get_certificate_public_keys";
 
         private const string JsonContentType = "application/json";
-        private Uri baseApiUrl;
-        private HttpClient httpClient;
+        private readonly Uri baseApiUrl;
+        private readonly HttpClient httpClient;
 
-        private int accountId;
-        private string password;
+        private readonly int accountId;
+        private readonly string password;
 
         public CaClient(Uri baseApiUrl, HttpClient httpClient)
         {
