@@ -10,6 +10,7 @@ using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Fee;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
+using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Mempool;
@@ -36,6 +37,10 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public readonly NodeSettings NodeSettings;
         public readonly TokenlessMempoolValidator MempoolValidator;
         public readonly ITokenlessSigner TokenlessSigner;
+        public readonly ICertificatePermissionsChecker CertificatePermissionsChecker;
+        public readonly KeyValueRepository KeyValueRepository;
+        public readonly RevocationChecker RevocationChecker;
+        public readonly CertificatesManager CertificatesManager;
 
         public TokenlessTestHelper()
         {
@@ -52,6 +57,14 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             this.NodeSettings = NodeSettings.Default(this.Network);
             this.MempoolSettings = new MempoolSettings(this.NodeSettings) { MempoolExpiry = Bitcoin.Features.MemoryPool.MempoolValidator.DefaultMempoolExpiry };
             this.TokenlessSigner = new TokenlessSigner(this.Network, new SenderRetriever());
+            
+            var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
+            var keyValueStore = new KeyValueRepositoryStore(repositorySerializer, this.NodeSettings.DataFolder, this.LoggerFactory, this.DateTimeProvider);
+            var kvRepo = new KeyValueRepository(keyValueStore, repositorySerializer);
+
+            this.RevocationChecker = new RevocationChecker(this.NodeSettings, kvRepo, this.LoggerFactory, this.DateTimeProvider);
+            this.CertificatesManager = new CertificatesManager(this.NodeSettings.DataFolder, this.NodeSettings, this.LoggerFactory, this.RevocationChecker, this.Network);
+            this.CertificatePermissionsChecker = new CertificatePermissionsChecker(new CertificateCache(this.NodeSettings.DataFolder), this.CertificatesManager, this.Network);
 
             this.BlockPolicyEstimator = new BlockPolicyEstimator(this.MempoolSettings, this.LoggerFactory, this.NodeSettings);
             this.Mempool = new TokenlessMempool(this.BlockPolicyEstimator, this.LoggerFactory, this.NodeSettings);
@@ -68,7 +81,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 else if (ruleType == typeof(NoDuplicateTransactionExistOnChainMempoolRule))
                     yield return (IMempoolRule)Activator.CreateInstance(ruleType, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.blockRepository);
                 else if (ruleType == typeof(SenderInputMempoolRule))
-                    yield return (IMempoolRule)Activator.CreateInstance(ruleType, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.TokenlessSigner);
+                    yield return (IMempoolRule)Activator.CreateInstance(ruleType, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.TokenlessSigner, this.CertificatePermissionsChecker);
                 else
                     yield return (IMempoolRule)Activator.CreateInstance(ruleType, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory);
             }
