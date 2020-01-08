@@ -82,6 +82,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                     yield return new NoDuplicateTransactionExistOnChainMempoolRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.blockRepository);
                 else if (ruleType == typeof(SenderInputMempoolRule))
                     yield return new SenderInputMempoolRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.TokenlessSigner, this.CertificatePermissionsChecker);
+                else if (ruleType == typeof(CreateTokenlessMempoolEntryRule))
+                    yield return new CreateTokenlessMempoolEntryRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory);
                 else
                     throw new NotImplementedException($"No constructor is defined for '{ruleType.Name}'.");
             }
