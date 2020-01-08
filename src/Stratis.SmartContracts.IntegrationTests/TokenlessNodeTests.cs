@@ -374,9 +374,9 @@ namespace Stratis.SmartContracts.IntegrationTests
             return transaction;
         }
 
-        private X509Certificate IssueCertificate(CaClient client, Key privKey, PubKey pubKey, BitcoinPubKeyAddress address)
+        private X509Certificate IssueCertificate(CaClient client, Key privKey, PubKey transactionSigningpubKey, BitcoinPubKeyAddress address)
         {
-            CertificateSigningRequestModel response = client.GenerateCertificateSigningRequest(Convert.ToBase64String(pubKey.ToBytes()), address.ToString());
+            CertificateSigningRequestModel response = client.GenerateCertificateSigningRequest(Convert.ToBase64String(privKey.PubKey.ToBytes()), address.ToString(), Convert.ToBase64String(transactionSigningpubKey.Hash.ToBytes()));
 
             string signedCsr = CaCertificatesManager.SignCertificateSigningRequest(response.CertificateSigningRequestContent, privKey);
 

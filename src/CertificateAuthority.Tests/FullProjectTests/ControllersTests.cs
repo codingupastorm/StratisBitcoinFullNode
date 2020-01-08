@@ -162,7 +162,6 @@ namespace CertificateAuthority.Tests.FullProjectTests
             Assert.True(caCert.SubjectDN.Equivalent(cert1.IssuerDN));
 
             Assert.Equal(clientAddress, certificate1.Address);
-            Assert.Equal(clientPrivateKey.PubKey, new PubKey(certificate1.PubKey));
 
             PubKey[] pubKeys = this.certificatesController.GetCertificatePublicKeys().Value.ToArray();
             Assert.Single(pubKeys);
@@ -183,7 +182,6 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest2.GetDerEncoded()), this.adminCredentials.AccountId, this.adminCredentials.Password))).Value;
 
             Assert.Equal(clientAddress, certificate2.Address);
-            Assert.Equal(clientPrivateKey2.PubKey, new PubKey(certificate2.PubKey));
 
             PubKey[] pubKeys2 = this.certificatesController.GetCertificatePublicKeys().Value.ToArray();
             Assert.Equal(2, pubKeys2.Length);
@@ -249,10 +247,10 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 new IssueCertificateFromFileContentsModel(Convert.ToBase64String(signedCsr.GetDerEncoded()), credentials1.AccountId, credentials1.Password))).Value;
 
             Assert.Equal(clientAddress, certificate3.Address);
-            Assert.Equal(clientPrivateKey3.PubKey, new PubKey(certificate3.PubKey));
 
             // Now try do it the same way a node would, by populating the relevant model and submitting it to the API.
-            var generateModel = new GenerateCertificateSigningRequestModel(clientAddress, Convert.ToBase64String(clientPublicKey), credentials1.AccountId, credentials1.Password);
+            // In this case we just use the same pubkey for both the certificate generation & transaction signing pubkey hash, they would ordinarily be different.
+            var generateModel = new GenerateCertificateSigningRequestModel(clientAddress, Convert.ToBase64String(clientPublicKey), Convert.ToBase64String(clientPrivateKey.PubKey.Hash.ToBytes()), credentials1.AccountId, credentials1.Password);
 
             CertificateSigningRequestModel unsignedCsrModel = (await this.certificatesController.GenerateCertificateSigningRequestAsync(generateModel)).Value;
 
@@ -273,7 +271,6 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 new IssueCertificateFromFileContentsModel(Convert.ToBase64String(signedCsr.GetDerEncoded()), credentials1.AccountId, credentials1.Password))).Value;
 
             Assert.Equal(clientAddress, certificate4.Address);
-            Assert.Equal(clientPrivateKey3.PubKey, new PubKey(certificate4.PubKey));
 
             Assert.True(CaCertificatesManager.ValidateCertificateChain(caCert, cert1));
         }

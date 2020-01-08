@@ -15,6 +15,7 @@ namespace CertificateAuthority
         private const string GetAllCertificatesEndpoint = "api/certificates/get_all_certificates";
         private const string GetRevokedCertificatesEndpoint = "api/certificates/get_revoked_certificates";
         private const string GetCertificateForAddressEndpoint = "api/certificates/get_certificate_for_address";
+        private const string GetCertificateForPubKeyHashEndpoint = "api/certificates/get_certificate_for_pubkey_hash";
         private const string GetCertificateStatusEndpoint = "api/certificates/get_certificate_status";
         private const string GenerateCertificateSigningRequestEndpoint = "api/certificates/generate_certificate_signing_request";
         private const string IssueCertificateEndpoint = "api/certificates/issue_certificate_using_request_string";
@@ -140,6 +141,24 @@ namespace CertificateAuthority
             return cert;
         }
 
+        public CertificateInfoModel GetCertificateForPubKeyHash(string pubKeyHash)
+        {
+            var pubKeyModel = new CredentialsModelWithPubKeyHashModel()
+            {
+                AccountId = this.accountId,
+                PubKeyHash = pubKeyHash,
+                Password = this.password
+            };
+
+            HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{GetCertificateForPubKeyHashEndpoint}", pubKeyModel).GetAwaiter().GetResult();
+
+            string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+            CertificateInfoModel cert = JsonConvert.DeserializeObject<CertificateInfoModel>(responseString);
+
+            return cert;
+        }
+
         public string GetCertificateStatus(string thumbprint)
         {
             var thumbprintModel = new CredentialsModelWithThumbprintModel()
@@ -161,14 +180,15 @@ namespace CertificateAuthority
         /// <param name="pubKey">The public key for the P2PKH address, in base64 format.</param>
         /// <param name="address">The P2PKH base58 address string.</param>
         /// <returns></returns>
-        public CertificateSigningRequestModel GenerateCertificateSigningRequest(string pubKey, string address)
+        public CertificateSigningRequestModel GenerateCertificateSigningRequest(string pubKey, string address, string transactionSigningPubKeyHash)
         {
             var generateCsrModel = new GenerateCertificateSigningRequestModel()
             {
                 AccountId = this.accountId,
                 Address = address,
                 Password = this.password,
-                PubKey = pubKey
+                PubKey = pubKey,
+                TransactionSigningPubKeyHash = transactionSigningPubKeyHash
             };
 
             HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{GenerateCertificateSigningRequestEndpoint}", generateCsrModel).GetAwaiter().GetResult();

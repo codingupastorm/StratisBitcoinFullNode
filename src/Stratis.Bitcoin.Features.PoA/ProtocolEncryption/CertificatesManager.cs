@@ -82,19 +82,18 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         /// <exception cref="CertificateConfigurationException">Thrown in case required certificates are not found or are not valid.</exception>
         public async Task InitializeAsync()
         {
+            this.LoadAuthorityCertificate();
+            this.LoadClientCertificate();
+        }
+
+        public bool LoadAuthorityCertificate()
+        { 
             string acPath = Path.Combine(this.dataFolder.RootPath, AuthorityCertificateName);
-            string clientCertPath = Path.Combine(this.dataFolder.RootPath, ClientCertificateName);
 
             if (!File.Exists(acPath))
             {
                 this.logger.LogTrace("(-)[AC_NOT_FOUND]:{0}='{1}'", nameof(acPath), acPath);
                 throw new CertificateConfigurationException($"Authority certificate not located at '{acPath}'. Make sure you place '{AuthorityCertificateName}' in the node's root directory.");
-            }
-
-            if (!File.Exists(clientCertPath))
-            {
-                this.logger.LogTrace("(-)[CC_NOT_FOUND]:{0}='{1}'", nameof(clientCertPath), clientCertPath);
-                throw new CertificateConfigurationException($"Client certificate not located at '{clientCertPath}'. Make sure you place '{ClientCertificateName}' in the node's root directory.");
             }
 
             this.caPassword = this.configuration.GetOrDefault<string>(CaPasswordKey, null);
@@ -117,6 +116,19 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             
             this.AuthorityCertificate = certParser.ReadCertificate(File.ReadAllBytes(acPath));
 
+            return true;
+        }
+
+        public bool LoadClientCertificate()
+        {
+            string clientCertPath = Path.Combine(this.dataFolder.RootPath, ClientCertificateName);
+
+            if (!File.Exists(clientCertPath))
+            {
+                this.logger.LogTrace("(-)[CC_NOT_FOUND]:{0}='{1}'", nameof(clientCertPath), clientCertPath);
+                throw new CertificateConfigurationException($"Client certificate not located at '{clientCertPath}'. Make sure you place '{ClientCertificateName}' in the node's root directory.");
+            }
+
             this.clientCertificatePassword = this.configuration.GetOrDefault<string>(ClientCertificateConfigurationKey, null);
 
             if (this.clientCertificatePassword == null)
@@ -133,14 +145,16 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             bool clientCertValid = this.IsSignedByAuthorityCertificate(this.ClientCertificate, this.AuthorityCertificate);
 
             if (!clientCertValid)
-                throw new Exception("Provided client certificate isn't valid or isn't signed by the authority certificate!");
+                throw new CertificateConfigurationException("Provided client certificate isn't valid or isn't signed by the authority certificate!");
 
             X509Certificate2 tempClientCert = CaCertificatesManager.ConvertCertificate(this.ClientCertificate, new SecureRandom());
 
-            bool revoked = await this.revocationChecker.IsCertificateRevokedAsync(tempClientCert.Thumbprint, false).ConfigureAwait(false);
+            bool revoked = this.revocationChecker.IsCertificateRevokedAsync(tempClientCert.Thumbprint, false).ConfigureAwait(false).GetAwaiter().GetResult();
 
             if (revoked)
-                throw new Exception("Provided client certificate was revoked!");
+                throw new CertificateConfigurationException("Provided client certificate was revoked!");
+
+            return true;
         }
 
         /// <summary>
@@ -165,14 +179,14 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
         }
 
-        public X509Certificate RequestNewCertificate(Key privateKey)
+        public X509Certificate RequestNewCertificate(Key privateKey, PubKey transactionSigningPubKey)
         {
             CaClient caClient = this.GetClient();
 
             PubKey pubKey = privateKey.PubKey;
             BitcoinPubKeyAddress address = pubKey.GetAddress(this.network);
 
-            CertificateSigningRequestModel csrModel = caClient.GenerateCertificateSigningRequest(Convert.ToBase64String(pubKey.ToBytes()), address.ToString());
+            CertificateSigningRequestModel csrModel = caClient.GenerateCertificateSigningRequest(Convert.ToBase64String(pubKey.ToBytes()), address.ToString(), Convert.ToBase64String(transactionSigningPubKey.Hash.ToBytes()));
 
             string signedCsr = CaCertificatesManager.SignCertificateSigningRequest(csrModel.CertificateSigningRequestContent, privateKey, "secp256k1");
 
@@ -189,6 +203,18 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             CaClient caClient = this.GetClient();
 
             CertificateInfoModel retrievedCertModel = caClient.GetCertificateForAddress(address);
+
+            var certParser = new X509CertificateParser();
+            X509Certificate certificate = certParser.ReadCertificate(Convert.FromBase64String(retrievedCertModel.CertificateContentDer));
+
+            return certificate;
+        }
+
+        public X509Certificate GetCertificateForPubKey(string pubKey)
+        {
+            CaClient caClient = this.GetClient();
+
+            CertificateInfoModel retrievedCertModel = caClient.GetCertificateForPubKeyHash(pubKey);
 
             var certParser = new X509CertificateParser();
             X509Certificate certificate = certParser.ReadCertificate(Convert.FromBase64String(retrievedCertModel.CertificateContentDer));

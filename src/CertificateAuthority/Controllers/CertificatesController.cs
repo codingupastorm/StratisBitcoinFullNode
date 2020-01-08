@@ -132,6 +132,28 @@ namespace CertificateAuthority.Controllers
             }
         }
 
+        /// <summary>Finds issued certificate by pubkey and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
+        [HttpPost("get_certificate_for_pubkey_hash")]
+        [ProducesResponseType(typeof(CertificateInfoModel), 200)]
+        public ActionResult<CertificateInfoModel> GetCertificateByPubKey([FromBody]CredentialsModelWithPubKeyHashModel model)
+        {
+            var data = new CredentialsAccessWithModel<CredentialsModelWithPubKeyHashModel>(model, AccountAccessFlags.AccessAnyCertificate);
+
+            try
+            {
+                CertificateInfoModel certificate = this.caCertificateManager.GetCertificateByPubKeyHash(data);
+
+                if (certificate == null)
+                    return StatusCode(StatusCodes.Status404NotFound);
+
+                return certificate;
+            }
+            catch (InvalidCredentialsException)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden);
+            }
+        }
+
         /// <summary>Provides collection of all issued certificates. AccessAnyCertificate access level is required.</summary>
         /// <response code="201">Collection of <see cref="CertificateInfoModel"/> instances."/>.</response>
         [HttpPost("get_all_certificates")]
@@ -159,9 +181,9 @@ namespace CertificateAuthority.Controllers
             var data = new CredentialsAccessWithModel<GenerateCertificateSigningRequestModel>(model, AccountAccessFlags.IssueCertificates);
 
             byte[] oid141 = Encoding.UTF8.GetBytes(data.Model.Address);
+            byte[] oid142 = Convert.FromBase64String(data.Model.TransactionSigningPubKeyHash);
 
             byte[] pubKeyBytes = Convert.FromBase64String(data.Model.PubKey);
-
             X9ECParameters ecdsaCurve = ECNamedCurveTable.GetByName("secp256k1");
             var ecdsaDomainParams = new ECDomainParameters(ecdsaCurve.Curve, ecdsaCurve.G, ecdsaCurve.N, ecdsaCurve.H, ecdsaCurve.GetSeed());
             var q = new X9ECPoint(ecdsaCurve.Curve, pubKeyBytes);
@@ -172,7 +194,7 @@ namespace CertificateAuthority.Controllers
             {
                 string subjectName = $"CN={data.Model.Address}";
 
-                Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(subjectName, publicKey, new string[0], oid141, pubKeyBytes);
+                Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(subjectName, publicKey, new string[0], oid141, oid142);
 
                 // Important workaround - fill in a dummy signature so that when the CSR is reconstituted on the far side, the decoding does not fail with DerNull errors.
                 unsignedCsr.SignRequest(new byte[] { });

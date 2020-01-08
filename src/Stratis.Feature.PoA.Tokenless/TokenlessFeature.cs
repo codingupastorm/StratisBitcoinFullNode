@@ -79,15 +79,15 @@ namespace Stratis.Feature.PoA.Tokenless
             if (options.EnablePermissionedMembership)
             {
                 await this.revocationChecker.InitializeAsync().ConfigureAwait(false);
-                await this.certificatesManager.InitializeAsync().ConfigureAwait(false);
+                // We do not need to initialize the CertificatesManager here like it would have been in the regular PoA feature, because the TokenlessWalletManager is now responsible for ensuring a client certificate is created instead.
             }
 
             this.miner.InitializeMining();
 
-            // Initialize the CA public key / federaton member voting loop.
+            // Initialize the CA public key / federation member voting loop.
             this.caPubKeysLoop = this.asyncProvider.CreateAndRunAsyncLoop("PeriodicCAKeys", (cancellation) =>
             {
-                this.SynchoronizeMembers();
+                this.SynchronizeMembers();
 
                 return Task.CompletedTask;
             },
@@ -96,7 +96,7 @@ namespace Stratis.Feature.PoA.Tokenless
             startAfter: TimeSpans.Minute);
         }
 
-        private void SynchoronizeMembers()
+        private void SynchronizeMembers()
         {
             List<PubKey> allowedMembers = this.certificatesManager.GetCertificatePublicKeys();
             List<IFederationMember> currentMembers = this.federationManager.GetFederationMembers();

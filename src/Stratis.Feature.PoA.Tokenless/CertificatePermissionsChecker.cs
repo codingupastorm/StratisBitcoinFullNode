@@ -49,7 +49,8 @@ namespace Stratis.Feature.PoA.Tokenless
 
         private X509Certificate GetCertificateFromCA(uint160 address)
         {
-            return this.certificatesManager.GetCertificateForAddress(address.ToBase58Address(this.network));
+            // TODO: Verify the encoding here vs what gets persisted to the CA database for the transaction signing pubkey hash
+            return this.certificatesManager.GetCertificateForPubKey(address.ToString());
         }
 
         public static bool ValidateCertificateHasPermission(X509Certificate certificate)

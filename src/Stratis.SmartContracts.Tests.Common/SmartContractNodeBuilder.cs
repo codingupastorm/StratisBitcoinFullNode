@@ -56,8 +56,9 @@ namespace Stratis.SmartContracts.Tests.Common
 
             using (var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder, "-password=test", $"-mnemonic={ mnemonics[nodeIndex] }", "-certificatepassword=test" }))
             {
-                var walletManager = new TokenlessWalletManager(network, settings.DataFolder, new TokenlessWalletSettings(settings));
-                walletManager.Initialize();
+                // TODO: Similar problem to the TokenlessD daemon - need to somehow supply a CertificatesManager here
+                //var walletManager = new TokenlessWalletManager(network, settings.DataFolder, new TokenlessWalletSettings(settings));
+                //walletManager.Initialize();
 
                 var tool = new KeyTool(settings.DataFolder);
                 tool.SavePrivateKey(network.FederationKeys[nodeIndex], KeyType.FederationKey);

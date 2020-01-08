@@ -49,7 +49,7 @@ namespace CertificateAuthority
         public const string CaCertFilename = "CaCertificate.crt";
 
         public const string P2pkhExtensionOid = "1.4.1";
-        public const string PubKeyExtensionOid = "1.4.2";
+        public const string TransactionSigningPubKeyHashExtensionOid = "1.4.2";
         public const string SendPermission = "1.4.3";
 
         public CaCertificatesManager(DataCacheLayer cache, Settings settings)
@@ -150,7 +150,8 @@ namespace CertificateAuthority
             X509Certificate certificateFromReq = IssueCertificateFromRequest(certRequest, caCertificate, caKey, new string[0], new[] { KeyPurposeID.AnyExtendedKeyUsage });
 
             string p2pkh = Encoding.UTF8.GetString(ExtractExtensionFromCsr(certRequest.GetCertificationRequestInfo().Attributes, P2pkhExtensionOid));
-            var pubKey = new PubKey(ExtractExtensionFromCsr(certRequest.GetCertificationRequestInfo().Attributes, PubKeyExtensionOid));
+            string transactionSigningPubKeyHash = Encoding.UTF8.GetString(ExtractExtensionFromCsr(certRequest.GetCertificationRequestInfo().Attributes, TransactionSigningPubKeyHashExtensionOid));
+            //var blockSigningPubKey = new PubKey(ExtractExtensionFromCsr(certRequest.GetCertificationRequestInfo().Attributes, BlockSigningPubKeyExtensionOid));
 
             var tempCert = ConvertCertificate(certificateFromReq, GetSecureRandom());
 
@@ -159,7 +160,8 @@ namespace CertificateAuthority
                 Status = CertificateStatus.Good,
                 Thumbprint = tempCert.Thumbprint,
                 Address = p2pkh,
-                PubKey = pubKey.ToHex(),
+                TransactionSigningPubKeyHash = transactionSigningPubKeyHash,
+                //BlockSigningPubKey = blockSigningPubKey.ToHex(),
                 CertificateContentDer = Convert.ToBase64String(certificateFromReq.GetEncoded()),
                 IssuerAccountId = creatorId
             };
@@ -186,7 +188,7 @@ namespace CertificateAuthority
             AsymmetricKeyParameter publicKey = certificateSigningRequest.GetPublicKey();
 
             byte[] oid141 = ExtractExtensionFromCsr(certificationRequestInfo.Attributes, P2pkhExtensionOid);
-            byte[] oid142 = ExtractExtensionFromCsr(certificationRequestInfo.Attributes, PubKeyExtensionOid);
+            byte[] oid142 = ExtractExtensionFromCsr(certificationRequestInfo.Attributes, TransactionSigningPubKeyHashExtensionOid);
 
             X509Certificate certificate = GenerateCertificate(random,
                 subjectName, publicKey, subjectSerialNumber, subjectAlternativeNames,
@@ -378,7 +380,7 @@ namespace CertificateAuthority
         private static void AddDltInformation(X509V3CertificateGenerator certificateGenerator, byte[] oid141, byte[] oid142)
         {
             certificateGenerator.AddExtension(P2pkhExtensionOid, false, new DerOctetString(oid141));
-            certificateGenerator.AddExtension(PubKeyExtensionOid, false, new DerOctetString(oid142));
+            certificateGenerator.AddExtension(TransactionSigningPubKeyHashExtensionOid, false, new DerOctetString(oid142));
             certificateGenerator.AddExtension(SendPermission, false, new byte[] {1});
         }
 
@@ -414,7 +416,7 @@ namespace CertificateAuthority
             {
                 // TODO: Technically there is an address associated with the CA's pubkey, should we use it?
                 Address = "",
-                PubKey = null,
+                TransactionSigningPubKeyHash = null,
                 CertificateContentDer = Convert.ToBase64String(this.caCertificate.GetEncoded()),
                 Id = 0,
                 IssuerAccountId = 0,
@@ -454,6 +456,14 @@ namespace CertificateAuthority
         public CertificateInfoModel GetCertificateByAddress(CredentialsAccessWithModel<CredentialsModelWithAddressModel> model)
         {
             return this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Certificates.SingleOrDefault(x => x.Address == model.Model.Address); });
+        }
+
+        /// <summary>
+        /// Finds issued certificate by pubkey and returns it or null if it wasn't found.
+        /// </summary>
+        public CertificateInfoModel GetCertificateByPubKeyHash(CredentialsAccessWithModel<CredentialsModelWithPubKeyHashModel> model)
+        {
+            return this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Certificates.SingleOrDefault(x => x.TransactionSigningPubKeyHash == model.Model.PubKeyHash); });
         }
 
         /// <summary>
@@ -499,8 +509,9 @@ namespace CertificateAuthority
                 dbContext.Update(certToEdit);
                 dbContext.SaveChanges();
 
-                if (!dbContext.Certificates.Any(c => c.PubKey == certToEdit.PubKey && certToEdit.Status != CertificateStatus.Revoked))
-                    this.repository.PublicKeys.Remove(certToEdit.PubKey);
+                // TODO: Is the intention to have an additional OID for the block signing key's pubkey or pubkey hash? If so, this will need to be modified to use a different (new) field on the certificate model
+                if (!dbContext.Certificates.Any(c => c.TransactionSigningPubKeyHash == certToEdit.TransactionSigningPubKeyHash && certToEdit.Status != CertificateStatus.Revoked))
+                    this.repository.PublicKeys.Remove(certToEdit.TransactionSigningPubKeyHash);
 
                 this.repository.RevokedCertificates.Add(thumbprint);
                 this.logger.Info("Certificate id {0}, thumbprint {1} was revoked.", certToEdit.Id, certToEdit.Thumbprint);
@@ -515,7 +526,7 @@ namespace CertificateAuthority
             IList values = new ArrayList();
 
             oids.Add(new DerObjectIdentifier(P2pkhExtensionOid));
-            oids.Add(new DerObjectIdentifier(PubKeyExtensionOid));
+            oids.Add(new DerObjectIdentifier(TransactionSigningPubKeyHashExtensionOid));
             oids.Add(new DerObjectIdentifier(SendPermission));
             values.Add(new X509Extension(true, new DerOctetString(oid141)));
             values.Add(new X509Extension(true, new DerOctetString(oid142)));
@@ -565,7 +576,7 @@ namespace CertificateAuthority
             IList values = new ArrayList();
 
             oids.Add(new DerObjectIdentifier(P2pkhExtensionOid));
-            oids.Add(new DerObjectIdentifier(PubKeyExtensionOid));
+            oids.Add(new DerObjectIdentifier(TransactionSigningPubKeyHashExtensionOid));
             oids.Add(new DerObjectIdentifier(SendPermission));
             values.Add(new X509Extension(true, new DerOctetString(oid141)));
             values.Add(new X509Extension(true, new DerOctetString(oid142)));

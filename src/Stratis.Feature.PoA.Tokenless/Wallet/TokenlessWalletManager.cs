@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using CertificateAuthority;
 using NBitcoin;
+using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
@@ -43,15 +45,19 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         public TokenlessWallet Wallet { get; private set; }
 
         private readonly Network network;
+        private readonly DataFolder dataFolder;
         private readonly FileStorage<TokenlessWallet> fileStorage;
         private ExtPubKey[] extPubKeys;
         private readonly TokenlessWalletSettings walletSettings;
+        private readonly CertificatesManager certificatesManager;
 
-        public TokenlessWalletManager(Network network, DataFolder dataFolder, TokenlessWalletSettings walletSettings)
+        public TokenlessWalletManager(Network network, DataFolder dataFolder, TokenlessWalletSettings walletSettings, CertificatesManager certificatesManager)
         {
             this.network = network;
-            this.fileStorage = new FileStorage<TokenlessWallet>(dataFolder.RootPath);
+            this.dataFolder = dataFolder;
+            this.fileStorage = new FileStorage<TokenlessWallet>(this.dataFolder.RootPath);
             this.walletSettings = walletSettings;
+            this.certificatesManager = certificatesManager;
         }
 
         public bool Initialize()
@@ -59,8 +65,9 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             bool walletOk = this.CheckWallet();
             bool blockSigningKeyFileOk = this.CheckBlockSigningKeyFile();
             bool transactionKeyFileOk = this.CheckTransactionSigningKeyFile();
+            bool certificateOk = this.CheckCertificate();
 
-            if (walletOk && blockSigningKeyFileOk && transactionKeyFileOk)
+            if (walletOk && blockSigningKeyFileOk && transactionKeyFileOk && certificateOk)
                 return true;
 
             Console.WriteLine($"Restart the daemon.");
@@ -266,24 +273,37 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         private bool CheckCertificate()
         {
-            var password = this.walletSettings.Password;
+            bool caOk = false;
+            bool clientOk = false;
 
-            if (!File.Exists(this.walletSettings.CertPath) || this.walletSettings.GenerateCertificate)
+            try
             {
-                if (password == null || this.walletSettings.UserFullName == null)
+                caOk = this.certificatesManager.LoadAuthorityCertificate();
+                clientOk = this.certificatesManager.LoadClientCertificate();
+            }
+            catch (CertificateConfigurationException certEx)
+            {
+                if (!caOk)
                 {
-                    Console.WriteLine($"Run this daemon with a -password=<password> argument and certificate details configured so that the client certificate ({CertificatesManager.ClientCertificateName}) can be requested.");
-                    //return false;
+                    Console.WriteLine(certEx.Message);
+
+                    return false;
                 }
-
-                Guard.Assert(this.Wallet != null);
-
-                // TODO: 4693 - Generate certificate request.
             }
-            else
-            {
-                // TODO: 4693 - Generate certificate request (Certificate validation).
-            }
+
+            if (clientOk && !this.walletSettings.GenerateCertificate)
+                return true;
+
+            if (!CheckPassword(CertificatesManager.ClientCertificateName))
+                return false;
+
+            // The certificate manager is responsible for creation and storage of the client certificate, the wallet manager is primarily responsible for providing the requisite private key.
+            Key privateKey = this.GetExtKey(this.walletSettings.Password, TokenlessWalletAccount.P2PCertificates).PrivateKey;
+            PubKey transactionSigningPubKey = this.GetExtKey(this.walletSettings.Password, TokenlessWalletAccount.TransactionSigning).PrivateKey.PubKey;
+
+            X509Certificate clientCert = this.certificatesManager.RequestNewCertificate(privateKey, transactionSigningPubKey);
+
+            File.WriteAllBytes(Path.Combine(this.dataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCert, privateKey, this.walletSettings.Password));
 
             return true;
         }
@@ -293,6 +313,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             if (string.IsNullOrEmpty(this.walletSettings.Password))
             {
                 Console.WriteLine($"Run this daemon with a -password=<password> argument so that the '{fileName}' file can be created.");
+
                 return false;
             }
 

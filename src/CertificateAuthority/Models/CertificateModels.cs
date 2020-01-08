@@ -16,9 +16,12 @@ namespace CertificateAuthority.Models
         public string Address { get; set; }
 
         /// <summary>
-        /// The public key corresponding to the private key of the certificate.
+        /// The public key hash corresponding to the certificate-bearing node's transaction signing key.
         /// </summary>
-        public string PubKey { get; set; }
+        /// <remarks>This is NOT the pubkey hash of the certificate's private key.</remarks>
+        public string TransactionSigningPubKeyHash { get; set; }
+
+        public string BlockSigningPubKey { get; set; }
 
         /// <summary>Certificate data encoded in DER format, converted to base64.</summary>
         public string CertificateContentDer { get; set; }
@@ -31,7 +34,7 @@ namespace CertificateAuthority.Models
 
         public override string ToString()
         {
-            return $"{nameof(this.Id)}:{this.Id},{nameof(this.Thumbprint)}:{this.Thumbprint},{nameof(this.Address)}:{this.Address},{nameof(this.PubKey)}:{this.PubKey}," +
+            return $"{nameof(this.Id)}:{this.Id},{nameof(this.Thumbprint)}:{this.Thumbprint},{nameof(this.Address)}:{this.Address},{nameof(this.TransactionSigningPubKeyHash)}:{this.TransactionSigningPubKeyHash}," +
                    $"{nameof(this.Status)}:{this.Status},{nameof(this.IssuerAccountId)}:{this.IssuerAccountId}," +
                    $"{nameof(this.RevokerAccountId)}:{this.RevokerAccountId}";
         }
