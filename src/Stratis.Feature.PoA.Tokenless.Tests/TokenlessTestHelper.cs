@@ -77,13 +77,13 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             foreach (Type ruleType in this.Network.Consensus.MempoolRules)
             {
                 if (ruleType == typeof(IsSmartContractWellFormedMempoolRule))
-                    yield return (IMempoolRule)Activator.CreateInstance(ruleType, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.CallDataSerializer);
+                    yield return new IsSmartContractWellFormedMempoolRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.CallDataSerializer);
                 else if (ruleType == typeof(NoDuplicateTransactionExistOnChainMempoolRule))
-                    yield return (IMempoolRule)Activator.CreateInstance(ruleType, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.blockRepository);
+                    yield return new NoDuplicateTransactionExistOnChainMempoolRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.blockRepository);
                 else if (ruleType == typeof(SenderInputMempoolRule))
-                    yield return (IMempoolRule)Activator.CreateInstance(ruleType, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.TokenlessSigner, this.CertificatePermissionsChecker);
+                    yield return new SenderInputMempoolRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.TokenlessSigner, this.CertificatePermissionsChecker);
                 else
-                    yield return (IMempoolRule)Activator.CreateInstance(ruleType, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory);
+                    throw new NotImplementedException($"No constructor is defined for '{ruleType.Name}'.");
             }
         }
     }
