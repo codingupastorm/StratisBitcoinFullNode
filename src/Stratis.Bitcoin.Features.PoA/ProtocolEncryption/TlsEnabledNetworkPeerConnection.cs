@@ -76,8 +76,8 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             this.peerCertificate = receivedCert;
 
-            // TODO: Handle false response
-            CaCertificatesManager.ValidateCertificateChain(this.certManager.AuthorityCertificate, this.peerCertificate);
+            if (!CaCertificatesManager.ValidateCertificateChain(this.certManager.AuthorityCertificate, this.peerCertificate))
+                return null;
 
             return this.stream;
         }
