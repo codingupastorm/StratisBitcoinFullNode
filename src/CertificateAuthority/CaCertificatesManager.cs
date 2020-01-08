@@ -33,7 +33,7 @@ using X509Extension = Org.BouncyCastle.Asn1.X509.X509Extension;
 namespace CertificateAuthority
 {
     public class CaCertificatesManager
-    {          
+    {
         private readonly DataCacheLayer repository;
 
         private readonly Settings settings;
@@ -59,7 +59,7 @@ namespace CertificateAuthority
         }
 
         public void Initialize()
-        {                     
+        {
         }
 
         public bool InitializeCertificateAuthority(string mnemonic, string password)
@@ -141,7 +141,7 @@ namespace CertificateAuthority
             byte[] requestRaw = System.Convert.FromBase64String(model.Model.CertificateRequestFileContents);
 
             var certRequest = new Pkcs10CertificationRequest(requestRaw);
-            
+
             return await this.IssueCertificate(certRequest, creator.Id);
         }
 
@@ -261,7 +261,7 @@ namespace CertificateAuthority
         {
             var certificateGenerator = new X509V3CertificateGenerator();
             certificateGenerator.SetSerialNumber(subjectSerialNumber);
-            
+
             var issuerDN = new X509Name(issuerName);
             certificateGenerator.SetIssuerDN(issuerDN);
 
@@ -519,7 +519,7 @@ namespace CertificateAuthority
             oids.Add(new DerObjectIdentifier(SendPermission));
             values.Add(new X509Extension(true, new DerOctetString(oid141)));
             values.Add(new X509Extension(true, new DerOctetString(oid142)));
-            values.Add(new X509Extension(true, new DerOctetString(new byte[] {1})));
+            values.Add(new X509Extension(true, new DerOctetString(new byte[] { 1 })));
 
 
             oids.Add(new DerObjectIdentifier(X509Extensions.SubjectAlternativeName.Id));
@@ -559,7 +559,7 @@ namespace CertificateAuthority
             return Convert.ToBase64String(signedCsr.GetDerEncoded());
         }
 
-        public static Pkcs10CertificationRequest CreateCertificateSigningRequest(string subjectName, AsymmetricCipherKeyPair subjectKeyPair, string[] subjectAlternativeNames, byte[] oid141,  byte[] oid142)
+        public static Pkcs10CertificationRequest CreateCertificateSigningRequest(string subjectName, AsymmetricCipherKeyPair subjectKeyPair, string[] subjectAlternativeNames, byte[] oid141, byte[] oid142)
         {
             IList oids = new ArrayList();
             IList values = new ArrayList();

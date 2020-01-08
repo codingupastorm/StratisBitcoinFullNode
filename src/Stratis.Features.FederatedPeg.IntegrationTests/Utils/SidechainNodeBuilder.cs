@@ -42,7 +42,7 @@ namespace Stratis.Features.FederatedPeg.IntegrationTests.Utils
 
             var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder });
             var tool = new KeyTool(settings.DataFolder);
-            tool.SavePrivateKey(key);
+            tool.SavePrivateKey(key, KeyType.FederationKey);
 
             return node;
         }
@@ -55,7 +55,7 @@ namespace Stratis.Features.FederatedPeg.IntegrationTests.Utils
 
             var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder });
             var tool = new KeyTool(settings.DataFolder);
-            tool.SavePrivateKey(key);
+            tool.SavePrivateKey(key, KeyType.FederationKey);
 
             return node;
         }

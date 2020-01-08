@@ -73,16 +73,24 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
             IEnumerable<string> certInfo = config.GetOrDefault<string>("certinfo", string.Empty, this.logger).Replace("\\,", "\0").Split(',').Select(t => t.Replace("\0", ",").Trim());
             this.CertificateAttributes = new Dictionary<string, string>();
+
             foreach ((string key, string value) in certInfo.Where(t => !string.IsNullOrEmpty(t)).Select(t => t.Split(':')).Select(a => (a[0].Trim(), string.Join(":", a.Skip(1)).Trim())))
                 this.CertificateAttributes[key] = value;
+
             this.UserFullName = config.GetOrDefault<string>("userfullname", null, this.logger);
+
             this.UserEMail = config.GetOrDefault<string>("useremail", null, this.logger);
+
             if (this.UserEMail != null && !IsEmail(this.UserEMail))
                 throw new ConfigurationException($"The supplied e-mail address ('{ this.UserEMail }') syntax is invalid.");
+
             this.UserTelephone = config.GetOrDefault<string>("userphone", null, this.logger);
+
             if (this.UserTelephone != null && !IsPhone(this.UserTelephone))
                 throw new ConfigurationException($"The supplied phone number ('{ this.UserTelephone }') syntax is invalid.");
+
             this.UserFacsimile = config.GetOrDefault<string>("userfax", null, this.logger);
+
             if (this.UserFacsimile != null && !IsPhone(this.UserFacsimile))
                 throw new ConfigurationException($"The supplied fax number ('{ this.UserFacsimile }') syntax is invalid.");
         }
@@ -157,7 +165,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         /// otherwise false.</returns>
         private static bool IsEmail(string email)
         {
-            if (email != null) 
+            if (email != null)
                 return Regex.IsMatch(email, matchEmailPattern);
 
             return false;
@@ -175,7 +183,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         /// <returns><c>True</c>, when phone number is not null and contains a valid phone number; otherwise false.</returns>
         private static bool IsPhone(string phone)
         {
-            if (phone != null) 
+            if (phone != null)
                 return Regex.IsMatch(phone, matchPhonePattern);
 
             return false;

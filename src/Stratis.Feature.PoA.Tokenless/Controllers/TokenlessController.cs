@@ -9,18 +9,18 @@ using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.Wallet.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.Wallet.Models;
-using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Utilities.JsonErrors;
 using Stratis.Bitcoin.Utilities.ModelStateErrors;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
+using Stratis.Feature.PoA.Tokenless.Core;
+using Stratis.Feature.PoA.Tokenless.Wallet;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Decompilation;
@@ -37,15 +37,13 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
     [Route("api/[controller]")]
     public class TokenlessController : Controller
     {
-        private readonly Network network;
+        private readonly ICoreComponent coreComponent;
         private readonly ITokenlessSigner tokenlessSigner;
+        private readonly ITokenlessWalletManager tokenlessWalletManager;
         private readonly ICallDataSerializer callDataSerializer;
         private readonly IAddressGenerator addressGenerator;
-        private readonly IConnectionManager connectionManager;
         private readonly IBroadcasterManager broadcasterManager;
         private readonly IMethodParameterStringSerializer methodParameterSerializer;
-        private readonly IBlockStore blockStore;
-        private readonly ChainIndexer chainIndexer;
         private readonly IStateRepositoryRoot stateRoot;
         private readonly IReceiptRepository receiptRepository;
         private readonly CSharpContractDecompiler contractDecompiler;
@@ -54,37 +52,33 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         private readonly ILogger logger;
 
         public TokenlessController(
-            Network network,
+            ICoreComponent coreComponent,
             ITokenlessSigner tokenlessSigner,
+            ITokenlessWalletManager tokenlessWalletManager,
             ICallDataSerializer callDataSerializer,
             IAddressGenerator addressGenerator,
-            IConnectionManager connectionManager,
             IBroadcasterManager broadcasterManager,
             IMethodParameterStringSerializer methodParameterSerializer,
-            IBlockStore blockStore,
             ChainIndexer chainIndexer,
             IStateRepositoryRoot stateRoot,
             IReceiptRepository receiptRepository,
             CSharpContractDecompiler contractDecompiler,
             IContractPrimitiveSerializer primitiveSerializer,
-            ISerializer serializer,
-            ILoggerFactory loggerFactory)
+            ISerializer serializer)
         {
-            this.network = network;
+            this.coreComponent = coreComponent;
             this.tokenlessSigner = tokenlessSigner;
+            this.tokenlessWalletManager = tokenlessWalletManager;
             this.callDataSerializer = callDataSerializer;
             this.addressGenerator = addressGenerator;
-            this.connectionManager = connectionManager;
             this.broadcasterManager = broadcasterManager;
             this.methodParameterSerializer = methodParameterSerializer;
-            this.blockStore = blockStore;
-            this.chainIndexer = chainIndexer;
             this.stateRoot = stateRoot;
             this.receiptRepository = receiptRepository;
             this.contractDecompiler = contractDecompiler;
             this.primitiveSerializer = primitiveSerializer;
             this.serializer = serializer;
-            this.logger = loggerFactory.CreateLogger(this.GetType());
+            this.logger = coreComponent.LoggerFactory.CreateLogger(this.GetType());
         }
 
         [Route("build/opreturn")]
@@ -96,13 +90,13 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
             try
             {
-                Transaction transaction = this.network.CreateTransaction();
+                Transaction transaction = this.coreComponent.Network.CreateTransaction();
                 Script outputScript = TxNullDataTemplate.Instance.GenerateScriptPubKey(model.OpReturnData);
                 transaction.Outputs.Add(new TxOut(Money.Zero, outputScript));
 
-                Key key = new Mnemonic(model.Mnemonic).DeriveExtKey().PrivateKey;
+                Key key = this.tokenlessWalletManager.LoadTransactionSigningKey();
 
-                this.tokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
+                this.tokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.coreComponent.Network));
 
                 // TODO-TL: Perhaps not use a Wallet Model here?
                 return Json(new WalletBuildTransactionModel
@@ -127,9 +121,9 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                 var methodParameters = ExtractMethodParameters(model.Parameters);
                 var contractTxData = new ContractTxData(0, 0, (Gas)0, model.ContractCode, methodParameters);
 
-                Transaction transaction = CreateAndSignTransaction(contractTxData, model.Mnemonic);
+                Transaction transaction = CreateAndSignTransaction(contractTxData);
 
-                return Json(BuildCreateContractTransactionResponse.Succeeded(transaction, 0, this.addressGenerator.GenerateAddress(transaction.GetHash(), 0).ToBase58Address(this.network)));
+                return Json(BuildCreateContractTransactionResponse.Succeeded(transaction, 0, this.addressGenerator.GenerateAddress(transaction.GetHash(), 0).ToBase58Address(this.coreComponent.Network)));
             }
             catch (MethodParameterStringSerializerException exception)
             {
@@ -149,9 +143,9 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             try
             {
                 var methodParameters = ExtractMethodParameters(model.Parameters);
-                var contractTxData = new ContractTxData(0, 0, (Gas)0, model.Address.ToUint160(this.network), model.MethodName, methodParameters);
+                var contractTxData = new ContractTxData(0, 0, (Gas)0, model.Address.ToUint160(this.coreComponent.Network), model.MethodName, methodParameters);
 
-                Transaction transaction = CreateAndSignTransaction(contractTxData, model.Mnemonic);
+                Transaction transaction = CreateAndSignTransaction(contractTxData);
 
                 return Json(BuildCallContractTransactionResponse.Succeeded(model.MethodName, transaction, 0));
             }
@@ -168,9 +162,9 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
         [Route("send")]
         [HttpPost]
-        public async Task<IActionResult> SendTransactionAsync([FromBody] string transactionHex)
+        public async Task<IActionResult> SendTransactionAsync([FromBody] SendTransactionModel model)
         {
-            if (!this.connectionManager.ConnectedPeers.Any())
+            if (!this.coreComponent.ConnectionManager.ConnectedPeers.Any())
             {
                 this.logger.LogTrace("(-)[NO_CONNECTED_PEERS]");
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.Forbidden, "Can't send transaction: sending transaction requires at least one connection!", string.Empty);
@@ -178,12 +172,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
             try
             {
-                Transaction transaction = this.network.CreateTransaction(transactionHex);
-
-                var model = new WalletSendTransactionModel
-                {
-                    TransactionId = transaction.GetHash()
-                };
+                Transaction transaction = this.coreComponent.Network.CreateTransaction(model.TransactionHex);
 
                 // TODO: Show some outputs or something?
 
@@ -197,7 +186,10 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                     return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, transactionBroadCastEntry.ErrorMessage, "Transaction Exception");
                 }
 
-                return this.Json(model);
+                return this.Json(new WalletSendTransactionModel
+                {
+                    TransactionId = transaction.GetHash()
+                });
             }
             catch (Exception e)
             {
@@ -227,7 +219,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                 return ModelStateErrors.BuildErrorResponse(this.ModelState);
             }
 
-            uint160 addressNumeric = request.ContractAddress.ToUint160(this.network);
+            uint160 addressNumeric = request.ContractAddress.ToUint160(this.coreComponent.Network);
             byte[] storageValue = this.stateRoot.GetStorageValue(addressNumeric, Encoding.UTF8.GetBytes(request.StorageKey));
 
             if (storageValue == null)
@@ -242,7 +234,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             object interpretedStorageValue = this.InterpretStorageValue(request.DataType, storageValue);
 
             // Use MethodParamStringSerializer to serialize the interpreted object to a string
-            string serialized = MethodParameterStringSerializer.Serialize(interpretedStorageValue, this.network);
+            string serialized = MethodParameterStringSerializer.Serialize(interpretedStorageValue, this.coreComponent.Network);
             return this.Json(serialized);
         }
 
@@ -270,15 +262,15 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
                 if (!receipt.Logs.Any())
                 {
-                    return this.Json(new ReceiptResponse(receipt, new List<LogResponse>(), this.network));
+                    return this.Json(new ReceiptResponse(receipt, new List<LogResponse>(), this.coreComponent.Network));
                 }
 
                 byte[] contractCode = this.stateRoot.GetCode(address);
                 var assembly = Assembly.Load(contractCode);
-                var deserializer = new ApiLogDeserializer(this.primitiveSerializer, this.network);
+                var deserializer = new ApiLogDeserializer(this.primitiveSerializer, this.coreComponent.Network);
 
                 List<LogResponse> logResponses = this.MapLogResponses(receipt, assembly, deserializer);
-                var receiptResponse = new ReceiptResponse(receipt, logResponses, this.network);
+                var receiptResponse = new ReceiptResponse(receipt, logResponses, this.coreComponent.Network);
 
                 return this.Json(receiptResponse);
             }
@@ -313,7 +305,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         {
             try
             {
-                uint160 address = contractAddress.ToUint160(this.network);
+                uint160 address = contractAddress.ToUint160(this.coreComponent.Network);
 
                 byte[] contractCode = this.stateRoot.GetCode(address);
 
@@ -321,7 +313,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                     return ErrorHelpers.BuildErrorResponse(HttpStatusCode.InternalServerError, "No code exists", $"No contract execution code exists at {address}");
 
                 var assembly = Assembly.Load(contractCode);
-                var deserializer = new ApiLogDeserializer(this.primitiveSerializer, this.network);
+                var deserializer = new ApiLogDeserializer(this.primitiveSerializer, this.coreComponent.Network);
                 List<Receipt> receipts = this.SearchReceipts(contractAddress, eventName);
 
                 var result = new List<ReceiptResponse>();
@@ -330,7 +322,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                 {
                     List<LogResponse> logResponses = this.MapLogResponses(receipt, assembly, deserializer);
 
-                    var receiptResponse = new ReceiptResponse(receipt, logResponses, this.network);
+                    var receiptResponse = new ReceiptResponse(receipt, logResponses, this.coreComponent.Network);
 
                     result.Add(receiptResponse);
                 }
@@ -357,7 +349,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         {
             try
             {
-                uint160 addressNumeric = contractAddress.ToUint160(this.network);
+                uint160 addressNumeric = contractAddress.ToUint160(this.coreComponent.Network);
                 byte[] contractCode = this.stateRoot.GetCode(addressNumeric);
 
                 if (contractCode == null || !contractCode.Any())
@@ -391,18 +383,18 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         /// Creates and signs the transaction.
         /// </summary>
         /// <param name="contractTxData">The contract data to be serialized.</param>
-        /// <param name="mnemonic">The mnemonic to derive the ExtKey.</param>
+        /// 
         /// <returns>The signed transaction</returns>
-        private Transaction CreateAndSignTransaction(ContractTxData contractTxData, string mnemonic)
+        private Transaction CreateAndSignTransaction(ContractTxData contractTxData)
         {
             byte[] outputScript = this.callDataSerializer.Serialize(contractTxData);
 
-            Transaction transaction = this.network.CreateTransaction();
+            Transaction transaction = this.coreComponent.Network.CreateTransaction();
             transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
 
-            Key key = new Mnemonic(mnemonic).DeriveExtKey().PrivateKey;
+            Key key = this.tokenlessWalletManager.LoadTransactionSigningKey();
 
-            this.tokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
+            this.tokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.coreComponent.Network));
 
             return transaction;
         }
@@ -455,7 +447,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
             foreach (Log log in receipt.Logs)
             {
-                var logResponse = new LogResponse(log, this.network);
+                var logResponse = new LogResponse(log, this.coreComponent.Network);
 
                 logResponses.Add(logResponse);
 
@@ -486,12 +478,12 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         private List<Receipt> SearchReceipts(string contractAddress, string eventName)
         {
             // Build the bytes we can use to check for this event.
-            uint160 addressUint160 = contractAddress.ToUint160(this.network);
+            uint160 addressUint160 = contractAddress.ToUint160(this.coreComponent.Network);
             byte[] addressBytes = addressUint160.ToBytes();
             byte[] eventBytes = Encoding.UTF8.GetBytes(eventName);
 
             // Loop through all headers and check bloom.
-            IEnumerable<ChainedHeader> blockHeaders = this.chainIndexer.EnumerateToTip(this.chainIndexer.Genesis);
+            IEnumerable<ChainedHeader> blockHeaders = this.coreComponent.ChainIndexer.EnumerateToTip(this.coreComponent.ChainIndexer.Genesis);
             List<ChainedHeader> matches = new List<ChainedHeader>();
             foreach (ChainedHeader chainedHeader in blockHeaders)
             {
@@ -504,7 +496,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             List<NBitcoin.Block> blocks = new List<NBitcoin.Block>();
             foreach (ChainedHeader chainedHeader in matches)
             {
-                blocks.Add(this.blockStore.GetBlock(chainedHeader.HashBlock));
+                blocks.Add(this.coreComponent.BlockStore.GetBlock(chainedHeader.HashBlock));
             }
 
             // For each block, get all receipts, and if they match, add to list to return.

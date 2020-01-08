@@ -33,7 +33,7 @@ namespace Stratis.SmartContracts.Tests.Common
             var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder });
 
             var tool = new KeyTool(settings.DataFolder);
-            tool.SavePrivateKey(network.FederationKeys[nodeIndex]);
+            tool.SavePrivateKey(network.FederationKeys[nodeIndex], KeyType.FederationKey);
 
             return node;
         }
@@ -42,7 +42,13 @@ namespace Stratis.SmartContracts.Tests.Common
         {
             string dataFolder = this.GetNextDataFolderName();
 
-            CoreNode node = this.CreateNode(new FullTokenlessRunner(dataFolder, network, this.TimeProvider), "poa.conf");
+            var configParameters = new NodeConfigParameters()
+            {
+                { "caurl" , "http://localhost:5050" }
+            };
+
+            CoreNode node = this.CreateNode(new FullTokenlessRunner(dataFolder, network, this.TimeProvider), "poa.conf", configParameters: configParameters);
+
             Mnemonic[] mnemonics = {
                     new Mnemonic("lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom"),
                     new Mnemonic("idle power swim wash diesel blouse photo among eager reward govern menu"),
@@ -54,7 +60,7 @@ namespace Stratis.SmartContracts.Tests.Common
                 walletManager.Initialize();
 
                 var tool = new KeyTool(settings.DataFolder);
-                tool.SavePrivateKey(network.FederationKeys[nodeIndex]);
+                tool.SavePrivateKey(network.FederationKeys[nodeIndex], KeyType.FederationKey);
 
                 if (authorityCertificate != null && clientCertificate != null)
                 {
@@ -74,7 +80,7 @@ namespace Stratis.SmartContracts.Tests.Common
             var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder });
 
             var tool = new KeyTool(settings.DataFolder);
-            tool.SavePrivateKey(network.FederationKeys[nodeIndex]);
+            tool.SavePrivateKey(network.FederationKeys[nodeIndex], KeyType.FederationKey);
             return node;
         }
 

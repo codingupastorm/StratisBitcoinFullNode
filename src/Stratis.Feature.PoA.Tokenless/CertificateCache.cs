@@ -28,7 +28,8 @@ namespace Stratis.Feature.PoA.Tokenless
 
         public CertificateCache(DataFolder dataFolder)
         {
-            this.certFolderPath = dataFolder.RootPath + "/certs";
+            this.certFolderPath = Path.Combine(dataFolder.RootPath, "certs");
+
             if (!Directory.Exists(this.certFolderPath))
                 Directory.CreateDirectory(this.certFolderPath);
         }
