@@ -59,7 +59,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             this.MempoolSettings = new MempoolSettings(this.NodeSettings) { MempoolExpiry = Bitcoin.Features.MemoryPool.MempoolValidator.DefaultMempoolExpiry };
             this.TokenlessSigner = new TokenlessSigner(this.Network, new SenderRetriever());
             
-            this.certificatePermissionsChecker = new Mock<ICertificatePermissionsChecker>(); this.certificatePermissionsChecker.Setup(c => c.CheckSenderCertificateHasPermission(It.IsAny<uint160>())).Returns(true);
+            this.certificatePermissionsChecker = new Mock<ICertificatePermissionsChecker>(); 
+            this.certificatePermissionsChecker.Setup(c => c.CheckSenderCertificateHasPermission(It.IsAny<uint160>())).Returns(true);
 
             this.BlockPolicyEstimator = new BlockPolicyEstimator(this.MempoolSettings, this.LoggerFactory, this.NodeSettings);
             this.Mempool = new TokenlessMempool(this.BlockPolicyEstimator, this.LoggerFactory, this.NodeSettings);
