@@ -39,9 +39,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public readonly TokenlessMempoolValidator MempoolValidator;
         public readonly ITokenlessSigner TokenlessSigner;
         public readonly ICertificatePermissionsChecker CertificatePermissionsChecker;
-        public readonly KeyValueRepository KeyValueRepository;
-        public readonly RevocationChecker RevocationChecker;
-        public readonly CertificatesManager CertificatesManager;
 
         public TokenlessTestHelper()
         {
@@ -62,13 +59,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             this.MempoolSettings = new MempoolSettings(this.NodeSettings) { MempoolExpiry = Bitcoin.Features.MemoryPool.MempoolValidator.DefaultMempoolExpiry };
             this.TokenlessSigner = new TokenlessSigner(this.Network, new SenderRetriever());
             
-            var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
-            var keyValueStore = new KeyValueRepositoryStore(repositorySerializer, this.NodeSettings.DataFolder, this.LoggerFactory, this.DateTimeProvider);
-            var kvRepo = new KeyValueRepository(keyValueStore, repositorySerializer);
-
-            this.RevocationChecker = new RevocationChecker(this.NodeSettings, kvRepo, this.LoggerFactory, this.DateTimeProvider);
-            this.CertificatesManager = new CertificatesManager(this.NodeSettings.DataFolder, this.NodeSettings, this.LoggerFactory, this.RevocationChecker, this.Network);
-            this.CertificatePermissionsChecker = new CertificatePermissionsChecker(new CertificateCache(this.NodeSettings.DataFolder), this.CertificatesManager, this.Network);
+            this.certificatePermissionsChecker = new Mock<ICertificatePermissionsChecker>(); this.certificatePermissionsChecker.Setup(c => c.CheckSenderCertificateHasPermission(It.IsAny<uint160>())).Returns(true);
 
             this.BlockPolicyEstimator = new BlockPolicyEstimator(this.MempoolSettings, this.LoggerFactory, this.NodeSettings);
             this.Mempool = new TokenlessMempool(this.BlockPolicyEstimator, this.LoggerFactory, this.NodeSettings);
