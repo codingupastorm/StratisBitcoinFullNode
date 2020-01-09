@@ -36,7 +36,9 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
 
             var config = new NodeConfigParameters
             {
-                { "-certificatepassword", "password" }
+                { "-certificatepassword", "password" },
+                { "-capassword", "4815162342" },
+                { "-caaccountid", "1" }
             };
 
             CoreNode node = this.CreateNode(new PoANodeRunner(dataFolder, network, this.TimeProvider), "poa.conf", configParameters: config);
@@ -68,7 +70,9 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
 
             var config = new NodeConfigParameters
             {
-                { "-certificatepassword", "password" }
+                { "-certificatepassword", "password" },
+                { "-capassword", "4815162342" },
+                { "-caaccountid", "1" }
             };
 
             CoreNode node = this.CreateNode(new PoANodeRunner(dataFolder, network, this.TimeProvider), "poa.conf", configParameters: config);
