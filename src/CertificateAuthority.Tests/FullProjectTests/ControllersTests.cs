@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.TestHost;
 using NBitcoin;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Pkcs;
+using Org.BouncyCastle.X509;
 using Xunit;
 using AccountAccessFlags = CertificateAuthority.Models.AccountAccessFlags;
 using AccountInfo = CertificateAuthority.Models.AccountInfo;
@@ -127,7 +128,17 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             this.certificatesController.InitializeCertificateAuthority(new CredentialsModelWithMnemonicModel("young shoe immense usual faculty edge habit misery swarm tape viable toddler", "node", credentials1.AccountId, credentials1.Password));
 
-            string clientName = "O=Stratis, CN=DLT Node Run By Iain McCain, OU=Administration";
+            var caCertModel = this.certificatesController.GetCaCertificate(credentials1).Value;
+
+            var certParser = new X509CertificateParser();
+
+            X509Certificate caCert = certParser.ReadCertificate(Convert.FromBase64String(caCertModel.CertificateContentDer));
+
+            Assert.NotNull(caCert);
+
+            // We need to be absolutely sure that the components of the subject DN are in the same order in a CSR versus the resulting certificate.
+            // Otherwise the certificate chain will fail validation, and there is currently no workaround in BouncyCastle.
+            string clientName = "O=Stratis,CN=DLT Node Run By Iain McCain,OU=Administration";
             int clientAddressIndex = 0;
             string hdPath = $"m/44'/105'/0'/0/{clientAddressIndex}";
 
@@ -145,6 +156,10 @@ namespace CertificateAuthority.Tests.FullProjectTests
             // IssueCertificate_UsingRequestString
             CertificateInfoModel certificate1 = (await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
                 new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest.GetDerEncoded()), credentials1.AccountId, credentials1.Password))).Value;
+
+            X509Certificate cert1 = certParser.ReadCertificate(Convert.FromBase64String(certificate1.CertificateContentDer));
+
+            Assert.True(caCert.SubjectDN.Equivalent(cert1.IssuerDN));
 
             Assert.Equal(clientAddress, certificate1.Address);
             Assert.Equal(clientPrivateKey.PubKey, new PubKey(certificate1.PubKey));
@@ -259,6 +274,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             Assert.Equal(clientAddress, certificate4.Address);
             Assert.Equal(clientPrivateKey3.PubKey, new PubKey(certificate4.PubKey));
+
+            Assert.True(CaCertificatesManager.ValidateCertificateChain(caCert, cert1));
         }
 
         [Fact]
