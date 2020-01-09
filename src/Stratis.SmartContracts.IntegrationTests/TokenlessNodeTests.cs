@@ -10,6 +10,7 @@ using CertificateAuthority.Tests.FullProjectTests.Helpers;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
@@ -271,9 +272,13 @@ namespace Stratis.SmartContracts.IntegrationTests
 
         private IWebHostBuilder CreateWebHostBuilder()
         {
+            var settings = new Settings();
+            settings.Initialize(new string[] { $"-serverurls={this.BaseAddress}" });
+
             IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseUrls(this.BaseAddress);
+            builder.UseUrls(settings.ServerUrls);
             builder.UseStartup<TestOnlyStartup>();
+            builder.ConfigureServices((services) => { services.AddSingleton(settings); });
 
             return builder;
         }
