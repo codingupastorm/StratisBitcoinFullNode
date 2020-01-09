@@ -30,6 +30,14 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         private readonly IDateTimeProvider dateTimeProvider;
 
+        private readonly TextFileConfiguration configuration;
+
+        private string caUrl;
+
+        private string caPassword;
+
+        private int caAccountId;
+
         private Dictionary<string, RevocationRecord> revokedCertsCache;
 
         private CaClient client;
@@ -47,19 +55,21 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.cancellation = new CancellationTokenSource();
             this.dateTimeProvider = dateTimeProvider;
-
+            
             // Ensure that the cache is never null, but it actually gets initialised from the repository later.
             this.revokedCertsCache = new Dictionary<string, RevocationRecord>();
+
+            this.configuration = nodeSettings.ConfigReader;
         }
 
         public async Task InitializeAsync()
         {
-            TextFileConfiguration config = this.nodeSettings.ConfigReader;
-            string certificateAuthorityUrl = config.GetOrDefault<string>("caurl", "https://localhost:5001");
-            int certificateAccountId = config.GetOrDefault<int>("certaccountid", -1);
-            string certificateAccountPassword = config.GetOrDefault<string>("certaccountpassword", "");
+            // TODO: Create a common settings class that can be injected
+            this.caUrl = this.configuration.GetOrDefault<string>("caurl", "https://localhost:5001");
+            this.caPassword = this.configuration.GetOrDefault<string>(CertificatesManager.CaPasswordKey, null);
+            this.caAccountId = this.configuration.GetOrDefault<int>(CertificatesManager.CaAccountIdKey, 0);
 
-            this.client = new CaClient(new Uri(certificateAuthorityUrl), new HttpClient(), certificateAccountId, certificateAccountPassword);
+            this.client = this.GetClient();
 
             this.revokedCertsCache = this.kvRepo.LoadValueJson<Dictionary<string, RevocationRecord>>(kvRepoKey);
 
@@ -70,6 +80,16 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             }
 
             this.cacheUpdatingTask = this.UpdateRevokedCertsCacheContinuouslyAsync();
+        }
+
+        public CaClient GetClient()
+        {
+            // TODO: This is a massive stupid hack to test with self signed certs.
+            var handler = new HttpClientHandler();
+            handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
+            var httpClient = new HttpClient(handler);
+
+            return new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
         }
 
         /// <summary>

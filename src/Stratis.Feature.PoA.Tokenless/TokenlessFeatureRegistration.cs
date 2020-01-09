@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NBitcoin;
 using Stratis.Bitcoin.Base;
@@ -16,6 +17,7 @@ using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.Wallet.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.Mempool;
@@ -92,13 +94,13 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<ICertificatePermissionsChecker, CertificatePermissionsChecker>();
                         services.AddSingleton<ICertificateCache, CertificateCache>();
 
-                        //var options = (PoAConsensusOptions)network.Consensus.Options;
-                        //if (options.EnablePermissionedMembership)
-                        //{
-                        //    ServiceDescriptor descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(INetworkPeerFactory));
-                        //    services.Remove(descriptor);
-                        //    services.AddSingleton<INetworkPeerFactory, TlsEnabledNetworkPeerFactory>();
-                        //}
+                        var options = (PoAConsensusOptions)network.Consensus.Options;
+                        if (options.EnablePermissionedMembership)
+                        {
+                            ServiceDescriptor descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(INetworkPeerFactory));
+                            services.Remove(descriptor);
+                            services.AddSingleton<INetworkPeerFactory, TlsEnabledNetworkPeerFactory>();
+                        }
                     });
             });
 

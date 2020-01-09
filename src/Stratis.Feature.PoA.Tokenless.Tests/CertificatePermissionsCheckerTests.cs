@@ -1,5 +1,7 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿using System.IO;
+using Org.BouncyCastle.X509;
 using Xunit;
+using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 
 namespace Stratis.Feature.PoA.Tokenless.Tests
 {
@@ -8,7 +10,9 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         [Fact]
         public void CheckCertificateHasPermissionFails()
         {
-            var cert = new X509Certificate2("Certificates/cert.crt");
+            var certParser = new X509CertificateParser();
+            X509Certificate cert = certParser.ReadCertificate(File.ReadAllBytes("Certificates/cert.crt"));
+
             Assert.False(CertificatePermissionsChecker.ValidateCertificateHasPermission(cert));
             Assert.False(CertificatePermissionsChecker.ValidateCertificateHasPermission(null));
         }

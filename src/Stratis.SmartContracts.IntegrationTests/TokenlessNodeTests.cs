@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Net.Http;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using CertificateAuthority;
@@ -12,6 +11,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
@@ -64,24 +64,12 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Get Authority Certificate.
                 Settings settings = (Settings)server.Services.GetService(typeof(Settings));
                 var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
-                X509Certificate2 ac = new X509Certificate2(File.ReadAllBytes(acLocation));
-
-                // Create 2 new client certificates.
-                var privKey1 = new Key();
-                PubKey pubKey1 = privKey1.PubKey;
-                BitcoinPubKeyAddress address1 = pubKey1.GetAddress(this.network);
-                X509Certificate2 certificate1 = IssueCertificate(client, privKey1, pubKey1, address1);
-                Assert.NotNull(certificate1);
-
-                var privKey2 = new Key();
-                PubKey pubKey2 = privKey2.PubKey;
-                BitcoinPubKeyAddress address2 = pubKey2.GetAddress(this.network);
-                X509Certificate2 certificate2 = IssueCertificate(client, privKey2, pubKey2, address2);
-                Assert.NotNull(certificate2);
+                var certParser = new X509CertificateParser();
+                X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
 
                 // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.  
-                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, certificate1);
-                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, certificate2);
+                (CoreNode node1, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                (CoreNode node2, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
 
                 node1.Start();
                 node2.Start();
@@ -114,24 +102,12 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Get Authority Certificate.
                 Settings settings = (Settings)server.Services.GetService(typeof(Settings));
                 var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
-                X509Certificate2 ac = new X509Certificate2(File.ReadAllBytes(acLocation));
-
-                // Create 2 new client certificates.
-                var privKey1 = new Key();
-                PubKey pubKey1 = privKey1.PubKey;
-                BitcoinPubKeyAddress address1 = pubKey1.GetAddress(this.network);
-                X509Certificate2 certificate1 = IssueCertificate(client, privKey1, pubKey1, address1);
-                Assert.NotNull(certificate1);
-
-                var privKey2 = new Key();
-                PubKey pubKey2 = privKey2.PubKey;
-                BitcoinPubKeyAddress address2 = pubKey2.GetAddress(this.network);
-                X509Certificate2 certificate2 = IssueCertificate(client, privKey2, pubKey2, address2);
-                Assert.NotNull(certificate2);
+                var certParser = new X509CertificateParser();
+                X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
 
                 // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.  
-                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, certificate1);
-                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, certificate2);
+                (CoreNode node1, Key privKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                (CoreNode node2, Key privKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
 
                 node1.Start();
                 node2.Start();
@@ -173,23 +149,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Get Authority Certificate.
                 Settings settings = (Settings)server.Services.GetService(typeof(Settings));
                 var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
-                X509Certificate2 ac = new X509Certificate2(File.ReadAllBytes(acLocation));
+                var certParser = new X509CertificateParser();
+                X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
 
-                // Create 2 new client certificates.
-                var privKey1 = new Key();
-                PubKey pubKey1 = privKey1.PubKey;
-                BitcoinPubKeyAddress address1 = pubKey1.GetAddress(this.network);
-                X509Certificate2 certificate1 = IssueCertificate(client, privKey1, pubKey1, address1);
-                Assert.NotNull(certificate1);
-
-                var privKey2 = new Key();
-                PubKey pubKey2 = privKey2.PubKey;
-                BitcoinPubKeyAddress address2 = pubKey2.GetAddress(this.network);
-                X509Certificate2 certificate2 = IssueCertificate(client, privKey2, pubKey2, address2);
-                Assert.NotNull(certificate2);
-
-                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, certificate1);
-                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, certificate2);
+                (CoreNode node1, Key privKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                (CoreNode node2, Key privKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
 
                 node1.Start();
                 node2.Start();
@@ -245,25 +209,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Get Authority Certificate.
                 Settings settings = (Settings)server.Services.GetService(typeof(Settings));
                 var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
-                X509Certificate2 ac = new X509Certificate2(File.ReadAllBytes(acLocation));
-
-                // Create 2 new client certificates.
-                string mnemonicString = "lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom";
-                Mnemonic mnemonic = new Mnemonic(mnemonicString);
-                var privKey1 = mnemonic.DeriveExtKey().PrivateKey;
-                PubKey pubKey1 = privKey1.PubKey;
-                BitcoinPubKeyAddress address1 = pubKey1.GetAddress(this.network);
-                X509Certificate2 certificate1 = IssueCertificate(client, privKey1, pubKey1, address1);
-                Assert.NotNull(certificate1);
-
-                var privKey2 = new Key();
-                PubKey pubKey2 = privKey2.PubKey;
-                BitcoinPubKeyAddress address2 = pubKey2.GetAddress(this.network);
-                X509Certificate2 certificate2 = IssueCertificate(client, privKey2, pubKey2, address2);
-                Assert.NotNull(certificate2);
-
-                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, certificate1);
-                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, certificate2);
+                var certParser = new X509CertificateParser();
+                X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
+               
+                (CoreNode node1, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                (CoreNode node2, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
 
                 node1.Start();
                 node2.Start();
@@ -324,6 +274,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
             builder.UseUrls(this.BaseAddress);
             builder.UseStartup<TestOnlyStartup>();
+
             return builder;
         }
 
@@ -367,20 +318,6 @@ namespace Stratis.SmartContracts.IntegrationTests
             signer.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
 
             return transaction;
-        }
-
-        private X509Certificate2 IssueCertificate(CaClient client, Key privKey, PubKey pubKey, BitcoinPubKeyAddress address)
-        {
-            CertificateSigningRequestModel response = client.GenerateCertificateSigningRequest(Convert.ToBase64String(pubKey.ToBytes()), address.ToString());
-
-            string signedCsr = CaCertificatesManager.SignCertificateSigningRequest(response.CertificateSigningRequestContent, privKey);
-
-            CertificateInfoModel certInfo = client.IssueCertificate(signedCsr);
-
-            Assert.NotNull(certInfo);
-            Assert.Equal(address.ToString(), certInfo.Address);
-
-            return new X509Certificate2(Convert.FromBase64String(certInfo.CertificateContentDer));
         }
     }
 }
