@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace CertificateAuthority.API
 {
@@ -7,8 +8,14 @@ namespace CertificateAuthority.API
     {
         public static void Main(string[] args)
         {
-            IWebHostBuilder builder = WebHost.CreateDefaultBuilder(args);
-            builder.UseStartup<Startup>().Build().Run();
+            var settings = new Settings();
+            settings.Initialize(args);
+
+            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
+            builder.UseUrls(settings.ServerUrls);
+            builder.UseStartup<Startup>();
+            builder.ConfigureServices((services) => { services.AddSingleton(settings); });
+            builder.Build().Run();
         }
     }
 }
