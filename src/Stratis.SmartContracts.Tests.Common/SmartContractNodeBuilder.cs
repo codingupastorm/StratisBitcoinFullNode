@@ -65,7 +65,7 @@ namespace Stratis.SmartContracts.Tests.Common
                 var tool = new KeyTool(settings.DataFolder);
                 tool.SavePrivateKey(network.FederationKeys[nodeIndex], KeyType.FederationKey);
 
-                Key clientCertificatePrivateKey = walletManager.GetExtKey("test", TokenlessWalletAccount.BlockSigning).PrivateKey;
+                Key clientCertificatePrivateKey = walletManager.GetExtKey("test", TokenlessWalletAccount.TransactionSigning).PrivateKey;
                 PubKey pubKey = clientCertificatePrivateKey.PubKey;
                 BitcoinPubKeyAddress address = pubKey.GetAddress(network);
                 X509Certificate clientCertificate = IssueCertificate(client, clientCertificatePrivateKey, pubKey, address);
