@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Stratis.SmartContracts.Tools.Sct": {
+      "commandName": "Project",
+      "commandLineArgs": "validate -sb C:\\Users\\jorda\\source\\repos\\StratisBitcoinFullNode\\src\\Stratis.SmartContracts.IntegrationTests\\SmartContracts\\Auction.cs"
+    }
+  }
+}
