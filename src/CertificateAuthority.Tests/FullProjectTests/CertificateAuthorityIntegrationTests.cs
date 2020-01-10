@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.FullProjectTests.Helpers;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using NBitcoin;
@@ -28,12 +26,11 @@ namespace CertificateAuthority.Tests.FullProjectTests
         {
             this.network = new StratisRegTest();
         }
-        
+
         [Fact]
-        public async Task CertificateAuthorityTestServerStartsUpAsync()
+        public void CertificateAuthorityTestServerStartsUp()
         {
-            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseStartup<TestOnlyStartup>();
+            IWebHostBuilder builder = TestsHelper.CreateWebHostBuilder();
 
             var server = new TestServer(builder);
             var client = new CaClient(server.BaseAddress, server.CreateClient(), TestAccountId, TestPassword);
@@ -46,24 +43,22 @@ namespace CertificateAuthority.Tests.FullProjectTests
         }
 
         [Fact]
-        public async Task CertificateAuthorityTestServerGetsInitializedAsync()
+        public void CertificateAuthorityTestServerGetsInitialized()
         {
-            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseStartup<TestOnlyStartup>();
+            IWebHostBuilder builder = TestsHelper.CreateWebHostBuilder();
 
             var server = new TestServer(builder);
             var client = new CaClient(server.BaseAddress, server.CreateClient(), TestAccountId, TestPassword);
 
             Assert.True(client.InitializeCertificateAuthority(CaMnemonic, CaMnemonicPassword));
-            
+
             server.Dispose();
         }
 
         [Fact]
-        public async Task CertificateAuthorityCanGenerateCertificateSigningRequestAsync()
+        public void CertificateAuthorityCanGenerateCertificateSigningRequest()
         {
-            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseStartup<TestOnlyStartup>();
+            IWebHostBuilder builder = TestsHelper.CreateWebHostBuilder();
 
             var server = new TestServer(builder);
             var client = new CaClient(server.BaseAddress, server.CreateClient(), TestAccountId, TestPassword);
@@ -88,10 +83,9 @@ namespace CertificateAuthority.Tests.FullProjectTests
         }
 
         [Fact]
-        public async Task CertificateAuthorityCanIssueCertificateAsync()
+        public void CertificateAuthorityCanIssueCertificate()
         {
-            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseStartup<TestOnlyStartup>();
+            IWebHostBuilder builder = TestsHelper.CreateWebHostBuilder();
 
             var server = new TestServer(builder);
             var client = new CaClient(server.BaseAddress, server.CreateClient(), TestAccountId, TestPassword);
