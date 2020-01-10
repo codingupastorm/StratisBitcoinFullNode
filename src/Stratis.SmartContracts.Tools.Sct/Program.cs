@@ -1,5 +1,5 @@
 ﻿using McMaster.Extensions.CommandLineUtils;
-using Stratis.SmartContracts.Tools.Sct.Build;
+using Stratis.SmartContracts.Tools.Sct.Building;
 using Stratis.SmartContracts.Tools.Sct.Deployment;
 using Stratis.SmartContracts.Tools.Sct.Validation;
 
