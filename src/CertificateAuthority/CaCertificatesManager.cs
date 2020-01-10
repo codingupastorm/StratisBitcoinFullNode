@@ -382,8 +382,8 @@ namespace CertificateAuthority
             certificateGenerator.AddExtension(P2pkhExtensionOid, false, new DerOctetString(oid141));
             certificateGenerator.AddExtension(PubKeyExtensionOid, false, new DerOctetString(oid142));
             certificateGenerator.AddExtension(SendPermission, false, new byte[] {1});
-            certificateGenerator.AddExtension(CallContractPermissionOid, true, new byte[] {1});
-            certificateGenerator.AddExtension(CreateContractPermissionOid, true, new byte[] { 1 });
+            certificateGenerator.AddExtension(CallContractPermissionOid, false, new byte[] {1});
+            certificateGenerator.AddExtension(CreateContractPermissionOid, false, new byte[] { 1 });
         }
 
         public static X509Certificate2 ConvertCertificate(X509Certificate certificate, SecureRandom random)
