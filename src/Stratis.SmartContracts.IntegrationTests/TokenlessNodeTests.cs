@@ -6,7 +6,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using CertificateAuthority;
-using CertificateAuthority.Models;
 using CertificateAuthority.Tests.FullProjectTests;
 using CertificateAuthority.Tests.FullProjectTests.Helpers;
 using Microsoft.AspNetCore;
@@ -214,7 +213,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
                 var certParser = new X509CertificateParser();
                 X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
-               
+
                 (CoreNode node1, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
                 (CoreNode node2, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
 
