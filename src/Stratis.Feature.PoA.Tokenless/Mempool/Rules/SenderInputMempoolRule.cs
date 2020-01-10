@@ -45,20 +45,16 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
             if (!this.certificatePermissionsChecker.CheckSenderCertificateHasPermission(getSenderResult.Sender, TransactionSendingPermission.Send)) 
                 context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "The sender of this transaction is not authorised by the CA to send transactions."));
 
-            if (context.Transaction.IsSmartContractExecTransaction())
-            {
-                if (context.Transaction.IsSmartContractCreateTransaction())
-                {
-                    if (!this.certificatePermissionsChecker.CheckSenderCertificateHasPermission(getSenderResult.Sender, TransactionSendingPermission.CreateContract))
-                        context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "The sender of this transaction is not authorised by the CA to create contracts."));
-                }
-                else
-                {
-                    if (!this.certificatePermissionsChecker.CheckSenderCertificateHasPermission(getSenderResult.Sender, TransactionSendingPermission.CallContract))
-                        context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "The sender of this transaction is not authorised by the CA to call contracts."));
-                }
-            }
+            // Not a smart contract, no further validation to do.
+            if (!context.Transaction.IsSmartContractExecTransaction())
+                return;
 
+            TransactionSendingPermission permission = context.Transaction.IsSmartContractCreateTransaction()
+                ? TransactionSendingPermission.CreateContract
+                : TransactionSendingPermission.CallContract;
+
+            if (!this.certificatePermissionsChecker.CheckSenderCertificateHasPermission(getSenderResult.Sender, permission))
+                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, $"The sender of this transaction does not have the {permission.ToString()} permission."));
         }
     }
 }
