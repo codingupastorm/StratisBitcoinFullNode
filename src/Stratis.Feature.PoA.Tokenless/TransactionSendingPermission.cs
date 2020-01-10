@@ -24,7 +24,7 @@ namespace Stratis.Feature.PoA.Tokenless
                     return CaCertificatesManager.CreateContractPermissionOid;
             }
 
-            throw new ArgumentException("Input permission is not bound ot an Oid.");
+            throw new ArgumentException("Input permission is not bound to an Oid.");
         }
     }
 }
