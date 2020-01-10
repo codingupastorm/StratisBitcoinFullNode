@@ -12,9 +12,6 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
 {
     public class HeaderTimeTests
     {
-        private string _authorityCertificatePath = Path.Combine("Data", "AuthorityCertificate.crt");
-        private string _clientCertificatePath = Path.Combine("Data", "ClientCertificate.pfx");
-
         [Fact]
         public async Task HeaderInFutureIsntAcceptedButNoBanAsync()
         {
@@ -22,8 +19,8 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
             var network = new TestPoANetwork();
             PoANodeBuilder builder = PoANodeBuilder.CreatePoANodeBuilder(this);
             PoANodeBuilder builder2 = PoANodeBuilder.CreatePoANodeBuilder(this);
-            CoreNode node1 = builder.CreatePoANode(network, network.FederationKey1, this._authorityCertificatePath, this._clientCertificatePath).Start();
-            CoreNode node2 = builder2.CreatePoANode(network, network.FederationKey2, this._authorityCertificatePath, this._clientCertificatePath).Start();
+            CoreNode node1 = builder.CreatePoANode(network, network.FederationKey1).Start();
+            CoreNode node2 = builder2.CreatePoANode(network, network.FederationKey2).Start();
 
             // They can connect, they agree on genesis.
             TestHelper.Connect(node1, node2);
