@@ -38,7 +38,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
                 votingEnabled: baseOptions.VotingEnabled,
                 autoKickIdleMembers: false,
                 federationMemberMaxIdleTimeSeconds: baseOptions.FederationMemberMaxIdleTimeSeconds,
-                enablePermissionedMembership: baseOptions.EnablePermissionedMembership
+                enablePermissionedMembership: false
             );
 
             this.Consensus.SetPrivatePropertyValue(nameof(this.Consensus.MaxReorgLength), (uint)5);

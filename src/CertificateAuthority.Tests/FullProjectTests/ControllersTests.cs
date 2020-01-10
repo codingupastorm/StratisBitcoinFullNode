@@ -7,7 +7,6 @@ using CertificateAuthority.Controllers;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.FullProjectTests.Helpers;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
@@ -25,26 +24,21 @@ namespace CertificateAuthority.Tests.FullProjectTests
 {
     public class ControllersTests
     {
-        private AccountsController accountsController;
-
-        private CertificatesController certificatesController;
-
+        private readonly AccountsController accountsController;
         private CredentialsModel adminCredentials;
-
-        private DataCacheLayer dataCacheLayer;
+        private readonly CertificatesController certificatesController;
+        private readonly DataCacheLayer dataCacheLayer;
 
         public ControllersTests()
         {
-            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseStartup<TestOnlyStartup>();
-
+            IWebHostBuilder builder = TestsHelper.CreateWebHostBuilder();
             var server = new TestServer(builder);
 
             this.adminCredentials = new CredentialsModel(1, "4815162342");
 
-            this.accountsController = (AccountsController) server.Host.Services.GetService(typeof(AccountsController));
-            this.certificatesController = (CertificatesController) server.Host.Services.GetService(typeof(CertificatesController));
-            this.dataCacheLayer = (DataCacheLayer) server.Host.Services.GetService(typeof(DataCacheLayer));
+            this.accountsController = (AccountsController)server.Host.Services.GetService(typeof(AccountsController));
+            this.certificatesController = (CertificatesController)server.Host.Services.GetService(typeof(CertificatesController));
+            this.dataCacheLayer = (DataCacheLayer)server.Host.Services.GetService(typeof(DataCacheLayer));
         }
 
         [Fact]

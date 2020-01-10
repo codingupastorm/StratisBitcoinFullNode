@@ -20,9 +20,6 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
 {
     public class VotingAndMiningTests : IDisposable
     {
-        private string _authorityCertificatePath = Path.Combine("Data", "AuthorityCertificate.crt");
-        private string _clientCertificatePath = Path.Combine("Data", "ClientCertificate.pfx");
-
         private readonly TestPoANetwork network;
 
         private readonly PoANodeBuilder builder;
@@ -38,9 +35,9 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
 
             this.builder = PoANodeBuilder.CreatePoANodeBuilder(this);
 
-            this.node1 = this.builder.CreatePoANode(this.network, this.network.FederationKey1, this._authorityCertificatePath, this._clientCertificatePath).Start();
-            this.node2 = this.builder.CreatePoANode(this.network, this.network.FederationKey2, this._authorityCertificatePath, this._clientCertificatePath).Start();
-            this.node3 = this.builder.CreatePoANode(this.network, this.network.FederationKey3, this._authorityCertificatePath, this._clientCertificatePath).Start();
+            this.node1 = this.builder.CreatePoANode(this.network, this.network.FederationKey1).Start();
+            this.node2 = this.builder.CreatePoANode(this.network, this.network.FederationKey2).Start();
+            this.node3 = this.builder.CreatePoANode(this.network, this.network.FederationKey3).Start();
         }
 
         [Fact]
@@ -256,13 +253,13 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
             {
                 // Create first node as fed member.
                 Key key = network.FederationKey1;
-                CoreNode node = builder.CreatePoANode(network, key, this._authorityCertificatePath, this._clientCertificatePath).Start();
+                CoreNode node = builder.CreatePoANode(network, key).Start();
 
                 Assert.True(node.FullNode.NodeService<IFederationManager>().IsFederationMember);
                 Assert.Equal(node.FullNode.NodeService<IFederationManager>().CurrentFederationKey, key);
 
                 // Create second node as normal node.
-                CoreNode node2 = builder.CreatePoANode(network, this._authorityCertificatePath, this._clientCertificatePath).Start();
+                CoreNode node2 = builder.CreatePoANode(network).Start();
 
                 Assert.False(node2.FullNode.NodeService<IFederationManager>().IsFederationMember);
                 Assert.Equal(node2.FullNode.NodeService<IFederationManager>().CurrentFederationKey, null);
@@ -276,7 +273,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
 
             using (PoANodeBuilder builder = PoANodeBuilder.CreatePoANodeBuilder(this))
             {
-                CoreNode node = builder.CreatePoANode(network, network.FederationKey1, this._authorityCertificatePath, this._clientCertificatePath).Start();
+                CoreNode node = builder.CreatePoANode(network, network.FederationKey1).Start();
 
                 int tipBefore = node.GetTip().Height;
 
@@ -294,7 +291,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
             using (PoANodeBuilder builder = PoANodeBuilder.CreatePoANodeBuilder(this))
             {
                 string walletName = "mywallet";
-                CoreNode node = builder.CreatePoANode(network, network.FederationKey1, this._authorityCertificatePath, this._clientCertificatePath).WithWallet("pass", walletName).Start();
+                CoreNode node = builder.CreatePoANode(network, network.FederationKey1).WithWallet("pass", walletName).Start();
 
                 IWalletManager walletManager = node.FullNode.NodeService<IWalletManager>();
                 long balanceOnStart = walletManager.GetBalances(walletName, "account 0").Sum(x => x.AmountConfirmed);
@@ -327,8 +324,8 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
                 Money transferAmount = Money.Coins(1m);
                 Money feeAmount = Money.Coins(0.0001m);
 
-                CoreNode nodeA = builder.CreatePoANode(network, network.FederationKey1, this._authorityCertificatePath, this._clientCertificatePath).WithWallet(walletPassword, walletName).Start();
-                CoreNode nodeB = builder.CreatePoANode(network, network.FederationKey2, this._authorityCertificatePath, this._clientCertificatePath).WithWallet(walletPassword, walletName).Start();
+                CoreNode nodeA = builder.CreatePoANode(network, network.FederationKey1).WithWallet(walletPassword, walletName).Start();
+                CoreNode nodeB = builder.CreatePoANode(network, network.FederationKey2).WithWallet(walletPassword, walletName).Start();
 
                 TestHelper.Connect(nodeA, nodeB);
 
