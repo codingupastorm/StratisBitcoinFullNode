@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using CertificateAuthority;
@@ -10,6 +12,7 @@ using CertificateAuthority.Tests.FullProjectTests.Helpers;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
@@ -269,11 +272,22 @@ namespace Stratis.SmartContracts.IntegrationTests
             }
         }
 
-        private IWebHostBuilder CreateWebHostBuilder()
+        private IWebHostBuilder CreateWebHostBuilder([CallerMemberName] string callingMethod = null)
         {
+            // Create a datafolder path for the CA settings to use
+            string hash = Guid.NewGuid().ToString("N").Substring(0, 7);
+            string numberedFolderName = string.Join(
+                ".",
+                new[] { hash }.Where(s => s != null));
+            string dataFolderName = Path.Combine(Path.GetTempPath(), callingMethod, numberedFolderName);
+
+            var settings = new Settings();
+            settings.Initialize(new string[] { $"-datadir={dataFolderName}", $"-serverurls={this.BaseAddress}" });
+
             IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseUrls(this.BaseAddress);
+            builder.UseUrls(settings.ServerUrls);
             builder.UseStartup<TestOnlyStartup>();
+            builder.ConfigureServices((services) => { services.AddSingleton(settings); });
 
             return builder;
         }
