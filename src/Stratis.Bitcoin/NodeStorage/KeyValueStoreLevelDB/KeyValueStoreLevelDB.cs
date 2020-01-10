@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using LevelDB;
@@ -65,6 +66,8 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             };
 
             this.Close();
+
+            Directory.CreateDirectory(rootPath);
             this.Storage = new DB(options, rootPath);
 
             Guard.NotNull(this.Storage, nameof(this.Storage));

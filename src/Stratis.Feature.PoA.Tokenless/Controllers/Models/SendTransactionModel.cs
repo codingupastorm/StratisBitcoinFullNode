@@ -2,9 +2,9 @@
 
 namespace Stratis.Feature.PoA.Tokenless.Controllers.Models
 {
-    public sealed class BuildOpReturnTransactionModel
+    public sealed class SendTransactionModel
     {
         [Required]
-        public byte[] OpReturnData { get; set; }
+        public string TransactionHex { get; set; }
     }
 }

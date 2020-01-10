@@ -1,8 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text.RegularExpressions;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Stratis.Bitcoin.Configuration;
@@ -10,7 +8,6 @@ using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.SmartContracts.PoA;
 using Stratis.Bitcoin.Networks;
 using Stratis.Sidechains.Networks;
-using Xunit.Sdk;
 
 namespace FederationSetup
 {
@@ -79,30 +76,30 @@ namespace FederationSetup
             switch (command)
             {
                 case SwitchExit:
-                {
-                   Environment.Exit(0);
-                   break;
-                }
+                    {
+                        Environment.Exit(0);
+                        break;
+                    }
                 case SwitchMenu:
-                {
-                    HandleSwitchMenuCommand(args);
-                    break;
-                }
+                    {
+                        HandleSwitchMenuCommand(args);
+                        break;
+                    }
                 case SwitchMineGenesisBlock:
-                {
-                    HandleSwitchMineGenesisBlockCommand(userInput);
-                    break;
-                }
+                    {
+                        HandleSwitchMineGenesisBlockCommand(userInput);
+                        break;
+                    }
                 case SwitchGenerateFedPublicPrivateKeys:
-                {
-                    HandleSwitchGenerateFedPublicPrivateKeysCommand(args);
-                    break;
-                }
+                    {
+                        HandleSwitchGenerateFedPublicPrivateKeysCommand(args);
+                        break;
+                    }
                 case SwitchGenerateMultiSigAddresses:
-                {
-                    HandleSwitchGenerateMultiSigAddressesCommand(args);
-                    break;
-                }
+                    {
+                        HandleSwitchGenerateMultiSigAddressesCommand(args);
+                        break;
+                    }
             }
         }
 
@@ -207,8 +204,8 @@ namespace FederationSetup
 
             Key key = tool.GeneratePrivateKey();
 
-            string savePath = tool.GetPrivateKeySavePath();
-            tool.SavePrivateKey(key);
+            string savePath = tool.GetKeyFilePath(KeyType.FederationKey);
+            tool.SavePrivateKey(key, KeyType.FederationKey);
             PubKey miningPubKey = key.PubKey;
 
             Console.WriteLine($"Your Masternode Public Key: {Encoders.Hex.EncodeData(miningPubKey.ToBytes(false))}");

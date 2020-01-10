@@ -3,15 +3,21 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Security;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Models;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Org.BouncyCastle.Asn1;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Security;
+using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
 using TextFileConfiguration = Stratis.Bitcoin.Configuration.TextFileConfiguration;
+using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 
 namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 {
@@ -24,15 +30,23 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         /// <summary>Name of client's .pfx certificate that is supposed to be found in node's folder.</summary>
         public const string ClientCertificateName = "ClientCertificate.pfx";
 
+        /// <summary>The password used to decrypt the PKCS#12 (.pfx) file containing the client certificate and private key.</summary>
         public const string ClientCertificateConfigurationKey = "certificatepassword";
 
-        public const string AccountIdKey = "certificateaccountid";
+        /// <summary>The account ID ('username') used by the node to query the CA.</summary>
+        public const string CaAccountIdKey = "caaccountid";
+
+        /// <summary>The password used by the node to query the CA.</summary>
+        public const string CaPasswordKey = "capassword";
 
         /// <summary>Root certificate of the certificate authority for the current network.</summary>
-        public X509Certificate2 AuthorityCertificate { get; private set; }
+        public X509Certificate AuthorityCertificate { get; private set; }
 
         /// <summary>Client certificate that is used to establish connections with other peers.</summary>
-        public X509Certificate2 ClientCertificate { get; private set; }
+        public X509Certificate ClientCertificate { get; private set; }
+
+        /// <summary>The private key associated with the loaded client certificate. Intended to be used for TLS communication only.</summary>
+        public AsymmetricKeyParameter ClientCertificatePrivateKey { get; private set; }
 
         private readonly DataFolder dataFolder;
 
@@ -49,6 +63,8 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         private string caPassword;
 
         private int caAccountId;
+
+        private string clientCertificatePassword;
 
         public CertificatesManager(DataFolder dataFolder, NodeSettings nodeSettings, ILoggerFactory loggerFactory, RevocationChecker revocationChecker, Network network)
         {
@@ -81,24 +97,32 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
                 throw new CertificateConfigurationException($"Client certificate not located at '{clientCertPath}'. Make sure you place '{ClientCertificateName}' in the node's root directory.");
             }
 
-            this.caPassword = this.configuration.GetOrDefault<string>(ClientCertificateConfigurationKey, null);
+            this.caPassword = this.configuration.GetOrDefault<string>(CaPasswordKey, null);
 
             if (this.caPassword == null)
             {
                 this.logger.LogTrace("(-)[NO_PASSWORD]");
-                throw new CertificateConfigurationException($"You have to provide password for the client certificate! Use '{ClientCertificateConfigurationKey}' configuration key to provide a password.");
+                throw new CertificateConfigurationException($"You have to provide a password for the certificate authority! Use '{CaPasswordKey}' configuration key to provide a password.");
             }
 
-            this.caAccountId = this.configuration.GetOrDefault<int>(AccountIdKey, 0);
+            this.caAccountId = this.configuration.GetOrDefault<int>(CaAccountIdKey, 0);
 
             if (this.caAccountId == 0)
             {
                 this.logger.LogTrace("(-)[NO_ACCOUNT_ID]");
-                throw new CertificateConfigurationException($"You have to provide account id to query the CA! Use '{AccountIdKey}' configuration key to provide an account id.");
+                throw new CertificateConfigurationException($"You have to provide an account ID for the certificate authority! Use '{CaAccountIdKey}' configuration key to provide an account id.");
             }
 
-            this.AuthorityCertificate = new X509Certificate2(acPath);
-            this.ClientCertificate = new X509Certificate2(clientCertPath, this.caPassword);
+            var certParser = new X509CertificateParser();
+            
+            this.AuthorityCertificate = certParser.ReadCertificate(File.ReadAllBytes(acPath));
+
+            this.clientCertificatePassword = this.configuration.GetOrDefault<string>(ClientCertificateConfigurationKey, null);
+
+            if (this.clientCertificatePassword == null)
+                throw new CertificateConfigurationException($"You have to provide a password for the client certificate! Use '{ClientCertificateConfigurationKey}' configuration key to provide a password.");
+
+            (this.ClientCertificate, this.ClientCertificatePrivateKey) = CaCertificatesManager.LoadPfx(File.ReadAllBytes(clientCertPath), this.clientCertificatePassword);
 
             if (this.ClientCertificate == null)
             {
@@ -109,9 +133,11 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             bool clientCertValid = this.IsSignedByAuthorityCertificate(this.ClientCertificate, this.AuthorityCertificate);
 
             if (!clientCertValid)
-                throw new Exception("Provided client certificate isn't signed by the authority certificate!");
+                throw new Exception("Provided client certificate isn't valid or isn't signed by the authority certificate!");
 
-            bool revoked = await this.revocationChecker.IsCertificateRevokedAsync(this.ClientCertificate.Thumbprint, false).ConfigureAwait(false);
+            X509Certificate2 tempClientCert = CaCertificatesManager.ConvertCertificate(this.ClientCertificate, new SecureRandom());
+
+            bool revoked = await this.revocationChecker.IsCertificateRevokedAsync(tempClientCert.Thumbprint, false).ConfigureAwait(false);
 
             if (revoked)
                 throw new Exception("Provided client certificate was revoked!");
@@ -121,67 +147,27 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         /// Checks if given certificate is signed by the authority certificate.
         /// </summary>
         /// <exception cref="Exception">Thrown in case authority chain build failed.</exception>
-        private bool IsSignedByAuthorityCertificate(X509Certificate2 certificateToValidate, X509Certificate2 authorityCertificate)
+        private bool IsSignedByAuthorityCertificate(X509Certificate certificateToValidate, X509Certificate authorityCertificate)
         {
-            var chain = new X509Chain
-            {
-                ChainPolicy =
-                {
-                    RevocationMode = X509RevocationMode.NoCheck,
-                    RevocationFlag = X509RevocationFlag.ExcludeRoot,
-                    VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority,
-                    VerificationTime = DateTime.Now,
-                    UrlRetrievalTimeout = new TimeSpan(0, 0, 0)
-                }
-            };
-
-            chain.ChainPolicy.ExtraStore.Add(authorityCertificate);
-
-            // Without actually importing the certificate into the local machine's trusted root store this will not return true.
-            chain.Build(certificateToValidate);
-
-            // Therefore, we inspect the ChainStatus directly to see if the certificate chain was nominally valid
-            bool isChainValid = false;
-
-            foreach (X509ChainStatus chainStatus in chain.ChainStatus)
-            {
-                // There are other validation errors getting raised, we should ensure that only 'known' errors are allowed
-                if (chainStatus.Status != X509ChainStatusFlags.UntrustedRoot &&
-                    chainStatus.Status != X509ChainStatusFlags.HasNotSupportedCriticalExtension &&
-                    chainStatus.Status != X509ChainStatusFlags.InvalidExtension)
-                    return false;
-
-                if (chainStatus.Status == X509ChainStatusFlags.UntrustedRoot)
-                    isChainValid = true;
-            }
-
-            // This piece makes sure it actually matches your known root
-            bool rootValid = chain.ChainElements.Cast<X509ChainElement>().Any(x => x.Certificate.Thumbprint == authorityCertificate.Thumbprint);
-
-            return isChainValid && rootValid;
+            return CaCertificatesManager.ValidateCertificateChain(authorityCertificate, certificateToValidate);
         }
 
-        public bool ValidateCertificate(object sender, X509Certificate certificate, X509Chain _, SslPolicyErrors sslPolicyErrors)
-        {
-            if (certificate == null)
-                return false;
-
-            var certificateToValidate = new X509Certificate2(certificate);
-
-            bool isValid = IsSignedByAuthorityCertificate(certificateToValidate, this.AuthorityCertificate);
-
-            bool revoked = this.revocationChecker.IsCertificateRevokedAsync(this.ClientCertificate.Thumbprint, false).ConfigureAwait(false).GetAwaiter().GetResult();
-
-            return isValid && !revoked;
-        }
-
-        public X509Certificate2 RequestNewCertificate(Key privateKey)
+        public CaClient GetClient()
         {
             // TODO: This is a massive stupid hack to test with self signed certs.
-            var handler = new HttpClientHandler();
-            handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true)
+            };
+
             var httpClient = new HttpClient(handler);
-            var caClient = new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
+
+            return new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
+        }
+
+        public X509Certificate RequestNewCertificate(Key privateKey)
+        {
+            CaClient caClient = this.GetClient();
 
             PubKey pubKey = privateKey.PubKey;
             BitcoinPubKeyAddress address = pubKey.GetAddress(this.network);
@@ -192,45 +178,35 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             CertificateInfoModel issuedCertificate = caClient.IssueCertificate(signedCsr);
 
-            var certificate = new X509Certificate2(Convert.FromBase64String(issuedCertificate.CertificateContentDer));
+            var certParser = new X509CertificateParser();
+            X509Certificate certificate = certParser.ReadCertificate(Convert.FromBase64String(issuedCertificate.CertificateContentDer));
 
             return certificate;
         }
 
-        public X509Certificate2 GetCertificateForAddress(string address)
+        public X509Certificate GetCertificateForAddress(string address)
         {
-            // TODO: This is a massive stupid hack to test with self signed certs.
-            var handler = new HttpClientHandler();
-            handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
-            var httpClient = new HttpClient(handler);
-
-            var caClient = new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
+            CaClient caClient = this.GetClient();
 
             CertificateInfoModel retrievedCertModel = caClient.GetCertificateForAddress(address);
 
-
-            var certificate = new X509Certificate2(Convert.FromBase64String(retrievedCertModel.CertificateContentDer));
+            var certParser = new X509CertificateParser();
+            X509Certificate certificate = certParser.ReadCertificate(Convert.FromBase64String(retrievedCertModel.CertificateContentDer));
 
             return certificate;
         }
 
         public List<PubKey> GetCertificatePublicKeys()
         {
-            // TODO: This is a massive stupid hack to test with self signed certs.
-            var handler = new HttpClientHandler();
-            handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
-
-            var httpClient = new HttpClient(handler);
-
-            var caClient = new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
+            CaClient caClient = this.GetClient();
 
             return caClient.GetCertificatePublicKeys();
         }
 
         public static byte[] ExtractCertificateExtension(X509Certificate certificate, string oid)
         {
-            var cert = new X509Certificate2(certificate);
-
+            X509Certificate2 cert = CaCertificatesManager.ConvertCertificate(certificate, new SecureRandom());
+            
             foreach (X509Extension extension in cert.Extensions)
             {
                 if (extension.Oid.Value == oid)
@@ -238,6 +214,33 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             }
 
             return null;
+        }
+
+        public static string ExtractCertificateExtensionString(X509Certificate certificate, string oid)
+        {
+            X509Certificate2 cert = CaCertificatesManager.ConvertCertificate(certificate, new SecureRandom());
+
+            foreach (X509Extension extension in cert.Extensions)
+            {
+                if (extension.Oid.Value == oid)
+                {
+                    // This is truly horrible, but it isn't clear how we can correctly go from the DER bytes in the extension, to a relevant BC class, to a string.
+                    // Perhaps we are meant to recursively evaluate the extension data as ASN.1 until we land up with raw data that can't be decoded further?
+                    var temp = extension.RawData.Skip(2).ToArray();
+                    
+                    return Encoding.UTF8.GetString(temp);
+                }
+            }
+
+            return null;
+        }
+
+        private static Asn1Object ToAsn1Object(byte[] data)
+        {
+            var inStream = new MemoryStream(data);
+            var asnInputStream = new Asn1InputStream(inStream);
+
+            return asnInputStream.ReadObject();
         }
     }
 

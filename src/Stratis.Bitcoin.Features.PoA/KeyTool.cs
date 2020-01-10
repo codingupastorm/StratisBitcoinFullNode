@@ -4,23 +4,26 @@ using Stratis.Bitcoin.Configuration;
 
 namespace Stratis.Bitcoin.Features.PoA
 {
-    public class KeyTool
+    public sealed class KeyTool
     {
-        public const string KeyFileDefaultName = "federationKey.dat";
+        public const string BlockSigningKeyFileName = "blockSigning.dat";
+        public const string FederationKeyFileName = "federationKey.dat";
+        public const string TransactionSigningKeyFileName = "transactionSigning.dat";
 
-        private readonly string path;
+        private readonly string rootPath;
 
         public KeyTool(DataFolder dataFolder)
         {
-            this.path = dataFolder.RootPath;
+            this.rootPath = dataFolder.RootPath;
         }
 
-        public KeyTool(string path)
+        public KeyTool(string rootPath)
         {
-            this.path = path;
+            this.rootPath = rootPath;
         }
 
         /// <summary>Generates a new private key.</summary>
+        /// <returns>The generated private <see cref="Key"/>.</returns>
         public Key GeneratePrivateKey()
         {
             var mnemonic = new Mnemonic(Wordlist.English, WordCount.Twelve);
@@ -30,15 +33,32 @@ namespace Stratis.Bitcoin.Features.PoA
         }
 
         /// <summary>Gets the default path for private key saving and loading.</summary>
-        public string GetPrivateKeySavePath()
+        /// <param name="keyType">The <see cref="KeyType"/> to get the file path for.</param>
+        /// <returns>The path to the federation key file.</returns>
+        public string GetKeyFilePath(KeyType keyType)
         {
-            string path = Path.Combine(this.path, KeyTool.KeyFileDefaultName);
+            string filePath = null;
 
-            return path;
+            switch (keyType)
+            {
+                case KeyType.BlockSigningKey:
+                    filePath = Path.Combine(this.rootPath, BlockSigningKeyFileName);
+                    break;
+                case KeyType.FederationKey:
+                    filePath = Path.Combine(this.rootPath, FederationKeyFileName);
+                    break;
+                case KeyType.TransactionSigningKey:
+                    filePath = Path.Combine(this.rootPath, TransactionSigningKeyFileName);
+                    break;
+            }
+
+            return filePath;
         }
 
         /// <summary>Saves private key to default path.</summary>
-        public void SavePrivateKey(Key privateKey)
+        /// <param name="privateKey">The key to be saved.</param>
+        /// <param name="keyType">The <see cref="KeyType"/> to be saved.</param>
+        public void SavePrivateKey(Key privateKey, KeyType keyType)
         {
             using (var ms = new MemoryStream())
             {
@@ -47,7 +67,7 @@ namespace Stratis.Bitcoin.Features.PoA
 
                 ms.Seek(0, SeekOrigin.Begin);
 
-                using (FileStream fileStream = File.Create(this.GetPrivateKeySavePath()))
+                using (FileStream fileStream = File.Create(GetKeyFilePath(keyType)))
                 {
                     ms.CopyTo(fileStream);
                 }
@@ -55,14 +75,16 @@ namespace Stratis.Bitcoin.Features.PoA
         }
 
         /// <summary>Loads the private key from default path.</summary>
-        public Key LoadPrivateKey()
+        /// <param name="keyType">The <see cref="KeyType"/> to load.</param>
+        /// <returns>The loaded <see cref="Key"/>.</returns>
+        public Key LoadPrivateKey(KeyType keyType)
         {
-            string path = this.GetPrivateKeySavePath();
+            string filePath = GetKeyFilePath(keyType);
 
-            if (!File.Exists(path))
+            if (!File.Exists(filePath))
                 return null;
 
-            using (FileStream readStream = File.OpenRead(path))
+            using (FileStream readStream = File.OpenRead(filePath))
             {
                 var privateKey = new Key();
                 var stream = new BitcoinStream(readStream, false);
@@ -71,5 +93,12 @@ namespace Stratis.Bitcoin.Features.PoA
                 return privateKey;
             }
         }
+    }
+
+    public enum KeyType
+    {
+        BlockSigningKey,
+        FederationKey,
+        TransactionSigningKey
     }
 }

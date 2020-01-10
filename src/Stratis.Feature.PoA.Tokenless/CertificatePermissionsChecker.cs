@@ -1,5 +1,5 @@
-﻿using System.Security.Cryptography.X509Certificates;
 using NBitcoin;
+using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.SmartContracts.CLR;
 
@@ -35,24 +35,24 @@ namespace Stratis.Feature.PoA.Tokenless
         /// <inheritdoc />
         public bool CheckSenderCertificateHasPermission(uint160 address, TransactionSendingPermission permission)
         {
-            X509Certificate2 certificate = this.GetCertificate(address); 
+            X509Certificate certificate = this.GetCertificate(address); 
             return ValidateCertificateHasPermission(certificate, permission);
         }
 
-        private X509Certificate2 GetCertificate(uint160 address)
+        private X509Certificate GetCertificate(uint160 address)
         {
-            X509Certificate2 certificate = this.certificateCache.GetCertificate(address) 
+            X509Certificate certificate = this.certificateCache.GetCertificate(address) 
                                            ?? GetCertificateFromCA(address);
 
             return certificate;
         }
 
-        private X509Certificate2 GetCertificateFromCA(uint160 address)
+        private X509Certificate GetCertificateFromCA(uint160 address)
         {
             return this.certificatesManager.GetCertificateForAddress(address.ToBase58Address(this.network));
         }
 
-        public static bool ValidateCertificateHasPermission(X509Certificate2 certificate, TransactionSendingPermission permission)
+        public static bool ValidateCertificateHasPermission(X509Certificate certificate, TransactionSendingPermission permission)
         {
             if (certificate == null)
                 return false;

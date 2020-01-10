@@ -26,6 +26,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         private readonly IBlockRepository blockRepository;
         public readonly ICallDataSerializer CallDataSerializer;
         public readonly ChainIndexer ChainIndexer;
+        private readonly Mock<ICertificatePermissionsChecker> CertificatePermissionsChecker;
         public readonly InMemoryCoinView InMemoryCoinView;
         public readonly IDateTimeProvider DateTimeProvider;
         public readonly ILoggerFactory LoggerFactory;
@@ -40,16 +41,19 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public TokenlessTestHelper()
         {
             this.Network = new TokenlessNetwork();
+            this.NodeSettings = NodeSettings.Default(this.Network);
+            this.LoggerFactory = new ExtendedLoggerFactory();
+            this.LoggerFactory.AddConsoleWithFilters();
 
             this.blockRepository = new Mock<IBlockRepository>().Object;
-
             this.CallDataSerializer = new NoGasCallDataSerializer(new ContractPrimitiveSerializer(this.Network));
+
+            this.CertificatePermissionsChecker = new Mock<ICertificatePermissionsChecker>();
+            this.CertificatePermissionsChecker.Setup(c => c.CheckSenderCertificateHasPermission(It.IsAny<uint160>(), It.IsAny<TransactionSendingPermission>())).Returns(true);
+
             this.ChainIndexer = new ChainIndexer(this.Network);
             this.InMemoryCoinView = new InMemoryCoinView(this.Network.GenesisHash);
             this.DateTimeProvider = Bitcoin.Utilities.DateTimeProvider.Default;
-            this.LoggerFactory = new ExtendedLoggerFactory();
-            this.LoggerFactory.AddConsoleWithFilters();
-            this.NodeSettings = NodeSettings.Default(this.Network);
             this.MempoolSettings = new MempoolSettings(this.NodeSettings) { MempoolExpiry = Bitcoin.Features.MemoryPool.MempoolValidator.DefaultMempoolExpiry };
             this.TokenlessSigner = new TokenlessSigner(this.Network, new SenderRetriever());
 
@@ -64,13 +68,15 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             foreach (Type ruleType in this.Network.Consensus.MempoolRules)
             {
                 if (ruleType == typeof(IsSmartContractWellFormedMempoolRule))
-                    yield return (IMempoolRule)Activator.CreateInstance(ruleType, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.CallDataSerializer);
+                    yield return new IsSmartContractWellFormedMempoolRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.CallDataSerializer);
                 else if (ruleType == typeof(NoDuplicateTransactionExistOnChainMempoolRule))
-                    yield return (IMempoolRule)Activator.CreateInstance(ruleType, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.blockRepository);
+                    yield return new NoDuplicateTransactionExistOnChainMempoolRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.blockRepository);
                 else if (ruleType == typeof(SenderInputMempoolRule))
-                    yield return (IMempoolRule)Activator.CreateInstance(ruleType, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.TokenlessSigner);
+                    yield return new SenderInputMempoolRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.TokenlessSigner, this.CertificatePermissionsChecker.Object);
+                else if (ruleType == typeof(CreateTokenlessMempoolEntryRule))
+                    yield return new CreateTokenlessMempoolEntryRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory);
                 else
-                    yield return (IMempoolRule)Activator.CreateInstance(ruleType, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory);
+                    throw new NotImplementedException($"No constructor is defined for '{ruleType.Name}'.");
             }
         }
     }
