@@ -45,7 +45,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         // TODO: Lots of repetition in this file.
-
+        
         [Fact]
         public async Task TokenlessNodesMineAnEmptyBlockAsync()
         {
@@ -54,10 +54,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             {
                 server.Start();
 
-                // TODO: This is a massive stupid hack to test with self signed certs.
-                var handler = new HttpClientHandler();
-                handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
-                var httpClient = new HttpClient(handler);
+                var httpClient = GetHttpClient();
 
                 // Start + Initialize CA.
                 var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
@@ -90,12 +87,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             {
                 server.Start();
 
-                // TODO: This is a massive stupid hack to test with self signed certs.
-                var handler = new HttpClientHandler
-                {
-                    ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true)
-                };
-                var httpClient = new HttpClient(handler);
+                var httpClient = GetHttpClient();
 
                 // Start + Initialize CA.
                 var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
@@ -139,10 +131,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             {
                 server.Start();
 
-                // TODO: This is a massive stupid hack to test with self signed certs.
-                var handler = new HttpClientHandler();
-                handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
-                var httpClient = new HttpClient(handler);
+                var httpClient = GetHttpClient();
 
                 // Start + Initialize CA.
                 var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
@@ -197,12 +186,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             {
                 server.Start();
 
-                // TODO: This is a massive stupid hack to test with self signed certs.
-                var handler = new HttpClientHandler
-                {
-                    ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true)
-                };
-                var httpClient = new HttpClient(handler);
+                var httpClient = GetHttpClient();
 
                 // Start + Initialize CA.
                 var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
@@ -269,6 +253,17 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Receipt callReceipt = receiptRepository.Retrieve(callResponse.TransactionId);
                 Assert.True(callReceipt.Success);
             }
+        }
+
+        private HttpClient GetHttpClient()
+        {
+            // TODO: This is a massive stupid hack to test with self signed certs.
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true)
+            };
+
+            return new HttpClient(handler);
         }
 
         private IWebHostBuilder CreateWebHostBuilder([CallerMemberName] string callingMethod = null)

@@ -22,7 +22,7 @@ namespace CertificateAuthority.Models
         public string TransactionSigningPubKeyHash { get; set; }
 
         /// <summary>
-        /// The public key hash corresponding to the certificate-bearing node's transaction signing key.
+        /// The public key hash corresponding to the certificate-bearing node's block signing key.
         /// </summary>
         /// <remarks>This is NOT the pubkey corresponding to the certificate's private key.</remarks>
         public string BlockSigningPubKey { get; set; }

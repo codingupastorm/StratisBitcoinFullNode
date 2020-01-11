@@ -160,7 +160,8 @@ namespace CertificateAuthority
 
             string p2pkh = Encoding.UTF8.GetString(ExtractExtensionFromCsr(attributes, P2pkhExtensionOid));
             string transactionSigningPubKeyHash = Encoding.UTF8.GetString(ExtractExtensionFromCsr(attributes, TransactionSigningPubKeyHashExtensionOid));
-            var blockSigningPubKey = new PubKey(ExtractExtensionFromCsr(attributes, BlockSigningPubKeyExtensionOid));
+            byte[] blockSigningPubKeyBytes = ExtractExtensionFromCsr(attributes, BlockSigningPubKeyExtensionOid);
+            var blockSigningPubKey = new PubKey(blockSigningPubKeyBytes);
 
             X509Certificate2 tempCert = ConvertCertificate(certificateFromReq, GetSecureRandom());
 

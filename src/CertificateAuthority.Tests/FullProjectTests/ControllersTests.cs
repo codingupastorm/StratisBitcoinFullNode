@@ -133,30 +133,40 @@ namespace CertificateAuthority.Tests.FullProjectTests
             // We need to be absolutely sure that the components of the subject DN are in the same order in a CSR versus the resulting certificate.
             // Otherwise the certificate chain will fail validation, and there is currently no workaround in BouncyCastle.
             string clientName = "O=Stratis,CN=DLT Node Run By Iain McCain,OU=Administration";
-            int clientAddressIndex = 0;
-            string hdPath = $"m/44'/105'/0'/0/{clientAddressIndex}";
 
             var clientAddressSpace = new HDWalletAddressSpace("tape viable toddler young shoe immense usual faculty edge habit misery swarm", "node");
-            Key clientPrivateKey = clientAddressSpace.GetKey(hdPath).PrivateKey;
-            byte[] clientPublicKey = clientPrivateKey.PubKey.ToBytes();
-            AsymmetricCipherKeyPair clientKey = clientAddressSpace.GetCertificateKeyPair(hdPath);
 
-            string clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
+            int transactionSigningIndex = 0;
+            int blockSigningIndex = 1;
+            int clientAddressIndex = 2;
+            
+            string clientHdPath = $"m/44'/105'/0'/0/{clientAddressIndex}";
+            string transactionSigningHdPath = $"m/44'/105'/0'/0/{transactionSigningIndex}";
+            string blockSigningHdPath = $"m/44'/105'/0'/0/{blockSigningIndex}";
+
+            Key clientPrivateKey = clientAddressSpace.GetKey(clientHdPath).PrivateKey;
+            Key transactionSigningPrivateKey = clientAddressSpace.GetKey(transactionSigningHdPath).PrivateKey;
+            Key blockSigningPrivateKey = clientAddressSpace.GetKey(blockSigningHdPath).PrivateKey;
+
+            AsymmetricCipherKeyPair clientKey = clientAddressSpace.GetCertificateKeyPair(clientHdPath);
+
+            string clientAddress = HDWalletAddressSpace.GetAddress(clientPrivateKey.PubKey.ToBytes(), 63);
             byte[] clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
-            byte[] clientOid142 = clientPublicKey;
+            byte[] clientOid142 = transactionSigningPrivateKey.PubKey.Hash.ToBytes();
+            byte[] clientOid144 = blockSigningPrivateKey.PubKey.ToBytes();
 
             var extensionData = new Dictionary<string, byte[]>
             {
                 {CaCertificatesManager.P2pkhExtensionOid, clientOid141},
                 {CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid, clientOid142},
-                {CaCertificatesManager.BlockSigningPubKeyExtensionOid, new byte[] {}}
+                {CaCertificatesManager.BlockSigningPubKeyExtensionOid, clientOid144}
             };
 
             Pkcs10CertificationRequest certificateSigningRequest = CaCertificatesManager.CreateCertificateSigningRequest(clientName, clientKey, new string[0], extensionData);
 
             // IssueCertificate_UsingRequestString
             CertificateInfoModel certificate1 = (await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
-                new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest.GetDerEncoded()), credentials1.AccountId, credentials1.Password))).Value;
+                new IssueCertificateFromFileContentsModel(Convert.ToBase64String(certificateSigningRequest.GetDerEncoded()), credentials1.AccountId, credentials1.Password))).Value;
 
             X509Certificate cert1 = certParser.ReadCertificate(Convert.FromBase64String(certificate1.CertificateContentDer));
 
@@ -166,22 +176,25 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             PubKey[] pubKeys = this.certificatesController.GetCertificatePublicKeys().Value.ToArray();
             Assert.Single(pubKeys);
-            Assert.Equal(clientPrivateKey.PubKey, pubKeys[0]);
+            Assert.Equal(blockSigningPrivateKey.PubKey, pubKeys[0]);
 
             var clientAddressSpace2 = new HDWalletAddressSpace("habit misery swarm tape viable toddler young shoe immense usual faculty edge", "node");
-            Key clientPrivateKey2 = clientAddressSpace2.GetKey(hdPath).PrivateKey;
-            clientPublicKey = clientPrivateKey2.PubKey.ToBytes();
-            AsymmetricCipherKeyPair clientKey2 = clientAddressSpace2.GetCertificateKeyPair(hdPath);
+            Key clientPrivateKey2 = clientAddressSpace2.GetKey(clientHdPath).PrivateKey;
+            byte[] clientPublicKey = clientPrivateKey2.PubKey.ToBytes();
+            AsymmetricCipherKeyPair clientKey2 = clientAddressSpace2.GetCertificateKeyPair(clientHdPath);
+
+            blockSigningPrivateKey = clientAddressSpace2.GetKey(blockSigningHdPath).PrivateKey;
 
             clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
             clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
             clientOid142 = clientPublicKey;
+            clientOid144 = blockSigningPrivateKey.PubKey.ToBytes();
 
             extensionData = new Dictionary<string, byte[]>
             {
                 {CaCertificatesManager.P2pkhExtensionOid, clientOid141},
                 {CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid, clientOid142},
-                {CaCertificatesManager.BlockSigningPubKeyExtensionOid, new byte[] {}}
+                {CaCertificatesManager.BlockSigningPubKeyExtensionOid, clientOid144}
             };
 
             Pkcs10CertificationRequest certificateSigningRequest2 = CaCertificatesManager.CreateCertificateSigningRequest(clientName, clientKey2, new string[0], extensionData);
@@ -193,7 +206,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             PubKey[] pubKeys2 = this.certificatesController.GetCertificatePublicKeys().Value.ToArray();
             Assert.Equal(2, pubKeys2.Length);
-            Assert.Equal(clientPrivateKey2.PubKey, pubKeys2[1]);
+            Assert.Equal(blockSigningPrivateKey.PubKey, pubKeys2[1]);
 
             Assert.Empty(this.certificatesController.GetRevokedCertificates().Value);
 
@@ -228,24 +241,27 @@ namespace CertificateAuthority.Tests.FullProjectTests
             // Public keys for revoked certificates don't appear in the list.
             pubKeys = this.certificatesController.GetCertificatePublicKeys().Value.ToArray();
             Assert.Single(pubKeys);
-            Assert.Equal(clientPrivateKey2.PubKey, pubKeys[0]);
+            Assert.Equal(blockSigningPrivateKey.PubKey, pubKeys[0]);
 
             // Now check that we can obtain an unsigned CSR template from the CA, which we then sign locally and receive a certificate for.
             // First do it using the manager's methods directly.
             var clientAddressSpace3 = new HDWalletAddressSpace("usual young shoe immense habit misery swarm tape viable toddler faculty edge", "node");
-            Key clientPrivateKey3 = clientAddressSpace3.GetKey(hdPath).PrivateKey;
+            Key clientPrivateKey3 = clientAddressSpace3.GetKey(clientHdPath).PrivateKey;
             clientPublicKey = clientPrivateKey3.PubKey.ToBytes();
-            AsymmetricCipherKeyPair clientKey3 = clientAddressSpace2.GetCertificateKeyPair(hdPath);
+            AsymmetricCipherKeyPair clientKey3 = clientAddressSpace2.GetCertificateKeyPair(clientHdPath);
+
+            blockSigningPrivateKey = clientAddressSpace2.GetKey(blockSigningHdPath).PrivateKey;
 
             clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
             clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
             clientOid142 = clientPublicKey;
+            clientOid144 = blockSigningPrivateKey.PubKey.ToBytes();
 
             extensionData = new Dictionary<string, byte[]>
             {
                 {CaCertificatesManager.P2pkhExtensionOid, clientOid141},
                 {CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid, clientOid142},
-                {CaCertificatesManager.BlockSigningPubKeyExtensionOid, new byte[] {}}
+                {CaCertificatesManager.BlockSigningPubKeyExtensionOid, clientOid144}
             };
 
             Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(clientName, clientKey2.Public, new string[0], extensionData);
@@ -265,7 +281,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             // Now try do it the same way a node would, by populating the relevant model and submitting it to the API.
             // In this case we just use the same pubkey for both the certificate generation & transaction signing pubkey hash, they would ordinarily be different.
-            var generateModel = new GenerateCertificateSigningRequestModel(clientAddress, Convert.ToBase64String(clientPublicKey), Convert.ToBase64String(clientPrivateKey.PubKey.Hash.ToBytes()), credentials1.AccountId, credentials1.Password);
+            var generateModel = new GenerateCertificateSigningRequestModel(clientAddress, Convert.ToBase64String(clientPublicKey), Convert.ToBase64String(clientPrivateKey.PubKey.Hash.ToBytes()), Convert.ToBase64String(blockSigningPrivateKey.PubKey.ToBytes()), credentials1.AccountId, credentials1.Password);
 
             CertificateSigningRequestModel unsignedCsrModel = (await this.certificatesController.GenerateCertificateSigningRequestAsync(generateModel)).Value;
 
