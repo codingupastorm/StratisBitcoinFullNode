@@ -145,7 +145,14 @@ namespace CertificateAuthority.Tests.FullProjectTests
             byte[] clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
             byte[] clientOid142 = clientPublicKey;
 
-            Pkcs10CertificationRequest certificateSigningRequest = CaCertificatesManager.CreateCertificateSigningRequest(clientName, clientKey, new string[0], clientOid141, clientOid142);
+            var extensionData = new Dictionary<string, byte[]>
+            {
+                {CaCertificatesManager.P2pkhExtensionOid, clientOid141},
+                {CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid, clientOid142},
+                {CaCertificatesManager.BlockSigningPubKeyExtensionOid, new byte[] {}}
+            };
+
+            Pkcs10CertificationRequest certificateSigningRequest = CaCertificatesManager.CreateCertificateSigningRequest(clientName, clientKey, new string[0], extensionData);
 
             // IssueCertificate_UsingRequestString
             CertificateInfoModel certificate1 = (await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
@@ -170,7 +177,14 @@ namespace CertificateAuthority.Tests.FullProjectTests
             clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
             clientOid142 = clientPublicKey;
 
-            Pkcs10CertificationRequest certificateSigningRequest2 = CaCertificatesManager.CreateCertificateSigningRequest(clientName, clientKey2, new string[0], clientOid141, clientOid142);
+            extensionData = new Dictionary<string, byte[]>
+            {
+                {CaCertificatesManager.P2pkhExtensionOid, clientOid141},
+                {CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid, clientOid142},
+                {CaCertificatesManager.BlockSigningPubKeyExtensionOid, new byte[] {}}
+            };
+
+            Pkcs10CertificationRequest certificateSigningRequest2 = CaCertificatesManager.CreateCertificateSigningRequest(clientName, clientKey2, new string[0], extensionData);
 
             CertificateInfoModel certificate2 = (await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
                 new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest2.GetDerEncoded()), this.adminCredentials.AccountId, this.adminCredentials.Password))).Value;
@@ -184,7 +198,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             Assert.Empty(this.certificatesController.GetRevokedCertificates().Value);
 
             // GetCertificateByThumbprint
-            CertificateInfoModel cert1Retrieved = this.certificatesController.GetCertificateByThumbprint(
+            CertificateInfoModel cert1Retrieved = this.certificatesController.GetCertificateForThumbprint(
                 new CredentialsModelWithThumbprintModel(certificate1.Thumbprint, this.adminCredentials.AccountId, this.adminCredentials.Password)).Value;
             Assert.Equal(certificate1.Id, cert1Retrieved.Id);
             Assert.Equal(certificate1.IssuerAccountId, cert1Retrieved.IssuerAccountId);
@@ -227,7 +241,14 @@ namespace CertificateAuthority.Tests.FullProjectTests
             clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
             clientOid142 = clientPublicKey;
 
-            Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(clientName, clientKey2.Public, new string[0], clientOid141, clientOid142);
+            extensionData = new Dictionary<string, byte[]>
+            {
+                {CaCertificatesManager.P2pkhExtensionOid, clientOid141},
+                {CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid, clientOid142},
+                {CaCertificatesManager.BlockSigningPubKeyExtensionOid, new byte[] {}}
+            };
+
+            Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(clientName, clientKey2.Public, new string[0], extensionData);
             var signature = CaCertificatesManager.GenerateCSRSignature(unsignedCsr.GetDataToSign(), "SHA256withECDSA", clientKey2.Private);
             unsignedCsr.SignRequest(signature);
 
@@ -295,7 +316,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             this.Returns403IfNoAccess((int accountId, string password) => this.certificatesController.RevokeCertificate(new CredentialsModelWithThumbprintModel("123", accountId, password)),
                 AccountAccessFlags.RevokeCertificates);
 
-            this.Returns403IfNoAccess((int accountId, string password) => this.certificatesController.GetCertificateByThumbprint(new CredentialsModelWithThumbprintModel("123", accountId, password)),
+            this.Returns403IfNoAccess((int accountId, string password) => this.certificatesController.GetCertificateForThumbprint(new CredentialsModelWithThumbprintModel("123", accountId, password)),
                 AccountAccessFlags.AccessAnyCertificate);
 
             this.Returns403IfNoAccess((int accountId, string password) => this.certificatesController.GetAllCertificates(new CredentialsModelWithThumbprintModel("123", accountId, password)),

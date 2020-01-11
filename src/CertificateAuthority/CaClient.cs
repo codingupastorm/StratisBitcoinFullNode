@@ -179,8 +179,9 @@ namespace CertificateAuthority
 
         /// <param name="pubKey">The public key for the P2PKH address, in base64 format.</param>
         /// <param name="address">The P2PKH base58 address string.</param>
-        /// <returns></returns>
-        public CertificateSigningRequestModel GenerateCertificateSigningRequest(string pubKey, string address, string transactionSigningPubKeyHash)
+        /// <param name="transactionSigningPubKeyHash">The pubkey hash of the transaction signing key.</param>
+        /// <param name="blockSigningPubKey">The pubkey of the block signing key.</param>
+        public CertificateSigningRequestModel GenerateCertificateSigningRequest(string pubKey, string address, string transactionSigningPubKeyHash, string blockSigningPubKey)
         {
             var generateCsrModel = new GenerateCertificateSigningRequestModel()
             {
@@ -188,7 +189,8 @@ namespace CertificateAuthority
                 Address = address,
                 Password = this.password,
                 PubKey = pubKey,
-                TransactionSigningPubKeyHash = transactionSigningPubKeyHash
+                TransactionSigningPubKeyHash = transactionSigningPubKeyHash,
+                BlockSigningPubKey = blockSigningPubKey
             };
 
             HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{GenerateCertificateSigningRequestEndpoint}", generateCsrModel).GetAwaiter().GetResult();

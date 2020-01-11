@@ -1,4 +1,5 @@
-﻿using CertificateAuthority;
+﻿using System;
+using CertificateAuthority;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
@@ -49,8 +50,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         private X509Certificate GetCertificateFromCA(uint160 address)
         {
-            // TODO: Verify the encoding here vs what gets persisted to the CA database for the transaction signing pubkey hash
-            return this.certificatesManager.GetCertificateForPubKey(address.ToString());
+            return this.certificatesManager.GetCertificateForPubKey(Convert.ToBase64String(address.ToBytes()));
         }
 
         public static bool ValidateCertificateHasPermission(X509Certificate certificate)

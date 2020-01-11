@@ -179,14 +179,14 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
         }
 
-        public X509Certificate RequestNewCertificate(Key privateKey, PubKey transactionSigningPubKey)
+        public X509Certificate RequestNewCertificate(Key privateKey, PubKey transactionSigningPubKey, PubKey blockSigningPubKey)
         {
             CaClient caClient = this.GetClient();
 
             PubKey pubKey = privateKey.PubKey;
             BitcoinPubKeyAddress address = pubKey.GetAddress(this.network);
 
-            CertificateSigningRequestModel csrModel = caClient.GenerateCertificateSigningRequest(Convert.ToBase64String(pubKey.ToBytes()), address.ToString(), Convert.ToBase64String(transactionSigningPubKey.Hash.ToBytes()));
+            CertificateSigningRequestModel csrModel = caClient.GenerateCertificateSigningRequest(Convert.ToBase64String(pubKey.ToBytes()), address.ToString(), Convert.ToBase64String(transactionSigningPubKey.Hash.ToBytes()), Convert.ToBase64String(blockSigningPubKey.ToBytes()));
 
             string signedCsr = CaCertificatesManager.SignCertificateSigningRequest(csrModel.CertificateSigningRequestContent, privateKey, "secp256k1");
 
@@ -210,11 +210,11 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return certificate;
         }
 
-        public X509Certificate GetCertificateForPubKey(string pubKey)
+        public X509Certificate GetCertificateForPubKey(string pubKeyHash)
         {
             CaClient caClient = this.GetClient();
 
-            CertificateInfoModel retrievedCertModel = caClient.GetCertificateForPubKeyHash(pubKey);
+            CertificateInfoModel retrievedCertModel = caClient.GetCertificateForPubKeyHash(pubKeyHash);
 
             var certParser = new X509CertificateParser();
             X509Certificate certificate = certParser.ReadCertificate(Convert.FromBase64String(retrievedCertModel.CertificateContentDer));

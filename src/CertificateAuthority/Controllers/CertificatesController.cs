@@ -91,7 +91,7 @@ namespace CertificateAuthority.Controllers
         /// <summary>Finds issued certificate by thumbprint and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
         [HttpPost("get_certificate_for_thumbprint")]
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
-        public ActionResult<CertificateInfoModel> GetCertificateByThumbprint([FromBody]CredentialsModelWithThumbprintModel model)
+        public ActionResult<CertificateInfoModel> GetCertificateForThumbprint([FromBody]CredentialsModelWithThumbprintModel model)
         {
             var data = new CredentialsAccessWithModel<CredentialsModelWithThumbprintModel>(model, AccountAccessFlags.AccessAnyCertificate);
 
@@ -113,7 +113,7 @@ namespace CertificateAuthority.Controllers
         /// <summary>Finds issued certificate by P2PKH address and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
         [HttpPost("get_certificate_for_address")]
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
-        public ActionResult<CertificateInfoModel> GetCertificateByAddress([FromBody]CredentialsModelWithAddressModel model)
+        public ActionResult<CertificateInfoModel> GetCertificateForAddress([FromBody]CredentialsModelWithAddressModel model)
         {
             var data = new CredentialsAccessWithModel<CredentialsModelWithAddressModel>(model, AccountAccessFlags.AccessAnyCertificate);
 
@@ -135,7 +135,7 @@ namespace CertificateAuthority.Controllers
         /// <summary>Finds issued certificate by pubkey and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
         [HttpPost("get_certificate_for_pubkey_hash")]
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
-        public ActionResult<CertificateInfoModel> GetCertificateByPubKey([FromBody]CredentialsModelWithPubKeyHashModel model)
+        public ActionResult<CertificateInfoModel> GetCertificateForPubKeyHash([FromBody]CredentialsModelWithPubKeyHashModel model)
         {
             var data = new CredentialsAccessWithModel<CredentialsModelWithPubKeyHashModel>(model, AccountAccessFlags.AccessAnyCertificate);
 
@@ -182,6 +182,14 @@ namespace CertificateAuthority.Controllers
 
             byte[] oid141 = Encoding.UTF8.GetBytes(data.Model.Address);
             byte[] oid142 = Convert.FromBase64String(data.Model.TransactionSigningPubKeyHash);
+            byte[] oid144 = Convert.FromBase64String(data.Model.BlockSigningPubKey);
+
+            var extensionData = new Dictionary<string, byte[]>
+            {
+                {CaCertificatesManager.P2pkhExtensionOid, oid141},
+                {CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid, oid142},
+                {CaCertificatesManager.BlockSigningPubKeyExtensionOid, oid144}
+            };
 
             byte[] pubKeyBytes = Convert.FromBase64String(data.Model.PubKey);
             X9ECParameters ecdsaCurve = ECNamedCurveTable.GetByName("secp256k1");
@@ -194,7 +202,7 @@ namespace CertificateAuthority.Controllers
             {
                 string subjectName = $"CN={data.Model.Address}";
 
-                Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(subjectName, publicKey, new string[0], oid141, oid142);
+                Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(subjectName, publicKey, new string[0], extensionData);
 
                 // Important workaround - fill in a dummy signature so that when the CSR is reconstituted on the far side, the decoding does not fail with DerNull errors.
                 unsignedCsr.SignRequest(new byte[] { });

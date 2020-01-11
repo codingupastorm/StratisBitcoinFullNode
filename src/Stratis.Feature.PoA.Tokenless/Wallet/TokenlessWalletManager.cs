@@ -300,8 +300,9 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             // The certificate manager is responsible for creation and storage of the client certificate, the wallet manager is primarily responsible for providing the requisite private key.
             Key privateKey = this.GetExtKey(this.walletSettings.Password, TokenlessWalletAccount.P2PCertificates).PrivateKey;
             PubKey transactionSigningPubKey = this.GetExtKey(this.walletSettings.Password, TokenlessWalletAccount.TransactionSigning).PrivateKey.PubKey;
+            PubKey blockSigningPubKey = this.GetExtKey(this.walletSettings.Password, TokenlessWalletAccount.BlockSigning).PrivateKey.PubKey;
 
-            X509Certificate clientCert = this.certificatesManager.RequestNewCertificate(privateKey, transactionSigningPubKey);
+            X509Certificate clientCert = this.certificatesManager.RequestNewCertificate(privateKey, transactionSigningPubKey, blockSigningPubKey);
 
             File.WriteAllBytes(Path.Combine(this.dataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCert, privateKey, this.walletSettings.Password));
 
