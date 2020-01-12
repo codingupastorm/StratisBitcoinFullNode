@@ -2,6 +2,7 @@
 using NBitcoin;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
+using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.SmartContracts.Core.Util;
 
@@ -41,9 +42,19 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
                 context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, $"The signature for transaction {context.Transaction.GetHash()} is invalid."));
 
             // Now that we have the sender address, lets get their certificate and check they have necessary permissions.
-            if (!this.certificatePermissionsChecker.CheckSenderCertificateHasPermission(getSenderResult.Sender)) 
+            if (!this.certificatePermissionsChecker.CheckSenderCertificateHasPermission(getSenderResult.Sender, TransactionSendingPermission.Send)) 
                 context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "The sender of this transaction is not authorised by the CA to send transactions."));
 
+            // Not a smart contract, no further validation to do.
+            if (!context.Transaction.IsSmartContractExecTransaction())
+                return;
+
+            TransactionSendingPermission permission = context.Transaction.IsSmartContractCreateTransaction()
+                ? TransactionSendingPermission.CreateContract
+                : TransactionSendingPermission.CallContract;
+
+            if (!this.certificatePermissionsChecker.CheckSenderCertificateHasPermission(getSenderResult.Sender, permission))
+                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, $"The sender of this transaction does not have the {permission.ToString()} permission."));
         }
     }
 }

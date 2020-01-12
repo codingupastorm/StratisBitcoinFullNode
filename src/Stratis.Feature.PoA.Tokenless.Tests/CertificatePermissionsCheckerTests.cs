@@ -13,8 +13,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var certParser = new X509CertificateParser();
             X509Certificate cert = certParser.ReadCertificate(File.ReadAllBytes("Certificates/cert.crt"));
 
-            Assert.False(CertificatePermissionsChecker.ValidateCertificateHasPermission(cert));
-            Assert.False(CertificatePermissionsChecker.ValidateCertificateHasPermission(null));
+            Assert.False(CertificatePermissionsChecker.ValidateCertificateHasPermission(cert, TransactionSendingPermission.Send));
+            Assert.False(CertificatePermissionsChecker.ValidateCertificateHasPermission(null, TransactionSendingPermission.Send));
         }
     }
 }

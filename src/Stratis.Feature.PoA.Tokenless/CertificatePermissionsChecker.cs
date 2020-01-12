@@ -1,4 +1,3 @@
-﻿using CertificateAuthority;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
@@ -13,8 +12,9 @@ namespace Stratis.Feature.PoA.Tokenless
         /// checking their certificate. If the certificate isn't known and stored locally, it will be retrieved from the CA.
         /// </summary>
         /// <param name="address">The sender that is trying to send a transaction.</param>
+        /// <param name="permission">The permission we're checking for.</param>
         /// <returns>Whether or not they have the required permissions to send a transaction.</returns>
-        bool CheckSenderCertificateHasPermission(uint160 address);
+        bool CheckSenderCertificateHasPermission(uint160 address, TransactionSendingPermission permission);
     }
 
     public class CertificatePermissionsChecker : ICertificatePermissionsChecker
@@ -33,10 +33,10 @@ namespace Stratis.Feature.PoA.Tokenless
         }
 
         /// <inheritdoc />
-        public bool CheckSenderCertificateHasPermission(uint160 address)
+        public bool CheckSenderCertificateHasPermission(uint160 address, TransactionSendingPermission permission)
         {
             X509Certificate certificate = this.GetCertificate(address); 
-            return ValidateCertificateHasPermission(certificate);
+            return ValidateCertificateHasPermission(certificate, permission);
         }
 
         private X509Certificate GetCertificate(uint160 address)
@@ -52,14 +52,14 @@ namespace Stratis.Feature.PoA.Tokenless
             return this.certificatesManager.GetCertificateForAddress(address.ToBase58Address(this.network));
         }
 
-        public static bool ValidateCertificateHasPermission(X509Certificate certificate)
+        public static bool ValidateCertificateHasPermission(X509Certificate certificate, TransactionSendingPermission permission)
         {
-            // TODO: Can easily be extended to check for different permission types.
-
             if (certificate == null)
                 return false;
 
-            byte[] result = CertificatesManager.ExtractCertificateExtension(certificate, CaCertificatesManager.SendPermission);
+            string oidToCheckFor = permission.GetPermissionOid();
+
+            byte[] result = CertificatesManager.ExtractCertificateExtension(certificate, oidToCheckFor);
             return result != null && result[0] == 1;
         }
     }

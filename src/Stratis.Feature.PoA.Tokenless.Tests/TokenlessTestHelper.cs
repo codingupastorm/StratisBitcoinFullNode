@@ -10,7 +10,6 @@ using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Fee;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Mempool;
@@ -50,7 +49,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             this.CallDataSerializer = new NoGasCallDataSerializer(new ContractPrimitiveSerializer(this.Network));
 
             this.CertificatePermissionsChecker = new Mock<ICertificatePermissionsChecker>();
-            this.CertificatePermissionsChecker.Setup(c => c.CheckSenderCertificateHasPermission(It.IsAny<uint160>())).Returns(true);
+            this.CertificatePermissionsChecker.Setup(c => c.CheckSenderCertificateHasPermission(It.IsAny<uint160>(), It.IsAny<TransactionSendingPermission>())).Returns(true);
 
             this.ChainIndexer = new ChainIndexer(this.Network);
             this.InMemoryCoinView = new InMemoryCoinView(this.Network.GenesisHash);
