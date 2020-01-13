@@ -50,7 +50,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             var server = new TestServer(builder);
             var client = new CaClient(server.BaseAddress, server.CreateClient(), TestAccountId, TestPassword);
 
-            Assert.True(client.InitializeCertificateAuthority(CaMnemonic, CaMnemonicPassword));
+            Assert.True(client.InitializeCertificateAuthority(CaMnemonic, CaMnemonicPassword, this.network));
 
             server.Dispose();
         }
@@ -63,7 +63,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             var server = new TestServer(builder);
             var client = new CaClient(server.BaseAddress, server.CreateClient(), TestAccountId, TestPassword);
 
-            Assert.True(client.InitializeCertificateAuthority(CaMnemonic, CaMnemonicPassword));
+            Assert.True(client.InitializeCertificateAuthority(CaMnemonic, CaMnemonicPassword, this.network));
 
             var privateKey = new Key();
             PubKey pubKey = privateKey.PubKey;
@@ -90,7 +90,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             var server = new TestServer(builder);
             var client = new CaClient(server.BaseAddress, server.CreateClient(), TestAccountId, TestPassword);
 
-            Assert.True(client.InitializeCertificateAuthority(CaMnemonic, CaMnemonicPassword));
+            Assert.True(client.InitializeCertificateAuthority(CaMnemonic, CaMnemonicPassword, this.network));
 
             var privateKey = new Key();
 

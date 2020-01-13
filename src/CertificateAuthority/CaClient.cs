@@ -42,9 +42,9 @@ namespace CertificateAuthority
             this.password = password;
         }
 
-        public bool InitializeCertificateAuthority(string mnemonic, string mnemonicPassword)
+        public bool InitializeCertificateAuthority(string mnemonic, string mnemonicPassword, Network network)
         {
-            var mnemonicModel = new CredentialsModelWithMnemonicModel(mnemonic, mnemonicPassword, this.accountId, this.password);
+            var mnemonicModel = new CredentialsModelWithMnemonicModel(mnemonic, mnemonicPassword, network.Consensus.CoinType, network.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS][0], this.accountId, this.password);
 
             HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{InitializeCertificateAuthorityEndpoint}", mnemonicModel).GetAwaiter().GetResult();
 

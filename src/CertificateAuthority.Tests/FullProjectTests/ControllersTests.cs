@@ -120,7 +120,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates | AccountAccessFlags.RevokeCertificates | AccountAccessFlags.AccessAnyCertificate;
             CredentialsModel credentials1 = this.CreateAccount(credentials1Access);
 
-            this.certificatesController.InitializeCertificateAuthority(new CredentialsModelWithMnemonicModel("young shoe immense usual faculty edge habit misery swarm tape viable toddler", "node", credentials1.AccountId, credentials1.Password));
+            this.certificatesController.InitializeCertificateAuthority(new CredentialsModelWithMnemonicModel("young shoe immense usual faculty edge habit misery swarm tape viable toddler", "node", 105, 63, credentials1.AccountId, credentials1.Password));
 
             var caCertModel = this.certificatesController.GetCaCertificate(credentials1).Value;
 

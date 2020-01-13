@@ -34,7 +34,7 @@ namespace CertificateAuthority.Controllers
 
             try
             {
-                return this.caCertificateManager.InitializeCertificateAuthority(data.Model.Mnemonic, data.Model.MnemonicPassword);
+                return this.caCertificateManager.InitializeCertificateAuthority(data.Model.Mnemonic, data.Model.MnemonicPassword, data.Model.CoinType, data.Model.AddressPrefix);
             }
             catch (InvalidCredentialsException)
             {

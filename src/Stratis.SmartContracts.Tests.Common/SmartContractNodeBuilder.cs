@@ -61,7 +61,6 @@ namespace Stratis.SmartContracts.Tests.Common
 
             using (var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder, "-password=test", $"-mnemonic={ mnemonics[nodeIndex] }", "-certificatepassword=test" }))
             {
-                // TODO: Fix this - providing a working CertificatesManager to the wallet is non-trivial
                 var loggerFactory = new LoggerFactory();
                 var revocationChecker = new RevocationChecker(settings, null, loggerFactory, new DateTimeProvider());
                 var certificatesManager = new CertificatesManager(settings.DataFolder, settings, loggerFactory, revocationChecker, network);
@@ -79,7 +78,6 @@ namespace Stratis.SmartContracts.Tests.Common
                 BitcoinPubKeyAddress address = pubKey.GetAddress(network);
                 PubKey blockSigningPubKey = walletManager.GetExtKey("test", TokenlessWalletAccount.BlockSigning).PrivateKey.PubKey;
 
-                // TODO: Main certificate private key is the P2P comms one
                 X509Certificate clientCertificate = IssueCertificate(client, clientCertificatePrivateKey, transactionSigningPubKey, address, blockSigningPubKey);
 
                 Assert.NotNull(clientCertificate);

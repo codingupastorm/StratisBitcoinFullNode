@@ -65,7 +65,7 @@ namespace CertificateAuthority
         {
         }
 
-        public bool InitializeCertificateAuthority(string mnemonic, string password, string coinType = "105")
+        public bool InitializeCertificateAuthority(string mnemonic, string password, int coinType, byte addressPrefix)
         {
             try
             {
@@ -75,7 +75,7 @@ namespace CertificateAuthority
 
                 var caAddressSpace = new HDWalletAddressSpace(mnemonic, password);
                 byte[] caPubKey = caAddressSpace.GetKey(hdPath).PrivateKey.PubKey.ToBytes();
-                string caAddress = HDWalletAddressSpace.GetAddress(caPubKey, 63);
+                string caAddress = HDWalletAddressSpace.GetAddress(caPubKey, addressPrefix);
                 byte[] caOid141 = Encoding.UTF8.GetBytes(caAddress);
                 
                 // TODO: Is this even needed for the CA?

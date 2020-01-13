@@ -112,10 +112,16 @@ namespace CertificateAuthority.Models
         /// This is a separate password to the actual user account to allow the user account password to be changed without affecting the CA.</summary>
         public string MnemonicPassword { get; set; }
 
-        public CredentialsModelWithMnemonicModel(string mnemonic, string mnemonicPassword, int accountId, string password) : base(accountId, password)
+        public int CoinType { get; set; }
+
+        public byte AddressPrefix { get; set; }
+
+        public CredentialsModelWithMnemonicModel(string mnemonic, string mnemonicPassword, int coinType, byte addressPrefix, int accountId, string password) : base(accountId, password)
         {
             this.Mnemonic = mnemonic;
             this.MnemonicPassword = mnemonicPassword;
+            this.CoinType = coinType;
+            this.AddressPrefix = addressPrefix;
         }
 
         public CredentialsModelWithMnemonicModel()
@@ -133,7 +139,7 @@ namespace CertificateAuthority.Models
         public string BlockSigningPubKey { get; set; }
 
         public string TransactionSigningPubKeyHash { get; set; }
-
+        
         public GenerateCertificateSigningRequestModel(string address, string pubKey, string transactionSigningPubKeyHash, string blockSigningPubKey, int accountId, string password) : base(accountId, password)
         {
             this.Address = address;
