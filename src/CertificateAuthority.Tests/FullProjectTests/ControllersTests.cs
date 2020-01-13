@@ -28,17 +28,18 @@ namespace CertificateAuthority.Tests.FullProjectTests
         private readonly CredentialsModel adminCredentials;
         private readonly CertificatesController certificatesController;
         private readonly DataCacheLayer dataCacheLayer;
+        private readonly TestServer server;
 
         public ControllersTests()
         {
             IWebHostBuilder builder = TestsHelper.CreateWebHostBuilder();
-            var server = new TestServer(builder);
+            this.server = new TestServer(builder);
 
             this.adminCredentials = new CredentialsModel(1, "4815162342");
 
-            this.accountsController = (AccountsController)server.Host.Services.GetService(typeof(AccountsController));
-            this.certificatesController = (CertificatesController)server.Host.Services.GetService(typeof(CertificatesController));
-            this.dataCacheLayer = (DataCacheLayer)server.Host.Services.GetService(typeof(DataCacheLayer));
+            this.accountsController = (AccountsController)this.server.Host.Services.GetService(typeof(AccountsController));
+            this.certificatesController = (CertificatesController)this.server.Host.Services.GetService(typeof(CertificatesController));
+            this.dataCacheLayer = (DataCacheLayer)this.server.Host.Services.GetService(typeof(DataCacheLayer));
         }
 
         [Fact]
@@ -48,7 +49,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             Assert.Single(this.accountsController.GetAllAccounts(this.adminCredentials).Value);
 
             AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates | AccountAccessFlags.RevokeCertificates | AccountAccessFlags.AccessAnyCertificate;
-            CredentialsModel credentials1 = TestsHelper.CreateAccount(credentials1Access);
+            CredentialsModel credentials1 = TestsHelper.CreateAccount(this.server, credentials1Access);
 
             this.certificatesController.InitializeCertificateAuthority(new CredentialsModelWithMnemonicModel("young shoe immense usual faculty edge habit misery swarm tape viable toddler", "node", credentials1.AccountId, credentials1.Password));
 
@@ -243,7 +244,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
         private void Returns403IfNoAccess(Func<int, string, object> action, AccountAccessFlags requiredAccess)
         {
-            CredentialsModel noAccessCredentials = TestsHelper.CreateAccount();
+            CredentialsModel noAccessCredentials = TestsHelper.CreateAccount(this.server);
 
             var response = action.Invoke(noAccessCredentials.AccountId, noAccessCredentials.Password);
 
@@ -272,7 +273,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
                     break;
             }
 
-            CredentialsModel accessCredentials = TestsHelper.CreateAccount(requiredAccess);
+            CredentialsModel accessCredentials = TestsHelper.CreateAccount(this.server, requiredAccess);
 
             response = action.Invoke(accessCredentials.AccountId, accessCredentials.Password);
 
@@ -308,7 +309,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
         private void CheckThrowsIfNoAccess(Action<int, string> action, AccountAccessFlags requiredAccess)
         {
-            CredentialsModel noAccessCredentials = this.CreateAccount();
+            CredentialsModel noAccessCredentials = TestsHelper.CreateAccount(this.server);
             bool throwsIfNoAccess = false;
 
             try
@@ -327,7 +328,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             if (!throwsIfNoAccess)
                 Assert.False(true, "Action was expected to throw.");
 
-            CredentialsModel accessCredentials = this.CreateAccount(requiredAccess);
+            CredentialsModel accessCredentials = TestsHelper.CreateAccount(this.server, requiredAccess);
 
             try
             {

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using CertificateAuthority.Controllers;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
@@ -15,28 +16,28 @@ namespace CertificateAuthority.Tests.FullProjectTests
         private readonly AccountsController accountsController;
         private readonly CredentialsModel adminCredentials;
         private readonly DataCacheLayer dataCacheLayer;
+        private readonly TestServer server;
 
         public AccountsControllerTests()
         {
             IWebHostBuilder builder = TestsHelper.CreateWebHostBuilder();
-            var server = new TestServer(builder);
+            this.server = new TestServer(builder);
 
             this.adminCredentials = new CredentialsModel(1, "4815162342");
-
-            this.accountsController = (AccountsController)server.Host.Services.GetService(typeof(AccountsController));
-            this.dataCacheLayer = (DataCacheLayer)server.Host.Services.GetService(typeof(DataCacheLayer));
+            this.accountsController = (AccountsController)this.server.Host.Services.GetService(typeof(AccountsController));
+            this.dataCacheLayer = (DataCacheLayer)this.server.Host.Services.GetService(typeof(DataCacheLayer));
         }
 
         [Fact]
-        private void TestAccountsControllerMethods()
+        public void TestAccountsControllerMethods()
         {
             // Just admin on start.
             Assert.Single(this.accountsController.GetAllAccounts(this.adminCredentials).Value);
 
             AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates;
-            CredentialsModel credentials1 = TestsHelper.CreateAccount(credentials1Access);
-            CredentialsModel credentials2 = TestsHelper.CreateAccount(AccountAccessFlags.DeleteAccounts);
-            CredentialsModel accToDelete = TestsHelper.CreateAccount();
+            CredentialsModel credentials1 = TestsHelper.CreateAccount(this.server, credentials1Access);
+            CredentialsModel credentials2 = TestsHelper.CreateAccount(this.server, AccountAccessFlags.DeleteAccounts);
+            CredentialsModel accToDelete = TestsHelper.CreateAccount(this.server);
 
             // GetAccountInfoById
             {
@@ -95,6 +96,64 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 Assert.Equal(2, certs.Count);
                 Assert.Equal(50, certs[0].CertificateContentDer.Length);
             }
+        }
+
+        [Fact]
+        public void ChangeAccountPassword_CurrentUser_Pass()
+        {
+            CredentialsModel credentials = TestsHelper.CreateAccount(this.server, AccountAccessFlags.BasicAccess);
+
+            var model = new ChangeAccountPasswordModel(credentials.AccountId, credentials.AccountId, credentials.Password, "newpassword");
+            this.accountsController.ChangeAccountPassword(model);
+
+            var adminCredentialsModel = new CredentialsModel(this.adminCredentials.AccountId, this.adminCredentials.Password);
+            List<AccountModel> accounts = this.accountsController.GetAllAccounts(adminCredentialsModel).Value;
+            AccountModel account = accounts.FirstOrDefault(a => a.Id == credentials.AccountId);
+            Assert.True(account.VerifyPassword("newpassword"));
+        }
+
+        [Fact]
+        public void ChangeAccountPassword_CurrentUser_WrongPassword_Fail()
+        {
+            CredentialsModel credentials = TestsHelper.CreateAccount(this.server, AccountAccessFlags.BasicAccess);
+
+            var model = new ChangeAccountPasswordModel(credentials.AccountId, credentials.AccountId, "wrongpassword", "newpassword");
+            this.accountsController.ChangeAccountPassword(model);
+
+            var adminCredentialsModel = new CredentialsModel(this.adminCredentials.AccountId, this.adminCredentials.Password);
+            List<AccountModel> accounts = this.accountsController.GetAllAccounts(adminCredentialsModel).Value;
+            AccountModel account = accounts.FirstOrDefault(a => a.Id == credentials.AccountId);
+            Assert.False(account.VerifyPassword("newpassword"));
+        }
+
+        [Fact]
+        public void ChangeAccountPassword_AdminUser_Pass()
+        {
+            CredentialsModel userA_Credentials = TestsHelper.CreateAccount(this.server, AccountAccessFlags.BasicAccess);
+
+            var changePasswordModel = new ChangeAccountPasswordModel(this.adminCredentials.AccountId, userA_Credentials.AccountId, this.adminCredentials.Password, "newpassword");
+            this.accountsController.ChangeAccountPassword(changePasswordModel);
+
+            var adminCredentialsModel = new CredentialsModel(this.adminCredentials.AccountId, this.adminCredentials.Password);
+            List<AccountModel> accounts = this.accountsController.GetAllAccounts(adminCredentialsModel).Value;
+            AccountModel account = accounts.FirstOrDefault(a => a.Id == userA_Credentials.AccountId);
+            Assert.True(account.VerifyPassword("newpassword"));
+        }
+
+        [Fact]
+        public void ChangeAccountPassword_DifferentUser_Fail()
+        {
+            CredentialsModel userA_Credentials = TestsHelper.CreateAccount(this.server, AccountAccessFlags.BasicAccess);
+            CredentialsModel userB_Credentials = TestsHelper.CreateAccount(this.server, AccountAccessFlags.BasicAccess);
+
+            var model = new ChangeAccountPasswordModel(userA_Credentials.AccountId, userB_Credentials.AccountId, userA_Credentials.Password, "newpassword");
+            this.accountsController.ChangeAccountPassword(model);
+
+            var adminCredentialsModel = new CredentialsModel(this.adminCredentials.AccountId, this.adminCredentials.Password);
+            List<AccountModel> accounts = this.accountsController.GetAllAccounts(adminCredentialsModel).Value;
+            AccountModel userB_Account = accounts.FirstOrDefault(a => a.Id == userB_Credentials.AccountId);
+            Assert.False(userB_Account.VerifyPassword("newpassword"));
+            Assert.True(userB_Account.VerifyPassword(userB_Credentials.Password));
         }
     }
 }

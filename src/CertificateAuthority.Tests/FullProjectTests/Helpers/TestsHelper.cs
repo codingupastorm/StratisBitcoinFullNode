@@ -22,13 +22,10 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
             return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
-        public static CredentialsModel CreateAccount(AccountAccessFlags access = AccountAccessFlags.BasicAccess, CredentialsModel creatorCredentialsModel = null)
+        public static CredentialsModel CreateAccount(TestServer server, AccountAccessFlags access = AccountAccessFlags.BasicAccess, CredentialsModel creatorCredentialsModel = null, string callingMethod = null)
         {
             string password = GenerateRandomString();
             string passHash = DataHelper.ComputeSha256Hash(password);
-
-            IWebHostBuilder builder = CreateWebHostBuilder();
-            var server = new TestServer(builder);
 
             var adminCredentials = new CredentialsModel(1, "4815162342");
 

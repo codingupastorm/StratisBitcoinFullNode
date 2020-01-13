@@ -62,14 +62,16 @@ namespace CertificateAuthority.Models
         /// <summary>The new password to use.</summary>
         public string NewPassword { get; set; }
 
-        public ChangeAccountPasswordModel(int accountId, string password, string newPassword) : base(accountId, password)
+        /// <summary>The account which password will be changed.</summary>
+        public int TargetAccountId { get; set; }
+
+        public ChangeAccountPasswordModel(int accountId, int targetAccountId, string password, string newPassword) : base(accountId, password)
         {
             this.NewPassword = newPassword;
+            this.TargetAccountId = targetAccountId;
         }
 
-        public ChangeAccountPasswordModel()
-        {
-        }
+        public ChangeAccountPasswordModel() { }
     }
 
     #endregion

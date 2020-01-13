@@ -225,20 +225,34 @@ namespace CertificateAuthority.Database
         {
             ExecuteCommand(credentialsModel, (dbContext, account) =>
             {
-                AccountModel accountToEdit = dbContext.Accounts.SingleOrDefault(x => x.Id == credentialsModel.Model.AccountId);
+                AccountModel targetAccount = dbContext.Accounts.SingleOrDefault(x => x.Id == credentialsModel.Model.TargetAccountId);
 
-                if (accountToEdit == null)
-                    throw new Exception("Account not found.");
+                if (targetAccount == null)
+                    throw new Exception($"Target account not found: {credentialsModel.Model.TargetAccountId}");
 
-                if (accountToEdit.Id != credentialsModel.AccountId)
-                    throw new Exception("You cannot update another account's password.");
+                // If the account and target account is not the same check if the account is the admin account.
+                if (targetAccount.Id != credentialsModel.Model.AccountId)
+                {
+                    AccountModel adminAccount = dbContext.Accounts.SingleOrDefault(a => a.Id == credentialsModel.Model.AccountId);
+                    if (adminAccount == null)
+                        throw new Exception($"The credential account does not exist: {credentialsModel.Model.AccountId}");
 
-                accountToEdit.PasswordHash = credentialsModel.Model.NewPassword;
+                    if (adminAccount.Name != Settings.AdminName)
+                        throw new Exception("Only you or an admin account can change the password.");
+                }
+                // If the account is the same as the target account, check the old password.
+                else
+                {
+                    if (!targetAccount.VerifyPassword(credentialsModel.Model.Password))
+                        throw new Exception($"The target account's old password is incorrect.");
+                }
 
-                dbContext.Accounts.Update(accountToEdit);
+                targetAccount.PasswordHash = DataHelper.ComputeSha256Hash(credentialsModel.Model.NewPassword);
+
+                dbContext.Accounts.Update(targetAccount);
                 dbContext.SaveChanges();
 
-                this.logger.Info("Account Id {0}'s password has been updated.", credentialsModel.AccountId);
+                this.logger.Info("Account Id {0}'s password has been updated.", credentialsModel.Model.TargetAccountId);
             });
         }
 
