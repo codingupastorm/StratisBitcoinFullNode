@@ -25,7 +25,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
     public class ControllersTests
     {
         private readonly AccountsController accountsController;
-        private CredentialsModel adminCredentials;
+        private readonly CredentialsModel adminCredentials;
         private readonly CertificatesController certificatesController;
         private readonly DataCacheLayer dataCacheLayer;
 
@@ -42,87 +42,17 @@ namespace CertificateAuthority.Tests.FullProjectTests
         }
 
         [Fact]
-        private void TestAccountsControllerMethods()
-        {
-            // Just admin on start.
-            Assert.Single(this.accountsController.GetAllAccounts(this.adminCredentials).Value);
-
-            AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates;
-            CredentialsModel credentials1 = this.CreateAccount(credentials1Access);
-            CredentialsModel credentials2 = this.CreateAccount(AccountAccessFlags.DeleteAccounts);
-            CredentialsModel accToDelete = this.CreateAccount();
-
-            // GetAccountInfoById
-            {
-                // Admin can access new user's data
-                AccountInfo info = this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(credentials1.AccountId, adminCredentials.AccountId, adminCredentials.Password)).Value;
-                Assert.Equal(credentials1Access, info.AccessInfo);
-                Assert.Equal(this.adminCredentials.AccountId, info.CreatorId);
-
-                // First user can access admin's data'
-                AccountInfo info2 = this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(this.adminCredentials.AccountId, credentials1.AccountId, credentials1.Password)).Value;
-                Assert.Equal(this.adminCredentials.AccountId, info2.CreatorId);
-                Assert.Equal(Settings.AdminName, info2.Name);
-
-                // Guy without rights fails.
-                var result = this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(credentials1.AccountId, credentials2.AccountId, credentials2.Password));
-
-                Assert.True((((StatusCodeResult)result.Result).StatusCode == 403));
-            }
-
-            // GetAllAccounts
-            List<AccountModel> allAccounts = this.accountsController.GetAllAccounts(this.adminCredentials).Value;
-            Assert.Equal(4, allAccounts.Count);
-
-            // DeleteAccountByAccountId
-            {
-                this.accountsController.DeleteAccountByAccountId(new CredentialsModelWithTargetId(accToDelete.AccountId, credentials2.AccountId, credentials2.Password));
-                Assert.Equal(3, this.accountsController.GetAllAccounts(this.adminCredentials).Value.Count);
-
-                var result = this.accountsController.DeleteAccountByAccountId(new CredentialsModelWithTargetId(credentials2.AccountId, credentials1.AccountId, credentials1.Password));
-                Assert.True(((StatusCodeResult)result).StatusCode == 403);
-            }
-
-            // ChangeAccountAccessLevel
-            int newFlag = 8 + 16 + 2 + 64;
-            this.accountsController.ChangeAccountAccessLevel(new ChangeAccountAccessLevel(newFlag, credentials1.AccountId, this.adminCredentials.AccountId, this.adminCredentials.Password));
-
-            int newAccessInfo = (int)this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(credentials1.AccountId, this.adminCredentials.AccountId, this.adminCredentials.Password)).Value.AccessInfo;
-            Assert.Equal(newFlag, newAccessInfo);
-
-            // GetCertIdsIssuedByAccountId
-            {
-                int issuerId = credentials1.AccountId;
-
-                string print1 = TestsHelper.GenerateRandomString(20);
-                string print2 = TestsHelper.GenerateRandomString(20);
-
-                // Add fake certificates using data repository.
-                this.dataCacheLayer.AddNewCertificate(new CertificateInfoModel()
-                { IssuerAccountId = issuerId, CertificateContentDer = TestsHelper.GenerateRandomString(50), Status = CertificateStatus.Good, Thumbprint = print1 });
-
-                this.dataCacheLayer.AddNewCertificate(new CertificateInfoModel()
-                { IssuerAccountId = issuerId, CertificateContentDer = TestsHelper.GenerateRandomString(50), Status = CertificateStatus.Good, Thumbprint = print2 });
-
-                List<CertificateInfoModel> certs = this.accountsController.GetCertificatesIssuedByAccountId(new CredentialsModelWithTargetId(issuerId, this.adminCredentials.AccountId, this.adminCredentials.Password)).Value;
-
-                Assert.Equal(2, certs.Count);
-                Assert.Equal(50, certs[0].CertificateContentDer.Length);
-            }
-        }
-
-        [Fact]
-        private async Task TestCertificatesControllerMethods()
+        private async Task TestCertificatesControllerMethodsAsync()
         {
             // Just admin on start.
             Assert.Single(this.accountsController.GetAllAccounts(this.adminCredentials).Value);
 
             AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates | AccountAccessFlags.RevokeCertificates | AccountAccessFlags.AccessAnyCertificate;
-            CredentialsModel credentials1 = this.CreateAccount(credentials1Access);
+            CredentialsModel credentials1 = TestsHelper.CreateAccount(credentials1Access);
 
             this.certificatesController.InitializeCertificateAuthority(new CredentialsModelWithMnemonicModel("young shoe immense usual faculty edge habit misery swarm tape viable toddler", "node", credentials1.AccountId, credentials1.Password));
 
-            var caCertModel = this.certificatesController.GetCaCertificate(credentials1).Value;
+            CertificateInfoModel caCertModel = this.certificatesController.GetCaCertificate(credentials1).Value;
 
             var certParser = new X509CertificateParser();
 
@@ -311,20 +241,9 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 AccountAccessFlags.IssueCertificates);
         }
 
-        private CredentialsModel CreateAccount(AccountAccessFlags access = AccountAccessFlags.BasicAccess, CredentialsModel creatorCredentialsModel = null)
-        {
-            string password = TestsHelper.GenerateRandomString();
-            string passHash = DataHelper.ComputeSha256Hash(password);
-
-            CredentialsModel credentialsModel = creatorCredentialsModel ?? this.adminCredentials;
-            int id = this.accountsController.CreateAccount(new CreateAccount(TestsHelper.GenerateRandomString(), passHash, (int)access, credentialsModel.AccountId, credentialsModel.Password)).Value;
-
-            return new CredentialsModel(id, password);
-        }
-
         private void Returns403IfNoAccess(Func<int, string, object> action, AccountAccessFlags requiredAccess)
         {
-            CredentialsModel noAccessCredentials = this.CreateAccount();
+            CredentialsModel noAccessCredentials = TestsHelper.CreateAccount();
 
             var response = action.Invoke(noAccessCredentials.AccountId, noAccessCredentials.Password);
 
@@ -353,7 +272,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
                     break;
             }
 
-            CredentialsModel accessCredentials = this.CreateAccount(requiredAccess);
+            CredentialsModel accessCredentials = TestsHelper.CreateAccount(requiredAccess);
 
             response = action.Invoke(accessCredentials.AccountId, accessCredentials.Password);
 
@@ -369,7 +288,6 @@ namespace CertificateAuthority.Tests.FullProjectTests
                     break;
                 case ActionResult<int> result3b:
                     Assert.Null(result3b.Result);
-                    Assert.NotNull(result3b.Value);
                     break;
                 case ActionResult<List<CertificateInfoModel>> result4b:
                     Assert.Null(result4b.Result);
@@ -377,7 +295,6 @@ namespace CertificateAuthority.Tests.FullProjectTests
                     break;
                 case ActionResult<bool> result5b:
                     Assert.Null(result5b.Result);
-                    Assert.NotNull(result5b.Value);
                     break;
                 case ActionResult<CertificateInfoModel> result6b:
                     // The certificate may not have been found or could not be issued, in which case the response is a 404 or 500

@@ -1,9 +1,9 @@
 ﻿using System;
-using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CertificateAuthority.Controllers
 {
@@ -142,6 +142,32 @@ namespace CertificateAuthority.Controllers
             {
                 // TODO: Add distinct exception type for attempting to change access level?
                 return StatusCode(StatusCodes.Status403Forbidden);
+            }
+        }
+
+        /// <summary>
+        /// Sets access level of a specified account to a given value.
+        /// You can't change your own or Admin's access level. You can't set account's access level to be higher than yours.
+        /// ChangeAccountAccessLevel access level is required.
+        /// </summary>
+        [HttpPost("changepassword")]
+        public ActionResult ChangeAccountPassword([FromBody]ChangeAccountPasswordModel model)
+        {
+            var credentials = new CredentialsAccessWithModel<ChangeAccountPasswordModel>(model, AccountAccessFlags.BasicAccess);
+
+            try
+            {
+                this.repository.ChangeAccountPassword(credentials);
+
+                return this.Ok();
+            }
+            catch (InvalidCredentialsException ex)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, ex.ToString());
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, ex.ToString());
             }
         }
     }
