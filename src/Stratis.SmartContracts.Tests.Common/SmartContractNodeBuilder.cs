@@ -43,7 +43,7 @@ namespace Stratis.SmartContracts.Tests.Common
             return node;
         }
 
-        public (CoreNode, Key) CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client)
+        public (CoreNode, Key, Key) CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client)
         {
             string dataFolder = this.GetNextDataFolderName();
 
@@ -74,7 +74,8 @@ namespace Stratis.SmartContracts.Tests.Common
 
                 Key clientCertificatePrivateKey = walletManager.GetExtKey("test", TokenlessWalletAccount.P2PCertificates).PrivateKey;
                 PubKey pubKey = clientCertificatePrivateKey.PubKey;
-                PubKey transactionSigningPubKey = walletManager.GetExtKey("test", TokenlessWalletAccount.TransactionSigning).PrivateKey.PubKey;
+                Key transactionSigningPrivateKey = walletManager.GetExtKey("test", TokenlessWalletAccount.TransactionSigning).PrivateKey;
+                PubKey transactionSigningPubKey = transactionSigningPrivateKey.PubKey;
                 BitcoinPubKeyAddress address = pubKey.GetAddress(network);
                 PubKey blockSigningPubKey = walletManager.GetExtKey("test", TokenlessWalletAccount.BlockSigning).PrivateKey.PubKey;
 
@@ -89,7 +90,7 @@ namespace Stratis.SmartContracts.Tests.Common
                     File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCertificate, clientCertificatePrivateKey, "test"));
                 }
 
-                return (node, clientCertificatePrivateKey);
+                return (node, clientCertificatePrivateKey, transactionSigningPrivateKey);
             }
         }
         private X509Certificate IssueCertificate(CaClient client, Key privKey, PubKey transactionSigningPubKey, BitcoinPubKeyAddress address, PubKey blockSigningPubKey)
