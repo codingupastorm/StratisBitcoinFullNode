@@ -23,7 +23,6 @@ namespace Stratis.TokenlessD
         {
             try
             {
-                // TODO: Fix this - providing a working CertificatesManager to the wallet is non-trivial
                 var network = new TokenlessNetwork();
                 var nodeSettings = new NodeSettings(network, args: args);
                 var loggerFactory = new LoggerFactory();
