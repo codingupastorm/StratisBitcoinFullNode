@@ -50,8 +50,10 @@ namespace CertificateAuthority
 
         public const string P2pkhExtensionOid = "1.4.1";
         public const string TransactionSigningPubKeyHashExtensionOid = "1.4.2";
-        public const string SendPermission = "1.4.3";
-        public const string BlockSigningPubKeyExtensionOid = "1.4.4";
+        public const string BlockSigningPubKeyExtensionOid = "1.4.3";
+        public const string SendPermission = "1.5.1";
+        public const string CallContractPermissionOid = "1.5.2";
+        public const string CreateContractPermissionOid = "1.5.3";
 
         public CaCertificatesManager(DataCacheLayer cache, Settings settings)
         {
@@ -405,8 +407,10 @@ namespace CertificateAuthority
             // TODO: Should this be explicitly requested in the CSR?
             certificateGenerator.AddExtension(SendPermission, false, new byte[] {1});
 
-            if (extensionData.TryGetValue(BlockSigningPubKeyExtensionOid, out byte[] oid144))
-                certificateGenerator.AddExtension(BlockSigningPubKeyExtensionOid, false, new DerOctetString(oid144));
+            if (extensionData.TryGetValue(BlockSigningPubKeyExtensionOid, out byte[] oid143))
+                certificateGenerator.AddExtension(BlockSigningPubKeyExtensionOid, false, new DerOctetString(oid143));
+            certificateGenerator.AddExtension(CallContractPermissionOid, false, new byte[] {1});
+            certificateGenerator.AddExtension(CreateContractPermissionOid, false, new byte[] { 1 });
         }
 
         public static X509Certificate2 ConvertCertificate(X509Certificate certificate, SecureRandom random)
@@ -566,6 +570,11 @@ namespace CertificateAuthority
             }
 
             oids.Add(new DerObjectIdentifier(SendPermission));
+            oids.Add(new DerObjectIdentifier(CallContractPermissionOid));
+            oids.Add(new DerObjectIdentifier(CreateContractPermissionOid));
+
+            values.Add(new X509Extension(true, new DerOctetString(new byte[] { 1 })));
+            values.Add(new X509Extension(true, new DerOctetString(new byte[] { 1 })));
             values.Add(new X509Extension(true, new DerOctetString(new byte[] { 1 })));
 
             if (extensionData.TryGetValue(BlockSigningPubKeyExtensionOid, out byte[] oid144))

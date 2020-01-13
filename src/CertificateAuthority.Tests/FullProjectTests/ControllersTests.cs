@@ -112,7 +112,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
         }
 
         [Fact]
-        private async Task TestCertificatesControllerMethods()
+        public async Task TestCertificatesControllerMethodsAsync()
         {
             // Just admin on start.
             Assert.Single(this.accountsController.GetAllAccounts(this.adminCredentials).Value);
@@ -153,13 +153,13 @@ namespace CertificateAuthority.Tests.FullProjectTests
             string clientAddress = HDWalletAddressSpace.GetAddress(clientPrivateKey.PubKey.ToBytes(), 63);
             byte[] clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
             byte[] clientOid142 = transactionSigningPrivateKey.PubKey.Hash.ToBytes();
-            byte[] clientOid144 = blockSigningPrivateKey.PubKey.ToBytes();
+            byte[] clientOid143 = blockSigningPrivateKey.PubKey.ToBytes();
 
             var extensionData = new Dictionary<string, byte[]>
             {
                 {CaCertificatesManager.P2pkhExtensionOid, clientOid141},
                 {CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid, clientOid142},
-                {CaCertificatesManager.BlockSigningPubKeyExtensionOid, clientOid144}
+                {CaCertificatesManager.BlockSigningPubKeyExtensionOid, clientOid143}
             };
 
             Pkcs10CertificationRequest certificateSigningRequest = CaCertificatesManager.CreateCertificateSigningRequest(clientName, clientKey, new string[0], extensionData);
@@ -188,13 +188,16 @@ namespace CertificateAuthority.Tests.FullProjectTests
             clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
             clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
             clientOid142 = clientPublicKey;
-            clientOid144 = blockSigningPrivateKey.PubKey.ToBytes();
+            clientOid143 = blockSigningPrivateKey.PubKey.ToBytes();
 
             extensionData = new Dictionary<string, byte[]>
             {
                 {CaCertificatesManager.P2pkhExtensionOid, clientOid141},
                 {CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid, clientOid142},
-                {CaCertificatesManager.BlockSigningPubKeyExtensionOid, clientOid144}
+                {CaCertificatesManager.BlockSigningPubKeyExtensionOid, clientOid143},
+                {CaCertificatesManager.SendPermission, new byte[] { 1 } },
+                {CaCertificatesManager.CallContractPermissionOid, new byte[] { 1 } },
+                {CaCertificatesManager.CreateContractPermissionOid, new byte[] { 1 } }
             };
 
             Pkcs10CertificationRequest certificateSigningRequest2 = CaCertificatesManager.CreateCertificateSigningRequest(clientName, clientKey2, new string[0], extensionData);
@@ -255,13 +258,13 @@ namespace CertificateAuthority.Tests.FullProjectTests
             clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
             clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
             clientOid142 = clientPublicKey;
-            clientOid144 = blockSigningPrivateKey.PubKey.ToBytes();
+            clientOid143 = blockSigningPrivateKey.PubKey.ToBytes();
 
             extensionData = new Dictionary<string, byte[]>
             {
                 {CaCertificatesManager.P2pkhExtensionOid, clientOid141},
                 {CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid, clientOid142},
-                {CaCertificatesManager.BlockSigningPubKeyExtensionOid, clientOid144}
+                {CaCertificatesManager.BlockSigningPubKeyExtensionOid, clientOid143}
             };
 
             Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(clientName, clientKey2.Public, new string[0], extensionData);
