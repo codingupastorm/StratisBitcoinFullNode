@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
+using NLog;
 
 namespace CertificateAuthority.Controllers
 {
@@ -13,6 +14,7 @@ namespace CertificateAuthority.Controllers
     public class AccountsController : Controller
     {
         private readonly DataCacheLayer repository;
+        private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public AccountsController(DataCacheLayer repository)
         {
@@ -35,6 +37,12 @@ namespace CertificateAuthority.Controllers
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
+            }
         }
 
         /// <summary>Provides account information of the account with id specified. AccessAccountInfo access level required.</summary>
@@ -52,6 +60,12 @@ namespace CertificateAuthority.Controllers
             catch (InvalidCredentialsException)
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
             }
         }
 
@@ -71,10 +85,11 @@ namespace CertificateAuthority.Controllers
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // TODO: This is generally the case where an account is being created with a higher access level than the creator. Create a distinct exception type for this scenario?
-                return StatusCode(StatusCodes.Status403Forbidden);
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
             }
         }
 
@@ -94,6 +109,12 @@ namespace CertificateAuthority.Controllers
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
+            }
         }
 
         /// <summary>Deletes existing account with id specified. DeleteAccounts access level is required. Can't delete Admin.</summary>
@@ -112,10 +133,11 @@ namespace CertificateAuthority.Controllers
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // TODO: Add distinct exception type for attempting to delete the admin account?
-                return StatusCode(StatusCodes.Status403Forbidden);
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
             }
         }
 
@@ -139,10 +161,11 @@ namespace CertificateAuthority.Controllers
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // TODO: Add distinct exception type for attempting to change access level?
-                return StatusCode(StatusCodes.Status403Forbidden);
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
             }
         }
     }

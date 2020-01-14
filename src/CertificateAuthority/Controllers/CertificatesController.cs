@@ -41,9 +41,11 @@ namespace CertificateAuthority.Controllers
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal server error");
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
             }
         }
 
@@ -66,6 +68,12 @@ namespace CertificateAuthority.Controllers
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
+            }
         }
 
         [HttpPost("get_ca_certificate")]
@@ -86,6 +94,12 @@ namespace CertificateAuthority.Controllers
             catch (InvalidCredentialsException)
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
             }
         }
 
@@ -108,6 +122,12 @@ namespace CertificateAuthority.Controllers
             catch (InvalidCredentialsException)
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
             }
         }
 
@@ -153,6 +173,12 @@ namespace CertificateAuthority.Controllers
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
+            }
         }
 
         /// <summary>Provides collection of all issued certificates. AccessAnyCertificate access level is required.</summary>
@@ -171,6 +197,12 @@ namespace CertificateAuthority.Controllers
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
+            }
         }
 
         /// <summary>Creates a template certificate request without a signature. IssueCertificates access level is required.</summary>
@@ -179,7 +211,9 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(CertificateSigningRequestModel), 200)]
         public async Task<IActionResult> GenerateCertificateSigningRequestAsync([FromBody]GenerateCertificateSigningRequestModel model)
         {
-            var data = new CredentialsAccessWithModel<GenerateCertificateSigningRequestModel>(model, AccountAccessFlags.IssueCertificates);
+            try
+            {
+                var data = new CredentialsAccessWithModel<GenerateCertificateSigningRequestModel>(model, AccountAccessFlags.IssueCertificates);
 
             byte[] oid141 = Encoding.UTF8.GetBytes(data.Model.Address);
             byte[] oid142 = Convert.FromBase64String(data.Model.TransactionSigningPubKeyHash);
@@ -197,10 +231,8 @@ namespace CertificateAuthority.Controllers
             var ecdsaDomainParams = new ECDomainParameters(ecdsaCurve.Curve, ecdsaCurve.G, ecdsaCurve.N, ecdsaCurve.H, ecdsaCurve.GetSeed());
             var q = new X9ECPoint(ecdsaCurve.Curve, pubKeyBytes);
 
-            AsymmetricKeyParameter publicKey = new ECPublicKeyParameters(q.Point, ecdsaDomainParams);
+                AsymmetricKeyParameter publicKey = new ECPublicKeyParameters(q.Point, ecdsaDomainParams);
 
-            try
-            {
                 string subjectName = $"CN={data.Model.Address}";
 
                 Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(subjectName, publicKey, new string[0], extensionData);
@@ -216,9 +248,11 @@ namespace CertificateAuthority.Controllers
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal server error");
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
             }
         }
 
@@ -239,9 +273,11 @@ namespace CertificateAuthority.Controllers
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal server error");
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
             }
         }
 
@@ -269,11 +305,11 @@ namespace CertificateAuthority.Controllers
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                this.logger.Error(e);
+                this.logger.Error(ex);
 
-                return StatusCode(500, "Internal server error");
+                return BadRequest(ex);
             }
         }
 
@@ -287,12 +323,21 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(string), 200)]
         public IActionResult GetCertificateStatus([FromBody]GetCertificateStatusModel model)
         {
-            CertificateStatus status = this.caCertificateManager.GetCertificateStatusByThumbprint(model.Thumbprint);
+            try
+            {
+                CertificateStatus status = this.caCertificateManager.GetCertificateStatusByThumbprint(model.Thumbprint);
 
-            if (model.AsString)
-                return this.Json(status.ToString());
+                if (model.AsString)
+                    return this.Json(status.ToString());
 
-            return this.Json(((int)status).ToString());
+                return this.Json(((int)status).ToString());
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
+            }
         }
 
         /// <summary>Returns a collection of thumbprints of revoked certificates.</summary>

@@ -439,6 +439,9 @@ namespace CertificateAuthority
 
         public CertificateInfoModel GetCaCertificate(CredentialsAccessModel accessModelInfo)
         {
+            if (this.caCertificate == null)
+                return null;
+
             X509Certificate2 tempCert = ConvertCertificate(this.caCertificate, GetSecureRandom());
 
             return new CertificateInfoModel()
@@ -541,7 +544,6 @@ namespace CertificateAuthority
                 dbContext.Update(certToEdit);
                 dbContext.SaveChanges();
 
-                // TODO: Is the intention to have an additional OID for the block signing key's pubkey or pubkey hash? If so, this will need to be modified to use a different (new) field on the certificate model
                 if (!dbContext.Certificates.Any(c => c.BlockSigningPubKey == certToEdit.BlockSigningPubKey && certToEdit.Status != CertificateStatus.Revoked))
                     this.repository.PublicKeys.Remove(certToEdit.BlockSigningPubKey);
 
