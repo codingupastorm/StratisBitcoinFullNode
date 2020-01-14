@@ -7,9 +7,10 @@ using Microsoft.AspNetCore.Http;
 
 namespace CertificateAuthority.Controllers
 {
+    [Produces("application/json")]
     [Route("api/accounts")]
     [ApiController]
-    public class AccountsController : ControllerBase
+    public class AccountsController : Controller
     {
         private readonly DataCacheLayer repository;
 
@@ -22,13 +23,13 @@ namespace CertificateAuthority.Controllers
         /// <response code="201">Instance of <see cref="AccountInfo"/>.</response>
         [HttpPost("get_account_info_by_id")]
         [ProducesResponseType(typeof(AccountInfo), 200)]
-        public ActionResult<AccountInfo> GetAccountInfoById([FromBody]CredentialsModelWithTargetId model)
+        public IActionResult GetAccountInfoById([FromBody]CredentialsModelWithTargetId model)
         {
             var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AccessAccountInfo);
 
             try
             {
-                return this.repository.GetAccountInfoById(credentials);
+                return this.Json(this.repository.GetAccountInfoById(credentials));
             }
             catch (InvalidCredentialsException)
             {
@@ -40,13 +41,13 @@ namespace CertificateAuthority.Controllers
         /// <response code="201">Collection of <see cref="AccountModel"/> instances.</response>
         [HttpPost("list_accounts")]
         [ProducesResponseType(typeof(List<AccountModel>), 200)]
-        public ActionResult<List<AccountModel>> GetAllAccounts([FromBody]CredentialsModel model)
+        public IActionResult GetAllAccounts([FromBody]CredentialsModel model)
         {
             var credentials = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAccountInfo);
 
             try
             {
-                return this.repository.GetAllAccounts(credentials);
+                return this.Json(this.repository.GetAllAccounts(credentials));
             }
             catch (InvalidCredentialsException)
             {
@@ -58,13 +59,13 @@ namespace CertificateAuthority.Controllers
         /// <response code="201">Account id as integer. CreateAccounts access level is required.</response>
         [HttpPost("create_account")]
         [ProducesResponseType(typeof(int), 200)]
-        public ActionResult<int> CreateAccount([FromBody]CreateAccount model)
+        public IActionResult CreateAccount([FromBody]CreateAccount model)
         {
             var credentials = new CredentialsAccessWithModel<CreateAccount>(model, AccountAccessFlags.CreateAccounts);
 
             try
             {
-                return this.repository.CreateAccount(credentials);
+                return this.Json(this.repository.CreateAccount(credentials));
             }
             catch (InvalidCredentialsException)
             {
@@ -81,13 +82,13 @@ namespace CertificateAuthority.Controllers
         /// <response code="201">Collection of <see cref="CertificateInfoModel"/> instances.</response>
         [HttpPost("get_certificates_issued_by_account_id")]
         [ProducesResponseType(typeof(List<CertificateInfoModel>), 200)]
-        public ActionResult<List<CertificateInfoModel>> GetCertificatesIssuedByAccountId([FromBody]CredentialsModelWithTargetId model)
+        public IActionResult GetCertificatesIssuedByAccountId([FromBody]CredentialsModelWithTargetId model)
         {
             var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AccessAnyCertificate);
 
             try
             {
-                return this.repository.GetCertificatesIssuedByAccountId(credentials);
+                return this.Json(this.repository.GetCertificatesIssuedByAccountId(credentials));
             }
             catch (InvalidCredentialsException)
             {
@@ -97,7 +98,7 @@ namespace CertificateAuthority.Controllers
 
         /// <summary>Deletes existing account with id specified. DeleteAccounts access level is required. Can't delete Admin.</summary>
         [HttpPost("delete_account_by_account_id")]
-        public ActionResult DeleteAccountByAccountId([FromBody]CredentialsModelWithTargetId model)
+        public IActionResult DeleteAccountByAccountId([FromBody]CredentialsModelWithTargetId model)
         {
             var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.DeleteAccounts);
 
@@ -124,7 +125,7 @@ namespace CertificateAuthority.Controllers
         /// ChangeAccountAccessLevel access level is required.
         /// </summary>
         [HttpPost("change_account_access_level")]
-        public ActionResult ChangeAccountAccessLevel([FromBody]ChangeAccountAccessLevel model)
+        public IActionResult ChangeAccountAccessLevel([FromBody]ChangeAccountAccessLevel model)
         {
             var credentials = new CredentialsAccessWithModel<ChangeAccountAccessLevel>(model, AccountAccessFlags.ChangeAccountAccessLevel);
 
