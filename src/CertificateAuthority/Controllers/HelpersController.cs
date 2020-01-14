@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using NLog;
 
 namespace CertificateAuthority.Controllers
 {
@@ -13,6 +15,7 @@ namespace CertificateAuthority.Controllers
     public class HelpersController : Controller
     {
         private readonly DataCacheLayer cache;
+        private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public HelpersController(DataCacheLayer cache)
         {
@@ -25,9 +28,18 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(string), 200)]
         public IActionResult GetSha256(string data)
         {
-            string hash = DataHelper.ComputeSha256Hash(data);
+            try
+            {                
+                string hash = DataHelper.ComputeSha256Hash(data);
 
-            return this.Json(hash);
+                return this.Json(hash);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
+            }
         }
 
         /// <summary>Provides collection of all access flags. To combine several flags into a single one just sum their integer representations.</summary>
@@ -55,6 +67,12 @@ namespace CertificateAuthority.Controllers
             catch (InvalidCredentialsException)
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
             }
         }
     }
