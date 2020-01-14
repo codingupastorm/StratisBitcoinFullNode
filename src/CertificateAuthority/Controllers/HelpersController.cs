@@ -1,17 +1,21 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using NLog;
 
 namespace CertificateAuthority.Controllers
 {
+    [Produces("application/json")]
     [Route("api/helpers")]
     [ApiController]
-    public class HelpersController : ControllerBase
+    public class HelpersController : Controller
     {
         private readonly DataCacheLayer cache;
+        private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
         public HelpersController(DataCacheLayer cache)
         {
@@ -22,11 +26,20 @@ namespace CertificateAuthority.Controllers
         /// <response code="201">Instance of string.</response>
         [HttpPost("get_sha256_hash")]
         [ProducesResponseType(typeof(string), 200)]
-        public ActionResult<string> GetSha256(string data)
+        public IActionResult GetSha256(string data)
         {
-            string hash = DataHelper.ComputeSha256Hash(data);
+            try
+            {                
+                string hash = DataHelper.ComputeSha256Hash(data);
 
-            return hash;
+                return this.Json(hash);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
+            }
         }
 
         /// <summary>Provides collection of all access flags. To combine several flags into a single one just sum their integer representations.</summary>
@@ -34,7 +47,7 @@ namespace CertificateAuthority.Controllers
         /// <response code="201">Dictionary with access flag as key and access string as value.</response>
         [HttpPost("get_all_access_level_values")]
         [ProducesResponseType(typeof(Dictionary<int, string>), 200)]
-        public ActionResult<string> GetAllAccessLevels(CredentialsModel model)
+        public IActionResult GetAllAccessLevels(CredentialsModel model)
         {
             var accessModelInfo = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.BasicAccess);
 
@@ -49,11 +62,17 @@ namespace CertificateAuthority.Controllers
 
                 string output = JsonConvert.SerializeObject(accesses);
 
-                return output;
+                return this.Json(output);
             }
             catch (InvalidCredentialsException)
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
             }
         }
     }
