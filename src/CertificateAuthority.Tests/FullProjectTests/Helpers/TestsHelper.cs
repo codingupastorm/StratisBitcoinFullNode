@@ -4,8 +4,10 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using CertificateAuthority.Controllers;
 using CertificateAuthority.Models;
+using FluentAssertions;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -32,7 +34,7 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
             var accountsController = (AccountsController)server.Host.Services.GetService(typeof(AccountsController));
 
             CredentialsModel credentialsModel = creatorCredentialsModel ?? adminCredentials;
-            int id = accountsController.CreateAccount(new CreateAccount(GenerateRandomString(), passHash, (int)access, credentialsModel.AccountId, credentialsModel.Password)).Value;
+            int id = GetValue<int>(accountsController.CreateAccount(new CreateAccount(GenerateRandomString(), passHash, (int)access, credentialsModel.AccountId, credentialsModel.Password)));
 
             return new CredentialsModel(id, password);
         }
@@ -55,6 +57,13 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
             builder.ConfigureServices((services) => { services.AddSingleton(settings); });
 
             return builder;
+        }
+
+        public static T GetValue<T>(IActionResult response)
+        {
+            response.Should().BeOfType<JsonResult>();
+            var result = (JsonResult)response;
+            return (T)result.Value;
         }
     }
 }

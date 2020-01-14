@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
-using NLog;
 using Microsoft.AspNetCore.Mvc;
+using NLog;
 
 namespace CertificateAuthority.Controllers
 {
@@ -40,7 +40,6 @@ namespace CertificateAuthority.Controllers
             catch (Exception ex)
             {
                 this.logger.Error(ex);
-
                 return BadRequest(ex);
             }
         }
@@ -64,7 +63,6 @@ namespace CertificateAuthority.Controllers
             catch (Exception ex)
             {
                 this.logger.Error(ex);
-
                 return BadRequest(ex);
             }
         }
@@ -88,7 +86,6 @@ namespace CertificateAuthority.Controllers
             catch (Exception ex)
             {
                 this.logger.Error(ex);
-
                 return BadRequest(ex);
             }
         }
@@ -112,7 +109,6 @@ namespace CertificateAuthority.Controllers
             catch (Exception ex)
             {
                 this.logger.Error(ex);
-
                 return BadRequest(ex);
             }
         }
@@ -136,7 +132,6 @@ namespace CertificateAuthority.Controllers
             catch (Exception ex)
             {
                 this.logger.Error(ex);
-
                 return BadRequest(ex);
             }
         }
@@ -164,7 +159,6 @@ namespace CertificateAuthority.Controllers
             catch (Exception ex)
             {
                 this.logger.Error(ex);
-
                 return BadRequest(ex);
             }
         }
@@ -185,13 +179,14 @@ namespace CertificateAuthority.Controllers
 
                 return this.Ok();
             }
-            catch (InvalidCredentialsException ex)
+            catch (InvalidCredentialsException)
             {
-                return StatusCode(StatusCodes.Status403Forbidden, ex.ToString());
+                return StatusCode(StatusCodes.Status403Forbidden);
             }
             catch (Exception ex)
             {
-                return StatusCode(StatusCodes.Status400BadRequest, ex.ToString());
+                this.logger.Error(ex);
+                return BadRequest(ex);
             }
         }
     }

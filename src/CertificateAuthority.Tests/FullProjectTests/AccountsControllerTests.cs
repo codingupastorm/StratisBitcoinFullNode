@@ -29,10 +29,10 @@ namespace CertificateAuthority.Tests.FullProjectTests
         }
 
         [Fact]
-        public void TestAccountsControllerMethods()
+        private void TestAccountsControllerMethods()
         {
             // Just admin on start.
-            Assert.Single(this.accountsController.GetAllAccounts(this.adminCredentials).Value);
+            Assert.Single(TestsHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(this.adminCredentials)));
 
             AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates;
             CredentialsModel credentials1 = TestsHelper.CreateAccount(this.server, credentials1Access);
@@ -42,31 +42,30 @@ namespace CertificateAuthority.Tests.FullProjectTests
             // GetAccountInfoById
             {
                 // Admin can access new user's data
-                AccountInfo info = this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(credentials1.AccountId, this.adminCredentials.AccountId, this.adminCredentials.Password)).Value;
+                AccountInfo info = TestsHelper.GetValue<AccountInfo>(this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(credentials1.AccountId, this.adminCredentials.AccountId, this.adminCredentials.Password)));
                 Assert.Equal(credentials1Access, info.AccessInfo);
                 Assert.Equal(this.adminCredentials.AccountId, info.CreatorId);
 
                 // First user can access admin's data'
-                AccountInfo info2 = this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(this.adminCredentials.AccountId, credentials1.AccountId, credentials1.Password)).Value;
+                AccountInfo info2 = TestsHelper.GetValue<AccountInfo>(this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(this.adminCredentials.AccountId, credentials1.AccountId, credentials1.Password)));
                 Assert.Equal(this.adminCredentials.AccountId, info2.CreatorId);
                 Assert.Equal(Settings.AdminName, info2.Name);
 
-                // Guy without rights fails.
-                ActionResult<AccountInfo> result = this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(credentials1.AccountId, credentials2.AccountId, credentials2.Password));
-
-                Assert.True(((StatusCodeResult)result.Result).StatusCode == 403);
+                // User without rights fails.
+                IActionResult result = this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(credentials1.AccountId, credentials2.AccountId, credentials2.Password));
+                Assert.True(((StatusCodeResult)result).StatusCode == 403);
             }
 
             // GetAllAccounts
-            List<AccountModel> allAccounts = this.accountsController.GetAllAccounts(this.adminCredentials).Value;
+            List<AccountModel> allAccounts = TestsHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(this.adminCredentials));
             Assert.Equal(4, allAccounts.Count);
 
             // DeleteAccountByAccountId
             {
                 this.accountsController.DeleteAccountByAccountId(new CredentialsModelWithTargetId(accToDelete.AccountId, credentials2.AccountId, credentials2.Password));
-                Assert.Equal(3, this.accountsController.GetAllAccounts(this.adminCredentials).Value.Count);
+                Assert.Equal(3, TestsHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(this.adminCredentials)).Count);
 
-                ActionResult result = this.accountsController.DeleteAccountByAccountId(new CredentialsModelWithTargetId(credentials2.AccountId, credentials1.AccountId, credentials1.Password));
+                IActionResult result = this.accountsController.DeleteAccountByAccountId(new CredentialsModelWithTargetId(credentials2.AccountId, credentials1.AccountId, credentials1.Password));
                 Assert.True(((StatusCodeResult)result).StatusCode == 403);
             }
 
@@ -74,7 +73,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             int newFlag = 8 + 16 + 2 + 64;
             this.accountsController.ChangeAccountAccessLevel(new ChangeAccountAccessLevel(newFlag, credentials1.AccountId, this.adminCredentials.AccountId, this.adminCredentials.Password));
 
-            int newAccessInfo = (int)this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(credentials1.AccountId, this.adminCredentials.AccountId, this.adminCredentials.Password)).Value.AccessInfo;
+            int newAccessInfo = (int)TestsHelper.GetValue<AccountInfo>(this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(credentials1.AccountId, this.adminCredentials.AccountId, this.adminCredentials.Password))).AccessInfo;
             Assert.Equal(newFlag, newAccessInfo);
 
             // GetCertIdsIssuedByAccountId
@@ -91,7 +90,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 this.dataCacheLayer.AddNewCertificate(new CertificateInfoModel()
                 { IssuerAccountId = issuerId, CertificateContentDer = TestsHelper.GenerateRandomString(50), Status = CertificateStatus.Good, Thumbprint = print2 });
 
-                List<CertificateInfoModel> certs = this.accountsController.GetCertificatesIssuedByAccountId(new CredentialsModelWithTargetId(issuerId, this.adminCredentials.AccountId, this.adminCredentials.Password)).Value;
+                List<CertificateInfoModel> certs = TestsHelper.GetValue<List<CertificateInfoModel>>(this.accountsController.GetCertificatesIssuedByAccountId(new CredentialsModelWithTargetId(issuerId, this.adminCredentials.AccountId, this.adminCredentials.Password)));
 
                 Assert.Equal(2, certs.Count);
                 Assert.Equal(50, certs[0].CertificateContentDer.Length);
@@ -107,7 +106,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             this.accountsController.ChangeAccountPassword(model);
 
             var adminCredentialsModel = new CredentialsModel(this.adminCredentials.AccountId, this.adminCredentials.Password);
-            List<AccountModel> accounts = this.accountsController.GetAllAccounts(adminCredentialsModel).Value;
+            List<AccountModel> accounts = TestsHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(adminCredentialsModel));
             AccountModel account = accounts.FirstOrDefault(a => a.Id == credentials.AccountId);
             Assert.True(account.VerifyPassword("newpassword"));
         }
@@ -121,7 +120,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             this.accountsController.ChangeAccountPassword(model);
 
             var adminCredentialsModel = new CredentialsModel(this.adminCredentials.AccountId, this.adminCredentials.Password);
-            List<AccountModel> accounts = this.accountsController.GetAllAccounts(adminCredentialsModel).Value;
+            List<AccountModel> accounts = TestsHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(adminCredentialsModel));
             AccountModel account = accounts.FirstOrDefault(a => a.Id == credentials.AccountId);
             Assert.False(account.VerifyPassword("newpassword"));
         }
@@ -135,7 +134,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             this.accountsController.ChangeAccountPassword(changePasswordModel);
 
             var adminCredentialsModel = new CredentialsModel(this.adminCredentials.AccountId, this.adminCredentials.Password);
-            List<AccountModel> accounts = this.accountsController.GetAllAccounts(adminCredentialsModel).Value;
+            List<AccountModel> accounts = TestsHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(adminCredentialsModel));
             AccountModel account = accounts.FirstOrDefault(a => a.Id == userA_Credentials.AccountId);
             Assert.True(account.VerifyPassword("newpassword"));
         }
@@ -150,7 +149,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             this.accountsController.ChangeAccountPassword(model);
 
             var adminCredentialsModel = new CredentialsModel(this.adminCredentials.AccountId, this.adminCredentials.Password);
-            List<AccountModel> accounts = this.accountsController.GetAllAccounts(adminCredentialsModel).Value;
+            List<AccountModel> accounts = TestsHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(adminCredentialsModel));
             AccountModel userB_Account = accounts.FirstOrDefault(a => a.Id == userB_Credentials.AccountId);
             Assert.False(userB_Account.VerifyPassword("newpassword"));
             Assert.True(userB_Account.VerifyPassword(userB_Credentials.Password));
