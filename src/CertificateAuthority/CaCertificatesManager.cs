@@ -412,7 +412,10 @@ namespace CertificateAuthority
 
         public CertificateInfoModel GetCaCertificate(CredentialsAccessModel accessModelInfo)
         {
-            var tempCert = ConvertCertificate(this.caCertificate, GetSecureRandom());
+            if (this.caCertificate == null)
+                return null;
+
+            X509Certificate2 tempCert = ConvertCertificate(this.caCertificate, GetSecureRandom());
 
             return new CertificateInfoModel()
             {
