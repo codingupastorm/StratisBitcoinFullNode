@@ -2,8 +2,13 @@
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using CertificateAuthority.Controllers;
+using CertificateAuthority.Models;
+using FluentAssertions;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CertificateAuthority.Tests.FullProjectTests.Helpers
@@ -17,6 +22,21 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
         {
             const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
             return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
+        }
+
+        public static CredentialsModel CreateAccount(TestServer server, AccountAccessFlags access = AccountAccessFlags.BasicAccess, CredentialsModel creatorCredentialsModel = null, string callingMethod = null)
+        {
+            string password = GenerateRandomString();
+            string passHash = DataHelper.ComputeSha256Hash(password);
+
+            var adminCredentials = new CredentialsModel(1, "4815162342");
+
+            var accountsController = (AccountsController)server.Host.Services.GetService(typeof(AccountsController));
+
+            CredentialsModel credentialsModel = creatorCredentialsModel ?? adminCredentials;
+            int id = GetValue<int>(accountsController.CreateAccount(new CreateAccount(GenerateRandomString(), passHash, (int)access, credentialsModel.AccountId, credentialsModel.Password)));
+
+            return new CredentialsModel(id, password);
         }
 
         public static IWebHostBuilder CreateWebHostBuilder([CallerMemberName] string callingMethod = null)
@@ -37,6 +57,13 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
             builder.ConfigureServices((services) => { services.AddSingleton(settings); });
 
             return builder;
+        }
+
+        public static T GetValue<T>(IActionResult response)
+        {
+            response.Should().BeOfType<JsonResult>();
+            var result = (JsonResult)response;
+            return (T)result.Value;
         }
     }
 }
