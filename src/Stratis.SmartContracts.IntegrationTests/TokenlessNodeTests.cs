@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Tests.FullProjectTests;
@@ -15,6 +17,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
+using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.IntegrationTests.Common;
@@ -46,6 +49,40 @@ namespace Stratis.SmartContracts.IntegrationTests
 
         // TODO: Lots of repetition in this file.
         
+        [Fact]
+        public async Task GetPublicKeysFromApi()
+        {
+            // TODO: May not be the right place for this test.
+
+            using (IWebHost server = CreateWebHostBuilder().Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            {
+                server.Start();
+
+                // TODO: This is a massive stupid hack to test with self signed certs.
+                var handler = new HttpClientHandler();
+                handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
+                var httpClient = new HttpClient(handler);
+
+                // Start + Initialize CA.
+                var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword));
+
+                // Get Authority Certificate.
+                Settings settings = (Settings)server.Services.GetService(typeof(Settings));
+                var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
+                var certParser = new X509CertificateParser();
+                X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
+
+                // Create a node so we have 1 available public key.
+                (CoreNode node1, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+
+                // Get public keys from the API.
+                List<PubKey> pubkeys = await client.GetCertificatePublicKeysAsync();
+                Assert.Single(pubkeys);
+            }
+        }
+
         [Fact]
         public async Task TokenlessNodesMineAnEmptyBlockAsync()
         {

@@ -84,21 +84,24 @@ namespace Stratis.Feature.PoA.Tokenless
 
             this.miner.InitializeMining();
 
-            // Initialize the CA public key / federation member voting loop.
-            this.caPubKeysLoop = this.asyncProvider.CreateAndRunAsyncLoop("PeriodicCAKeys", (cancellation) =>
+            if (options.VotingEnabled)
             {
-                this.SynchronizeMembers();
+                this.votingManager.Initialize();
+            }
 
-                return Task.CompletedTask;
+            // Initialize the CA public key / federaton member voting loop.
+            this.caPubKeysLoop = this.asyncProvider.CreateAndRunAsyncLoop("PeriodicCAKeys", async (cancellation) =>
+            {
+                await this.SynchronizeMembersAsync();
             },
             this.nodeLifetime.ApplicationStopping,
             repeatEvery: TimeSpans.Minute,
             startAfter: TimeSpans.Minute);
         }
 
-        private void SynchronizeMembers()
+        private async Task SynchronizeMembersAsync()
         {
-            List<PubKey> allowedMembers = this.certificatesManager.GetCertificatePublicKeys();
+            List<PubKey> allowedMembers = await this.certificatesManager.GetCertificatePublicKeysAsync();
             List<IFederationMember> currentMembers = this.federationManager.GetFederationMembers();
 
             // Check for differences and kick members without valid certificates.                

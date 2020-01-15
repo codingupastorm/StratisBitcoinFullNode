@@ -469,9 +469,9 @@ namespace CertificateAuthority
         /// <summary>
         /// Provides the collection of public keys of all non-revoked certificates.
         /// </summary>
-        public List<PubKey> GetCertificatePublicKeys()
+        public List<string> GetCertificatePublicKeys()
         {
-            return this.repository.PublicKeys.Select(pk => new PubKey(pk)).ToList();
+            return this.repository.PublicKeys.ToList();
         }
 
         /// <summary>

@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Threading.Tasks;
 using CertificateAuthority.Models;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -89,7 +91,7 @@ namespace CertificateAuthority
             return certList;
         }
 
-        public List<PubKey> GetCertificatePublicKeys()
+        public async Task<List<PubKey>> GetCertificatePublicKeysAsync()
         {
             var credentialsModel = new CredentialsModel()
             {
@@ -97,13 +99,13 @@ namespace CertificateAuthority
                 Password = this.password
             };
 
-            HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{GetCertificatePublicKeysEndpoint}", credentialsModel).GetAwaiter().GetResult();
+            HttpResponseMessage response = await this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{GetCertificatePublicKeysEndpoint}", credentialsModel);
 
-            string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            string responseString = await response.Content.ReadAsStringAsync();
 
-            List<PubKey> pubKeyList = JsonConvert.DeserializeObject<List<PubKey>>(responseString);
+            List<string> pubKeyList = JsonConvert.DeserializeObject<List<string>>(responseString);
 
-            return pubKeyList;
+            return pubKeyList.Select(x => new PubKey(x)).ToList();
         }
 
         public List<string> GetRevokedCertificates()
