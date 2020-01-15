@@ -17,6 +17,10 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         public string ExtPubKey2 { get; set; }
 
+        public TokenlessWallet()
+        {
+        }
+
         public TokenlessWallet(Network network, string password, string passphrase, ref Mnemonic mnemonic)
         {
             Guard.NotEmpty(password, nameof(password));
