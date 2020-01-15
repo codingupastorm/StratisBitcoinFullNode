@@ -77,13 +77,6 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return this.fileStorage.LoadByFileName(fileName);
         }
 
-        public static ExtKey GetExtendedKey(Mnemonic mnemonic, string passphrase = null)
-        {
-            Guard.NotNull(mnemonic, nameof(mnemonic));
-
-            return mnemonic.DeriveExtKey(passphrase);
-        }
-
         private int GetAddressIndex(TokenlessWalletAccount tokenlessWalletAccount)
         {
             switch (tokenlessWalletAccount)
@@ -120,12 +113,6 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
             var keyTool = new KeyTool(this.walletSettings.RootPath);
             return keyTool.LoadPrivateKey(KeyType.TransactionSigningKey);
-        }
-
-        [NoTrace]
-        public ExtKey GetExtKey(string password)
-        {
-            return new ExtKey(Key.Parse(this.Wallet.EncryptedSeed, password, this.network), Convert.FromBase64String(this.Wallet.ChainCode));
         }
 
         public (TokenlessWallet, Mnemonic) CreateWallet(string password, string passphrase, Mnemonic mnemonic = null)
