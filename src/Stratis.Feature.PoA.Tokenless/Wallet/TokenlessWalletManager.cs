@@ -103,7 +103,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         public PubKey GetPubKey(TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0)
         {
-            return this.Wallet.GetPubKey(tokenlessWalletAccount, GetAddressIndex(tokenlessWalletAccount), addressType);
+            return this.Wallet.GetPubKey(this.network, tokenlessWalletAccount, GetAddressIndex(tokenlessWalletAccount), addressType);
         }
 
         public ExtKey GetExtKey(string password, TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0)
