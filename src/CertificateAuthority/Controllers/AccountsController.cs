@@ -11,10 +11,10 @@ namespace CertificateAuthority.Controllers
     [Produces("application/json")]
     [Route("api/accounts")]
     [ApiController]
-    public class AccountsController : Controller
+    public sealed class AccountsController : Controller
     {
-        private readonly DataCacheLayer repository;
         private readonly Logger logger = LogManager.GetCurrentClassLogger();
+        private readonly DataCacheLayer repository;
 
         public AccountsController(DataCacheLayer repository)
         {
@@ -27,21 +27,11 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(AccountInfo), 200)]
         public IActionResult GetAccountInfoById([FromBody]CredentialsModelWithTargetId model)
         {
-            var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AccessAccountInfo);
-
-            try
+            return ExecuteRepositoryQuery(() =>
             {
+                var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AccessAccountInfo);
                 return this.Json(this.repository.GetAccountInfoById(credentials));
-            }
-            catch (InvalidCredentialsException)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden);
-            }
-            catch (Exception ex)
-            {
-                this.logger.Error(ex);
-                return BadRequest(ex);
-            }
+            });
         }
 
         /// <summary>Provides account information of the account with id specified. AccessAccountInfo access level required.</summary>
@@ -50,21 +40,11 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(List<AccountModel>), 200)]
         public IActionResult GetAllAccounts([FromBody]CredentialsModel model)
         {
-            var credentials = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAccountInfo);
-
-            try
+            return ExecuteRepositoryQuery(() =>
             {
+                var credentials = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAccountInfo);
                 return this.Json(this.repository.GetAllAccounts(credentials));
-            }
-            catch (InvalidCredentialsException)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden);
-            }
-            catch (Exception ex)
-            {
-                this.logger.Error(ex);
-                return BadRequest(ex);
-            }
+            });
         }
 
         /// <summary>Creates new account.</summary>
@@ -73,19 +53,11 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(int), 200)]
         public IActionResult CreateAccount([FromBody]CreateAccount model)
         {
-            return ExecuteRepositoryQuery<int>(() =>
+            return ExecuteRepositoryQuery(() =>
             {
+                var credentials = new CredentialsAccessWithModel<CreateAccount>(model, AccountAccessFlags.CreateAccounts);
                 return this.Json(this.repository.CreateAccount(credentials));
-            }
-            catch (InvalidCredentialsException)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden);
-            }
-            catch (Exception ex)
-            {
-                this.logger.Error(ex);
-                return BadRequest(ex);
-            }
+            });
         }
 
         /// <summary>Provides collection of all certificates issued by account with specified id. AccessAnyCertificate access level is required.</summary>
@@ -94,21 +66,11 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(List<CertificateInfoModel>), 200)]
         public IActionResult GetCertificatesIssuedByAccountId([FromBody]CredentialsModelWithTargetId model)
         {
-            var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AccessAnyCertificate);
-
-            try
+            return ExecuteRepositoryQuery(() =>
             {
+                var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AccessAnyCertificate);
                 return this.Json(this.repository.GetCertificatesIssuedByAccountId(credentials));
-            }
-            catch (InvalidCredentialsException)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden);
-            }
-            catch (Exception ex)
-            {
-                this.logger.Error(ex);
-                return BadRequest(ex);
-            }
+            });
         }
 
         /// <summary>Deletes existing account with id specified. DeleteAccounts access level is required. Can't delete Admin.</summary>
@@ -119,18 +81,8 @@ namespace CertificateAuthority.Controllers
             {
                 var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.DeleteAccounts);
                 this.repository.DeleteAccount(credentials);
-
                 return this.Ok();
-            }
-            catch (InvalidCredentialsException)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden);
-            }
-            catch (Exception ex)
-            {
-                this.logger.Error(ex);
-                return BadRequest(ex);
-            }
+            });
         }
 
         /// <summary>
@@ -149,15 +101,40 @@ namespace CertificateAuthority.Controllers
             });
         }
 
-        private ActionResult<TResult> ExecuteRepositoryQuery<TResult>(Func<ActionResult<TResult>> action)
+        /// <summary>
+        /// Sets access level of a specified account to a given value.
+        /// You can't change your own or Admin's access level. You can't set account's access level to be higher than yours.
+        /// ChangeAccountAccessLevel access level is required.
+        /// </summary>
+        [HttpPost("changepassword")]
+        public ActionResult ChangeAccountPassword([FromBody]ChangeAccountPasswordModel model)
+        {
+            return ExecuteRepositoryCommand(() =>
+            {
+                var credentials = new CredentialsAccessWithModel<ChangeAccountPasswordModel>(model, AccountAccessFlags.BasicAccess);
+                this.repository.ChangeAccountPassword(credentials);
+                return Ok();
+            });
+        }
+
+        private IActionResult ExecuteRepositoryQuery(Func<IActionResult> action)
         {
             try
             {
                 return action();
             }
+            catch (CertificateAuthorityAccountException ex)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, ex.ToString());
+            }
             catch (InvalidCredentialsException)
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+                return StatusCode(StatusCodes.Status400BadRequest, ex.ToString());
             }
         }
 
@@ -167,32 +144,9 @@ namespace CertificateAuthority.Controllers
             {
                 return action();
             }
-            catch (InvalidCredentialsException)
+            catch (CertificateAuthorityAccountException ex)
             {
-                return StatusCode(StatusCodes.Status403Forbidden);
-            }
-            catch (Exception ex)
-            {
-                this.logger.Error(ex);
-                return BadRequest(ex);
-            }
-        }
-
-        /// <summary>
-        /// Sets access level of a specified account to a given value.
-        /// You can't change your own or Admin's access level. You can't set account's access level to be higher than yours.
-        /// ChangeAccountAccessLevel access level is required.
-        /// </summary>
-        [HttpPost("changepassword")]
-        public ActionResult ChangeAccountPassword([FromBody]ChangeAccountPasswordModel model)
-        {
-            var credentials = new CredentialsAccessWithModel<ChangeAccountPasswordModel>(model, AccountAccessFlags.BasicAccess);
-
-            try
-            {
-                this.repository.ChangeAccountPassword(credentials);
-
-                return this.Ok();
+                return StatusCode(StatusCodes.Status400BadRequest, ex.ToString());
             }
             catch (InvalidCredentialsException)
             {
@@ -201,7 +155,7 @@ namespace CertificateAuthority.Controllers
             catch (Exception ex)
             {
                 this.logger.Error(ex);
-                return BadRequest(ex);
+                return StatusCode(StatusCodes.Status400BadRequest, ex.ToString());
             }
         }
     }
