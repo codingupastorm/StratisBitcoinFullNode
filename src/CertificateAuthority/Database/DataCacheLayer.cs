@@ -29,17 +29,12 @@ namespace CertificateAuthority.Database
 
                 if (!dbContext.Accounts.Any() && settings.CreateAdminAccountOnCleanStart)
                 {
-                    AccountAccessFlags adminAttrs = AccountAccessFlags.AccessAccountInfo;
-
-                    foreach (AccountAccessFlags attr in DataHelper.AllAccessFlags)
-                        adminAttrs |= attr;
-
                     // Create Admin.
                     var admin = new AccountModel()
                     {
                         Name = Settings.AdminName,
                         PasswordHash = settings.DefaultAdminPasswordHash,
-                        AccessInfo = adminAttrs,
+                        AccessInfo = AccountAccessFlags.AdminAccess,
 
                         // Will set below.
                         CreatorId = 1
@@ -55,7 +50,7 @@ namespace CertificateAuthority.Database
 
         private CADbContext CreateContext()
         {
-            return new CADbContext(settings);
+            return new CADbContext(this.settings);
         }
 
         private bool IsValidPubKey(string pubKey)
@@ -89,7 +84,7 @@ namespace CertificateAuthority.Database
                     this.CertStatusesByThumbprint.Add(info.Thumbprint, info.Status);
 
                     if (info.Status == CertificateStatus.Revoked)
-                        RevokedCertificates.Add(info.Thumbprint);
+                        this.RevokedCertificates.Add(info.Thumbprint);
                     else if (this.IsValidPubKey(info.PubKey))
                         this.PublicKeys.Add(info.PubKey);
                 }
@@ -221,6 +216,41 @@ namespace CertificateAuthority.Database
                 dbContext.SaveChanges();
 
                 this.logger.Info("Account with id {0} access level was changed from {1} to {2} by account with id {3}.", accountId, oldAccessInfo, accountToEdit.AccessInfo, account.Id);
+            });
+        }
+
+        public void ChangeAccountPassword(CredentialsAccessWithModel<ChangeAccountPasswordModel> credentialsModel)
+        {
+            ExecuteCommand(credentialsModel, (dbContext, account) =>
+            {
+                AccountModel targetAccount = dbContext.Accounts.SingleOrDefault(x => x.Id == credentialsModel.Model.TargetAccountId);
+
+                if (targetAccount == null)
+                    throw new Exception($"Target account not found: {credentialsModel.Model.TargetAccountId}");
+
+                // If the account and target account is not the same check if the account is the admin account.
+                if (targetAccount.Id != credentialsModel.Model.AccountId)
+                {
+                    AccountModel adminAccount = dbContext.Accounts.SingleOrDefault(a => a.Id == credentialsModel.Model.AccountId);
+                    if (adminAccount == null)
+                        throw new Exception($"The credential account does not exist: {credentialsModel.Model.AccountId}");
+
+                    if (adminAccount.Name != Settings.AdminName)
+                        throw new Exception("Only you or an admin account can change the password.");
+                }
+                // If the account is the same as the target account, check the old password.
+                else
+                {
+                    if (!targetAccount.VerifyPassword(credentialsModel.Model.Password))
+                        throw new Exception($"The target account's old password is incorrect.");
+                }
+
+                targetAccount.PasswordHash = DataHelper.ComputeSha256Hash(credentialsModel.Model.NewPassword);
+
+                dbContext.Accounts.Update(targetAccount);
+                dbContext.SaveChanges();
+
+                this.logger.Info("Account Id {0}'s password has been updated.", credentialsModel.Model.TargetAccountId);
             });
         }
 

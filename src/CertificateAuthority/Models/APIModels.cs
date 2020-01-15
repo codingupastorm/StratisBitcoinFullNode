@@ -18,6 +18,7 @@ namespace CertificateAuthority.Models
     }
 
     #region Models for AccountsController
+
     public class CreateAccount : CredentialsModel
     {
         /// <summary>Account name for a new account. Can't be a a nickname that is already taken.</summary>
@@ -55,9 +56,28 @@ namespace CertificateAuthority.Models
         {
         }
     }
+
+    public sealed class ChangeAccountPasswordModel : CredentialsModel
+    {
+        /// <summary>The new password to use.</summary>
+        public string NewPassword { get; set; }
+
+        /// <summary>The account which password will be changed.</summary>
+        public int TargetAccountId { get; set; }
+
+        public ChangeAccountPasswordModel(int accountId, int targetAccountId, string password, string newPassword) : base(accountId, password)
+        {
+            this.NewPassword = newPassword;
+            this.TargetAccountId = targetAccountId;
+        }
+
+        public ChangeAccountPasswordModel() { }
+    }
+
     #endregion
 
     #region Models for CertificatesController
+
     public class CredentialsModelWithThumbprintModel : CredentialsModel
     {
         /// <summary>Certificate's thumbprint.</summary>

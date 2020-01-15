@@ -14,6 +14,7 @@ using Org.BouncyCastle.Pkcs;
 
 namespace CertificateAuthority.Controllers
 {
+    [Produces("application/json")]
     [Route("api/certificates")]
     [ApiController]
     public class CertificatesController : Controller
@@ -28,21 +29,23 @@ namespace CertificateAuthority.Controllers
 
         [HttpPost("initialize_ca")]
         [ProducesResponseType(typeof(bool), 200)]
-        public ActionResult<bool> InitializeCertificateAuthority([FromBody]CredentialsModelWithMnemonicModel model)
+        public IActionResult InitializeCertificateAuthority([FromBody]CredentialsModelWithMnemonicModel model)
         {
             var data = new CredentialsAccessWithModel<CredentialsModelWithMnemonicModel>(model, AccountAccessFlags.InitializeCertificateAuthority);
 
             try
             {
-                return this.caCertificateManager.InitializeCertificateAuthority(data.Model.Mnemonic, data.Model.MnemonicPassword);
+                return this.Json(this.caCertificateManager.InitializeCertificateAuthority(data.Model.Mnemonic, data.Model.MnemonicPassword));
             }
             catch (InvalidCredentialsException)
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal server error");
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
             }
         }
 
@@ -53,23 +56,29 @@ namespace CertificateAuthority.Controllers
         /// </summary>
         [HttpPost("revoke_certificate")]
         [ProducesResponseType(typeof(bool), 200)]
-        public ActionResult<bool> RevokeCertificate([FromBody]CredentialsModelWithThumbprintModel model)
+        public IActionResult RevokeCertificate([FromBody]CredentialsModelWithThumbprintModel model)
         {
             var data = new CredentialsAccessWithModel<CredentialsModelWithThumbprintModel>(model, AccountAccessFlags.RevokeCertificates);
 
             try
             {
-                return this.caCertificateManager.RevokeCertificate(data);
+                return this.Json(this.caCertificateManager.RevokeCertificate(data));
             }
             catch (InvalidCredentialsException)
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
+            }
         }
 
         [HttpPost("get_ca_certificate")]
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
-        public ActionResult<CertificateInfoModel> GetCaCertificate([FromBody]CredentialsModel model)
+        public IActionResult GetCaCertificate([FromBody]CredentialsModel model)
         {
             var data = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAnyCertificate);
 
@@ -80,18 +89,24 @@ namespace CertificateAuthority.Controllers
                 if (certificate == null)
                     return StatusCode(StatusCodes.Status404NotFound);
 
-                return certificate;
+                return this.Json(certificate);
             }
             catch (InvalidCredentialsException)
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
             }
         }
 
         /// <summary>Finds issued certificate by thumbprint and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
         [HttpPost("get_certificate_for_thumbprint")]
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
-        public ActionResult<CertificateInfoModel> GetCertificateByThumbprint([FromBody]CredentialsModelWithThumbprintModel model)
+        public IActionResult GetCertificateByThumbprint([FromBody]CredentialsModelWithThumbprintModel model)
         {
             var data = new CredentialsAccessWithModel<CredentialsModelWithThumbprintModel>(model, AccountAccessFlags.AccessAnyCertificate);
 
@@ -102,18 +117,24 @@ namespace CertificateAuthority.Controllers
                 if (certificate == null)
                     return StatusCode(StatusCodes.Status404NotFound);
 
-                return certificate;
+                return this.Json(certificate);
             }
             catch (InvalidCredentialsException)
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
             }
         }
 
         /// <summary>Finds issued certificate by P2PKH address and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
         [HttpPost("get_certificate_for_address")]
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
-        public ActionResult<CertificateInfoModel> GetCertificateByAddress([FromBody]CredentialsModelWithAddressModel model)
+        public IActionResult GetCertificateByAddress([FromBody]CredentialsModelWithAddressModel model)
         {
             var data = new CredentialsAccessWithModel<CredentialsModelWithAddressModel>(model, AccountAccessFlags.AccessAnyCertificate);
 
@@ -124,11 +145,17 @@ namespace CertificateAuthority.Controllers
                 if (certificate == null)
                     return StatusCode(StatusCodes.Status404NotFound);
 
-                return certificate;
+                return this.Json(certificate);
             }
             catch (InvalidCredentialsException)
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
             }
         }
 
@@ -136,17 +163,23 @@ namespace CertificateAuthority.Controllers
         /// <response code="201">Collection of <see cref="CertificateInfoModel"/> instances."/>.</response>
         [HttpPost("get_all_certificates")]
         [ProducesResponseType(typeof(List<CertificateInfoModel>), 200)]
-        public ActionResult<List<CertificateInfoModel>> GetAllCertificates([FromBody]CredentialsModel model)
+        public IActionResult GetAllCertificates([FromBody]CredentialsModel model)
         {
             var data = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAnyCertificate);
 
             try
             {
-                return this.caCertificateManager.GetAllCertificates(data);
+                return this.Json(this.caCertificateManager.GetAllCertificates(data));
             }
             catch (InvalidCredentialsException)
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
             }
         }
 
@@ -154,22 +187,22 @@ namespace CertificateAuthority.Controllers
         /// <response code="200">Instance of <see cref="CertificateSigningRequestModel"/>.</response>
         [HttpPost("generate_certificate_signing_request")]
         [ProducesResponseType(typeof(CertificateSigningRequestModel), 200)]
-        public async Task<ActionResult<CertificateSigningRequestModel>> GenerateCertificateSigningRequestAsync([FromBody]GenerateCertificateSigningRequestModel model)
+        public async Task<IActionResult> GenerateCertificateSigningRequestAsync([FromBody]GenerateCertificateSigningRequestModel model)
         {
-            var data = new CredentialsAccessWithModel<GenerateCertificateSigningRequestModel>(model, AccountAccessFlags.IssueCertificates);
-
-            byte[] oid141 = Encoding.UTF8.GetBytes(data.Model.Address);
-
-            byte[] pubKeyBytes = Convert.FromBase64String(data.Model.PubKey);
-
-            X9ECParameters ecdsaCurve = ECNamedCurveTable.GetByName("secp256k1");
-            var ecdsaDomainParams = new ECDomainParameters(ecdsaCurve.Curve, ecdsaCurve.G, ecdsaCurve.N, ecdsaCurve.H, ecdsaCurve.GetSeed());
-            var q = new X9ECPoint(ecdsaCurve.Curve, pubKeyBytes);
-
-            AsymmetricKeyParameter publicKey = new ECPublicKeyParameters(q.Point, ecdsaDomainParams);
-
             try
             {
+                var data = new CredentialsAccessWithModel<GenerateCertificateSigningRequestModel>(model, AccountAccessFlags.IssueCertificates);
+
+                byte[] oid141 = Encoding.UTF8.GetBytes(data.Model.Address);
+
+                byte[] pubKeyBytes = Convert.FromBase64String(data.Model.PubKey);
+
+                X9ECParameters ecdsaCurve = ECNamedCurveTable.GetByName("secp256k1");
+                var ecdsaDomainParams = new ECDomainParameters(ecdsaCurve.Curve, ecdsaCurve.G, ecdsaCurve.N, ecdsaCurve.H, ecdsaCurve.GetSeed());
+                var q = new X9ECPoint(ecdsaCurve.Curve, pubKeyBytes);
+
+                AsymmetricKeyParameter publicKey = new ECPublicKeyParameters(q.Point, ecdsaDomainParams);
+
                 string subjectName = $"CN={data.Model.Address}";
 
                 Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(subjectName, publicKey, new string[0], oid141, pubKeyBytes);
@@ -179,15 +212,17 @@ namespace CertificateAuthority.Controllers
 
                 var csrModel = new CertificateSigningRequestModel(unsignedCsr);
 
-                return csrModel;
+                return this.Json(csrModel);
             }
             catch (InvalidCredentialsException)
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal server error");
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
             }
         }
 
@@ -195,22 +230,24 @@ namespace CertificateAuthority.Controllers
         /// <response code="201">Instance of <see cref="CertificateInfoModel"/>.</response>
         [HttpPost("issue_certificate_using_request_file")]
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
-        public async Task<ActionResult<CertificateInfoModel>> IssueCertificate_UsingRequestFileAsync([FromBody]IssueCertificateFromRequestModel model)
+        public async Task<IActionResult> IssueCertificate_UsingRequestFileAsync([FromBody]IssueCertificateFromRequestModel model)
         {
             var data = new CredentialsAccessWithModel<IssueCertificateFromRequestModel>(model, AccountAccessFlags.IssueCertificates);
 
             try
             {
                 CertificateInfoModel infoModel = await this.caCertificateManager.IssueCertificateAsync(data);
-                return infoModel;
+                return this.Json(infoModel);
             }
             catch (InvalidCredentialsException)
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return StatusCode(500, "Internal server error");
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
             }
         }
 
@@ -218,7 +255,7 @@ namespace CertificateAuthority.Controllers
         /// <response code="201">Instance of <see cref="CertificateInfoModel"/>.</response>
         [HttpPost("issue_certificate_using_request_string")]
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
-        public async Task<ActionResult<CertificateInfoModel>> IssueCertificate_UsingRequestStringAsync([FromBody]IssueCertificateFromFileContentsModel model)
+        public async Task<IActionResult> IssueCertificate_UsingRequestStringAsync([FromBody]IssueCertificateFromFileContentsModel model)
         {
             var data = new CredentialsAccessWithModel<IssueCertificateFromFileContentsModel>(model, AccountAccessFlags.IssueCertificates);
 
@@ -232,17 +269,17 @@ namespace CertificateAuthority.Controllers
 
                 CertificateInfoModel infoModel = await this.caCertificateManager.IssueCertificateAsync(data);
 
-                return infoModel;
+                return this.Json(infoModel);
             }
             catch (InvalidCredentialsException)
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                this.logger.Error(e);
+                this.logger.Error(ex);
 
-                return StatusCode(500, "Internal server error");
+                return BadRequest(ex);
             }
         }
 
@@ -254,14 +291,23 @@ namespace CertificateAuthority.Controllers
         [HttpPost]
         [Route("get_certificate_status")]
         [ProducesResponseType(typeof(string), 200)]
-        public ActionResult<string> GetCertificateStatus([FromBody]GetCertificateStatusModel model)
+        public IActionResult GetCertificateStatus([FromBody]GetCertificateStatusModel model)
         {
-            CertificateStatus status = this.caCertificateManager.GetCertificateStatusByThumbprint(model.Thumbprint);
+            try
+            {
+                CertificateStatus status = this.caCertificateManager.GetCertificateStatusByThumbprint(model.Thumbprint);
 
-            if (model.AsString)
-                return status.ToString();
+                if (model.AsString)
+                    return this.Json(status.ToString());
 
-            return ((int)status).ToString();
+                return this.Json(((int)status).ToString());
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
+
+                return BadRequest(ex);
+            }
         }
 
         /// <summary>Returns a collection of thumbprints of revoked certificates.</summary>
@@ -269,9 +315,9 @@ namespace CertificateAuthority.Controllers
         [HttpPost]
         [Route("get_revoked_certificates")]
         [ProducesResponseType(typeof(ICollection<string>), 200)]
-        public ActionResult<ICollection<string>> GetRevokedCertificates()
+        public IActionResult GetRevokedCertificates()
         {
-            return this.caCertificateManager.GetRevokedCertificates();
+            return this.Json(this.caCertificateManager.GetRevokedCertificates());
         }
 
         /// <summary>Returns the public key value (oid142) for all non-revoked certificates.</summary>
@@ -279,9 +325,9 @@ namespace CertificateAuthority.Controllers
         [HttpGet]
         [Route("get_certificate_public_keys")]
         [ProducesResponseType(typeof(ICollection<PubKey>), 200)]
-        public ActionResult<ICollection<PubKey>> GetCertificatePublicKeys()
+        public IActionResult GetCertificatePublicKeys()
         {
-            return this.caCertificateManager.GetCertificatePublicKeys();
+            return this.Json(this.caCertificateManager.GetCertificatePublicKeys());
         }
     }
 }

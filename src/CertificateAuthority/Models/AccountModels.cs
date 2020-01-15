@@ -50,7 +50,8 @@ namespace CertificateAuthority.Models
         AccessAnyCertificate = 16,
         ChangeAccountAccessLevel = 32,
         CreateAccounts = 64,
-        InitializeCertificateAuthority = 128
+        InitializeCertificateAuthority = 128,
+        AdminAccess = ~0 // All bits set.
     }
 
     /// <summary>Credentials needed for API endpoints with restricted access.</summary>

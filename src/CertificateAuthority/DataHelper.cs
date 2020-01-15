@@ -77,18 +77,13 @@ namespace CertificateAuthority
             return contentLines;
         }
 
-        /// <summary>Checks if creator has more or the same access level as child account.</summary>
+        /// <summary>Checks that slave does not add permissions that master does not have.</summary>
         public static bool IsCreatorHasGreaterOrEqualAccess(AccountAccessFlags creatorFlags, AccountAccessFlags childAccountAccess)
         {
             int master = (int)creatorFlags;
             int slave = (int)childAccountAccess;
 
-            int xor = master ^ slave;
-            int flippedMaster = ~master;
-
-            int result = xor & flippedMaster; // should be 0
-
-            return result == 0;
+            return (master | slave) == master;
         }
     }
 }
