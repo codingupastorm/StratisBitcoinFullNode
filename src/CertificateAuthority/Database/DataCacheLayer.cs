@@ -1,9 +1,9 @@
-﻿using NLog;
-using System;
-using System.Linq;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using CertificateAuthority.Models;
 using NBitcoin;
+using NLog;
 
 namespace CertificateAuthority.Database
 {
@@ -145,15 +145,15 @@ namespace CertificateAuthority.Database
             return ExecuteQuery(credentialsModel, (dbContext, account) =>
             {
                 if (dbContext.Accounts.Any(x => x.Name == credentialsModel.Model.NewAccountName))
-                    throw new Exception("That name is already taken!");
+                    throw new CertificateAuthorityAccountException("That name is already taken!");
 
                 AccountAccessFlags newAccountAccessLevel =
                     (AccountAccessFlags)credentialsModel.Model.NewAccountAccess | AccountAccessFlags.BasicAccess;
 
                 if (!DataHelper.IsCreatorHasGreaterOrEqualAccess(account.AccessInfo, newAccountAccessLevel))
-                    throw new Exception("You can't create an account with an access level higher than yours!");
+                    throw new CertificateAuthorityAccountException("You can't create an account with an access level higher than yours!");
 
-                AccountModel newAccount = new AccountModel()
+                var newAccount = new AccountModel()
                 {
                     Name = credentialsModel.Model.NewAccountName,
                     PasswordHash = credentialsModel.Model.NewAccountPasswordHash,
@@ -179,10 +179,10 @@ namespace CertificateAuthority.Database
                 AccountModel accountToDelete = dbContext.Accounts.SingleOrDefault(x => x.Id == accountId);
 
                 if (accountToDelete == null)
-                    throw new Exception("Account not found.");
+                    throw new CertificateAuthorityAccountException("Account not found.");
 
                 if (accountToDelete.Name == Settings.AdminName)
-                    throw new Exception("You can't delete Admin account!");
+                    throw new CertificateAuthorityAccountException("You can't delete Admin account!");
 
                 dbContext.Accounts.Remove(accountToDelete);
                 dbContext.SaveChanges();
@@ -199,20 +199,20 @@ namespace CertificateAuthority.Database
                 int accountId = credentialsModel.Model.TargetAccountId;
 
                 if (account.Id == accountId)
-                    throw new Exception("You can't change your own access level!");
+                    throw new CertificateAuthorityAccountException("You can't change your own access level!");
 
                 AccountModel accountToEdit = dbContext.Accounts.SingleOrDefault(x => x.Id == accountId);
 
                 if (accountToEdit == null)
-                    throw new Exception("Account not found.");
+                    throw new CertificateAuthorityAccountException("Account not found.");
 
                 if (accountToEdit.Name == Settings.AdminName)
-                    throw new Exception("Admin's access level can't be changed.");
+                    throw new CertificateAuthorityAccountException("Admin's access level can't be changed.");
 
-                AccountAccessFlags newAccountAccessLevel = (AccountAccessFlags)credentialsModel.Model.AccessFlags;
+                var newAccountAccessLevel = (AccountAccessFlags)credentialsModel.Model.AccessFlags;
 
                 if (!DataHelper.IsCreatorHasGreaterOrEqualAccess(account.AccessInfo, newAccountAccessLevel))
-                    throw new Exception("You can't set access level to be higher than yours!");
+                    throw new CertificateAuthorityAccountException("You can't set access level to be higher than yours!");
 
                 AccountAccessFlags oldAccessInfo = accountToEdit.AccessInfo;
                 accountToEdit.AccessInfo = newAccountAccessLevel;

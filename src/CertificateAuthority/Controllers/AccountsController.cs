@@ -1,15 +1,15 @@
 ﻿using System;
-using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace CertificateAuthority.Controllers
 {
     [Route("api/accounts")]
     [ApiController]
-    public class AccountsController : ControllerBase
+    public sealed class AccountsController : ControllerBase
     {
         private readonly DataCacheLayer repository;
 
@@ -24,16 +24,11 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(AccountInfo), 200)]
         public ActionResult<AccountInfo> GetAccountInfoById([FromBody]CredentialsModelWithTargetId model)
         {
-            var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AccessAccountInfo);
-
-            try
+            return ExecuteRepositoryQuery<AccountInfo>(() =>
             {
+                var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AccessAccountInfo);
                 return this.repository.GetAccountInfoById(credentials);
-            }
-            catch (InvalidCredentialsException)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden);
-            }
+            });
         }
 
         /// <summary>Provides account information of the account with id specified. AccessAccountInfo access level required.</summary>
@@ -42,16 +37,11 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(List<AccountModel>), 200)]
         public ActionResult<List<AccountModel>> GetAllAccounts([FromBody]CredentialsModel model)
         {
-            var credentials = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAccountInfo);
-
-            try
+            return ExecuteRepositoryQuery<List<AccountModel>>(() =>
             {
+                var credentials = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAccountInfo);
                 return this.repository.GetAllAccounts(credentials);
-            }
-            catch (InvalidCredentialsException)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden);
-            }
+            });
         }
 
         /// <summary>Creates new account.</summary>
@@ -60,21 +50,11 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(int), 200)]
         public ActionResult<int> CreateAccount([FromBody]CreateAccount model)
         {
-            var credentials = new CredentialsAccessWithModel<CreateAccount>(model, AccountAccessFlags.CreateAccounts);
-
-            try
+            return ExecuteRepositoryQuery<int>(() =>
             {
+                var credentials = new CredentialsAccessWithModel<CreateAccount>(model, AccountAccessFlags.CreateAccounts);
                 return this.repository.CreateAccount(credentials);
-            }
-            catch (InvalidCredentialsException)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden);
-            }
-            catch (Exception)
-            {
-                // TODO: This is generally the case where an account is being created with a higher access level than the creator. Create a distinct exception type for this scenario?
-                return StatusCode(StatusCodes.Status403Forbidden);
-            }
+            });
         }
 
         /// <summary>Provides collection of all certificates issued by account with specified id. AccessAnyCertificate access level is required.</summary>
@@ -83,39 +63,23 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(List<CertificateInfoModel>), 200)]
         public ActionResult<List<CertificateInfoModel>> GetCertificatesIssuedByAccountId([FromBody]CredentialsModelWithTargetId model)
         {
-            var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AccessAnyCertificate);
-
-            try
+            return ExecuteRepositoryQuery<List<CertificateInfoModel>>(() =>
             {
+                var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AccessAnyCertificate);
                 return this.repository.GetCertificatesIssuedByAccountId(credentials);
-            }
-            catch (InvalidCredentialsException)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden);
-            }
+            });
         }
 
         /// <summary>Deletes existing account with id specified. DeleteAccounts access level is required. Can't delete Admin.</summary>
         [HttpPost("delete_account_by_account_id")]
         public ActionResult DeleteAccountByAccountId([FromBody]CredentialsModelWithTargetId model)
         {
-            var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.DeleteAccounts);
-
-            try
+            return ExecuteRepositoryCommand(() =>
             {
+                var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.DeleteAccounts);
                 this.repository.DeleteAccount(credentials);
-
-                return this.Ok();
-            }
-            catch (InvalidCredentialsException)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden);
-            }
-            catch (Exception)
-            {
-                // TODO: Add distinct exception type for attempting to delete the admin account?
-                return StatusCode(StatusCodes.Status403Forbidden);
-            }
+                return Ok();
+            });
         }
 
         /// <summary>
@@ -126,22 +90,39 @@ namespace CertificateAuthority.Controllers
         [HttpPost("change_account_access_level")]
         public ActionResult ChangeAccountAccessLevel([FromBody]ChangeAccountAccessLevel model)
         {
-            var credentials = new CredentialsAccessWithModel<ChangeAccountAccessLevel>(model, AccountAccessFlags.ChangeAccountAccessLevel);
+            return ExecuteRepositoryCommand(() =>
+            {
+                var credentials = new CredentialsAccessWithModel<ChangeAccountAccessLevel>(model, AccountAccessFlags.ChangeAccountAccessLevel);
+                this.repository.ChangeAccountAccessLevel(credentials);
+                return Ok();
+            });
+        }
 
+        private ActionResult<TResult> ExecuteRepositoryQuery<TResult>(Func<ActionResult<TResult>> action)
+        {
             try
             {
-                this.repository.ChangeAccountAccessLevel(credentials);
-
-                return this.Ok();
+                return action();
             }
             catch (InvalidCredentialsException)
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
-            catch (Exception)
+        }
+
+        private ActionResult ExecuteRepositoryCommand(Func<ActionResult> action)
+        {
+            try
             {
-                // TODO: Add distinct exception type for attempting to change access level?
+                return action();
+            }
+            catch (InvalidCredentialsException)
+            {
                 return StatusCode(StatusCodes.Status403Forbidden);
+            }
+            catch (CertificateAuthorityAccountException ex)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, ex.ToString());
             }
         }
     }
