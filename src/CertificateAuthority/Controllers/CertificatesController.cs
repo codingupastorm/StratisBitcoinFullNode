@@ -322,9 +322,9 @@ namespace CertificateAuthority.Controllers
 
         /// <summary>Returns the public key value (oid142) for all non-revoked certificates.</summary>
         /// <response code="200">Collection of <see cref="PubKey"/>.</response>
-        [HttpGet]
+        [HttpPost]
         [Route("get_certificate_public_keys")]
-        [ProducesResponseType(typeof(ICollection<PubKey>), 200)]
+        [ProducesResponseType(typeof(ICollection<string>), 200)]
         public IActionResult GetCertificatePublicKeys()
         {
             return this.Json(this.caCertificateManager.GetCertificatePublicKeys());

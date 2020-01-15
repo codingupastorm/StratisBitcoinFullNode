@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -196,11 +195,11 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return certificate;
         }
 
-        public List<PubKey> GetCertificatePublicKeys()
+        public Task<List<PubKey>> GetCertificatePublicKeysAsync()
         {
             CaClient caClient = this.GetClient();
 
-            return caClient.GetCertificatePublicKeys();
+            return caClient.GetCertificatePublicKeysAsync();
         }
 
         public static byte[] ExtractCertificateExtension(X509Certificate certificate, string oid)
