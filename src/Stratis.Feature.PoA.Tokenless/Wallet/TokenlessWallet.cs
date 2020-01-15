@@ -24,7 +24,6 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         public TokenlessWallet(Network network, string password, string passphrase, ref Mnemonic mnemonic)
         {
             Guard.NotEmpty(password, nameof(password));
-            Guard.NotNull(passphrase, nameof(passphrase));
 
             // Generate the root seed used to generate keys from a mnemonic picked at random
             // and a passphrase optionally provided by the user.
@@ -54,10 +53,10 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             this.ExtPubKey2 = addressExtKey2.Neuter().ToString(network);
         }
 
-        public PubKey GetPubKey(TokenlessWalletAccount tokenlessWalletAccount, int addressIndex, int addressType = 0)
+        public PubKey GetPubKey(Network network, TokenlessWalletAccount tokenlessWalletAccount, int addressIndex, int addressType = 0)
         {
             var keyPath = new KeyPath($"{addressType}/{addressIndex}");
-            ExtPubKey extPubKey = ExtPubKey.Parse(new[] { this.ExtPubKey0, this.ExtPubKey1, this.ExtPubKey2 }[(int)tokenlessWalletAccount]).Derive(keyPath);
+            ExtPubKey extPubKey = ExtPubKey.Parse(new[] { this.ExtPubKey0, this.ExtPubKey1, this.ExtPubKey2 }[(int)tokenlessWalletAccount], network).Derive(keyPath);
             return extPubKey.PubKey;
         }
 
