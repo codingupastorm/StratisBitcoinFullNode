@@ -156,7 +156,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                 TokenlessWallet wallet;
                 Mnemonic mnemonic = (strMnemonic == null) ? null : new Mnemonic(strMnemonic);
 
-                (wallet, mnemonic) = this.CreateWallet(password, password, mnemonic);
+                (wallet, mnemonic) = this.CreateWallet(password, null, mnemonic);
 
                 this.Wallet = wallet;
 
