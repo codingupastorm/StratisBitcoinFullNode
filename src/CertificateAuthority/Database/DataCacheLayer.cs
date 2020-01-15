@@ -29,17 +29,12 @@ namespace CertificateAuthority.Database
 
                 if (!dbContext.Accounts.Any() && settings.CreateAdminAccountOnCleanStart)
                 {
-                    AccountAccessFlags adminAttrs = AccountAccessFlags.AccessAccountInfo;
-
-                    foreach (AccountAccessFlags attr in DataHelper.AllAccessFlags)
-                        adminAttrs |= attr;
-
                     // Create Admin.
                     var admin = new AccountModel()
                     {
                         Name = Settings.AdminName,
                         PasswordHash = settings.DefaultAdminPasswordHash,
-                        AccessInfo = adminAttrs,
+                        AccessInfo = AccountAccessFlags.AdminAccess,
 
                         // Will set below.
                         CreatorId = 1
