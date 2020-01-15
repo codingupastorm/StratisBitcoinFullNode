@@ -5,7 +5,6 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Utilities;
-using TracerAttributes;
 
 namespace Stratis.Feature.PoA.Tokenless.Wallet
 {
@@ -77,13 +76,6 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return this.fileStorage.LoadByFileName(fileName);
         }
 
-        public static ExtKey GetExtendedKey(Mnemonic mnemonic, string passphrase = null)
-        {
-            Guard.NotNull(mnemonic, nameof(mnemonic));
-
-            return mnemonic.DeriveExtKey(passphrase);
-        }
-
         private int GetAddressIndex(TokenlessWalletAccount tokenlessWalletAccount)
         {
             switch (tokenlessWalletAccount)
@@ -103,20 +95,12 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         public PubKey GetPubKey(TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0)
         {
-            int addressIndex = GetAddressIndex(tokenlessWalletAccount);
-            var keyPath = new KeyPath($"{addressType}/{addressIndex}");
-            ExtPubKey extPubKey = this.extPubKeys[(int)tokenlessWalletAccount].Derive(keyPath);
-            return extPubKey.PubKey;
+            return this.Wallet.GetPubKey(this.network, tokenlessWalletAccount, GetAddressIndex(tokenlessWalletAccount), addressType);
         }
 
         public ExtKey GetExtKey(string password, TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0)
         {
-            int addressIndex = GetAddressIndex(tokenlessWalletAccount);
-            string hdPath = $"m/44'/{this.network.Consensus.CoinType}'/{(int)tokenlessWalletAccount}'/{addressType}/{addressIndex}";
-            ExtKey seedExtKey = this.GetExtKey(password);
-            ExtKey pathExtKey = seedExtKey.Derive(new KeyPath(hdPath));
-
-            return pathExtKey;
+            return this.Wallet.GetExtKey(this.network, password, tokenlessWalletAccount, addressType);
         }
 
         /// <inheritdoc/>
@@ -130,52 +114,9 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return keyTool.LoadPrivateKey(KeyType.TransactionSigningKey);
         }
 
-        [NoTrace]
-        public ExtKey GetExtKey(string password)
+        public (TokenlessWallet, Mnemonic) CreateWallet(string password, Mnemonic mnemonic = null)
         {
-            return new ExtKey(Key.Parse(this.Wallet.EncryptedSeed, password, this.network), Convert.FromBase64String(this.Wallet.ChainCode));
-        }
-
-        public (TokenlessWallet, Mnemonic) CreateWallet(string password, string passphrase, Mnemonic mnemonic = null)
-        {
-            Guard.NotEmpty(password, nameof(password));
-            Guard.NotNull(passphrase, nameof(passphrase));
-
-            // Generate the root seed used to generate keys from a mnemonic picked at random
-            // and a passphrase optionally provided by the user.
-            mnemonic = mnemonic ?? new Mnemonic(Wordlist.English, WordCount.Twelve);
-
-            ExtKey extendedKey = GetExtendedKey(mnemonic, passphrase);
-
-            // Create a wallet file.
-            string encryptedSeed = extendedKey.PrivateKey.GetEncryptedBitcoinSecret(password, this.network).ToWif();
-            string chainCode = Convert.ToBase64String(extendedKey.ChainCode);
-
-            Key privateKey = Key.Parse(encryptedSeed, password, this.network);
-            var seedExtKey = new ExtKey(privateKey, extendedKey.ChainCode);
-
-            /*
-            - transaction signing (m/44'/105'/0'/0/N) where N is a zero based key ID
-            - block signing (m/44'/105'/1'/0/N) where N is a zero based key ID
-            - P2P certificates (m/44'/105'/2'/K/N) where N is a zero based key ID
-            */
-
-            ExtKey addressExtKey0 = seedExtKey.Derive(new KeyPath($"m/44'/{this.network.Consensus.CoinType}'/0'"));
-            ExtKey addressExtKey1 = seedExtKey.Derive(new KeyPath($"m/44'/{this.network.Consensus.CoinType}'/1'"));
-            ExtKey addressExtKey2 = seedExtKey.Derive(new KeyPath($"m/44'/{this.network.Consensus.CoinType}'/2'"));
-
-            ExtPubKey extPubKey0 = addressExtKey0.Neuter();
-            ExtPubKey extPubKey1 = addressExtKey1.Neuter();
-            ExtPubKey extPubKey2 = addressExtKey2.Neuter();
-
-            var wallet = new TokenlessWallet()
-            {
-                EncryptedSeed = encryptedSeed,
-                ChainCode = chainCode,
-                ExtPubKey0 = extPubKey0.ToString(this.network),
-                ExtPubKey1 = extPubKey1.ToString(this.network),
-                ExtPubKey2 = extPubKey2.ToString(this.network)
-            };
+            var wallet = new TokenlessWallet(this.network, password, ref mnemonic);
 
             this.fileStorage.SaveToFile(wallet, WalletFileName);
 
@@ -201,7 +142,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                 TokenlessWallet wallet;
                 Mnemonic mnemonic = (strMnemonic == null) ? null : new Mnemonic(strMnemonic);
 
-                (wallet, mnemonic) = this.CreateWallet(password, password, mnemonic);
+                (wallet, mnemonic) = this.CreateWallet(password, mnemonic);
 
                 this.Wallet = wallet;
 
