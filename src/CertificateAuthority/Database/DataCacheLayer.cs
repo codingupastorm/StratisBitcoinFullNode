@@ -84,7 +84,7 @@ namespace CertificateAuthority.Database
                     this.CertStatusesByThumbprint.Add(info.Thumbprint, info.Status);
 
                     if (info.Status == CertificateStatus.Revoked)
-                        RevokedCertificates.Add(info.Thumbprint);
+                        this.RevokedCertificates.Add(info.Thumbprint);
                     else if (this.IsValidPubKey(info.BlockSigningPubKey))
                         this.PublicKeys.Add(info.BlockSigningPubKey);
                 }
