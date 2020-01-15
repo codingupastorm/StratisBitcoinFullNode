@@ -21,7 +21,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         {
         }
 
-        public TokenlessWallet(Network network, string password, string passphrase, ref Mnemonic mnemonic)
+        public TokenlessWallet(Network network, string password, ref Mnemonic mnemonic)
         {
             Guard.NotEmpty(password, nameof(password));
 
@@ -29,7 +29,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             // and a passphrase optionally provided by the user.
             mnemonic = mnemonic ?? new Mnemonic(Wordlist.English, WordCount.Twelve);
 
-            ExtKey extendedKey = GetExtKey(mnemonic, passphrase);
+            ExtKey extendedKey = GetExtKey(mnemonic);
             ExtKey seedExtKey = GetSeedExtKey(extendedKey);
 
             this.ExtPubKey0 = GetAccountExtPubKey(network.Consensus.CoinType, seedExtKey, TokenlessWalletAccount.TransactionSigning).ToString(network);

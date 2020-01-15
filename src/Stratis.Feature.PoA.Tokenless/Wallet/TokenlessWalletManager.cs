@@ -114,9 +114,9 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return keyTool.LoadPrivateKey(KeyType.TransactionSigningKey);
         }
 
-        public (TokenlessWallet, Mnemonic) CreateWallet(string password, string passphrase, Mnemonic mnemonic = null)
+        public (TokenlessWallet, Mnemonic) CreateWallet(string password, Mnemonic mnemonic = null)
         {
-            var wallet = new TokenlessWallet(this.network, password, passphrase, ref mnemonic);
+            var wallet = new TokenlessWallet(this.network, password, ref mnemonic);
 
             this.fileStorage.SaveToFile(wallet, WalletFileName);
 
@@ -142,7 +142,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                 TokenlessWallet wallet;
                 Mnemonic mnemonic = (strMnemonic == null) ? null : new Mnemonic(strMnemonic);
 
-                (wallet, mnemonic) = this.CreateWallet(password, null, mnemonic);
+                (wallet, mnemonic) = this.CreateWallet(password, mnemonic);
 
                 this.Wallet = wallet;
 
