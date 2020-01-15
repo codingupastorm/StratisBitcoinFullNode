@@ -79,13 +79,17 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return new ExtKey(Key.Parse(this.EncryptedSeed, password, network), Convert.FromBase64String(this.ChainCode));
         }
 
-        public ExtKey GetExtKey(Network network, string password, TokenlessWalletAccount tokenlessWalletAccount, int addressIndex, int addressType = 0)
+        public static ExtKey GetExtKey(int coinType, ExtKey seedExtKey, TokenlessWalletAccount tokenlessWalletAccount, int addressIndex, int addressType = 0)
         {
-            string hdPath = $"m/44'/{network.Consensus.CoinType}'/{(int)tokenlessWalletAccount}'/{addressType}/{addressIndex}";
-            ExtKey seedExtKey = this.GetExtKey(network, password);
+            string hdPath = $"m/44'/{coinType}'/{(int)tokenlessWalletAccount}'/{addressType}/{addressIndex}";
             ExtKey pathExtKey = seedExtKey.Derive(new KeyPath(hdPath));
 
             return pathExtKey;
+        }
+
+        public ExtKey GetExtKey(Network network, string password, TokenlessWalletAccount tokenlessWalletAccount, int addressIndex, int addressType = 0)
+        {
+            return GetExtKey(network.Consensus.CoinType, this.GetExtKey(network, password), tokenlessWalletAccount, addressIndex, addressType);
         }
     }
 }
