@@ -1,9 +1,9 @@
-﻿using NLog;
-using System;
-using System.Linq;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using CertificateAuthority.Models;
 using NBitcoin;
+using NLog;
 
 namespace CertificateAuthority.Database
 {
@@ -29,17 +29,12 @@ namespace CertificateAuthority.Database
 
                 if (!dbContext.Accounts.Any() && settings.CreateAdminAccountOnCleanStart)
                 {
-                    AccountAccessFlags adminAttrs = AccountAccessFlags.AccessAccountInfo;
-
-                    foreach (AccountAccessFlags attr in DataHelper.AllAccessFlags)
-                        adminAttrs |= attr;
-
                     // Create Admin.
                     var admin = new AccountModel()
                     {
                         Name = Settings.AdminName,
                         PasswordHash = settings.DefaultAdminPasswordHash,
-                        AccessInfo = adminAttrs,
+                        AccessInfo = AccountAccessFlags.AdminAccess,
 
                         // Will set below.
                         CreatorId = 1
@@ -55,7 +50,7 @@ namespace CertificateAuthority.Database
 
         private CADbContext CreateContext()
         {
-            return new CADbContext(settings);
+            return new CADbContext(this.settings);
         }
 
         private bool IsValidPubKey(string pubKey)
@@ -145,15 +140,15 @@ namespace CertificateAuthority.Database
             return ExecuteQuery(credentialsModel, (dbContext, account) =>
             {
                 if (dbContext.Accounts.Any(x => x.Name == credentialsModel.Model.NewAccountName))
-                    throw new Exception("That name is already taken!");
+                    throw new CertificateAuthorityAccountException("That name is already taken!");
 
                 AccountAccessFlags newAccountAccessLevel =
                     (AccountAccessFlags)credentialsModel.Model.NewAccountAccess | AccountAccessFlags.BasicAccess;
 
                 if (!DataHelper.IsCreatorHasGreaterOrEqualAccess(account.AccessInfo, newAccountAccessLevel))
-                    throw new Exception("You can't create an account with an access level higher than yours!");
+                    throw new CertificateAuthorityAccountException("You can't create an account with an access level higher than yours!");
 
-                AccountModel newAccount = new AccountModel()
+                var newAccount = new AccountModel()
                 {
                     Name = credentialsModel.Model.NewAccountName,
                     PasswordHash = credentialsModel.Model.NewAccountPasswordHash,
@@ -179,10 +174,10 @@ namespace CertificateAuthority.Database
                 AccountModel accountToDelete = dbContext.Accounts.SingleOrDefault(x => x.Id == accountId);
 
                 if (accountToDelete == null)
-                    throw new Exception("Account not found.");
+                    throw new CertificateAuthorityAccountException("Account not found.");
 
                 if (accountToDelete.Name == Settings.AdminName)
-                    throw new Exception("You can't delete Admin account!");
+                    throw new CertificateAuthorityAccountException("You can't delete Admin account!");
 
                 dbContext.Accounts.Remove(accountToDelete);
                 dbContext.SaveChanges();
@@ -199,20 +194,20 @@ namespace CertificateAuthority.Database
                 int accountId = credentialsModel.Model.TargetAccountId;
 
                 if (account.Id == accountId)
-                    throw new Exception("You can't change your own access level!");
+                    throw new CertificateAuthorityAccountException("You can't change your own access level!");
 
                 AccountModel accountToEdit = dbContext.Accounts.SingleOrDefault(x => x.Id == accountId);
 
                 if (accountToEdit == null)
-                    throw new Exception("Account not found.");
+                    throw new CertificateAuthorityAccountException("Account not found.");
 
                 if (accountToEdit.Name == Settings.AdminName)
-                    throw new Exception("Admin's access level can't be changed.");
+                    throw new CertificateAuthorityAccountException("Admin's access level can't be changed.");
 
-                AccountAccessFlags newAccountAccessLevel = (AccountAccessFlags)credentialsModel.Model.AccessFlags;
+                var newAccountAccessLevel = (AccountAccessFlags)credentialsModel.Model.AccessFlags;
 
                 if (!DataHelper.IsCreatorHasGreaterOrEqualAccess(account.AccessInfo, newAccountAccessLevel))
-                    throw new Exception("You can't set access level to be higher than yours!");
+                    throw new CertificateAuthorityAccountException("You can't set access level to be higher than yours!");
 
                 AccountAccessFlags oldAccessInfo = accountToEdit.AccessInfo;
                 accountToEdit.AccessInfo = newAccountAccessLevel;
@@ -221,6 +216,41 @@ namespace CertificateAuthority.Database
                 dbContext.SaveChanges();
 
                 this.logger.Info("Account with id {0} access level was changed from {1} to {2} by account with id {3}.", accountId, oldAccessInfo, accountToEdit.AccessInfo, account.Id);
+            });
+        }
+
+        public void ChangeAccountPassword(CredentialsAccessWithModel<ChangeAccountPasswordModel> credentialsModel)
+        {
+            ExecuteCommand(credentialsModel, (dbContext, account) =>
+            {
+                AccountModel targetAccount = dbContext.Accounts.SingleOrDefault(x => x.Id == credentialsModel.Model.TargetAccountId);
+
+                if (targetAccount == null)
+                    throw new Exception($"Target account not found: {credentialsModel.Model.TargetAccountId}");
+
+                // If the account and target account is not the same check if the account is the admin account.
+                if (targetAccount.Id != credentialsModel.Model.AccountId)
+                {
+                    AccountModel adminAccount = dbContext.Accounts.SingleOrDefault(a => a.Id == credentialsModel.Model.AccountId);
+                    if (adminAccount == null)
+                        throw new Exception($"The credential account does not exist: {credentialsModel.Model.AccountId}");
+
+                    if (adminAccount.Name != Settings.AdminName)
+                        throw new Exception("Only you or an admin account can change the password.");
+                }
+                // If the account is the same as the target account, check the old password.
+                else
+                {
+                    if (!targetAccount.VerifyPassword(credentialsModel.Model.Password))
+                        throw new Exception($"The target account's old password is incorrect.");
+                }
+
+                targetAccount.PasswordHash = DataHelper.ComputeSha256Hash(credentialsModel.Model.NewPassword);
+
+                dbContext.Accounts.Update(targetAccount);
+                dbContext.SaveChanges();
+
+                this.logger.Info("Account Id {0}'s password has been updated.", credentialsModel.Model.TargetAccountId);
             });
         }
 

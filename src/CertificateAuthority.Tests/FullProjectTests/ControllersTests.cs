@@ -7,7 +7,6 @@ using CertificateAuthority.Controllers;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.FullProjectTests.Helpers;
-using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
@@ -26,111 +25,35 @@ namespace CertificateAuthority.Tests.FullProjectTests
     public class ControllersTests
     {
         private readonly AccountsController accountsController;
-        private CredentialsModel adminCredentials;
+        private readonly CredentialsModel adminCredentials;
         private readonly CertificatesController certificatesController;
         private readonly DataCacheLayer dataCacheLayer;
+        private readonly TestServer server;
 
         public ControllersTests()
         {
             IWebHostBuilder builder = TestsHelper.CreateWebHostBuilder();
-            var server = new TestServer(builder);
+            this.server = new TestServer(builder);
 
             this.adminCredentials = new CredentialsModel(1, "4815162342");
 
-            this.accountsController = (AccountsController)server.Host.Services.GetService(typeof(AccountsController));
-            this.certificatesController = (CertificatesController)server.Host.Services.GetService(typeof(CertificatesController));
-            this.dataCacheLayer = (DataCacheLayer)server.Host.Services.GetService(typeof(DataCacheLayer));
+            this.accountsController = (AccountsController)this.server.Host.Services.GetService(typeof(AccountsController));
+            this.certificatesController = (CertificatesController)this.server.Host.Services.GetService(typeof(CertificatesController));
+            this.dataCacheLayer = (DataCacheLayer)this.server.Host.Services.GetService(typeof(DataCacheLayer));
         }
 
         [Fact]
-        private void TestAccountsControllerMethods()
+        private async Task TestCertificatesControllerMethodsAsync()
         {
             // Just admin on start.
-            Assert.Single(this.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(this.adminCredentials)));
-
-            AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates;
-            CredentialsModel credentials1 = this.CreateAccount(credentials1Access);
-            CredentialsModel credentials2 = this.CreateAccount(AccountAccessFlags.DeleteAccounts);
-            CredentialsModel accToDelete = this.CreateAccount();
-
-            // GetAccountInfoById
-            {
-                // Admin can access new user's data
-                AccountInfo info = this.GetValue<AccountInfo>(this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(credentials1.AccountId, adminCredentials.AccountId, adminCredentials.Password)));
-                Assert.Equal(credentials1Access, info.AccessInfo);
-                Assert.Equal(this.adminCredentials.AccountId, info.CreatorId);
-
-                // First user can access admin's data'
-                AccountInfo info2 = this.GetValue<AccountInfo>(this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(this.adminCredentials.AccountId, credentials1.AccountId, credentials1.Password)));
-                Assert.Equal(this.adminCredentials.AccountId, info2.CreatorId);
-                Assert.Equal(Settings.AdminName, info2.Name);
-
-                // Guy without rights fails.
-                var result = this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(credentials1.AccountId, credentials2.AccountId, credentials2.Password));
-
-                Assert.True(((StatusCodeResult)result).StatusCode == 403);
-            }
-
-            // GetAllAccounts
-            List<AccountModel> allAccounts = this.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(this.adminCredentials));
-            Assert.Equal(4, allAccounts.Count);
-
-            // DeleteAccountByAccountId
-            {
-                this.accountsController.DeleteAccountByAccountId(new CredentialsModelWithTargetId(accToDelete.AccountId, credentials2.AccountId, credentials2.Password));
-                Assert.Equal(3, this.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(this.adminCredentials)).Count);
-
-                var result = this.accountsController.DeleteAccountByAccountId(new CredentialsModelWithTargetId(credentials2.AccountId, credentials1.AccountId, credentials1.Password));
-                Assert.True(((StatusCodeResult)result).StatusCode == 403);
-            }
-
-            // ChangeAccountAccessLevel
-            int newFlag = 8 + 16 + 2 + 64;
-            this.accountsController.ChangeAccountAccessLevel(new ChangeAccountAccessLevel(newFlag, credentials1.AccountId, this.adminCredentials.AccountId, this.adminCredentials.Password));
-
-            int newAccessInfo = (int)this.GetValue<AccountInfo>(this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(credentials1.AccountId, this.adminCredentials.AccountId, this.adminCredentials.Password))).AccessInfo;
-            Assert.Equal(newFlag, newAccessInfo);
-
-            // GetCertIdsIssuedByAccountId
-            {
-                int issuerId = credentials1.AccountId;
-
-                string print1 = TestsHelper.GenerateRandomString(20);
-                string print2 = TestsHelper.GenerateRandomString(20);
-
-                // Add fake certificates using data repository.
-                this.dataCacheLayer.AddNewCertificate(new CertificateInfoModel()
-                { IssuerAccountId = issuerId, CertificateContentDer = TestsHelper.GenerateRandomString(50), Status = CertificateStatus.Good, Thumbprint = print1 });
-
-                this.dataCacheLayer.AddNewCertificate(new CertificateInfoModel()
-                { IssuerAccountId = issuerId, CertificateContentDer = TestsHelper.GenerateRandomString(50), Status = CertificateStatus.Good, Thumbprint = print2 });
-
-                List<CertificateInfoModel> certs = this.GetValue<List<CertificateInfoModel>>(this.accountsController.GetCertificatesIssuedByAccountId(new CredentialsModelWithTargetId(issuerId, this.adminCredentials.AccountId, this.adminCredentials.Password)));
-
-                Assert.Equal(2, certs.Count);
-                Assert.Equal(50, certs[0].CertificateContentDer.Length);
-            }
-        }
-
-        private T GetValue<T>(IActionResult response)
-        {
-            response.Should().BeOfType<JsonResult>();
-            var result = (JsonResult)response;
-            return (T)result.Value;
-        }
-
-        [Fact]
-        public async Task TestCertificatesControllerMethodsAsync()
-        {
-            // Just admin on start.
-            Assert.Single(GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(this.adminCredentials)));
+            Assert.Single(TestsHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(this.adminCredentials)));
 
             AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates | AccountAccessFlags.RevokeCertificates | AccountAccessFlags.AccessAnyCertificate;
-            CredentialsModel credentials1 = this.CreateAccount(credentials1Access);
+            CredentialsModel credentials1 = TestsHelper.CreateAccount(this.server, credentials1Access);
 
             this.certificatesController.InitializeCertificateAuthority(new CredentialsModelWithMnemonicModel("young shoe immense usual faculty edge habit misery swarm tape viable toddler", "node", 105, 63, credentials1.AccountId, credentials1.Password));
 
-            var caCertModel = this.GetValue<CertificateInfoModel>(this.certificatesController.GetCaCertificate(credentials1));
+            CertificateInfoModel caCertModel = TestsHelper.GetValue<CertificateInfoModel>(this.certificatesController.GetCaCertificate(credentials1));
 
             var certParser = new X509CertificateParser();
 
@@ -173,7 +96,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             Pkcs10CertificationRequest certificateSigningRequest = CaCertificatesManager.CreateCertificateSigningRequest(clientName, clientKey, new string[0], extensionData);
 
             // IssueCertificate_UsingRequestString
-            CertificateInfoModel certificate1 = this.GetValue<CertificateInfoModel>(await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
+            CertificateInfoModel certificate1 = TestsHelper.GetValue<CertificateInfoModel>(await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
                 new IssueCertificateFromFileContentsModel(Convert.ToBase64String(certificateSigningRequest.GetDerEncoded()), credentials1.AccountId, credentials1.Password)));
 
             X509Certificate cert1 = certParser.ReadCertificate(Convert.FromBase64String(certificate1.CertificateContentDer));
@@ -182,7 +105,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             Assert.Equal(clientAddress, certificate1.Address);
 
-            PubKey[] pubKeys = this.GetValue<ICollection<PubKey>>(this.certificatesController.GetCertificatePublicKeys()).ToArray();
+            PubKey[] pubKeys = TestsHelper.GetValue<ICollection<PubKey>>(this.certificatesController.GetCertificatePublicKeys()).ToArray();
             Assert.Single(pubKeys);
             Assert.Equal(blockSigningPrivateKey.PubKey, pubKeys[0]);
 
@@ -210,47 +133,47 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             Pkcs10CertificationRequest certificateSigningRequest2 = CaCertificatesManager.CreateCertificateSigningRequest(clientName, clientKey2, new string[0], extensionData);
 
-            CertificateInfoModel certificate2 = this.GetValue<CertificateInfoModel>(await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
+            CertificateInfoModel certificate2 = TestsHelper.GetValue<CertificateInfoModel>(await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
                 new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest2.GetDerEncoded()), this.adminCredentials.AccountId, this.adminCredentials.Password)));
 
             Assert.Equal(clientAddress, certificate2.Address);
 
-            PubKey[] pubKeys2 = this.GetValue<ICollection<PubKey>>(this.certificatesController.GetCertificatePublicKeys()).ToArray();
+            PubKey[] pubKeys2 = TestsHelper.GetValue<ICollection<PubKey>>(this.certificatesController.GetCertificatePublicKeys()).ToArray();
             Assert.Equal(2, pubKeys2.Length);
             Assert.Equal(blockSigningPrivateKey.PubKey, pubKeys2[1]);
 
-            Assert.Empty(this.GetValue<ICollection<string>>(this.certificatesController.GetRevokedCertificates()));
+            Assert.Empty(TestsHelper.GetValue<ICollection<string>>(this.certificatesController.GetRevokedCertificates()));
 
             // GetCertificateByThumbprint
-            CertificateInfoModel cert1Retrieved = this.GetValue<CertificateInfoModel>(this.certificatesController.GetCertificateByThumbprint(
+            CertificateInfoModel cert1Retrieved = TestsHelper.GetValue<CertificateInfoModel>(this.certificatesController.GetCertificateByThumbprint(
                 new CredentialsModelWithThumbprintModel(certificate1.Thumbprint, this.adminCredentials.AccountId, this.adminCredentials.Password)));
             Assert.Equal(certificate1.Id, cert1Retrieved.Id);
             Assert.Equal(certificate1.IssuerAccountId, cert1Retrieved.IssuerAccountId);
 
-            string status = this.GetValue<string>(this.certificatesController.GetCertificateStatus(new GetCertificateStatusModel(certificate1.Thumbprint, true)));
+            string status = TestsHelper.GetValue<string>(this.certificatesController.GetCertificateStatus(new GetCertificateStatusModel(certificate1.Thumbprint, true)));
             Assert.Equal(CertificateStatus.Good.ToString(), status);
 
             this.certificatesController.RevokeCertificate(new CredentialsModelWithThumbprintModel(certificate1.Thumbprint, credentials1.AccountId, credentials1.Password));
 
             // Can't revoke 2nd time same cert.
-            bool result = this.GetValue<bool>(this.certificatesController.RevokeCertificate(new CredentialsModelWithThumbprintModel(certificate1.Thumbprint, credentials1.AccountId, credentials1.Password)));
+            bool result = TestsHelper.GetValue<bool>(this.certificatesController.RevokeCertificate(new CredentialsModelWithThumbprintModel(certificate1.Thumbprint, credentials1.AccountId, credentials1.Password)));
             Assert.False(result);
 
-            Assert.Equal(CertificateStatus.Revoked.ToString(), this.GetValue<string>(this.certificatesController.GetCertificateStatus(new GetCertificateStatusModel(certificate1.Thumbprint, true))));
-            Assert.Equal(CertificateStatus.Unknown.ToString(), this.GetValue<string>(this.certificatesController.GetCertificateStatus(new GetCertificateStatusModel(TestsHelper.GenerateRandomString(20), true))));
+            Assert.Equal(CertificateStatus.Revoked.ToString(), TestsHelper.GetValue<string>(this.certificatesController.GetCertificateStatus(new GetCertificateStatusModel(certificate1.Thumbprint, true))));
+            Assert.Equal(CertificateStatus.Unknown.ToString(), TestsHelper.GetValue<string>(this.certificatesController.GetCertificateStatus(new GetCertificateStatusModel(TestsHelper.GenerateRandomString(20), true))));
 
-            List<CertificateInfoModel> allCerts = this.GetValue<List<CertificateInfoModel>>(this.certificatesController.GetAllCertificates(credentials1));
+            List<CertificateInfoModel> allCerts = TestsHelper.GetValue<List<CertificateInfoModel>>(this.certificatesController.GetAllCertificates(credentials1));
             Assert.True(allCerts.Count(x => x.Status == CertificateStatus.Good) == 1);
             Assert.True(allCerts.Count(x => x.Status == CertificateStatus.Revoked) == 1);
 
-            Assert.Equal(CertificateStatus.Revoked.ToString(), this.GetValue<string>(this.certificatesController.GetCertificateStatus(new GetCertificateStatusModel(certificate1.Thumbprint, true))));
+            Assert.Equal(CertificateStatus.Revoked.ToString(), TestsHelper.GetValue<string>(this.certificatesController.GetCertificateStatus(new GetCertificateStatusModel(certificate1.Thumbprint, true))));
 
-            List<string> revoked = this.GetValue<ICollection<string>>(this.certificatesController.GetRevokedCertificates()).ToList();
+            List<string> revoked = TestsHelper.GetValue<ICollection<string>>(this.certificatesController.GetRevokedCertificates()).ToList();
             Assert.Single(revoked);
             Assert.Equal(certificate1.Thumbprint, revoked[0]);
 
             // Public keys for revoked certificates don't appear in the list.
-            pubKeys = this.GetValue<ICollection<PubKey>>(this.certificatesController.GetCertificatePublicKeys()).ToArray();
+            pubKeys = TestsHelper.GetValue<ICollection<PubKey>>(this.certificatesController.GetCertificatePublicKeys()).ToArray();
             Assert.Single(pubKeys);
             Assert.Equal(blockSigningPrivateKey.PubKey, pubKeys[0]);
 
@@ -285,7 +208,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             Assert.True(signedCsr.Verify());
 
-            CertificateInfoModel certificate3 = this.GetValue<CertificateInfoModel>(await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
+            CertificateInfoModel certificate3 = TestsHelper.GetValue<CertificateInfoModel>(await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
                 new IssueCertificateFromFileContentsModel(Convert.ToBase64String(signedCsr.GetDerEncoded()), credentials1.AccountId, credentials1.Password)));
 
             Assert.Equal(clientAddress, certificate3.Address);
@@ -294,7 +217,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             // In this case we just use the same pubkey for both the certificate generation & transaction signing pubkey hash, they would ordinarily be different.
             var generateModel = new GenerateCertificateSigningRequestModel(clientAddress, Convert.ToBase64String(clientPublicKey), Convert.ToBase64String(clientPrivateKey.PubKey.Hash.ToBytes()), Convert.ToBase64String(blockSigningPrivateKey.PubKey.ToBytes()), credentials1.AccountId, credentials1.Password);
 
-            CertificateSigningRequestModel unsignedCsrModel = this.GetValue<CertificateSigningRequestModel>(await this.certificatesController.GenerateCertificateSigningRequestAsync(generateModel));
+            CertificateSigningRequestModel unsignedCsrModel = TestsHelper.GetValue<CertificateSigningRequestModel>(await this.certificatesController.GenerateCertificateSigningRequestAsync(generateModel));
 
             byte[] csrTemp = Convert.FromBase64String(unsignedCsrModel.CertificateSigningRequestContent);
 
@@ -309,7 +232,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             // TODO: Why is this failing? Do a manual verification of the EC maths
             //Assert.True(signedCsr.Verify());
 
-            CertificateInfoModel certificate4 = this.GetValue<CertificateInfoModel>(await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
+            CertificateInfoModel certificate4 = TestsHelper.GetValue<CertificateInfoModel>(await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
                 new IssueCertificateFromFileContentsModel(Convert.ToBase64String(signedCsr.GetDerEncoded()), credentials1.AccountId, credentials1.Password)));
 
             Assert.Equal(clientAddress, certificate4.Address);
@@ -356,49 +279,38 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 AccountAccessFlags.IssueCertificates);
         }
 
-        private CredentialsModel CreateAccount(AccountAccessFlags access = AccountAccessFlags.BasicAccess, CredentialsModel creatorCredentialsModel = null)
-        {
-            string password = TestsHelper.GenerateRandomString();
-            string passHash = DataHelper.ComputeSha256Hash(password);
-
-            CredentialsModel credentialsModel = creatorCredentialsModel ?? this.adminCredentials;
-            int id = this.GetValue<int>(this.accountsController.CreateAccount(new CreateAccount(TestsHelper.GenerateRandomString(), passHash, (int)access, credentialsModel.AccountId, credentialsModel.Password)));
-
-            return new CredentialsModel(id, password);
-        }
-
         private void Returns403IfNoAccess(Func<int, string, object> action, AccountAccessFlags requiredAccess)
         {
-            CredentialsModel noAccessCredentials = this.CreateAccount();
+            CredentialsModel noAccessCredentials = TestsHelper.CreateAccount(this.server);
 
             var response = action.Invoke(noAccessCredentials.AccountId, noAccessCredentials.Password);
 
             switch (response)
             {
                 case ActionResult<AccountInfo> result1:
-                    Assert.True(((result1.Result as StatusCodeResult).StatusCode == 403));
+                    Assert.True((result1.Result as StatusCodeResult).StatusCode == 403);
                     break;
                 case ActionResult<List<AccountModel>> result2:
-                    Assert.True(((result2.Result as StatusCodeResult).StatusCode == 403));
+                    Assert.True((result2.Result as StatusCodeResult).StatusCode == 403);
                     break;
                 case ActionResult<int> result3:
-                    Assert.True(((result3.Result as StatusCodeResult).StatusCode == 403));
+                    Assert.True((result3.Result as StatusCodeResult).StatusCode == 403);
                     break;
                 case ActionResult<List<CertificateInfoModel>> result4:
-                    Assert.True(((result4.Result as StatusCodeResult).StatusCode == 403));
+                    Assert.True((result4.Result as StatusCodeResult).StatusCode == 403);
                     break;
                 case ActionResult<bool> result5:
-                    Assert.True(((result5.Result as StatusCodeResult).StatusCode == 403));
+                    Assert.True((result5.Result as StatusCodeResult).StatusCode == 403);
                     break;
                 case ActionResult<CertificateInfoModel> result6:
-                    Assert.True(((result6.Result as StatusCodeResult).StatusCode == 403));
+                    Assert.True((result6.Result as StatusCodeResult).StatusCode == 403);
                     break;
                 default:
-                    Assert.True(((response as StatusCodeResult).StatusCode == 403));
+                    Assert.True((response as StatusCodeResult).StatusCode == 403);
                     break;
             }
 
-            CredentialsModel accessCredentials = this.CreateAccount(requiredAccess);
+            CredentialsModel accessCredentials = TestsHelper.CreateAccount(this.server, requiredAccess);
 
             response = action.Invoke(accessCredentials.AccountId, accessCredentials.Password);
 
@@ -414,7 +326,6 @@ namespace CertificateAuthority.Tests.FullProjectTests
                     break;
                 case ActionResult<int> result3b:
                     Assert.Null(result3b.Result);
-                    Assert.NotNull(result3b.Value);
                     break;
                 case ActionResult<List<CertificateInfoModel>> result4b:
                     Assert.Null(result4b.Result);
@@ -422,7 +333,6 @@ namespace CertificateAuthority.Tests.FullProjectTests
                     break;
                 case ActionResult<bool> result5b:
                     Assert.Null(result5b.Result);
-                    Assert.NotNull(result5b.Value);
                     break;
                 case ActionResult<CertificateInfoModel> result6b:
                     // The certificate may not have been found or could not be issued, in which case the response is a 404 or 500
@@ -436,7 +346,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
         private void CheckThrowsIfNoAccess(Action<int, string> action, AccountAccessFlags requiredAccess)
         {
-            CredentialsModel noAccessCredentials = this.CreateAccount();
+            CredentialsModel noAccessCredentials = TestsHelper.CreateAccount(this.server);
             bool throwsIfNoAccess = false;
 
             try
@@ -455,7 +365,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             if (!throwsIfNoAccess)
                 Assert.False(true, "Action was expected to throw.");
 
-            CredentialsModel accessCredentials = this.CreateAccount(requiredAccess);
+            CredentialsModel accessCredentials = TestsHelper.CreateAccount(this.server, requiredAccess);
 
             try
             {
