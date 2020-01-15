@@ -1,9 +1,9 @@
 ﻿using System;
-using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using NLog;
 
 namespace CertificateAuthority.Controllers
@@ -40,7 +40,6 @@ namespace CertificateAuthority.Controllers
             catch (Exception ex)
             {
                 this.logger.Error(ex);
-
                 return BadRequest(ex);
             }
         }
@@ -64,7 +63,6 @@ namespace CertificateAuthority.Controllers
             catch (Exception ex)
             {
                 this.logger.Error(ex);
-
                 return BadRequest(ex);
             }
         }
@@ -88,7 +86,6 @@ namespace CertificateAuthority.Controllers
             catch (Exception ex)
             {
                 this.logger.Error(ex);
-
                 return BadRequest(ex);
             }
         }
@@ -112,7 +109,6 @@ namespace CertificateAuthority.Controllers
             catch (Exception ex)
             {
                 this.logger.Error(ex);
-
                 return BadRequest(ex);
             }
         }
@@ -136,7 +132,6 @@ namespace CertificateAuthority.Controllers
             catch (Exception ex)
             {
                 this.logger.Error(ex);
-
                 return BadRequest(ex);
             }
         }
@@ -164,7 +159,33 @@ namespace CertificateAuthority.Controllers
             catch (Exception ex)
             {
                 this.logger.Error(ex);
+                return BadRequest(ex);
+            }
+        }
 
+        /// <summary>
+        /// Sets access level of a specified account to a given value.
+        /// You can't change your own or Admin's access level. You can't set account's access level to be higher than yours.
+        /// ChangeAccountAccessLevel access level is required.
+        /// </summary>
+        [HttpPost("changepassword")]
+        public ActionResult ChangeAccountPassword([FromBody]ChangeAccountPasswordModel model)
+        {
+            var credentials = new CredentialsAccessWithModel<ChangeAccountPasswordModel>(model, AccountAccessFlags.BasicAccess);
+
+            try
+            {
+                this.repository.ChangeAccountPassword(credentials);
+
+                return this.Ok();
+            }
+            catch (InvalidCredentialsException)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden);
+            }
+            catch (Exception ex)
+            {
+                this.logger.Error(ex);
                 return BadRequest(ex);
             }
         }
