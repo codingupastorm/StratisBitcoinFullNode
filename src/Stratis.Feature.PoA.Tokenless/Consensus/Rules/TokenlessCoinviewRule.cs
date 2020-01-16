@@ -131,7 +131,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
                 return;
             }
 
-            foreach (Transaction transaction in context.ValidationContext.BlockToValidate.Transactions)
+            foreach (Transaction transaction in context.ValidationContext.BlockToValidate.Transactions.Where(x=> !x.IsCoinBase))
             {
                 this.logger.LogDebug("Processing transaction '{0}'.", transaction.GetHash());
 

@@ -84,6 +84,8 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             this.MedianTimePast = Utils.DateTimeToUnixTime(this.ChainTip.GetMedianTimePast());
             this.LockTimeCutoff = MempoolValidator.StandardLocktimeVerifyFlags.HasFlag(Transaction.LockTimeFlags.MedianTimePast) ? this.MedianTimePast : this.BlockTemplate.Block.Header.Time;
 
+            this.block.Transactions.Add(CreateTokenlessCoinbase());
+
             this.AddTransactions(out int _, out int _);
 
             this.logger.LogDebug("Serialized size is {0} bytes, block weight is {1}, number of txs is {2}", this.BlockTemplate.Block.GetSerializedSize(), this.BlockTemplate.Block.GetBlockWeight(this.Network.Consensus), this.BlockTx);
@@ -95,6 +97,19 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             this.executionCache.StoreExecutionResult(this.BlockTemplate.Block.GetHash(), cacheModel);
 
             return this.BlockTemplate;
+        }
+
+        /// <summary>
+        /// Creates a coinbase without any significant data. Will be used for voting if necessary.
+        /// </summary>
+        private Transaction CreateTokenlessCoinbase()
+        {
+            Transaction tx = this.Network.CreateTransaction();
+            tx.Time = (uint)this.DateTimeProvider.GetAdjustedTimeAsUnixTimestamp();
+            // We need these 2 for IsCoinBase to return true.
+            tx.AddInput(TxIn.CreateCoinbase(this.ChainTip.Height + 1));
+            tx.AddOutput(Money.Zero, new Script());
+            return tx;
         }
 
         /// <inheritdoc/>
