@@ -16,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
+using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.IntegrationTests.Common;
@@ -287,6 +288,60 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 Receipt callReceipt = receiptRepository.Retrieve(callResponse.TransactionId);
                 Assert.True(callReceipt.Success);
+            }
+        }
+
+        [Fact]
+        public async Task TokenlessNodesUpdateMiners()
+        {
+            using (IWebHost server = CreateWebHostBuilder().Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            {
+                server.Start();
+
+                // TODO: This is a massive stupid hack to test with self signed certs.
+                var handler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true)
+                };
+                var httpClient = new HttpClient(handler);
+
+                // Start + Initialize CA.
+                var client = new CaClient(new Uri(this.BaseAddress), httpClient,
+                    CertificateAuthorityIntegrationTests.TestAccountId,
+                    CertificateAuthorityIntegrationTests.TestPassword);
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic,
+                    CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+
+                // Get Authority Certificate.
+                Settings settings = (Settings)server.Services.GetService(typeof(Settings));
+                var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
+                var certParser = new X509CertificateParser();
+                X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
+
+                (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                (CoreNode node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+
+                node1.Start();
+
+                // node2.Start();
+
+                VotingManager node1VotingManager = node1.FullNode.NodeService<VotingManager>();
+                // VotingManager node2VotingManager = node2.FullNode.NodeService<VotingManager>();
+
+                TestBase.WaitLoop(() => node1VotingManager.GetScheduledVotes().Count > 0);
+
+                //IFederationManager node1FederationManager = node1.FullNode.NodeService<IFederationManager>();
+                //IFederationManager node2FederationManager = node2.FullNode.NodeService<IFederationManager>();
+
+                //// Mine some blocks to "start" the network.
+                //await node1.MineBlocksAsync(5);
+
+                //Assert.Equal(2, node1FederationManager.GetFederationMembers().Count);
+                //Assert.Equal(2, node2FederationManager.GetFederationMembers().Count);
+
+                //// node1.FullNode.NodeService<VotingManager>().GetScheduledVotes()
+
             }
         }
 
