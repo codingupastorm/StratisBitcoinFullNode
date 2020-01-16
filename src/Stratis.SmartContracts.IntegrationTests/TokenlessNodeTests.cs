@@ -345,9 +345,10 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.Single(finishedPolls);
                 Assert.Equal(VoteKey.KickFederationMember, finishedPolls.First().VotingData.Key);
 
-                // Mine enough blocks that the vote is finalized and executed.
-                await node1.MineBlocksAsync((int)this.network.Consensus.MaxReorgLength + 1);
-                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == (2 + this.network.Consensus.MaxReorgLength + 1));
+                await node1.MineBlocksAsync(5);
+                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 7);
+                await node2.MineBlocksAsync(5);
+                TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 12);
 
                 // Ensure we have only 2 federation members now.
                 IFederationManager node1FederationManager = node1.FullNode.NodeService<IFederationManager>();
