@@ -113,7 +113,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 bip9Deployments: new NoBIP9Deployments(),
                 bip34Hash: null,
                 minerConfirmationWindow: 0,
-                maxReorgLength: 500, // TODO-TL: Check
+                maxReorgLength: 10, // This is really a RegTest class at the moment.
                 defaultAssumeValid: null,
                 maxMoney: long.MinValue,
                 coinbaseMaturity: 2, // TODO-TL: Check

@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using Org.BouncyCastle.X509;
+using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
@@ -292,7 +293,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task TokenlessNodesUpdateMiners()
+        public async Task TokenlessNodesKickAMinerBasedOnCA()
         {
             using (IWebHost server = CreateWebHostBuilder().Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
@@ -326,6 +327,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 node1.Start();
                 node2.Start();
 
+                TestHelper.Connect(node1, node2);
+
                 // As the network had 3 federation members on startup, one should be voted out. Wait for a scheduled vote.
                 VotingManager node1VotingManager = node1.FullNode.NodeService<VotingManager>();
                 VotingManager node2VotingManager = node2.FullNode.NodeService<VotingManager>();
@@ -334,21 +337,21 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Mine some blocks to lock in the vote
                 await node1.MineBlocksAsync(1);
+                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 1);
                 await node2.MineBlocksAsync(1);
+                TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 2);
 
                 List<Poll> finishedPolls = node1VotingManager.GetFinishedPolls();
-                List<Poll> pendingPolls = node1VotingManager.GetFinishedPolls();
                 Assert.Single(finishedPolls);
-                // finishedPolls.First().PollVotedInFavorBlockData
+                Assert.Equal(VoteKey.KickFederationMember, finishedPolls.First().VotingData.Key);
 
-                //IFederationManager node1FederationManager = node1.FullNode.NodeService<IFederationManager>();
-                //IFederationManager node2FederationManager = node2.FullNode.NodeService<IFederationManager>();
+                // Mine enough blocks that the vote is finalized and executed.
+                await node1.MineBlocksAsync((int)this.network.Consensus.MaxReorgLength + 1);
+                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == (2 + this.network.Consensus.MaxReorgLength + 1));
 
-                //Assert.Equal(2, node1FederationManager.GetFederationMembers().Count);
-                //Assert.Equal(2, node2FederationManager.GetFederationMembers().Count);
-
-                //// node1.FullNode.NodeService<VotingManager>().GetScheduledVotes()
-
+                // Ensure we have only 2 federation members now.
+                IFederationManager node1FederationManager = node1.FullNode.NodeService<IFederationManager>();
+                Assert.Equal(2, node1FederationManager.GetFederationMembers().Count);
             }
         }
 
