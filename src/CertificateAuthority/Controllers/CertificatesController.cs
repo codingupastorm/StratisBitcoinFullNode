@@ -357,6 +357,8 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(ICollection<string>), 200)]
         public IActionResult GetCertificatePublicKeys()
         {
+            // TODO: This and presumably the other methods here should be checking credentials!!
+
             return this.Json(this.caCertificateManager.GetCertificatePublicKeys());
         }
     }

@@ -12,12 +12,11 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             var mnemonic = new Mnemonic("lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom");
 
-            ExtKey extKey = TokenlessWallet.GetExtKey(mnemonic);
-            ExtKey seedExtKey = TokenlessWallet.GetSeedExtKey(extKey);
+            ExtKey seedExtKey = TokenlessWallet.GetSeedExtKey(mnemonic);
 
             int coinType = 500;
 
-            Key privateKey = TokenlessWallet.GetExtKey(coinType, seedExtKey, TokenlessWalletAccount.BlockSigning, 0).PrivateKey;
+            Key privateKey = TokenlessWallet.GetKey(coinType, seedExtKey, TokenlessWalletAccount.BlockSigning, 0);
 
             ExtPubKey account = TokenlessWallet.GetAccountExtPubKey(coinType, seedExtKey, TokenlessWalletAccount.BlockSigning);
 

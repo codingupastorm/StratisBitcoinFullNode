@@ -54,12 +54,8 @@ namespace Stratis.SmartContracts.Tests.Common
 
             CoreNode node = this.CreateNode(new FullTokenlessRunner(dataFolder, network, this.TimeProvider), "poa.conf", configParameters: configParameters);
 
-            Mnemonic[] mnemonics = {
-                    new Mnemonic("lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom"),
-                    new Mnemonic("idle power swim wash diesel blouse photo among eager reward govern menu"),
-                    new Mnemonic("high neither night category fly wasp inner kitchen phone current skate hair") };
 
-            using (var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder, "-password=test", $"-mnemonic={ mnemonics[nodeIndex] }", "-certificatepassword=test" }))
+            using (var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder, "-password=test", $"-mnemonic={ TokenlessNetwork.Mnemonics[nodeIndex] }", "-certificatepassword=test" }))
             {
                 var loggerFactory = new LoggerFactory();
                 var revocationChecker = new RevocationChecker(settings, null, loggerFactory, new DateTimeProvider());
@@ -68,15 +64,19 @@ namespace Stratis.SmartContracts.Tests.Common
 
                 walletManager.Initialize();
 
-                var tool = new KeyTool(settings.DataFolder);
-                tool.SavePrivateKey(network.FederationKeys[nodeIndex], KeyType.FederationKey);
+                Key miningKey = walletManager.GetKey("test", TokenlessWalletAccount.BlockSigning);
+                PubKey miningPubKey = miningKey.PubKey;
 
-                Key clientCertificatePrivateKey = walletManager.GetExtKey("test", TokenlessWalletAccount.P2PCertificates).PrivateKey;
+                // Save poa key for mining
+                var tool = new KeyTool(settings.DataFolder);
+                tool.SavePrivateKey(miningKey, KeyType.FederationKey);
+
+                Key clientCertificatePrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.P2PCertificates);
                 PubKey pubKey = clientCertificatePrivateKey.PubKey;
-                Key transactionSigningPrivateKey = walletManager.GetExtKey("test", TokenlessWalletAccount.TransactionSigning).PrivateKey;
+                Key transactionSigningPrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.TransactionSigning);
                 PubKey transactionSigningPubKey = transactionSigningPrivateKey.PubKey;
                 BitcoinPubKeyAddress address = pubKey.GetAddress(network);
-                PubKey blockSigningPubKey = walletManager.GetExtKey("test", TokenlessWalletAccount.BlockSigning).PrivateKey.PubKey;
+                PubKey blockSigningPubKey = miningKey.PubKey;
 
                 X509Certificate clientCertificate = IssueCertificate(client, clientCertificatePrivateKey, transactionSigningPubKey, address, blockSigningPubKey);
 
