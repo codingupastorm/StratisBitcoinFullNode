@@ -85,8 +85,8 @@ namespace CertificateAuthority.Database
 
                     if (info.Status == CertificateStatus.Revoked)
                         this.RevokedCertificates.Add(info.Thumbprint);
-                    else if (this.IsValidPubKey(info.PubKey))
-                        this.PublicKeys.Add(info.PubKey);
+                    else if (this.IsValidPubKey(info.BlockSigningPubKey))
+                        this.PublicKeys.Add(info.BlockSigningPubKey);
                 }
             }
 
@@ -100,8 +100,8 @@ namespace CertificateAuthority.Database
         public void AddNewCertificate(CertificateInfoModel certificate)
         {
             this.CertStatusesByThumbprint.Add(certificate.Thumbprint, certificate.Status);
-            if (this.IsValidPubKey(certificate.PubKey))
-                this.PublicKeys.Add(certificate.PubKey);
+            if (this.IsValidPubKey(certificate.BlockSigningPubKey))
+                this.PublicKeys.Add(certificate.BlockSigningPubKey);
 
             using (CADbContext dbContext = this.CreateContext())
             {

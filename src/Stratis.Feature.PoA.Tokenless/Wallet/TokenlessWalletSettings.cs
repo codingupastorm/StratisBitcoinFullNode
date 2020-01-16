@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
@@ -33,17 +32,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         public bool GenerateCertificate { get; set; }
 
         public string CertPath { get; set; }
-
-        public Dictionary<string, string> CertificateAttributes { get; set; }
-
-        public string UserFullName { get; set; }
-
-        public string UserEMail { get; set; }
-
-        public string UserTelephone { get; set; }
-
-        public string UserFacsimile { get; set; }
-
+        
         private bool IsRelativePath(string path)
         {
             return !this.CertPath.Contains(":\\") && !this.CertPath.StartsWith("/");
@@ -70,29 +59,6 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
             this.GenerateCertificate = config.GetOrDefault<bool>("generatecertificate", false, this.logger);
             this.CertPath = Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.ClientCertificateName);
-
-            IEnumerable<string> certInfo = config.GetOrDefault<string>("certinfo", string.Empty, this.logger).Replace("\\,", "\0").Split(',').Select(t => t.Replace("\0", ",").Trim());
-            this.CertificateAttributes = new Dictionary<string, string>();
-
-            foreach ((string key, string value) in certInfo.Where(t => !string.IsNullOrEmpty(t)).Select(t => t.Split(':')).Select(a => (a[0].Trim(), string.Join(":", a.Skip(1)).Trim())))
-                this.CertificateAttributes[key] = value;
-
-            this.UserFullName = config.GetOrDefault<string>("userfullname", null, this.logger);
-
-            this.UserEMail = config.GetOrDefault<string>("useremail", null, this.logger);
-
-            if (this.UserEMail != null && !IsEmail(this.UserEMail))
-                throw new ConfigurationException($"The supplied e-mail address ('{ this.UserEMail }') syntax is invalid.");
-
-            this.UserTelephone = config.GetOrDefault<string>("userphone", null, this.logger);
-
-            if (this.UserTelephone != null && !IsPhone(this.UserTelephone))
-                throw new ConfigurationException($"The supplied phone number ('{ this.UserTelephone }') syntax is invalid.");
-
-            this.UserFacsimile = config.GetOrDefault<string>("userfax", null, this.logger);
-
-            if (this.UserFacsimile != null && !IsPhone(this.UserFacsimile))
-                throw new ConfigurationException($"The supplied fax number ('{ this.UserFacsimile }') syntax is invalid.");
         }
 
         /// <summary>
@@ -111,11 +77,6 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             builder.AppendLine("-certaddressindex=<number>      The index (N) used for the P2P certificate key at HD Path (m/44'/105'/2'/0/N) where N is a zero based key ID.");
             builder.AppendLine("----Certificate Details----");
             builder.AppendLine("-generatecertificate            Requests a new certificate to be generated.");
-            builder.AppendLine("-certinfo=<string>              Certificate attributes - e.g. 'CN:Sample Cert, OU:R&D, O:Company Ltd., L:Dublin 4, S:Dublin, C:IE'.");
-            builder.AppendLine("-userfullname=<string>          The full name of the user.");
-            builder.AppendLine("-useremail=<string>             The e-mail address of the user.");
-            builder.AppendLine("-userphone=<phone number>       The phone number of the user.");
-            builder.AppendLine("-userfax=<fax number>           The fax number of the user.");
 
             defaults.Logger.LogInformation(builder.ToString());
         }
@@ -137,16 +98,6 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             builder.AppendLine("----Certificate Details----");
             builder.AppendLine("#Requests a new certificate to be generated.");
             builder.AppendLine("#generatecertificate=false");
-            builder.AppendLine("#Certificate attributes - e.g. 'CN:Sample Cert, OU:R&D, O:Company Ltd., L:Dublin 4, S:Dublin, C:IE'.");
-            builder.AppendLine("#certinfo=");
-            builder.AppendLine("#The full name of the user.");
-            builder.AppendLine("#userfullname=");
-            builder.AppendLine("#The e-mail address of the user.");
-            builder.AppendLine("#useremail=");
-            builder.AppendLine("#The phone number of the user.");
-            builder.AppendLine("#userphone=");
-            builder.AppendLine("#The fax number of the user.");
-            builder.AppendLine("#userfax=");
         }
 
         /// <summary>

@@ -48,7 +48,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         // TODO: Lots of repetition in this file.
-
+        
         [Fact]
         public async Task GetPublicKeysFromApi()
         {
@@ -91,14 +91,11 @@ namespace Stratis.SmartContracts.IntegrationTests
             {
                 server.Start();
 
-                // TODO: This is a massive stupid hack to test with self signed certs.
-                var handler = new HttpClientHandler();
-                handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
-                var httpClient = new HttpClient(handler);
+                var httpClient = GetHttpClient();
 
                 // Start + Initialize CA.
                 var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
-                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword));
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 Settings settings = (Settings)server.Services.GetService(typeof(Settings));
@@ -107,8 +104,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
 
                 // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.  
-                (CoreNode node1, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
-                (CoreNode node2, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+                (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                (CoreNode node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
 
                 node1.Start();
                 node2.Start();
@@ -127,16 +124,11 @@ namespace Stratis.SmartContracts.IntegrationTests
             {
                 server.Start();
 
-                // TODO: This is a massive stupid hack to test with self signed certs.
-                var handler = new HttpClientHandler
-                {
-                    ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true)
-                };
-                var httpClient = new HttpClient(handler);
+                var httpClient = GetHttpClient();
 
                 // Start + Initialize CA.
                 var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
-                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword));
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 Settings settings = (Settings)server.Services.GetService(typeof(Settings));
@@ -145,15 +137,15 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
 
                 // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.  
-                (CoreNode node1, Key privKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
-                (CoreNode node2, Key privKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
 
                 node1.Start();
                 node2.Start();
                 TestHelper.Connect(node1, node2);
 
                 // Build and send a transaction from one node.
-                Transaction transaction = this.CreateBasicOpReturnTransaction(node1, privKey1);
+                Transaction transaction = this.CreateBasicOpReturnTransaction(node1, txPrivKey1);
                 var broadcasterManager = node1.FullNode.NodeService<IBroadcasterManager>();
                 await broadcasterManager.BroadcastTransactionAsync(transaction);
 
@@ -176,14 +168,11 @@ namespace Stratis.SmartContracts.IntegrationTests
             {
                 server.Start();
 
-                // TODO: This is a massive stupid hack to test with self signed certs.
-                var handler = new HttpClientHandler();
-                handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
-                var httpClient = new HttpClient(handler);
+                var httpClient = GetHttpClient();
 
                 // Start + Initialize CA.
                 var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
-                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword));
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 Settings settings = (Settings)server.Services.GetService(typeof(Settings));
@@ -191,8 +180,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var certParser = new X509CertificateParser();
                 X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
 
-                (CoreNode node1, Key privKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
-                (CoreNode node2, Key privKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
 
                 node1.Start();
                 node2.Start();
@@ -204,7 +193,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
                 var stateRepo = node2.FullNode.NodeService<IStateRepositoryRoot>();
 
-                Transaction createTransaction = this.CreateContractCreateTransaction(node1, privKey1);
+                Transaction createTransaction = this.CreateContractCreateTransaction(node1, txPrivKey1);
                 await broadcasterManager.BroadcastTransactionAsync(createTransaction);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
@@ -213,7 +202,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Receipt createReceipt = receiptRepository.Retrieve(createTransaction.GetHash());
                 Assert.True(createReceipt.Success);
 
-                Transaction callTransaction = CreateContractCallTransaction(node1, createReceipt.NewContractAddress, privKey1);
+                Transaction callTransaction = CreateContractCallTransaction(node1, createReceipt.NewContractAddress, txPrivKey1);
                 await broadcasterManager.BroadcastTransactionAsync(callTransaction);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
@@ -234,16 +223,11 @@ namespace Stratis.SmartContracts.IntegrationTests
             {
                 server.Start();
 
-                // TODO: This is a massive stupid hack to test with self signed certs.
-                var handler = new HttpClientHandler
-                {
-                    ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true)
-                };
-                var httpClient = new HttpClient(handler);
+                var httpClient = GetHttpClient();
 
                 // Start + Initialize CA.
                 var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
-                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword));
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 Settings settings = (Settings)server.Services.GetService(typeof(Settings));
@@ -251,8 +235,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var certParser = new X509CertificateParser();
                 X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
 
-                (CoreNode node1, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
-                (CoreNode node2, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+                (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                (CoreNode node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
 
                 node1.Start();
                 node2.Start();
@@ -306,6 +290,17 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Receipt callReceipt = receiptRepository.Retrieve(callResponse.TransactionId);
                 Assert.True(callReceipt.Success);
             }
+        }
+
+        private HttpClient GetHttpClient()
+        {
+            // TODO: This is a massive stupid hack to test with self signed certs.
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true)
+            };
+
+            return new HttpClient(handler);
         }
 
         private IWebHostBuilder CreateWebHostBuilder([CallerMemberName] string callingMethod = null)

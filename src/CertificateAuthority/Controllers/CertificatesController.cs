@@ -35,7 +35,7 @@ namespace CertificateAuthority.Controllers
 
             try
             {
-                return this.Json(this.caCertificateManager.InitializeCertificateAuthority(data.Model.Mnemonic, data.Model.MnemonicPassword));
+                return this.Json(this.caCertificateManager.InitializeCertificateAuthority(data.Model.Mnemonic, data.Model.MnemonicPassword, data.Model.CoinType, data.Model.AddressPrefix));
             }
             catch (InvalidCredentialsException)
             {
@@ -151,6 +151,28 @@ namespace CertificateAuthority.Controllers
             {
                 return StatusCode(StatusCodes.Status403Forbidden);
             }
+        }
+
+        /// <summary>Finds issued certificate by pubkey and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
+        [HttpPost("get_certificate_for_pubkey_hash")]
+        [ProducesResponseType(typeof(CertificateInfoModel), 200)]
+        public IActionResult GetCertificateForPubKeyHash([FromBody]CredentialsModelWithPubKeyHashModel model)
+        {
+            var data = new CredentialsAccessWithModel<CredentialsModelWithPubKeyHashModel>(model, AccountAccessFlags.AccessAnyCertificate);
+
+            try
+            {
+                CertificateInfoModel certificate = this.caCertificateManager.GetCertificateByPubKeyHash(data);
+
+                if (certificate == null)
+                    return StatusCode(StatusCodes.Status404NotFound);
+
+                return this.Json(certificate);
+            }
+            catch (InvalidCredentialsException)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden);
+            }
             catch (Exception ex)
             {
                 this.logger.Error(ex);
@@ -193,19 +215,27 @@ namespace CertificateAuthority.Controllers
             {
                 var data = new CredentialsAccessWithModel<GenerateCertificateSigningRequestModel>(model, AccountAccessFlags.IssueCertificates);
 
-                byte[] oid141 = Encoding.UTF8.GetBytes(data.Model.Address);
+            byte[] oid141 = Encoding.UTF8.GetBytes(data.Model.Address);
+            byte[] oid142 = Convert.FromBase64String(data.Model.TransactionSigningPubKeyHash);
+            byte[] oid144 = Convert.FromBase64String(data.Model.BlockSigningPubKey);
 
-                byte[] pubKeyBytes = Convert.FromBase64String(data.Model.PubKey);
+            var extensionData = new Dictionary<string, byte[]>
+            {
+                {CaCertificatesManager.P2pkhExtensionOid, oid141},
+                {CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid, oid142},
+                {CaCertificatesManager.BlockSigningPubKeyExtensionOid, oid144}
+            };
 
-                X9ECParameters ecdsaCurve = ECNamedCurveTable.GetByName("secp256k1");
-                var ecdsaDomainParams = new ECDomainParameters(ecdsaCurve.Curve, ecdsaCurve.G, ecdsaCurve.N, ecdsaCurve.H, ecdsaCurve.GetSeed());
-                var q = new X9ECPoint(ecdsaCurve.Curve, pubKeyBytes);
+            byte[] pubKeyBytes = Convert.FromBase64String(data.Model.PubKey);
+            X9ECParameters ecdsaCurve = ECNamedCurveTable.GetByName("secp256k1");
+            var ecdsaDomainParams = new ECDomainParameters(ecdsaCurve.Curve, ecdsaCurve.G, ecdsaCurve.N, ecdsaCurve.H, ecdsaCurve.GetSeed());
+            var q = new X9ECPoint(ecdsaCurve.Curve, pubKeyBytes);
 
                 AsymmetricKeyParameter publicKey = new ECPublicKeyParameters(q.Point, ecdsaDomainParams);
 
                 string subjectName = $"CN={data.Model.Address}";
 
-                Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(subjectName, publicKey, new string[0], oid141, pubKeyBytes);
+                Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(subjectName, publicKey, new string[0], extensionData);
 
                 // Important workaround - fill in a dummy signature so that when the CSR is reconstituted on the far side, the decoding does not fail with DerNull errors.
                 unsignedCsr.SignRequest(new byte[] { });

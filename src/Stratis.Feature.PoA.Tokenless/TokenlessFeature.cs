@@ -79,7 +79,7 @@ namespace Stratis.Feature.PoA.Tokenless
             if (options.EnablePermissionedMembership)
             {
                 await this.revocationChecker.InitializeAsync().ConfigureAwait(false);
-                await this.certificatesManager.InitializeAsync().ConfigureAwait(false);
+                // We do not need to initialize the CertificatesManager here like it would have been in the regular PoA feature, because the TokenlessWalletManager is now responsible for ensuring a client certificate is created instead.
             }
 
             this.miner.InitializeMining();

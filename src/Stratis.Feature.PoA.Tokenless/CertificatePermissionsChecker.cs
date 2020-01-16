@@ -1,7 +1,7 @@
+using System;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
-using Stratis.SmartContracts.CLR;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -49,7 +49,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         private X509Certificate GetCertificateFromCA(uint160 address)
         {
-            return this.certificatesManager.GetCertificateForAddress(address.ToBase58Address(this.network));
+            return this.certificatesManager.GetCertificateForPubKey(Convert.ToBase64String(address.ToBytes()));
         }
 
         public static bool ValidateCertificateHasPermission(X509Certificate certificate, TransactionSendingPermission permission)
