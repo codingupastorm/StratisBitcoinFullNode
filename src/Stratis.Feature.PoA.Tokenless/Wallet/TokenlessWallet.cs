@@ -40,9 +40,9 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             this.EncryptedSeed = seedExtKey.PrivateKey.GetEncryptedBitcoinSecret(password, network).ToWif();
         }
 
-        public static ExtKey GetSeedExtKey(Mnemonic mnemonic, string passphrase = null)
+        public static ExtKey GetSeedExtKey(Mnemonic mnemonic)
         {
-            return mnemonic.DeriveExtKey(passphrase);
+            return mnemonic.DeriveExtKey();
         }
 
         public static ExtPubKey GetAccountExtPubKey(int coinType, ExtKey seedExtKey, TokenlessWalletAccount tokenlessWalletAccount)
