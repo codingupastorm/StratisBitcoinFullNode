@@ -64,16 +64,16 @@ namespace Stratis.SmartContracts.Tests.Common
 
                 walletManager.Initialize();
 
-                Key miningKey = walletManager.GetExtKey("test", TokenlessWalletAccount.BlockSigning).PrivateKey;
+                Key miningKey = walletManager.GetKey("test", TokenlessWalletAccount.BlockSigning).PrivateKey;
                 PubKey miningPubKey = miningKey.PubKey;
 
                 // Save poa key for mining
                 var tool = new KeyTool(settings.DataFolder);
                 tool.SavePrivateKey(miningKey, KeyType.FederationKey);
 
-                Key clientCertificatePrivateKey = walletManager.GetExtKey("test", TokenlessWalletAccount.P2PCertificates).PrivateKey;
+                Key clientCertificatePrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.P2PCertificates).PrivateKey;
                 PubKey pubKey = clientCertificatePrivateKey.PubKey;
-                Key transactionSigningPrivateKey = walletManager.GetExtKey("test", TokenlessWalletAccount.TransactionSigning).PrivateKey;
+                Key transactionSigningPrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.TransactionSigning).PrivateKey;
                 PubKey transactionSigningPubKey = transactionSigningPrivateKey.PubKey;
                 BitcoinPubKeyAddress address = pubKey.GetAddress(network);
                 PubKey blockSigningPubKey = miningKey.PubKey;
