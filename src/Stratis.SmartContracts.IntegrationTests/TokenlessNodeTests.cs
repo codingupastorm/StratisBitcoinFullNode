@@ -154,7 +154,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 await node2.MineBlocksAsync(1);
                 TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 1);
                 var block = node1.FullNode.ChainIndexer.GetHeader(1).Block;
-                Assert.Single(block.Transactions);
+                Assert.Equal(2, block.Transactions.Count);
             }
         }
 
