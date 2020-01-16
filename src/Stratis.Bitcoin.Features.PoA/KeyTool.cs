@@ -6,7 +6,6 @@ namespace Stratis.Bitcoin.Features.PoA
 {
     public sealed class KeyTool
     {
-        public const string BlockSigningKeyFileName = "federationKey.dat";
         public const string FederationKeyFileName = "federationKey.dat";
         public const string TransactionSigningKeyFileName = "transactionSigning.dat";
 
@@ -41,9 +40,6 @@ namespace Stratis.Bitcoin.Features.PoA
 
             switch (keyType)
             {
-                case KeyType.BlockSigningKey:
-                    filePath = Path.Combine(this.rootPath, BlockSigningKeyFileName);
-                    break;
                 case KeyType.FederationKey:
                     filePath = Path.Combine(this.rootPath, FederationKeyFileName);
                     break;
@@ -97,7 +93,6 @@ namespace Stratis.Bitcoin.Features.PoA
 
     public enum KeyType
     {
-        BlockSigningKey,
         FederationKey,
         TransactionSigningKey
     }
