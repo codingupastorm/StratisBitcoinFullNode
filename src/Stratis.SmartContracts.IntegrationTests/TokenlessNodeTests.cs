@@ -15,7 +15,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using Org.BouncyCastle.X509;
+using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
+using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.IntegrationTests.Common;
@@ -287,6 +289,71 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 Receipt callReceipt = receiptRepository.Retrieve(callResponse.TransactionId);
                 Assert.True(callReceipt.Success);
+            }
+        }
+
+        [Fact]
+        public async Task TokenlessNodesKickAMinerBasedOnCA()
+        {
+            using (IWebHost server = CreateWebHostBuilder().Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            {
+                server.Start();
+
+                // TODO: This is a massive stupid hack to test with self signed certs.
+                var handler = new HttpClientHandler
+                {
+                    ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true)
+                };
+                var httpClient = new HttpClient(handler);
+
+                // Start + Initialize CA.
+                var client = new CaClient(new Uri(this.BaseAddress), httpClient,
+                    CertificateAuthorityIntegrationTests.TestAccountId,
+                    CertificateAuthorityIntegrationTests.TestPassword);
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic,
+                    CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+
+                // Get Authority Certificate.
+                Settings settings = (Settings)server.Services.GetService(typeof(Settings));
+                var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
+                var certParser = new X509CertificateParser();
+                X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
+
+                // Start the network with only 2 certificates generated.
+                (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                (CoreNode node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+
+                node1.Start();
+                node2.Start();
+
+                TestHelper.Connect(node1, node2);
+
+                // As the network had 3 federation members on startup, one should be voted out. Wait for a scheduled vote.
+                VotingManager node1VotingManager = node1.FullNode.NodeService<VotingManager>();
+                VotingManager node2VotingManager = node2.FullNode.NodeService<VotingManager>();
+                TestBase.WaitLoop(() => node1VotingManager.GetScheduledVotes().Count > 0);
+                TestBase.WaitLoop(() => node2VotingManager.GetScheduledVotes().Count > 0);
+
+                // Mine some blocks to lock in the vote
+                await node1.MineBlocksAsync(1);
+                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 1);
+                await node2.MineBlocksAsync(1);
+                TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 2);
+
+                List<Poll> finishedPolls = node1VotingManager.GetFinishedPolls();
+                Assert.Single(finishedPolls);
+                Assert.Equal(VoteKey.KickFederationMember, finishedPolls.First().VotingData.Key);
+
+                // Mine some more blocks to execute the vote and reduce number of federation members to 2.
+                await node1.MineBlocksAsync(5);
+                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 7);
+                await node2.MineBlocksAsync(5);
+                TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 12);
+
+                // Ensure we have only 2 federation members now.
+                IFederationManager node1FederationManager = node1.FullNode.NodeService<IFederationManager>();
+                Assert.Equal(2, node1FederationManager.GetFederationMembers().Count);
             }
         }
 
