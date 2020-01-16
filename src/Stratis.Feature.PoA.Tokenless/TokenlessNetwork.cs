@@ -23,6 +23,11 @@ namespace Stratis.Feature.PoA.Tokenless
         /// <summary> The default name used for the Stratis configuration file. </summary>
         private const string NetworkDefaultConfigFilename = "tokenless.conf";
 
+        public static Mnemonic[] Mnemonics = {
+            new Mnemonic("lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom"),
+            new Mnemonic("idle power swim wash diesel blouse photo among eager reward govern menu"),
+            new Mnemonic("high neither night category fly wasp inner kitchen phone current skate hair") };
+
         public Key[] FederationKeys { get; private set; }
 
         public TokenlessNetwork()
@@ -70,9 +75,9 @@ namespace Stratis.Feature.PoA.Tokenless
 
             this.FederationKeys = new Key[]
             {
-                new Mnemonic("lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom").DeriveExtKey().PrivateKey,
-                new Mnemonic("idle power swim wash diesel blouse photo among eager reward govern menu").DeriveExtKey().PrivateKey,
-                new Mnemonic("high neither night category fly wasp inner kitchen phone current skate hair").DeriveExtKey().PrivateKey
+                Mnemonics[0].DeriveExtKey().PrivateKey,
+                Mnemonics[1].DeriveExtKey().PrivateKey,
+                Mnemonics[2].DeriveExtKey().PrivateKey
             };
 
             var genesisFederationMembers = new List<IFederationMember>
