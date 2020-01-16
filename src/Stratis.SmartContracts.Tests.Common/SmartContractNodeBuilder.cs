@@ -67,10 +67,6 @@ namespace Stratis.SmartContracts.Tests.Common
                 Key miningKey = walletManager.GetKey("test", TokenlessWalletAccount.BlockSigning);
                 PubKey miningPubKey = miningKey.PubKey;
 
-                // Save poa key for mining
-                var tool = new KeyTool(settings.DataFolder);
-                tool.SavePrivateKey(miningKey, KeyType.FederationKey);
-
                 Key clientCertificatePrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.P2PCertificates);
                 PubKey pubKey = clientCertificatePrivateKey.PubKey;
                 Key transactionSigningPrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.TransactionSigning);
