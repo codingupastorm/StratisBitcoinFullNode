@@ -319,23 +319,30 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var certParser = new X509CertificateParser();
                 X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
 
+                // Start the network with only 2 certificates generated.
                 (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
                 (CoreNode node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
 
                 node1.Start();
+                node2.Start();
 
-                // node2.Start();
-
+                // As the network had 3 federation members on startup, one should be voted out. Wait for a scheduled vote.
                 VotingManager node1VotingManager = node1.FullNode.NodeService<VotingManager>();
-                // VotingManager node2VotingManager = node2.FullNode.NodeService<VotingManager>();
-
+                VotingManager node2VotingManager = node2.FullNode.NodeService<VotingManager>();
                 TestBase.WaitLoop(() => node1VotingManager.GetScheduledVotes().Count > 0);
+                TestBase.WaitLoop(() => node2VotingManager.GetScheduledVotes().Count > 0);
+
+                // Mine some blocks to lock in the vote
+                await node1.MineBlocksAsync(1);
+                await node2.MineBlocksAsync(1);
+
+                List<Poll> finishedPolls = node1VotingManager.GetFinishedPolls();
+                List<Poll> pendingPolls = node1VotingManager.GetFinishedPolls();
+                Assert.Single(finishedPolls);
+                // finishedPolls.First().PollVotedInFavorBlockData
 
                 //IFederationManager node1FederationManager = node1.FullNode.NodeService<IFederationManager>();
                 //IFederationManager node2FederationManager = node2.FullNode.NodeService<IFederationManager>();
-
-                //// Mine some blocks to "start" the network.
-                //await node1.MineBlocksAsync(5);
 
                 //Assert.Equal(2, node1FederationManager.GetFederationMembers().Count);
                 //Assert.Equal(2, node2FederationManager.GetFederationMembers().Count);

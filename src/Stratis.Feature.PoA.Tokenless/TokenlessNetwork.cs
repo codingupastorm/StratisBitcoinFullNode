@@ -95,7 +95,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 0,
                 genesisFederationMembers: genesisFederationMembers,
                 targetSpacingSeconds: 16,
-                votingEnabled: false,
+                votingEnabled: true,
                 autoKickIdleMembers: false,
                 enablePermissionedMembership: true
             );
