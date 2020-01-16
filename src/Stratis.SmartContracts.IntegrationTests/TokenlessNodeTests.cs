@@ -64,7 +64,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Start + Initialize CA.
                 var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
-                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword));
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 Settings settings = (Settings)server.Services.GetService(typeof(Settings));
