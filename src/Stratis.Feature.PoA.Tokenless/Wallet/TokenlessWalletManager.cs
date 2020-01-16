@@ -172,18 +172,18 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         private bool CheckBlockSigningKeyFile()
         {
-            if (!CheckPassword(KeyTool.BlockSigningKeyFileName))
+            if (!CheckPassword(KeyTool.FederationKeyFileName))
                 return false;
 
-            if (!File.Exists(Path.Combine(this.walletSettings.RootPath, KeyTool.BlockSigningKeyFileName)))
+            if (!File.Exists(Path.Combine(this.walletSettings.RootPath, KeyTool.FederationKeyFileName)))
             {
                 Guard.Assert(this.Wallet != null);
 
                 Key key = this.GetKey(this.walletSettings.Password, TokenlessWalletAccount.BlockSigning);
                 var keyTool = new KeyTool(this.walletSettings.RootPath);
-                keyTool.SavePrivateKey(key, KeyType.BlockSigningKey);
+                keyTool.SavePrivateKey(key, KeyType.FederationKey);
 
-                Console.WriteLine($"The key file '{KeyTool.BlockSigningKeyFileName}' has been created.");
+                Console.WriteLine($"The key file '{KeyTool.FederationKeyFileName}' has been created.");
 
                 return false;
             }
