@@ -16,7 +16,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         PubKey GetPubKey(TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0);
 
-        ExtKey GetExtKey(string password, TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0);
+        Key GetExtKey(string password, TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0);
 
         /// <summary>
         /// Loads the private key for signing transactions from disk.
@@ -105,9 +105,9 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return this.Wallet.GetPubKey(this.network, tokenlessWalletAccount, GetAddressIndex(tokenlessWalletAccount), addressType);
         }
 
-        public ExtKey GetExtKey(string password, TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0)
+        public Key GetExtKey(string password, TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0)
         {
-            return this.Wallet.GetExtKey(this.network, password, tokenlessWalletAccount, addressType);
+            return this.Wallet.GetKey(this.network, password, tokenlessWalletAccount, addressType);
         }
 
         /// <inheritdoc/>
@@ -179,7 +179,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             {
                 Guard.Assert(this.Wallet != null);
 
-                Key key = this.GetExtKey(this.walletSettings.Password, TokenlessWalletAccount.BlockSigning).PrivateKey;
+                Key key = this.GetExtKey(this.walletSettings.Password, TokenlessWalletAccount.BlockSigning);
                 var keyTool = new KeyTool(this.walletSettings.RootPath);
                 keyTool.SavePrivateKey(key, KeyType.BlockSigningKey);
 
@@ -200,7 +200,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             {
                 Guard.Assert(this.Wallet != null);
 
-                Key key = this.GetExtKey(this.walletSettings.Password, TokenlessWalletAccount.TransactionSigning).PrivateKey;
+                Key key = this.GetExtKey(this.walletSettings.Password, TokenlessWalletAccount.TransactionSigning);
                 var keyTool = new KeyTool(this.walletSettings.RootPath);
                 keyTool.SavePrivateKey(key, KeyType.TransactionSigningKey);
 
@@ -239,9 +239,9 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                 return false;
 
             // The certificate manager is responsible for creation and storage of the client certificate, the wallet manager is primarily responsible for providing the requisite private key.
-            Key privateKey = this.GetExtKey(this.walletSettings.Password, TokenlessWalletAccount.P2PCertificates).PrivateKey;
-            PubKey transactionSigningPubKey = this.GetExtKey(this.walletSettings.Password, TokenlessWalletAccount.TransactionSigning).PrivateKey.PubKey;
-            PubKey blockSigningPubKey = this.GetExtKey(this.walletSettings.Password, TokenlessWalletAccount.BlockSigning).PrivateKey.PubKey;
+            Key privateKey = this.GetExtKey(this.walletSettings.Password, TokenlessWalletAccount.P2PCertificates);
+            PubKey transactionSigningPubKey = this.GetExtKey(this.walletSettings.Password, TokenlessWalletAccount.TransactionSigning).PubKey;
+            PubKey blockSigningPubKey = this.GetExtKey(this.walletSettings.Password, TokenlessWalletAccount.BlockSigning).PubKey;
 
             X509Certificate clientCert = this.certificatesManager.RequestNewCertificate(privateKey, transactionSigningPubKey, blockSigningPubKey);
 

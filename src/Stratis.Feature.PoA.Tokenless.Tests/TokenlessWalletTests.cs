@@ -16,7 +16,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             int coinType = 500;
 
-            Key privateKey = TokenlessWallet.GetExtKey(coinType, seedExtKey, TokenlessWalletAccount.BlockSigning, 0).PrivateKey;
+            Key privateKey = TokenlessWallet.GetKey(coinType, seedExtKey, TokenlessWalletAccount.BlockSigning, 0);
 
             ExtPubKey account = TokenlessWallet.GetAccountExtPubKey(coinType, seedExtKey, TokenlessWalletAccount.BlockSigning);
 
