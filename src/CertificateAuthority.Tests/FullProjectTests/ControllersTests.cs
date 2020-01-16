@@ -105,7 +105,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             Assert.Equal(clientAddress, certificate1.Address);
 
-            PubKey[] pubKeys = TestsHelper.GetValue<ICollection<PubKey>>(this.certificatesController.GetCertificatePublicKeys()).ToArray();
+            PubKey[] pubKeys = TestsHelper.GetValue<ICollection<string>>(this.certificatesController.GetCertificatePublicKeys()).Select(s => new PubKey(s)).ToArray();
             Assert.Single(pubKeys);
             Assert.Equal(blockSigningPrivateKey.PubKey, pubKeys[0]);
 
@@ -138,7 +138,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             Assert.Equal(clientAddress, certificate2.Address);
 
-            PubKey[] pubKeys2 = TestsHelper.GetValue<ICollection<PubKey>>(this.certificatesController.GetCertificatePublicKeys()).ToArray();
+            PubKey[] pubKeys2 = TestsHelper.GetValue<ICollection<string>>(this.certificatesController.GetCertificatePublicKeys()).Select(s => new PubKey(s)).ToArray();
             Assert.Equal(2, pubKeys2.Length);
             Assert.Equal(blockSigningPrivateKey.PubKey, pubKeys2[1]);
 
@@ -173,7 +173,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             Assert.Equal(certificate1.Thumbprint, revoked[0]);
 
             // Public keys for revoked certificates don't appear in the list.
-            pubKeys = TestsHelper.GetValue<ICollection<PubKey>>(this.certificatesController.GetCertificatePublicKeys()).ToArray();
+            pubKeys = TestsHelper.GetValue<ICollection<string>>(this.certificatesController.GetCertificatePublicKeys()).Select(s => new PubKey(s)).ToArray();
             Assert.Single(pubKeys);
             Assert.Equal(blockSigningPrivateKey.PubKey, pubKeys[0]);
 
