@@ -95,7 +95,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             builder.AppendLine("#miningaddressindex=0");
             builder.AppendLine("#The certificate address index.");
             builder.AppendLine("#certaddressindex=0");
-            builder.AppendLine("----Certificate Details----");
+            builder.AppendLine("#----Certificate Details----");
             builder.AppendLine("#Requests a new certificate to be generated.");
             builder.AppendLine("#generatecertificate=false");
         }
