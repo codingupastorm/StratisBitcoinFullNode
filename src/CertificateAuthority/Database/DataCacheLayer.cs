@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CertificateAuthority.Models;
 using NBitcoin;
+using NBitcoin.DataEncoders;
 using NLog;
 
 namespace CertificateAuthority.Database
@@ -52,24 +53,6 @@ namespace CertificateAuthority.Database
         {
             return new CADbContext(this.settings);
         }
-
-        private bool IsValidPubKey(string pubKey)
-        {
-            if (string.IsNullOrEmpty(pubKey))
-                return false;
-
-            try
-            {
-                new PubKey(pubKey);
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
         public void Initialize()
         {
             // Fill cache.
@@ -85,8 +68,8 @@ namespace CertificateAuthority.Database
 
                     if (info.Status == CertificateStatus.Revoked)
                         this.RevokedCertificates.Add(info.Thumbprint);
-                    else if (this.IsValidPubKey(info.BlockSigningPubKey))
-                        this.PublicKeys.Add(info.BlockSigningPubKey);
+                    else if ((info.BlockSigningPubKey?.Length ?? 0) != 0)
+                        this.PublicKeys.Add(Encoders.Hex.EncodeData(info.BlockSigningPubKey));
                 }
             }
 
@@ -100,8 +83,8 @@ namespace CertificateAuthority.Database
         public void AddNewCertificate(CertificateInfoModel certificate)
         {
             this.CertStatusesByThumbprint.Add(certificate.Thumbprint, certificate.Status);
-            if (this.IsValidPubKey(certificate.BlockSigningPubKey))
-                this.PublicKeys.Add(certificate.BlockSigningPubKey);
+            if ((certificate.BlockSigningPubKey?.Length ?? 0) != 0)
+                this.PublicKeys.Add(Encoders.Hex.EncodeData(certificate.BlockSigningPubKey));
 
             using (CADbContext dbContext = this.CreateContext())
             {

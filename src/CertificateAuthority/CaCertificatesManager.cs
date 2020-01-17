@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
 using NBitcoin;
+using NBitcoin.DataEncoders;
 using NLog;
 using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Asn1.Pkcs;
@@ -159,11 +160,10 @@ namespace CertificateAuthority
         {
             X509Certificate certificateFromReq = IssueCertificateFromRequest(certRequest, caCertificate, caKey, new string[0], new[] { KeyPurposeID.AnyExtendedKeyUsage });
             Asn1Set attributes = certRequest.GetCertificationRequestInfo().Attributes;
-
+   
             string p2pkh = Encoding.UTF8.GetString(ExtractExtensionFromCsr(attributes, P2pkhExtensionOid));
-            string transactionSigningPubKeyHash = Encoding.UTF8.GetString(ExtractExtensionFromCsr(attributes, TransactionSigningPubKeyHashExtensionOid));
+            var transactionSigningPubKeyHashBytes = ExtractExtensionFromCsr(attributes, TransactionSigningPubKeyHashExtensionOid);
             byte[] blockSigningPubKeyBytes = ExtractExtensionFromCsr(attributes, BlockSigningPubKeyExtensionOid);
-            var blockSigningPubKey = new PubKey(blockSigningPubKeyBytes);
 
             X509Certificate2 tempCert = ConvertCertificate(certificateFromReq, GetSecureRandom());
 
@@ -172,8 +172,8 @@ namespace CertificateAuthority
                 Status = CertificateStatus.Good,
                 Thumbprint = tempCert.Thumbprint,
                 Address = p2pkh,
-                TransactionSigningPubKeyHash = transactionSigningPubKeyHash,
-                BlockSigningPubKey = blockSigningPubKey.ToHex(),
+                TransactionSigningPubKeyHash = transactionSigningPubKeyHashBytes,
+                BlockSigningPubKey = blockSigningPubKeyBytes,
                 CertificateContentDer = Convert.ToBase64String(certificateFromReq.GetEncoded()),
                 IssuerAccountId = creatorId
             };
@@ -495,10 +495,10 @@ namespace CertificateAuthority
         /// </summary>
         public CertificateInfoModel GetCertificateByPubKeyHash(CredentialsAccessWithModel<CredentialsModelWithPubKeyHashModel> model)
         {
-            byte[] decodedHash = Convert.FromBase64String(model.Model.PubKeyHash);
-            string transactionSigningPubKeyHash = Encoding.UTF8.GetString(decodedHash);
+            byte[] transactionSigningPubKeyHash = Convert.FromBase64String(model.Model.PubKeyHash);
+            var byteArrayComparer = new ByteArrayComparer();
 
-            return this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Certificates.SingleOrDefault(x => x.TransactionSigningPubKeyHash == transactionSigningPubKeyHash); });
+            return this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Certificates.SingleOrDefault(x => byteArrayComparer.Equals(x.TransactionSigningPubKeyHash, transactionSigningPubKeyHash)); });
         }
 
         /// <summary>
@@ -545,7 +545,7 @@ namespace CertificateAuthority
                 dbContext.SaveChanges();
 
                 if (!dbContext.Certificates.Any(c => c.BlockSigningPubKey == certToEdit.BlockSigningPubKey && certToEdit.Status != CertificateStatus.Revoked))
-                    this.repository.PublicKeys.Remove(certToEdit.BlockSigningPubKey);
+                    this.repository.PublicKeys.Remove(Encoders.Hex.EncodeData(certToEdit.BlockSigningPubKey));
 
                 this.repository.RevokedCertificates.Add(thumbprint);
                 this.logger.Info("Certificate id {0}, thumbprint {1} was revoked.", certToEdit.Id, certToEdit.Thumbprint);

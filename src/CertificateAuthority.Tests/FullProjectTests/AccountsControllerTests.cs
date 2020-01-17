@@ -7,6 +7,7 @@ using CertificateAuthority.Tests.FullProjectTests.Helpers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
+using NBitcoin;
 using Xunit;
 
 namespace CertificateAuthority.Tests.FullProjectTests
@@ -82,18 +83,40 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
                 string print1 = TestsHelper.GenerateRandomString(20);
                 string print2 = TestsHelper.GenerateRandomString(20);
+                byte[] blockSignPubKey1 = (new Key()).PubKey.ToBytes();
+                byte[] blockSignPubKey2 = (new Key()).PubKey.ToBytes();
+                byte[] txSignPubKeyHash1 = (new Key()).PubKey.Hash.ToBytes();
+                byte[] txSignPubKeyHash2 = (new Key()).PubKey.Hash.ToBytes();
 
                 // Add fake certificates using data repository.
                 this.dataCacheLayer.AddNewCertificate(new CertificateInfoModel()
-                { IssuerAccountId = issuerId, CertificateContentDer = TestsHelper.GenerateRandomString(50), Status = CertificateStatus.Good, Thumbprint = print1 });
+                {
+                    IssuerAccountId = issuerId,
+                    CertificateContentDer = TestsHelper.GenerateRandomString(50),
+                    Status = CertificateStatus.Good,
+                    Thumbprint = print1,
+                    BlockSigningPubKey = blockSignPubKey1,
+                    TransactionSigningPubKeyHash = txSignPubKeyHash1
+                });
 
                 this.dataCacheLayer.AddNewCertificate(new CertificateInfoModel()
-                { IssuerAccountId = issuerId, CertificateContentDer = TestsHelper.GenerateRandomString(50), Status = CertificateStatus.Good, Thumbprint = print2 });
+                { 
+                    IssuerAccountId = issuerId, 
+                    CertificateContentDer = TestsHelper.GenerateRandomString(50), 
+                    Status = CertificateStatus.Good, 
+                    Thumbprint = print2,
+                    BlockSigningPubKey = blockSignPubKey2,
+                    TransactionSigningPubKeyHash = txSignPubKeyHash2
+                });
 
                 List<CertificateInfoModel> certs = TestsHelper.GetValue<List<CertificateInfoModel>>(this.accountsController.GetCertificatesIssuedByAccountId(new CredentialsModelWithTargetId(issuerId, this.adminCredentials.AccountId, this.adminCredentials.Password)));
 
                 Assert.Equal(2, certs.Count);
                 Assert.Equal(50, certs[0].CertificateContentDer.Length);
+                Assert.Equal(blockSignPubKey1, certs[0].BlockSigningPubKey);
+                Assert.Equal(blockSignPubKey2, certs[1].BlockSigningPubKey);
+                Assert.Equal(txSignPubKeyHash1, certs[0].TransactionSigningPubKeyHash);
+                Assert.Equal(txSignPubKeyHash2, certs[1].TransactionSigningPubKeyHash);
             }
         }
 
