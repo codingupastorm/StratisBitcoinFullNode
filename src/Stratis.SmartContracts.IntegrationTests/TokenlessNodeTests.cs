@@ -374,7 +374,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.Equal(2, finishedPolls.Count);
                 Assert.Equal(VoteKey.AddFederationMember, finishedPolls[1].VotingData.Key);
 
-                // Mine some more blocks to execute the vote and reduce number of federation members to 2.
+                // Mine some more blocks to execute the vote and add a 3rd federation member
                 await node1.MineBlocksAsync(5);
                 TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 19);
                 await node2.MineBlocksAsync(5);
