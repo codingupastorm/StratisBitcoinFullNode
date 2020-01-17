@@ -174,7 +174,7 @@ namespace CertificateAuthority
                 Address = p2pkh,
                 TransactionSigningPubKeyHash = transactionSigningPubKeyHashBytes,
                 BlockSigningPubKey = blockSigningPubKeyBytes,
-                CertificateContentDer = Convert.ToBase64String(certificateFromReq.GetEncoded()),
+                CertificateContentDer = certificateFromReq.GetEncoded(),
                 IssuerAccountId = creatorId
             };
 
@@ -449,7 +449,7 @@ namespace CertificateAuthority
                 // TODO: Technically there is an address associated with the CA's pubkey, should we use it?
                 Address = "",
                 TransactionSigningPubKeyHash = null,
-                CertificateContentDer = Convert.ToBase64String(this.caCertificate.GetEncoded()),
+                CertificateContentDer = this.caCertificate.GetEncoded(),
                 Id = 0,
                 IssuerAccountId = 0,
                 RevokerAccountId = 0,

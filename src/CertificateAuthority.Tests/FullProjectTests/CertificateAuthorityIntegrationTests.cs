@@ -106,7 +106,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             Assert.NotNull(certInfo);
             Assert.Equal(address.ToString(), certInfo.Address);
 
-            var certificate = new X509Certificate(Convert.FromBase64String(certInfo.CertificateContentDer));
+            var certificate = new X509Certificate(certInfo.CertificateContentDer);
 
             Assert.NotNull(certificate);
 

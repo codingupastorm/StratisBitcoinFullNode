@@ -92,7 +92,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 this.dataCacheLayer.AddNewCertificate(new CertificateInfoModel()
                 {
                     IssuerAccountId = issuerId,
-                    CertificateContentDer = TestsHelper.GenerateRandomString(50),
+                    CertificateContentDer = new byte[50],
                     Status = CertificateStatus.Good,
                     Thumbprint = print1,
                     BlockSigningPubKey = blockSignPubKey1,
@@ -102,7 +102,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 this.dataCacheLayer.AddNewCertificate(new CertificateInfoModel()
                 { 
                     IssuerAccountId = issuerId, 
-                    CertificateContentDer = TestsHelper.GenerateRandomString(50), 
+                    CertificateContentDer = new byte[50], 
                     Status = CertificateStatus.Good, 
                     Thumbprint = print2,
                     BlockSigningPubKey = blockSignPubKey2,

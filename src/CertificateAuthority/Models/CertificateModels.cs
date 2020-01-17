@@ -97,7 +97,8 @@ namespace CertificateAuthority.Models
         public byte[] BlockSigningPubKey { get; set; }
 
         /// <summary>Certificate data encoded in DER format, converted to base64.</summary>
-        public string CertificateContentDer { get; set; }
+        [JsonConverter(typeof(ByteArrayConverter))]
+        public byte[] CertificateContentDer { get; set; }
 
         public CertificateStatus Status { get; set; }
 

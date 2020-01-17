@@ -57,7 +57,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             var certParser = new X509CertificateParser();
 
-            X509Certificate caCert = certParser.ReadCertificate(Convert.FromBase64String(caCertModel.CertificateContentDer));
+            X509Certificate caCert = certParser.ReadCertificate(caCertModel.CertificateContentDer);
 
             Assert.NotNull(caCert);
 
@@ -99,7 +99,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             CertificateInfoModel certificate1 = TestsHelper.GetValue<CertificateInfoModel>(await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
                 new IssueCertificateFromFileContentsModel(Convert.ToBase64String(certificateSigningRequest.GetDerEncoded()), credentials1.AccountId, credentials1.Password)));
 
-            X509Certificate cert1 = certParser.ReadCertificate(Convert.FromBase64String(certificate1.CertificateContentDer));
+            X509Certificate cert1 = certParser.ReadCertificate(certificate1.CertificateContentDer);
 
             Assert.True(caCert.SubjectDN.Equivalent(cert1.IssuerDN));
 
