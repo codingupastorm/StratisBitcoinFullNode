@@ -100,7 +100,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
             var certParser = new X509CertificateParser();
 
-            return certParser.ReadCertificate(Convert.FromBase64String(certInfo.CertificateContentDer));
+            return certParser.ReadCertificate(certInfo.CertificateContentDer);
         }
 
         public CoreNode CreateWhitelistedContractPoANode(SmartContractsPoAWhitelistRegTest network, int nodeIndex)

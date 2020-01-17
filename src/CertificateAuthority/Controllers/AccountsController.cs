@@ -69,7 +69,8 @@ namespace CertificateAuthority.Controllers
             return ExecuteRepositoryQuery(() =>
             {
                 var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AccessAnyCertificate);
-                return this.Json(this.repository.GetCertificatesIssuedByAccountId(credentials));
+                var res = this.Json(this.repository.GetCertificatesIssuedByAccountId(credentials));
+                return res;
             });
         }
 

@@ -192,7 +192,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             CertificateInfoModel issuedCertificate = caClient.IssueCertificate(signedCsr);
 
             var certParser = new X509CertificateParser();
-            X509Certificate certificate = certParser.ReadCertificate(Convert.FromBase64String(issuedCertificate.CertificateContentDer));
+            X509Certificate certificate = certParser.ReadCertificate(issuedCertificate.CertificateContentDer);
 
             return certificate;
         }
@@ -204,7 +204,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             CertificateInfoModel retrievedCertModel = caClient.GetCertificateForAddress(address);
 
             var certParser = new X509CertificateParser();
-            X509Certificate certificate = certParser.ReadCertificate(Convert.FromBase64String(retrievedCertModel.CertificateContentDer));
+            X509Certificate certificate = certParser.ReadCertificate(retrievedCertModel.CertificateContentDer);
 
             return certificate;
         }
@@ -216,7 +216,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             CertificateInfoModel retrievedCertModel = caClient.GetCertificateForPubKeyHash(pubKeyHash);
 
             var certParser = new X509CertificateParser();
-            X509Certificate certificate = certParser.ReadCertificate(Convert.FromBase64String(retrievedCertModel.CertificateContentDer));
+            X509Certificate certificate = certParser.ReadCertificate(retrievedCertModel.CertificateContentDer);
 
             return certificate;
         }
