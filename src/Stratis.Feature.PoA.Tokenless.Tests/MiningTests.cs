@@ -101,7 +101,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             Assert.Single(this.helper.Mempool.MapTx);
 
             BlockTemplate block = blockDefinition.Build(this.helper.ChainIndexer.Tip, null);
-            Assert.Single(block.Block.Transactions);
+            Assert.Equal(2, block.Block.Transactions.Count);
 
             BlockExecutionResultModel result = this.executionCache.GetExecutionResult(block.Block.GetHash());
             Assert.NotNull(result);
@@ -133,7 +133,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             BlockDefinition blockDefinition = CreateBlockDefinition();
             BlockTemplate block = blockDefinition.Build(this.helper.ChainIndexer.Tip, null);
-            Assert.Single(block.Block.Transactions);
+            Assert.Equal(2, block.Block.Transactions.Count);
         }
 
         private TokenlessMempoolValidator CreateTokenlessMempoolValidator()
