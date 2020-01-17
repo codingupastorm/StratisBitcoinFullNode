@@ -354,6 +354,38 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Ensure we have only 2 federation members now.
                 IFederationManager node1FederationManager = node1.FullNode.NodeService<IFederationManager>();
                 Assert.Equal(2, node1FederationManager.GetFederationMembers().Count);
+
+                // Last of all, create a 3rd node and see him get voted in.
+                (CoreNode node3, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 2, ac, client);
+                node3.Start();
+                TestHelper.Connect(node3, node2);
+                TestHelper.Connect(node3, node1);
+
+                TestBase.WaitLoop(() => node1VotingManager.GetScheduledVotes().Count > 0);
+                TestBase.WaitLoop(() => node2VotingManager.GetScheduledVotes().Count > 0);
+
+                // Mine some blocks to lock in the vote
+                await node1.MineBlocksAsync(1);
+                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 13); // TODO: These magic numbers suck, but we can't use the same tools available to the old testing framework. Need new one.
+                await node2.MineBlocksAsync(1);
+                TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 14);
+
+                finishedPolls = node1VotingManager.GetFinishedPolls();
+                Assert.Equal(2, finishedPolls.Count);
+                Assert.Equal(VoteKey.AddFederationMember, finishedPolls[1].VotingData.Key);
+
+                // Mine some more blocks to execute the vote and add a 3rd federation member
+                await node1.MineBlocksAsync(5);
+                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 19);
+                await node2.MineBlocksAsync(5);
+                TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 24);
+
+                // Ensure we have 3 federation members now.
+                Assert.Equal(3, node1FederationManager.GetFederationMembers().Count);
+
+                // And lastly, that our 3rd guy can now mine.
+                await node3.MineBlocksAsync(1);
+                TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 25);
             }
         }
 
