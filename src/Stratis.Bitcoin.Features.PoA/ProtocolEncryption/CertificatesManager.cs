@@ -167,13 +167,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         public CaClient GetClient()
         {
-            // TODO: This is a massive stupid hack to test with self signed certs.
-            var handler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true)
-            };
-
-            var httpClient = new HttpClient(handler);
+            var httpClient = new HttpClient();
 
             return new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
         }
