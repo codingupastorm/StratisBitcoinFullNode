@@ -19,7 +19,6 @@ using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
@@ -52,24 +51,17 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task GetPublicKeysFromApi()
         {
-            // TODO: May not be the right place for this test.
-
             using (IWebHost server = CreateWebHostBuilder().Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
 
-                var httpClient = new HttpClient();
-
                 // Start + Initialize CA.
-                var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+                var client = GetClient();
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
-                Settings settings = (Settings)server.Services.GetService(typeof(Settings));
-                var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
-                var certParser = new X509CertificateParser();
-                X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
+                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
                 // Create a node so we have 1 available public key.
                 (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
@@ -88,17 +80,12 @@ namespace Stratis.SmartContracts.IntegrationTests
             {
                 server.Start();
 
-                var httpClient = GetHttpClient();
-
                 // Start + Initialize CA.
-                var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+                var client = GetClient();
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
-                Settings settings = (Settings)server.Services.GetService(typeof(Settings));
-                var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
-                var certParser = new X509CertificateParser();
-                X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
+                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
                 // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.  
                 (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
@@ -109,7 +96,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TestHelper.Connect(node1, node2);
 
                 await node2.MineBlocksAsync(1);
-                TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
             }
         }
 
@@ -121,17 +108,12 @@ namespace Stratis.SmartContracts.IntegrationTests
             {
                 server.Start();
 
-                var httpClient = GetHttpClient();
-
                 // Start + Initialize CA.
-                var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+                var client = GetClient();
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
-                Settings settings = (Settings)server.Services.GetService(typeof(Settings));
-                var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
-                var certParser = new X509CertificateParser();
-                X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
+                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
                 // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.  
                 (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
@@ -143,15 +125,14 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Build and send a transaction from one node.
                 Transaction transaction = this.CreateBasicOpReturnTransaction(node1, txPrivKey1);
-                var broadcasterManager = node1.FullNode.NodeService<IBroadcasterManager>();
-                await broadcasterManager.BroadcastTransactionAsync(transaction);
+                await node1.BroadcastTransactionAsync(transaction);
 
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
 
                 // Other node receives and mines transaction, validating it came from a permitted sender.
                 await node2.MineBlocksAsync(1);
-                TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
                 var block = node1.FullNode.ChainIndexer.GetHeader(1).Block;
                 Assert.Equal(2, block.Transactions.Count);
             }
@@ -165,17 +146,12 @@ namespace Stratis.SmartContracts.IntegrationTests
             {
                 server.Start();
 
-                var httpClient = GetHttpClient();
-
                 // Start + Initialize CA.
-                var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+                var client = GetClient();
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
-                Settings settings = (Settings)server.Services.GetService(typeof(Settings));
-                var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
-                var certParser = new X509CertificateParser();
-                X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
+                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
                 (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
                 (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
@@ -186,24 +162,23 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TestHelper.Connect(node1, node2);
 
                 // Broadcast from node1, check state of node2.
-                var broadcasterManager = node1.FullNode.NodeService<IBroadcasterManager>();
                 var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
                 var stateRepo = node2.FullNode.NodeService<IStateRepositoryRoot>();
 
                 Transaction createTransaction = this.CreateContractCreateTransaction(node1, txPrivKey1);
-                await broadcasterManager.BroadcastTransactionAsync(createTransaction);
+                await node1.BroadcastTransactionAsync(createTransaction);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
-                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
 
                 Receipt createReceipt = receiptRepository.Retrieve(createTransaction.GetHash());
                 Assert.True(createReceipt.Success);
 
                 Transaction callTransaction = CreateContractCallTransaction(node1, createReceipt.NewContractAddress, txPrivKey1);
-                await broadcasterManager.BroadcastTransactionAsync(callTransaction);
+                await node1.BroadcastTransactionAsync(callTransaction);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
-                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 2);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
 
                 Receipt callReceipt = receiptRepository.Retrieve(callTransaction.GetHash());
                 Assert.True(callReceipt.Success);
@@ -220,17 +195,12 @@ namespace Stratis.SmartContracts.IntegrationTests
             {
                 server.Start();
 
-                var httpClient = GetHttpClient();
-
                 // Start + Initialize CA.
-                var client = new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+                var client = GetClient();
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
-                Settings settings = (Settings)server.Services.GetService(typeof(Settings));
-                var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
-                var certParser = new X509CertificateParser();
-                X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
+                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
                 (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
                 (CoreNode node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
@@ -261,7 +231,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
-                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
 
                 Receipt createReceipt = receiptRepository.Retrieve(createResponse.TransactionId);
                 Assert.True(createReceipt.Success);
@@ -282,7 +252,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
-                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 2);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
 
                 Receipt callReceipt = receiptRepository.Retrieve(callResponse.TransactionId);
                 Assert.True(callReceipt.Success);
@@ -297,20 +267,13 @@ namespace Stratis.SmartContracts.IntegrationTests
             {
                 server.Start();
 
-                var httpClient = new HttpClient();
-
                 // Start + Initialize CA.
-                var client = new CaClient(new Uri(this.BaseAddress), httpClient,
-                    CertificateAuthorityIntegrationTests.TestAccountId,
-                    CertificateAuthorityIntegrationTests.TestPassword);
+                var client = GetClient();
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic,
                     CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
-                Settings settings = (Settings)server.Services.GetService(typeof(Settings));
-                var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
-                var certParser = new X509CertificateParser();
-                X509Certificate ac = certParser.ReadCertificate(File.ReadAllBytes(acLocation));
+                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
                 // Start the network with only 2 certificates generated.
                 (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
@@ -329,9 +292,9 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Mine some blocks to lock in the vote
                 await node1.MineBlocksAsync(1);
-                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
                 await node2.MineBlocksAsync(1);
-                TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 2);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
 
                 List<Poll> finishedPolls = node1VotingManager.GetFinishedPolls();
                 Assert.Single(finishedPolls);
@@ -339,9 +302,9 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Mine some more blocks to execute the vote and reduce number of federation members to 2.
                 await node1.MineBlocksAsync(5);
-                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 7);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
                 await node2.MineBlocksAsync(5);
-                TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 12);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
 
                 // Ensure we have only 2 federation members now.
                 IFederationManager node1FederationManager = node1.FullNode.NodeService<IFederationManager>();
@@ -358,9 +321,9 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Mine some blocks to lock in the vote
                 await node1.MineBlocksAsync(1);
-                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 13); // TODO: These magic numbers suck, but we can't use the same tools available to the old testing framework. Need new one.
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2); 
                 await node2.MineBlocksAsync(1);
-                TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 14);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
 
                 finishedPolls = node1VotingManager.GetFinishedPolls();
                 Assert.Equal(2, finishedPolls.Count);
@@ -368,16 +331,66 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Mine some more blocks to execute the vote and add a 3rd federation member
                 await node1.MineBlocksAsync(5);
-                TestBase.WaitLoop(() => node2.FullNode.ChainIndexer.Height == 19);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
                 await node2.MineBlocksAsync(5);
-                TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 24);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
 
                 // Ensure we have 3 federation members now.
                 Assert.Equal(3, node1FederationManager.GetFederationMembers().Count);
 
                 // And lastly, that our 3rd guy can now mine.
                 await node3.MineBlocksAsync(1);
-                TestBase.WaitLoop(() => node1.FullNode.ChainIndexer.Height == 25);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2, node3);
+            }
+        }
+
+        [Fact]
+        public async Task NodeStoresSendersCertificateFromApi()
+        {
+            using (IWebHost server = CreateWebHostBuilder().Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = GetClient();
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
+
+                // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.  
+                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+
+                node1.Start();
+                node2.Start();
+                TestHelper.Connect(node1, node2);
+
+                // Build and send a transaction from one node.
+                Transaction transaction = this.CreateBasicOpReturnTransaction(node1, txPrivKey1);
+                await node1.BroadcastTransactionAsync(transaction);
+
+                TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+
+                // Other node receives and mines transaction, validating it came from a permitted sender.
+                await node2.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+                var block = node1.FullNode.ChainIndexer.GetHeader(1).Block;
+                Assert.Equal(2, block.Transactions.Count);
+
+                // Check that the certificate is now stored on the node.
+                Assert.NotNull(node2.FullNode.NodeService<ICertificateCache>().GetCertificate(txPrivKey1.PubKey
+                    .GetAddress(this.network).ToString().ToUint160(this.network)));
+
+                // Send another transaction from the same address.
+                transaction = this.CreateBasicOpReturnTransaction(node1, txPrivKey1);
+                await node1.BroadcastTransactionAsync(transaction);
+
+                // Other node receives and mines transaction, validating it came from a permitted sender, having got the certificate locally this time.
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                await node2.MineBlocksAsync(1);
             }
         }
 
@@ -385,6 +398,27 @@ namespace Stratis.SmartContracts.IntegrationTests
         {
             return new HttpClient();
         }
+
+        private CaClient GetClient()
+        {
+            // TODO: This is a massive stupid hack to test with self signed certs.
+            var handler = new HttpClientHandler();
+            handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
+            var httpClient = GetHttpClient();
+            return new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+        }
+
+        /// <summary>
+        /// Returns the CA certificate that is stored on an initialized CA server.
+        /// </summary>
+        private X509Certificate GetCertificateFromInitializedCAServer(IWebHost server)
+        {
+            Settings settings = (Settings)server.Services.GetService(typeof(Settings));
+            var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
+            var certParser = new X509CertificateParser();
+            return certParser.ReadCertificate(File.ReadAllBytes(acLocation));
+        }
+
 
         private IWebHostBuilder CreateWebHostBuilder([CallerMemberName] string callingMethod = null)
         {
