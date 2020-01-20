@@ -98,8 +98,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
                 this.tokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.coreComponent.Network));
 
-                // TODO-TL: Perhaps not use a Wallet Model here?
-                return Json(new WalletBuildTransactionModel
+                return Json(new TokenlessTransactionModel
                 {
                     Hex = transaction.ToHex(),
                     TransactionId = transaction.GetHash()
