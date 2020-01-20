@@ -396,13 +396,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
         private HttpClient GetHttpClient()
         {
-            // TODO: This is a massive stupid hack to test with self signed certs.
-            var handler = new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true)
-            };
-
-            return new HttpClient(handler);
+            return new HttpClient();
         }
 
         private CaClient GetClient()
