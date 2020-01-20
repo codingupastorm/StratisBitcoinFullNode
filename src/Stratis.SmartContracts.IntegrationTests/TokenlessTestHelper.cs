@@ -1,4 +1,7 @@
 ﻿using System.Linq;
+using System.Threading.Tasks;
+using NBitcoin;
+using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
@@ -9,7 +12,7 @@ namespace Stratis.SmartContracts.IntegrationTests
     /// Provides test helper methods that would otherwise fail on tokenless nodes because of dependencies missing.
     /// Specifically it avoids comparing wallet details.
     /// </summary>
-    public class TokenlessTestHelper
+    public static class TokenlessTestHelper
     {
         public static void WaitForNodeToSync(params CoreNode[] nodes)
         {
@@ -63,6 +66,12 @@ namespace Stratis.SmartContracts.IntegrationTests
                 return false;
 
             return true;
+        }
+
+        public static async Task BroadcastTransactionAsync(this CoreNode node, Transaction transaction)
+        {
+            var broadcasterManager = node.FullNode.NodeService<IBroadcasterManager>();
+            await broadcasterManager.BroadcastTransactionAsync(transaction);
         }
     }
 }

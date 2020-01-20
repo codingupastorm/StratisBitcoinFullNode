@@ -49,7 +49,9 @@ namespace Stratis.Feature.PoA.Tokenless
 
         private X509Certificate GetCertificateFromCA(uint160 address)
         {
-            return this.certificatesManager.GetCertificateForPubKey(Convert.ToBase64String(address.ToBytes()));
+            X509Certificate certificate = this.certificatesManager.GetCertificateForPubKey(Convert.ToBase64String(address.ToBytes()));
+            this.certificateCache.SetCertificate(address, certificate);
+            return certificate;
         }
 
         public static bool ValidateCertificateHasPermission(X509Certificate certificate, TransactionSendingPermission permission)
