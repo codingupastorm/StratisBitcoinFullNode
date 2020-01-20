@@ -19,7 +19,6 @@ using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
@@ -126,8 +125,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Build and send a transaction from one node.
                 Transaction transaction = this.CreateBasicOpReturnTransaction(node1, txPrivKey1);
-                var broadcasterManager = node1.FullNode.NodeService<IBroadcasterManager>();
-                await broadcasterManager.BroadcastTransactionAsync(transaction);
+                await node1.BroadcastTransactionAsync(transaction);
 
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
@@ -164,12 +162,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TestHelper.Connect(node1, node2);
 
                 // Broadcast from node1, check state of node2.
-                var broadcasterManager = node1.FullNode.NodeService<IBroadcasterManager>();
                 var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
                 var stateRepo = node2.FullNode.NodeService<IStateRepositoryRoot>();
 
                 Transaction createTransaction = this.CreateContractCreateTransaction(node1, txPrivKey1);
-                await broadcasterManager.BroadcastTransactionAsync(createTransaction);
+                await node1.BroadcastTransactionAsync(createTransaction);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
                 TokenlessTestHelper.WaitForNodeToSync(node1, node2);
@@ -178,7 +175,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.True(createReceipt.Success);
 
                 Transaction callTransaction = CreateContractCallTransaction(node1, createReceipt.NewContractAddress, txPrivKey1);
-                await broadcasterManager.BroadcastTransactionAsync(callTransaction);
+                await node1.BroadcastTransactionAsync(callTransaction);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
                 TokenlessTestHelper.WaitForNodeToSync(node1, node2);
@@ -344,6 +341,56 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // And lastly, that our 3rd guy can now mine.
                 await node3.MineBlocksAsync(1);
                 TokenlessTestHelper.WaitForNodeToSync(node1, node2, node3);
+            }
+        }
+
+        [Fact]
+        public async Task NodeStoresSendersCertificateFromApi()
+        {
+            using (IWebHost server = CreateWebHostBuilder().Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = GetClient();
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
+
+                // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.  
+                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+
+                node1.Start();
+                node2.Start();
+                TestHelper.Connect(node1, node2);
+
+                // Build and send a transaction from one node.
+                Transaction transaction = this.CreateBasicOpReturnTransaction(node1, txPrivKey1);
+                await node1.BroadcastTransactionAsync(transaction);
+
+                TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+
+                // Other node receives and mines transaction, validating it came from a permitted sender.
+                await node2.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+                var block = node1.FullNode.ChainIndexer.GetHeader(1).Block;
+                Assert.Equal(2, block.Transactions.Count);
+
+                // Check that the certificate is now stored on the node.
+                Assert.NotNull(node2.FullNode.NodeService<ICertificateCache>().GetCertificate(txPrivKey1.PubKey
+                    .GetAddress(this.network).ToString().ToUint160(this.network)));
+
+                // Send another transaction from the same address.
+                transaction = this.CreateBasicOpReturnTransaction(node1, txPrivKey1);
+                await node1.BroadcastTransactionAsync(transaction);
+
+                // Other node receives and mines transaction, validating it came from a permitted sender, having got the certificate locally this time.
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                await node2.MineBlocksAsync(1);
             }
         }
 
