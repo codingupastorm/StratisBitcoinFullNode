@@ -172,11 +172,11 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         private bool CheckBlockSigningKeyFile()
         {
-            if (!CheckPassword(KeyTool.FederationKeyFileName))
-                return false;
-
             if (!File.Exists(Path.Combine(this.walletSettings.RootPath, KeyTool.FederationKeyFileName)))
             {
+                if (!CheckPassword(KeyTool.FederationKeyFileName))
+                    return false;
+
                 Guard.Assert(this.Wallet != null);
 
                 Key key = this.GetKey(this.walletSettings.Password, TokenlessWalletAccount.BlockSigning);
@@ -193,11 +193,11 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         private bool CheckTransactionSigningKeyFile()
         {
-            if (!CheckPassword(KeyTool.TransactionSigningKeyFileName))
-                return false;
-
             if (!File.Exists(Path.Combine(this.walletSettings.RootPath, KeyTool.TransactionSigningKeyFileName)))
             {
+                if (!CheckPassword(KeyTool.TransactionSigningKeyFileName))
+                    return false;
+
                 Guard.Assert(this.Wallet != null);
 
                 Key key = this.GetKey(this.walletSettings.Password, TokenlessWalletAccount.TransactionSigning);
