@@ -170,6 +170,8 @@ namespace Stratis.Feature.PoA.Tokenless
 
             this.miner.Dispose();
 
+            this.votingManager.Dispose();
+
             if (((PoAConsensusOptions)this.coreComponent.Network.Consensus.Options).EnablePermissionedMembership)
             {
                 this.revocationChecker.Dispose();

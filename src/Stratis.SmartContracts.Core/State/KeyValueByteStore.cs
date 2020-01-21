@@ -22,7 +22,7 @@ namespace Stratis.SmartContracts.Core.State
     /// </summary>
     public class KeyValueByteStore : ISource<byte[], byte[]>
     {
-        private IKeyValueStore keyValueStore;
+        protected IKeyValueStore keyValueStore;
         private string table;
 
         public KeyValueByteStore(IKeyValueStore keyValueStore, string table)
@@ -81,9 +81,17 @@ namespace Stratis.SmartContracts.Core.State
     /// <summary>
     /// Used for dependency injection. A contract state specific implementation of the above class.
     /// </summary>
-    public class ContractStateKeyValueStore : KeyValueByteStore
+    public class ContractStateKeyValueStore : KeyValueByteStore, IDisposable
     {
+        private bool mustDispose;
+
         public ContractStateKeyValueStore(DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, RepositorySerializer repositorySerializer)
-            : base(new ContractStateTableStore(dataFolder.SmartContractStatePath, loggerFactory, dateTimeProvider, repositorySerializer), "state") { }
+            : base(new ContractStateTableStore(dataFolder.SmartContractStatePath, loggerFactory, dateTimeProvider, repositorySerializer), "state"){ this.mustDispose = true; }
+
+        public void Dispose()
+        {
+            if (this.mustDispose)
+                this.keyValueStore.Dispose();
+        }
     }
 }

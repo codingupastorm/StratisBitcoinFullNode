@@ -39,13 +39,15 @@ namespace Stratis.Bitcoin.Features.SmartContracts
         private readonly ILogger logger;
         private readonly Network network;
         private readonly IStateRepositoryRoot stateRoot;
+        private readonly ContractStateKeyValueStore contractStateKeyValueStore;
 
-        public SmartContractFeature(IConsensusManager consensusLoop, ILoggerFactory loggerFactory, Network network, IStateRepositoryRoot stateRoot)
+        public SmartContractFeature(IConsensusManager consensusLoop, ILoggerFactory loggerFactory, Network network, IStateRepositoryRoot stateRoot, ContractStateKeyValueStore contractStateKeyValueStore)
         {
             this.consensusManager = consensusLoop;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.network = network;
             this.stateRoot = stateRoot;
+            this.contractStateKeyValueStore = contractStateKeyValueStore;
         }
 
         public override Task InitializeAsync()
@@ -62,6 +64,13 @@ namespace Stratis.Bitcoin.Features.SmartContracts
 
             this.logger.LogInformation("Smart Contract Feature Injected.");
             return Task.CompletedTask;
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+
+            this.contractStateKeyValueStore.Dispose();
         }
     }
 
