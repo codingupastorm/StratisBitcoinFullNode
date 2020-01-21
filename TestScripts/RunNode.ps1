@@ -1,7 +1,6 @@
 #############################
 #    UPDATE THESE VALUES    #
 #############################
-$repo_folder = "e:\Public\StratisBitcoinFullNode.DLT.Private"
 $ca_account = "1"
 $ca_password = "4815162342"
 
@@ -13,6 +12,7 @@ $mnemonics =
 #############################
 
 $script_dir = Split-Path $script:MyInvocation.MyCommand.Path
+$repo_folder = "$script_dir\.."
 $root_datadir = "$script_dir\Data"
 $path_to_tokenlessd = "$repo_folder\src\Stratis.TokenlessD"
 $node = $args[0]

@@ -1,7 +1,6 @@
 #############################
 #    UPDATE THESE VALUES    #
 #############################
-$repo_folder = "e:\Public\StratisBitcoinFullNode.DLT.Private"
 $ca_account = "1"
 $ca_password = "4815162342"
 
@@ -11,11 +10,12 @@ $coinType = 500
 $addressPrefix = 0
 #############################
 
-$path_to_ca = "$repo_folder\src\CertificateAuthority.API"
 $interval_time = 5
 $long_interval_time = 10
 
 $script_dir = Split-Path $script:MyInvocation.MyCommand.Path
+$repo_folder = "$script_dir\.."
+$path_to_ca = "$repo_folder\src\CertificateAuthority.API"
 $root_datadir = "$script_dir\Data"
 $ca_root = "$root_datadir"
 
