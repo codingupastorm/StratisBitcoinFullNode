@@ -24,7 +24,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
     {
         /// <summary>Name of authority .crt certificate that is supposed to be found in application folder.</summary>
         /// <remarks>This certificate is automatically copied during the build.</remarks>
-        public const string AuthorityCertificateName = "AuthorityCertificate.crt";
+        public const string AuthorityCertificateName = "CaCertificate.crt";
 
         /// <summary>Name of client's .pfx certificate that is supposed to be found in node's folder.</summary>
         public const string ClientCertificateName = "ClientCertificate.pfx";
