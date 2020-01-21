@@ -43,9 +43,9 @@ namespace Stratis.SmartContracts.Tests.Common
             return node;
         }
 
-        public (CoreNode, Key, Key) CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client)
+        public (CoreNode, Key, Key) CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client, bool initialRun = true)
         {
-            string dataFolder = this.GetNextDataFolderName();
+            string dataFolder = this.GetNextDataFolderName(nodeIndex : nodeIndex);
 
             var configParameters = new NodeConfigParameters()
             {
@@ -54,8 +54,12 @@ namespace Stratis.SmartContracts.Tests.Common
 
             CoreNode node = this.CreateNode(new FullTokenlessRunner(dataFolder, network, this.TimeProvider), "poa.conf", configParameters: configParameters);
 
+            string[] args = new string[] { "-conf=poa.conf", "-datadir=" + dataFolder, "-password=test", $"-mnemonic={ TokenlessNetwork.Mnemonics[nodeIndex] }", "-certificatepassword=test" };
 
-            using (var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder, "-password=test", $"-mnemonic={ TokenlessNetwork.Mnemonics[nodeIndex] }", "-certificatepassword=test" }))
+            if (!initialRun)
+                args = new string[] { "-conf=poa.conf", "-datadir=" + dataFolder, "-certificatepassword=test" };
+
+            using (var settings = new NodeSettings(network, args: args))
             {
                 var loggerFactory = new LoggerFactory();
                 var revocationChecker = new RevocationChecker(settings, null, loggerFactory, new DateTimeProvider());
@@ -63,6 +67,9 @@ namespace Stratis.SmartContracts.Tests.Common
                 var walletManager = new TokenlessWalletManager(network, settings.DataFolder, new TokenlessWalletSettings(settings), certificatesManager);
 
                 walletManager.Initialize();
+
+                if (!initialRun)
+                    return (node, null, null);
 
                 Key miningKey = walletManager.GetKey("test", TokenlessWalletAccount.BlockSigning);
                 PubKey miningPubKey = miningKey.PubKey;

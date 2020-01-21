@@ -200,9 +200,9 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             return CreateNode(new CustomNodeRunner(dataDir, callback, network, protocolVersion, configParameters, agent, minProtocolVersion), configFileName);
         }
 
-        protected string GetNextDataFolderName(string folderName = null)
+        protected string GetNextDataFolderName(string folderName = null, int? nodeIndex = null)
         {
-            string hash = Guid.NewGuid().ToString("N").Substring(0, 7);
+            string hash = nodeIndex.ToString() ?? Guid.NewGuid().ToString("N").Substring(0, 7);
             string numberedFolderName = string.Join(
                 ".",
                 new[] { hash, folderName }.Where(s => s != null));
