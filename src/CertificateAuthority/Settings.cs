@@ -108,7 +108,7 @@ namespace CertificateAuthority
 
             this.CaSubjectNameOrganizationUnit = configReader.GetOrDefault<string>("caorganizationunit", "Administration");
 
-            this.ServerUrls = configReader.GetOrDefault<string>("serverurls", "https://localhost:5001;http://localhost:5050");
+            this.ServerUrls = configReader.GetOrDefault<string>("serverurls", "https://0.0.0.0:5001;http://0.0.0.0:5050");
             Console.WriteLine($"{nameof(this.ServerUrls)} set to: {this.ServerUrls}");
         }
 
