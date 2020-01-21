@@ -245,6 +245,7 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+/TestScripts/Data
 /src/TestCase
 /src/Stratis.Bitcoin.IntegrationTests/TestData
 /src/Stratis.Bitcoin.IntegrationTests/ValidSomeBlocks
