@@ -142,6 +142,11 @@ namespace NBitcoin
         public int DefaultMaxInboundConnections { get; protected set; }
 
         /// <summary>
+        /// Whether to enable IP range filtering by default on this network. If true, will filter out IPs within the same range.
+        /// </summary>
+        public bool DefaultEnableIpRangeFiltering { get; protected set; }
+
+        /// <summary>
         /// The consensus for this network.
         /// </summary>
         public IConsensus Consensus { get; protected set; }
@@ -212,6 +217,13 @@ namespace NBitcoin
         /// Byte array representation of a magic number.
         /// </summary>
         public byte[] MagicBytesArray;
+
+
+        public Network()
+        {
+            // To set default values that child objects will have to explicitly change.
+            this.DefaultEnableIpRangeFiltering = true;
+        }
 
         /// <summary>
         /// Byte representation of a magic number.
