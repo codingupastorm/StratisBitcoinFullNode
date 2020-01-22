@@ -77,10 +77,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate nodeCert = certParser.ReadCertificate(nodeCerts.First().CertificateContentDer);
                 DateTime roughly2YearsInFuture = DateTime.Now.AddYears(2).AddHours(-25); // -25 hour to give bit of time for the test to run and allow for time truncation. 
                 Assert.True(nodeCert.NotAfter > roughly2YearsInFuture);
-
-                // Get public keys from the API.
-                List<PubKey> pubkeys = await client.GetCertificatePublicKeysAsync();
-                Assert.Single(pubkeys);
             }
         }
 
