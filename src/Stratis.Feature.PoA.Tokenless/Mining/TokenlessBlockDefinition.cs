@@ -84,6 +84,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             this.MedianTimePast = Utils.DateTimeToUnixTime(this.ChainTip.GetMedianTimePast());
             this.LockTimeCutoff = MempoolValidator.StandardLocktimeVerifyFlags.HasFlag(Transaction.LockTimeFlags.MedianTimePast) ? this.MedianTimePast : this.BlockTemplate.Block.Header.Time;
 
+            // Coinbase gets added first.
             this.block.Transactions.Add(CreateTokenlessCoinbase());
 
             this.AddTransactions(out int _, out int _);
@@ -128,8 +129,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             packagesSelected = 0;
             descendentsUpdated = 0;
 
-            // TODO-TL: Implement new ordering by time.
-            var entriesToAdd = this.MempoolLock.ReadAsync(() => this.Mempool.MapTx.AncestorScore).ConfigureAwait(false).GetAwaiter().GetResult().ToList();
+            var entriesToAdd = this.MempoolLock.ReadAsync(() => this.Mempool.MapTx.EntryTime).ConfigureAwait(false).GetAwaiter().GetResult().ToList();
 
             foreach (TxMempoolEntry entryToAdd in entriesToAdd)
             {

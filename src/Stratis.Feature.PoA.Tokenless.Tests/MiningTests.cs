@@ -121,19 +121,30 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             await InitializeAsync();
 
-            TokenlessMempoolValidator mempoolValidator = CreateTokenlessMempoolValidator();
-            Transaction transaction = this.helper.Network.CreateTransaction();
-
-            var key = new Key();
-            this.helper.TokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.helper.Network));
-
             var mempoolValidationState = new MempoolValidationState(false);
-            await mempoolValidator.AcceptToMemoryPool(mempoolValidationState, transaction);
-            Assert.Single(this.helper.Mempool.MapTx);
+            TokenlessMempoolValidator mempoolValidator = CreateTokenlessMempoolValidator();
+            var key = new Key();
+
+            // Transaction One
+            Transaction transactionOne = this.helper.Network.CreateTransaction();
+            this.helper.TokenlessSigner.InsertSignedTxIn(transactionOne, key.GetBitcoinSecret(this.helper.Network));
+            await mempoolValidator.AcceptToMemoryPool(mempoolValidationState, transactionOne);
+            TestBase.WaitLoop(() => { return this.helper.Mempool.MapTx.Count == 1; });
+
+            await Task.Delay(1000); // Small delay so that the transaction has different time.
+
+            // Transaction Two
+            Transaction transactionTwo = this.helper.Network.CreateTransaction();
+            this.helper.TokenlessSigner.InsertSignedTxIn(transactionTwo, key.GetBitcoinSecret(this.helper.Network));
+            await mempoolValidator.AcceptToMemoryPool(mempoolValidationState, transactionTwo);
+            TestBase.WaitLoop(() => { return this.helper.Mempool.MapTx.Count == 2; });
 
             BlockDefinition blockDefinition = CreateBlockDefinition();
             BlockTemplate block = blockDefinition.Build(this.helper.ChainIndexer.Tip, null);
-            Assert.Equal(2, block.Block.Transactions.Count);
+            Assert.Equal(3, block.Block.Transactions.Count);
+
+            // Ensure that the transaction one was added before transaction two.
+            Assert.True(block.Block.Transactions[1].Time < block.Block.Transactions[2].Time);
         }
 
         private TokenlessMempoolValidator CreateTokenlessMempoolValidator()

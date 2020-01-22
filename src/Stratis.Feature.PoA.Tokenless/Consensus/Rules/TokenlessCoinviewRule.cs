@@ -131,7 +131,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
                 return;
             }
 
-            foreach (Transaction transaction in context.ValidationContext.BlockToValidate.Transactions.Where(x=> !x.IsCoinBase))
+            foreach (Transaction transaction in context.ValidationContext.BlockToValidate.Transactions.Where(x => !x.IsCoinBase))
             {
                 this.logger.LogDebug("Processing transaction '{0}'.", transaction.GetHash());
 
@@ -232,15 +232,6 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 
             if (logsBloom != smartContractBlockHeader.LogsBloom)
                 SmartContractConsensusErrors.UnequalLogsBloom.Throw();
-        }
-
-        public bool CheckInput(TxOut txout, TxIn input)
-        {
-            if (txout.ScriptPubKey.IsSmartContractExec() || txout.ScriptPubKey.IsSmartContractInternalCall())
-                return input.ScriptSig.IsSmartContractSpend();
-
-            // TODO-TL: Do we need to check the new TxIn signature?
-            return true;
         }
 
         /// <inheritdoc/>
