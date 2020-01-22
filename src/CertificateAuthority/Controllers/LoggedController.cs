@@ -7,12 +7,25 @@ using NLog;
 namespace CertificateAuthority.Controllers
 {
     public class LoggedController : Controller
-    { 
+    {
+        private readonly string[] privateFields = new[] { "password", "mnemonic" };
+
         private readonly Logger logger;
 
         protected LoggedController(Logger logger)
         {
             this.logger = logger;
+        }
+
+        private bool ContainsPrivateField(string str)
+        {
+            string lowerStr = str.ToLower();
+
+            foreach (string privateField in this.privateFields)
+                if (lowerStr.Contains(privateField))
+                    return true;
+
+            return false;
         }
 
         /// <summary>
@@ -23,7 +36,7 @@ namespace CertificateAuthority.Controllers
         private string SerializeObjectWithoutPasswordValues(object obj)
         {
             var json = JsonConvert.SerializeObject(obj);
-            if (!json.ToLower().Contains("password"))
+            if (!ContainsPrivateField(json))
                 return json;
 
             Type objectType = obj.GetType();
@@ -33,7 +46,7 @@ namespace CertificateAuthority.Controllers
 
             foreach (PropertyInfo propertyInfo in objectType.GetProperties())
             {
-                if (!propertyInfo.Name.ToLower().Contains("password"))
+                if (!this.ContainsPrivateField(propertyInfo.Name))
                     continue;
 
                 propertyInfo.SetValue(cleanedObject, "******");
