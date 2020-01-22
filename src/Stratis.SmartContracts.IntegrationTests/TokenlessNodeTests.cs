@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using CertificateAuthority;
+using CertificateAuthority.Models;
 using CertificateAuthority.Tests.FullProjectTests;
 using CertificateAuthority.Tests.FullProjectTests.Helpers;
 using Microsoft.AspNetCore;
@@ -47,9 +48,9 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         // TODO: Lots of repetition in this file.
-        
+
         [Fact]
-        public async Task GetPublicKeysFromApi()
+        public async Task StartCACorrectlyAndTestApi()
         {
             using (IWebHost server = CreateWebHostBuilder().Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
@@ -63,8 +64,19 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
+                // Ensure certificate is valid for 10 years
+                DateTime roughly10YearsInFuture = DateTime.Now.AddYears(10).AddHours(-25); // -25 hour to give bit of time for the test to run and allow for time truncation. 
+                Assert.True(ac.NotAfter > roughly10YearsInFuture);
+
                 // Create a node so we have 1 available public key.
                 (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+
+                // Check that our node's certificate is valid for 2 years.
+                List<CertificateInfoModel> nodeCerts = client.GetAllCertificates();
+                var certParser = new X509CertificateParser();
+                X509Certificate nodeCert = certParser.ReadCertificate(nodeCerts.First().CertificateContentDer);
+                DateTime roughly2YearsInFuture = DateTime.Now.AddYears(2).AddHours(-25); // -25 hour to give bit of time for the test to run and allow for time truncation. 
+                Assert.True(nodeCert.NotAfter > roughly2YearsInFuture);
 
                 // Get public keys from the API.
                 List<PubKey> pubkeys = await client.GetCertificatePublicKeysAsync();
