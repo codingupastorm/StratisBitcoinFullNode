@@ -56,8 +56,8 @@ namespace CertificateAuthority
         public const string CallContractPermissionOid = "1.5.2";
         public const string CreateContractPermissionOid = "1.5.3";
 
-        private const int certificateValidityPeriodYears = 2;
-        private const int caCertificateValidityPeriodYears = 10;
+        public const int certificateValidityPeriodYears = 10;
+        public const int caCertificateValidityPeriodYears = 10;
 
         public CaCertificatesManager(DataCacheLayer cache, Settings settings)
         {
