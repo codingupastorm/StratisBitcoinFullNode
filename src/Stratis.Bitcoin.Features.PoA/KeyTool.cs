@@ -6,7 +6,7 @@ namespace Stratis.Bitcoin.Features.PoA
 {
     public sealed class KeyTool
     {
-        public const string FederationKeyFileName = "federationKey.dat";
+        public const string FederationKeyFileName = "miningKey.dat";
         public const string TransactionSigningKeyFileName = "transactionSigning.dat";
 
         private readonly string rootPath;
