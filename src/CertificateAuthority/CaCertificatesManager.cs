@@ -56,6 +56,9 @@ namespace CertificateAuthority
         public const string CallContractPermissionOid = "1.5.2";
         public const string CreateContractPermissionOid = "1.5.3";
 
+        private const int certificateValidityPeriodYears = 2;
+        private const int caCertificateValidityPeriodYears = 10;
+
         public CaCertificatesManager(DataCacheLayer cache, Settings settings)
         {
             this.repository = cache;
@@ -78,7 +81,7 @@ namespace CertificateAuthority
                 byte[] caPubKey = caAddressSpace.GetKey(hdPath).PrivateKey.PubKey.ToBytes();
                 string caAddress = HDWalletAddressSpace.GetAddress(caPubKey, addressPrefix);
                 byte[] caOid141 = Encoding.UTF8.GetBytes(caAddress);
-                
+
                 // TODO: Is this even needed for the CA?
                 byte[] caOid142 = caPubKey;
 
@@ -113,7 +116,7 @@ namespace CertificateAuthority
             X509Certificate certificate = GenerateCertificate(random,
                 subjectName, subjectKeyPair.Public, subjectSerialNumber, subjectAlternativeNames,
                 subjectName, subjectKeyPair, subjectSerialNumber,
-                true, usages, extensionData);
+                true, usages, extensionData, caCertificateValidityPeriodYears);
 
             return certificate;
         }
@@ -160,7 +163,7 @@ namespace CertificateAuthority
         {
             X509Certificate certificateFromReq = IssueCertificateFromRequest(certRequest, caCertificate, caKey, new string[0], new[] { KeyPurposeID.AnyExtendedKeyUsage });
             Asn1Set attributes = certRequest.GetCertificationRequestInfo().Attributes;
-   
+
             string p2pkh = Encoding.UTF8.GetString(ExtractExtensionFromCsr(attributes, P2pkhExtensionOid));
             var transactionSigningPubKeyHashBytes = ExtractExtensionFromCsr(attributes, TransactionSigningPubKeyHashExtensionOid);
             byte[] blockSigningPubKeyBytes = ExtractExtensionFromCsr(attributes, BlockSigningPubKeyExtensionOid);
@@ -205,7 +208,7 @@ namespace CertificateAuthority
 
             var extensionData = new Dictionary<string, byte[]>
             {
-                {P2pkhExtensionOid, oid141}, 
+                {P2pkhExtensionOid, oid141},
                 {TransactionSigningPubKeyHashExtensionOid, oid142},
                 {BlockSigningPubKeyExtensionOid, oid144}
             };
@@ -213,7 +216,7 @@ namespace CertificateAuthority
             X509Certificate certificate = GenerateCertificate(random,
                 subjectName, publicKey, subjectSerialNumber, subjectAlternativeNames,
                 issuerCertificate.SubjectDN.ToString(), issuerKeyPair, issuerCertificate.SerialNumber,
-                false, usages, extensionData);
+                false, usages, extensionData, certificateValidityPeriodYears);
 
             return certificate;
         }
@@ -278,7 +281,8 @@ namespace CertificateAuthority
                                                            BigInteger issuerSerialNumber,
                                                            bool isCertificateAuthority,
                                                            KeyPurposeID[] usages,
-                                                           Dictionary<string, byte[]> extensionData)
+                                                           Dictionary<string, byte[]> extensionData,
+                                                           int validityPeriodYears)
         {
             var certificateGenerator = new X509V3CertificateGenerator();
             certificateGenerator.SetSerialNumber(subjectSerialNumber);
@@ -292,7 +296,7 @@ namespace CertificateAuthority
 
             // Our certificate needs valid from/to values.
             DateTime notBefore = DateTime.UtcNow.Date;
-            DateTime notAfter = notBefore.AddYears(2);
+            DateTime notAfter = notBefore.AddYears(validityPeriodYears);
 
             certificateGenerator.SetNotBefore(notBefore);
             certificateGenerator.SetNotAfter(notAfter);
@@ -405,11 +409,11 @@ namespace CertificateAuthority
                 certificateGenerator.AddExtension(TransactionSigningPubKeyHashExtensionOid, false, new DerOctetString(oid142));
 
             // TODO: Should this be explicitly requested in the CSR?
-            certificateGenerator.AddExtension(SendPermission, false, new byte[] {1});
+            certificateGenerator.AddExtension(SendPermission, false, new byte[] { 1 });
 
             if (extensionData.TryGetValue(BlockSigningPubKeyExtensionOid, out byte[] oid143))
                 certificateGenerator.AddExtension(BlockSigningPubKeyExtensionOid, false, new DerOctetString(oid143));
-            certificateGenerator.AddExtension(CallContractPermissionOid, false, new byte[] {1});
+            certificateGenerator.AddExtension(CallContractPermissionOid, false, new byte[] { 1 });
             certificateGenerator.AddExtension(CreateContractPermissionOid, false, new byte[] { 1 });
         }
 
@@ -663,7 +667,7 @@ namespace CertificateAuthority
             store.SetKeyEntry("privateKey", new AsymmetricKeyEntry(privateKeyParameter), new X509CertificateEntry[] { certEntry });
 
             byte[] pfxBytes;
-            
+
             using (var stream = new MemoryStream())
             {
                 store.Save(stream, password.ToCharArray(), new SecureRandom());
@@ -742,7 +746,7 @@ namespace CertificateAuthority
 
             return true;
         }
-        
+
         #region Utility methods for delayed-signing of CSRs
         public static byte[] GenerateCSRSignature(byte[] data, string signerAlgorithm, AsymmetricKeyParameter privateSigningKey)
         {
