@@ -77,26 +77,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate nodeCert = certParser.ReadCertificate(nodeCerts.First().CertificateContentDer);
                 DateTime roughly2YearsInFuture = DateTime.Now.AddYears(2).AddHours(-25); // -25 hour to give bit of time for the test to run and allow for time truncation. 
                 Assert.True(nodeCert.NotAfter > roughly2YearsInFuture);
-            }
-        }
-
-        [Fact]
-        public async Task GetPublicKeysFromApi()
-        {
-            using (IWebHost server = CreateWebHostBuilder().Build())
-            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
-            {
-                server.Start();
-
-                // Start + Initialize CA.
-                var client = GetClient();
-                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
-
-                // Get Authority Certificate.
-                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
-
-                // Create a node so we have 1 available public key.
-                (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
 
                 // Get public keys from the API.
                 List<PubKey> pubkeys = await client.GetCertificatePublicKeysAsync();
