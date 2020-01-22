@@ -65,8 +65,9 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
                 // Ensure certificate is valid for 10 years
-                DateTime roughly10YearsInFuture = DateTime.Now.AddYears(10).AddHours(-25); // -25 hour to give bit of time for the test to run and allow for time truncation. 
-                Assert.True(ac.NotAfter > roughly10YearsInFuture);
+                DateTime estimatedCACertExpiry = DateTime.Now.AddYears(CaCertificatesManager.caCertificateValidityPeriodYears).AddHours(-25); // -25 hour to give bit of time for the test to run and allow for time truncation. 
+                Assert.True(ac.NotAfter > estimatedCACertExpiry);
+                Assert.True(ac.NotAfter < estimatedCACertExpiry.AddDays(2));
 
                 // Create a node so we have 1 available public key.
                 (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
@@ -75,8 +76,9 @@ namespace Stratis.SmartContracts.IntegrationTests
                 List<CertificateInfoModel> nodeCerts = client.GetAllCertificates();
                 var certParser = new X509CertificateParser();
                 X509Certificate nodeCert = certParser.ReadCertificate(nodeCerts.First().CertificateContentDer);
-                DateTime roughly2YearsInFuture = DateTime.Now.AddYears(2).AddHours(-25); // -25 hour to give bit of time for the test to run and allow for time truncation. 
-                Assert.True(nodeCert.NotAfter > roughly2YearsInFuture);
+                DateTime estimatedCertExpiry = DateTime.Now.AddYears(CaCertificatesManager.certificateValidityPeriodYears).AddHours(-25); // -25 hour to give bit of time for the test to run and allow for time truncation. 
+                Assert.True(nodeCert.NotAfter > estimatedCertExpiry);
+                Assert.True(nodeCert.NotAfter < estimatedCertExpiry.AddDays(2));
 
                 // Get public keys from the API.
                 List<PubKey> pubkeys = await client.GetCertificatePublicKeysAsync();

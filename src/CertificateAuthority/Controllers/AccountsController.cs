@@ -11,12 +11,11 @@ namespace CertificateAuthority.Controllers
     [Produces("application/json")]
     [Route("api/accounts")]
     [ApiController]
-    public sealed class AccountsController : Controller
+    public sealed class AccountsController : LoggedController
     {
-        private readonly Logger logger = LogManager.GetCurrentClassLogger();
         private readonly DataCacheLayer repository;
 
-        public AccountsController(DataCacheLayer repository)
+        public AccountsController(DataCacheLayer repository) : base(LogManager.GetCurrentClassLogger())
         {
             this.repository = repository;
         }
@@ -27,6 +26,8 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(AccountInfo), 200)]
         public IActionResult GetAccountInfoById([FromBody]CredentialsModelWithTargetId model)
         {
+            this.LogEntry(model);
+
             return ExecuteRepositoryQuery(() =>
             {
                 var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AccessAccountInfo);
@@ -40,6 +41,8 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(List<AccountModel>), 200)]
         public IActionResult GetAllAccounts([FromBody]CredentialsModel model)
         {
+            this.LogEntry(model);
+
             return ExecuteRepositoryQuery(() =>
             {
                 var credentials = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAccountInfo);
@@ -53,6 +56,8 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(int), 200)]
         public IActionResult CreateAccount([FromBody]CreateAccount model)
         {
+            this.LogEntry(model);
+
             return ExecuteRepositoryQuery(() =>
             {
                 var credentials = new CredentialsAccessWithModel<CreateAccount>(model, AccountAccessFlags.CreateAccounts);
@@ -66,10 +71,12 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(List<CertificateInfoModel>), 200)]
         public IActionResult GetCertificatesIssuedByAccountId([FromBody]CredentialsModelWithTargetId model)
         {
+            this.LogEntry(model);
+
             return ExecuteRepositoryQuery(() =>
             {
                 var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AccessAnyCertificate);
-                var res = this.Json(this.repository.GetCertificatesIssuedByAccountId(credentials));
+                JsonResult res = this.Json(this.repository.GetCertificatesIssuedByAccountId(credentials));
                 return res;
             });
         }
@@ -78,6 +85,8 @@ namespace CertificateAuthority.Controllers
         [HttpPost("delete_account_by_account_id")]
         public IActionResult DeleteAccountByAccountId([FromBody]CredentialsModelWithTargetId model)
         {
+            this.LogEntry(model);
+
             return ExecuteRepositoryCommand(() =>
             {
                 var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.DeleteAccounts);
@@ -94,6 +103,8 @@ namespace CertificateAuthority.Controllers
         [HttpPost("change_account_access_level")]
         public IActionResult ChangeAccountAccessLevel([FromBody]ChangeAccountAccessLevel model)
         {
+            this.LogEntry(model);
+
             return ExecuteRepositoryCommand(() =>
             {
                 var credentials = new CredentialsAccessWithModel<ChangeAccountAccessLevel>(model, AccountAccessFlags.ChangeAccountAccessLevel);
@@ -108,8 +119,10 @@ namespace CertificateAuthority.Controllers
         /// ChangeAccountAccessLevel access level is required.
         /// </summary>
         [HttpPost("changepassword")]
-        public ActionResult ChangeAccountPassword([FromBody]ChangeAccountPasswordModel model)
+        public IActionResult ChangeAccountPassword([FromBody]ChangeAccountPasswordModel model)
         {
+            this.LogEntry(model);
+
             return ExecuteRepositoryCommand(() =>
             {
                 var credentials = new CredentialsAccessWithModel<ChangeAccountPasswordModel>(model, AccountAccessFlags.BasicAccess);
@@ -118,28 +131,27 @@ namespace CertificateAuthority.Controllers
             });
         }
 
-        private IActionResult ExecuteRepositoryQuery(Func<IActionResult> action)
+        private IActionResult ExecuteRepositoryQuery(Func<IActionResult> action, [System.Runtime.CompilerServices.CallerMemberName] string memberName = "")
         {
             try
             {
-                return action();
+                return (IActionResult)this.LogExit(action(), memberName);
             }
             catch (CertificateAuthorityAccountException ex)
             {
-                return StatusCode(StatusCodes.Status400BadRequest, ex.ToString());
+                return this.LogErrorExit(StatusCode(StatusCodes.Status400BadRequest, ex.ToString()), memberName);
             }
             catch (InvalidCredentialsException)
             {
-                return StatusCode(StatusCodes.Status403Forbidden);
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden), memberName);
             }
             catch (Exception ex)
             {
-                this.logger.Error(ex);
-                return StatusCode(StatusCodes.Status400BadRequest, ex.ToString());
+                return this.LogErrorExit(StatusCode(StatusCodes.Status400BadRequest, ex.ToString()), memberName);
             }
         }
 
-        private ActionResult ExecuteRepositoryCommand(Func<ActionResult> action)
+        private IActionResult ExecuteRepositoryCommand(Func<ActionResult> action, [System.Runtime.CompilerServices.CallerMemberName] string memberName = "")
         {
             try
             {
@@ -155,8 +167,7 @@ namespace CertificateAuthority.Controllers
             }
             catch (Exception ex)
             {
-                this.logger.Error(ex);
-                return StatusCode(StatusCodes.Status400BadRequest, ex.ToString());
+                return this.LogErrorExit(StatusCode(StatusCodes.Status400BadRequest, ex.ToString()));
             }
         }
     }

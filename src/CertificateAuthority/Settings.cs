@@ -115,7 +115,7 @@ namespace CertificateAuthority
             // If serverUrls is not set from command line, check the .conf file.
             if (string.IsNullOrEmpty(this.ServerUrls))
             {
-                this.ServerUrls = configFileArgs.GetOrDefault<string>("serverurls", "https://localhost:5001;http://localhost:5050");
+                this.ServerUrls = configFileArgs.GetOrDefault<string>("serverurls", "https://0.0.0.0:5001;http://0.0.0.0:5050");
                 Console.WriteLine($"{nameof(this.ServerUrls)} set to: {this.ServerUrls}");
             }
         }
