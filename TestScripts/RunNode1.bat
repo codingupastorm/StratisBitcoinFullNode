@@ -1,0 +1,1 @@
+powershell.exe -File "RunNode.ps1" 1 0

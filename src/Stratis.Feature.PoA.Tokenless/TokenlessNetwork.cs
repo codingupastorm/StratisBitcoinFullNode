@@ -55,6 +55,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.DefaultPort = 16438;
             this.DefaultMaxOutboundConnections = 16;
             this.DefaultMaxInboundConnections = 109;
+            this.DefaultEnableIpRangeFiltering = false;
             this.DefaultRPCPort = 16474;
             this.DefaultAPIPort = 30000;
             this.MaxTipAge = 2 * 60 * 60;
