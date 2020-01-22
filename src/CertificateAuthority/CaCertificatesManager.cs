@@ -56,6 +56,8 @@ namespace CertificateAuthority
         public const string CallContractPermissionOid = "1.5.2";
         public const string CreateContractPermissionOid = "1.5.3";
 
+        public const int CertificateValidityYears = 10;
+
         public CaCertificatesManager(DataCacheLayer cache, Settings settings)
         {
             this.repository = cache;
@@ -292,7 +294,7 @@ namespace CertificateAuthority
 
             // Our certificate needs valid from/to values.
             DateTime notBefore = DateTime.UtcNow.Date;
-            DateTime notAfter = notBefore.AddYears(2);
+            DateTime notAfter = notBefore.AddYears(CertificateValidityYears);
 
             certificateGenerator.SetNotBefore(notBefore);
             certificateGenerator.SetNotAfter(notAfter);
