@@ -215,6 +215,9 @@ namespace CertificateAuthority
 
             HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{IssueCertificateEndpoint}", issueCertModel).GetAwaiter().GetResult();
 
+            if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                throw new AccessViolationException("Can't issue a certificate using the provided CA credentials.");
+
             string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
 
             CertificateInfoModel certificateInfoModel = JsonConvert.DeserializeObject<CertificateInfoModel>(responseString);
