@@ -58,6 +58,10 @@ namespace CertificateAuthority
             string dataDirRoot = commandLineArgsConfiguration.GetOrDefault<string>("datadirroot", DataDirRoot);
             Console.WriteLine($"{nameof(dataDirRoot)}: {dataDirRoot}");
 
+            this.ServerUrls = commandLineArgsConfiguration.GetOrDefault<string>("serverurls", null);
+            if (!string.IsNullOrEmpty(this.ServerUrls))
+                Console.WriteLine($"{nameof(this.ServerUrls)} set to: {this.ServerUrls}");
+
             if (this.DataDirectory != null && this.configurationFile != null)
                 this.configurationFile = Path.Combine(this.DataDirectory, this.configurationFile);
 
@@ -91,25 +95,29 @@ namespace CertificateAuthority
                 File.Create(this.configurationFile).Close();
             }
 
-            var configReader = new TextFileConfiguration(File.ReadAllText(this.configurationFile));
+            var configFileArgs = new TextFileConfiguration(File.ReadAllText(this.configurationFile));
 
             string defaultDbPath = Path.Combine(this.DataDirectory, "SQLiteDatabase.db");
-            this.DatabasePath = configReader.GetOrDefault<string>("dbpath", defaultDbPath).NormalizeDirectorySeparator();
+            this.DatabasePath = configFileArgs.GetOrDefault<string>("dbpath", defaultDbPath).NormalizeDirectorySeparator();
 
-            this.DefaultIssuanceCertificateDays = configReader.GetOrDefault<int>("defaultcertdays", 10 * 365);
+            this.DefaultIssuanceCertificateDays = configFileArgs.GetOrDefault<int>("defaultcertdays", 10 * 365);
 
-            this.CreateAdminAccountOnCleanStart = configReader.GetOrDefault<bool>("createadmin", true);
+            this.CreateAdminAccountOnCleanStart = configFileArgs.GetOrDefault<bool>("createadmin", true);
 
-            this.DefaultAdminPasswordHash = configReader.GetOrDefault<string>("adminpasshash", "6085fee2997a53fe15f195d907590238ec1f717adf6ac7fd4d7ed137f91892aa");
+            this.DefaultAdminPasswordHash = configFileArgs.GetOrDefault<string>("adminpasshash", "6085fee2997a53fe15f195d907590238ec1f717adf6ac7fd4d7ed137f91892aa");
 
-            this.CaSubjectNameOrganization = configReader.GetOrDefault<string>("caorganization", "Stratis");
+            this.CaSubjectNameOrganization = configFileArgs.GetOrDefault<string>("caorganization", "Stratis");
 
-            this.CaSubjectNameCommonName = configReader.GetOrDefault<string>("cacommonname", "DLT Root Certificate");
+            this.CaSubjectNameCommonName = configFileArgs.GetOrDefault<string>("cacommonname", "DLT Root Certificate");
 
-            this.CaSubjectNameOrganizationUnit = configReader.GetOrDefault<string>("caorganizationunit", "Administration");
+            this.CaSubjectNameOrganizationUnit = configFileArgs.GetOrDefault<string>("caorganizationunit", "Administration");
 
-            this.ServerUrls = configReader.GetOrDefault<string>("serverurls", "https://0.0.0.0:5001;http://0.0.0.0:5050");
-            Console.WriteLine($"{nameof(this.ServerUrls)} set to: {this.ServerUrls}");
+            // If serverUrls is not set from command line, check the .conf file.
+            if (string.IsNullOrEmpty(this.ServerUrls))
+            {
+                this.ServerUrls = configFileArgs.GetOrDefault<string>("serverurls", "https://0.0.0.0:5001;http://0.0.0.0:5050");
+                Console.WriteLine($"{nameof(this.ServerUrls)} set to: {this.ServerUrls}");
+            }
         }
 
         private string CreateDefaultDataDirectories(string appName, string networkName)
