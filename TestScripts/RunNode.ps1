@@ -39,7 +39,7 @@ $initial = ""
 
 $node_data = "$node_root\tokenless\TokenlessMain"
 $client_certificate = "$node_data\ClientCertificate.pfx"
-$federation_key_file = "$node_data\federationKey.dat"
+$federation_key_file = "$node_data\miningKey.dat"
 $transaction_key_file = "$node_data\transactionSigning.dat"
 $wallet_file = "$node_data\nodeid.json"
 
