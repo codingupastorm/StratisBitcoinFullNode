@@ -12,12 +12,11 @@ namespace CertificateAuthority.Controllers
     [Produces("application/json")]
     [Route("api/helpers")]
     [ApiController]
-    public class HelpersController : Controller
+    public class HelpersController : LoggedController
     {
         private readonly DataCacheLayer cache;
-        private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        public HelpersController(DataCacheLayer cache)
+        public HelpersController(DataCacheLayer cache) : base(LogManager.GetCurrentClassLogger())
         {
             this.cache = cache;
         }
@@ -28,17 +27,17 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(string), 200)]
         public IActionResult GetSha256(string data)
         {
+            this.LogEntry(data);
+
             try
             {                
                 string hash = DataHelper.ComputeSha256Hash(data);
 
-                return this.Json(hash);
+                return this.Json(this.LogExit(hash));
             }
             catch (Exception ex)
             {
-                this.logger.Error(ex);
-
-                return BadRequest(ex);
+                return this.LogErrorExit(BadRequest(ex));
             }
         }
 
@@ -49,6 +48,8 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(Dictionary<int, string>), 200)]
         public IActionResult GetAllAccessLevels(CredentialsModel model)
         {
+            this.LogEntry(model);
+
             var accessModelInfo = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.BasicAccess);
 
             try
@@ -62,17 +63,15 @@ namespace CertificateAuthority.Controllers
 
                 string output = JsonConvert.SerializeObject(accesses);
 
-                return this.Json(output);
+                return this.Json(this.LogExit(output));
             }
             catch (InvalidCredentialsException)
             {
-                return StatusCode(StatusCodes.Status403Forbidden);
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
             }
             catch (Exception ex)
             {
-                this.logger.Error(ex);
-
-                return BadRequest(ex);
+                return this.LogErrorExit(BadRequest(ex));
             }
         }
     }

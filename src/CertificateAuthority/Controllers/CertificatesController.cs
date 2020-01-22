@@ -6,6 +6,7 @@ using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using Newtonsoft.Json;
 using NLog;
 using Org.BouncyCastle.Asn1.X9;
 using Org.BouncyCastle.Crypto;
@@ -17,12 +18,11 @@ namespace CertificateAuthority.Controllers
     [Produces("application/json")]
     [Route("api/certificates")]
     [ApiController]
-    public class CertificatesController : Controller
+    public class CertificatesController : LoggedController
     {
         private readonly CaCertificatesManager caCertificateManager;
-        private readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-        public CertificatesController(CaCertificatesManager caCertificateManager)
+        public CertificatesController(CaCertificatesManager caCertificateManager) : base(LogManager.GetCurrentClassLogger())
         {
             this.caCertificateManager = caCertificateManager;
         }
@@ -31,21 +31,23 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(bool), 200)]
         public IActionResult InitializeCertificateAuthority([FromBody]CredentialsModelWithMnemonicModel model)
         {
+            this.LogEntry(model);
+
             var data = new CredentialsAccessWithModel<CredentialsModelWithMnemonicModel>(model, AccountAccessFlags.InitializeCertificateAuthority);
 
             try
             {
-                return this.Json(this.caCertificateManager.InitializeCertificateAuthority(data.Model.Mnemonic, data.Model.MnemonicPassword, data.Model.CoinType, data.Model.AddressPrefix));
+                var certificate = this.caCertificateManager.InitializeCertificateAuthority(data.Model.Mnemonic, data.Model.MnemonicPassword, data.Model.CoinType, data.Model.AddressPrefix);
+
+                return this.Json(this.LogExit(certificate));
             }
             catch (InvalidCredentialsException)
             {
-                return StatusCode(StatusCodes.Status403Forbidden);
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
             }
             catch (Exception ex)
             {
-                this.logger.Error(ex);
-
-                return BadRequest(ex);
+                return this.LogErrorExit(BadRequest(ex));
             }
         }
 
@@ -58,21 +60,23 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(bool), 200)]
         public IActionResult RevokeCertificate([FromBody]CredentialsModelWithThumbprintModel model)
         {
+            this.LogEntry(model);
+
             var data = new CredentialsAccessWithModel<CredentialsModelWithThumbprintModel>(model, AccountAccessFlags.RevokeCertificates);
 
             try
             {
-                return this.Json(this.caCertificateManager.RevokeCertificate(data));
+                var res = this.caCertificateManager.RevokeCertificate(data);
+
+                return this.Json(this.LogExit(res));
             }
             catch (InvalidCredentialsException)
             {
-                return StatusCode(StatusCodes.Status403Forbidden);
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
             }
             catch (Exception ex)
             {
-                this.logger.Error(ex);
-
-                return BadRequest(ex);
+                return this.LogErrorExit(BadRequest(ex));
             }
         }
 
@@ -80,26 +84,26 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
         public IActionResult GetCaCertificate([FromBody]CredentialsModel model)
         {
+            this.LogEntry(model);
+
             var data = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAnyCertificate);
 
             try
             {
-                CertificateInfoModel certificate = this.caCertificateManager.GetCaCertificate(data);
+                CertificateInfoModel res = this.caCertificateManager.GetCaCertificate(data);
 
-                if (certificate == null)
-                    return StatusCode(StatusCodes.Status404NotFound);
+                if (res == null)
+                    return this.LogErrorExit(StatusCode(StatusCodes.Status404NotFound));
 
-                return this.Json(certificate);
+                return this.Json(this.LogExit(res));
             }
             catch (InvalidCredentialsException)
             {
-                return StatusCode(StatusCodes.Status403Forbidden);
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
             }
             catch (Exception ex)
             {
-                this.logger.Error(ex);
-
-                return BadRequest(ex);
+                return this.LogErrorExit(BadRequest(ex));
             }
         }
 
@@ -108,6 +112,8 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
         public IActionResult GetCertificateByThumbprint([FromBody]CredentialsModelWithThumbprintModel model)
         {
+            this.LogEntry(model);
+
             var data = new CredentialsAccessWithModel<CredentialsModelWithThumbprintModel>(model, AccountAccessFlags.AccessAnyCertificate);
 
             try
@@ -115,19 +121,17 @@ namespace CertificateAuthority.Controllers
                 CertificateInfoModel certificate = this.caCertificateManager.GetCertificateByThumbprint(data);
 
                 if (certificate == null)
-                    return StatusCode(StatusCodes.Status404NotFound);
+                    return this.LogErrorExit(StatusCode(StatusCodes.Status404NotFound));
 
-                return this.Json(certificate);
+                return this.Json(this.LogExit(certificate));
             }
             catch (InvalidCredentialsException)
             {
-                return StatusCode(StatusCodes.Status403Forbidden);
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
             }
             catch (Exception ex)
             {
-                this.logger.Error(ex);
-
-                return BadRequest(ex);
+                return this.LogErrorExit(BadRequest(ex));
             }
         }
 
@@ -136,6 +140,8 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
         public IActionResult GetCertificateByAddress([FromBody]CredentialsModelWithAddressModel model)
         {
+            this.LogEntry(model);
+
             var data = new CredentialsAccessWithModel<CredentialsModelWithAddressModel>(model, AccountAccessFlags.AccessAnyCertificate);
 
             try
@@ -145,11 +151,11 @@ namespace CertificateAuthority.Controllers
                 if (certificate == null)
                     return StatusCode(StatusCodes.Status404NotFound);
 
-                return this.Json(certificate);
+                return this.Json(this.LogExit(certificate));
             }
             catch (InvalidCredentialsException)
             {
-                return StatusCode(StatusCodes.Status403Forbidden);
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
             }
         }
 
@@ -158,6 +164,8 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
         public IActionResult GetCertificateForPubKeyHash([FromBody]CredentialsModelWithPubKeyHashModel model)
         {
+            this.LogEntry(model);
+
             var data = new CredentialsAccessWithModel<CredentialsModelWithPubKeyHashModel>(model, AccountAccessFlags.AccessAnyCertificate);
 
             try
@@ -165,19 +173,17 @@ namespace CertificateAuthority.Controllers
                 CertificateInfoModel certificate = this.caCertificateManager.GetCertificateByPubKeyHash(data);
 
                 if (certificate == null)
-                    return StatusCode(StatusCodes.Status404NotFound);
+                    return this.LogErrorExit(StatusCode(StatusCodes.Status404NotFound));
 
-                return this.Json(certificate);
+                return this.Json(this.LogExit(certificate));
             }
             catch (InvalidCredentialsException)
             {
-                return StatusCode(StatusCodes.Status403Forbidden);
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
             }
             catch (Exception ex)
             {
-                this.logger.Error(ex);
-
-                return BadRequest(ex);
+                return this.LogErrorExit(BadRequest(ex));
             }
         }
 
@@ -187,21 +193,21 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(List<CertificateInfoModel>), 200)]
         public IActionResult GetAllCertificates([FromBody]CredentialsModel model)
         {
+            this.LogEntry(model);
+
             var data = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAnyCertificate);
 
             try
             {
-                return this.Json(this.caCertificateManager.GetAllCertificates(data));
+                return this.Json(this.LogExit(this.caCertificateManager.GetAllCertificates(data)));
             }
             catch (InvalidCredentialsException)
             {
-                return StatusCode(StatusCodes.Status403Forbidden);
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
             }
             catch (Exception ex)
             {
-                this.logger.Error(ex);
-
-                return BadRequest(ex);
+                return this.LogErrorExit(BadRequest(ex));
             }
         }
 
@@ -211,25 +217,27 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(CertificateSigningRequestModel), 200)]
         public async Task<IActionResult> GenerateCertificateSigningRequestAsync([FromBody]GenerateCertificateSigningRequestModel model)
         {
+            this.LogEntry(model);
+
             try
             {
                 var data = new CredentialsAccessWithModel<GenerateCertificateSigningRequestModel>(model, AccountAccessFlags.IssueCertificates);
 
-            byte[] oid141 = Encoding.UTF8.GetBytes(data.Model.Address);
-            byte[] oid142 = Convert.FromBase64String(data.Model.TransactionSigningPubKeyHash);
-            byte[] oid144 = Convert.FromBase64String(data.Model.BlockSigningPubKey);
+                byte[] oid141 = Encoding.UTF8.GetBytes(data.Model.Address);
+                byte[] oid142 = Convert.FromBase64String(data.Model.TransactionSigningPubKeyHash);
+                byte[] oid144 = Convert.FromBase64String(data.Model.BlockSigningPubKey);
 
-            var extensionData = new Dictionary<string, byte[]>
-            {
-                {CaCertificatesManager.P2pkhExtensionOid, oid141},
-                {CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid, oid142},
-                {CaCertificatesManager.BlockSigningPubKeyExtensionOid, oid144}
-            };
+                var extensionData = new Dictionary<string, byte[]>
+                {
+                    {CaCertificatesManager.P2pkhExtensionOid, oid141},
+                    {CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid, oid142},
+                    {CaCertificatesManager.BlockSigningPubKeyExtensionOid, oid144}
+                };
 
-            byte[] pubKeyBytes = Convert.FromBase64String(data.Model.PubKey);
-            X9ECParameters ecdsaCurve = ECNamedCurveTable.GetByName("secp256k1");
-            var ecdsaDomainParams = new ECDomainParameters(ecdsaCurve.Curve, ecdsaCurve.G, ecdsaCurve.N, ecdsaCurve.H, ecdsaCurve.GetSeed());
-            var q = new X9ECPoint(ecdsaCurve.Curve, pubKeyBytes);
+                byte[] pubKeyBytes = Convert.FromBase64String(data.Model.PubKey);
+                X9ECParameters ecdsaCurve = ECNamedCurveTable.GetByName("secp256k1");
+                var ecdsaDomainParams = new ECDomainParameters(ecdsaCurve.Curve, ecdsaCurve.G, ecdsaCurve.N, ecdsaCurve.H, ecdsaCurve.GetSeed());
+                var q = new X9ECPoint(ecdsaCurve.Curve, pubKeyBytes);
 
                 AsymmetricKeyParameter publicKey = new ECPublicKeyParameters(q.Point, ecdsaDomainParams);
 
@@ -242,17 +250,15 @@ namespace CertificateAuthority.Controllers
 
                 var csrModel = new CertificateSigningRequestModel(unsignedCsr);
 
-                return this.Json(csrModel);
+                return this.Json(this.LogExit(csrModel));
             }
             catch (InvalidCredentialsException)
             {
-                return StatusCode(StatusCodes.Status403Forbidden);
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
             }
             catch (Exception ex)
             {
-                this.logger.Error(ex);
-
-                return BadRequest(ex);
+                return this.LogErrorExit(BadRequest(ex));
             }
         }
 
@@ -262,22 +268,22 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
         public async Task<IActionResult> IssueCertificate_UsingRequestFileAsync([FromBody]IssueCertificateFromRequestModel model)
         {
+            this.LogEntry(model);
+
             var data = new CredentialsAccessWithModel<IssueCertificateFromRequestModel>(model, AccountAccessFlags.IssueCertificates);
 
             try
             {
                 CertificateInfoModel infoModel = await this.caCertificateManager.IssueCertificateAsync(data);
-                return this.Json(infoModel);
+                return this.Json(this.LogExit(infoModel));
             }
             catch (InvalidCredentialsException)
             {
-                return StatusCode(StatusCodes.Status403Forbidden);
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
             }
             catch (Exception ex)
             {
-                this.logger.Error(ex);
-
-                return BadRequest(ex);
+                return this.LogErrorExit(BadRequest(ex));
             }
         }
 
@@ -287,6 +293,8 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
         public async Task<IActionResult> IssueCertificate_UsingRequestStringAsync([FromBody]IssueCertificateFromFileContentsModel model)
         {
+            this.LogEntry(model);
+
             var data = new CredentialsAccessWithModel<IssueCertificateFromFileContentsModel>(model, AccountAccessFlags.IssueCertificates);
 
             try
@@ -299,17 +307,15 @@ namespace CertificateAuthority.Controllers
 
                 CertificateInfoModel infoModel = await this.caCertificateManager.IssueCertificateAsync(data);
 
-                return this.Json(infoModel);
+                return this.Json(this.LogExit(infoModel));
             }
             catch (InvalidCredentialsException)
             {
-                return StatusCode(StatusCodes.Status403Forbidden);
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
             }
             catch (Exception ex)
             {
-                this.logger.Error(ex);
-
-                return BadRequest(ex);
+                return this.LogErrorExit(BadRequest(ex));
             }
         }
 
@@ -323,20 +329,20 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(string), 200)]
         public IActionResult GetCertificateStatus([FromBody]GetCertificateStatusModel model)
         {
+            this.LogEntry(model);
+
             try
             {
                 CertificateStatus status = this.caCertificateManager.GetCertificateStatusByThumbprint(model.Thumbprint);
 
                 if (model.AsString)
-                    return this.Json(status.ToString());
+                    return this.Json(this.LogExit(status.ToString()));
 
-                return this.Json(((int)status).ToString());
+                return this.Json(this.LogExit((int)status).ToString());
             }
             catch (Exception ex)
             {
-                this.logger.Error(ex);
-
-                return BadRequest(ex);
+                return this.LogErrorExit(BadRequest(ex));
             }
         }
 
@@ -347,7 +353,9 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(ICollection<string>), 200)]
         public IActionResult GetRevokedCertificates()
         {
-            return this.Json(this.caCertificateManager.GetRevokedCertificates());
+            this.LogEntry();
+
+            return this.Json(this.LogExit(this.caCertificateManager.GetRevokedCertificates()));
         }
 
         /// <summary>Returns the public key value (oid142) for all non-revoked certificates.</summary>
@@ -359,7 +367,9 @@ namespace CertificateAuthority.Controllers
         {
             // TODO: This and presumably the other methods here should be checking credentials!!
 
-            return this.Json(this.caCertificateManager.GetCertificatePublicKeys());
+            this.LogEntry();
+
+            return this.Json(this.LogExit(this.caCertificateManager.GetCertificatePublicKeys()));
         }
     }
 }
