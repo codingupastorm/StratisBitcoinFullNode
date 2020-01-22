@@ -4,7 +4,6 @@ using CertificateAuthority.Database;
 using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using NLog;
 
 namespace CertificateAuthority.Controllers
@@ -30,7 +29,7 @@ namespace CertificateAuthority.Controllers
             this.LogEntry(data);
 
             try
-            {                
+            {
                 string hash = DataHelper.ComputeSha256Hash(data);
 
                 return this.Json(this.LogExit(hash));
@@ -61,9 +60,7 @@ namespace CertificateAuthority.Controllers
                 foreach (AccountAccessFlags flag in DataHelper.AllAccessFlags)
                     accesses.Add((int)flag, flag.ToString());
 
-                string output = JsonConvert.SerializeObject(accesses);
-
-                return this.Json(this.LogExit(output));
+                return this.Json(this.LogExit(accesses));
             }
             catch (InvalidCredentialsException)
             {
