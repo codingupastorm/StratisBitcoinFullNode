@@ -27,7 +27,7 @@ New-Item -ItemType directory -Force -Path $node_root
 New-Item -ItemType directory -Force -Path $node_root\tokenless
 New-Item -ItemType directory -Force -Path $node_root\tokenless\TokenlessMain
 
-Copy-Item $root_datadir\ca\CaMain\CaCertificate.crt -Destination $node_root\tokenless\TokenlessMain\AuthorityCertificate.crt
+Copy-Item $root_datadir\ca\CaMain\CaCertificate.crt -Destination $node_root\tokenless\TokenlessMain\CaCertificate.crt
 
 cd $path_to_tokenlessd
 Write-Host "Running Stratis.TokenlessD..." -foregroundcolor "magenta"
