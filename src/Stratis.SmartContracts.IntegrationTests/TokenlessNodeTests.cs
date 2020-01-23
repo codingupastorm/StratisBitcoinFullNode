@@ -493,10 +493,10 @@ namespace Stratis.SmartContracts.IntegrationTests
                     (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
 
                     List<CertificateInfoModel> nodeCerts = client.GetAllCertificates();
-                    Assert.Single(nodeCerts);
+                    Assert.Equal(2, nodeCerts.Count);
 
                     List<PubKey> pubkeys = await client.GetCertificatePublicKeysAsync();
-                    Assert.Single(pubkeys);
+                    Assert.Equal(2, pubkeys.Count);
                 }
             }
         }
