@@ -51,6 +51,9 @@ namespace CertificateAuthority
         public const string CaCertFilename = "CaCertificate.crt";
         public const string CaPfxFilename = "CaCertificate.pfx";
 
+        /// <summary>
+        /// Password to save / load the pfx with. We may want to move this to come from the command line?
+        /// </summary>
         private const string CaPfxPassword = "5tr471s";
 
         public const string P2pkhExtensionOid = "1.4.1";
