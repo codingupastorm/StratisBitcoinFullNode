@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
@@ -131,7 +132,7 @@ namespace CertificateAuthority.Controllers
             });
         }
 
-        private IActionResult ExecuteRepositoryQuery(Func<IActionResult> action, [System.Runtime.CompilerServices.CallerMemberName] string memberName = "")
+        private IActionResult ExecuteRepositoryQuery(Func<IActionResult> action, [CallerMemberName] string memberName = "")
         {
             try
             {
@@ -139,11 +140,11 @@ namespace CertificateAuthority.Controllers
             }
             catch (CertificateAuthorityAccountException ex)
             {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status400BadRequest, ex.ToString()), memberName);
+                return this.LogErrorExit(StatusCode(StatusCodes.Status400BadRequest, ex.Message), memberName);
             }
-            catch (InvalidCredentialsException)
+            catch (InvalidCredentialsException ex)
             {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden), memberName);
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message), memberName);
             }
             catch (Exception ex)
             {
@@ -151,7 +152,7 @@ namespace CertificateAuthority.Controllers
             }
         }
 
-        private IActionResult ExecuteRepositoryCommand(Func<ActionResult> action, [System.Runtime.CompilerServices.CallerMemberName] string memberName = "")
+        private IActionResult ExecuteRepositoryCommand(Func<ActionResult> action, [CallerMemberName] string memberName = "")
         {
             try
             {
@@ -159,11 +160,11 @@ namespace CertificateAuthority.Controllers
             }
             catch (CertificateAuthorityAccountException ex)
             {
-                return StatusCode(StatusCodes.Status400BadRequest, ex.ToString());
+                return this.LogErrorExit(StatusCode(StatusCodes.Status400BadRequest, ex.Message), memberName);
             }
-            catch (InvalidCredentialsException)
+            catch (InvalidCredentialsException ex)
             {
-                return StatusCode(StatusCodes.Status403Forbidden);
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message), memberName);
             }
             catch (Exception ex)
             {

@@ -70,7 +70,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             int transactionSigningIndex = 0;
             int blockSigningIndex = 1;
             int clientAddressIndex = 2;
-            
+
             string clientHdPath = $"m/44'/105'/0'/0/{clientAddressIndex}";
             string transactionSigningHdPath = $"m/44'/105'/0'/0/{transactionSigningIndex}";
             string blockSigningHdPath = $"m/44'/105'/0'/0/{blockSigningIndex}";
@@ -217,7 +217,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             // In this case we just use the same pubkey for both the certificate generation & transaction signing pubkey hash, they would ordinarily be different.
             var generateModel = new GenerateCertificateSigningRequestModel(clientAddress, Convert.ToBase64String(clientPublicKey), Convert.ToBase64String(clientPrivateKey.PubKey.Hash.ToBytes()), Convert.ToBase64String(blockSigningPrivateKey.PubKey.ToBytes()), credentials1.AccountId, credentials1.Password);
 
-            CertificateSigningRequestModel unsignedCsrModel = TestsHelper.GetValue<CertificateSigningRequestModel>(await this.certificatesController.GenerateCertificateSigningRequestAsync(generateModel));
+            CertificateSigningRequestModel unsignedCsrModel = TestsHelper.GetValue<CertificateSigningRequestModel>(this.certificatesController.GenerateCertificateSigningRequest(generateModel));
 
             byte[] csrTemp = Convert.FromBase64String(unsignedCsrModel.CertificateSigningRequestContent);
 
@@ -306,7 +306,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
                     Assert.True((result6.Result as StatusCodeResult).StatusCode == 403);
                     break;
                 default:
-                    Assert.True((response as StatusCodeResult).StatusCode == 403);
+                    Assert.True((response as ObjectResult).StatusCode == 403);
                     break;
             }
 

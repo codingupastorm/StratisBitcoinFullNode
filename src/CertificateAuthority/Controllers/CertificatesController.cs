@@ -6,7 +6,6 @@ using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
-using Newtonsoft.Json;
 using NLog;
 using Org.BouncyCastle.Asn1.X9;
 using Org.BouncyCastle.Crypto;
@@ -41,9 +40,9 @@ namespace CertificateAuthority.Controllers
 
                 return this.Json(this.LogExit(certificate));
             }
-            catch (InvalidCredentialsException)
+            catch (InvalidCredentialsException ex)
             {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message));
             }
             catch (Exception ex)
             {
@@ -70,9 +69,9 @@ namespace CertificateAuthority.Controllers
 
                 return this.Json(this.LogExit(res));
             }
-            catch (InvalidCredentialsException)
+            catch (InvalidCredentialsException ex)
             {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message));
             }
             catch (Exception ex)
             {
@@ -97,9 +96,9 @@ namespace CertificateAuthority.Controllers
 
                 return this.Json(this.LogExit(res));
             }
-            catch (InvalidCredentialsException)
+            catch (InvalidCredentialsException ex)
             {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message));
             }
             catch (Exception ex)
             {
@@ -125,9 +124,9 @@ namespace CertificateAuthority.Controllers
 
                 return this.Json(this.LogExit(certificate));
             }
-            catch (InvalidCredentialsException)
+            catch (InvalidCredentialsException ex)
             {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message));
             }
             catch (Exception ex)
             {
@@ -153,9 +152,9 @@ namespace CertificateAuthority.Controllers
 
                 return this.Json(this.LogExit(certificate));
             }
-            catch (InvalidCredentialsException)
+            catch (InvalidCredentialsException ex)
             {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message));
             }
         }
 
@@ -201,9 +200,9 @@ namespace CertificateAuthority.Controllers
             {
                 return this.Json(this.LogExit(this.caCertificateManager.GetAllCertificates(data)));
             }
-            catch (InvalidCredentialsException)
+            catch (InvalidCredentialsException ex)
             {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message));
             }
             catch (Exception ex)
             {
@@ -215,7 +214,7 @@ namespace CertificateAuthority.Controllers
         /// <response code="200">Instance of <see cref="CertificateSigningRequestModel"/>.</response>
         [HttpPost("generate_certificate_signing_request")]
         [ProducesResponseType(typeof(CertificateSigningRequestModel), 200)]
-        public async Task<IActionResult> GenerateCertificateSigningRequestAsync([FromBody]GenerateCertificateSigningRequestModel model)
+        public IActionResult GenerateCertificateSigningRequest([FromBody]GenerateCertificateSigningRequestModel model)
         {
             this.LogEntry(model);
 
@@ -277,9 +276,9 @@ namespace CertificateAuthority.Controllers
                 CertificateInfoModel infoModel = await this.caCertificateManager.IssueCertificateAsync(data);
                 return this.Json(this.LogExit(infoModel));
             }
-            catch (InvalidCredentialsException)
+            catch (InvalidCredentialsException ex)
             {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message));
             }
             catch (Exception ex)
             {
@@ -309,9 +308,9 @@ namespace CertificateAuthority.Controllers
 
                 return this.Json(this.LogExit(infoModel));
             }
-            catch (InvalidCredentialsException)
+            catch (InvalidCredentialsException ex)
             {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message));
             }
             catch (Exception ex)
             {
