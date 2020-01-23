@@ -108,7 +108,7 @@ namespace Stratis.Feature.PoA.Tokenless
             // If we're not a federation member, it's not our job to vote. Don't schedule any votes until we are one.
             if (!this.federationManager.IsFederationMember)
             {
-                this.logger.LogInDebug("Attempted to Synchronize members but we aren't a member yet.");
+                this.logger.LogDebug("Attempted to Synchronize members but we aren't a member yet.");
                 return;
             }
 
