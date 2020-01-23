@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
@@ -289,7 +290,7 @@ namespace CertificateAuthority.Controllers
         /// <summary>
         /// Executes a method on the <see cref="CaCertificatesManager"/> and returns the result.
         /// </summary>
-        private IActionResult ExecuteCaMethod(Func<IActionResult> action)
+        private IActionResult ExecuteCaMethod(Func<IActionResult> action, [CallerMemberName] string memberName = "")
         {
             try
             {
@@ -297,11 +298,11 @@ namespace CertificateAuthority.Controllers
             }
             catch (InvalidCredentialsException ex)
             {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message));
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message), memberName);
             }
             catch (Exception ex)
             {
-                return this.LogErrorExit(BadRequest(ex));
+                return this.LogErrorExit(BadRequest(ex), memberName);
             }
         }
     }
