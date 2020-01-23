@@ -50,12 +50,14 @@ namespace Stratis.SmartContracts.IntegrationTests
         // TODO: Lots of repetition in this file.
 
         [Fact]
-        public async Task StartCACorrectlyAndTestApi()
+        public async Task StartCACorrectlyAndTestApiAsync()
         {
             using (IWebHost server = CreateWebHostBuilder().Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
+
+                DateTime testDate = DateTime.Now.ToUniversalTime().Date;
 
                 // Start + Initialize CA.
                 var client = GetClient();
@@ -64,21 +66,29 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
-                // Ensure certificate is valid for 10 years
-                DateTime estimatedCACertExpiry = DateTime.Now.AddYears(CaCertificatesManager.caCertificateValidityPeriodYears).AddHours(-25); // -25 hour to give bit of time for the test to run and allow for time truncation. 
-                Assert.True(ac.NotAfter > estimatedCACertExpiry);
-                Assert.True(ac.NotAfter < estimatedCACertExpiry.AddDays(2));
-
                 // Create a node so we have 1 available public key.
                 (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
 
-                // Check that our node's certificate is valid for 2 years.
+                // Get the date again in case it has changed. The idea is that the certificate date will be one of the two dates. 
+                // Either the initial one or the second one if a date change occurred while the certificates were being generated.
+                DateTime testDate2 = DateTime.Now.ToUniversalTime().Date;
+
+                // Check that Authority Certificate is valid from the expected date.
+                Assert.True((testDate == ac.NotBefore) || (testDate2 == ac.NotBefore));
+
+                // Check that Authority Certificate is valid for the expected number of years.
+                Assert.Equal(ac.NotBefore.AddYears(CaCertificatesManager.caCertificateValidityPeriodYears), ac.NotAfter);
+
+                // Get Client Certificate.
                 List<CertificateInfoModel> nodeCerts = client.GetAllCertificates();
                 var certParser = new X509CertificateParser();
                 X509Certificate nodeCert = certParser.ReadCertificate(nodeCerts.First().CertificateContentDer);
-                DateTime estimatedCertExpiry = DateTime.Now.AddYears(CaCertificatesManager.certificateValidityPeriodYears).AddHours(-25); // -25 hour to give bit of time for the test to run and allow for time truncation. 
-                Assert.True(nodeCert.NotAfter > estimatedCertExpiry);
-                Assert.True(nodeCert.NotAfter < estimatedCertExpiry.AddDays(2));
+
+                // Check that Client Certificate is valid from the expected date.
+                Assert.True((testDate == nodeCert.NotBefore) || (testDate2 == nodeCert.NotBefore));
+
+                // Check that Client Certificate is valid for the expected number of years.
+                Assert.Equal(nodeCert.NotBefore.AddYears(CaCertificatesManager.certificateValidityPeriodYears), nodeCert.NotAfter);
 
                 // Get public keys from the API.
                 List<PubKey> pubkeys = await client.GetCertificatePublicKeysAsync();
@@ -325,7 +335,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task TokenlessNodesKickAMinerBasedOnCA()
+        public async Task TokenlessNodesKickAMinerBasedOnCAAsync()
         {
             using (IWebHost server = CreateWebHostBuilder().Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
@@ -410,7 +420,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task NodeStoresSendersCertificateFromApi()
+        public async Task NodeStoresSendersCertificateFromApiAsync()
         {
             using (IWebHost server = CreateWebHostBuilder().Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
