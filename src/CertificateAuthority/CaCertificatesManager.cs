@@ -20,6 +20,7 @@ using Org.BouncyCastle.Crypto.Operators;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto.Prng;
 using Org.BouncyCastle.Math;
+using Org.BouncyCastle.Math.EC;
 using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.Pkix;
 using Org.BouncyCastle.Security;
@@ -48,6 +49,12 @@ namespace CertificateAuthority
         public const int CaAddressIndex = 0;
 
         public const string CaCertFilename = "CaCertificate.crt";
+        public const string CaPfxFilename = "CaCertificate.pfx";
+
+        /// <summary>
+        /// Password to save / load the pfx with. We may want to move this to come from the command line?
+        /// </summary>
+        private const string CaPfxPassword = "5tr471s";
 
         public const string P2pkhExtensionOid = "1.4.1";
         public const string TransactionSigningPubKeyHashExtensionOid = "1.4.2";
@@ -65,12 +72,38 @@ namespace CertificateAuthority
             this.settings = settings;
         }
 
+        /// <summary>
+        /// Runs on server startup. Will load key and certificate from a pfx file if they exist.
+        /// </summary>
         public void Initialize()
         {
+            string caPfxPath = Path.Combine(this.settings.DataDirectory, CaPfxFilename);
+
+            if (!File.Exists(caPfxPath))
+            {
+                // CA hasn't been initialised yet. Nothing to load. 
+                return;
+            }
+
+            (X509Certificate certificate, AsymmetricKeyParameter key) = LoadPfx(File.ReadAllBytes(caPfxPath), CaPfxPassword);
+
+            this.caCertificate = certificate;
+            var ec = key as ECPrivateKeyParameters;
+            ECPoint q = ec.Parameters.G.Multiply(ec.D);
+
+            var pub = new ECPublicKeyParameters(q, ec.Parameters);
+            // var pub = new ECPublicKeyParameters(ec.AlgorithmName, q, ec.PublicKeyParamSet);
+            this.caKey = new AsymmetricCipherKeyPair(pub, ec); // TODO: This method of deriving pubkey from private could be made into its own method.
         }
 
         public bool InitializeCertificateAuthority(string mnemonic, string password, int coinType, byte addressPrefix)
         {
+            if (this.caCertificate != null)
+            {
+                // CA is already initialized. Whoever is calling this probably shouldn't be.
+                return false;
+            }
+
             try
             {
                 // TODO: Build the subject DN up as individual components to prevent reordering problems
@@ -78,7 +111,8 @@ namespace CertificateAuthority
                 string hdPath = $"m/44'/{coinType}'/0'/0/{CaAddressIndex}";
 
                 var caAddressSpace = new HDWalletAddressSpace(mnemonic, password);
-                byte[] caPubKey = caAddressSpace.GetKey(hdPath).PrivateKey.PubKey.ToBytes();
+                Key caPrivateKey = caAddressSpace.GetKey(hdPath).PrivateKey;
+                byte[] caPubKey = caPrivateKey.PubKey.ToBytes();
                 string caAddress = HDWalletAddressSpace.GetAddress(caPubKey, addressPrefix);
                 byte[] caOid141 = Encoding.UTF8.GetBytes(caAddress);
 
@@ -94,7 +128,11 @@ namespace CertificateAuthority
                 this.caKey = caAddressSpace.GetCertificateKeyPair(hdPath);
                 this.caCertificate = CreateCertificateAuthorityCertificate(this.caKey, caSubjectName, null, null, extensionData);
 
-                // TODO: If the CA has already been initialized, we shouldn't need to re-create the files on disk.
+                // Store the pfx file so that we can reload everything later on
+                byte[] pfxFile = CreatePfx(this.caCertificate, caPrivateKey, CaPfxPassword);
+                File.WriteAllBytes(Path.Combine(this.settings.DataDirectory, CaPfxFilename), pfxFile);
+
+                // Many tests + tools are grabbing the certificate at this point. To keep that easily available we also store just the certificate.
                 File.WriteAllBytes(Path.Combine(this.settings.DataDirectory, CaCertFilename), this.caCertificate.GetEncoded());
             }
             catch (Exception)
