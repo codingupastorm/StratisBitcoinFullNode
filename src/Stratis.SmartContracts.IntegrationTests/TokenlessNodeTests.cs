@@ -80,7 +80,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 List<CertificateInfoModel> nodeCerts = client.GetAllCertificates();
                 var certParser = new X509CertificateParser();
                 X509Certificate nodeCert = certParser.ReadCertificate(nodeCerts.First().CertificateContentDer);
-                Assert.True((testDate == nodeCert.NotBefore) || (dateChanged && (testDate.AddDays(1) == nodeCert.NotAfter)));
+                Assert.True((testDate == nodeCert.NotBefore) || (dateChanged && (testDate.AddDays(1) == nodeCert.NotBefore)));
                 Assert.Equal(nodeCert.NotBefore.AddYears(CaCertificatesManager.certificateValidityPeriodYears), nodeCert.NotAfter);
 
                 // Get public keys from the API.
