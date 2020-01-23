@@ -50,7 +50,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         // TODO: Lots of repetition in this file.
 
         [Fact]
-        public async Task StartCACorrectlyAndTestApi()
+        public async Task StartCACorrectlyAndTestApiAsync()
         {
             using (IWebHost server = CreateWebHostBuilder().Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
@@ -334,7 +334,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task TokenlessNodesKickAMinerBasedOnCA()
+        public async Task TokenlessNodesKickAMinerBasedOnCAAsync()
         {
             using (IWebHost server = CreateWebHostBuilder().Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
@@ -419,7 +419,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task NodeStoresSendersCertificateFromApi()
+        public async Task NodeStoresSendersCertificateFromApiAsync()
         {
             using (IWebHost server = CreateWebHostBuilder().Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
