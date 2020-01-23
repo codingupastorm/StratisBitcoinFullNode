@@ -69,7 +69,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Create a node so we have 1 available public key.
                 (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
 
-                // Get the date again in case it has changed.
+                // Get the date again in case it has changed. The idea is that the certificate date will be one of the two dates. 
+                // Either the initial one or the second one if a date change occurred while the certificates were being generated.
                 DateTime testDate2 = DateTime.Now.ToUniversalTime().Date;
 
                 // Check that Authority Certificate is valid from the expected date.
