@@ -72,15 +72,21 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Detect if we need to be a bit more lenient in the asserts.
                 bool dateChanged = testDate != DateTime.Now.ToUniversalTime().Date;
 
-                // Ensure certificate is valid for the expected number of years
+                // Check that Authority Certificate is valid from the expected date.
                 Assert.True((testDate == ac.NotBefore) || (dateChanged && (testDate.AddDays(1) == ac.NotBefore)));
+
+                // Check that Authority Certificate is valid for the expected number of years.
                 Assert.Equal(ac.NotBefore.AddYears(CaCertificatesManager.caCertificateValidityPeriodYears), ac.NotAfter);
 
-                // Check that our node's certificate is valid for the expected number of years.
+                // Get Client Certificate.
                 List<CertificateInfoModel> nodeCerts = client.GetAllCertificates();
                 var certParser = new X509CertificateParser();
                 X509Certificate nodeCert = certParser.ReadCertificate(nodeCerts.First().CertificateContentDer);
+
+                // Check that Client Certificate is valid from the expected date.
                 Assert.True((testDate == nodeCert.NotBefore) || (dateChanged && (testDate.AddDays(1) == nodeCert.NotBefore)));
+
+                // Check that Client Certificate is valid for the expected number of years.
                 Assert.Equal(nodeCert.NotBefore.AddYears(CaCertificatesManager.certificateValidityPeriodYears), nodeCert.NotAfter);
 
                 // Get public keys from the API.
