@@ -95,10 +95,10 @@ namespace CertificateAuthority.Database
             this.logger.Info("Certificate id {0}, thumbprint {1} was added.");
         }
 
-        /// <summary>Provides collection of all certificates issued by account with specified id.</summary>
-        public List<CertificateInfoModel> GetCertificatesIssuedByAccountId(CredentialsAccessWithModel<CredentialsModelWithTargetId> accessWithModel)
+        /// <summary>Provides the certificate issued by the account with the specified id, if any.</summary>
+        public CertificateInfoModel GetCertificateIssuedByAccountId(CredentialsAccessWithModel<CredentialsModelWithTargetId> accessWithModel)
         {
-            return ExecuteQuery(accessWithModel, (dbContext) => { return dbContext.Certificates.Where(x => x.IssuerAccountId == accessWithModel.Model.TargetAccountId).ToList(); });
+            return ExecuteQuery(accessWithModel, (dbContext) => { return dbContext.Certificates.First(x => x.IssuerAccountId == accessWithModel.Model.TargetAccountId); });
         }
 
         #endregion
@@ -109,6 +109,26 @@ namespace CertificateAuthority.Database
         public AccountInfo GetAccountInfoById(CredentialsAccessWithModel<CredentialsModelWithTargetId> credentialsModel)
         {
             return ExecuteQuery<CredentialsAccessWithModel<CredentialsModelWithTargetId>, AccountInfo>(credentialsModel, (dbContext) => dbContext.Accounts.SingleOrDefault(x => x.Id == credentialsModel.Model.TargetAccountId));
+        }
+
+        /// <summary>Sets the Approved flag on an account.</summary>
+        public AccountInfo ApproveAccount(CredentialsAccessWithModel<CredentialsModelWithTargetId> credentialsModel)
+        {
+            return ExecuteCommand(credentialsModel, (dbContext, account) =>
+            {
+                int accountId = credentialsModel.Model.TargetAccountId;
+
+                AccountModel accountToApprove = dbContext.Accounts.SingleOrDefault(x => x.Id == accountId);
+
+                if (accountToApprove.Approved)
+                    throw new CertificateAuthorityAccountException("Account already approved!");
+
+                accountToApprove.Approved = true;
+
+                dbContext.Accounts.Update(accountToApprove);
+
+                return accountToApprove;
+            });
         }
 
         /// <summary>Provides collection of all existing accounts.</summary>
@@ -122,21 +142,28 @@ namespace CertificateAuthority.Database
         {
             return ExecuteQuery(credentialsModel, (dbContext, account) =>
             {
-                if (dbContext.Accounts.Any(x => x.Name == credentialsModel.Model.NewAccountName))
+                if (dbContext.Accounts.Any(x => x.Name == credentialsModel.Model.CommonName))
                     throw new CertificateAuthorityAccountException("That name is already taken!");
 
-                AccountAccessFlags newAccountAccessLevel =
-                    (AccountAccessFlags)credentialsModel.Model.NewAccountAccess | AccountAccessFlags.BasicAccess;
+                AccountAccessFlags newAccountAccessLevel = (AccountAccessFlags)credentialsModel.Model.RequestedAccountAccess | AccountAccessFlags.BasicAccess;
 
                 if (!DataHelper.IsCreatorHasGreaterOrEqualAccess(account.AccessInfo, newAccountAccessLevel))
                     throw new CertificateAuthorityAccountException("You can't create an account with an access level higher than yours!");
 
                 var newAccount = new AccountModel()
                 {
-                    Name = credentialsModel.Model.NewAccountName,
+                    Name = credentialsModel.Model.CommonName,
                     PasswordHash = credentialsModel.Model.NewAccountPasswordHash,
                     AccessInfo = newAccountAccessLevel,
-                    CreatorId = account.Id
+                    CreatorId = account.Id,
+                    OrganizationUnit = credentialsModel.Model.OrganizationUnit,
+                    Organization = credentialsModel.Model.Organization,
+                    Locality = credentialsModel.Model.Locality,
+                    StateOrProvince = credentialsModel.Model.StateOrProvince,
+                    EmailAddress = credentialsModel.Model.EmailAddress,
+                    Country = credentialsModel.Model.Country,
+                    RequestedPermissions = credentialsModel.Model.RequestedPermissions,
+                    Approved = false
                 };
 
                 dbContext.Accounts.Add(newAccount);
@@ -161,6 +188,12 @@ namespace CertificateAuthority.Database
 
                 if (accountToDelete.Name == Settings.AdminName)
                     throw new CertificateAuthorityAccountException("You can't delete Admin account!");
+
+                if (accountToDelete.RequestedPermissions != null)
+                {
+                    foreach (RequestedPermission permission in accountToDelete.RequestedPermissions)
+                        dbContext.RequestedPermissions.Remove(permission);
+                }
 
                 dbContext.Accounts.Remove(accountToDelete);
                 dbContext.SaveChanges();

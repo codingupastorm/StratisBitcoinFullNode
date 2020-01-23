@@ -6,7 +6,6 @@ using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
-using Newtonsoft.Json;
 using NLog;
 using Org.BouncyCastle.Asn1.X9;
 using Org.BouncyCastle.Crypto;
@@ -241,9 +240,12 @@ namespace CertificateAuthority.Controllers
 
                 AsymmetricKeyParameter publicKey = new ECPublicKeyParameters(q.Point, ecdsaDomainParams);
 
-                string subjectName = $"CN={data.Model.Address}";
+                // The subject DN comes from the original information supplied by the user upon account creation.
+                string subjectName = this.caCertificateManager.GetClientCertificateSubjectDistinguishedName(data);
 
-                Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(subjectName, publicKey, new string[0], extensionData);
+                string[] subjectAlternativeNames = this.caCertificateManager.GetClientCertificateSubjectAlternativeNames(data);
+
+                Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(subjectName, publicKey, subjectAlternativeNames, extensionData);
 
                 // Important workaround - fill in a dummy signature so that when the CSR is reconstituted on the far side, the decoding does not fail with DerNull errors.
                 unsignedCsr.SignRequest(new byte[] { });

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -34,7 +35,18 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
             var accountsController = (AccountsController)server.Host.Services.GetService(typeof(AccountsController));
 
             CredentialsModel credentialsModel = creatorCredentialsModel ?? adminCredentials;
-            int id = GetValue<int>(accountsController.CreateAccount(new CreateAccount(GenerateRandomString(), passHash, (int)access, credentialsModel.AccountId, credentialsModel.Password)));
+            int id = GetValue<int>(accountsController.CreateAccount(new CreateAccount(GenerateRandomString(),
+                passHash,
+                (int)access,
+                "dummyOrganizationUnit",
+                "dummyOrganization",
+                "dummyLocality",
+                "dummyStateOrProvince",
+                "dummyEmailAddress",
+                "dummyCountry",
+                new List<string>() { "1.5.1" }, 
+                credentialsModel.AccountId,
+                credentialsModel.Password)));
 
             return new CredentialsModel(id, password);
         }

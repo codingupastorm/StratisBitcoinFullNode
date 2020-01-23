@@ -9,6 +9,9 @@ namespace CertificateAuthority.Database
 
         public DbSet<CertificateInfoModel> Certificates { get; set; }
 
+        /// <remarks>Should typically only be directly accessed when deleting accounts.</summary>
+        public DbSet<RequestedPermission> RequestedPermissions { get; set; }
+
         private readonly Settings settings;
 
         public CADbContext(Settings settings)

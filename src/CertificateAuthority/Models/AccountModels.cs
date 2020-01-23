@@ -1,7 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace CertificateAuthority.Models
 {
+    public class RequestedPermission
+    {
+        public int ID { get; set; }
+
+        public string Permission { get; set; }
+    }
+
     /// <summary>General information about user's account.</summary>
     public class AccountInfo
     {
@@ -10,6 +18,25 @@ namespace CertificateAuthority.Models
         public AccountAccessFlags AccessInfo { get; set; }
 
         public int CreatorId { get; set; }
+
+        public string OrganizationUnit { get; set; }
+
+        public string Organization { get; set; }
+
+        public string Locality { get; set; }
+
+        public string StateOrProvince { get; set; }
+
+        public string EmailAddress { get; set; }
+
+        public string Country { get; set; }
+
+        public List<RequestedPermission> RequestedPermissions { get; set; }
+
+        /// <summary>
+        /// Indicates whether or not the administrator has approved the creation of the account.
+        /// </summary>
+        public bool Approved { get; set; }
 
         public override string ToString()
         {

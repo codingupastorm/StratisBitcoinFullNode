@@ -260,6 +260,21 @@ namespace CertificateAuthority
             return null;
         }
 
+        public string GetClientCertificateSubjectDistinguishedName(CredentialsAccessModel model)
+        {
+            AccountModel account = this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Accounts.SingleOrDefault(x => x.Id == model.AccountId); });
+
+            // TODO: Verify that this is the correct order
+            return $"O={account.Organization},CN={account.Name},OU={account.OrganizationUnit},L={account.Locality},ST={account.StateOrProvince},C={account.Country}";
+        }
+
+        public string[] GetClientCertificateSubjectAlternativeNames(CredentialsAccessModel model)
+        {
+            AccountModel account = this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Accounts.SingleOrDefault(x => x.Id == model.AccountId); });
+
+            return new string[] { $"CN={account.EmailAddress}" };
+        }
+
         private static SecureRandom GetSecureRandom()
         {
             // Since we're on Windows, we'll use the CryptoAPI one (on the assumption
@@ -364,7 +379,7 @@ namespace CertificateAuthority
         /// <param name="subjectAlternativeNames"></param>
         private static void AddSubjectAlternativeNames(X509V3CertificateGenerator certificateGenerator, IEnumerable<string> subjectAlternativeNames)
         {
-            Asn1Encodable[] altnames = subjectAlternativeNames.Select(name => new GeneralName(GeneralName.DnsName, name)).ToArray<Asn1Encodable>();
+            Asn1Encodable[] altnames = subjectAlternativeNames.Select(name => new GeneralName(GeneralName.OtherName, name)).ToArray<Asn1Encodable>();
             var subjectAlternativeNamesExtension = new DerSequence(altnames);
             certificateGenerator.AddExtension(X509Extensions.SubjectAlternativeName.Id, false, subjectAlternativeNamesExtension);
         }
