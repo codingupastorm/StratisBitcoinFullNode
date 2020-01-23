@@ -501,6 +501,30 @@ namespace Stratis.SmartContracts.IntegrationTests
             }
         }
 
+        [Fact]
+        public async Task CantInitializeCATwice()
+        {
+            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = GetClient();
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
+
+                // Try and initialize it again with a new password.
+                Assert.False(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, "SomeRandomPassword", this.network));
+
+                // Check that the certificate is identical
+                X509Certificate ac2 = GetCertificateFromInitializedCAServer(server);
+
+                Assert.Equal(ac, ac2);
+            }
+        }
+
         private HttpClient GetHttpClient()
         {
             return new HttpClient();
