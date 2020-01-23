@@ -69,11 +69,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Create a node so we have 1 available public key.
                 (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
 
-                // Detect if we need to be a bit more lenient in the asserts.
-                bool dateChanged = testDate != DateTime.Now.ToUniversalTime().Date;
+                // Get the date again in case it has changed.
+                DateTime testDate2 = DateTime.Now.ToUniversalTime().Date;
 
                 // Check that Authority Certificate is valid from the expected date.
-                Assert.True((testDate == ac.NotBefore) || (dateChanged && (testDate.AddDays(1) == ac.NotBefore)));
+                Assert.True((testDate == ac.NotBefore) || (testDate2 == ac.NotBefore));
 
                 // Check that Authority Certificate is valid for the expected number of years.
                 Assert.Equal(ac.NotBefore.AddYears(CaCertificatesManager.caCertificateValidityPeriodYears), ac.NotAfter);
@@ -84,7 +84,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate nodeCert = certParser.ReadCertificate(nodeCerts.First().CertificateContentDer);
 
                 // Check that Client Certificate is valid from the expected date.
-                Assert.True((testDate == nodeCert.NotBefore) || (dateChanged && (testDate.AddDays(1) == nodeCert.NotBefore)));
+                Assert.True((testDate == nodeCert.NotBefore) || (testDate2 == nodeCert.NotBefore));
 
                 // Check that Client Certificate is valid for the expected number of years.
                 Assert.Equal(nodeCert.NotBefore.AddYears(CaCertificatesManager.certificateValidityPeriodYears), nodeCert.NotAfter);
