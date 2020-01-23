@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Threading.Tasks;
 using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -34,20 +33,11 @@ namespace CertificateAuthority.Controllers
 
             var data = new CredentialsAccessWithModel<CredentialsModelWithMnemonicModel>(model, AccountAccessFlags.InitializeCertificateAuthority);
 
-            try
+            return ExecuteCaMethod(() =>
             {
-                var certificate = this.caCertificateManager.InitializeCertificateAuthority(data.Model.Mnemonic, data.Model.MnemonicPassword, data.Model.CoinType, data.Model.AddressPrefix);
-
-                return this.Json(this.LogExit(certificate));
-            }
-            catch (InvalidCredentialsException ex)
-            {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message));
-            }
-            catch (Exception ex)
-            {
-                return this.LogErrorExit(BadRequest(ex));
-            }
+                var certificateCreationResult = this.caCertificateManager.InitializeCertificateAuthority(data.Model.Mnemonic, data.Model.MnemonicPassword, data.Model.CoinType, data.Model.AddressPrefix);
+                return this.Json(this.LogExit(certificateCreationResult));
+            });
         }
 
         /// <summary>
@@ -63,20 +53,11 @@ namespace CertificateAuthority.Controllers
 
             var data = new CredentialsAccessWithModel<CredentialsModelWithThumbprintModel>(model, AccountAccessFlags.RevokeCertificates);
 
-            try
+            return ExecuteCaMethod(() =>
             {
-                var res = this.caCertificateManager.RevokeCertificate(data);
-
-                return this.Json(this.LogExit(res));
-            }
-            catch (InvalidCredentialsException ex)
-            {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message));
-            }
-            catch (Exception ex)
-            {
-                return this.LogErrorExit(BadRequest(ex));
-            }
+                var revokeCertificateResult = this.caCertificateManager.RevokeCertificate(data);
+                return this.Json(this.LogExit(revokeCertificateResult));
+            });
         }
 
         [HttpPost("get_ca_certificate")]
@@ -87,23 +68,15 @@ namespace CertificateAuthority.Controllers
 
             var data = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAnyCertificate);
 
-            try
+            return ExecuteCaMethod(() =>
             {
-                CertificateInfoModel res = this.caCertificateManager.GetCaCertificate(data);
+                CertificateInfoModel certificateInfo = this.caCertificateManager.GetCaCertificate(data);
 
-                if (res == null)
+                if (certificateInfo == null)
                     return this.LogErrorExit(StatusCode(StatusCodes.Status404NotFound));
 
-                return this.Json(this.LogExit(res));
-            }
-            catch (InvalidCredentialsException ex)
-            {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message));
-            }
-            catch (Exception ex)
-            {
-                return this.LogErrorExit(BadRequest(ex));
-            }
+                return this.Json(this.LogExit(certificateInfo));
+            });
         }
 
         /// <summary>Finds issued certificate by thumbprint and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
@@ -115,23 +88,15 @@ namespace CertificateAuthority.Controllers
 
             var data = new CredentialsAccessWithModel<CredentialsModelWithThumbprintModel>(model, AccountAccessFlags.AccessAnyCertificate);
 
-            try
+            return ExecuteCaMethod(() =>
             {
-                CertificateInfoModel certificate = this.caCertificateManager.GetCertificateByThumbprint(data);
+                CertificateInfoModel certificateInfo = this.caCertificateManager.GetCertificateByThumbprint(data);
 
-                if (certificate == null)
+                if (certificateInfo == null)
                     return this.LogErrorExit(StatusCode(StatusCodes.Status404NotFound));
 
-                return this.Json(this.LogExit(certificate));
-            }
-            catch (InvalidCredentialsException ex)
-            {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message));
-            }
-            catch (Exception ex)
-            {
-                return this.LogErrorExit(BadRequest(ex));
-            }
+                return this.Json(this.LogExit(certificateInfo));
+            });
         }
 
         /// <summary>Finds issued certificate by P2PKH address and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
@@ -143,19 +108,15 @@ namespace CertificateAuthority.Controllers
 
             var data = new CredentialsAccessWithModel<CredentialsModelWithAddressModel>(model, AccountAccessFlags.AccessAnyCertificate);
 
-            try
+            return ExecuteCaMethod(() =>
             {
-                CertificateInfoModel certificate = this.caCertificateManager.GetCertificateByAddress(data);
+                CertificateInfoModel certificateInfo = this.caCertificateManager.GetCertificateByAddress(data);
 
-                if (certificate == null)
+                if (certificateInfo == null)
                     return StatusCode(StatusCodes.Status404NotFound);
 
-                return this.Json(this.LogExit(certificate));
-            }
-            catch (InvalidCredentialsException ex)
-            {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message));
-            }
+                return this.Json(this.LogExit(certificateInfo));
+            });
         }
 
         /// <summary>Finds issued certificate by pubkey and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
@@ -167,23 +128,15 @@ namespace CertificateAuthority.Controllers
 
             var data = new CredentialsAccessWithModel<CredentialsModelWithPubKeyHashModel>(model, AccountAccessFlags.AccessAnyCertificate);
 
-            try
+            return ExecuteCaMethod(() =>
             {
-                CertificateInfoModel certificate = this.caCertificateManager.GetCertificateByPubKeyHash(data);
+                CertificateInfoModel certificateInfo = this.caCertificateManager.GetCertificateByPubKeyHash(data);
 
-                if (certificate == null)
+                if (certificateInfo == null)
                     return this.LogErrorExit(StatusCode(StatusCodes.Status404NotFound));
 
-                return this.Json(this.LogExit(certificate));
-            }
-            catch (InvalidCredentialsException)
-            {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
-            }
-            catch (Exception ex)
-            {
-                return this.LogErrorExit(BadRequest(ex));
-            }
+                return this.Json(this.LogExit(certificateInfo));
+            });
         }
 
         /// <summary>Provides collection of all issued certificates. AccessAnyCertificate access level is required.</summary>
@@ -196,18 +149,10 @@ namespace CertificateAuthority.Controllers
 
             var data = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAnyCertificate);
 
-            try
+            return ExecuteCaMethod(() =>
             {
                 return this.Json(this.LogExit(this.caCertificateManager.GetAllCertificates(data)));
-            }
-            catch (InvalidCredentialsException ex)
-            {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message));
-            }
-            catch (Exception ex)
-            {
-                return this.LogErrorExit(BadRequest(ex));
-            }
+            });
         }
 
         /// <summary>Creates a template certificate request without a signature. IssueCertificates access level is required.</summary>
@@ -218,7 +163,7 @@ namespace CertificateAuthority.Controllers
         {
             this.LogEntry(model);
 
-            try
+            return ExecuteCaMethod(() =>
             {
                 var data = new CredentialsAccessWithModel<GenerateCertificateSigningRequestModel>(model, AccountAccessFlags.IssueCertificates);
 
@@ -250,72 +195,48 @@ namespace CertificateAuthority.Controllers
                 var csrModel = new CertificateSigningRequestModel(unsignedCsr);
 
                 return this.Json(this.LogExit(csrModel));
-            }
-            catch (InvalidCredentialsException)
-            {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
-            }
-            catch (Exception ex)
-            {
-                return this.LogErrorExit(BadRequest(ex));
-            }
+            });
         }
 
         /// <summary>Issues a new certificate using provided certificate request. IssueCertificates access level is required.</summary>
         /// <response code="201">Instance of <see cref="CertificateInfoModel"/>.</response>
         [HttpPost("issue_certificate_using_request_file")]
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
-        public async Task<IActionResult> IssueCertificate_UsingRequestFileAsync([FromBody]IssueCertificateFromRequestModel model)
+        public IActionResult IssueCertificate_UsingRequestFile([FromBody]IssueCertificateFromRequestModel model)
         {
             this.LogEntry(model);
 
             var data = new CredentialsAccessWithModel<IssueCertificateFromRequestModel>(model, AccountAccessFlags.IssueCertificates);
 
-            try
+            return ExecuteCaMethod(() =>
             {
-                CertificateInfoModel infoModel = await this.caCertificateManager.IssueCertificateAsync(data);
-                return this.Json(this.LogExit(infoModel));
-            }
-            catch (InvalidCredentialsException ex)
-            {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message));
-            }
-            catch (Exception ex)
-            {
-                return this.LogErrorExit(BadRequest(ex));
-            }
+                CertificateInfoModel certificateInfo = this.caCertificateManager.IssueCertificate(data);
+                return this.Json(this.LogExit(certificateInfo));
+            });
         }
 
         /// <summary>Issues a new certificate using provided certificate request string. IssueCertificates access level is required.</summary>
         /// <response code="201">Instance of <see cref="CertificateInfoModel"/>.</response>
         [HttpPost("issue_certificate_using_request_string")]
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
-        public async Task<IActionResult> IssueCertificate_UsingRequestStringAsync([FromBody]IssueCertificateFromFileContentsModel model)
+        public IActionResult IssueCertificate_UsingRequestString([FromBody]IssueCertificateFromFileContentsModel model)
         {
             this.LogEntry(model);
 
             var data = new CredentialsAccessWithModel<IssueCertificateFromFileContentsModel>(model, AccountAccessFlags.IssueCertificates);
 
-            try
+            return ExecuteCaMethod(() =>
             {
                 if (data.Model.CertificateRequestFileContents.Length == 0)
-                    return BadRequest();
+                    return this.LogErrorExit(BadRequest());
 
                 if (string.IsNullOrEmpty(data.Model.CertificateRequestFileContents))
-                    return BadRequest();
+                    return this.LogErrorExit(BadRequest());
 
-                CertificateInfoModel infoModel = await this.caCertificateManager.IssueCertificateAsync(data);
+                CertificateInfoModel infoModel = this.caCertificateManager.IssueCertificate(data);
 
                 return this.Json(this.LogExit(infoModel));
-            }
-            catch (InvalidCredentialsException ex)
-            {
-                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message));
-            }
-            catch (Exception ex)
-            {
-                return this.LogErrorExit(BadRequest(ex));
-            }
+            });
         }
 
         /// <summary>
@@ -330,7 +251,7 @@ namespace CertificateAuthority.Controllers
         {
             this.LogEntry(model);
 
-            try
+            return ExecuteCaMethod(() =>
             {
                 CertificateStatus status = this.caCertificateManager.GetCertificateStatusByThumbprint(model.Thumbprint);
 
@@ -338,11 +259,7 @@ namespace CertificateAuthority.Controllers
                     return this.Json(this.LogExit(status.ToString()));
 
                 return this.Json(this.LogExit((int)status).ToString());
-            }
-            catch (Exception ex)
-            {
-                return this.LogErrorExit(BadRequest(ex));
-            }
+            });
         }
 
         /// <summary>Returns a collection of thumbprints of revoked certificates.</summary>
@@ -352,8 +269,8 @@ namespace CertificateAuthority.Controllers
         [ProducesResponseType(typeof(ICollection<string>), 200)]
         public IActionResult GetRevokedCertificates()
         {
+            // TODO: This and presumably the other methods here should be checking credentials!!
             this.LogEntry();
-
             return this.Json(this.LogExit(this.caCertificateManager.GetRevokedCertificates()));
         }
 
@@ -365,10 +282,27 @@ namespace CertificateAuthority.Controllers
         public IActionResult GetCertificatePublicKeys()
         {
             // TODO: This and presumably the other methods here should be checking credentials!!
-
             this.LogEntry();
-
             return this.Json(this.LogExit(this.caCertificateManager.GetCertificatePublicKeys()));
+        }
+
+        /// <summary>
+        /// Executes a method on the <see cref="CaCertificatesManager"/> and returns the result.
+        /// </summary>
+        private IActionResult ExecuteCaMethod(Func<IActionResult> action)
+        {
+            try
+            {
+                return action();
+            }
+            catch (InvalidCredentialsException ex)
+            {
+                return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden, ex.Message));
+            }
+            catch (Exception ex)
+            {
+                return this.LogErrorExit(BadRequest(ex));
+            }
         }
     }
 }
