@@ -57,6 +57,8 @@ namespace Stratis.SmartContracts.IntegrationTests
             {
                 server.Start();
 
+                DateTime testDate = DateTime.Now.ToUniversalTime().Date;
+
                 // Start + Initialize CA.
                 var client = GetClient();
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
@@ -64,21 +66,22 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
-                // Ensure certificate is valid for 10 years
-                DateTime estimatedCACertExpiry = DateTime.Now.AddYears(CaCertificatesManager.caCertificateValidityPeriodYears).AddHours(-25); // -25 hour to give bit of time for the test to run and allow for time truncation. 
-                Assert.True(ac.NotAfter > estimatedCACertExpiry);
-                Assert.True(ac.NotAfter < estimatedCACertExpiry.AddDays(2));
-
                 // Create a node so we have 1 available public key.
                 (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
 
-                // Check that our node's certificate is valid for 2 years.
+                // Detect if we need to be a bit more lenient in the asserts.
+                bool dateChanged = testDate != DateTime.Now.ToUniversalTime().Date;
+
+                // Ensure certificate is valid for the expected number of years
+                Assert.True((testDate == ac.NotBefore) || (dateChanged && (testDate.AddDays(1) == ac.NotBefore)));
+                Assert.Equal(ac.NotBefore.AddYears(CaCertificatesManager.caCertificateValidityPeriodYears), ac.NotAfter);
+
+                // Check that our node's certificate is valid for the expected number of years.
                 List<CertificateInfoModel> nodeCerts = client.GetAllCertificates();
                 var certParser = new X509CertificateParser();
                 X509Certificate nodeCert = certParser.ReadCertificate(nodeCerts.First().CertificateContentDer);
-                DateTime estimatedCertExpiry = DateTime.Now.AddYears(CaCertificatesManager.certificateValidityPeriodYears).AddHours(-25); // -25 hour to give bit of time for the test to run and allow for time truncation. 
-                Assert.True(nodeCert.NotAfter > estimatedCertExpiry);
-                Assert.True(nodeCert.NotAfter < estimatedCertExpiry.AddDays(2));
+                Assert.True((testDate == nodeCert.NotBefore) || (dateChanged && (testDate.AddDays(1) == nodeCert.NotAfter)));
+                Assert.Equal(nodeCert.NotBefore.AddYears(CaCertificatesManager.certificateValidityPeriodYears), nodeCert.NotAfter);
 
                 // Get public keys from the API.
                 List<PubKey> pubkeys = await client.GetCertificatePublicKeysAsync();
