@@ -90,8 +90,9 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
             try
             {
+                byte[] opReturnData = Encoding.UTF8.GetBytes(model.OpReturnData);
                 Transaction transaction = this.coreComponent.Network.CreateTransaction();
-                Script outputScript = TxNullDataTemplate.Instance.GenerateScriptPubKey(model.OpReturnData);
+                Script outputScript = TxNullDataTemplate.Instance.GenerateScriptPubKey(opReturnData);
                 transaction.Outputs.Add(new TxOut(Money.Zero, outputScript));
 
                 Key key = this.tokenlessWalletManager.LoadTransactionSigningKey();
