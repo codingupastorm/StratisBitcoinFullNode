@@ -331,6 +331,22 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 Receipt callReceipt = receiptRepository.Retrieve(callResponse.TransactionId);
                 Assert.True(callReceipt.Success);
+
+                // Also check that OpReturn Transaction can be sent via controller
+                var opReturnModel = new BuildOpReturnTransactionModel()
+                {
+                    OpReturnData = "Sending a message via opReturn 123"
+                };
+
+                var opReturnResult = (JsonResult)node1Controller.BuildOpReturnTransaction(opReturnModel);
+                var opReturnResponse = (TokenlessTransactionModel)opReturnResult.Value;
+
+                await node1Controller.SendTransactionAsync(new SendTransactionModel()
+                {
+                    TransactionHex = opReturnResponse.Hex
+                });
+
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
             }
         }
 
