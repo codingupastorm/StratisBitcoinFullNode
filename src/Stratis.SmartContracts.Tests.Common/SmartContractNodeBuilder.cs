@@ -54,8 +54,12 @@ namespace Stratis.SmartContracts.Tests.Common
 
             CoreNode node = this.CreateNode(new FullTokenlessRunner(dataFolder, network, this.TimeProvider), "poa.conf", configParameters: configParameters);
 
+            Mnemonic mnemonic = nodeIndex < 3
+                ? TokenlessNetwork.Mnemonics[nodeIndex]
+                : new Mnemonic(Wordlist.English, WordCount.Twelve);
+
             string[] args = initialRun ? 
-                new string[] { "-conf=poa.conf", "-datadir=" + dataFolder, "-password=test", $"-mnemonic={ TokenlessNetwork.Mnemonics[nodeIndex] }", "-certificatepassword=test" } :
+                new string[] { "-conf=poa.conf", "-datadir=" + dataFolder, "-password=test", $"-mnemonic={ mnemonic }", "-certificatepassword=test" } :
                 new string[] { "-conf=poa.conf", "-datadir=" + dataFolder, "-certificatepassword=test" };
 
             using (var settings = new NodeSettings(network, args: args))
