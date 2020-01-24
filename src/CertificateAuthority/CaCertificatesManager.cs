@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading.Tasks;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
 using NBitcoin;
@@ -107,7 +106,7 @@ namespace CertificateAuthority
             try
             {
                 // TODO: Build the subject DN up as individual components to prevent reordering problems
-                string caSubjectName = $"O={settings.CaSubjectNameOrganization},CN={settings.CaSubjectNameCommonName},OU={settings.CaSubjectNameOrganizationUnit}";
+                string caSubjectName = $"O={this.settings.CaSubjectNameOrganization},CN={this.settings.CaSubjectNameCommonName},OU={this.settings.CaSubjectNameOrganizationUnit}";
                 string hdPath = $"m/44'/{coinType}'/0'/0/{CaAddressIndex}";
 
                 var caAddressSpace = new HDWalletAddressSpace(mnemonic, password);
@@ -162,7 +161,7 @@ namespace CertificateAuthority
         /// <summary>
         /// Issues a new certificate using provided certificate request file.
         /// </summary>
-        public async Task<CertificateInfoModel> IssueCertificateAsync(CredentialsAccessWithModel<IssueCertificateFromRequestModel> model)
+        public CertificateInfoModel IssueCertificate(CredentialsAccessWithModel<IssueCertificateFromRequestModel> model)
         {
             this.repository.VerifyCredentialsAndAccessLevel(model, out AccountModel creator);
 
@@ -178,28 +177,28 @@ namespace CertificateAuthority
 
             ms.Dispose();
 
-            return await this.IssueCertificate(certRequest, creator.Id);
+            return this.IssueCertificate(certRequest, creator.Id);
         }
 
         /// <summary>
         /// Issues a new certificate using provided certificate request base64 string.
         /// </summary>
-        public async Task<CertificateInfoModel> IssueCertificateAsync(CredentialsAccessWithModel<IssueCertificateFromFileContentsModel> model)
+        public CertificateInfoModel IssueCertificate(CredentialsAccessWithModel<IssueCertificateFromFileContentsModel> model)
         {
             this.repository.VerifyCredentialsAndAccessLevel(model, out AccountModel creator);
 
             this.logger.Info("Issuing certificate from the following request: '{0}'.", model.Model.CertificateRequestFileContents);
 
-            byte[] requestRaw = System.Convert.FromBase64String(model.Model.CertificateRequestFileContents);
+            byte[] requestRaw = Convert.FromBase64String(model.Model.CertificateRequestFileContents);
 
             var certRequest = new Pkcs10CertificationRequest(requestRaw);
 
-            return await this.IssueCertificate(certRequest, creator.Id);
+            return this.IssueCertificate(certRequest, creator.Id);
         }
 
-        private async Task<CertificateInfoModel> IssueCertificate(Pkcs10CertificationRequest certRequest, int creatorId)
+        private CertificateInfoModel IssueCertificate(Pkcs10CertificationRequest certRequest, int creatorId)
         {
-            X509Certificate certificateFromReq = IssueCertificateFromRequest(certRequest, caCertificate, caKey, new string[0], new[] { KeyPurposeID.AnyExtendedKeyUsage });
+            X509Certificate certificateFromReq = IssueCertificateFromRequest(certRequest, this.caCertificate, this.caKey, new string[0], new[] { KeyPurposeID.AnyExtendedKeyUsage });
             Asn1Set attributes = certRequest.GetCertificationRequestInfo().Attributes;
 
             string p2pkh = Encoding.UTF8.GetString(ExtractExtensionFromCsr(attributes, P2pkhExtensionOid));
