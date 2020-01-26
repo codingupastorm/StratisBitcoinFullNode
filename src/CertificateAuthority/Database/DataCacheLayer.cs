@@ -36,6 +36,7 @@ namespace CertificateAuthority.Database
                         Name = Settings.AdminName,
                         PasswordHash = settings.DefaultAdminPasswordHash,
                         AccessInfo = AccountAccessFlags.AdminAccess,
+                        Approved = true,
 
                         // Will set below.
                         CreatorId = 1
@@ -126,6 +127,7 @@ namespace CertificateAuthority.Database
                 accountToApprove.Approved = true;
 
                 dbContext.Accounts.Update(accountToApprove);
+                dbContext.SaveChanges();
 
                 return accountToApprove;
             });

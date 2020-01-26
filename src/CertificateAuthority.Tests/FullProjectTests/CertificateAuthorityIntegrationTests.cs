@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using CertificateAuthority.Controllers;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.FullProjectTests.Helpers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using NBitcoin;
+using Newtonsoft.Json;
 using Org.BouncyCastle.Pkcs;
 using Stratis.Bitcoin.Networks;
 using Xunit;
@@ -51,6 +53,63 @@ namespace CertificateAuthority.Tests.FullProjectTests
             var client = new CaClient(server.BaseAddress, server.CreateClient(), TestAccountId, TestPassword);
 
             Assert.True(client.InitializeCertificateAuthority(CaMnemonic, CaMnemonicPassword, this.network));
+
+            server.Dispose();
+        }
+
+        [Fact]
+        public void CertificateAuthorityCanAddANewAccount()
+        {
+            IWebHostBuilder builder = TestsHelper.CreateWebHostBuilder();
+
+            var server = new TestServer(builder);
+            var client = new CaClient(server.BaseAddress, server.CreateClient(), TestAccountId, TestPassword);
+
+            Assert.True(client.InitializeCertificateAuthority(CaMnemonic, CaMnemonicPassword, this.network));
+
+            var privateKey = new Key();
+            PubKey pubKey = privateKey.PubKey;
+            BitcoinPubKeyAddress address = pubKey.GetAddress(this.network);
+
+            var accountsController = (AccountsController)server.Host.Services.GetService(typeof(AccountsController));
+
+            var createAccountModel = new CreateAccount()
+            {
+                AccountId = TestAccountId, 
+                Password = TestPassword,
+                CommonName = "dummyName",
+                Country = "dummyCountry",
+                EmailAddress = "dummyEmail@example.com",
+                Locality = "dummyLocality",
+                NewAccountPasswordHash = DataHelper.ComputeSha256Hash("test"),
+                Organization = "dummyOrganization",
+                OrganizationUnit = "dummyOrganizationUnit",
+                StateOrProvince = "dummyState",
+                RequestedAccountAccess = (int)AccountAccessFlags.IssueCertificates,
+                RequestedPermissions = new List<Permission>() { new Permission() { Name = "Test permission" } }
+            };
+
+            int id = TestsHelper.GetValue<int>(accountsController.CreateAccount(createAccountModel));
+
+            var lowPrivilegeClient = new CaClient(server.BaseAddress, server.CreateClient(), id, "test");
+
+            // The requirement for an account to be approved prior to use must be enforced.
+            // TODO: The type of exception thrown here should be more meaningful, and represent the actual error (unapproved account)
+            Assert.Throws<JsonSerializationException>(() => lowPrivilegeClient.GenerateCertificateSigningRequest(Convert.ToBase64String(pubKey.ToBytes()), address.ToString(), Convert.ToBase64String(pubKey.Hash.ToBytes()), Convert.ToBase64String(pubKey.ToBytes())));
+
+            var credentialsModel = new CredentialsModelWithTargetId() {AccountId = TestAccountId, Password = TestPassword, TargetAccountId = id};
+
+            accountsController.ApproveAccount(credentialsModel);
+
+            CertificateSigningRequestModel response = lowPrivilegeClient.GenerateCertificateSigningRequest(Convert.ToBase64String(pubKey.ToBytes()), address.ToString(), Convert.ToBase64String(pubKey.Hash.ToBytes()), Convert.ToBase64String(pubKey.ToBytes()));
+
+            Assert.NotNull(response);
+            Assert.NotEmpty(response.CertificateSigningRequestContent);
+
+            byte[] csrTemp = Convert.FromBase64String(response.CertificateSigningRequestContent);
+            var unsignedCsr = new Pkcs10CertificationRequestDelaySigned(csrTemp);
+
+            Assert.NotNull(unsignedCsr);
 
             server.Dispose();
         }

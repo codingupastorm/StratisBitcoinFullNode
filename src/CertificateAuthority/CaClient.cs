@@ -199,6 +199,8 @@ namespace CertificateAuthority
 
             string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
 
+            // TODO: If, for example, a 403 error is returned by the API, we need to propagate the error upwards correctly instead of returning the error message string
+
             CertificateSigningRequestModel csrModel = JsonConvert.DeserializeObject<CertificateSigningRequestModel>(responseString);
 
             return csrModel;

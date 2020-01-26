@@ -48,6 +48,13 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
                 credentialsModel.AccountId,
                 credentialsModel.Password)));
 
+            accountsController.ApproveAccount(new CredentialsModelWithTargetId()
+            {
+                TargetAccountId = id,
+                AccountId = adminCredentials.AccountId,
+                Password = adminCredentials.Password
+            });
+
             return new CredentialsModel(id, password);
         }
 
