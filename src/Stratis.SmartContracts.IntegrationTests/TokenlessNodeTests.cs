@@ -13,6 +13,7 @@ using CertificateAuthority.Tests.FullProjectTests.Helpers;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using Org.BouncyCastle.X509;
@@ -60,7 +61,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 DateTime testDate = DateTime.Now.ToUniversalTime().Date;
 
                 // Start + Initialize CA.
-                var client = GetClient();
+                var client = GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
@@ -103,17 +104,20 @@ namespace Stratis.SmartContracts.IntegrationTests
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
-
+                
                 // Start + Initialize CA.
-                var client = GetClient();
+                var client = GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
-                // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.  
-                (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
-                (CoreNode node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+                // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CaClient client1 = this.GetClient(server);
+                CaClient client2 = this.GetClient(server);
+
+                (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                (CoreNode node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -133,15 +137,18 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = GetClient();
+                var client = GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
-                // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.  
-                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
-                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+                // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CaClient client1 = this.GetClient(server);
+                CaClient client2 = this.GetClient(server);
+
+                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -171,15 +178,18 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = GetClient();
+                var client = GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
-                // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.  
-                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
-                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+                // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CaClient client1 = this.GetClient(server);
+                CaClient client2 = this.GetClient(server);
+
+                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -189,9 +199,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 node2.FullNode.Dispose();
 
                 // Now start the nodes without passwords.
-                client = GetClient();
-                (node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client, false);
-                (node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client, false);
+                (node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1, false);
+                (node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2, false);
 
                 node1.Start();
                 node2.Start();
@@ -222,14 +231,17 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = GetClient();
+                var client = GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
-                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
-                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+                CaClient client1 = this.GetClient(server);
+                CaClient client2 = this.GetClient(server);
+
+                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -271,14 +283,17 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = GetClient();
+                var client = GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
-                (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
-                (CoreNode node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+                CaClient client1 = this.GetClient(server);
+                CaClient client2 = this.GetClient(server);
+
+                (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                (CoreNode node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -359,7 +374,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = GetClient();
+                var client = GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic,
                     CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
@@ -367,8 +382,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
                 // Start the network with only 2 certificates generated.
-                (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
-                (CoreNode node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+                CaClient client1 = this.GetClient(server);
+                CaClient client2 = this.GetClient(server);
+
+                (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                (CoreNode node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -402,7 +420,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.Equal(2, node1FederationManager.GetFederationMembers().Count);
 
                 // Last of all, create a 3rd node and see him get voted in.
-                (CoreNode node3, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 2, ac, client);
+                CaClient client3 = this.GetClient(server);
+                (CoreNode node3, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 2, ac, client3);
                 node3.Start();
                 TestHelper.Connect(node3, node2);
                 TestHelper.Connect(node3, node1);
@@ -444,15 +463,18 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = GetClient();
+                var client = GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
-                // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.  
-                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
-                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+                // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CaClient client1 = this.GetClient(server);
+                CaClient client2 = this.GetClient(server);
+
+                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -488,6 +510,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task RestartCAAndEverythingStillWorksAsync()
         {
+            CaClient client1;
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 string dataFolderName = GetDataFolderName();
@@ -499,14 +522,16 @@ namespace Stratis.SmartContracts.IntegrationTests
                     server.Start();
 
                     // Start + Initialize CA.
-                    client = GetClient();
+                    client = GetAdminClient();
                     Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                     // Get Authority Certificate.
                     ac = GetCertificateFromInitializedCAServer(server);
 
                     // Create 1 tokenless node.
-                    (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                    client1 = this.GetClient(server);
+
+                    (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
                 }
 
                 // Server has been killed. Restart it.
@@ -516,7 +541,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     server.Start();
 
                     // Check that we can still create nodes and make API calls.
-                    (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+                    (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client1);
 
                     List<CertificateInfoModel> nodeCerts = client.GetAllCertificates();
                     Assert.Equal(2, nodeCerts.Count);
@@ -536,14 +561,16 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = GetClient();
+                var client = GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
-                // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.  
-                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CaClient client1 = this.GetClient(server);
+                
+                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
 
                 node1.Start();
 
@@ -565,7 +592,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = GetClient();
+                var client = GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
@@ -581,10 +608,25 @@ namespace Stratis.SmartContracts.IntegrationTests
             }
         }
 
-        private CaClient GetClient()
+        /// <summary>
+        /// Used to instantiate a CA client with the admin's credentials. If multiple nodes need to interact with the CA in a test, they will need their own accounts & clients created.
+        /// </summary>
+        private CaClient GetAdminClient()
         {
             var httpClient = new HttpClient();
             return new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+        }
+
+        /// <summary>
+        /// Creates a new account against the supplied running CA from scratch, and returns the client for it.
+        /// </summary>
+        private CaClient GetClient(IWebHost server)
+        {
+            var httpClient = new HttpClient();
+
+            // TODO: Pass custom permission list in, to make tests with nodes that have heterogeneous permissions
+            CredentialsModel credentials = TestsHelper.CreateAccount(server, AccountAccessFlags.AdminAccess);
+            return new CaClient(new Uri(this.BaseAddress), httpClient, credentials.AccountId, credentials.Password);
         }
 
         /// <summary>

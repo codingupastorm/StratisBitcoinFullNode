@@ -36,9 +36,9 @@ namespace CertificateAuthority.Tests.FullProjectTests
             Assert.Single(TestsHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(this.adminCredentials)));
 
             AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates;
-            CredentialsModel credentials1 = TestsHelper.CreateAccount(this.server, credentials1Access);
-            CredentialsModel credentials2 = TestsHelper.CreateAccount(this.server, AccountAccessFlags.DeleteAccounts);
-            CredentialsModel accToDelete = TestsHelper.CreateAccount(this.server);
+            CredentialsModel credentials1 = TestsHelper.CreateAccount(this.server.Host, credentials1Access);
+            CredentialsModel credentials2 = TestsHelper.CreateAccount(this.server.Host, AccountAccessFlags.DeleteAccounts);
+            CredentialsModel accToDelete = TestsHelper.CreateAccount(this.server.Host);
 
             // GetAccountInfoById
             {
@@ -107,7 +107,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void ChangeAccountPassword_CurrentUser_Pass()
         {
-            CredentialsModel credentials = TestsHelper.CreateAccount(this.server, AccountAccessFlags.BasicAccess);
+            CredentialsModel credentials = TestsHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess);
 
             var model = new ChangeAccountPasswordModel(credentials.AccountId, credentials.AccountId, credentials.Password, "newpassword");
             this.accountsController.ChangeAccountPassword(model);
@@ -121,7 +121,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void ChangeAccountPassword_CurrentUser_WrongPassword_Fail()
         {
-            CredentialsModel credentials = TestsHelper.CreateAccount(this.server, AccountAccessFlags.BasicAccess);
+            CredentialsModel credentials = TestsHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess);
 
             var model = new ChangeAccountPasswordModel(credentials.AccountId, credentials.AccountId, "wrongpassword", "newpassword");
             this.accountsController.ChangeAccountPassword(model);
@@ -135,7 +135,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void ChangeAccountPassword_AdminUser_Pass()
         {
-            CredentialsModel userA_Credentials = TestsHelper.CreateAccount(this.server, AccountAccessFlags.BasicAccess);
+            CredentialsModel userA_Credentials = TestsHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess);
 
             var changePasswordModel = new ChangeAccountPasswordModel(this.adminCredentials.AccountId, userA_Credentials.AccountId, this.adminCredentials.Password, "newpassword");
             this.accountsController.ChangeAccountPassword(changePasswordModel);
@@ -149,8 +149,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void ChangeAccountPassword_DifferentUser_Fail()
         {
-            CredentialsModel userA_Credentials = TestsHelper.CreateAccount(this.server, AccountAccessFlags.BasicAccess);
-            CredentialsModel userB_Credentials = TestsHelper.CreateAccount(this.server, AccountAccessFlags.BasicAccess);
+            CredentialsModel userA_Credentials = TestsHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess);
+            CredentialsModel userB_Credentials = TestsHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess);
 
             var model = new ChangeAccountPasswordModel(userA_Credentials.AccountId, userB_Credentials.AccountId, userA_Credentials.Password, "newpassword");
             this.accountsController.ChangeAccountPassword(model);

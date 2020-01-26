@@ -64,7 +64,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
         {
             AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates | AccountAccessFlags.RevokeCertificates | AccountAccessFlags.AccessAnyCertificate;
             
-            return TestsHelper.CreateAccount(this.server, credentials1Access);
+            return TestsHelper.CreateAccount(this.server.Host, credentials1Access);
         }
 
         [Fact]
@@ -326,7 +326,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
         private void Returns403IfNoAccess(Func<int, string, object> action, AccountAccessFlags requiredAccess)
         {
-            CredentialsModel noAccessCredentials = TestsHelper.CreateAccount(this.server);
+            CredentialsModel noAccessCredentials = TestsHelper.CreateAccount(this.server.Host);
 
             var response = action.Invoke(noAccessCredentials.AccountId, noAccessCredentials.Password);
 
@@ -355,7 +355,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
                     break;
             }
 
-            CredentialsModel accessCredentials = TestsHelper.CreateAccount(this.server, requiredAccess);
+            CredentialsModel accessCredentials = TestsHelper.CreateAccount(this.server.Host, requiredAccess);
 
             response = action.Invoke(accessCredentials.AccountId, accessCredentials.Password);
 
@@ -391,7 +391,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
         private void CheckThrowsIfNoAccess(Action<int, string> action, AccountAccessFlags requiredAccess)
         {
-            CredentialsModel noAccessCredentials = TestsHelper.CreateAccount(this.server);
+            CredentialsModel noAccessCredentials = TestsHelper.CreateAccount(this.server.Host);
             bool throwsIfNoAccess = false;
 
             try
@@ -410,7 +410,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             if (!throwsIfNoAccess)
                 Assert.False(true, "Action was expected to throw.");
 
-            CredentialsModel accessCredentials = TestsHelper.CreateAccount(this.server, requiredAccess);
+            CredentialsModel accessCredentials = TestsHelper.CreateAccount(this.server.Host, requiredAccess);
 
             try
             {

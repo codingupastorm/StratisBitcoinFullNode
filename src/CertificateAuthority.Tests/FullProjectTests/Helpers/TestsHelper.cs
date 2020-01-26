@@ -17,7 +17,8 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
     public static class TestsHelper
     {
         public static string BaseAddress = "http://localhost:5050";
-        private static Random random = new Random();
+
+        private static readonly Random random = new Random();
 
         public static string GenerateRandomString(int length = 10)
         {
@@ -25,14 +26,17 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
             return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
-        public static CredentialsModel CreateAccount(TestServer server, AccountAccessFlags access = AccountAccessFlags.BasicAccess, CredentialsModel creatorCredentialsModel = null, string callingMethod = null)
+        public static CredentialsModel CreateAccount(IWebHost server, AccountAccessFlags access = AccountAccessFlags.BasicAccess, CredentialsModel creatorCredentialsModel = null, List<string> permissions = null)
         {
+            // Default to all permissions unless otherwise restricted.
+            List<string> accountPermissions = permissions ?? AccountsController.ValidPermissions;
+
             string password = GenerateRandomString();
             string passHash = DataHelper.ComputeSha256Hash(password);
 
             var adminCredentials = new CredentialsModel(1, "4815162342");
 
-            var accountsController = (AccountsController)server.Host.Services.GetService(typeof(AccountsController));
+            var accountsController = (AccountsController)server.Services.GetService(typeof(AccountsController));
 
             CredentialsModel credentialsModel = creatorCredentialsModel ?? adminCredentials;
             int id = GetValue<int>(accountsController.CreateAccount(new CreateAccount(GenerateRandomString(),
@@ -44,7 +48,7 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
                 "dummyStateOrProvince",
                 "dummyEmailAddress",
                 "dummyCountry",
-                new List<string>() { AccountsController.SendPermission }, 
+                accountPermissions, 
                 credentialsModel.AccountId,
                 credentialsModel.Password)));
 
