@@ -510,7 +510,6 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task RestartCAAndEverythingStillWorksAsync()
         {
-            CaClient client1;
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 string dataFolderName = GetDataFolderName();
@@ -529,7 +528,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     ac = GetCertificateFromInitializedCAServer(server);
 
                     // Create 1 tokenless node.
-                    client1 = this.GetClient(server);
+                    CaClient client1 = this.GetClient(server);
 
                     (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
                 }
@@ -541,6 +540,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                     server.Start();
 
                     // Check that we can still create nodes and make API calls.
+                    CaClient client1 = this.GetClient(server);
+
                     (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client1);
 
                     List<CertificateInfoModel> nodeCerts = client.GetAllCertificates();

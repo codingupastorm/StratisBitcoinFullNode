@@ -97,18 +97,11 @@ namespace CertificateAuthority.Database
             this.logger.Info("Certificate id {0}, thumbprint {1} was added.");
         }
 
-        public CertificateInfoModel GetCertificateForAccount(int accountId)
-        {
-            using (CADbContext dbContext = this.CreateContext())
-            {
-                return dbContext.Certificates.FirstOrDefault(x => x.AccountId == accountId);
-            }
-        }
-
         /// <summary>Provides the certificate issued by the account with the specified id, if any.</summary>
         public CertificateInfoModel GetCertificateIssuedByAccountId(CredentialsAccessWithModel<CredentialsModelWithTargetId> accessWithModel)
         {
-            return ExecuteQuery(accessWithModel, (dbContext) => { return dbContext.Certificates.First(x => x.AccountId == accessWithModel.Model.TargetAccountId); });
+            // TODO: We shouldn't need special access rights to retrieve the certificate for the authenticating user, i.e. when Model.AccountId == Model.TargetAccountId
+            return ExecuteQuery(accessWithModel, (dbContext) => { return dbContext.Certificates.FirstOrDefault(x => x.AccountId == accessWithModel.Model.TargetAccountId); });
         }
 
         #endregion
@@ -118,7 +111,13 @@ namespace CertificateAuthority.Database
         /// <summary>Provides account information of the account with id specified.</summary>
         public AccountInfo GetAccountInfoById(CredentialsAccessWithModel<CredentialsModelWithTargetId> credentialsModel)
         {
-            return ExecuteQuery<CredentialsAccessWithModel<CredentialsModelWithTargetId>, AccountInfo>(credentialsModel, (dbContext) => dbContext.Accounts.SingleOrDefault(x => x.Id == credentialsModel.Model.TargetAccountId));
+            AccountInfo accountInfo = ExecuteQuery<CredentialsAccessWithModel<CredentialsModelWithTargetId>, AccountInfo>(credentialsModel, (dbContext) => dbContext.Accounts.SingleOrDefault(x => x.Id == credentialsModel.Model.TargetAccountId));
+
+            // TODO: Investigate whether there is a more elegant way of handling a lack of permissions
+            if (accountInfo.Permissions == null)
+                accountInfo.Permissions = new List<Permission>();
+
+            return accountInfo;
         }
 
         /// <summary>Sets the Approved flag on an account.</summary>
