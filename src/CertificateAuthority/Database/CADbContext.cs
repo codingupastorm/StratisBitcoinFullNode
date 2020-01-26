@@ -27,7 +27,10 @@ namespace CertificateAuthority.Database
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<AccountModel>().HasMany(a => a.Permissions).WithOne().HasForeignKey(b => b.AccountModelId).OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<AccountModel>()
+                .HasMany(a => a.Permissions)
+                .WithOne().HasForeignKey(b => b.AccountModelId)
+                .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<CertificateInfoModel>().ToTable("Certificates");
 
             base.OnModelCreating(modelBuilder);

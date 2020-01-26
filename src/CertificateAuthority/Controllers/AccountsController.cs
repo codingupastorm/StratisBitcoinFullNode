@@ -14,6 +14,17 @@ namespace CertificateAuthority.Controllers
     [ApiController]
     public sealed class AccountsController : LoggedController
     {
+        public const string SendPermission = "Send";
+        public const string CallContractPermission = "CallContract";
+        public const string CreateContractPermission = "CreateContract";
+
+        public static List<string> ValidPermissions = new List<string>()
+        {
+            SendPermission,
+            CallContractPermission,
+            CreateContractPermission
+        };
+        
         private readonly DataCacheLayer repository;
 
         public AccountsController(DataCacheLayer repository) : base(LogManager.GetCurrentClassLogger())

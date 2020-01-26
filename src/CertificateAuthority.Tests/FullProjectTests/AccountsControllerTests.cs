@@ -88,7 +88,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 // Add fake certificate using data repository.
                 this.dataCacheLayer.AddNewCertificate(new CertificateInfoModel()
                 {
-                    IssuerAccountId = issuerId,
+                    AccountId = issuerId,
                     CertificateContentDer = new byte[50],
                     Status = CertificateStatus.Good,
                     Thumbprint = print1,

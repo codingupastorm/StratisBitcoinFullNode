@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CertificateAuthority.Controllers;
 using CertificateAuthority.Models;
-using NBitcoin;
 using NBitcoin.DataEncoders;
 using NLog;
 
@@ -54,6 +54,7 @@ namespace CertificateAuthority.Database
         {
             return new CADbContext(this.settings);
         }
+
         public void Initialize()
         {
             // Fill cache.
@@ -96,10 +97,18 @@ namespace CertificateAuthority.Database
             this.logger.Info("Certificate id {0}, thumbprint {1} was added.");
         }
 
+        public CertificateInfoModel GetCertificateForAccount(int accountId)
+        {
+            using (CADbContext dbContext = this.CreateContext())
+            {
+                return dbContext.Certificates.FirstOrDefault(x => x.AccountId == accountId);
+            }
+        }
+
         /// <summary>Provides the certificate issued by the account with the specified id, if any.</summary>
         public CertificateInfoModel GetCertificateIssuedByAccountId(CredentialsAccessWithModel<CredentialsModelWithTargetId> accessWithModel)
         {
-            return ExecuteQuery(accessWithModel, (dbContext) => { return dbContext.Certificates.First(x => x.IssuerAccountId == accessWithModel.Model.TargetAccountId); });
+            return ExecuteQuery(accessWithModel, (dbContext) => { return dbContext.Certificates.First(x => x.AccountId == accessWithModel.Model.TargetAccountId); });
         }
 
         #endregion
@@ -151,6 +160,9 @@ namespace CertificateAuthority.Database
 
                 if (!DataHelper.IsCreatorHasGreaterOrEqualAccess(account.AccessInfo, newAccountAccessLevel))
                     throw new CertificateAuthorityAccountException("You can't create an account with an access level higher than yours!");
+
+                if (credentialsModel.Model.RequestedPermissions.Any(permission => !AccountsController.ValidPermissions.Contains(permission.Name)))
+                    throw new CertificateAuthorityAccountException("Invalid permission requested!");
 
                 var newAccount = new AccountModel()
                 {

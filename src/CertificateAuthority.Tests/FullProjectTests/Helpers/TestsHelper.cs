@@ -44,7 +44,7 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
                 "dummyStateOrProvince",
                 "dummyEmailAddress",
                 "dummyCountry",
-                new List<string>() { "1.5.1" }, 
+                new List<string>() { AccountsController.SendPermission }, 
                 credentialsModel.AccountId,
                 credentialsModel.Password)));
 

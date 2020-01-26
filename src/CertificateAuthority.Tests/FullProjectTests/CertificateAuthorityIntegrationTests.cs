@@ -86,7 +86,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 OrganizationUnit = "dummyOrganizationUnit",
                 StateOrProvince = "dummyState",
                 RequestedAccountAccess = (int)AccountAccessFlags.IssueCertificates,
-                RequestedPermissions = new List<Permission>() { new Permission() { Name = "Test permission" } }
+                RequestedPermissions = new List<Permission>() { new Permission() { Name = AccountsController.SendPermission } }
             };
 
             int id = TestsHelper.GetValue<int>(accountsController.CreateAccount(createAccountModel));

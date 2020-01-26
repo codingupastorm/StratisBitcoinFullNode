@@ -163,7 +163,7 @@ namespace CertificateAuthority
         /// </summary>
         public CertificateInfoModel IssueCertificate(CredentialsAccessWithModel<IssueCertificateFromRequestModel> model)
         {
-            this.repository.VerifyCredentialsAndAccessLevel(model, out AccountModel creator);
+            this.repository.VerifyCredentialsAndAccessLevel(model, out AccountModel requester);
 
             if (model.Model.CertificateRequestFile.Length == 0)
                 throw new Exception("Empty file!");
@@ -177,7 +177,7 @@ namespace CertificateAuthority
 
             ms.Dispose();
 
-            return this.IssueCertificate(certRequest, creator.Id);
+            return this.IssueCertificate(certRequest, requester.Id);
         }
 
         /// <summary>
@@ -196,8 +196,14 @@ namespace CertificateAuthority
             return this.IssueCertificate(certRequest, creator.Id);
         }
 
-        private CertificateInfoModel IssueCertificate(Pkcs10CertificationRequest certRequest, int creatorId)
+        private CertificateInfoModel IssueCertificate(Pkcs10CertificationRequest certRequest, int requesterId)
         {
+            CertificateInfoModel existingCertificate = this.repository.GetCertificateForAccount(requesterId);
+
+            // TODO: Should this actually throw instead?
+            if (existingCertificate != null)
+                return existingCertificate;
+
             X509Certificate certificateFromReq = IssueCertificateFromRequest(certRequest, this.caCertificate, this.caKey, new string[0], new[] { KeyPurposeID.AnyExtendedKeyUsage });
             Asn1Set attributes = certRequest.GetCertificationRequestInfo().Attributes;
 
@@ -215,7 +221,7 @@ namespace CertificateAuthority
                 TransactionSigningPubKeyHash = transactionSigningPubKeyHashBytes,
                 BlockSigningPubKey = blockSigningPubKeyBytes,
                 CertificateContentDer = certificateFromReq.GetEncoded(),
-                IssuerAccountId = creatorId
+                AccountId = requesterId
             };
 
             this.repository.AddNewCertificate(infoModel);
@@ -225,13 +231,15 @@ namespace CertificateAuthority
 
             File.WriteAllBytes(Path.Combine(this.settings.DataDirectory, certFilename), certificateFromReq.GetEncoded());
 
-            this.logger.Info("New certificate was issued by account id {0}; certificate: '{1}'.", creatorId, infoModel);
+            this.logger.Info("New certificate was issued by account id {0}; certificate: '{1}'.", requesterId, infoModel);
 
             return infoModel;
         }
 
         private static X509Certificate IssueCertificateFromRequest(Pkcs10CertificationRequest certificateSigningRequest, X509Certificate issuerCertificate, AsymmetricCipherKeyPair issuerKeyPair, string[] subjectAlternativeNames, KeyPurposeID[] usages)
         {
+            // TODO: Check that the submitted details in the CSR match those in the approved account
+
             SecureRandom random = GetSecureRandom();
             BigInteger subjectSerialNumber = GenerateSerialNumber(random);
 
@@ -507,7 +515,7 @@ namespace CertificateAuthority
                 TransactionSigningPubKeyHash = null,
                 CertificateContentDer = this.caCertificate.GetEncoded(),
                 Id = 0,
-                IssuerAccountId = 0,
+                AccountId = 0,
                 RevokerAccountId = 0,
                 Status = CertificateStatus.Good,
                 Thumbprint = tempCert.Thumbprint
