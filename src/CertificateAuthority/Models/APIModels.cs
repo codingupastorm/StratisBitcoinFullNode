@@ -49,7 +49,7 @@ namespace CertificateAuthority.Models
         /// A list of the OIDs for the permissions desired by the requester.
         /// These can also be separately granted by the administrator prior to certificate generation.
         /// </summary>
-        public List<RequestedPermission> RequestedPermissions { get; set; }
+        public List<Permission> RequestedPermissions { get; set; }
 
         public CreateAccount(string commonName, string newAccountPasswordHash, int requestedAccountAccess, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country, List<string> requestedPermissions, int accountId, string password) : base(accountId, password)
         {
@@ -62,7 +62,7 @@ namespace CertificateAuthority.Models
             this.StateOrProvince = stateOrProvince;
             this.EmailAddress = emailAddress;
             this.Country = country;
-            this.RequestedPermissions = requestedPermissions.Select(p => new RequestedPermission() { Permission = p }).ToList();
+            this.RequestedPermissions = requestedPermissions.Select(p => new Permission() { Name = p }).ToList();
         }
 
         public CreateAccount()

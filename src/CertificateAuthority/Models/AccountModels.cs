@@ -3,11 +3,15 @@ using System.Collections.Generic;
 
 namespace CertificateAuthority.Models
 {
-    public class RequestedPermission
+    public class Permission
     {
-        public int ID { get; set; }
+        public int Id { get; set; }
+        
+        /// <summary>The foreign key for the associated <see cref="AccountModel"/> that has this permission.</summary>
+        public int AccountModelId { get; set; }
 
-        public string Permission { get; set; }
+        /// <summary>The human-readable name for the permission.</summary>
+        public string Name { get; set; }
     }
 
     /// <summary>General information about user's account.</summary>
@@ -31,11 +35,10 @@ namespace CertificateAuthority.Models
 
         public string Country { get; set; }
 
-        public List<RequestedPermission> RequestedPermissions { get; set; }
+        /// <summary>The permissions that this account is approved to have.</summary>
+        public List<Permission> Permissions { get; set; }
 
-        /// <summary>
-        /// Indicates whether or not the administrator has approved the creation of the account.
-        /// </summary>
+        /// <summary>Indicates whether or not the administrator has approved the creation of the account.</summary>
         public bool Approved { get; set; }
 
         public override string ToString()

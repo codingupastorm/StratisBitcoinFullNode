@@ -162,7 +162,7 @@ namespace CertificateAuthority.Database
                     StateOrProvince = credentialsModel.Model.StateOrProvince,
                     EmailAddress = credentialsModel.Model.EmailAddress,
                     Country = credentialsModel.Model.Country,
-                    RequestedPermissions = credentialsModel.Model.RequestedPermissions,
+                    Permissions = credentialsModel.Model.RequestedPermissions,
                     Approved = false
                 };
 
@@ -188,12 +188,6 @@ namespace CertificateAuthority.Database
 
                 if (accountToDelete.Name == Settings.AdminName)
                     throw new CertificateAuthorityAccountException("You can't delete Admin account!");
-
-                if (accountToDelete.RequestedPermissions != null)
-                {
-                    foreach (RequestedPermission permission in accountToDelete.RequestedPermissions)
-                        dbContext.RequestedPermissions.Remove(permission);
-                }
 
                 dbContext.Accounts.Remove(accountToDelete);
                 dbContext.SaveChanges();
@@ -279,6 +273,9 @@ namespace CertificateAuthority.Database
             account = dbContext.Accounts.SingleOrDefault(x => x.Id == credentialsAccessModel.AccountId);
 
             if (account == null)
+                throw InvalidCredentialsException.FromErrorCode(CredentialsExceptionErrorCodes.AccountNotFound, credentialsAccessModel.RequiredAccess);
+
+            if (!account.Approved)
                 throw InvalidCredentialsException.FromErrorCode(CredentialsExceptionErrorCodes.AccountNotFound, credentialsAccessModel.RequiredAccess);
 
             if (!account.VerifyPassword(credentialsAccessModel.Password))

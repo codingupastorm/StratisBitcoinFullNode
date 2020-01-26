@@ -50,12 +50,14 @@ namespace Stratis.SmartContracts.IntegrationTests
         // TODO: Lots of repetition in this file.
 
         [Fact]
-        public async Task StartCACorrectlyAndTestApi()
+        public async Task StartCACorrectlyAndTestApiAsync()
         {
-            using (IWebHost server = CreateWebHostBuilder().Build())
+            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
+
+                DateTime testDate = DateTime.Now.ToUniversalTime().Date;
 
                 // Start + Initialize CA.
                 var client = GetClient();
@@ -64,21 +66,29 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
-                // Ensure certificate is valid for 10 years
-                DateTime estimatedCACertExpiry = DateTime.Now.AddYears(CaCertificatesManager.caCertificateValidityPeriodYears).AddHours(-25); // -25 hour to give bit of time for the test to run and allow for time truncation. 
-                Assert.True(ac.NotAfter > estimatedCACertExpiry);
-                Assert.True(ac.NotAfter < estimatedCACertExpiry.AddDays(2));
-
                 // Create a node so we have 1 available public key.
                 (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
 
-                // Check that our node's certificate is valid for 2 years.
+                // Get the date again in case it has changed. The idea is that the certificate date will be one of the two dates. 
+                // Either the initial one or the second one if a date change occurred while the certificates were being generated.
+                DateTime testDate2 = DateTime.Now.ToUniversalTime().Date;
+
+                // Check that Authority Certificate is valid from the expected date.
+                Assert.True((testDate == ac.NotBefore) || (testDate2 == ac.NotBefore));
+
+                // Check that Authority Certificate is valid for the expected number of years.
+                Assert.Equal(ac.NotBefore.AddYears(CaCertificatesManager.caCertificateValidityPeriodYears), ac.NotAfter);
+
+                // Get Client Certificate.
                 List<CertificateInfoModel> nodeCerts = client.GetAllCertificates();
                 var certParser = new X509CertificateParser();
                 X509Certificate nodeCert = certParser.ReadCertificate(nodeCerts.First().CertificateContentDer);
-                DateTime estimatedCertExpiry = DateTime.Now.AddYears(CaCertificatesManager.certificateValidityPeriodYears).AddHours(-25); // -25 hour to give bit of time for the test to run and allow for time truncation. 
-                Assert.True(nodeCert.NotAfter > estimatedCertExpiry);
-                Assert.True(nodeCert.NotAfter < estimatedCertExpiry.AddDays(2));
+
+                // Check that Client Certificate is valid from the expected date.
+                Assert.True((testDate == nodeCert.NotBefore) || (testDate2 == nodeCert.NotBefore));
+
+                // Check that Client Certificate is valid for the expected number of years.
+                Assert.Equal(nodeCert.NotBefore.AddYears(CaCertificatesManager.certificateValidityPeriodYears), nodeCert.NotAfter);
 
                 // Get public keys from the API.
                 List<PubKey> pubkeys = await client.GetCertificatePublicKeysAsync();
@@ -89,7 +99,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesMineAnEmptyBlockAsync()
         {
-            using (IWebHost server = CreateWebHostBuilder().Build())
+            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
@@ -117,7 +127,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesConnectAndMineOpReturnAsync()
         {
-            using (IWebHost server = CreateWebHostBuilder().Build())
+            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
@@ -155,7 +165,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesConnectAndMineWithoutPasswordAsync()
         {
-            using (IWebHost server = CreateWebHostBuilder().Build())
+            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
@@ -206,7 +216,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesCreateAndCallAContractAsync()
         {
-            using (IWebHost server = CreateWebHostBuilder().Build())
+            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
@@ -255,7 +265,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesCreateAndCallWithControllerAsync()
         {
-            using (IWebHost server = CreateWebHostBuilder().Build())
+            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
@@ -321,13 +331,29 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 Receipt callReceipt = receiptRepository.Retrieve(callResponse.TransactionId);
                 Assert.True(callReceipt.Success);
+
+                // Also check that OpReturn Transaction can be sent via controller
+                var opReturnModel = new BuildOpReturnTransactionModel()
+                {
+                    OpReturnData = "Sending a message via opReturn 123"
+                };
+
+                var opReturnResult = (JsonResult)node1Controller.BuildOpReturnTransaction(opReturnModel);
+                var opReturnResponse = (TokenlessTransactionModel)opReturnResult.Value;
+
+                await node1Controller.SendTransactionAsync(new SendTransactionModel()
+                {
+                    TransactionHex = opReturnResponse.Hex
+                });
+
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
             }
         }
 
         [Fact]
-        public async Task TokenlessNodesKickAMinerBasedOnCA()
+        public async Task TokenlessNodesKickAMinerBasedOnCAAsync()
         {
-            using (IWebHost server = CreateWebHostBuilder().Build())
+            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
@@ -386,7 +412,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Mine some blocks to lock in the vote
                 await node1.MineBlocksAsync(1);
-                TokenlessTestHelper.WaitForNodeToSync(node1, node2); 
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
                 await node2.MineBlocksAsync(1);
                 TokenlessTestHelper.WaitForNodeToSync(node1, node2);
 
@@ -410,9 +436,9 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task NodeStoresSendersCertificateFromApi()
+        public async Task NodeStoresSendersCertificateFromApiAsync()
         {
-            using (IWebHost server = CreateWebHostBuilder().Build())
+            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
@@ -459,17 +485,105 @@ namespace Stratis.SmartContracts.IntegrationTests
             }
         }
 
-        private HttpClient GetHttpClient()
+        [Fact]
+        public async Task RestartCAAndEverythingStillWorksAsync()
         {
-            return new HttpClient();
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            {
+                string dataFolderName = GetDataFolderName();
+                X509Certificate ac = null;
+                CaClient client = null;
+
+                using (IWebHost server = CreateWebHostBuilder(dataFolderName).Build())
+                {
+                    server.Start();
+
+                    // Start + Initialize CA.
+                    client = GetClient();
+                    Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+
+                    // Get Authority Certificate.
+                    ac = GetCertificateFromInitializedCAServer(server);
+
+                    // Create 1 tokenless node.
+                    (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                }
+
+                // Server has been killed. Restart it.
+
+                using (IWebHost server = CreateWebHostBuilder(dataFolderName).Build())
+                {
+                    server.Start();
+
+                    // Check that we can still create nodes and make API calls.
+                    (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+
+                    List<CertificateInfoModel> nodeCerts = client.GetAllCertificates();
+                    Assert.Equal(2, nodeCerts.Count);
+
+                    List<PubKey> pubkeys = await client.GetCertificatePublicKeysAsync();
+                    Assert.Equal(2, pubkeys.Count);
+                }
+            }
+        }
+
+        [Fact]
+        public async Task RestartTokenlessNodeAfterBlocksMinedAndContinuesAsync()
+        {
+            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(this))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = GetClient();
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
+
+                // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.  
+                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+
+                node1.Start();
+
+                // Mine 20 blocks
+                await node1.MineBlocksAsync(20);
+                TestHelper.IsNodeSyncedAtHeight(node1, 20);
+
+                // Restart the node and ensure that it is still at height 20.
+                node1.Restart();
+                TestHelper.IsNodeSyncedAtHeight(node1, 20);
+            }
+        }
+
+        [Fact]
+        public void CantInitializeCATwice()
+        {
+            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = GetClient();
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
+
+                // Try and initialize it again with a new password.
+                Assert.False(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, "SomeRandomPassword", this.network));
+
+                // Check that the certificate is identical
+                X509Certificate ac2 = GetCertificateFromInitializedCAServer(server);
+
+                Assert.Equal(ac, ac2);
+            }
         }
 
         private CaClient GetClient()
         {
-            // TODO: This is a massive stupid hack to test with self signed certs.
-            var handler = new HttpClientHandler();
-            handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
-            var httpClient = GetHttpClient();
+            var httpClient = new HttpClient();
             return new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
         }
 
@@ -484,16 +598,18 @@ namespace Stratis.SmartContracts.IntegrationTests
             return certParser.ReadCertificate(File.ReadAllBytes(acLocation));
         }
 
-
-        private IWebHostBuilder CreateWebHostBuilder([CallerMemberName] string callingMethod = null)
+        private string GetDataFolderName([CallerMemberName] string callingMethod = null)
         {
             // Create a datafolder path for the CA settings to use
             string hash = Guid.NewGuid().ToString("N").Substring(0, 7);
             string numberedFolderName = string.Join(
                 ".",
                 new[] { hash }.Where(s => s != null));
-            string dataFolderName = Path.Combine(Path.GetTempPath(), callingMethod, numberedFolderName);
+            return Path.Combine(Path.GetTempPath(), callingMethod, numberedFolderName);
+        }
 
+        private IWebHostBuilder CreateWebHostBuilder(string dataFolderName)
+        {
             var settings = new Settings();
             settings.Initialize(new string[] { $"-datadir={dataFolderName}", $"-serverurls={this.BaseAddress}" });
 

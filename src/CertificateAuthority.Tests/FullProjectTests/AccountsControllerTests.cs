@@ -54,7 +54,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
                 // User without rights fails.
                 IActionResult result = this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(credentials1.AccountId, credentials2.AccountId, credentials2.Password));
-                Assert.True(((StatusCodeResult)result).StatusCode == 403);
+                Assert.True(((ObjectResult)result).StatusCode == 403);
             }
 
             // GetAllAccounts
@@ -67,7 +67,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 Assert.Equal(3, TestsHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(this.adminCredentials)).Count);
 
                 IActionResult result = this.accountsController.DeleteAccountByAccountId(new CredentialsModelWithTargetId(credentials2.AccountId, credentials1.AccountId, credentials1.Password));
-                Assert.True(((StatusCodeResult)result).StatusCode == 403);
+                Assert.True(((ObjectResult)result).StatusCode == 403);
             }
 
             // ChangeAccountAccessLevel

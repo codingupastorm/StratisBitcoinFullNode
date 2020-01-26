@@ -70,7 +70,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             int transactionSigningIndex = 0;
             int blockSigningIndex = 1;
             int clientAddressIndex = 2;
-            
+
             string clientHdPath = $"m/44'/105'/0'/0/{clientAddressIndex}";
             string transactionSigningHdPath = $"m/44'/105'/0'/0/{transactionSigningIndex}";
             string blockSigningHdPath = $"m/44'/105'/0'/0/{blockSigningIndex}";
@@ -96,7 +96,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             Pkcs10CertificationRequest certificateSigningRequest = CaCertificatesManager.CreateCertificateSigningRequest(clientName, clientKey, new string[0], extensionData);
 
             // IssueCertificate_UsingRequestString
-            CertificateInfoModel certificate1 = TestsHelper.GetValue<CertificateInfoModel>(await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
+            CertificateInfoModel certificate1 = TestsHelper.GetValue<CertificateInfoModel>(this.certificatesController.IssueCertificate_UsingRequestString(
                 new IssueCertificateFromFileContentsModel(Convert.ToBase64String(certificateSigningRequest.GetDerEncoded()), credentials1.AccountId, credentials1.Password)));
 
             X509Certificate cert1 = certParser.ReadCertificate(certificate1.CertificateContentDer);
@@ -133,7 +133,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             Pkcs10CertificationRequest certificateSigningRequest2 = CaCertificatesManager.CreateCertificateSigningRequest(clientName, clientKey2, new string[0], extensionData);
 
-            CertificateInfoModel certificate2 = TestsHelper.GetValue<CertificateInfoModel>(await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
+            CertificateInfoModel certificate2 = TestsHelper.GetValue<CertificateInfoModel>(this.certificatesController.IssueCertificate_UsingRequestString(
                 new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest2.GetDerEncoded()), this.adminCredentials.AccountId, this.adminCredentials.Password)));
 
             Assert.Equal(clientAddress, certificate2.Address);
@@ -208,7 +208,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             Assert.True(signedCsr.Verify());
 
-            CertificateInfoModel certificate3 = TestsHelper.GetValue<CertificateInfoModel>(await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
+            CertificateInfoModel certificate3 = TestsHelper.GetValue<CertificateInfoModel>(this.certificatesController.IssueCertificate_UsingRequestString(
                 new IssueCertificateFromFileContentsModel(Convert.ToBase64String(signedCsr.GetDerEncoded()), credentials1.AccountId, credentials1.Password)));
 
             Assert.Equal(clientAddress, certificate3.Address);
@@ -217,7 +217,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             // In this case we just use the same pubkey for both the certificate generation & transaction signing pubkey hash, they would ordinarily be different.
             var generateModel = new GenerateCertificateSigningRequestModel(clientAddress, Convert.ToBase64String(clientPublicKey), Convert.ToBase64String(clientPrivateKey.PubKey.Hash.ToBytes()), Convert.ToBase64String(blockSigningPrivateKey.PubKey.ToBytes()), credentials1.AccountId, credentials1.Password);
 
-            CertificateSigningRequestModel unsignedCsrModel = TestsHelper.GetValue<CertificateSigningRequestModel>(await this.certificatesController.GenerateCertificateSigningRequestAsync(generateModel));
+            CertificateSigningRequestModel unsignedCsrModel = TestsHelper.GetValue<CertificateSigningRequestModel>(this.certificatesController.GenerateCertificateSigningRequest(generateModel));
 
             byte[] csrTemp = Convert.FromBase64String(unsignedCsrModel.CertificateSigningRequestContent);
 
@@ -232,7 +232,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             // TODO: Why is this failing? Do a manual verification of the EC maths
             //Assert.True(signedCsr.Verify());
 
-            CertificateInfoModel certificate4 = TestsHelper.GetValue<CertificateInfoModel>(await this.certificatesController.IssueCertificate_UsingRequestStringAsync(
+            CertificateInfoModel certificate4 = TestsHelper.GetValue<CertificateInfoModel>(this.certificatesController.IssueCertificate_UsingRequestString(
                 new IssueCertificateFromFileContentsModel(Convert.ToBase64String(signedCsr.GetDerEncoded()), credentials1.AccountId, credentials1.Password)));
 
             Assert.Equal(clientAddress, certificate4.Address);
@@ -278,10 +278,10 @@ namespace CertificateAuthority.Tests.FullProjectTests
             this.Returns403IfNoAccess((int accountId, string password) => this.certificatesController.GetAllCertificates(new CredentialsModelWithThumbprintModel("123", accountId, password)),
                 AccountAccessFlags.AccessAnyCertificate);
 
-            this.Returns403IfNoAccess((int accountId, string password) => this.certificatesController.IssueCertificate_UsingRequestFileAsync(new IssueCertificateFromRequestModel(null, accountId, password)).GetAwaiter().GetResult(),
+            this.Returns403IfNoAccess((int accountId, string password) => this.certificatesController.IssueCertificate_UsingRequestFile(new IssueCertificateFromRequestModel(null, accountId, password)),
                 AccountAccessFlags.IssueCertificates);
 
-            this.Returns403IfNoAccess((int accountId, string password) => this.certificatesController.IssueCertificate_UsingRequestStringAsync(new IssueCertificateFromFileContentsModel("123", accountId, password)).GetAwaiter().GetResult(),
+            this.Returns403IfNoAccess((int accountId, string password) => this.certificatesController.IssueCertificate_UsingRequestString(new IssueCertificateFromFileContentsModel("123", accountId, password)),
                 AccountAccessFlags.IssueCertificates);
         }
 
@@ -312,7 +312,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
                     Assert.True((result6.Result as StatusCodeResult).StatusCode == 403);
                     break;
                 default:
-                    Assert.True((response as StatusCodeResult).StatusCode == 403);
+                    Assert.True((response as ObjectResult).StatusCode == 403);
                     break;
             }
 

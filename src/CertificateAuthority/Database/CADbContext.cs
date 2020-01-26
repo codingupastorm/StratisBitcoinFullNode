@@ -9,8 +9,7 @@ namespace CertificateAuthority.Database
 
         public DbSet<CertificateInfoModel> Certificates { get; set; }
 
-        /// <remarks>Should typically only be directly accessed when deleting accounts.</summary>
-        public DbSet<RequestedPermission> RequestedPermissions { get; set; }
+        public DbSet<Permission> Permissions { get; set; }
 
         private readonly Settings settings;
 
@@ -28,7 +27,7 @@ namespace CertificateAuthority.Database
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<AccountModel>().ToTable("Accounts");
+            modelBuilder.Entity<AccountModel>().HasMany(a => a.Permissions).WithOne().HasForeignKey(b => b.AccountModelId).OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<CertificateInfoModel>().ToTable("Certificates");
 
             base.OnModelCreating(modelBuilder);
