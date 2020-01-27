@@ -55,6 +55,9 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             this.stream = this.tcpClient.GetStream();
 
+            if (this.certManager.ClientCertificate == null || this.certManager.ClientCertificatePrivateKey == null)
+                throw new OperationCanceledException("The client certificate has not been loaded yet.");
+
             X509Certificate receivedCert;
             if (this.isServer)
             {

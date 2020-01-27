@@ -86,12 +86,12 @@ namespace Stratis.Feature.PoA.Tokenless
                 // We do not need to initialize the CertificatesManager here like it would have been in the regular PoA feature, because the TokenlessWalletManager is now responsible for ensuring a client certificate is created instead.
             }
 
-            this.miner.InitializeMining();
-
             if (options.VotingEnabled)
             {
                 this.votingManager.Initialize();
             }
+
+            this.miner.InitializeMining();
 
             // Initialize the CA public key / federaton member voting loop.
             this.caPubKeysLoop = this.asyncProvider.CreateAndRunAsyncLoop("PeriodicCAKeys", async (cancellation) =>

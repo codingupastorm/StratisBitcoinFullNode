@@ -32,5 +32,14 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
             this.PoaHeaderValidator = poaHeaderValidator;
             this.SlotsManager = slotsManager;
         }
+
+        /// <summary>
+        /// This gets overridden in a tokenless network as we can't return coinview's tip as it does not apply.
+        /// </summary>
+        /// <returns>The <see cref="ChainIndexer"/>'s tip.</returns>
+        public override uint256 GetBlockHash()
+        {
+            return base.ChainIndexer.Tip.HashBlock;
+        }
     }
 }

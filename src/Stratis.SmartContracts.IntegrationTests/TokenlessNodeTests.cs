@@ -331,6 +331,22 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 Receipt callReceipt = receiptRepository.Retrieve(callResponse.TransactionId);
                 Assert.True(callReceipt.Success);
+
+                // Also check that OpReturn Transaction can be sent via controller
+                var opReturnModel = new BuildOpReturnTransactionModel()
+                {
+                    OpReturnData = "Sending a message via opReturn 123"
+                };
+
+                var opReturnResult = (JsonResult)node1Controller.BuildOpReturnTransaction(opReturnModel);
+                var opReturnResponse = (TokenlessTransactionModel)opReturnResult.Value;
+
+                await node1Controller.SendTransactionAsync(new SendTransactionModel()
+                {
+                    TransactionHex = opReturnResponse.Hex
+                });
+
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
             }
         }
 
@@ -396,7 +412,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Mine some blocks to lock in the vote
                 await node1.MineBlocksAsync(1);
-                TokenlessTestHelper.WaitForNodeToSync(node1, node2); 
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
                 await node2.MineBlocksAsync(1);
                 TokenlessTestHelper.WaitForNodeToSync(node1, node2);
 
@@ -470,7 +486,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task RestartCAAndEverythingStillWorks()
+        public async Task RestartCAAndEverythingStillWorksAsync()
         {
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
@@ -512,7 +528,37 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task CantInitializeCATwice()
+        public async Task RestartTokenlessNodeAfterBlocksMinedAndContinuesAsync()
+        {
+            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(this))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = GetClient();
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
+
+                // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.  
+                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+
+                node1.Start();
+
+                // Mine 20 blocks
+                await node1.MineBlocksAsync(20);
+                TestHelper.IsNodeSyncedAtHeight(node1, 20);
+
+                // Restart the node and ensure that it is still at height 20.
+                node1.Restart();
+                TestHelper.IsNodeSyncedAtHeight(node1, 20);
+            }
+        }
+
+        [Fact]
+        public void CantInitializeCATwice()
         {
             using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
             {
@@ -600,17 +646,9 @@ namespace Stratis.SmartContracts.IntegrationTests
             }
         }
 
-        private HttpClient GetHttpClient()
-        {
-            return new HttpClient();
-        }
-
         private CaClient GetClient()
         {
-            // TODO: This is a massive stupid hack to test with self signed certs.
-            var handler = new HttpClientHandler();
-            handler.ServerCertificateCustomValidationCallback = ((sender, cert, chain, errors) => true);
-            var httpClient = GetHttpClient();
+            var httpClient = new HttpClient();
             return new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
         }
 
@@ -624,7 +662,6 @@ namespace Stratis.SmartContracts.IntegrationTests
             var certParser = new X509CertificateParser();
             return certParser.ReadCertificate(File.ReadAllBytes(acLocation));
         }
-
 
         private string GetDataFolderName([CallerMemberName] string callingMethod = null)
         {
