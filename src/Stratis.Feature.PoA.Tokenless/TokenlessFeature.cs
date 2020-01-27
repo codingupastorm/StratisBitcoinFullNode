@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Builder.Feature;
@@ -31,6 +32,7 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly NodeSettings nodeSettings;
         private readonly IAsyncProvider asyncProvider;
         private readonly INodeLifetime nodeLifetime;
+        private readonly ILogger logger;
         private IAsyncLoop caPubKeysLoop;
 
         public TokenlessFeature(
@@ -44,7 +46,8 @@ namespace Stratis.Feature.PoA.Tokenless
             StoreSettings storeSettings,
             NodeSettings nodeSettings,
             IAsyncProvider asyncProvider,
-            INodeLifetime nodeLifetime)
+            INodeLifetime nodeLifetime,
+            ILoggerFactory loggerFactory)
         {
             this.certificatesManager = certificatesManager;
             this.votingManager = votingManager;
@@ -56,6 +59,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.asyncProvider = asyncProvider;
             this.nodeLifetime = nodeLifetime;
             this.caPubKeysLoop = null;
+            this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
 
             // TODO-TL: Is there a better place to do this?
             storeSettings.TxIndex = true;
@@ -101,6 +105,13 @@ namespace Stratis.Feature.PoA.Tokenless
 
         private async Task SynchronizeMembersAsync()
         {
+            // If we're not a federation member, it's not our job to vote. Don't schedule any votes until we are one.
+            if (!this.federationManager.IsFederationMember)
+            {
+                this.logger.LogDebug("Attempted to Synchronize members but we aren't a member yet.");
+                return;
+            }
+
             List<PubKey> allowedMembers = await this.certificatesManager.GetCertificatePublicKeysAsync();
             List<IFederationMember> currentMembers = this.federationManager.GetFederationMembers();
 

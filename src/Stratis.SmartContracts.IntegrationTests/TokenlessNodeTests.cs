@@ -609,6 +609,77 @@ namespace Stratis.SmartContracts.IntegrationTests
             }
         }
 
+        [Fact]
+        public async Task AddedNodeCanMineWithoutBreaking()
+        {
+            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = GetClient();
+                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
+
+                // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CaClient client1 = this.GetClient(server);
+                CaClient client2 = this.GetClient(server);
+                CaClient client3 = this.GetClient(server);
+
+                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+                (CoreNode node3, Key privKey3, Key txPrivKey3) = nodeBuilder.CreateFullTokenlessNode(this.network, 2, ac, client3);
+
+                // Get them connected and mining
+                node1.Start();
+                node2.Start();
+                node3.Start();
+                TestHelper.Connect(node1, node2);
+                TestHelper.Connect(node1, node3);
+                TestHelper.Connect(node2, node3);
+
+                await node1.MineBlocksAsync(3);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2, node3);
+
+                // Now add a 4th
+                CaClient client4 = this.GetClient(server);
+
+                (CoreNode node4, Key privKey4, Key txPrivKey4) = nodeBuilder.CreateFullTokenlessNode(this.network, 3, ac, client4);
+                node4.Start();
+
+                VotingManager node1VotingManager = node1.FullNode.NodeService<VotingManager>();
+                VotingManager node2VotingManager = node2.FullNode.NodeService<VotingManager>();
+                VotingManager node3VotingManager = node2.FullNode.NodeService<VotingManager>();
+                TestBase.WaitLoop(() => node1VotingManager.GetScheduledVotes().Count > 0);
+                TestBase.WaitLoop(() => node2VotingManager.GetScheduledVotes().Count > 0);
+                TestBase.WaitLoop(() => node3VotingManager.GetScheduledVotes().Count > 0);
+
+                // Mine some blocks to lock in the vote
+                await node1.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2, node3);
+                await node2.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2, node3);
+                await node3.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2, node3);
+
+                // Mine some more blocks to execute the vote and increase federation members.
+                await node1.MineBlocksAsync(5);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2, node3);
+                await node2.MineBlocksAsync(4);
+
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2, node3);
+
+                TestHelper.Connect(node1, node4);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node4);
+
+                // Finally, see if node4 can mine fine.
+                await node4.MineBlocksAsync(1);
+            }
+        }
+
         /// <summary>
         /// Used to instantiate a CA client with the admin's credentials. If multiple nodes need to interact with the CA in a test, they will need their own accounts & clients created.
         /// </summary>
