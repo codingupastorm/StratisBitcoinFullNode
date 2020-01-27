@@ -16,7 +16,9 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         private readonly ILogger logger;
 
         public int AccountAddressIndex { get; set; }
+
         public int MiningAddressIndex { get; set; }
+
         public int CertificateAddressIndex { get; set; }
 
         public string EncryptedSeed { get; set; }
@@ -32,7 +34,21 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         public bool GenerateCertificate { get; set; }
 
         public string CertPath { get; set; }
-        
+
+        public string Name { get; set; }
+
+        public string OrganizationUnit { get; set; }
+
+        public string Organization { get; set; }
+
+        public string Locality { get; set; }
+
+        public string StateOrProvince { get; set; }
+
+        public string EmailAddress { get; set; }
+
+        public string Country { get; set; }
+
         private bool IsRelativePath(string path)
         {
             return !this.CertPath.Contains(":\\") && !this.CertPath.StartsWith("/");
@@ -59,6 +75,18 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
             this.GenerateCertificate = config.GetOrDefault<bool>("generatecertificate", false, this.logger);
             this.CertPath = Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.ClientCertificateName);
+
+            this.Name = config.GetOrDefault<string>("certificatename", "", this.logger);
+            this.OrganizationUnit = config.GetOrDefault<string>("certificateorganizationunit", "", this.logger);
+            this.Organization = config.GetOrDefault<string>("certificateorganization", "", this.logger);
+            this.Locality = config.GetOrDefault<string>("certificatelocality", "", this.logger);
+            this.StateOrProvince = config.GetOrDefault<string>("certificatestateorprovince", "", this.logger);
+            this.EmailAddress = config.GetOrDefault<string>("certificateemailaddress", null, this.logger);
+            
+            if (this.EmailAddress != null && !IsEmail(this.EmailAddress))
+                throw new ConfigurationException($"The supplied e-mail address ('{ this.EmailAddress }') syntax is invalid.");
+
+            this.Country = config.GetOrDefault<string>("certificatecountry", "", this.logger);
         }
 
         /// <summary>
@@ -76,7 +104,14 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             builder.AppendLine("-miningaddressindex=<number>    The index (N) used for the block signing key at HD Path (m/44'/105'/1'/0/N) where N is a zero based key ID.");
             builder.AppendLine("-certaddressindex=<number>      The index (N) used for the P2P certificate key at HD Path (m/44'/105'/2'/0/N) where N is a zero based key ID.");
             builder.AppendLine("----Certificate Details----");
-            builder.AppendLine("-generatecertificate            Requests a new certificate to be generated.");
+            builder.AppendLine("-generatecertificate                  Requests a new certificate to be generated.");
+            builder.AppendLine("-certificatename=<string>             The user's name, as it should appear on the certificate request.");
+            builder.AppendLine("-certificateorganizationunit=<string> The user's organization unit.");
+            builder.AppendLine("-certificateorganization=<string>     The user's organization.");
+            builder.AppendLine("-certificatelocality=<string>         The user's locality.");
+            builder.AppendLine("-certificatestateorprovince=<string>  The user's state or province.");
+            builder.AppendLine("-certificateemailaddress=<string>     The user's email address.");
+            builder.AppendLine("-certificatecountry=<string>          The user's country.");
 
             defaults.Logger.LogInformation(builder.ToString());
         }
@@ -98,6 +133,13 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             builder.AppendLine("#----Certificate Details----");
             builder.AppendLine("#Requests a new certificate to be generated.");
             builder.AppendLine("#generatecertificate=false");
+            builder.AppendLine("#certificatename=");
+            builder.AppendLine("#certificateorganizationunit=");
+            builder.AppendLine("#certificateorganization=");
+            builder.AppendLine("#certificatelocality=");
+            builder.AppendLine("#certificatestateorprovince=");
+            builder.AppendLine("#certificateemailaddress=");
+            builder.AppendLine("#certificatecountry=");
         }
 
         /// <summary>
