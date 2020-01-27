@@ -74,7 +74,9 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             // We need to be absolutely sure that the components of the subject DN are in the same order in a CSR versus the resulting certificate.
             // Otherwise the certificate chain will fail validation, and there is currently no workaround in BouncyCastle.
-            string clientName = "O=Stratis,CN=DLT Node Run By Iain McCain,OU=Administration";
+            var credModel = new CredentialsAccessModel(credentials1.AccountId, credentials1.Password, AccountAccessFlags.BasicAccess);
+            AccountModel account = this.dataCacheLayer.ExecuteQuery(credModel, (dbContext) => { return dbContext.Accounts.SingleOrDefault(x => x.Id == credModel.AccountId); });
+            string clientName = $"O={account.Organization},CN={account.Name},OU={account.OrganizationUnit},L={account.Locality},ST={account.StateOrProvince},C={account.Country}";
 
             var clientAddressSpace = new HDWalletAddressSpace("tape viable toddler young shoe immense usual faculty edge habit misery swarm", "node");
 
@@ -105,13 +107,19 @@ namespace CertificateAuthority.Tests.FullProjectTests
             var certParser = new X509CertificateParser();
             X509Certificate cert1 = certParser.ReadCertificate(certificate1.CertificateContentDer);
 
-            Assert.True(caCert.SubjectDN.Equivalent(cert1.IssuerDN));
+            Assert.True(this.caCert.SubjectDN.Equivalent(cert1.IssuerDN));
 
             Assert.Equal(clientAddress, certificate1.Address);
 
             PubKey[] pubKeys = TestsHelper.GetValue<ICollection<string>>(this.certificatesController.GetCertificatePublicKeys()).Select(s => new PubKey(s)).ToArray();
             Assert.Single(pubKeys);
             Assert.Equal(blockSigningPrivateKey.PubKey, pubKeys[0]);
+
+            CredentialsModel credentials2 = this.GetPrivilegedAccount();
+
+            credModel = new CredentialsAccessModel(credentials2.AccountId, credentials2.Password, AccountAccessFlags.BasicAccess);
+            account = this.dataCacheLayer.ExecuteQuery(credModel, (dbContext) => { return dbContext.Accounts.SingleOrDefault(x => x.Id == credModel.AccountId); });
+            clientName = $"O={account.Organization},CN={account.Name},OU={account.OrganizationUnit},L={account.Locality},ST={account.StateOrProvince},C={account.Country}";
 
             var clientAddressSpace2 = new HDWalletAddressSpace("habit misery swarm tape viable toddler young shoe immense usual faculty edge", "node");
             Key clientPrivateKey2 = clientAddressSpace2.GetKey(this.clientHdPath).PrivateKey;
@@ -138,7 +146,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             Pkcs10CertificationRequest certificateSigningRequest2 = CaCertificatesManager.CreateCertificateSigningRequest(clientName, clientKey2, new string[0], extensionData);
 
             CertificateInfoModel certificate2 = TestsHelper.GetValue<CertificateInfoModel>(this.certificatesController.IssueCertificate_UsingRequestString(
-                new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest2.GetDerEncoded()), this.adminCredentials.AccountId, this.adminCredentials.Password)));
+                new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest2.GetDerEncoded()), credentials2.AccountId, credentials2.Password)));
 
             Assert.Equal(clientAddress, certificate2.Address);
 
@@ -189,8 +197,9 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             // Check that we can obtain an unsigned CSR template from the CA, which we then sign locally and receive a certificate for.
             // Do it using the manager's methods directly to verify their operation.
-
-            string clientName = "O=Stratis,CN=DLT Node Run By Iain McCain,OU=Administration";
+            var credModel = new CredentialsAccessModel(credentials1.AccountId, credentials1.Password, AccountAccessFlags.BasicAccess);
+            AccountModel account = this.dataCacheLayer.ExecuteQuery(credModel, (dbContext) => { return dbContext.Accounts.SingleOrDefault(x => x.Id == credModel.AccountId); });
+            string clientName = $"O={account.Organization},CN={account.Name},OU={account.OrganizationUnit},L={account.Locality},ST={account.StateOrProvince},C={account.Country}";
 
             var clientAddressSpace2 = new HDWalletAddressSpace("habit misery swarm tape viable toddler young shoe immense usual faculty edge", "node");
             var clientAddressSpace3 = new HDWalletAddressSpace("usual young shoe immense habit misery swarm tape viable toddler faculty edge", "node");
@@ -243,11 +252,11 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             var clientAddressSpace2 = new HDWalletAddressSpace("habit misery swarm tape viable toddler young shoe immense usual faculty edge", "node");
             var clientAddressSpace3 = new HDWalletAddressSpace("usual young shoe immense habit misery swarm tape viable toddler faculty edge", "node");
-            Key clientPrivateKey3 = clientAddressSpace3.GetKey(clientHdPath).PrivateKey;
+            Key clientPrivateKey3 = clientAddressSpace3.GetKey(this.clientHdPath).PrivateKey;
             var clientPublicKey = clientPrivateKey3.PubKey.ToBytes();
-            AsymmetricCipherKeyPair clientKey3 = clientAddressSpace2.GetCertificateKeyPair(clientHdPath);
+            AsymmetricCipherKeyPair clientKey3 = clientAddressSpace2.GetCertificateKeyPair(this.clientHdPath);
 
-            Key blockSigningPrivateKey = clientAddressSpace3.GetKey(blockSigningHdPath).PrivateKey;
+            Key blockSigningPrivateKey = clientAddressSpace3.GetKey(this.blockSigningHdPath).PrivateKey;
 
             var clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
 
