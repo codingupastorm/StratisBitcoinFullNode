@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -131,14 +132,23 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             this.clientCertificatePassword = this.configuration.GetOrDefault<string>(ClientCertificateConfigurationKey, null);
 
             if (this.clientCertificatePassword == null)
-                throw new CertificateConfigurationException($"You have to provide a password for the client certificate! Use '{ClientCertificateConfigurationKey}' configuration key to provide a password.");
+            {
+                this.logger.LogError("(-)[MISSING_PASSWORD]");
+                throw new AuthenticationException($"You have to provide a password for the client certificate! Use '{ClientCertificateConfigurationKey}' configuration key to provide a password.");
+            }
 
-            (this.ClientCertificate, this.ClientCertificatePrivateKey) = CaCertificatesManager.LoadPfx(File.ReadAllBytes(clientCertPath), this.clientCertificatePassword);
+            try
+            {
+                (this.ClientCertificate, this.ClientCertificatePrivateKey) = CaCertificatesManager.LoadPfx(File.ReadAllBytes(clientCertPath), this.clientCertificatePassword);
+            }
+            catch (IOException)
+            {
+            }
 
             if (this.ClientCertificate == null)
             {
-                this.logger.LogTrace("(-)[WRONG_PASSWORD]");
-                throw new CertificateConfigurationException($"Client certificate wasn't loaded. Usually this happens when provided password is incorrect.");
+                this.logger.LogError("(-)[WRONG_PASSWORD]");
+                throw new AuthenticationException($"Client certificate wasn't loaded. Usually this happens when provided password is incorrect.");
             }
 
             bool clientCertValid = this.IsSignedByAuthorityCertificate(this.ClientCertificate, this.AuthorityCertificate);
