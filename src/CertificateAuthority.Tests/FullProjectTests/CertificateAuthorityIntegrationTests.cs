@@ -116,7 +116,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             Assert.Single(allCerts);
             Assert.Equal(address.ToString(), allCerts.First().Address);
 
-            CertificateInfoModel queryByAddress = client.GetCertificateForAddress(address.ToString());
+            CertificateInfoModel queryByAddress = client.GetCertificateForTransactionSigningPubKeyHash(Convert.ToBase64String(pubKey.Hash.ToBytes()));
             Assert.NotNull(queryByAddress.CertificateContentDer);
 
             server.Dispose();

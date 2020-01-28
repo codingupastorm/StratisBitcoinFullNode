@@ -16,7 +16,6 @@ namespace CertificateAuthority
         private const string GetCaCertificateEndpoint = "api/certificates/get_ca_certificate";
         private const string GetAllCertificatesEndpoint = "api/certificates/get_all_certificates";
         private const string GetRevokedCertificatesEndpoint = "api/certificates/get_revoked_certificates";
-        private const string GetCertificateForAddressEndpoint = "api/certificates/get_certificate_for_address";
         private const string GetCertificateForPubKeyHashEndpoint = "api/certificates/get_certificate_for_pubkey_hash";
         private const string GetCertificateStatusEndpoint = "api/certificates/get_certificate_status";
         private const string GenerateCertificateSigningRequestEndpoint = "api/certificates/generate_certificate_signing_request";
@@ -125,30 +124,12 @@ namespace CertificateAuthority
             return revokedCertList;
         }
 
-        public CertificateInfoModel GetCertificateForAddress(string address)
-        {
-            var addressModel = new CredentialsModelWithAddressModel()
-            {
-                AccountId = this.accountId,
-                Address = address,
-                Password = this.password
-            };
-
-            HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{GetCertificateForAddressEndpoint}", addressModel).GetAwaiter().GetResult();
-
-            string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-
-            CertificateInfoModel cert = JsonConvert.DeserializeObject<CertificateInfoModel>(responseString);
-
-            return cert;
-        }
-
-        public CertificateInfoModel GetCertificateForPubKeyHash(string pubKeyHash)
+        public CertificateInfoModel GetCertificateForTransactionSigningPubKeyHash(string base64PubKeyHash)
         {
             var pubKeyModel = new CredentialsModelWithPubKeyHashModel()
             {
                 AccountId = this.accountId,
-                PubKeyHash = pubKeyHash,
+                PubKeyHash = base64PubKeyHash,
                 Password = this.password
             };
 
