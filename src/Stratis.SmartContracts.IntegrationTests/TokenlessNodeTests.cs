@@ -8,8 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Models;
-using CertificateAuthority.Tests.FullProjectTests;
-using CertificateAuthority.Tests.FullProjectTests.Helpers;
+using CertificateAuthority.Tests;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -61,7 +60,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Start + Initialize CA.
                 var client = GetClient();
-                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
@@ -106,7 +105,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Start + Initialize CA.
                 var client = GetClient();
-                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
@@ -134,7 +133,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Start + Initialize CA.
                 var client = GetClient();
-                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
@@ -172,7 +171,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Start + Initialize CA.
                 var client = GetClient();
-                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
@@ -223,7 +222,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Start + Initialize CA.
                 var client = GetClient();
-                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
@@ -272,7 +271,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Start + Initialize CA.
                 var client = GetClient();
-                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
@@ -360,8 +359,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Start + Initialize CA.
                 var client = GetClient();
-                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic,
-                    CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
@@ -445,7 +443,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Start + Initialize CA.
                 var client = GetClient();
-                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
@@ -500,7 +498,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                     // Start + Initialize CA.
                     client = GetClient();
-                    Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+                    Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                     // Get Authority Certificate.
                     ac = GetCertificateFromInitializedCAServer(server);
@@ -537,7 +535,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Start + Initialize CA.
                 var client = GetClient();
-                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
@@ -566,13 +564,13 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Start + Initialize CA.
                 var client = GetClient();
-                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
                 // Try and initialize it again with a new password.
-                Assert.False(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, "SomeRandomPassword", this.network));
+                Assert.False(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, "SomeRandomPassword", this.network));
 
                 // Check that the certificate is identical
                 X509Certificate ac2 = GetCertificateFromInitializedCAServer(server);
@@ -591,7 +589,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Start + Initialize CA.
                 var client = GetClient();
-                Assert.True(client.InitializeCertificateAuthority(CertificateAuthorityIntegrationTests.CaMnemonic, CertificateAuthorityIntegrationTests.CaMnemonicPassword, this.network));
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
@@ -649,7 +647,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         private CaClient GetClient()
         {
             var httpClient = new HttpClient();
-            return new CaClient(new Uri(this.BaseAddress), httpClient, CertificateAuthorityIntegrationTests.TestAccountId, CertificateAuthorityIntegrationTests.TestPassword);
+            return new CaClient(new Uri(this.BaseAddress), httpClient, Settings.AdminAccountId, CaTestHelper.AdminPassword);
         }
 
         /// <summary>

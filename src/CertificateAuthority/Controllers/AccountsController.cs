@@ -132,6 +132,12 @@ namespace CertificateAuthority.Controllers
             });
         }
 
+        /// <summary>
+        /// Executes a query against the certificate authority repository.
+        /// </summary>
+        /// <param name="action">The action that will execute the query.</param>
+        /// <param name="memberName">The caller of the action.</param>
+        /// <returns>Returns an <see cref="IActionResult"/> that is mostly a Json object.</returns>
         private IActionResult ExecuteRepositoryQuery(Func<IActionResult> action, [CallerMemberName] string memberName = "")
         {
             try
@@ -152,6 +158,12 @@ namespace CertificateAuthority.Controllers
             }
         }
 
+        /// <summary>
+        /// Executes a command (update) against the certificate authority repository.
+        /// </summary>
+        /// <param name="action">The action that will execute the update.</param>
+        /// <param name="memberName">The caller of the action.</param>
+        /// <returns>Returns an <see cref="IActionResult"/> that is mostly a OK response.</returns>
         private IActionResult ExecuteRepositoryCommand(Func<ActionResult> action, [CallerMemberName] string memberName = "")
         {
             try

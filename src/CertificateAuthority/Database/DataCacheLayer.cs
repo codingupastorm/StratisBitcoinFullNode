@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using CertificateAuthority.Models;
-using NBitcoin;
 using NBitcoin.DataEncoders;
 using NLog;
 
@@ -33,12 +32,10 @@ namespace CertificateAuthority.Database
                     // Create Admin.
                     var admin = new AccountModel()
                     {
-                        Name = Settings.AdminName,
-                        PasswordHash = settings.DefaultAdminPasswordHash,
                         AccessInfo = AccountAccessFlags.AdminAccess,
-
-                        // Will set below.
-                        CreatorId = 1
+                        CreatorId = Settings.AdminAccountId,
+                        Name = Settings.AdminName,
+                        PasswordHash = settings.DefaultAdminPasswordHash
                     };
 
                     dbContext.Accounts.Add(admin);
@@ -53,6 +50,7 @@ namespace CertificateAuthority.Database
         {
             return new CADbContext(this.settings);
         }
+
         public void Initialize()
         {
             // Fill cache.
@@ -200,6 +198,32 @@ namespace CertificateAuthority.Database
 
                 this.logger.Info("Account with id {0} access level was changed from {1} to {2} by account with id {3}.", accountId, oldAccessInfo, accountToEdit.AccessInfo, account.Id);
             });
+        }
+
+        /// <summary>
+        /// This method should not exposed to the API.
+        /// </summary>
+        /// <param name="accountId">The account's password that will be set.</param>
+        /// <param name="password">The account's new password.</param>
+        internal void ChangeAccountPassword(int accountId, string password)
+        {
+            if (string.IsNullOrEmpty(password))
+                throw new Exception($"Password is null.");
+
+            CADbContext dbContext = this.CreateContext();
+
+            AccountModel account = dbContext.Accounts.SingleOrDefault(a => a.Id == accountId);
+            if (account == null)
+                throw new Exception($"The account was not found: {accountId}");
+
+            account.PasswordHash = DataHelper.ComputeSha256Hash(password);
+
+            dbContext.Accounts.Update(account);
+            dbContext.SaveChanges();
+
+            this.logger.Info("Account Id {0}'s password has been updated.", accountId);
+
+            return;
         }
 
         public void ChangeAccountPassword(CredentialsAccessWithModel<ChangeAccountPasswordModel> credentialsModel)

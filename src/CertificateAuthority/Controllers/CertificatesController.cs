@@ -28,15 +28,13 @@ namespace CertificateAuthority.Controllers
 
         [HttpPost("initialize_ca")]
         [ProducesResponseType(typeof(bool), 200)]
-        public IActionResult InitializeCertificateAuthority([FromBody]CredentialsModelWithMnemonicModel model)
+        public IActionResult InitializeCertificateAuthority([FromBody]InitializeCertificateAuthorityModel model)
         {
             this.LogEntry(model);
 
-            var data = new CredentialsAccessWithModel<CredentialsModelWithMnemonicModel>(model, AccountAccessFlags.InitializeCertificateAuthority);
-
             return ExecuteCaMethod(() =>
             {
-                var certificateCreationResult = this.caCertificateManager.InitializeCertificateAuthority(data.Model.Mnemonic, data.Model.MnemonicPassword, data.Model.CoinType, data.Model.AddressPrefix);
+                var certificateCreationResult = this.caCertificateManager.InitializeCertificateAuthority(model.AddressPrefix, model.AdminPassword, model.CoinType, model.Mnemonic, model.MnemonicPassword);
                 return this.Json(this.LogExit(certificateCreationResult));
             });
         }

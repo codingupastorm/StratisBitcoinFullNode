@@ -10,12 +10,18 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using NBitcoin;
+using Stratis.Feature.PoA.Tokenless;
 
-namespace CertificateAuthority.Tests.FullProjectTests.Helpers
+namespace CertificateAuthority.Tests
 {
-    public static class TestsHelper
+    public static class CaTestHelper
     {
+        public const string AdminPassword = "4815162342";
         public static string BaseAddress = "http://localhost:5050";
+        public const string CaMnemonic = "young shoe immense usual faculty edge habit misery swarm tape viable toddler";
+        public const string CaMnemonicPassword = "node";
+
         private static Random random = new Random();
 
         public static string GenerateRandomString(int length = 10)
@@ -29,7 +35,7 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
             string password = GenerateRandomString();
             string passHash = DataHelper.ComputeSha256Hash(password);
 
-            var adminCredentials = new CredentialsModel(1, "4815162342");
+            var adminCredentials = new CredentialsModel(1, AdminPassword);
 
             var accountsController = (AccountsController)server.Host.Services.GetService(typeof(AccountsController));
 
@@ -37,6 +43,15 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
             int id = GetValue<int>(accountsController.CreateAccount(new CreateAccount(GenerateRandomString(), passHash, (int)access, credentialsModel.AccountId, credentialsModel.Password)));
 
             return new CredentialsModel(id, password);
+        }
+
+        internal static void InitializeCa(TestServer server)
+        {
+            var network = new TokenlessNetwork();
+
+            var certificatesController = (CertificatesController)server.Host.Services.GetService(typeof(CertificatesController));
+            var model = new InitializeCertificateAuthorityModel(CaMnemonic, CaMnemonicPassword, network.Consensus.CoinType, network.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS][0], AdminPassword);
+            certificatesController.InitializeCertificateAuthority(model);
         }
 
         public static IWebHostBuilder CreateWebHostBuilder([CallerMemberName] string callingMethod = null)

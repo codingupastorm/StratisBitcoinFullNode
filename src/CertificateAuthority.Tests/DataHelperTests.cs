@@ -9,7 +9,7 @@ namespace CertificateAuthority.Tests
         [Fact]
         public void ComputeSha256HashTests()
         {
-            Dictionary<string, string> inputToHashDictionary = new Dictionary<string, string>()
+            var inputToHashDictionary = new Dictionary<string, string>()
             {
                 {"65y56h456gergerg", "4e0e7b3189d7cb3a4c6b7bca5844b30d83653eef364af449c6f1e7bf224701fd" },
                 {"rg54g4g45g45g", "1eacd796aa227beea7112f5a8524264aec1bb7d72f6fefba9b047c3bd1173c96" },
@@ -46,7 +46,7 @@ namespace CertificateAuthority.Tests
         [Fact]
         public void GetCertificateRequestLinesInvalidData_Test()
         {
-            List<string> invalidData = new List<string>()
+            var invalidData = new List<string>()
             {
                 "-----BEGIN g45g54g REQUEST----- MIIE1jQH 2IpYg1u4ox 79pteewn -----END CERTIFICATE REQUEST-----",
                 "-----BEGIN CERTIFICATE REQUEST----- MIIE1jQH 2IpYg1u4ox 79pteewn -----END CERTIFICATE REQaaaEST-----",
@@ -75,7 +75,6 @@ namespace CertificateAuthority.Tests
 
             public bool ExpectedResult { get; set; }
         }
-
 
         [Fact]
         public void IsCreatorHasGreaterOrEqualAccessTest()
