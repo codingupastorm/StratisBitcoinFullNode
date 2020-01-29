@@ -57,8 +57,8 @@ namespace CertificateAuthority
         public const string CallContractPermissionOid = "1.5.2";
         public const string CreateContractPermissionOid = "1.5.3";
 
-        public const int certificateValidityPeriodYears = 10;
-        public const int caCertificateValidityPeriodYears = 10;
+        public const int CertificateValidityPeriodYears = 10;
+        public const int CaCertificateValidityPeriodYears = 10;
 
         public CaCertificatesManager(DataCacheLayer repository, Settings settings)
         {
@@ -106,18 +106,9 @@ namespace CertificateAuthority
 
                 var caAddressSpace = new HDWalletAddressSpace(mnemonic, mnemonicPassword);
                 Key caPrivateKey = caAddressSpace.GetKey(hdPath).PrivateKey;
-                byte[] caPubKey = caPrivateKey.PubKey.ToBytes();
-                string caAddress = HDWalletAddressSpace.GetAddress(caPubKey, addressPrefix);
-                byte[] caOid141 = Encoding.UTF8.GetBytes(caAddress);
-
-                // TODO: Is this even needed for the CA?
-                byte[] caOid142 = caPubKey;
-
-                var extensionData = new Dictionary<string, byte[]>()
-                {
-                    {P2pkhExtensionOid, caOid141},
-                    {TransactionSigningPubKeyHashExtensionOid, caOid142}
-                };
+                
+                // The CA is the big boss, and won't be signing transactions itself, so no extensions.
+                var extensionData = new Dictionary<string, byte[]>();
 
                 this.caKey = caAddressSpace.GetCertificateKeyPair(hdPath);
                 this.caCertificate = CreateCertificateAuthorityCertificate(this.caKey, caSubjectName, null, null, extensionData);
@@ -157,7 +148,7 @@ namespace CertificateAuthority
             X509Certificate certificate = GenerateCertificate(random,
                 subjectName, subjectKeyPair.Public, subjectSerialNumber, subjectAlternativeNames,
                 subjectName, subjectKeyPair, subjectSerialNumber,
-                true, usages, extensionData, caCertificateValidityPeriodYears);
+                true, usages, extensionData, CaCertificateValidityPeriodYears);
 
             return certificate;
         }
@@ -205,7 +196,10 @@ namespace CertificateAuthority
             X509Certificate certificateFromReq = IssueCertificateFromRequest(certRequest, this.caCertificate, this.caKey, new string[0], new[] { KeyPurposeID.AnyExtendedKeyUsage });
             Asn1Set attributes = certRequest.GetCertificationRequestInfo().Attributes;
 
+            // TODO: This should come from the transaction signing pubkeyhash. Presently the address could be different to the pubkey hash, which is nonsensical.
+            // The address thus could be stored in the db but doesn't need to be its own field in the certificate.
             string p2pkh = Encoding.UTF8.GetString(ExtractExtensionFromCsr(attributes, P2pkhExtensionOid));
+
             var transactionSigningPubKeyHashBytes = ExtractExtensionFromCsr(attributes, TransactionSigningPubKeyHashExtensionOid);
             byte[] blockSigningPubKeyBytes = ExtractExtensionFromCsr(attributes, BlockSigningPubKeyExtensionOid);
 
@@ -257,7 +251,7 @@ namespace CertificateAuthority
             X509Certificate certificate = GenerateCertificate(random,
                 subjectName, publicKey, subjectSerialNumber, subjectAlternativeNames,
                 issuerCertificate.SubjectDN.ToString(), issuerKeyPair, issuerCertificate.SerialNumber,
-                false, usages, extensionData, certificateValidityPeriodYears);
+                false, usages, extensionData, CertificateValidityPeriodYears);
 
             return certificate;
         }
@@ -528,17 +522,9 @@ namespace CertificateAuthority
         }
 
         /// <summary>
-        /// Finds issued certificate by address and returns it or null if it wasn't found.
-        /// </summary>
-        public CertificateInfoModel GetCertificateByAddress(CredentialsAccessWithModel<CredentialsModelWithAddressModel> model)
-        {
-            return this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Certificates.SingleOrDefault(x => x.Address == model.Model.Address); });
-        }
-
-        /// <summary>
         /// Finds issued certificate by pubkey hash and returns it or null if it wasn't found.
         /// </summary>
-        public CertificateInfoModel GetCertificateByPubKeyHash(CredentialsAccessWithModel<CredentialsModelWithPubKeyHashModel> model)
+        public CertificateInfoModel GetCertificateByTransactionSigningPubKeyHash(CredentialsAccessWithModel<CredentialsModelWithPubKeyHashModel> model)
         {
             byte[] transactionSigningPubKeyHash = Convert.FromBase64String(model.Model.PubKeyHash);
             var byteArrayComparer = new ByteArrayComparer();

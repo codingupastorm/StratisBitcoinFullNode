@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -131,14 +132,23 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             this.clientCertificatePassword = this.configuration.GetOrDefault<string>(ClientCertificateConfigurationKey, null);
 
             if (this.clientCertificatePassword == null)
-                throw new CertificateConfigurationException($"You have to provide a password for the client certificate! Use '{ClientCertificateConfigurationKey}' configuration key to provide a password.");
+            {
+                this.logger.LogError("(-)[MISSING_PASSWORD]");
+                throw new AuthenticationException($"You have to provide a password for the client certificate! Use '{ClientCertificateConfigurationKey}' configuration key to provide a password.");
+            }
 
-            (this.ClientCertificate, this.ClientCertificatePrivateKey) = CaCertificatesManager.LoadPfx(File.ReadAllBytes(clientCertPath), this.clientCertificatePassword);
+            try
+            {
+                (this.ClientCertificate, this.ClientCertificatePrivateKey) = CaCertificatesManager.LoadPfx(File.ReadAllBytes(clientCertPath), this.clientCertificatePassword);
+            }
+            catch (IOException)
+            {
+            }
 
             if (this.ClientCertificate == null)
             {
-                this.logger.LogTrace("(-)[WRONG_PASSWORD]");
-                throw new CertificateConfigurationException($"Client certificate wasn't loaded. Usually this happens when provided password is incorrect.");
+                this.logger.LogError("(-)[WRONG_PASSWORD]");
+                throw new AuthenticationException($"Client certificate wasn't loaded. Usually this happens when provided password is incorrect.");
             }
 
             bool clientCertValid = this.IsSignedByAuthorityCertificate(this.ClientCertificate, this.AuthorityCertificate);
@@ -191,11 +201,12 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return certificate;
         }
 
-        public X509Certificate GetCertificateForAddress(string address)
+        public X509Certificate GetCertificateForAddress(uint160 address)
         {
             CaClient caClient = this.GetClient();
 
-            CertificateInfoModel retrievedCertModel = caClient.GetCertificateForAddress(address);
+            string base64PubKeyHash = Convert.ToBase64String(address.ToBytes());
+            CertificateInfoModel retrievedCertModel = caClient.GetCertificateForTransactionSigningPubKeyHash(base64PubKeyHash);
 
             var certParser = new X509CertificateParser();
             X509Certificate certificate = certParser.ReadCertificate(retrievedCertModel.CertificateContentDer);
@@ -203,11 +214,11 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return certificate;
         }
 
-        public X509Certificate GetCertificateForPubKey(string pubKeyHash)
+        public X509Certificate GetCertificateForTransactionSigningPubKeyHash(string pubKeyHash)
         {
             CaClient caClient = this.GetClient();
 
-            CertificateInfoModel retrievedCertModel = caClient.GetCertificateForPubKeyHash(pubKeyHash);
+            CertificateInfoModel retrievedCertModel = caClient.GetCertificateForTransactionSigningPubKeyHash(pubKeyHash);
 
             var certParser = new X509CertificateParser();
             X509Certificate certificate = certParser.ReadCertificate(retrievedCertModel.CertificateContentDer);
