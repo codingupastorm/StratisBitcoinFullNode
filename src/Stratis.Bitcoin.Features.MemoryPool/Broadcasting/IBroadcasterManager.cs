@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.Wallet.Broadcasting;
 
-namespace Stratis.Bitcoin.Features.Wallet.Interfaces
+namespace Stratis.Bitcoin.Features.MemoryPool.Broadcasting
 {
     public interface IBroadcasterManager
     {

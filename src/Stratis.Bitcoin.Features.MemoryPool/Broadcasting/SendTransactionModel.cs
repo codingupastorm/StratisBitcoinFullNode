@@ -3,12 +3,12 @@ using NBitcoin;
 using Newtonsoft.Json;
 using Stratis.Bitcoin.Utilities.JsonConverters;
 
-namespace Stratis.Bitcoin.Features.Wallet.Models
+namespace Stratis.Bitcoin.Features.MemoryPool.Broadcasting
 {
     /// <summary>
     /// A model class to be returned when the user sends a transaction successfully.
     /// </summary>
-    public class WalletSendTransactionModel
+    public class SendTransactionModel
     {
         /// <summary>
         /// The transaction id.
