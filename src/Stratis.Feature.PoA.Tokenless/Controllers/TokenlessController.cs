@@ -9,9 +9,9 @@ using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
-using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Utilities.JsonErrors;
 using Stratis.Bitcoin.Utilities.ModelStateErrors;
@@ -377,11 +377,26 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             }
         }
 
+        [Route("nodeaddress")]
+        [HttpGet]
+        public IActionResult GetNodeAddress()
+        {
+            try
+            {
+                PubKey transactionSigningKey = this.tokenlessWalletManager.GetPubKey(TokenlessWalletAccount.TransactionSigning);
+                return this.Json(transactionSigningKey.GetAddress(this.coreComponent.Network).ToString());
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError("Exception occurred: {0}", e.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
+            }
+        }
+
         /// <summary>
         /// Creates and signs the transaction.
         /// </summary>
         /// <param name="contractTxData">The contract data to be serialized.</param>
-        /// 
         /// <returns>The signed transaction</returns>
         private Transaction CreateAndSignTransaction(ContractTxData contractTxData)
         {
