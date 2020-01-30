@@ -54,7 +54,6 @@ namespace CertificateAuthority.Tests
                 "dummyEmailAddress",
                 "dummyCountry",
                 accountPermissions, 
-                credentialsModel.AccountId,
                 credentialsModel.Password)));
 
             accountsController.ApproveAccount(new CredentialsModelWithTargetId()

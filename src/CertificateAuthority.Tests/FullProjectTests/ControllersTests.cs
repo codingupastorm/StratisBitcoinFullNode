@@ -309,7 +309,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 "dummyStateOrProvince",
                 "dummyEmailAddress",
                 "dummyCountry",
-                new List<string>() { AccountsController.SendPermission }, accountId, password)), AccountAccessFlags.CreateAccounts | AccountAccessFlags.DeleteAccounts);
+                new List<string>() { AccountsController.SendPermission }, password)), AccountAccessFlags.CreateAccounts | AccountAccessFlags.DeleteAccounts);
 
             this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.GetCertificateIssuedByAccountId(new CredentialsModelWithTargetId(1, accountId, password)),
                 AccountAccessFlags.AccessAnyCertificate);

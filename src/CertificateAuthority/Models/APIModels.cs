@@ -21,8 +21,10 @@ namespace CertificateAuthority.Models
 
     #region Models for AccountsController
 
-    public class CreateAccount : CredentialsModel
+    public class CreateAccount
     {
+        public string Password { get; set; }
+
         /// <summary>Account name for the new account. Can't be a a name that is already taken.
         /// This will also be used as the common name (CN) field of the requested certificate.</summary>
         public string CommonName { get; set; }
@@ -51,7 +53,7 @@ namespace CertificateAuthority.Models
         /// </summary>
         public List<Permission> RequestedPermissions { get; set; }
 
-        public CreateAccount(string commonName, string newAccountPasswordHash, int requestedAccountAccess, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country, List<string> requestedPermissions, int accountId, string password) : base(accountId, password)
+        public CreateAccount(string commonName, string newAccountPasswordHash, int requestedAccountAccess, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country, List<string> requestedPermissions, string password)
         {
             this.CommonName = commonName;
             this.NewAccountPasswordHash = newAccountPasswordHash;
@@ -63,6 +65,7 @@ namespace CertificateAuthority.Models
             this.EmailAddress = emailAddress;
             this.Country = country;
             this.RequestedPermissions = requestedPermissions.Select(p => new Permission() { Name = p }).ToList();
+            this.Password = password;
         }
 
         public CreateAccount()

@@ -91,7 +91,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return this.caAccountId != 0 && !string.IsNullOrEmpty(this.caPassword);
         }
 
-        public bool LoadAuthorityCertificate()
+        public bool LoadAuthorityCertificate(bool requireAccountId = true)
         { 
             string acPath = Path.Combine(this.dataFolder.RootPath, AuthorityCertificateName);
 
@@ -111,7 +111,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             this.caAccountId = this.configuration.GetOrDefault<int>(CaAccountIdKey, 0);
 
-            if (this.caAccountId == 0)
+            if (requireAccountId && this.caAccountId == 0)
             {
                 this.logger.LogTrace("(-)[NO_ACCOUNT_ID]");
                 throw new CertificateConfigurationException($"You have to provide an account ID for the certificate authority! Use '{CaAccountIdKey}' configuration key to provide an account id.");

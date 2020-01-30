@@ -49,7 +49,7 @@ $wallet_file = "$node_data\nodeid.json"
 
 if (!(Test-Path $client_certificate) -or !(Test-Path $federation_key_file) -or !(Test-Path $transaction_key_file) -or !(Test-Path $wallet_file))
 {
-    $initial = "& dotnet $daemon_file -datadir=""$node_root"" -port=$port -apiport=$api_port -password=test -capassword=$ca_password -caaccountid=$ca_account -certificatepassword=test -mnemonic=""$mnemonic"""
+    $initial = "& dotnet $daemon_file -datadir=""$node_root"" -port=$port -apiport=$api_port -password=test -capassword=test -certificatepassword=test -mnemonic=""$mnemonic"""
 }
 
 # Run

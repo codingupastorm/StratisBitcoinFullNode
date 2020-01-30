@@ -146,43 +146,44 @@ namespace CertificateAuthority.Database
         }
 
         /// <summary>Creates a new account.</summary>
-        public int CreateAccount(CredentialsAccessWithModel<CreateAccount> credentialsModel)
+        /// <remarks>This method is somewhat special in that it requires no account ID for the credentials.
+        /// Only a password is required.</remarks>
+        public int CreateAccount(CreateAccount createAccountModel)
         {
-            return ExecuteQuery(credentialsModel, (dbContext, account) =>
+            CADbContext dbContext = this.CreateContext();
+
+            if (dbContext.Accounts.Any(x => x.Name == createAccountModel.CommonName))
+                throw new CertificateAuthorityAccountException("That name is already taken!");
+
+            AccountAccessFlags newAccountAccessLevel = (AccountAccessFlags)createAccountModel.RequestedAccountAccess | AccountAccessFlags.BasicAccess;
+
+            if (createAccountModel.RequestedPermissions.Any(permission => !AccountsController.ValidPermissions.Contains(permission.Name)))
+                throw new CertificateAuthorityAccountException("Invalid permission requested!");
+
+            var newAccount = new AccountModel()
             {
-                if (dbContext.Accounts.Any(x => x.Name == credentialsModel.Model.CommonName))
-                    throw new CertificateAuthorityAccountException("That name is already taken!");
+                Name = createAccountModel.CommonName,
+                PasswordHash = createAccountModel.NewAccountPasswordHash,
+                AccessInfo = newAccountAccessLevel,
+                CreatorId = -1, // Not known yet, as we are creating our own account
+                OrganizationUnit = createAccountModel.OrganizationUnit,
+                Organization = createAccountModel.Organization,
+                Locality = createAccountModel.Locality,
+                StateOrProvince = createAccountModel.StateOrProvince,
+                EmailAddress = createAccountModel.EmailAddress,
+                Country = createAccountModel.Country,
+                Permissions = createAccountModel.RequestedPermissions,
+                Approved = false
+            };
 
-                AccountAccessFlags newAccountAccessLevel = (AccountAccessFlags)credentialsModel.Model.RequestedAccountAccess | AccountAccessFlags.BasicAccess;
+            dbContext.Accounts.Add(newAccount);
+            dbContext.SaveChanges();
+            newAccount.CreatorId = newAccount.Id;
+            dbContext.Update(newAccount);
+            dbContext.SaveChanges();
 
-                if (!DataHelper.IsCreatorHasGreaterOrEqualAccess(account.AccessInfo, newAccountAccessLevel))
-                    throw new CertificateAuthorityAccountException("You can't create an account with an access level higher than yours!");
-
-                if (credentialsModel.Model.RequestedPermissions.Any(permission => !AccountsController.ValidPermissions.Contains(permission.Name)))
-                    throw new CertificateAuthorityAccountException("Invalid permission requested!");
-
-                var newAccount = new AccountModel()
-                {
-                    Name = credentialsModel.Model.CommonName,
-                    PasswordHash = credentialsModel.Model.NewAccountPasswordHash,
-                    AccessInfo = newAccountAccessLevel,
-                    CreatorId = account.Id,
-                    OrganizationUnit = credentialsModel.Model.OrganizationUnit,
-                    Organization = credentialsModel.Model.Organization,
-                    Locality = credentialsModel.Model.Locality,
-                    StateOrProvince = credentialsModel.Model.StateOrProvince,
-                    EmailAddress = credentialsModel.Model.EmailAddress,
-                    Country = credentialsModel.Model.Country,
-                    Permissions = credentialsModel.Model.RequestedPermissions,
-                    Approved = false
-                };
-
-                dbContext.Accounts.Add(newAccount);
-                dbContext.SaveChanges();
-
-                this.logger.Info("Account was created: '{0}', creator: '{1}'.", newAccount, account);
-                return newAccount.Id;
-            });
+            this.logger.Info("Account was created: '{0}'.", newAccount);
+            return newAccount.Id;
         }
 
         /// <summary>Deletes existing account with id specified.</summary>

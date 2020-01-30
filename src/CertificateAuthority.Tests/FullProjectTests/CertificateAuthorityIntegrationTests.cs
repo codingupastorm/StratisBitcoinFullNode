@@ -71,7 +71,6 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             var createAccountModel = new CreateAccount()
             {
-                AccountId = Settings.AdminAccountId, 
                 Password = CaTestHelper.AdminPassword,
                 CommonName = "dummyName",
                 Country = "dummyCountry",
@@ -91,7 +90,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             // The requirement for an account to be approved prior to use must be enforced.
             // TODO: The type of exception thrown here should be more meaningful, and represent the actual error (unapproved account)
-            Assert.Throws<JsonSerializationException>(() => lowPrivilegeClient.GenerateCertificateSigningRequest(Convert.ToBase64String(pubKey.ToBytes()), address.ToString(), Convert.ToBase64String(pubKey.Hash.ToBytes()), Convert.ToBase64String(pubKey.ToBytes())));
+            Assert.Throws<Exception>(() => lowPrivilegeClient.GenerateCertificateSigningRequest(Convert.ToBase64String(pubKey.ToBytes()), address.ToString(), Convert.ToBase64String(pubKey.Hash.ToBytes()), Convert.ToBase64String(pubKey.ToBytes())));
 
             var credentialsModel = new CredentialsModelWithTargetId() {AccountId = Settings.AdminAccountId, Password = CaTestHelper.AdminPassword, TargetAccountId = id};
 
