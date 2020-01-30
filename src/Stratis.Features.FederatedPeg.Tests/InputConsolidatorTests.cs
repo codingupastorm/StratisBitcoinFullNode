@@ -2,7 +2,7 @@
 using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Features.FederatedPeg.InputConsolidation;
 using Xunit;

@@ -13,6 +13,7 @@ using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
 using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.Features.BlockStore.Models;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.Wallet.Models;
@@ -494,7 +495,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                     {
                         Hex = buildTransactionModel.Hex
                     })
-                    .ReceiveJson<WalletSendTransactionModel>();
+                    .ReceiveJson<SendTransactionModel>();
 
                 // Assert.
                 // The sending node should have 50 (+ fee) fewer coins.
@@ -603,7 +604,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                 {
                     Hex = buildTransactionModel.Hex
                 })
-                .ReceiveJson<WalletSendTransactionModel>();
+                .ReceiveJson<SendTransactionModel>();
 
                 // Assert.
                 // The sending node should have 50 (+ fee) fewer coins.
@@ -694,7 +695,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                     {
                         Hex = buildTransactionModel.Hex
                     })
-                    .ReceiveJson<WalletSendTransactionModel>();
+                    .ReceiveJson<SendTransactionModel>();
 
                 // Assert.
                 // Mine and sync so that we make sure the receiving node is up to date.

@@ -8,6 +8,7 @@ using Flurl.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using Newtonsoft.Json.Linq;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Bitcoin.Features.SmartContracts.Wallet;
@@ -66,7 +67,7 @@ namespace Stratis.Features.FederatedPeg.IntegrationTests
                 // Send funds from fed1 to user1
                 string user1Address = user1.GetUnusedAddress();
                 Script scriptPubKey = PayToPubkeyHashTemplate.Instance.GenerateScriptPubKey(new BitcoinPubKeyAddress(user1Address, network));
-                Result<WalletSendTransactionModel> result = SendTransaction(fed1, scriptPubKey, new Money(100_000, MoneyUnit.BTC));
+                Result<SendTransactionModel> result = SendTransaction(fed1, scriptPubKey, new Money(100_000, MoneyUnit.BTC));
                 Assert.True(result.IsSuccess);
                 int currentHeight = user1.FullNode.ChainIndexer.Height;
                 TestBase.WaitLoop(() => user1.FullNode.ChainIndexer.Height > currentHeight + 2);
@@ -123,7 +124,7 @@ namespace Stratis.Features.FederatedPeg.IntegrationTests
         /// <summary>
         /// Helper method ripped from FN to send standard transaction.
         /// </summary>
-        public Result<WalletSendTransactionModel> SendTransaction(CoreNode coreNode, Script scriptPubKey, Money amount)
+        public Result<SendTransactionModel> SendTransaction(CoreNode coreNode, Script scriptPubKey, Money amount)
         {
             var txBuildContext = new TransactionBuildContext(coreNode.FullNode.Network)
             {
@@ -142,11 +143,11 @@ namespace Stratis.Features.FederatedPeg.IntegrationTests
             if (result is ErrorResult errorResult)
             {
                 var errorResponse = (ErrorResponse)errorResult.Value;
-                return Result.Fail<WalletSendTransactionModel>(errorResponse.Errors[0].Message);
+                return Result.Fail<SendTransactionModel>(errorResponse.Errors[0].Message);
             }
 
             JsonResult response = (JsonResult)result;
-            return Result.Ok((WalletSendTransactionModel)response.Value);
+            return Result.Ok((SendTransactionModel)response.Value);
         }
 
     }

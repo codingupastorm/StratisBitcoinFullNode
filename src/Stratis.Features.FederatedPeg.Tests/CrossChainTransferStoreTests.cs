@@ -11,6 +11,7 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Controllers;
 using Stratis.Bitcoin.Features.MemoryPool;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
@@ -641,7 +642,7 @@ namespace Stratis.Features.FederatedPeg.Tests
                 Hex = model.Hex
             };
 
-            WalletSendTransactionModel model2 = Post<SendTransactionRequest, WalletSendTransactionModel>(
+            SendTransactionModel model2 = Post<SendTransactionRequest, SendTransactionModel>(
                 "http://127.0.0.1:38221/api/wallet/send-transaction", sendRequest);
 
         }
