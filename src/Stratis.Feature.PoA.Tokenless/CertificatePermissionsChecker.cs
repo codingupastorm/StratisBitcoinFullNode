@@ -1,4 +1,3 @@
-using System;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
@@ -49,7 +48,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         private X509Certificate GetCertificateFromCA(uint160 address)
         {
-            X509Certificate certificate = this.certificatesManager.GetCertificateForPubKey(Convert.ToBase64String(address.ToBytes()));
+            X509Certificate certificate = this.certificatesManager.GetCertificateForAddress(address);
             this.certificateCache.SetCertificate(address, certificate);
             return certificate;
         }

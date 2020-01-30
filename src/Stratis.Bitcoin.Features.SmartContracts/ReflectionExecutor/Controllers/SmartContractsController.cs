@@ -11,13 +11,12 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Newtonsoft.Json;
 using Stratis.Bitcoin.Connection;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.SmartContracts.Wallet;
 using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Utilities.JsonErrors;
 using Stratis.Bitcoin.Utilities.ModelStateErrors;
 using Stratis.SmartContracts;
@@ -499,7 +498,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             // Check if transaction was actually added to a mempool.
             TransactionBroadcastEntry transactionBroadCastEntry = this.broadcasterManager.GetTransaction(transaction.GetHash());
 
-            if (transactionBroadCastEntry?.State == Features.Wallet.Broadcasting.State.CantBroadcast)
+            if (transactionBroadCastEntry?.State == Features.MemoryPool.Broadcasting.State.CantBroadcast)
             {
                 this.logger.LogError("Exception occurred: {0}", transactionBroadCastEntry.ErrorMessage);
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, transactionBroadCastEntry.ErrorMessage, "Transaction Exception");
@@ -544,7 +543,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             // Check if transaction was actually added to a mempool.
             TransactionBroadcastEntry transactionBroadCastEntry = this.broadcasterManager.GetTransaction(transaction.GetHash());
 
-            if (transactionBroadCastEntry?.State == Features.Wallet.Broadcasting.State.CantBroadcast)
+            if (transactionBroadCastEntry?.State == Features.MemoryPool.Broadcasting.State.CantBroadcast)
             {
                 this.logger.LogError("Exception occurred: {0}", transactionBroadCastEntry.ErrorMessage);
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, transactionBroadCastEntry.ErrorMessage, "Transaction Exception");

@@ -9,11 +9,9 @@ using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
-using Stratis.Bitcoin.Features.Wallet.Broadcasting;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Utilities.JsonErrors;
 using Stratis.Bitcoin.Utilities.ModelStateErrors;
@@ -29,7 +27,7 @@ using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
-using State = Stratis.Bitcoin.Features.Wallet.Broadcasting.State;
+using State = Stratis.Bitcoin.Features.MemoryPool.Broadcasting.State;
 
 namespace Stratis.Feature.PoA.Tokenless.Controllers
 {
@@ -162,7 +160,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
         [Route("send")]
         [HttpPost]
-        public async Task<IActionResult> SendTransactionAsync([FromBody] SendTransactionModel model)
+        public async Task<IActionResult> SendTransactionAsync([FromBody] Models.SendTransactionModel model)
         {
             if (!this.coreComponent.ConnectionManager.ConnectedPeers.Any())
             {
@@ -186,7 +184,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                     return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, transactionBroadCastEntry.ErrorMessage, "Transaction Exception");
                 }
 
-                return this.Json(new WalletSendTransactionModel
+                return this.Json(new Bitcoin.Features.MemoryPool.Broadcasting.SendTransactionModel
                 {
                     TransactionId = transaction.GetHash()
                 });
@@ -379,11 +377,26 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             }
         }
 
+        [Route("nodeaddress")]
+        [HttpGet]
+        public IActionResult GetNodeAddress()
+        {
+            try
+            {
+                PubKey transactionSigningKey = this.tokenlessWalletManager.GetPubKey(TokenlessWalletAccount.TransactionSigning);
+                return this.Json(transactionSigningKey.GetAddress(this.coreComponent.Network).ToString());
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError("Exception occurred: {0}", e.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
+            }
+        }
+
         /// <summary>
         /// Creates and signs the transaction.
         /// </summary>
         /// <param name="contractTxData">The contract data to be serialized.</param>
-        /// 
         /// <returns>The signed transaction</returns>
         private Transaction CreateAndSignTransaction(ContractTxData contractTxData)
         {

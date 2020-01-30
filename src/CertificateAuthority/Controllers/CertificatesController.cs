@@ -28,15 +28,13 @@ namespace CertificateAuthority.Controllers
 
         [HttpPost("initialize_ca")]
         [ProducesResponseType(typeof(bool), 200)]
-        public IActionResult InitializeCertificateAuthority([FromBody]CredentialsModelWithMnemonicModel model)
+        public IActionResult InitializeCertificateAuthority([FromBody]InitializeCertificateAuthorityModel model)
         {
             this.LogEntry(model);
 
-            var data = new CredentialsAccessWithModel<CredentialsModelWithMnemonicModel>(model, AccountAccessFlags.InitializeCertificateAuthority);
-
             return ExecuteCaMethod(() =>
             {
-                var certificateCreationResult = this.caCertificateManager.InitializeCertificateAuthority(data.Model.Mnemonic, data.Model.MnemonicPassword, data.Model.CoinType, data.Model.AddressPrefix);
+                var certificateCreationResult = this.caCertificateManager.InitializeCertificateAuthority(model.AddressPrefix, model.AdminPassword, model.CoinType, model.Mnemonic, model.MnemonicPassword);
                 return this.Json(this.LogExit(certificateCreationResult));
             });
         }
@@ -100,26 +98,6 @@ namespace CertificateAuthority.Controllers
             });
         }
 
-        /// <summary>Finds issued certificate by P2PKH address and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
-        [HttpPost("get_certificate_for_address")]
-        [ProducesResponseType(typeof(CertificateInfoModel), 200)]
-        public IActionResult GetCertificateByAddress([FromBody]CredentialsModelWithAddressModel model)
-        {
-            this.LogEntry(model);
-
-            var data = new CredentialsAccessWithModel<CredentialsModelWithAddressModel>(model, AccountAccessFlags.AccessAnyCertificate);
-
-            return ExecuteCaMethod(() =>
-            {
-                CertificateInfoModel certificateInfo = this.caCertificateManager.GetCertificateByAddress(data);
-
-                if (certificateInfo == null)
-                    return StatusCode(StatusCodes.Status404NotFound);
-
-                return this.Json(this.LogExit(certificateInfo));
-            });
-        }
-
         /// <summary>Finds issued certificate by pubkey and returns it or null if it wasn't found. AccessAnyCertificate access level is required.</summary>
         [HttpPost("get_certificate_for_pubkey_hash")]
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
@@ -131,7 +109,7 @@ namespace CertificateAuthority.Controllers
 
             return ExecuteCaMethod(() =>
             {
-                CertificateInfoModel certificateInfo = this.caCertificateManager.GetCertificateByPubKeyHash(data);
+                CertificateInfoModel certificateInfo = this.caCertificateManager.GetCertificateByTransactionSigningPubKeyHash(data);
 
                 if (certificateInfo == null)
                     return this.LogErrorExit(StatusCode(StatusCodes.Status404NotFound));

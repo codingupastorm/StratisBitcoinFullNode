@@ -25,7 +25,7 @@ start-process cmd -ArgumentList "/k color 0E && dotnet run -datadir=""$ca_root""
 timeout $long_interval_time
 
 Write-Host "Initializing CA..." -foregroundcolor "magenta"
-$params = @{ "mnemonic" = "$mnemonic"; "mnemonicPassword" = "$mnemonicPassword"; "coinType" = $coinType; "addressPrefix" = $addressPrefix; "accountId" = $ca_account; "password" = "$ca_password" }
+$params = @{ "mnemonic" = "$mnemonic"; "mnemonicPassword" = "$mnemonicPassword"; "coinType" = $coinType; "addressPrefix" = $addressPrefix; "accountId" = $ca_account; "adminPassword" = "$ca_password" }
 Write-Host ($params|ConvertTo-Json)
 Invoke-WebRequest -Uri https://localhost:5001/api/certificates/initialize_ca -Method post -Body ($params|ConvertTo-Json) -ContentType "application/json-patch+json"
 timeout $interval_time

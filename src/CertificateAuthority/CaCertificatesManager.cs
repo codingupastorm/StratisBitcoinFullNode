@@ -35,20 +35,15 @@ using X509Extension = Org.BouncyCastle.Asn1.X509.X509Extension;
 
 namespace CertificateAuthority
 {
-    public class CaCertificatesManager
+    public sealed class CaCertificatesManager
     {
+        private AsymmetricCipherKeyPair caKey;
+        private X509Certificate caCertificate;
+        private readonly Logger logger = LogManager.GetCurrentClassLogger();
         private readonly DataCacheLayer repository;
-
         private readonly Settings settings;
 
-        private readonly Logger logger = LogManager.GetCurrentClassLogger();
-
-        private AsymmetricCipherKeyPair caKey;
-
-        private X509Certificate caCertificate;
-
         public const int CaAddressIndex = 0;
-
         public const string CaCertFilename = "CaCertificate.crt";
         public const string CaPfxFilename = "CaCertificate.pfx";
 
@@ -64,12 +59,12 @@ namespace CertificateAuthority
         public const string CallContractPermissionOid = "1.5.2";
         public const string CreateContractPermissionOid = "1.5.3";
 
-        public const int certificateValidityPeriodYears = 10;
-        public const int caCertificateValidityPeriodYears = 10;
+        public const int CertificateValidityPeriodYears = 10;
+        public const int CaCertificateValidityPeriodYears = 10;
 
-        public CaCertificatesManager(DataCacheLayer cache, Settings settings)
+        public CaCertificatesManager(DataCacheLayer repository, Settings settings)
         {
-            this.repository = cache;
+            this.repository = repository;
             this.settings = settings;
         }
 
@@ -97,7 +92,7 @@ namespace CertificateAuthority
             this.caKey = new AsymmetricCipherKeyPair(pub, ec); // TODO: This method of deriving pubkey from private could be made into its own method.
         }
 
-        public bool InitializeCertificateAuthority(string mnemonic, string password, int coinType, byte addressPrefix)
+        public bool InitializeCertificateAuthority(byte addressPrefix, string adminPassword, int coinType, string mnemonic, string mnemonicPassword)
         {
             if (this.caCertificate != null)
             {
@@ -111,20 +106,11 @@ namespace CertificateAuthority
                 string caSubjectName = $"O={this.settings.CaSubjectNameOrganization},CN={this.settings.CaSubjectNameCommonName},OU={this.settings.CaSubjectNameOrganizationUnit}";
                 string hdPath = $"m/44'/{coinType}'/0'/0/{CaAddressIndex}";
 
-                var caAddressSpace = new HDWalletAddressSpace(mnemonic, password);
+                var caAddressSpace = new HDWalletAddressSpace(mnemonic, mnemonicPassword);
                 Key caPrivateKey = caAddressSpace.GetKey(hdPath).PrivateKey;
-                byte[] caPubKey = caPrivateKey.PubKey.ToBytes();
-                string caAddress = HDWalletAddressSpace.GetAddress(caPubKey, addressPrefix);
-                byte[] caOid141 = Encoding.UTF8.GetBytes(caAddress);
-
-                // TODO: Is this even needed for the CA?
-                byte[] caOid142 = caPubKey;
-
-                var extensionData = new Dictionary<string, byte[]>()
-                {
-                    {P2pkhExtensionOid, caOid141},
-                    {TransactionSigningPubKeyHashExtensionOid, caOid142}
-                };
+                
+                // The CA is the big boss, and won't be signing transactions itself, so no extensions.
+                var extensionData = new Dictionary<string, byte[]>();
 
                 this.caKey = caAddressSpace.GetCertificateKeyPair(hdPath);
                 this.caCertificate = CreateCertificateAuthorityCertificate(this.caKey, caSubjectName, null, null, extensionData);
@@ -135,16 +121,25 @@ namespace CertificateAuthority
 
                 // Many tests + tools are grabbing the certificate at this point. To keep that easily available we also store just the certificate.
                 File.WriteAllBytes(Path.Combine(this.settings.DataDirectory, CaCertFilename), this.caCertificate.GetEncoded());
+
+                SetAdminPassword(adminPassword);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 this.caKey = null;
                 this.caCertificate = null;
+
+                this.logger.Error(ex.ToString());
 
                 return false;
             }
 
             return true;
+        }
+
+        private void SetAdminPassword(string adminPassword)
+        {
+            this.repository.ChangeAccountPassword(Settings.AdminAccountId, adminPassword);
         }
 
         private static X509Certificate CreateCertificateAuthorityCertificate(AsymmetricCipherKeyPair subjectKeyPair, string subjectName, string[] subjectAlternativeNames, KeyPurposeID[] usages, Dictionary<string, byte[]> extensionData)
@@ -156,7 +151,7 @@ namespace CertificateAuthority
             X509Certificate certificate = GenerateCertificate(random,
                 subjectName, subjectKeyPair.Public, subjectSerialNumber, subjectAlternativeNames,
                 subjectName, subjectKeyPair, subjectSerialNumber,
-                true, usages, extensionData, caCertificateValidityPeriodYears, new List<string>() { });
+                true, usages, extensionData, CaCertificateValidityPeriodYears, new List<string>() { });
 
             return certificate;
         }
@@ -225,8 +220,10 @@ namespace CertificateAuthority
             X509Certificate certificateFromReq = IssueCertificateFromRequest(certRequest, accountInfo, this.caCertificate, this.caKey, subjectName, new string[0], new[] { KeyPurposeID.AnyExtendedKeyUsage });
             Asn1Set attributes = certRequest.GetCertificationRequestInfo().Attributes;
 
-            // TODO: Can these be moved into the account creation or is it better to keep them separate?
+            // TODO: This should come from the transaction signing pubkeyhash. Presently the address could be different to the pubkey hash, which is nonsensical.
+            // The address thus could be stored in the db but doesn't need to be its own field in the certificate.
             string p2pkh = Encoding.UTF8.GetString(ExtractExtensionFromCsr(attributes, P2pkhExtensionOid));
+
             var transactionSigningPubKeyHashBytes = ExtractExtensionFromCsr(attributes, TransactionSigningPubKeyHashExtensionOid);
             byte[] blockSigningPubKeyBytes = ExtractExtensionFromCsr(attributes, BlockSigningPubKeyExtensionOid);
 
@@ -280,7 +277,7 @@ namespace CertificateAuthority
             X509Certificate certificate = GenerateCertificate(random,
                 subjectName, publicKey, subjectSerialNumber, subjectAlternativeNames,
                 issuerCertificate.SubjectDN.ToString(), issuerKeyPair, issuerCertificate.SerialNumber,
-                false, usages, extensionData, certificateValidityPeriodYears, accountInfo.Permissions.Select(p => p.Name).ToList());
+                false, usages, extensionData, CertificateValidityPeriodYears, accountInfo.Permissions.Select(p => p.Name).ToList());
 
             return certificate;
         }
@@ -571,17 +568,9 @@ namespace CertificateAuthority
         }
 
         /// <summary>
-        /// Finds issued certificate by address and returns it or null if it wasn't found.
-        /// </summary>
-        public CertificateInfoModel GetCertificateByAddress(CredentialsAccessWithModel<CredentialsModelWithAddressModel> model)
-        {
-            return this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Certificates.SingleOrDefault(x => x.Address == model.Model.Address); });
-        }
-
-        /// <summary>
         /// Finds issued certificate by pubkey hash and returns it or null if it wasn't found.
         /// </summary>
-        public CertificateInfoModel GetCertificateByPubKeyHash(CredentialsAccessWithModel<CredentialsModelWithPubKeyHashModel> model)
+        public CertificateInfoModel GetCertificateByTransactionSigningPubKeyHash(CredentialsAccessWithModel<CredentialsModelWithPubKeyHashModel> model)
         {
             byte[] transactionSigningPubKeyHash = Convert.FromBase64String(model.Model.PubKeyHash);
             var byteArrayComparer = new ByteArrayComparer();

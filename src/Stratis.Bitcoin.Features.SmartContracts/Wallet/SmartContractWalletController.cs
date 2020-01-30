@@ -8,9 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Connection;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.Utilities;
@@ -19,7 +19,7 @@ using Stratis.Bitcoin.Utilities.ModelStateErrors;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.Receipts;
-using State = Stratis.Bitcoin.Features.Wallet.Broadcasting.State;
+using State = Stratis.Bitcoin.Features.MemoryPool.Broadcasting.State;
 
 namespace Stratis.Bitcoin.Features.SmartContracts.Wallet
 {
@@ -360,7 +360,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Wallet
             {
                 Transaction transaction = this.network.CreateTransaction(request.Hex);
 
-                var model = new WalletSendTransactionModel
+                var model = new SendTransactionModel
                 {
                     TransactionId = transaction.GetHash(),
                     Outputs = new List<TransactionOutputModel>()
