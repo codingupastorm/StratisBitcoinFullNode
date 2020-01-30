@@ -9,13 +9,11 @@ using NBitcoin.Protocol;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.ColdStaking;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Interfaces;
 using Xunit;
 
 namespace Stratis.Features.SQLiteWalletRepository.Tests
@@ -50,26 +48,6 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
     {
         public MultiWalletRepositoryTests() : base(false)
         {
-        }
-    }
-
-    public class ColdStakingDestinationReader : ScriptDestinationReader, IScriptDestinationReader
-    {
-        public ColdStakingDestinationReader(IScriptAddressReader scriptAddressReader) : base(scriptAddressReader)
-        {
-        }
-
-        public override IEnumerable<TxDestination> GetDestinationFromScriptPubKey(Network network, Script redeemScript)
-        {
-            if (ColdStakingScriptTemplate.Instance.ExtractScriptPubKeyParameters(redeemScript, out KeyId hotPubKeyHash, out KeyId coldPubKeyHash))
-            {
-                yield return hotPubKeyHash;
-                yield return coldPubKeyHash;
-            }
-            else
-            {
-                base.GetDestinationFromScriptPubKey(network, redeemScript);
-            }
         }
     }
 
@@ -190,7 +168,7 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
                 {
                     var nodeSettings = new NodeSettings(this.network, args: new[] { $"-datadir={dataFolder.RootPath}" }, protocolVersion: ProtocolVersion.ALT_PROTOCOL_VERSION);
 
-                    var repo = new SQLiteWalletRepository(nodeSettings.LoggerFactory, dataFolder, this.network, DateTimeProvider.Default, new ColdStakingDestinationReader(new ScriptAddressReader()));
+                    var repo = new SQLiteWalletRepository(nodeSettings.LoggerFactory, dataFolder, this.network, DateTimeProvider.Default, new ScriptDestinationReader(new ScriptAddressReader()));
                     repo.WriteMetricsToFile = true;
                     repo.Initialize(this.dbPerWallet);
 
@@ -466,8 +444,7 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
                 var blockBase = new BlockBase(network, this.dataDir);
 
                 // Initialize the repo.
-                network.StandardScriptsRegistry.RegisterStandardScriptTemplate(ColdStakingScriptTemplate.Instance);
-                var repo = new SQLiteWalletRepository(blockBase.NodeSettings.LoggerFactory, dataFolder, network, DateTimeProvider.Default, new ColdStakingDestinationReader(new ScriptAddressReader()));
+                var repo = new SQLiteWalletRepository(blockBase.NodeSettings.LoggerFactory, dataFolder, network, DateTimeProvider.Default, new ScriptDestinationReader(new ScriptAddressReader()));
                 repo.WriteMetricsToFile = true;
                 blockBase.Metrics = repo.Metrics;
                 repo.Initialize(this.dbPerWallet);
@@ -708,8 +685,7 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
                 var blockBase = new BlockBase(network, this.dataDir);
 
                 // Initialize the repo.
-                network.StandardScriptsRegistry.RegisterStandardScriptTemplate(ColdStakingScriptTemplate.Instance);
-                var repo = new SQLiteWalletRepository(blockBase.NodeSettings.LoggerFactory, dataFolder, network, DateTimeProvider.Default, new ColdStakingDestinationReader(new ScriptAddressReader()));
+                var repo = new SQLiteWalletRepository(blockBase.NodeSettings.LoggerFactory, dataFolder, network, DateTimeProvider.Default, new ScriptDestinationReader(new ScriptAddressReader()));
                 repo.WriteMetricsToFile = true;
                 blockBase.Metrics = repo.Metrics;
                 repo.Initialize(this.dbPerWallet);
