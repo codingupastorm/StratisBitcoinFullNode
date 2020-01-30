@@ -5,6 +5,7 @@ using System.Security;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Controllers;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
@@ -454,7 +455,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                 File.Copy("Data/test.wallet.json", testWalletPath);
         }
 
-        private static Result<WalletSendTransactionModel> SendManyUtxosTransaction(CoreNode node, Script scriptPubKey, Money amount, int utxos = 1)
+        private static Result<SendTransactionModel> SendManyUtxosTransaction(CoreNode node, Script scriptPubKey, Money amount, int utxos = 1)
         {
             Recipient[] recipients = new Recipient[utxos];
             for (int i = 0; i < recipients.Length; i++)
@@ -479,11 +480,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
             if (result is ErrorResult errorResult)
             {
                 var errorResponse = (ErrorResponse)errorResult.Value;
-                return Result.Fail<WalletSendTransactionModel>(errorResponse.Errors[0].Message);
+                return Result.Fail<SendTransactionModel>(errorResponse.Errors[0].Message);
             }
 
             JsonResult response = (JsonResult)result;
-            return Result.Ok((WalletSendTransactionModel)response.Value);
+            return Result.Ok((SendTransactionModel)response.Value);
         }
     }
 }

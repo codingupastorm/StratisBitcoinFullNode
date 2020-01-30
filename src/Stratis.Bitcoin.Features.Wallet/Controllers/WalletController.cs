@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Features.Wallet.Broadcasting;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet.Helpers;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.Wallet.Models;
@@ -970,7 +970,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
             {
                 Transaction transaction = this.network.CreateTransaction(request.Hex);
 
-                var model = new WalletSendTransactionModel
+                var model = new SendTransactionModel
                 {
                     TransactionId = transaction.GetHash(),
                     Outputs = new List<TransactionOutputModel>()
@@ -1656,7 +1656,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
 
                 foreach (Transaction transaction in transactionList)
                 {
-                    var modelItem = new WalletSendTransactionModel
+                    var modelItem = new SendTransactionModel
                     {
                         TransactionId = transaction.GetHash(),
                         Outputs = new List<TransactionOutputModel>()

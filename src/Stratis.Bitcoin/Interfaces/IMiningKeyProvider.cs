@@ -1,6 +1,6 @@
 ﻿using NBitcoin;
 
-namespace Stratis.Bitcoin.Features.Wallet.Interfaces
+namespace Stratis.Bitcoin.Interfaces
 {
     public interface IMiningKeyProvider
     {

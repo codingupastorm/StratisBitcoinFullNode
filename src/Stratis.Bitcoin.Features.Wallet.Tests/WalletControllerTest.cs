@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Features.Wallet.Broadcasting;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet.Controllers;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.Wallet.Models;
@@ -1808,7 +1808,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             IActionResult result = controller.SendTransaction(new SendTransactionRequest(transactionHex));
 
             var viewResult = Assert.IsType<JsonResult>(result);
-            var model = viewResult.Value as WalletSendTransactionModel;
+            var model = viewResult.Value as SendTransactionModel;
             Assert.NotNull(model);
             Assert.Equal(new uint256("96b4f0c2f0aa2cecd43fa66b5e3227c56afd8791e18fcc572d9625ee05d6741c"), model.TransactionId);
             Assert.Equal("1GkjeiT7Y6RdPPL3p3nUME9DLJchhLNCsJ", model.Outputs.First().Address);

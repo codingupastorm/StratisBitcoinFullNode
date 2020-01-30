@@ -5,10 +5,10 @@ using System.Linq;
 using CSharpFunctionalExtensions;
 using Mono.Cecil;
 using NBitcoin;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
-using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.CLR.Serialization;
@@ -58,7 +58,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             bytes.CopyTo(garbageTxData, txData.Length - 4);
 
             // Send fails - doesn't even make it to mempool
-            Result<WalletSendTransactionModel> result = this.node1.SendTransaction(new Script(garbageTxData), 25);
+            Result<SendTransactionModel> result = this.node1.SendTransaction(new Script(garbageTxData), 25);
             Assert.True(result.IsFailure);
             Assert.Equal("Invalid ContractTxData format", result.Error); // TODO: const error message
         }
@@ -109,7 +109,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             bytes[0] = (byte)ScOpcodeType.OP_CALLCONTRACT;
 
             // Send fails - doesn't even make it to mempool
-            Result<WalletSendTransactionModel> result = this.node1.SendTransaction(new Script(bytes), 25);
+            Result<SendTransactionModel> result = this.node1.SendTransaction(new Script(bytes), 25);
             Assert.True(result.IsFailure);
             Assert.Equal("Invalid ContractTxData format", result.Error); // TODO: const error message
         }

@@ -123,32 +123,6 @@ namespace CertificateAuthority.Models
         }
     }
 
-    public class CredentialsModelWithMnemonicModel : CredentialsModel
-    {
-        /// <summary>Mnemonic words used to derive certificate authority's private key.</summary>
-        public string Mnemonic { get; set; }
-
-        /// <summary>Password to be used with the mnemonic words, used to derive certificate authority's private key.
-        /// This is a separate password to the actual user account to allow the user account password to be changed without affecting the CA.</summary>
-        public string MnemonicPassword { get; set; }
-
-        public int CoinType { get; set; }
-
-        public byte AddressPrefix { get; set; }
-
-        public CredentialsModelWithMnemonicModel(string mnemonic, string mnemonicPassword, int coinType, byte addressPrefix, int accountId, string password) : base(accountId, password)
-        {
-            this.Mnemonic = mnemonic;
-            this.MnemonicPassword = mnemonicPassword;
-            this.CoinType = coinType;
-            this.AddressPrefix = addressPrefix;
-        }
-
-        public CredentialsModelWithMnemonicModel()
-        {
-        }
-    }
-
     public class GenerateCertificateSigningRequestModel : CredentialsModel
     {
         public string Address { get; set; }
@@ -159,7 +133,7 @@ namespace CertificateAuthority.Models
         public string BlockSigningPubKey { get; set; }
 
         public string TransactionSigningPubKeyHash { get; set; }
-        
+
         public GenerateCertificateSigningRequestModel(string address, string pubKey, string transactionSigningPubKeyHash, string blockSigningPubKey, int accountId, string password) : base(accountId, password)
         {
             this.Address = address;

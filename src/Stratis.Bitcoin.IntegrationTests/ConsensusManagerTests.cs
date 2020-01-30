@@ -10,9 +10,9 @@ using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.Miner.Interfaces;
 using Stratis.Bitcoin.Features.Miner.Staking;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
@@ -530,7 +530,7 @@ namespace Stratis.Bitcoin.IntegrationTests
                 TestHelper.ConnectAndSync(minerA, minerB);
 
                 // Miner A will spend the coins
-                WalletSendTransactionModel walletSendTransactionModel = $"http://localhost:{minerA.ApiPort}/api"
+                SendTransactionModel walletSendTransactionModel = $"http://localhost:{minerA.ApiPort}/api"
                     .AppendPathSegment("wallet/splitcoins")
                     .PostJsonAsync(new SplitCoinsRequest
                     {
@@ -540,7 +540,7 @@ namespace Stratis.Bitcoin.IntegrationTests
                         TotalAmountToSplit = network.Consensus.PremineReward.ToString(),
                         UtxosCount = 2
                     })
-                    .ReceiveJson<WalletSendTransactionModel>().Result;
+                    .ReceiveJson<SendTransactionModel>().Result;
 
                 TestBase.WaitLoop(() => minerA.FullNode.MempoolManager().InfoAll().Count > 0);
                 TestHelper.MineBlocks(minerA, 12);

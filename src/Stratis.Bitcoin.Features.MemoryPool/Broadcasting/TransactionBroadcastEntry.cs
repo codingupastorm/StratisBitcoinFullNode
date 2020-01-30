@@ -1,7 +1,6 @@
 ﻿using System;
-using Stratis.Bitcoin.Features.MemoryPool;
 
-namespace Stratis.Bitcoin.Features.Wallet.Broadcasting
+namespace Stratis.Bitcoin.Features.MemoryPool.Broadcasting
 {
     public class TransactionBroadcastEntry
     {

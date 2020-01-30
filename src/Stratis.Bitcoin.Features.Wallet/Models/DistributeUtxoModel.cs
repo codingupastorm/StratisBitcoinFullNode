@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 
 namespace Stratis.Bitcoin.Features.Wallet.Models
 {
@@ -27,11 +28,11 @@ namespace Stratis.Bitcoin.Features.Wallet.Models
         public bool DryRun { get; set; }
 
         [JsonProperty(PropertyName = "WalletSendTransaction")]
-        public List<WalletSendTransactionModel> WalletSendTransaction { get; set; }
+        public List<SendTransactionModel> WalletSendTransaction { get; set; }
 
         public DistributeUtxoModel()
         {
-            this.WalletSendTransaction = new List<WalletSendTransactionModel>();
+            this.WalletSendTransaction = new List<SendTransactionModel>();
         }
     }
 }
