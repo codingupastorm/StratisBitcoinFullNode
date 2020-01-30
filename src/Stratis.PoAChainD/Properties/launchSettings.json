@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Stratis.PoAChainD": {
-      "commandName": "Project",
-      "commandLineArgs": "-connect=0 -listen=1 -bootstrap=1 -apiuri=http://localhost:37666 -certificatepassword=4815162342 -addressindex=1 -port=16400 -datadir=C:\\Users\\user\\Desktop\\PoASetup\\dir2 -listen=1 -whitebind=::ffff:127.0.0.1:16400"
-    }
-  }
-}
