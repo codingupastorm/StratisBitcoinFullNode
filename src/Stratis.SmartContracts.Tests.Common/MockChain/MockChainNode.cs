@@ -11,6 +11,7 @@ using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers;
 using Stratis.Bitcoin.Features.SmartContracts.Wallet;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.Wallet.Models;
@@ -125,7 +126,7 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
         /// <summary>
         /// Send a normal transaction.
         /// </summary>
-        public Result<WalletSendTransactionModel> SendTransaction(Script scriptPubKey, Money amount, int utxos = 0, List<OutPoint> selectedInputs = null)
+        public Result<SendTransactionModel> SendTransaction(Script scriptPubKey, Money amount, int utxos = 0, List<OutPoint> selectedInputs = null)
         {
             Recipient[] recipients;
 
@@ -171,11 +172,11 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
             if (result is ErrorResult errorResult)
             {
                 var errorResponse = (ErrorResponse)errorResult.Value;
-                return Result.Fail<WalletSendTransactionModel>(errorResponse.Errors[0].Message);
+                return Result.Fail<SendTransactionModel>(errorResponse.Errors[0].Message);
             }
 
             JsonResult response = (JsonResult)result;
-            return Result.Ok((WalletSendTransactionModel)response.Value);
+            return Result.Ok((SendTransactionModel)response.Value);
         }
 
         /// <summary>

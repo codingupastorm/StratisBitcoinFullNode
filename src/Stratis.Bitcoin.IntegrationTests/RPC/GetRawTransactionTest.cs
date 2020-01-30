@@ -8,6 +8,7 @@ using Flurl.Http;
 using NBitcoin;
 using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.Features.BlockStore.Models;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
@@ -210,7 +211,7 @@ namespace Stratis.Bitcoin.IntegrationTests.RPC
                     {
                         Hex = buildTransactionModel.Hex
                     })
-                    .ReceiveJson<WalletSendTransactionModel>();
+                    .ReceiveJson<SendTransactionModel>();
 
                 uint256 txId = buildTransactionModel.TransactionId;
 

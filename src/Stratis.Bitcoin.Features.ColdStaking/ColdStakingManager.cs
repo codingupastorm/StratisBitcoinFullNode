@@ -7,6 +7,7 @@ using NBitcoin;
 using NBitcoin.BuilderExtensions;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;

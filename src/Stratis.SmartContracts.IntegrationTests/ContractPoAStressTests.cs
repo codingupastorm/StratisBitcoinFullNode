@@ -4,6 +4,7 @@ using System.Threading;
 using CSharpFunctionalExtensions;
 using NBitcoin;
 using Stratis.Bitcoin.Features.MemoryPool;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
@@ -34,7 +35,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             var node2 = this.mockChain.Nodes[1];
 
             // Load us up with 100 utxos
-            Result<WalletSendTransactionModel> fundingResult = node1.SendTransaction(node1.MinerAddress.ScriptPubKey, Money.Coins(100m), txsToSend);
+            Result<SendTransactionModel> fundingResult = node1.SendTransaction(node1.MinerAddress.ScriptPubKey, Money.Coins(100m), txsToSend);
             this.mockChain.MineBlocks(1);
 
             ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/Auction.cs");
@@ -150,7 +151,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             this.mockChain.MineBlocks(1);
 
             // Load us up with 100 utxos, each gets 1000.
-            Result<WalletSendTransactionModel> fundingResult = node1.SendTransaction(node1.MinerAddress.ScriptPubKey, Money.Coins(100_000m), txsToSend);
+            Result<SendTransactionModel> fundingResult = node1.SendTransaction(node1.MinerAddress.ScriptPubKey, Money.Coins(100_000m), txsToSend);
             node1.WaitMempoolCount(1);
             this.mockChain.MineBlocks(1);
 
@@ -193,7 +194,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             var node2 = this.mockChain.Nodes[1];
 
             // Load us up with 100 utxos we can create contracts with
-            Result<WalletSendTransactionModel> fundingResult = node1.SendTransaction(node1.MinerAddress.ScriptPubKey, Money.Coins(1000m), 1000);
+            Result<SendTransactionModel> fundingResult = node1.SendTransaction(node1.MinerAddress.ScriptPubKey, Money.Coins(1000m), 1000);
             Assert.True(fundingResult.IsSuccess);
             this.mockChain.WaitAllMempoolCount(1);
             this.mockChain.MineBlocks(1);
