@@ -35,7 +35,7 @@ namespace CertificateAuthority.Tests
             string password = GenerateRandomString();
             string passHash = DataHelper.ComputeSha256Hash(password);
 
-            var adminCredentials = new CredentialsModel(1, AdminPassword);
+            var adminCredentials = new CredentialsModel(Settings.AdminAccountId, AdminPassword);
 
             var accountsController = (AccountsController)server.Host.Services.GetService(typeof(AccountsController));
 

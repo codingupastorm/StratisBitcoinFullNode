@@ -23,7 +23,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder();
             this.server = new TestServer(builder);
 
-            this.adminCredentials = new CredentialsModel(1, CaTestHelper.AdminPassword);
+            this.adminCredentials = new CredentialsModel(Settings.AdminAccountId, CaTestHelper.AdminPassword);
             this.accountsController = (AccountsController)this.server.Host.Services.GetService(typeof(AccountsController));
             this.dataCacheLayer = (DataCacheLayer)this.server.Host.Services.GetService(typeof(DataCacheLayer));
 
