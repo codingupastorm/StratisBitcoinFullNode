@@ -1,4 +1,5 @@
-﻿using CertificateAuthority.Tests.FullProjectTests;
+﻿using CertificateAuthority;
+using CertificateAuthority.Tests;
 using NBitcoin;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Base;
@@ -34,8 +35,8 @@ namespace Stratis.SmartContracts.Tests.Common
         public override void BuildNode()
         {
             var settings = new NodeSettings(this.Network, args: new string[] { "-conf=poa.conf", "-datadir=" + this.DataFolder,
-                $"-{CertificatesManager.CaAccountIdKey}={CertificateAuthorityIntegrationTests.TestAccountId}",
-                $"-{CertificatesManager.CaPasswordKey}={CertificateAuthorityIntegrationTests.TestPassword}",
+                $"-{CertificatesManager.CaAccountIdKey}={Settings.AdminAccountId}",
+                $"-{CertificatesManager.CaPasswordKey}={CaTestHelper.AdminPassword}",
                 $"-{CertificatesManager.ClientCertificateConfigurationKey}=test"
             });
 

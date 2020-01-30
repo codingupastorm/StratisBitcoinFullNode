@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using CertificateAuthority.Models;
-using CertificateAuthority.Tests.FullProjectTests.Helpers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using NBitcoin;
@@ -13,13 +12,8 @@ using Xunit;
 
 namespace CertificateAuthority.Tests.FullProjectTests
 {
-    public class CertificateAuthorityIntegrationTests
+    public sealed class CertificateAuthorityIntegrationTests
     {
-        public const int TestAccountId = 1;
-        public const string TestPassword = "4815162342";
-        public const string CaMnemonic = "young shoe immense usual faculty edge habit misery swarm tape viable toddler";
-        public const string CaMnemonicPassword = "node";
-
         private readonly Network network;
 
         public CertificateAuthorityIntegrationTests()
@@ -30,10 +24,12 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void CertificateAuthorityTestServerStartsUp()
         {
-            IWebHostBuilder builder = TestsHelper.CreateWebHostBuilder();
+            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder();
 
             var server = new TestServer(builder);
-            var client = new CaClient(server.BaseAddress, server.CreateClient(), TestAccountId, TestPassword);
+            var client = new CaClient(server.BaseAddress, server.CreateClient(), Settings.AdminAccountId, CaTestHelper.AdminPassword);
+
+            CaTestHelper.InitializeCa(server);
 
             List<CertificateInfoModel> response = client.GetAllCertificates();
 
@@ -45,12 +41,12 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void CertificateAuthorityTestServerGetsInitialized()
         {
-            IWebHostBuilder builder = TestsHelper.CreateWebHostBuilder();
+            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder();
 
             var server = new TestServer(builder);
-            var client = new CaClient(server.BaseAddress, server.CreateClient(), TestAccountId, TestPassword);
+            var client = new CaClient(server.BaseAddress, server.CreateClient(), Settings.AdminAccountId, CaTestHelper.AdminPassword);
 
-            Assert.True(client.InitializeCertificateAuthority(CaMnemonic, CaMnemonicPassword, this.network));
+            Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
             server.Dispose();
         }
@@ -58,12 +54,12 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void CertificateAuthorityCanGenerateCertificateSigningRequest()
         {
-            IWebHostBuilder builder = TestsHelper.CreateWebHostBuilder();
+            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder();
 
             var server = new TestServer(builder);
-            var client = new CaClient(server.BaseAddress, server.CreateClient(), TestAccountId, TestPassword);
+            var client = new CaClient(server.BaseAddress, server.CreateClient(), Settings.AdminAccountId, CaTestHelper.AdminPassword);
 
-            Assert.True(client.InitializeCertificateAuthority(CaMnemonic, CaMnemonicPassword, this.network));
+            Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
             var privateKey = new Key();
             PubKey pubKey = privateKey.PubKey;
@@ -85,12 +81,12 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void CertificateAuthorityCanIssueCertificate()
         {
-            IWebHostBuilder builder = TestsHelper.CreateWebHostBuilder();
+            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder();
 
             var server = new TestServer(builder);
-            var client = new CaClient(server.BaseAddress, server.CreateClient(), TestAccountId, TestPassword);
+            var client = new CaClient(server.BaseAddress, server.CreateClient(), Settings.AdminAccountId, CaTestHelper.AdminPassword);
 
-            Assert.True(client.InitializeCertificateAuthority(CaMnemonic, CaMnemonicPassword, this.network));
+            Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
             var privateKey = new Key();
 

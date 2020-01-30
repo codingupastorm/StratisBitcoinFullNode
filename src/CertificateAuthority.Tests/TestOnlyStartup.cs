@@ -5,7 +5,7 @@ using CertificateAuthority.Controllers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CertificateAuthority.Tests.FullProjectTests.Helpers
+namespace CertificateAuthority.Tests
 {
     public class TestOnlyStartup : Startup
     {
@@ -28,7 +28,7 @@ namespace CertificateAuthority.Tests.FullProjectTests.Helpers
         {
             string timeStamp = DateTime.Now.ToString("yyyyMMddHHmmssfff");
 
-            string randomString = TestsHelper.GenerateRandomString(6);
+            string randomString = CaTestHelper.GenerateRandomString(6);
 
             return Path.Combine(Path.GetTempPath(), caller.GetType().Name, callingMethod, timeStamp + randomString);
         }

@@ -18,12 +18,13 @@ namespace CertificateAuthority
 
     public class Settings
     {
+        public const int AdminAccountId = 1;
+        public const string AdminName = "Admin";
+        public const string AdminPasswordUnInitialized = "0000000000000000000000000000000000000000000000000000000000000000";
         private const string DataDirRoot = "StratisNode";
         private const string RootFolderName = "ca";
         private const string SubFolderName = "CaMain";
         private const string ConfigFileName = "ca.conf";
-
-        public const string AdminName = "Admin";
 
         private string configurationFile;
 
@@ -104,7 +105,7 @@ namespace CertificateAuthority
 
             this.CreateAdminAccountOnCleanStart = configFileArgs.GetOrDefault<bool>("createadmin", true);
 
-            this.DefaultAdminPasswordHash = configFileArgs.GetOrDefault<string>("adminpasshash", "6085fee2997a53fe15f195d907590238ec1f717adf6ac7fd4d7ed137f91892aa");
+            this.DefaultAdminPasswordHash = configFileArgs.GetOrDefault<string>("adminpasshash", AdminPasswordUnInitialized);
 
             this.CaSubjectNameOrganization = configFileArgs.GetOrDefault<string>("caorganization", "Stratis");
 

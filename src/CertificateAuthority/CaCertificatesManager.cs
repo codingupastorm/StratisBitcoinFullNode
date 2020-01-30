@@ -33,20 +33,15 @@ using X509Extension = Org.BouncyCastle.Asn1.X509.X509Extension;
 
 namespace CertificateAuthority
 {
-    public class CaCertificatesManager
+    public sealed class CaCertificatesManager
     {
+        private AsymmetricCipherKeyPair caKey;
+        private X509Certificate caCertificate;
+        private readonly Logger logger = LogManager.GetCurrentClassLogger();
         private readonly DataCacheLayer repository;
-
         private readonly Settings settings;
 
-        private readonly Logger logger = LogManager.GetCurrentClassLogger();
-
-        private AsymmetricCipherKeyPair caKey;
-
-        private X509Certificate caCertificate;
-
         public const int CaAddressIndex = 0;
-
         public const string CaCertFilename = "CaCertificate.crt";
         public const string CaPfxFilename = "CaCertificate.pfx";
 
@@ -65,9 +60,9 @@ namespace CertificateAuthority
         public const int CertificateValidityPeriodYears = 10;
         public const int CaCertificateValidityPeriodYears = 10;
 
-        public CaCertificatesManager(DataCacheLayer cache, Settings settings)
+        public CaCertificatesManager(DataCacheLayer repository, Settings settings)
         {
-            this.repository = cache;
+            this.repository = repository;
             this.settings = settings;
         }
 
@@ -95,7 +90,7 @@ namespace CertificateAuthority
             this.caKey = new AsymmetricCipherKeyPair(pub, ec); // TODO: This method of deriving pubkey from private could be made into its own method.
         }
 
-        public bool InitializeCertificateAuthority(string mnemonic, string password, int coinType, byte addressPrefix)
+        public bool InitializeCertificateAuthority(byte addressPrefix, string adminPassword, int coinType, string mnemonic, string mnemonicPassword)
         {
             if (this.caCertificate != null)
             {
@@ -109,7 +104,7 @@ namespace CertificateAuthority
                 string caSubjectName = $"O={this.settings.CaSubjectNameOrganization},CN={this.settings.CaSubjectNameCommonName},OU={this.settings.CaSubjectNameOrganizationUnit}";
                 string hdPath = $"m/44'/{coinType}'/0'/0/{CaAddressIndex}";
 
-                var caAddressSpace = new HDWalletAddressSpace(mnemonic, password);
+                var caAddressSpace = new HDWalletAddressSpace(mnemonic, mnemonicPassword);
                 Key caPrivateKey = caAddressSpace.GetKey(hdPath).PrivateKey;
                 
                 // The CA is the big boss, and won't be signing transactions itself, so no extensions.
@@ -124,16 +119,25 @@ namespace CertificateAuthority
 
                 // Many tests + tools are grabbing the certificate at this point. To keep that easily available we also store just the certificate.
                 File.WriteAllBytes(Path.Combine(this.settings.DataDirectory, CaCertFilename), this.caCertificate.GetEncoded());
+
+                SetAdminPassword(adminPassword);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
                 this.caKey = null;
                 this.caCertificate = null;
+
+                this.logger.Error(ex.ToString());
 
                 return false;
             }
 
             return true;
+        }
+
+        private void SetAdminPassword(string adminPassword)
+        {
+            this.repository.ChangeAccountPassword(Settings.AdminAccountId, adminPassword);
         }
 
         private static X509Certificate CreateCertificateAuthorityCertificate(AsymmetricCipherKeyPair subjectKeyPair, string subjectName, string[] subjectAlternativeNames, KeyPurposeID[] usages, Dictionary<string, byte[]> extensionData)
