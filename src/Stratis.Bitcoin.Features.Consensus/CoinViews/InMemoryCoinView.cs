@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using NBitcoin;
+using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Utilities;
 using ReaderWriterLock = NBitcoin.ReaderWriterLock;
 

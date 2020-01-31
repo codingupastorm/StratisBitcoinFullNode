@@ -1,5 +1,5 @@
 ﻿using NBitcoin;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
+using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Utilities;
 using Xunit;
 

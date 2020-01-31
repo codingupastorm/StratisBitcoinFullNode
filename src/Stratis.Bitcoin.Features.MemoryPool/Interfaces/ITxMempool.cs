@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using NBitcoin;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
+using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.MemoryPool.Fee;
 using static Stratis.Bitcoin.Features.MemoryPool.TxMempool;
 
