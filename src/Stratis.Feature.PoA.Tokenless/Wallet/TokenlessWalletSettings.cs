@@ -75,18 +75,41 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
             this.GenerateCertificate = config.GetOrDefault<bool>("generatecertificate", false, this.logger);
             this.CertPath = Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.ClientCertificateName);
-
+            
             this.Name = config.GetOrDefault<string>("certificatename", "", this.logger);
             this.OrganizationUnit = config.GetOrDefault<string>("certificateorganizationunit", "", this.logger);
             this.Organization = config.GetOrDefault<string>("certificateorganization", "", this.logger);
             this.Locality = config.GetOrDefault<string>("certificatelocality", "", this.logger);
             this.StateOrProvince = config.GetOrDefault<string>("certificatestateorprovince", "", this.logger);
             this.EmailAddress = config.GetOrDefault<string>("certificateemailaddress", null, this.logger);
-            
-            if (this.EmailAddress != null && !IsEmail(this.EmailAddress))
-                throw new ConfigurationException($"The supplied e-mail address ('{ this.EmailAddress }') syntax is invalid.");
-
             this.Country = config.GetOrDefault<string>("certificatecountry", "", this.logger);
+
+            if (this.GenerateCertificate)
+            {
+                if (string.IsNullOrEmpty(this.Name))
+                    throw new ConfigurationException("You need to specify a name for the node's certificate.");
+
+                if (string.IsNullOrEmpty(this.OrganizationUnit))
+                    throw new ConfigurationException("You need to specify an organization unit for the node's certificate.");
+
+                if (string.IsNullOrEmpty(this.Organization))
+                    throw new ConfigurationException("You need to specify an organization for the node's certificate.");
+
+                if (string.IsNullOrEmpty(this.Locality))
+                    throw new ConfigurationException("You need to specify a locality for the node's certificate.");
+
+                if (string.IsNullOrEmpty(this.StateOrProvince))
+                    throw new ConfigurationException("You need to specify a state or province for the node's certificate.");
+
+                if (string.IsNullOrEmpty(this.EmailAddress))
+                    throw new ConfigurationException("You need to specify an email address for the node's certificate.");
+
+                //if (this.EmailAddress != null && !IsEmail(this.EmailAddress))
+                //    throw new ConfigurationException($"The supplied e-mail address ('{ this.EmailAddress }') syntax is invalid.");
+
+                if (string.IsNullOrEmpty(this.Country))
+                    throw new ConfigurationException("You need to specify a country for the node's certificate.");
+            }
         }
 
         /// <summary>
@@ -158,10 +181,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         /// otherwise false.</returns>
         private static bool IsEmail(string email)
         {
-            if (email != null)
-                return Regex.IsMatch(email, matchEmailPattern);
-
-            return false;
+            return email != null && Regex.IsMatch(email, matchEmailPattern);
         }
 
         /// <summary>

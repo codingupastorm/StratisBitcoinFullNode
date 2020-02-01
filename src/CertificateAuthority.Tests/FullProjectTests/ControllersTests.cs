@@ -302,15 +302,6 @@ namespace CertificateAuthority.Tests.FullProjectTests
             this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.GetAllAccounts(new CredentialsModel(accountId, password)),
                 AccountAccessFlags.AccessAccountInfo);
 
-            this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.CreateAccount(new CreateAccount("", "", (int)AccountAccessFlags.DeleteAccounts, 
-                "dummyOrganizationUnit",
-                "dummyOrganization",
-                "dummyLocality",
-                "dummyStateOrProvince",
-                "dummyEmailAddress",
-                "dummyCountry",
-                new List<string>() { AccountsController.SendPermission }, password)), AccountAccessFlags.CreateAccounts | AccountAccessFlags.DeleteAccounts);
-
             this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.GetCertificateIssuedByAccountId(new CredentialsModelWithTargetId(1, accountId, password)),
                 AccountAccessFlags.AccessAnyCertificate);
 

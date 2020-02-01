@@ -46,7 +46,6 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 // Admin can access new user's data
                 AccountInfo info = CaTestHelper.GetValue<AccountInfo>(this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(credentials1.AccountId, this.adminCredentials.AccountId, this.adminCredentials.Password)));
                 Assert.Equal(credentials1Access, info.AccessInfo);
-                Assert.Equal(this.adminCredentials.AccountId, info.CreatorId);
 
                 // First user can access admin's data'
                 AccountInfo info2 = CaTestHelper.GetValue<AccountInfo>(this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(this.adminCredentials.AccountId, credentials1.AccountId, credentials1.Password)));
