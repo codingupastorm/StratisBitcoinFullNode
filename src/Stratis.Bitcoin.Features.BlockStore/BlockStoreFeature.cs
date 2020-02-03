@@ -10,7 +10,6 @@ using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.BlockStore.AddressIndexing;
 using Stratis.Bitcoin.Features.BlockStore.Pruning;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
@@ -48,8 +47,6 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
         private readonly IPrunedBlockRepository prunedBlockRepository;
 
-        private readonly IAddressIndexer addressIndexer;
-
         public BlockStoreFeature(
             Network network,
             ChainIndexer chainIndexer,
@@ -62,8 +59,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
             INodeStats nodeStats,
             IConsensusManager consensusManager,
             ICheckpoints checkpoints,
-            IPrunedBlockRepository prunedBlockRepository,
-            IAddressIndexer addressIndexer)
+            IPrunedBlockRepository prunedBlockRepository)
         {
             this.network = network;
             this.chainIndexer = chainIndexer;
@@ -77,7 +73,6 @@ namespace Stratis.Bitcoin.Features.BlockStore
             this.consensusManager = consensusManager;
             this.checkpoints = checkpoints;
             this.prunedBlockRepository = prunedBlockRepository;
-            this.addressIndexer = addressIndexer;
 
             nodeStats.RegisterStats(this.AddInlineStats, StatsType.Inline, this.GetType().Name, 900);
         }
@@ -153,8 +148,6 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
             this.blockStoreSignaled.Initialize();
 
-            this.addressIndexer.Initialize();
-
             return Task.CompletedTask;
         }
 
@@ -169,9 +162,6 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
             this.logger.LogInformation("Stopping BlockStoreSignaled.");
             this.blockStoreSignaled.Dispose();
-
-            this.logger.LogInformation("Stopping AddressIndexer.");
-            this.addressIndexer.Dispose();
         }
     }
 
@@ -201,7 +191,6 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
                         services.AddSingleton<StoreSettings>();
                         services.AddSingleton<IBlockStoreQueueFlushCondition, BlockStoreQueueFlushCondition>();
-                        services.AddSingleton<IAddressIndexer, AddressIndexer>();
                         services.AddSingleton<IBlockKeyValueStore, BlockKeyValueStore>();
                     });
             });
