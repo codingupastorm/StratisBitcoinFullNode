@@ -670,11 +670,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Broadcast from node1, check state of node2.
                 var node1Controller = node1.FullNode.NodeController<TokenlessController>();
 
-                //TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
-                //await node1.MineBlocksAsync(1);
-                //TokenlessTestHelper.WaitForNodeToSync(node1, node2);
-
-                // Also check that OpReturn Transaction can be sent via controller
                 var opReturnModel = new BuildOpReturnTransactionModel()
                 {
                     OpReturnData = "0203040509"
