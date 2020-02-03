@@ -232,7 +232,7 @@ namespace CertificateAuthority.Controllers
 
             return ExecuteCaMethod(() =>
             {
-                CertificateStatus status = this.caCertificateManager.GetCertificateStatusByThumbprint(model.Thumbprint);
+                CertificateStatus status = this.caCertificateManager.GetCertificateStatusByThumbprint(model.Thumbprint.ToUpper());
 
                 if (model.AsString)
                     return this.Json(this.LogExit(status.ToString()));
