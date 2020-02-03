@@ -518,7 +518,9 @@ namespace CertificateAuthority
         /// </summary>
         public CertificateInfoModel GetCertificateByThumbprint(CredentialsAccessWithModel<CredentialsModelWithThumbprintModel> model)
         {
-            return this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Certificates.SingleOrDefault(x => x.Thumbprint == model.Model.Thumbprint); });
+            string thumbPrintToFind = model.Model.Thumbprint.ToUpper();
+
+            return this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Certificates.SingleOrDefault(x => x.Thumbprint == thumbPrintToFind); });
         }
 
         /// <summary>
@@ -560,7 +562,7 @@ namespace CertificateAuthority
         {
             return this.repository.ExecuteCommand(model, (dbContext, account) =>
             {
-                string thumbprint = model.Model.Thumbprint;
+                string thumbprint = model.Model.Thumbprint.ToUpper();
 
                 if (this.GetCertificateStatusByThumbprint(thumbprint) != CertificateStatus.Good)
                     return false;
