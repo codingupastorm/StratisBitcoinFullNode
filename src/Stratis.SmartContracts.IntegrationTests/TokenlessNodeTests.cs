@@ -713,6 +713,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 await node1.MineBlocksAsync(1);
                 TokenlessTestHelper.WaitForNodeToSync(node1, node2);
 
+                // Confirm that the tx was mined.
+                Assert.True(node1.GetTip().Block.Transactions.Any(t => t.GetHash() == transactionId2));
                 Assert.NotEqual(transactionId1, transactionId2);
                 Assert.NotEqual(tx1.Time, tx2.Time);
             }
