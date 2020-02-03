@@ -14,7 +14,6 @@ using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.SmartContracts.Wallet;
-using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities.JsonErrors;
@@ -124,22 +123,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             });
         }
 
-        /// <summary>
-        /// Gets the balance of a smart contract in STRAT (or the sidechain coin). This method only works for smart contract addresses. 
-        /// </summary>
-        /// 
-        /// <param name="address">The address of the smart contract to retrieve the balance for.</param>
-        /// 
-        /// <returns>The balance of a smart contract in STRAT (or the sidechain coin).</returns>
-        [Route("balance")]
-        [HttpGet]
-        public IActionResult GetBalance([FromQuery]string address)
-        {
-            uint160 addressNumeric = address.ToUint160(this.network);
-            ulong balance = this.stateRoot.GetCurrentBalance(addressNumeric);
-            Money moneyBalance = Money.Satoshis(balance);
-            return this.Json(moneyBalance.ToString(false));
-        }
 
         /// <summary>
         /// Gets a single piece of smart contract data, which was stored as a key–value pair using the
@@ -439,32 +422,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
         }
 
         /// <summary>
-        /// Gets a fee estimate for a specific smart contract account-based transfer transaction.
-        /// This differs from fee estimation on standard networks due to the way inputs must be selected for account-based transfers.
-        /// </summary>
-        /// <param name="request">An object containing the parameters used to build the the fee estimation transaction.</param>
-        /// <returns>The estimated fee for the transaction.</returns>
-        [Route("estimate-fee")]
-        [HttpPost]
-        public IActionResult EstimateFee([FromBody] ScTxFeeEstimateRequest request)
-        {
-            if (!this.ModelState.IsValid)
-                return ModelStateErrors.BuildErrorResponse(this.ModelState);
-
-            try
-            {
-                EstimateFeeResult result = this.smartContractTransactionService.EstimateFee(request);
-
-                return this.Json(result.Fee);
-            }
-            catch (Exception e)
-            {
-                this.logger.LogError("Exception occurred: {0}", e.ToString());
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
-            }
-        }
-
-        /// <summary>
         /// Builds a transaction to create a smart contract and then broadcasts the transaction to the network.
         /// If the deployment is successful, methods on the smart contract can be subsequently called.
         /// </summary>
@@ -623,34 +580,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
                     request.MethodName = propertyGetterName;
                 }
             }
-        }
-
-        /// <summary>
-        /// Gets all addresses owned by a wallet which have a balance associated with them. This
-        /// method effectively returns the balance of all the UTXOs associated with a wallet.
-        /// In a case where multiple UTXOs are associated with one address, the amounts
-        /// are tallied to give a total for that address.
-        /// </summary>
-        ///
-        /// <param name="walletName">The name of the wallet to retrieve the addresses from.</param>
-        /// 
-        /// <returns>The addresses owned by a wallet which have a balance associated with them.</returns>
-        [Route("address-balances")]
-        [HttpGet]
-        public IActionResult GetAddressesWithBalances([FromQuery] string walletName)
-        {
-            IEnumerable<IGrouping<HdAddress, UnspentOutputReference>> allSpendable = this.walletManager.GetSpendableTransactionsInWallet(walletName, MinConfirmationsAllChecks).GroupBy(x => x.Address);
-            var result = new List<object>();
-            foreach (IGrouping<HdAddress, UnspentOutputReference> grouping in allSpendable)
-            {
-                result.Add(new
-                {
-                    grouping.Key.Address,
-                    Sum = grouping.Sum(x => x.Transaction.GetUnspentAmount(false))
-                });
-            }
-
-            return this.Json(result);
         }
 
         private object InterpretStorageValue(MethodParameterDataType dataType, byte[] bytes)
