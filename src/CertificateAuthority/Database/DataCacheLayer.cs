@@ -157,6 +157,9 @@ namespace CertificateAuthority.Database
 
             AccountAccessFlags newAccountAccessLevel = (AccountAccessFlags)createAccountModel.RequestedAccountAccess | AccountAccessFlags.BasicAccess;
 
+            if (createAccountModel.RequestedPermissions == null)
+                throw new CertificateAuthorityAccountException("No permissions requested!");
+
             if (createAccountModel.RequestedPermissions.Any(permission => !AccountsController.ValidPermissions.Contains(permission.Name)))
                 throw new CertificateAuthorityAccountException("Invalid permission requested!");
 
