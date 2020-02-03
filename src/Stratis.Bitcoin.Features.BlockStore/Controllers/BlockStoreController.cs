@@ -16,9 +16,6 @@ namespace Stratis.Bitcoin.Features.BlockStore.Controllers
 {
     public static class BlockStoreRouteEndPoint
     {
-        public const string GetAddressesBalances = "getaddressesbalances";
-        public const string GetVerboseAddressesBalances = "getverboseaddressesbalances";
-        public const string GetAddressIndexerTip = "addressindexertip";
         public const string GetBlock = "block";
         public const string GetBlockCount = "GetBlockCount";
     }
@@ -64,26 +61,6 @@ namespace Stratis.Bitcoin.Features.BlockStore.Controllers
             this.chainState = chainState;
             this.chainIndexer = chainIndexer;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
-        }
-
-        /// <summary>
-        /// Retrieves the <see cref="addressIndexer"/>'s tip.
-        /// </summary>
-        /// <returns>An instance of <see cref="AddressIndexerTipModel"/> containing the tip's hash and height.</returns>
-        [Route(BlockStoreRouteEndPoint.GetAddressIndexerTip)]
-        [HttpGet]
-        public IActionResult GetAddressIndexerTip()
-        {
-            try
-            {
-                ChainedHeader addressIndexerTip = this.addressIndexer.IndexerTip;
-                return this.Json(new AddressIndexerTipModel() { TipHash = addressIndexerTip?.HashBlock, TipHeight = addressIndexerTip?.Height });
-            }
-            catch (Exception e)
-            {
-                this.logger.LogError("Exception occurred: {0}", e.ToString());
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
-            }
         }
 
         /// <summary>
@@ -153,58 +130,6 @@ namespace Stratis.Bitcoin.Features.BlockStore.Controllers
             try
             {
                 return this.Json(this.chainState.ConsensusTip.Height);
-            }
-            catch (Exception e)
-            {
-                this.logger.LogError("Exception occurred: {0}", e.ToString());
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
-            }
-        }
-
-        /// <summary>Provides balance of the given addresses confirmed with at least <paramref name="minConfirmations"/> confirmations.</summary>
-        /// <param name="addresses">A comma delimited set of addresses that will be queried.</param>
-        /// <param name="minConfirmations">Only blocks below consensus tip less this parameter will be considered.</param>
-        /// <returns>A result object containing the balance for each requested address and if so, a meesage stating why the indexer is not queryable.</returns>
-        [Route(BlockStoreRouteEndPoint.GetAddressesBalances)]
-        [HttpGet]
-        public IActionResult GetAddressesBalances(string addresses, int minConfirmations)
-        {
-            try
-            {
-                string[] addressesArray = addresses.Split(',');
-
-                this.logger.LogDebug("Asking data for {0} addresses.", addressesArray.Length);
-
-                AddressBalancesResult result = this.addressIndexer.GetAddressBalances(addressesArray, minConfirmations);
-
-                this.logger.LogDebug("Sending data for {0} addresses.", result.Balances.Count);
-
-                return this.Json(result);
-            }
-            catch (Exception e)
-            {
-                this.logger.LogError("Exception occurred: {0}", e.ToString());
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
-            }
-        }
-
-
-        /// <summary>Provides verbose balance data of the given addresses.</summary>
-        /// <param name="addresses">A comma delimited set of addresses that will be queried.</param>
-        /// <returns>A result object containing the balance for each requested address and if so, a meesage stating why the indexer is not queryable.</returns>
-        [Route(BlockStoreRouteEndPoint.GetVerboseAddressesBalances)]
-        [HttpGet]
-        public IActionResult GetVerboseAddressesBalancesData(string addresses)
-        {
-            try
-            {
-                string[] addressesArray = addresses?.Split(',') ?? new string[] { };
-
-                this.logger.LogDebug("Asking data for {0} addresses.", addressesArray.Length);
-
-                VerboseAddressBalancesResult result = this.addressIndexer.GetAddressIndexerState(addressesArray);
-
-                return this.Json(result);
             }
             catch (Exception e)
             {
