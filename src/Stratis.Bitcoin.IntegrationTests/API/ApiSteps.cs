@@ -465,7 +465,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
             statusResponse.ConsensusHeight.Should().Be(0);
             statusResponse.BlockStoreHeight.Should().Be(0);
             statusResponse.ProtocolVersion.Should().Be((uint)(statusNode.Settings.ProtocolVersion));
-            statusResponse.RelayFee.Should().Be(statusNode.Settings.MinRelayTxFeeRate.FeePerK.ToUnit(MoneyUnit.BTC));
             statusResponse.DataDirectoryPath.Should().Be(statusNode.Settings.DataDir);
 
             List<string> featuresNamespaces = statusResponse.FeaturesData.Select(f => f.Namespace).ToList();
