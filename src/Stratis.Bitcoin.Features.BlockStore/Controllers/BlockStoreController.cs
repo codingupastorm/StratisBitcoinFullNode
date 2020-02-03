@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Controllers.Models;
-using Stratis.Bitcoin.Features.BlockStore.AddressIndexing;
 using Stratis.Bitcoin.Features.BlockStore.Models;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities;
@@ -25,8 +24,6 @@ namespace Stratis.Bitcoin.Features.BlockStore.Controllers
     [Route("api/[controller]")]
     public class BlockStoreController : Controller
     {
-        private readonly IAddressIndexer addressIndexer;
-
         /// <summary>Provides access to the block store on disk.</summary>
         private readonly IBlockStore blockStore;
 
@@ -47,15 +44,12 @@ namespace Stratis.Bitcoin.Features.BlockStore.Controllers
             ILoggerFactory loggerFactory,
             IBlockStore blockStore,
             IChainState chainState,
-            ChainIndexer chainIndexer,
-            IAddressIndexer addressIndexer)
+            ChainIndexer chainIndexer)
         {
             Guard.NotNull(network, nameof(network));
             Guard.NotNull(loggerFactory, nameof(loggerFactory));
             Guard.NotNull(chainState, nameof(chainState));
-            Guard.NotNull(addressIndexer, nameof(addressIndexer));
 
-            this.addressIndexer = addressIndexer;
             this.network = network;
             this.blockStore = blockStore;
             this.chainState = chainState;
