@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
-using Stratis.Bitcoin.Controllers.Converters;
 
 namespace Stratis.Bitcoin.Controllers.Models
 {
@@ -68,10 +66,6 @@ namespace Stratis.Bitcoin.Controllers.Models
 
         /// <summary>Is the node on the testnet.</summary>
         public bool Testnet { get; set; }
-
-        /// <summary>The current transaction relay fee.</summary>
-        [JsonConverter(typeof(BtcDecimalJsonConverter))]
-        public decimal RelayFee { get; set; }
 
         /// <summary>Returns the status of the node.</summary>
         public string State { get; set; }
