@@ -100,6 +100,10 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules
             return result;
         }
 
+        public override void NetworkSpecificStandardTxChecks(Transaction tx)
+        {
+        }
+
         public override void Dispose()
         {
             this.prefetcher.Dispose();

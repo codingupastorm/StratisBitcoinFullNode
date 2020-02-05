@@ -425,16 +425,14 @@ namespace Stratis.Bitcoin.Features.MemoryPool
                 context.State.Fail(MempoolErrors.Version).Throw();
             }
 
-            if (this.network.Consensus.IsProofOfStake)
-            {
-                long adjustedTime = this.dateTimeProvider.GetAdjustedTimeAsUnixTimestamp();
-                PosFutureDriftRule futureDriftRule = this.consensusRules.GetRule<PosFutureDriftRule>();
+            try
 
-                // nTime has different purpose from nLockTime but can be used in similar attacks
-                if (tx.Time > adjustedTime + futureDriftRule.GetFutureDrift(adjustedTime))
-                {
-                    context.State.Fail(MempoolErrors.TimeTooNew).Throw();
-                }
+            {
+                this.consensusRules.NetworkSpecificStandardTxChecks(tx);
+            }
+            catch (ConsensusErrorException consensusError)
+            {
+                context.State.Fail(new MempoolError(consensusError.ConsensusError));
             }
 
             // Extremely large transactions with lots of inputs can cost the network
