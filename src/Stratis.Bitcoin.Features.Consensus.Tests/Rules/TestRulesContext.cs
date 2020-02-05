@@ -115,7 +115,12 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.Rules
             return this.RuleContext ?? new PowRuleContext();
         }
 
-        public override void ConsensusSpecificTxChecks(Transaction tx, bool requireStandard)
+        public override void ConsensusSpecificTxChecks(Transaction tx)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void ConsensusSpecificRequiredTxChecks(Transaction tx)
         {
             throw new NotImplementedException();
         }

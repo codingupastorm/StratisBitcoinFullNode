@@ -281,7 +281,9 @@ namespace Stratis.Bitcoin.Consensus
             }
         }
 
-        public abstract void ConsensusSpecificTxChecks(Transaction tx, bool requireStandard);
+        public abstract void ConsensusSpecificTxChecks(Transaction tx);
+
+        public abstract void ConsensusSpecificRequiredTxChecks(Transaction tx);
 
         /// <inheritdoc />
         public abstract RuleContext CreateRuleContext(ValidationContext validationContext);
