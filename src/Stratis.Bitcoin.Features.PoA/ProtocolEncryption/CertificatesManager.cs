@@ -214,18 +214,6 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return certificate;
         }
 
-        public X509Certificate GetCertificateForTransactionSigningPubKeyHash(string pubKeyHash)
-        {
-            CaClient caClient = this.GetClient();
-
-            CertificateInfoModel retrievedCertModel = caClient.GetCertificateForTransactionSigningPubKeyHash(pubKeyHash);
-
-            var certParser = new X509CertificateParser();
-            X509Certificate certificate = certParser.ReadCertificate(retrievedCertModel.CertificateContentDer);
-
-            return certificate;
-        }
-
         public Task<List<PubKey>> GetCertificatePublicKeysAsync()
         {
             CaClient caClient = this.GetClient();
@@ -240,7 +228,9 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             foreach (X509Extension extension in cert.Extensions)
             {
                 if (extension.Oid.Value == oid)
-                    return extension.RawData;
+                    // This is truly horrible, but it isn't clear how we can correctly go from the DER bytes in the extension, to a relevant BC class, to a string.
+                    // Perhaps we are meant to recursively evaluate the extension data as ASN.1 until we land up with raw data that can't be decoded further?
+                    return extension.RawData.Skip(2).ToArray();
             }
 
             return null;
