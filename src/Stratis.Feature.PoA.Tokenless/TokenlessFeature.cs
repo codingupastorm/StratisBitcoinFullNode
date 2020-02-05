@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -96,7 +97,15 @@ namespace Stratis.Feature.PoA.Tokenless
             // Initialize the CA public key / federaton member voting loop.
             this.caPubKeysLoop = this.asyncProvider.CreateAndRunAsyncLoop("PeriodicCAKeys", async (cancellation) =>
             {
-                await this.SynchronizeMembersAsync();
+                try
+                {
+                    await this.SynchronizeMembersAsync();
+                } 
+                catch (Exception e)
+                {
+                    this.logger.LogDebug(e, "Exception raised when calling CA to synchronize members.");
+                    this.logger.LogWarning("Could not synchronize members with CA. CA is possibly down! Will retry in 1 minute.");
+                }
             },
             this.nodeLifetime.ApplicationStopping,
             repeatEvery: TimeSpans.Minute,
