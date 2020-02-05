@@ -169,7 +169,17 @@ namespace CertificateAuthority
         /// <returns></returns>
         private T RequestFromCA<T>(string endpoint, object model)
         {
-            HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{endpoint}", model).GetAwaiter().GetResult();
+            HttpResponseMessage response;
+            try
+            {
+                response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{endpoint}", model).GetAwaiter()
+                    .GetResult();
+            }
+            catch (HttpRequestException exception)
+            {
+                throw new CaClientException("Failed to connect to the CA.", exception);
+            }
+
 
             if (!response.IsSuccessStatusCode)
             {
