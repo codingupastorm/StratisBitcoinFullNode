@@ -19,7 +19,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules
     public class PowConsensusRuleEngine : ConsensusRuleEngine
     {
         /// <summary>Instance logger.</summary>
-        private readonly ILogger logger;
+        protected readonly ILogger logger;
 
         /// <summary>The consensus db, containing all unspent UTXO in the chain.</summary>
         public ICoinView UtxoSet { get; }
@@ -100,8 +100,9 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules
             return result;
         }
 
-        public override void NetworkSpecificStandardTxChecks(Transaction tx)
+        public override void ConsensusSpecificTxChecks(Transaction tx, bool requireStandard)
         {
+            new CheckPowTransactionRule { Logger = this.logger }.CheckTransaction(this.Network, this.Network.Consensus.Options, tx);
         }
 
         public override void Dispose()

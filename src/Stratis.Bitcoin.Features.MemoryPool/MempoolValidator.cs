@@ -371,11 +371,6 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         /// <param name="context">Current validation context.</param>
         protected virtual void PreMempoolChecks(MempoolValidationContext context)
         {
-            // TODO: fix this to use dedicated mempool rules.
-            new CheckPowTransactionRule { Logger = this.logger }.CheckTransaction(this.network, this.network.Consensus.Options, context.Transaction);
-            if (this.chainIndexer.Network.Consensus.IsProofOfStake)
-                new CheckPosTransactionRule { Logger = this.logger }.CheckTransaction(context.Transaction);
-
             // Coinbase is only valid in a block, not as a loose transaction
             if (context.Transaction.IsCoinBase)
             {
@@ -395,9 +390,9 @@ namespace Stratis.Bitcoin.Features.MemoryPool
 
             // Rather not work on nonstandard transactions (unless -testnet/-regtest)
             if (this.mempoolSettings.RequireStandard)
-            {
                 this.CheckStandardTransaction(context);
-            }
+            else
+                this.ConsensusSpecificTxChecks(context);
 
             // Only accept nLockTime-using transactions that can be mined in the next
             // block; we don't want our mempool filled up with transactions that can't
@@ -406,6 +401,18 @@ namespace Stratis.Bitcoin.Features.MemoryPool
             {
                 this.logger.LogTrace("(-)[FAIL_NONSTANDARD]");
                 context.State.Fail(MempoolErrors.NonFinal).Throw();
+            }
+        }
+
+        private void ConsensusSpecificTxChecks(MempoolValidationContext context)
+        {
+            try
+            {
+                this.consensusRules.ConsensusSpecificTxChecks(context.Transaction, this.mempoolSettings.RequireStandard);
+            }
+            catch (ConsensusErrorException consensusError)
+            {
+                context.State.Fail(new MempoolError(MempoolErrors.RejectNonstandard, consensusError.ConsensusError.Code)).Throw();
             }
         }
 
@@ -425,14 +432,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
                 context.State.Fail(MempoolErrors.Version).Throw();
             }
 
-            try
-            {
-                this.consensusRules.NetworkSpecificStandardTxChecks(tx);
-            }
-            catch (ConsensusErrorException consensusError)
-            {
-                context.State.Fail(new MempoolError(MempoolErrors.RejectNonstandard, consensusError.ConsensusError.Code)).Throw();
-            }
+            this.ConsensusSpecificTxChecks(context);
 
             // Extremely large transactions with lots of inputs can cost the network
             // almost as much to process as they cost the sender in fees, because

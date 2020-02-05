@@ -63,14 +63,21 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules
             this.RewindDataIndexCache.Initialize(tip.Height, this.UtxoSet);
         }
 
-        public override void NetworkSpecificStandardTxChecks(Transaction tx)
+        public override void ConsensusSpecificTxChecks(Transaction tx, bool requireStandard)
         {
-            long adjustedTime = this.DateTimeProvider.GetAdjustedTimeAsUnixTimestamp();
-            PosFutureDriftRule futureDriftRule = this.GetRule<PosFutureDriftRule>();
+            base.ConsensusSpecificTxChecks(tx, requireStandard);
 
-            // nTime has different purpose from nLockTime but can be used in similar attacks
-            if (tx.Time > adjustedTime + futureDriftRule.GetFutureDrift(adjustedTime))
-                ConsensusErrors.TimeTooNew.Throw();
+            new CheckPosTransactionRule { Logger = this.logger }.CheckTransaction(tx);
+
+            if (requireStandard)
+            {
+                long adjustedTime = this.DateTimeProvider.GetAdjustedTimeAsUnixTimestamp();
+                PosFutureDriftRule futureDriftRule = this.GetRule<PosFutureDriftRule>();
+
+                // nTime has different purpose from nLockTime but can be used in similar attacks
+                if (tx.Time > adjustedTime + futureDriftRule.GetFutureDrift(adjustedTime))
+                    ConsensusErrors.TimeTooNew.Throw();
+            }
         }
     }
 }

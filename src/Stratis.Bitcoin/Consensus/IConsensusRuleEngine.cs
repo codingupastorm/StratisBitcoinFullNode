@@ -77,6 +77,6 @@ namespace Stratis.Bitcoin.Consensus
         /// <returns>Context that contains validation result related information.</returns>
         Task<ValidationContext> FullValidationAsync(ChainedHeader header, Block block);
 
-        void NetworkSpecificStandardTxChecks(Transaction tx);
+        void ConsensusSpecificTxChecks(Transaction tx, bool requireStandard);
     }
 }
