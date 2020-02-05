@@ -336,6 +336,11 @@ namespace CertificateAuthority
             return new string[] { $"CN={account.EmailAddress}" };
         }
 
+        public void RemoveAccessLevels(int accountId, AccountAccessFlags flags)
+        {
+            this.repository.RemoveAccessLevels(accountId, flags);
+        }
+
         private static SecureRandom GetSecureRandom()
         {
             // Since we're on Windows, we'll use the CryptoAPI one (on the assumption
@@ -627,6 +632,39 @@ namespace CertificateAuthority
                     this.repository.PublicKeys.Remove(Encoders.Hex.EncodeData(certToEdit.BlockSigningPubKey));
 
                 this.repository.RevokedCertificates.Add(thumbprint);
+                this.logger.Info("Certificate id {0}, thumbprint {1} was revoked.", certToEdit.Id, certToEdit.Thumbprint);
+
+                return true;
+            });
+        }
+
+        public void GrantIssuePermission(CredentialsModelWithTargetId model)
+        {
+            var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AdminAccess);
+            this.repository.VerifyCredentialsAndAccessLevel(credentials, out _);
+            this.repository.GrantIssuePermission(model);
+        }
+
+        public bool RevokeCertificateForAccount(CredentialsAccessWithModel<CredentialsModelWithTargetId> model)
+        {
+            return this.repository.ExecuteCommand(model, (dbContext, account) =>
+            {
+                CertificateInfoModel certificate = this.repository.GetCertificateIssuedByAccountId(model);
+
+                this.repository.CertStatusesByThumbprint[certificate.Thumbprint] = CertificateStatus.Revoked;
+
+                CertificateInfoModel certToEdit = dbContext.Certificates.Single(x => x.Thumbprint == certificate.Thumbprint);
+
+                certToEdit.Status = CertificateStatus.Revoked;
+                certToEdit.RevokerAccountId = account.Id;
+
+                dbContext.Update(certToEdit);
+                dbContext.SaveChanges();
+
+                if (!dbContext.Certificates.Any(c => c.BlockSigningPubKey == certToEdit.BlockSigningPubKey && certToEdit.Status != CertificateStatus.Revoked))
+                    this.repository.PublicKeys.Remove(Encoders.Hex.EncodeData(certToEdit.BlockSigningPubKey));
+
+                this.repository.RevokedCertificates.Add(certificate.Thumbprint);
                 this.logger.Info("Certificate id {0}, thumbprint {1} was revoked.", certToEdit.Id, certToEdit.Thumbprint);
 
                 return true;

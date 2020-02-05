@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
+using CertificateAuthority.Database;
 using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -56,6 +57,25 @@ namespace CertificateAuthority.Controllers
             {
                 var revokeCertificateResult = this.caCertificateManager.RevokeCertificate(data);
                 return this.Json(this.LogExit(revokeCertificateResult));
+            });
+        }
+
+        /// <summary>Gives an account the IssueCertificates access level back again and revokes any issued certificates it may have.</summary>
+        /// <remarks>This is similar to the <see cref="ChangeAccountAccessLevel"/> endpoint, but it has additional necessary logic.</remarks>
+        [HttpPost("grant_issue_permission")]
+        [ProducesResponseType(typeof(AccountModel), 200)]
+        public IActionResult GrantIssuePermission([FromBody]CredentialsModelWithTargetId model)
+        {
+            this.LogEntry(model);
+
+            var data = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.RevokeCertificates);
+
+            return ExecuteCaMethod(() =>
+            {
+                this.caCertificateManager.GrantIssuePermission(model);
+                this.caCertificateManager.RevokeCertificateForAccount(data);
+
+                return Ok();
             });
         }
 
@@ -193,6 +213,10 @@ namespace CertificateAuthority.Controllers
             return ExecuteCaMethod(() =>
             {
                 CertificateInfoModel certificateInfo = this.caCertificateManager.IssueCertificate(data);
+
+                // Only allowed to issue certificate once unless the permission is explicitly re-granted
+                this.caCertificateManager.RemoveAccessLevels(model.AccountId, AccountAccessFlags.IssueCertificates);
+
                 return this.Json(this.LogExit(certificateInfo));
             });
         }
@@ -216,6 +240,9 @@ namespace CertificateAuthority.Controllers
                     return this.LogErrorExit(BadRequest());
 
                 CertificateInfoModel infoModel = this.caCertificateManager.IssueCertificate(data);
+
+                // Only allowed to issue certificate once unless the permission is explicitly re-granted
+                this.caCertificateManager.RemoveAccessLevels(model.AccountId, AccountAccessFlags.IssueCertificates);
 
                 return this.Json(this.LogExit(infoModel));
             });

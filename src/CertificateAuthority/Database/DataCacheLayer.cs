@@ -266,8 +266,6 @@ namespace CertificateAuthority.Database
             dbContext.SaveChanges();
 
             this.logger.Info("Account Id {0}'s password has been updated.", accountId);
-
-            return;
         }
 
         public void ChangeAccountPassword(CredentialsAccessWithModel<ChangeAccountPasswordModel> credentialsModel)
@@ -306,6 +304,42 @@ namespace CertificateAuthority.Database
         }
 
         #endregion
+
+        public void RemoveAccessLevels(int accountId, AccountAccessFlags flags)
+        {
+            CADbContext dbContext = this.CreateContext();
+
+            AccountModel account = dbContext.Accounts.SingleOrDefault(a => a.Id == accountId);
+
+            if (account == null)
+                throw new Exception($"The account was not found: {accountId}");
+
+            int access = (int)account.AccessInfo;
+            access &= ~(int)flags;
+
+            account.AccessInfo = (AccountAccessFlags)access;
+
+            dbContext.Update(account);
+            dbContext.SaveChanges();
+        }
+
+        public void GrantIssuePermission(CredentialsModelWithTargetId model)
+        {
+            CADbContext dbContext = this.CreateContext();
+
+            AccountModel account = dbContext.Accounts.SingleOrDefault(a => a.Id == model.TargetAccountId);
+
+            if (account == null)
+                throw new Exception($"The account was not found: {model.TargetAccountId}");
+
+            if ((account.AccessInfo & AccountAccessFlags.IssueCertificates) == AccountAccessFlags.IssueCertificates)
+                throw new Exception($"Account already has IssueCertificates access level: {model.TargetAccountId}");
+
+            account.AccessInfo |= AccountAccessFlags.IssueCertificates;
+
+            dbContext.Update(account);
+            dbContext.SaveChanges();
+        }
 
         /// <summary>Validate the account's password and access attributes for a particular action.</summary>
         /// <exception cref="InvalidCredentialsException">Thrown in case credentials are invalid.</exception>
