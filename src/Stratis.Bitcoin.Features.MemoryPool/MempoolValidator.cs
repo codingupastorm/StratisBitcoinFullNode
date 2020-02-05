@@ -426,13 +426,12 @@ namespace Stratis.Bitcoin.Features.MemoryPool
             }
 
             try
-
             {
                 this.consensusRules.NetworkSpecificStandardTxChecks(tx);
             }
             catch (ConsensusErrorException consensusError)
             {
-                context.State.Fail(new MempoolError(consensusError.ConsensusError));
+                context.State.Fail(new MempoolError(MempoolErrors.RejectNonstandard, consensusError.ConsensusError.Code)).Throw();
             }
 
             // Extremely large transactions with lots of inputs can cost the network
