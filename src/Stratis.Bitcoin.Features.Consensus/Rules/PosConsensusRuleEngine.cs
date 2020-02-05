@@ -9,6 +9,7 @@ using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.Consensus.Interfaces;
 using Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders;
+using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Utilities;
 using TracerAttributes;
 
@@ -60,6 +61,16 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules
             ChainedHeader tip = chainTip.FindAncestorOrSelf(hash);
 
             this.RewindDataIndexCache.Initialize(tip.Height, this.UtxoSet);
+        }
+
+        public override void NetworkSpecificStandardTxChecks(Transaction tx)
+        {
+            long adjustedTime = this.DateTimeProvider.GetAdjustedTimeAsUnixTimestamp();
+            PosFutureDriftRule futureDriftRule = this.GetRule<PosFutureDriftRule>();
+
+            // nTime has different purpose from nLockTime but can be used in similar attacks
+            if (tx.Time > adjustedTime + futureDriftRule.GetFutureDrift(adjustedTime))
+                ConsensusErrors.TimeTooNew.Throw();
         }
     }
 }
