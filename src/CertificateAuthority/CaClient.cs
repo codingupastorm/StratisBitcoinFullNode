@@ -179,7 +179,7 @@ namespace CertificateAuthority
                     errorMessage += $" Message: {response.Content.ReadAsStringAsync().GetAwaiter().GetResult()}";
                 }
 
-                throw new Exception(errorMessage);
+                throw new CaClientException(errorMessage);
             }
 
             string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
