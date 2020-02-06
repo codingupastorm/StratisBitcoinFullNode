@@ -95,7 +95,7 @@ namespace Stratis.Bitcoin.P2P
                 // Don't attempt to connect to self.
                 if (this.ConnectionSettings.ExternalEndpoint.MapToIpv6().Equals(peer.Endpoint))
                 {
-                    this.logger.LogDebug("Selection failed, can't connect to self.", peer.Endpoint);
+                    this.logger.LogDebug("Selection failed, can't connect to self.");
                     peerSelectionFailed++;
                     continue;
                 }
