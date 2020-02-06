@@ -92,6 +92,10 @@ namespace Stratis.Bitcoin.P2P
                     continue;
                 }
 
+                // Don't attempt to connect to self.
+                if (this.ConnectionSettings.ExternalEndpoint.MapToIpv6().Equals(peer.Endpoint))
+                    continue;
+
                 // If the peer exists in the -addnode collection don't
                 // try and connect to it.
                 bool peerExistsInAddNode = this.ConnectionSettings.RetrieveAddNodes().Any(p => p.MapToIpv6().Match(peer.Endpoint));
