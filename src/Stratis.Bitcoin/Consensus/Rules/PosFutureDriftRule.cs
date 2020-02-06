@@ -1,10 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Utilities;
 
-namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
+namespace Stratis.Bitcoin.Consensus.Rules
 {
     /// <summary>
     /// A rule that will verify the block time drift is according to the PoS consensus rules for the <see cref="StratisMain"/> network (and its test networks).
@@ -54,12 +52,12 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
         protected const int FutureDriftSeconds = 15;
 
         /// <summary>Allow access to the POS parent.</summary>
-        protected PosConsensusRuleEngine PosParent;
+        protected ConsensusRuleEngine PosParent;
 
         /// <inheritdoc />
         public override void Initialize()
         {
-            this.PosParent = this.Parent as PosConsensusRuleEngine;
+            this.PosParent = this.Parent;
 
             Guard.NotNull(this.PosParent, nameof(this.PosParent));
         }

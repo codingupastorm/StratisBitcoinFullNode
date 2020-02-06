@@ -2,10 +2,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Consensus.Rules;
 
-namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
+namespace Stratis.Bitcoin.Consensus.Rules
 {
     /// <summary>Validate a PoW transaction.</summary>
     public class CheckPowTransactionRule : PartialValidationConsensusRule
