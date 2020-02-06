@@ -644,6 +644,77 @@ namespace Stratis.SmartContracts.IntegrationTests
             }
         }
 
+        [Fact]
+        public async Task TokenlessNodesCanSendSameOpReturnDataTwiceAsync()
+        {
+            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = GetClient();
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
+
+                (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                (CoreNode node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+
+                node1.Start();
+                node2.Start();
+
+                TestHelper.Connect(node1, node2);
+
+                // Broadcast from node1, check state of node2.
+                var node1Controller = node1.FullNode.NodeController<TokenlessController>();
+
+                var opReturnModel = new BuildOpReturnTransactionModel()
+                {
+                    OpReturnData = "0203040509"
+                };
+
+                var opReturnResult = (JsonResult)node1Controller.BuildOpReturnTransaction(opReturnModel);
+                var opReturnResponse = (TokenlessTransactionModel)opReturnResult.Value;
+                var transactionId1 = opReturnResponse.TransactionId;
+                var tx1 = this.network.Consensus.ConsensusFactory.CreateTransaction(opReturnResponse.Hex);
+
+                await node1Controller.SendTransactionAsync(new SendTransactionModel()
+                {
+                    TransactionHex = opReturnResponse.Hex
+                });
+
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                await node1.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+
+                // Build and send the same transaction again.
+                opReturnResult = (JsonResult)node1Controller.BuildOpReturnTransaction(opReturnModel);
+                opReturnResponse = (TokenlessTransactionModel)opReturnResult.Value;
+
+                var transactionId2 = opReturnResponse.TransactionId;
+                var tx2 = this.network.Consensus.ConsensusFactory.CreateTransaction(opReturnResponse.Hex);
+
+                var result = await node1Controller.SendTransactionAsync(new SendTransactionModel()
+                {
+                    TransactionHex = opReturnResponse.Hex
+                });
+                
+                var sendTransactionResult = (JsonResult) result;
+                var sendTransactionResponse = (Bitcoin.Features.MemoryPool.Broadcasting.SendTransactionModel)sendTransactionResult.Value;
+
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                await node1.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+
+                // Confirm that the tx was mined.
+                Assert.True(node1.GetTip().Block.Transactions.Any(t => t.GetHash() == transactionId2));
+                Assert.NotEqual(transactionId1, transactionId2);
+                Assert.NotEqual(tx1.Time, tx2.Time);
+            }
+        }
+
         private CaClient GetClient()
         {
             var httpClient = new HttpClient();
