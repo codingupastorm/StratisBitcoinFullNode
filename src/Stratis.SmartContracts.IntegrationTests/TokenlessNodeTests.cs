@@ -17,6 +17,7 @@ using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
+using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
@@ -526,6 +527,58 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
+        public async Task RestartNodeWithoutCARemembersWhichCertificatesRevokedAsync()
+        {
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            {
+                string dataFolderName = GetDataFolderName();
+                X509Certificate ac = null;
+                CaClient client = null;
+
+                using (IWebHost server = CreateWebHostBuilder(dataFolderName).Build())
+                {
+                    server.Start();
+
+                    // Start + Initialize CA.
+                    client = GetClient();
+                    Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
+
+                    // Get Authority Certificate.
+                    ac = GetCertificateFromInitializedCAServer(server);
+
+                    // Create 1 tokenless node.
+                    (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+
+                    // Revoke a certificate.
+                    this.RevokeCertificateFromInitializedCAServer(server);
+                    
+                    // Get the thumbprint of the revoked certificate.
+                    string revokedThumbprint = client.GetRevokedCertificates().First();
+
+                    // Start the node.
+                    node1.Start();
+
+                    // Confirm that the certificate is revoked.
+                    RevocationChecker revocationChecker = node1.FullNode.NodeService<RevocationChecker>();
+                    TestBase.WaitLoop(() => revocationChecker.IsCertificateRevokedAsync(revokedThumbprint).GetAwaiter().GetResult());
+
+                    // Stop the node.
+                    node1.FullNode.Dispose();
+
+                    // Stop the CA.
+                    server.Dispose();
+
+                    // Restart the node.
+                    (node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client, false);
+                    node1.Start();
+
+                    // Is the certificate stil revoked even though we are running without a CA?
+                    Assert.True(revocationChecker.IsCertificateRevokedAsync(revokedThumbprint).GetAwaiter().GetResult());
+                }
+            }
+        }
+
+        [Fact]
         public async Task RestartTokenlessNodeAfterBlocksMinedAndContinuesAsync()
         {
             using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
@@ -659,6 +712,23 @@ namespace Stratis.SmartContracts.IntegrationTests
             var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
             var certParser = new X509CertificateParser();
             return certParser.ReadCertificate(File.ReadAllBytes(acLocation));
+        }
+
+        private void RevokeCertificateFromInitializedCAServer(IWebHost server)
+        {
+            var caCertificatesManager = (CaCertificatesManager)server.Services.GetService(typeof(CaCertificatesManager));
+
+            // Get a good cetificate.
+            var certs = caCertificatesManager.GetAllCertificates(new CredentialsAccessModel(1, CaTestHelper.AdminPassword, AccountAccessFlags.AccessAnyCertificate));
+
+            var model = new CredentialsAccessWithModel<CredentialsModelWithThumbprintModel>(new CredentialsModelWithThumbprintModel()
+            {
+                AccountId = 1,
+                Password = CaTestHelper.AdminPassword,
+                Thumbprint = certs[0].Thumbprint
+            }, AccountAccessFlags.RevokeCertificates);
+
+            caCertificatesManager.RevokeCertificate(model);
         }
 
         private string GetDataFolderName([CallerMemberName] string callingMethod = null)
