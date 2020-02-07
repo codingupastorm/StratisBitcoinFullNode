@@ -420,16 +420,13 @@ namespace Stratis.Bitcoin.Features.MemoryPool
                 context.State.Fail(MempoolErrors.Version).Throw();
             }
 
-            if (this.mempoolSettings.RequireStandard)
+            try
             {
-                try
-                {
-                    this.consensusRules.ConsensusSpecificRequiredTxChecks(context.Transaction);
-                }
-                catch (ConsensusErrorException consensusError)
-                {
-                    context.State.Fail(new MempoolError(MempoolErrors.RejectNonstandard, consensusError.ConsensusError.Code)).Throw();
-                }
+                this.consensusRules.ConsensusSpecificRequiredTxChecks(context.Transaction);
+            }
+            catch (ConsensusErrorException consensusError)
+            {
+                context.State.Fail(new MempoolError(MempoolErrors.RejectNonstandard, consensusError.ConsensusError.Code)).Throw();
             }
 
             // Extremely large transactions with lots of inputs can cost the network
