@@ -533,8 +533,7 @@ namespace Stratis.Bitcoin.P2P.Peer
         /// <inheritdoc />
         public void Disconnect()
         {
-            // Avoids a condition where disconnect could be called multiple times and
-            // throw an exception if the stream is already closed.
+            // Avoids a condition where disconnect could be called multiple times
             if (Interlocked.CompareExchange(ref this.disconnected, 1, 0) == 1)
             {
                 return;
@@ -546,8 +545,17 @@ namespace Stratis.Bitcoin.P2P.Peer
             this.stream = null;
             this.tcpClient = null;
 
-            disposeStream?.Dispose();
-            disposeTcpClient?.Dispose();
+            try
+            {
+                disposeStream?.Dispose();
+                disposeTcpClient?.Dispose();
+            }
+            catch (IOException)
+            {
+                // It's possible the stream has since been disconnected by the other end,
+                // and calling dispose will attempt to write to the socket, resulting in an IO error.
+                // Therefore we can ignore these types of exception.
+            }
         }
     }
 }
