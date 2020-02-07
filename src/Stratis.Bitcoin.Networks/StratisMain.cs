@@ -5,6 +5,7 @@ using NBitcoin;
 using NBitcoin.BouncyCastle.Math;
 using NBitcoin.DataEncoders;
 using NBitcoin.Protocol;
+using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.Consensus.Rules.ProvenHeaderRules;
 using Stratis.Bitcoin.Features.MemoryPool.Rules;

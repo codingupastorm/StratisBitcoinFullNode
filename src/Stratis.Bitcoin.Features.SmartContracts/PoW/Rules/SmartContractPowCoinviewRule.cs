@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Features.Consensus;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
+using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.SmartContracts.Caching;
 using Stratis.Bitcoin.Features.SmartContracts.Rules;
 using Stratis.SmartContracts.CLR;

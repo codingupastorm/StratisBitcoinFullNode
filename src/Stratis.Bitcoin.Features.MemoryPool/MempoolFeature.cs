@@ -8,7 +8,6 @@ using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.MemoryPool.Fee;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Interfaces;
@@ -153,7 +152,6 @@ namespace Stratis.Bitcoin.Features.MemoryPool
             {
                 features
                 .AddFeature<MempoolFeature>()
-                .DependOn<ConsensusFeature>()
                 .FeatureServices(services =>
                     {
                         services.AddSingleton<MempoolSchedulerLock>();

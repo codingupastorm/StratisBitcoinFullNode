@@ -17,6 +17,7 @@ using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
+using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
@@ -526,6 +527,58 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
+        public async Task RestartNodeWithoutCARemembersWhichCertificatesRevokedAsync()
+        {
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            {
+                string dataFolderName = GetDataFolderName();
+                X509Certificate ac = null;
+                CaClient client = null;
+
+                using (IWebHost server = CreateWebHostBuilder(dataFolderName).Build())
+                {
+                    server.Start();
+
+                    // Start + Initialize CA.
+                    client = GetClient();
+                    Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
+
+                    // Get Authority Certificate.
+                    ac = GetCertificateFromInitializedCAServer(server);
+
+                    // Create 1 tokenless node.
+                    (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+
+                    // Revoke a certificate.
+                    this.RevokeCertificateFromInitializedCAServer(server);
+                    
+                    // Get the thumbprint of the revoked certificate.
+                    string revokedThumbprint = client.GetRevokedCertificates().First();
+
+                    // Start the node.
+                    node1.Start();
+
+                    // Confirm that the certificate is revoked.
+                    RevocationChecker revocationChecker = node1.FullNode.NodeService<RevocationChecker>();
+                    TestBase.WaitLoop(() => revocationChecker.IsCertificateRevokedAsync(revokedThumbprint).GetAwaiter().GetResult());
+
+                    // Stop the node.
+                    node1.FullNode.Dispose();
+
+                    // Stop the CA.
+                    server.Dispose();
+
+                    // Restart the node.
+                    (node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client, false);
+                    node1.Start();
+
+                    // Is the certificate stil revoked even though we are running without a CA?
+                    Assert.True(revocationChecker.IsCertificateRevokedAsync(revokedThumbprint).GetAwaiter().GetResult());
+                }
+            }
+        }
+
+        [Fact]
         public async Task RestartTokenlessNodeAfterBlocksMinedAndContinuesAsync()
         {
             using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
@@ -644,6 +697,77 @@ namespace Stratis.SmartContracts.IntegrationTests
             }
         }
 
+        [Fact]
+        public async Task TokenlessNodesCanSendSameOpReturnDataTwiceAsync()
+        {
+            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = GetClient();
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
+
+                (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                (CoreNode node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+
+                node1.Start();
+                node2.Start();
+
+                TestHelper.Connect(node1, node2);
+
+                // Broadcast from node1, check state of node2.
+                var node1Controller = node1.FullNode.NodeController<TokenlessController>();
+
+                var opReturnModel = new BuildOpReturnTransactionModel()
+                {
+                    OpReturnData = "0203040509"
+                };
+
+                var opReturnResult = (JsonResult)node1Controller.BuildOpReturnTransaction(opReturnModel);
+                var opReturnResponse = (TokenlessTransactionModel)opReturnResult.Value;
+                var transactionId1 = opReturnResponse.TransactionId;
+                var tx1 = this.network.Consensus.ConsensusFactory.CreateTransaction(opReturnResponse.Hex);
+
+                await node1Controller.SendTransactionAsync(new SendTransactionModel()
+                {
+                    TransactionHex = opReturnResponse.Hex
+                });
+
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                await node1.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+
+                // Build and send the same transaction again.
+                opReturnResult = (JsonResult)node1Controller.BuildOpReturnTransaction(opReturnModel);
+                opReturnResponse = (TokenlessTransactionModel)opReturnResult.Value;
+
+                var transactionId2 = opReturnResponse.TransactionId;
+                var tx2 = this.network.Consensus.ConsensusFactory.CreateTransaction(opReturnResponse.Hex);
+
+                var result = await node1Controller.SendTransactionAsync(new SendTransactionModel()
+                {
+                    TransactionHex = opReturnResponse.Hex
+                });
+                
+                var sendTransactionResult = (JsonResult) result;
+                var sendTransactionResponse = (Bitcoin.Features.MemoryPool.Broadcasting.SendTransactionModel)sendTransactionResult.Value;
+
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                await node1.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+
+                // Confirm that the tx was mined.
+                Assert.True(node1.GetTip().Block.Transactions.Any(t => t.GetHash() == transactionId2));
+                Assert.NotEqual(transactionId1, transactionId2);
+                Assert.NotEqual(tx1.Time, tx2.Time);
+            }
+        }
+
         private CaClient GetClient()
         {
             var httpClient = new HttpClient();
@@ -659,6 +783,23 @@ namespace Stratis.SmartContracts.IntegrationTests
             var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
             var certParser = new X509CertificateParser();
             return certParser.ReadCertificate(File.ReadAllBytes(acLocation));
+        }
+
+        private void RevokeCertificateFromInitializedCAServer(IWebHost server)
+        {
+            var caCertificatesManager = (CaCertificatesManager)server.Services.GetService(typeof(CaCertificatesManager));
+
+            // Get a good cetificate.
+            var certs = caCertificatesManager.GetAllCertificates(new CredentialsAccessModel(1, CaTestHelper.AdminPassword, AccountAccessFlags.AccessAnyCertificate));
+
+            var model = new CredentialsAccessWithModel<CredentialsModelWithThumbprintModel>(new CredentialsModelWithThumbprintModel()
+            {
+                AccountId = 1,
+                Password = CaTestHelper.AdminPassword,
+                Thumbprint = certs[0].Thumbprint
+            }, AccountAccessFlags.RevokeCertificates);
+
+            caCertificatesManager.RevokeCertificate(model);
         }
 
         private string GetDataFolderName([CallerMemberName] string callingMethod = null)

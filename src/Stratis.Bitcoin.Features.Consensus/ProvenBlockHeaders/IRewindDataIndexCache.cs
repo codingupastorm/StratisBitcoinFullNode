@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using NBitcoin;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
+using Stratis.Bitcoin.Consensus;
 
 namespace Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders
 {

@@ -13,7 +13,6 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Controllers;
 using Stratis.Bitcoin.Controllers.Models;
-using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.RPC.Exceptions;
 using Stratis.Bitcoin.Features.RPC.ModelBinders;
 using Stratis.Bitcoin.Features.RPC.Models;

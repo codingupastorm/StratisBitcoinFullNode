@@ -1,8 +1,7 @@
 ﻿using NBitcoin;
 using Stratis.Bitcoin.Base.Deployments;
-using Stratis.Bitcoin.Consensus.Rules;
 
-namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
+namespace Stratis.Bitcoin.Consensus.Rules
 {
     /// <summary>A base skeleton class that is implemented by networks to define and verify the version of blocks.</summary>
     public abstract class HeaderVersionRule : HeaderValidationConsensusRule
