@@ -87,7 +87,7 @@ namespace Stratis.Bitcoin.P2P
         protected IPeerAddressManager PeerAddressManager { get; private set; }
 
         /// <summary>Tracker for endpoints known to be self.</summary>
-        private readonly ISelfEndpointTracker selfEndpointTracker;
+        protected readonly ISelfEndpointTracker selfEndpointTracker;
 
         /// <summary>Factory for creating P2P network peers.</summary>
         private readonly INetworkPeerFactory networkPeerFactory;
