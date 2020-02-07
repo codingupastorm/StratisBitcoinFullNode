@@ -101,11 +101,13 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules
             return result;
         }
 
+        /// <inheritdoc />
         public override void ConsensusSpecificTxChecks(Transaction tx)
         {
             new CheckPowTransactionRule { Logger = this.logger }.CheckTransaction(this.Network, this.Network.Consensus.Options, tx);
         }
 
+        /// <inheritdoc />
         public override void ConsensusSpecificRequiredTxChecks(Transaction tx)
         {
         }

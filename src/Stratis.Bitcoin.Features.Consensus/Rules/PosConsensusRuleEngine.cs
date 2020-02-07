@@ -63,6 +63,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules
             this.RewindDataIndexCache.Initialize(tip.Height, this.UtxoSet);
         }
 
+        /// <inheritdoc />
         public override void ConsensusSpecificRequiredTxChecks(Transaction tx)
         {
             long adjustedTime = this.DateTimeProvider.GetAdjustedTimeAsUnixTimestamp();
@@ -73,6 +74,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules
                 ConsensusErrors.TimeTooNew.Throw();
         }
 
+        /// <inheritdoc />
         public override void ConsensusSpecificTxChecks(Transaction tx)
         {
             base.ConsensusSpecificTxChecks(tx);
