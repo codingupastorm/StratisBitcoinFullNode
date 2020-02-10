@@ -49,7 +49,7 @@ namespace Stratis.Bitcoin.IntegrationTests
 
         private readonly Network network;
 
-        private static FeeRate blockMinFeeRate = new FeeRate(PowMining.DefaultBlockMinTxFee);
+        private static FeeRate blockMinFeeRate = new FeeRate(BlockDefinitionOptions.DefaultBlockMinTxFee);
 
         public static PowBlockDefinition AssemblerForTest(TestContext testContext)
         {

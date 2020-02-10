@@ -55,7 +55,7 @@ namespace Stratis.SmartContracts.IntegrationTests.PoW
     /// </summary>
     public sealed class SmartContractMinerTests
     {
-        private static readonly FeeRate blockMinFeeRate = new FeeRate(PowMining.DefaultBlockMinTxFee);
+        private static readonly FeeRate blockMinFeeRate = new FeeRate(BlockDefinitionOptions.DefaultBlockMinTxFee);
 
         public static BlockDefinition AssemblerForTest(TestContext testContext)
         {
