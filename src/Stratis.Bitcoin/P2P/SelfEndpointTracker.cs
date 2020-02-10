@@ -48,7 +48,7 @@ namespace Stratis.Bitcoin.P2P
         /// <inheritdoc/>
         public void Add(IPEndPoint ipEndPoint)
         {
-            this.knownSelfEndpoints.Add(ipEndPoint);
+            this.knownSelfEndpoints.Add(ipEndPoint.MapToIpv6());
         }
 
         /// <inheritdoc/>
