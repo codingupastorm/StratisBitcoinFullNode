@@ -45,7 +45,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
         private readonly Mock<IStakeValidator> stakeValidator;
         private readonly MempoolSchedulerLock mempoolSchedulerLock;
         private readonly Mock<ITxMempool> txMempool;
-        private readonly IMinerSettings minerSettings;
+        private readonly MinerSettings minerSettings;
         private readonly Mock<IWalletManager> walletManager;
         private readonly Mock<IAsyncProvider> asyncProvider;
         private readonly Mock<ITimeSyncBehaviorState> timeSyncBehaviorState;

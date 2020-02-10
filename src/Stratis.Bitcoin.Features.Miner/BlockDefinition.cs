@@ -4,11 +4,13 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
+using Stratis.Bitcoin.Features.Miner.Comparers;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Utilities;
 
-namespace Stratis.Bitcoin.Features.MemoryPool
+namespace Stratis.Bitcoin.Features.Miner
 {
     /// <summary>
     /// A high level class that will allow the ability to override or inject functionality based on what type of block creation logic is used.
@@ -103,7 +105,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
             ILoggerFactory loggerFactory,
             ITxMempool mempool,
             MempoolSchedulerLock mempoolLock,
-            IMinerSettings minerSettings,
+            MinerSettings minerSettings,
             Network network)
         {
             this.ConsensusManager = consensusManager;
@@ -112,6 +114,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
             this.Mempool = mempool;
             this.MempoolLock = mempoolLock;
             this.Network = network;
+
             this.Options = minerSettings.BlockDefinitionOptions;
             this.BlockMinFeeRate = this.Options.BlockMinFeeRate;
 

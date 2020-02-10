@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
+using Stratis.Bitcoin.Features.MemoryPool;
 
-namespace Stratis.Bitcoin.Features.MemoryPool
+namespace Stratis.Bitcoin.Features.Miner.Comparers
 {
     /// <summary>
     /// A comparator that sorts transactions based on number of ancestors.

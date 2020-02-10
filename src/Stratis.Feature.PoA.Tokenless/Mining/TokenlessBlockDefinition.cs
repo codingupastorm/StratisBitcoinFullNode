@@ -45,7 +45,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             ILoggerFactory loggerFactory,
             ITxMempool mempool,
             MempoolSchedulerLock mempoolLock,
-            IMinerSettings minerSettings,
+            MinerSettings minerSettings,
             Network network,
             ITokenlessSigner tokenlessSigner,
             IStateRepositoryRoot stateRoot,

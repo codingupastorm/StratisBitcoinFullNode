@@ -4,13 +4,12 @@ using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.MemoryPool;
+using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Bitcoin.Features.SmartContracts.Rules;
-using Stratis.Bitcoin.Mining;
 
 namespace Stratis.Bitcoin.Features.SmartContracts.PoA
 {
@@ -69,7 +68,8 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoA
                         services.AddSingleton<IFederationManager, FederationManager>();
                         services.AddSingleton<PoABlockHeaderValidator>();
                         services.AddSingleton<IPoAMiner, PoAMiner>();
-                        services.AddSingleton<IMinerSettings, PoAMinerSettings>();
+                        services.AddSingleton<PoAMinerSettings>();
+                        services.AddSingleton<MinerSettings>();
                         services.AddSingleton<ISlotsManager, SlotsManager>();
                         services.AddSingleton<BlockDefinition, SmartContractPoABlockDefinition>();
                         services.AddSingleton<IBlockBufferGenerator, BlockBufferGenerator>();
