@@ -10,7 +10,7 @@ using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Validators;
-using Stratis.Bitcoin.Features.Miner;
+using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
@@ -93,9 +93,11 @@ namespace Stratis.Bitcoin.Features.PoA
             IMiningKeyProvider miningKeyProvider,
             INodeStats nodeStats,
             VotingManager votingManager,
-            PoAMinerSettings poAMinerSettings,
+            IMinerSettings poAMinerSettings,
             IAsyncProvider asyncProvider)
         {
+            Guard.Assert(poAMinerSettings is PoAMinerSettings);
+
             this.consensusManager = consensusManager;
             this.dateTimeProvider = dateTimeProvider;
             this.network = network as PoANetwork;
@@ -108,7 +110,7 @@ namespace Stratis.Bitcoin.Features.PoA
             this.integrityValidator = integrityValidator;
             this.miningKeyProvider = miningKeyProvider;
             this.votingManager = votingManager;
-            this.settings = poAMinerSettings;
+            this.settings = poAMinerSettings as PoAMinerSettings;
             this.asyncProvider = asyncProvider;
 
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
