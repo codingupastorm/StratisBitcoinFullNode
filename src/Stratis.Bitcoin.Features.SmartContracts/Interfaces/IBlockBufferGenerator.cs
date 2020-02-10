@@ -1,4 +1,4 @@
-﻿using Stratis.Bitcoin.Features.Miner;
+﻿using Stratis.Bitcoin.Mining;
 
 namespace Stratis.Bitcoin.Features.SmartContracts
 {
