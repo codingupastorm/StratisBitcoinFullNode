@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using Stratis.Bitcoin.Features.MemoryPool;
 
-namespace Stratis.Bitcoin.Features.Miner.Comparers
+namespace Stratis.Bitcoin.Features.MemoryPool
 {
     /// <summary>
     /// This matches the calculation in CompareTxMemPoolEntryByAncestorFee,

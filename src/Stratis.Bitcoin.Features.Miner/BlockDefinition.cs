@@ -6,7 +6,6 @@ using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Features.Miner.Comparers;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Utilities;
 
