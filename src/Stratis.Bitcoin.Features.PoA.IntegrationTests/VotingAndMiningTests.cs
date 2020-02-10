@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using DBreeze.Utils;
 using NBitcoin;
 using NBitcoin.Crypto;
-using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.Wallet;
@@ -338,7 +337,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
                 CoreNodePoAExtensions.WaitTillSynced(nodeA, nodeB);
 
                 // Will send funds to one of nodeB's addresses.
-                NBitcoin.Script destination = nodeB.FullNode.WalletManager().GetUnusedAddress().ScriptPubKey;
+                Script destination = nodeB.FullNode.WalletManager().GetUnusedAddress().ScriptPubKey;
 
                 var context = new TransactionBuildContext(network)
                 {

@@ -1,7 +1,7 @@
 ﻿using System;
 using NBitcoin;
 
-namespace Stratis.Bitcoin.Mining
+namespace Stratis.Bitcoin.Features.Miner
 {
     /// <summary>
     /// Semi- immutable settings to be used by <see cref="BlockDefinition"/>.
@@ -10,9 +10,6 @@ namespace Stratis.Bitcoin.Mining
     {
         /// <summary>Minimum block size in bytes. Could be set per network in future.</summary>
         private const uint MinBlockSize = 1000;
-
-        /// <summary>Default for "-blockmintxfee", which sets the minimum feerate for a transaction in blocks created by mining code.</summary>
-        public const int DefaultBlockMinTxFee = 1000;
 
         /// <summary>Maximum block weight (in weight units) for the blocks created by miner.</summary>
         public uint BlockMaxWeight { get; private set; }
@@ -27,7 +24,7 @@ namespace Stratis.Bitcoin.Mining
         {
             this.BlockMaxWeight = blockMaxWeight;
             this.BlockMaxSize = blockMaxSize;
-            this.BlockMinFeeRate = new FeeRate(DefaultBlockMinTxFee); // TODO: Where should this be set, really?
+            this.BlockMinFeeRate = new FeeRate(PowMining.DefaultBlockMinTxFee); // TODO: Where should this be set, really?
         }
 
         /// <summary>

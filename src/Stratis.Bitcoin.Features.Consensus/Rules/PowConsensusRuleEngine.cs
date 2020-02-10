@@ -8,7 +8,6 @@ using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Utilities;
 using TracerAttributes;
 
@@ -20,7 +19,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules
     public class PowConsensusRuleEngine : ConsensusRuleEngine
     {
         /// <summary>Instance logger.</summary>
-        protected readonly ILogger logger;
+        private readonly ILogger logger;
 
         /// <summary>The consensus db, containing all unspent UTXO in the chain.</summary>
         public ICoinView UtxoSet { get; }
@@ -99,17 +98,6 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules
             }
 
             return result;
-        }
-
-        /// <inheritdoc />
-        public override void ConsensusSpecificTxChecks(Transaction tx)
-        {
-            new CheckPowTransactionRule { Logger = this.logger }.CheckTransaction(this.Network, this.Network.Consensus.Options, tx);
-        }
-
-        /// <inheritdoc />
-        public override void ConsensusSpecificRequiredTxChecks(Transaction tx)
-        {
         }
 
         public override void Dispose()
