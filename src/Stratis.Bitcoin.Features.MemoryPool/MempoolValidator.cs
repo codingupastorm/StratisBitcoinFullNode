@@ -371,10 +371,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         /// <param name="context">Current validation context.</param>
         protected virtual void PreMempoolChecks(MempoolValidationContext context)
         {
-            // TODO: fix this to use dedicated mempool rules.
-            new CheckPowTransactionRule { Logger = this.logger }.CheckTransaction(this.network, this.network.Consensus.Options, context.Transaction);
-            if (this.chainIndexer.Network.Consensus.IsProofOfStake)
-                new CheckPosTransactionRule { Logger = this.logger }.CheckTransaction(context.Transaction);
+            this.consensusRules.ConsensusSpecificTxChecks(context.Transaction);
 
             // Coinbase is only valid in a block, not as a loose transaction
             if (context.Transaction.IsCoinBase)
@@ -395,9 +392,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool
 
             // Rather not work on nonstandard transactions (unless -testnet/-regtest)
             if (this.mempoolSettings.RequireStandard)
-            {
                 this.CheckStandardTransaction(context);
-            }
 
             // Only accept nLockTime-using transactions that can be mined in the next
             // block; we don't want our mempool filled up with transactions that can't
@@ -425,16 +420,13 @@ namespace Stratis.Bitcoin.Features.MemoryPool
                 context.State.Fail(MempoolErrors.Version).Throw();
             }
 
-            if (this.network.Consensus.IsProofOfStake)
+            try
             {
-                long adjustedTime = this.dateTimeProvider.GetAdjustedTimeAsUnixTimestamp();
-                PosFutureDriftRule futureDriftRule = this.consensusRules.GetRule<PosFutureDriftRule>();
-
-                // nTime has different purpose from nLockTime but can be used in similar attacks
-                if (tx.Time > adjustedTime + futureDriftRule.GetFutureDrift(adjustedTime))
-                {
-                    context.State.Fail(MempoolErrors.TimeTooNew).Throw();
-                }
+                this.consensusRules.ConsensusSpecificRequiredTxChecks(context.Transaction);
+            }
+            catch (ConsensusErrorException consensusError)
+            {
+                context.State.Fail(new MempoolError(MempoolErrors.RejectNonstandard, consensusError.ConsensusError.Code)).Throw();
             }
 
             // Extremely large transactions with lots of inputs can cost the network

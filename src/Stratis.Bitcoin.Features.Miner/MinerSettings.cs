@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Features.MemoryPool;
+using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Bitcoin.Features.Miner
@@ -9,7 +11,7 @@ namespace Stratis.Bitcoin.Features.Miner
     /// <summary>
     /// Configuration related to the miner interface.
     /// </summary>
-    public class MinerSettings
+    public class MinerSettings : IMinerSettings
     {
         private const ulong MinimumSplitCoinValueDefaultValue = 100 * Money.COIN;
 

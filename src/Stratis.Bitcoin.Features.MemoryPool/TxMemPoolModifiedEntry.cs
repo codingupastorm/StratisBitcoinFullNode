@@ -1,8 +1,7 @@
 ﻿using System;
 using NBitcoin;
-using Stratis.Bitcoin.Features.MemoryPool;
 
-namespace Stratis.Bitcoin.Features.Miner
+namespace Stratis.Bitcoin.Features.MemoryPool
 {
     /// <summary>
     /// Container for tracking updates to ancestor feerate as we include (parent) transactions in a block.
