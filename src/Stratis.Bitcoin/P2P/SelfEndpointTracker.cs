@@ -55,7 +55,7 @@ namespace Stratis.Bitcoin.P2P
         [NoTrace]
         public bool IsSelf(IPEndPoint ipEndPoint)
         {
-            return this.knownSelfEndpoints.Contains(ipEndPoint);
+            return this.knownSelfEndpoints.Contains(ipEndPoint.MapToIpv6());
         }
 
         /// <inheritdoc/>
