@@ -19,7 +19,7 @@ namespace Stratis.Bitcoin.Features.PoA
             ITxMempool mempool,
             MempoolSchedulerLock mempoolLock,
             Network network,
-            MinerSettings minerSettings)
+            IMinerSettings minerSettings)
             : base(consensusManager, dateTimeProvider, loggerFactory, mempool, mempoolLock, minerSettings, network)
         {
         }

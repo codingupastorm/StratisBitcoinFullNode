@@ -36,7 +36,7 @@ namespace Stratis.Bitcoin.Features.Miner
             ITxMempool mempool,
             MempoolSchedulerLock mempoolLock,
             Network network,
-            MinerSettings minerSettings,
+            IMinerSettings minerSettings,
             IStakeChain stakeChain,
             IStakeValidator stakeValidator)
             : base(consensusManager, dateTimeProvider, loggerFactory, mempool, mempoolLock, minerSettings, network)

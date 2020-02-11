@@ -93,7 +93,7 @@ namespace Stratis.Bitcoin.Features.PoA
             IMiningKeyProvider miningKeyProvider,
             INodeStats nodeStats,
             VotingManager votingManager,
-            PoAMinerSettings poAMinerSettings,
+            IMinerSettings poAMinerSettings,
             IAsyncProvider asyncProvider)
         {
             this.consensusManager = consensusManager;
@@ -108,7 +108,10 @@ namespace Stratis.Bitcoin.Features.PoA
             this.integrityValidator = integrityValidator;
             this.miningKeyProvider = miningKeyProvider;
             this.votingManager = votingManager;
-            this.settings = poAMinerSettings;
+
+            Guard.Assert(poAMinerSettings is PoAMinerSettings);
+            this.settings = (PoAMinerSettings)poAMinerSettings;
+
             this.asyncProvider = asyncProvider;
 
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);

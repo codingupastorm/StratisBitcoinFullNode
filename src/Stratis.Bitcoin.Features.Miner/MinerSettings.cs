@@ -10,7 +10,7 @@ namespace Stratis.Bitcoin.Features.Miner
     /// <summary>
     /// Configuration related to the miner interface.
     /// </summary>
-    public class MinerSettings
+    public class MinerSettings : IMinerSettings
     {
         private const ulong MinimumSplitCoinValueDefaultValue = 100 * Money.COIN;
 

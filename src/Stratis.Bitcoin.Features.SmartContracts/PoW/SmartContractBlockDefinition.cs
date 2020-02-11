@@ -48,7 +48,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoW
             ILoggerFactory loggerFactory,
             ITxMempool mempool,
             MempoolSchedulerLock mempoolLock,
-            MinerSettings minerSettings,
+            IMinerSettings minerSettings,
             Network network,
             ISenderRetriever senderRetriever,
             IStateRepositoryRoot stateRoot,

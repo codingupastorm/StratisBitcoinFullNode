@@ -13,12 +13,12 @@ using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.Miner.Controllers;
 using Stratis.Bitcoin.Features.Miner.Interfaces;
 using Stratis.Bitcoin.Features.Miner.Staking;
 using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Mining;
+using Stratis.Bitcoin.Utilities;
 
 [assembly: InternalsVisibleTo("Stratis.Bitcoin.Features.Miner.Tests")]
 
@@ -55,7 +55,7 @@ namespace Stratis.Bitcoin.Features.Miner
         public MiningFeature(
             ConnectionManagerSettings connectionManagerSettings,
             Network network,
-            MinerSettings minerSettings,
+            IMinerSettings minerSettings,
             NodeSettings nodeSettings,
             ILoggerFactory loggerFactory,
             ITimeSyncBehaviorState timeSyncBehaviorState,
@@ -64,7 +64,10 @@ namespace Stratis.Bitcoin.Features.Miner
         {
             this.connectionManagerSettings = connectionManagerSettings;
             this.network = network;
-            this.minerSettings = minerSettings;
+
+            Guard.Assert(minerSettings is MinerSettings);
+            this.minerSettings = (MinerSettings)minerSettings;
+
             this.nodeSettings = nodeSettings;
             this.powMining = powMining;
             this.timeSyncBehaviorState = timeSyncBehaviorState;
@@ -222,7 +225,7 @@ namespace Stratis.Bitcoin.Features.Miner
                         services.AddSingleton<IPowMining, PowMining>();
                         services.AddSingleton<IBlockProvider, BlockProvider>();
                         services.AddSingleton<BlockDefinition, PowBlockDefinition>();
-                        services.AddSingleton<MinerSettings>();
+                        services.AddSingleton<IMinerSettings, MinerSettings>();
                     });
             });
 
@@ -255,7 +258,7 @@ namespace Stratis.Bitcoin.Features.Miner
                         services.AddSingleton<BlockDefinition, PowBlockDefinition>();
                         services.AddSingleton<BlockDefinition, PosBlockDefinition>();
                         services.AddSingleton<BlockDefinition, PosPowBlockDefinition>();
-                        services.AddSingleton<MinerSettings>();
+                        services.AddSingleton<IMinerSettings, MinerSettings>();
                     });
             });
 
