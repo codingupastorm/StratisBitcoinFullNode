@@ -32,7 +32,7 @@ namespace Stratis.Bitcoin.Features.Miner
             ILoggerFactory loggerFactory,
             ITxMempool mempool,
             MempoolSchedulerLock mempoolLock,
-            MinerSettings minerSettings,
+            IMinerSettings minerSettings,
             Network network,
             IStakeChain stakeChain,
             IStakeValidator stakeValidator)

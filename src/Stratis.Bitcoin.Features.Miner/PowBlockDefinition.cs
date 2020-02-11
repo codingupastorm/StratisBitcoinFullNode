@@ -19,7 +19,7 @@ namespace Stratis.Bitcoin.Features.Miner
             ILoggerFactory loggerFactory,
             ITxMempool mempool,
             MempoolSchedulerLock mempoolLock,
-            MinerSettings minerSettings,
+            IMinerSettings minerSettings,
             Network network,
             IConsensusRuleEngine consensusRules,
             BlockDefinitionOptions options = null)

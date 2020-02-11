@@ -11,6 +11,7 @@ using Stratis.Bitcoin.Consensus.Validators;
 using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Core;
 
@@ -40,7 +41,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
             IMiningKeyProvider miningKeyProvider,
             INodeStats nodeStats,
             VotingManager votingManager,
-            PoAMinerSettings poAMinerSettings,
+            IMinerSettings poAMinerSettings,
             IAsyncProvider asyncProvider) : base(consensusManager, dateTimeProvider, network, nodeLifetime, loggerFactory, ibdState, blockDefinition, slotsManager,
                 connectionManager, poaHeaderValidator, federationManager, integrityValidator, miningKeyProvider, nodeStats, votingManager, poAMinerSettings, asyncProvider)
         {
@@ -106,7 +107,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
             IIntegrityValidator integrityValidator,
             IMiningKeyProvider miningKeyProvider,
             INodeStats nodeStats,
-            PoAMinerSettings poAMinerSettings,
+            IMinerSettings poAMinerSettings,
             IAsyncProvider asyncProvider,
             VotingManager votingManager)
             : base(coreComponent.ConsensusManager, coreComponent.DateTimeProvider, coreComponent.Network, coreComponent.NodeLifetime, coreComponent.LoggerFactory, coreComponent.InitialBlockDownloadState, blockDefinition, slotsManager,
