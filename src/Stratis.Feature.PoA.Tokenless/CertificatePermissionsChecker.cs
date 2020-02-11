@@ -1,4 +1,5 @@
 using CertificateAuthority;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
@@ -21,15 +22,15 @@ namespace Stratis.Feature.PoA.Tokenless
     {
         private readonly ICertificateCache certificateCache;
         private readonly CertificatesManager certificatesManager;
-        private readonly Network network;
+        private readonly ILogger logger;
 
         public CertificatePermissionsChecker(ICertificateCache certificateCache,
             CertificatesManager certificatesManager,
-            Network network)
+            ILoggerFactory loggerFactory)
         {
             this.certificateCache = certificateCache;
             this.certificatesManager = certificatesManager;
-            this.network = network;
+            this.logger = loggerFactory.CreateLogger(this.GetType());
         }
 
         /// <inheritdoc />
@@ -62,9 +63,22 @@ namespace Stratis.Feature.PoA.Tokenless
 
         private X509Certificate GetCertificateFromCA(uint160 address)
         {
-            X509Certificate certificate = this.certificatesManager.GetCertificateForAddress(address);
-            this.certificateCache.SetCertificate(address, certificate);
-            return certificate;
+            try
+            {
+                X509Certificate certificate = this.certificatesManager.GetCertificateForAddress(address);
+                if (certificate != null)
+                {
+                    this.certificateCache.SetCertificate(address, certificate);
+                }
+                return certificate;
+            }
+            catch (CaClientException exception)
+            {
+                // If there is an error when contacting the CA, don't explode. Just deny the transaction for now.
+
+                this.logger.LogWarning("Error when asking the CA for a sender certificate. Denying transaction.");
+                return null;
+            }
         }
 
         public static bool ValidateCertificateHasPermission(X509Certificate certificate, TransactionSendingPermission permission)
