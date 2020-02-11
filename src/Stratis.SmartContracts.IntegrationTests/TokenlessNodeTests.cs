@@ -470,6 +470,10 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var block = node1.FullNode.ChainIndexer.GetHeader(1).Block;
                 Assert.Equal(2, block.Transactions.Count);
 
+                // On the original node, the certificate shouldn't be stored in the cache as it is from "itself"
+                Assert.Null(node1.FullNode.NodeService<ICertificateCache>().GetCertificate(txPrivKey1.PubKey
+                    .GetAddress(this.network).ToString().ToUint160(this.network)));
+
                 // Check that the certificate is now stored on the node.
                 Assert.NotNull(node2.FullNode.NodeService<ICertificateCache>().GetCertificate(txPrivKey1.PubKey
                     .GetAddress(this.network).ToString().ToUint160(this.network)));
@@ -481,6 +485,51 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Other node receives and mines transaction, validating it came from a permitted sender, having got the certificate locally this time.
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node2.MineBlocksAsync(1);
+            }
+        }
+
+        [Fact]
+        public async Task TokenlessNodesFunctionIfCATurnsOff()
+        {
+            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = GetClient();
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
+
+                // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.  
+                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
+
+                node1.Start();
+                node2.Start();
+                TestHelper.Connect(node1, node2);
+
+                // Turn the CA off
+                server.Dispose();
+
+                // Build and send a transaction from one node.
+                Transaction transaction = this.CreateBasicOpReturnTransaction(node1, txPrivKey1);
+                await node1.BroadcastTransactionAsync(transaction);
+
+                // Node1 should still let it in the mempool as it's from himself.
+                TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+
+                // Node2 won't be able to get the certificate so will decline the transaction but still work.
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+
+                // First node mines a block so the transaction is in a block, which the other guy then also trusts.
+                await node1.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+
+                var block = node2.FullNode.ChainIndexer.GetHeader(1).Block;
+                Assert.Equal(2, block.Transactions.Count);
             }
         }
 
