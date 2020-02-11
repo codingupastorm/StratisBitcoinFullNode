@@ -1,3 +1,4 @@
+using CertificateAuthority;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
@@ -40,6 +41,19 @@ namespace Stratis.Feature.PoA.Tokenless
 
         private X509Certificate GetCertificate(uint160 address)
         {
+            // The certificate might be our own. If so, just return that one, no need to get from the cache or query CA.
+            if (this.certificatesManager?.ClientCertificate != null)
+            {
+                // TODO: This value could be cached, or retrieved from the wallet?
+                byte[] myCertTransactionSigningHash = CertificatesManager.ExtractCertificateExtension(this.certificatesManager.ClientCertificate, CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid);
+                uint160 myCertAddress = new uint160(myCertTransactionSigningHash);
+
+                if (myCertAddress == address)
+                {
+                    return this.certificatesManager.ClientCertificate;
+                }
+            }
+
             X509Certificate certificate = this.certificateCache.GetCertificate(address) 
                                            ?? GetCertificateFromCA(address);
 

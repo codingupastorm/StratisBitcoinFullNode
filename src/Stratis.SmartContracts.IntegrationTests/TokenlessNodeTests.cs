@@ -470,6 +470,10 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var block = node1.FullNode.ChainIndexer.GetHeader(1).Block;
                 Assert.Equal(2, block.Transactions.Count);
 
+                // On the original node, the certificate shouldn't be stored in the cache as it is from "itself"
+                Assert.Null(node1.FullNode.NodeService<ICertificateCache>().GetCertificate(txPrivKey1.PubKey
+                    .GetAddress(this.network).ToString().ToUint160(this.network)));
+
                 // Check that the certificate is now stored on the node.
                 Assert.NotNull(node2.FullNode.NodeService<ICertificateCache>().GetCertificate(txPrivKey1.PubKey
                     .GetAddress(this.network).ToString().ToUint160(this.network)));
