@@ -230,6 +230,8 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
                 if (extension.Oid.Value == oid)
                     // This is truly horrible, but it isn't clear how we can correctly go from the DER bytes in the extension, to a relevant BC class, to a string.
                     // Perhaps we are meant to recursively evaluate the extension data as ASN.1 until we land up with raw data that can't be decoded further?
+                    // IMPORTANT: The two prefix bytes being removed consist of a type tag (e.g. `0x04` = octet string)
+                    // and a length byte. For lengths > 127 more than one byte is needed, which would break this code.
                     return extension.RawData.Skip(2).ToArray();
             }
 
