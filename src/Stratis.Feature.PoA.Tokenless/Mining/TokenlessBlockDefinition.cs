@@ -8,7 +8,6 @@ using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Caching;
