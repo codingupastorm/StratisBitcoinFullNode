@@ -109,12 +109,6 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
             this.chain.WaitForAllNodesToSync();
         }
 
-        public ulong GetWalletAddressBalance(string walletAddress)
-        {
-            var jsonResult = (JsonResult)this.smartContractWalletController.GetAddressBalance(walletAddress);
-            return (ulong)(decimal)jsonResult.Value;
-        }
-
         /// <summary>
         /// Get an unused address that can be used to send funds to this node.
         /// </summary>

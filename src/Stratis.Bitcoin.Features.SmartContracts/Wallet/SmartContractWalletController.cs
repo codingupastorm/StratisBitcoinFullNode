@@ -66,25 +66,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Wallet
         }
 
         /// <summary>
-        /// Gets the balance at a specific wallet address in STRAT (or the sidechain coin).
-        /// This method gets the UTXOs at the address that the wallet can spend.
-        /// The function can be used to query the balance at a smart contract account address
-        /// supplied by /api/SmartContractWallet/account-addresses.
-        /// </summary>
-        ///
-        /// <param name="walletName">The address at which to retrieve the balance.</param>
-        /// 
-        /// <returns>The balance at a specific wallet address in STRAT (or the sidechain coin).</returns>
-        [Route("address-balance")]
-        [HttpGet]
-        public IActionResult GetAddressBalance(string address)
-        {
-            AddressBalance balance = this.walletManager.GetAddressBalance(address);
-
-            return this.Json(balance.AmountConfirmed.ToUnit(MoneyUnit.Satoshi));
-        }
-
-        /// <summary>
         /// Gets the history of a specific wallet address.
         /// This includes the smart contract create and call transactions
         /// This method can be used to query the balance at a smart contract account address
