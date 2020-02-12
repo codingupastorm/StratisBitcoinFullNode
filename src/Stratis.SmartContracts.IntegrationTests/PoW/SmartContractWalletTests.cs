@@ -127,52 +127,6 @@ namespace Stratis.SmartContracts.IntegrationTests.PoW
             }
         }
 
-        /*
-         * We need to be careful that the transactions built by the TransactionBuilder don't try to include all UTXOs as inputs,
-         * as this leads to issues with coinbase-immaturity.
-         *
-         * Until we update the SmartContractsController to retrieve only mature transactions, we need this test.
-         */
-        [Fact]
-        public void SmartContractsController_Builds_Transaction_With_Minimum_Inputs()
-        {
-            using (SmartContractNodeBuilder builder = SmartContractNodeBuilder.Create(this))
-            {
-                CoreNode scSender = builder.CreateSmartContractPowNode().WithWallet().Start();
-
-                var maturity = (int)scSender.FullNode.Network.Consensus.CoinbaseMaturity;
-
-                HdAddress addr = TestHelper.MineBlocks(scSender, maturity + 5).AddressUsed;
-
-                int spendableBlocks = GetSpendableBlocks(maturity + 5, maturity);
-                var total = scSender.FullNode.WalletManager().GetSpendableTransactionsInWallet(WalletName).Sum(s => s.Transaction.Amount);
-                Assert.Equal(Money.COIN * spendableBlocks * 50, total);
-
-                SmartContractsController senderSmartContractsController = scSender.FullNode.NodeController<SmartContractsController>();
-
-                SmartContractWalletController senderWalletController = scSender.FullNode.NodeController<SmartContractWalletController>();
-                ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/StorageDemo.cs");
-                Assert.True(compilationResult.Success);
-
-                var buildRequest = new BuildCreateContractTransactionRequest
-                {
-                    AccountName = AccountName,
-                    GasLimit = 10_000,
-                    GasPrice = 1,
-                    ContractCode = compilationResult.Compilation.ToHexString(),
-                    FeeAmount = "0.001",
-                    Password = Password,
-                    WalletName = WalletName,
-                    Sender = addr.Address
-                };
-
-                JsonResult result = (JsonResult)senderSmartContractsController.BuildCreateSmartContractTransaction(buildRequest);
-                var response = (BuildCreateContractTransactionResponse)result.Value;
-                var transaction = scSender.FullNode.Network.CreateTransaction(response.Hex);
-                Assert.Single(transaction.Inputs);
-            }
-        }
-
         [Retry]
         public void SendAndReceiveSmartContractTransactionsUsingController()
         {
