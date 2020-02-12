@@ -341,33 +341,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
         }
 
         /// <summary>
-        /// Builds a transaction to call a smart contract method. Although the transaction is created, the
-        /// call is not made, and no gas or fees are consumed.
-        /// Instead the created transaction is returned as a JSON object.
-        /// Transactions built using this method can be deployed using /api/SmartContractWallet/send-transaction
-        /// However, unless there is a need to closely examine the transaction before deploying it, you should use
-        /// api/SmartContracts/build-and-send-call.
-        /// </summary>
-        /// 
-        /// <param name="request">An object containing the necessary parameters to build the transaction.</param>
-        /// 
-        /// <returns>A transaction ready to call a method on a smart contract.</returns>
-        [Route("build-call")]
-        [HttpPost]
-        public IActionResult BuildCallSmartContractTransaction([FromBody] BuildCallContractTransactionRequest request)
-        {
-            if (!this.ModelState.IsValid)
-                return ModelStateErrors.BuildErrorResponse(this.ModelState);
-
-            var response = this.smartContractTransactionService.BuildCallTx(request);
-
-            if (!response.Success)
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, response.Message, string.Empty);
-
-            return this.Json(response);
-        }
-
-        /// <summary>
         /// Builds a transaction to transfer funds on a smart contract network.
         /// </summary>
         /// 
