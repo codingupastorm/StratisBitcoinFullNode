@@ -66,43 +66,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Wallet
         }
 
         /// <summary>
-        /// Builds a transaction to create a smart contract and then broadcasts the transaction to the network.
-        /// If the deployment is successful, methods on the smart contract can be subsequently called.
-        /// </summary>
-        /// 
-        /// <param name="request">An object containing the necessary parameters to build the transaction.</param>
-        /// 
-        /// <returns>A hash of the transaction used to create the smart contract. The result of the transaction broadcast is not returned,
-        /// and you should check for a transaction receipt to see if it was successful.</returns>
-        [Route("create")]
-        [HttpPost]
-        public IActionResult Create([FromBody] BuildCreateContractTransactionRequest request)
-        {
-            if (!this.ModelState.IsValid)
-                return ModelStateErrors.BuildErrorResponse(this.ModelState);
-
-            BuildCreateContractTransactionResponse response = this.smartContractTransactionService.BuildCreateTx(request);
-
-            if (!response.Success)
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, response.Message, string.Empty);
-
-            Transaction transaction = this.network.CreateTransaction(response.Hex);
-
-            this.broadcasterManager.BroadcastTransactionAsync(transaction).GetAwaiter().GetResult();
-
-            // Check if transaction was actually added to a mempool.
-            TransactionBroadcastEntry transactionBroadCastEntry = this.broadcasterManager.GetTransaction(transaction.GetHash());
-
-            if (transactionBroadCastEntry?.State == State.CantBroadcast)
-            {
-                this.logger.LogError("Exception occurred: {0}", transactionBroadCastEntry.ErrorMessage);
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, transactionBroadCastEntry.ErrorMessage, "Transaction Exception");
-            }
-
-            return this.Json(response.TransactionId);
-        }
-
-        /// <summary>
         /// Builds a transaction to call a smart contract method and then broadcasts the transaction to the network.
         /// If the call is successful, any changes to the smart contract balance or persistent data are propagated
         /// across the network.
