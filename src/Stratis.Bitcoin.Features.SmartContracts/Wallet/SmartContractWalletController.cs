@@ -66,44 +66,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Wallet
         }
 
         /// <summary>
-        /// Builds a transaction to call a smart contract method and then broadcasts the transaction to the network.
-        /// If the call is successful, any changes to the smart contract balance or persistent data are propagated
-        /// across the network.
-        /// </summary>
-        /// 
-        /// <param name="request">An object containing the necessary parameters to build the transaction.</param>
-        ///
-        /// <returns>The transaction used to call a smart contract method. The result of the transaction broadcast is not returned,
-        /// and you should check for a transaction receipt to see if it was successful.</returns>
-        [Route("call")]
-        [HttpPost]
-        public IActionResult Call([FromBody] BuildCallContractTransactionRequest request)
-        {
-            if (!this.ModelState.IsValid)
-                return ModelStateErrors.BuildErrorResponse(this.ModelState);
-
-            BuildCallContractTransactionResponse response = this.smartContractTransactionService.BuildCallTx(request);
-
-            if (!response.Success)
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, response.Message,string.Empty);
-
-            Transaction transaction = this.network.CreateTransaction(response.Hex);
-
-            this.broadcasterManager.BroadcastTransactionAsync(transaction).GetAwaiter().GetResult();
-
-            // Check if transaction was actually added to a mempool.
-            TransactionBroadcastEntry transactionBroadCastEntry = this.broadcasterManager.GetTransaction(transaction.GetHash());
-
-            if (transactionBroadCastEntry?.State == State.CantBroadcast)
-            {
-                this.logger.LogError("Exception occurred: {0}", transactionBroadCastEntry.ErrorMessage);
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, transactionBroadCastEntry.ErrorMessage, "Transaction Exception");
-            }
-
-            return this.Json(response);
-        }
-
-        /// <summary>
         /// Broadcasts a transaction, which either creates a smart contract or calls a method on a smart contract.
         /// If the contract deployment or method call are successful gas and fees are consumed.
         /// </summary>
