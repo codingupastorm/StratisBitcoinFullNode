@@ -275,8 +275,6 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
             {
                 Amount = amount.ToString(CultureInfo.InvariantCulture),
                 ContractAddress = contractAddress,
-                GasLimit = gasLimit,
-                GasPrice = gasPrice,
                 MethodName = methodName,
                 Parameters = parameters,
                 Sender = sender ?? this.MinerAddress.Address
