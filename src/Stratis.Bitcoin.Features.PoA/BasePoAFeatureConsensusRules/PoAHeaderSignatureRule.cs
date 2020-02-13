@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Base;
@@ -22,13 +21,9 @@ namespace Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules
 
         private bool votingEnabled;
 
-        private VotingManager votingManager;
-
-        private IFederationManager federationManager;
-
         private IChainState chainState;
 
-        private PoAConsensusFactory consensusFactory;
+        private IModifiedFederation modifiedFederation;
 
         /// <inheritdoc />
         public override void Initialize()
@@ -39,10 +34,8 @@ namespace Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules
 
             this.slotsManager = engine.SlotsManager;
             this.validator = engine.PoaHeaderValidator;
-            this.votingManager = engine.VotingManager;
-            this.federationManager = engine.FederationManager;
             this.chainState = engine.ChainState;
-            this.consensusFactory = (PoAConsensusFactory)this.Parent.Network.Consensus.ConsensusFactory;
+            this.modifiedFederation = new ModifiedFederation(this.Parent.Network, engine.FederationManager, engine.VotingManager);
 
             this.maxReorg = this.Parent.Network.Consensus.MaxReorgLength;
             this.votingEnabled = ((PoAConsensusOptions)this.Parent.Network.Consensus.Options).VotingEnabled;
@@ -67,22 +60,7 @@ namespace Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules
 
                     bool mightBeInsufficient = currentHeader.Height - this.chainState.ConsensusTip.Height > this.maxReorg;
 
-                    List<IFederationMember> modifiedFederation = this.federationManager.GetFederationMembers();
-
-                    foreach (Poll poll in this.votingManager.GetFinishedPolls().Where(x => !x.IsExecuted &&
-                        ((x.VotingData.Key == VoteKey.AddFederationMember) || (x.VotingData.Key == VoteKey.KickFederationMember))))
-                    {
-                        if (currentHeader.Height - poll.PollVotedInFavorBlockData.Height <= this.maxReorg)
-                            // Not applied yet.
-                            continue;
-
-                        IFederationMember federationMember = this.consensusFactory.DeserializeFederationMember(poll.VotingData.Data);
-
-                        if (poll.VotingData.Key == VoteKey.AddFederationMember)
-                            modifiedFederation.Add(federationMember);
-                        else if (poll.VotingData.Key == VoteKey.KickFederationMember)
-                            modifiedFederation.Remove(federationMember);
-                    }
+                    List<IFederationMember> modifiedFederation = this.modifiedFederation.GetModifiedFederation(currentHeader.Height);
 
                     pubKey = this.slotsManager.GetFederationMemberForTimestamp(poaHeader.Time, modifiedFederation).PubKey;
 

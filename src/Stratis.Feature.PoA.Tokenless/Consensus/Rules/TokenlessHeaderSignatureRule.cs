@@ -15,13 +15,13 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
     {
         private readonly PoABlockHeaderValidator headerValidator;
         private readonly ISlotsManager slotsManager;
-        private readonly VotingManager votingManager;
+        private readonly IModifiedFederation modifiedFederation;
 
-        public TokenlessHeaderSignatureRule(PoABlockHeaderValidator headerValidator, ISlotsManager slotsManager, VotingManager votingManager)
+        public TokenlessHeaderSignatureRule(PoABlockHeaderValidator headerValidator, ISlotsManager slotsManager, IModifiedFederation modifiedFederation)
         {
             this.headerValidator = headerValidator;
             this.slotsManager = slotsManager;
-            this.votingManager = votingManager;
+            this.modifiedFederation = modifiedFederation;
         }
 
         /// <inheritdoc />
@@ -52,7 +52,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 
                     bool mightBeInsufficient = currentHeader.Height - this.Parent.ChainState.ConsensusTip.Height > consensus.MaxReorgLength;
 
-                    List<IFederationMember> modifiedFederation = this.slotsManager.GetModifiedFederation(this.votingManager, context.ValidationContext.ChainedHeaderToValidate.Height);
+                    List<IFederationMember> modifiedFederation = this.modifiedFederation.GetModifiedFederation(context.ValidationContext.ChainedHeaderToValidate.Height);
 
                     pubKey = this.slotsManager.GetFederationMemberForTimestamp(poaHeader.Time, modifiedFederation).PubKey;
 

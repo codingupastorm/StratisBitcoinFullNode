@@ -770,64 +770,6 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task StartingFedMemberLateDoesNotCauseBan()
-        {
-            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
-            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
-            {
-                server.Start();
-
-                // Start + Initialize CA.
-                var client = GetClient();
-                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
-
-                // Get Authority Certificate.
-                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
-
-                // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.  
-                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
-                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client);
-
-                // Get them connected and mining
-                node1.Start();
-                node2.Start();
-
-                TestHelper.Connect(node1, node2);
-
-                VotingManager node1VotingManager = node1.FullNode.NodeService<VotingManager>();
-                VotingManager node2VotingManager = node2.FullNode.NodeService<VotingManager>();
-
-                // Wait for the nodes to vote out the unused node.
-                TestBase.WaitLoop(() => {
-                    node1.MineBlocksAsync(1).GetAwaiter().GetResult();
-                    return node1VotingManager.GetScheduledVotes().Count > 0;
-                });
-
-                TestBase.WaitLoop(() => {
-                    node2.MineBlocksAsync(1).GetAwaiter().GetResult();
-                    return node2VotingManager.GetScheduledVotes().Count > 0;
-                });
-
-                // Mine some blocks to lock in the vote
-                await node1.MineBlocksAsync(1);
-                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
-                await node2.MineBlocksAsync(1);
-                TokenlessTestHelper.WaitForNodeToSync(node2, node1);
-
-                // Mine some more blocks to execute the vote and increase federation members.
-                await node1.MineBlocksAsync(5);
-                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
-                await node2.MineBlocksAsync(5);
-                TokenlessTestHelper.WaitForNodeToSync(node2, node1);
-
-                // Start node 3 now that it has been voted out.
-                (CoreNode node3, Key privKey3, Key txPrivKey3) = nodeBuilder.CreateFullTokenlessNode(this.network, 2, ac, client);
-                node3.Start();
-                TestHelper.Connect(node3, node1);
-            }
-        }
-
-        [Fact]
         public async Task TokenlessNodesCanSendSameOpReturnDataTwiceAsync()
         {
             using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
