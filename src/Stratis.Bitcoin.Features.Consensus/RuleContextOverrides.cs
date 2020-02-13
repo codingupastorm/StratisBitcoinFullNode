@@ -6,23 +6,6 @@ using Stratis.Bitcoin.Consensus.Rules;
 
 namespace Stratis.Bitcoin.Features.Consensus
 {
-    public abstract class UtxoRuleContext : RuleContext
-    {
-        protected UtxoRuleContext()
-        {
-        }
-
-        protected UtxoRuleContext(ValidationContext validationContext, DateTimeOffset time)
-            : base(validationContext, time)
-        {
-        }
-
-        /// <summary>
-        /// The UTXO that are representing the current validated block.
-        /// </summary>
-        public UnspentOutputSet UnspentOutputSet { get; set; }
-    }
-
     /// <summary>
     /// A context that is used by the <see cref="IConsensusRuleEngine"/> for the PoS network type.
     /// </summary>

@@ -125,6 +125,9 @@ namespace Stratis.Bitcoin.P2P.Peer
         /// <summary>Set to <c>1</c> if the peer disposal has been initiated, <c>0</c> otherwise.</summary>
         private int disposed;
 
+        /// <summary>Set to <c>1</c> if the peer disconnection has been initiated, <c>0</c> otherwise.</summary>
+        private int disconnected;
+
         /// <summary>
         /// Initializes an instance of the object.
         /// </summary>
@@ -530,14 +533,29 @@ namespace Stratis.Bitcoin.P2P.Peer
         /// <inheritdoc />
         public void Disconnect()
         {
+            // Avoids a condition where disconnect could be called multiple times
+            if (Interlocked.CompareExchange(ref this.disconnected, 1, 0) == 1)
+            {
+                return;
+            }
+
             Stream disposeStream = this.stream;
             TcpClient disposeTcpClient = this.tcpClient;
 
             this.stream = null;
             this.tcpClient = null;
 
-            disposeStream?.Dispose();
-            disposeTcpClient?.Dispose();
+            try
+            {
+                disposeStream?.Dispose();
+                disposeTcpClient?.Dispose();
+            }
+            catch (IOException)
+            {
+                // It's possible the stream has since been disconnected by the other end,
+                // and calling dispose will attempt to write to the socket, resulting in an IO error.
+                // Therefore we can ignore these types of exception.
+            }
         }
     }
 }

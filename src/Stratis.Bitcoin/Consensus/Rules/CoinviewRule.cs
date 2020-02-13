@@ -3,11 +3,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Base.Deployments;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Utilities;
 
-namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
+namespace Stratis.Bitcoin.Consensus.Rules
 {
     /// <summary>
     /// The proof of work coinview update rules. Validates the UTXO set is correctly spent and creating new outputs.

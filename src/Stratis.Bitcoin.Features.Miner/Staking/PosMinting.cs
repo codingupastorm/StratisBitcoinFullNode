@@ -12,7 +12,6 @@ using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.Consensus;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.Consensus.Interfaces;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.MemoryPool;
@@ -232,7 +231,7 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
             IAsyncProvider asyncProvider,
             ITimeSyncBehaviorState timeSyncBehaviorState,
             ILoggerFactory loggerFactory,
-            MinerSettings minerSettings)
+            IMinerSettings minerSettings)
         {
             this.blockProvider = blockProvider;
             this.consensusManager = consensusManager;
@@ -261,9 +260,13 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
 
             this.rpcGetStakingInfoModel = new Models.GetStakingInfoModel();
 
-            this.CoinstakeSplitEnabled = minerSettings.EnableCoinStakeSplitting;
-            this.MinimumStakingCoinValue = minerSettings.MinimumStakingCoinValue;
-            this.MinimumSplitCoinValue = minerSettings.MinimumSplitCoinValue;
+            Guard.Assert(minerSettings is MinerSettings);
+
+            var posMinerSettings = (MinerSettings)minerSettings;
+
+            this.CoinstakeSplitEnabled = posMinerSettings.EnableCoinStakeSplitting;
+            this.MinimumStakingCoinValue = posMinerSettings.MinimumStakingCoinValue;
+            this.MinimumSplitCoinValue = posMinerSettings.MinimumSplitCoinValue;
             this.ValidStakingTemplates = walletManager.GetValidStakingTemplates();
         }
 

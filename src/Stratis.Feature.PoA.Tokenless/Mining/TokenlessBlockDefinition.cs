@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
@@ -45,7 +44,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             ILoggerFactory loggerFactory,
             ITxMempool mempool,
             MempoolSchedulerLock mempoolLock,
-            MinerSettings minerSettings,
+            IMinerSettings minerSettings,
             Network network,
             ITokenlessSigner tokenlessSigner,
             IStateRepositoryRoot stateRoot,

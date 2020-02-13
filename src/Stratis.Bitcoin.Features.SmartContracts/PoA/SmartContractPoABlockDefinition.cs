@@ -8,6 +8,7 @@ using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules;
 using Stratis.Bitcoin.Features.SmartContracts.Caching;
 using Stratis.Bitcoin.Features.SmartContracts.PoW;
+using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Utilities;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core;
@@ -35,7 +36,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoA
             IStateRepositoryRoot stateRoot,
             IBlockExecutionResultCache executionCache,
             ICallDataSerializer callDataSerializer,
-            MinerSettings minerSettings)
+            IMinerSettings minerSettings)
             : base(blockBufferGenerator, coinView, consensusManager, dateTimeProvider, executorFactory, loggerFactory, mempool,
                 mempoolLock, minerSettings, network, senderRetriever, stateRoot, executionCache, callDataSerializer)
         {

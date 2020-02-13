@@ -2,7 +2,7 @@
 using System.Threading;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
+using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Utilities;
 using Stratis.SmartContracts.Core.Util;
 using Stratis.SmartContracts.Networks;

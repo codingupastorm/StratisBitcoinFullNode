@@ -48,14 +48,14 @@ namespace Stratis.Bitcoin.P2P
         /// <inheritdoc/>
         public void Add(IPEndPoint ipEndPoint)
         {
-            this.knownSelfEndpoints.Add(ipEndPoint);
+            this.knownSelfEndpoints.Add(ipEndPoint.MapToIpv6());
         }
 
         /// <inheritdoc/>
         [NoTrace]
         public bool IsSelf(IPEndPoint ipEndPoint)
         {
-            return this.knownSelfEndpoints.Contains(ipEndPoint);
+            return this.knownSelfEndpoints.Contains(ipEndPoint.MapToIpv6());
         }
 
         /// <inheritdoc/>

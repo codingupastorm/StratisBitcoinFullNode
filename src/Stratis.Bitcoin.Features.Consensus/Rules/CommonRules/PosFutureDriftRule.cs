@@ -54,12 +54,12 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
         protected const int FutureDriftSeconds = 15;
 
         /// <summary>Allow access to the POS parent.</summary>
-        protected PosConsensusRuleEngine PosParent;
+        protected ConsensusRuleEngine PosParent;
 
         /// <inheritdoc />
         public override void Initialize()
         {
-            this.PosParent = this.Parent as PosConsensusRuleEngine;
+            this.PosParent = this.Parent;
 
             Guard.NotNull(this.PosParent, nameof(this.PosParent));
         }

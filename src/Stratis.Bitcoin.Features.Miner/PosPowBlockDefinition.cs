@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.Consensus.Interfaces;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.MemoryPool;
@@ -37,7 +36,7 @@ namespace Stratis.Bitcoin.Features.Miner
             ITxMempool mempool,
             MempoolSchedulerLock mempoolLock,
             Network network,
-            MinerSettings minerSettings,
+            IMinerSettings minerSettings,
             IStakeChain stakeChain,
             IStakeValidator stakeValidator)
             : base(consensusManager, dateTimeProvider, loggerFactory, mempool, mempoolLock, minerSettings, network)

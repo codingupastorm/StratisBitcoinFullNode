@@ -9,9 +9,6 @@ using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
-using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Features.Consensus;
-using Stratis.Bitcoin.Features.RPC.Controllers;
 
 namespace Stratis.Bitcoin.Features.RPC
 {
@@ -128,7 +125,6 @@ namespace Stratis.Bitcoin.Features.RPC
             {
                 features
                 .AddFeature<RPCFeature>()
-                .DependOn<ConsensusFeature>()
                 .FeatureServices(services => services.AddSingleton(fullNodeBuilder));
             });
 
