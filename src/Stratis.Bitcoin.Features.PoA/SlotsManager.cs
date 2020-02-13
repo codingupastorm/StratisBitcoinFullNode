@@ -15,8 +15,6 @@ namespace Stratis.Bitcoin.Features.PoA
     /// </summary>
     public interface ISlotsManager
     {
-        List<IFederationMember> GetModifiedFederation(VotingManager votingManager, int height);
-
         /// <summary>Gets the federation member for specified timestamp.</summary>
         /// <param name="headerUnixTimestamp">Timestamp of a header.</param>
         /// <exception cref="ConsensusErrorException">In case timestamp is invalid.</exception>
@@ -52,31 +50,6 @@ namespace Stratis.Bitcoin.Features.PoA
             this.consensus = network.Consensus;
             this.consensusOptions = (network as PoANetwork).ConsensusOptions;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
-        }
-
-        public List<IFederationMember> GetModifiedFederation(VotingManager votingManager, int height)
-        {
-            List<IFederationMember> modifiedFederation = this.federationManager.GetFederationMembers();
-
-            if (this.consensusOptions.VotingEnabled)
-            {
-                foreach (Poll poll in votingManager.GetFinishedPolls().Where(x => !x.IsExecuted &&
-                    ((x.VotingData.Key == VoteKey.AddFederationMember) || (x.VotingData.Key == VoteKey.KickFederationMember))))
-                {
-                    if (height - poll.PollVotedInFavorBlockData.Height <= this.consensus.MaxReorgLength)
-                        // Not applied yet.
-                        continue;
-
-                    IFederationMember federationMember = (this.consensus.ConsensusFactory as PoAConsensusFactory).DeserializeFederationMember(poll.VotingData.Data);
-
-                    if (poll.VotingData.Key == VoteKey.AddFederationMember)
-                        modifiedFederation.Add(federationMember);
-                    else if (poll.VotingData.Key == VoteKey.KickFederationMember)
-                        modifiedFederation.Remove(federationMember);
-                }
-            }
-
-            return modifiedFederation;
         }
 
         /// <inheritdoc />
