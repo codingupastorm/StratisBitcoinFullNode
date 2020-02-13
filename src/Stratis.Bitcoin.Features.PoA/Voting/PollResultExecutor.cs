@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitcoin.DataEncoders;
 
 namespace Stratis.Bitcoin.Features.PoA.Voting
 {
@@ -91,7 +92,7 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
                 case VoteKey.AddFederationMember:
                 case VoteKey.KickFederationMember:
                     IFederationMember federationMember = this.consensusFactory.DeserializeFederationMember(data.Data);
-                    return $"{action},FederationMember:'{federationMember}'";
+                    return $"{action},FederationMember:'{(federationMember?.ToString() ?? Encoders.Hex.EncodeData(data.Data))}'";
 
                 case VoteKey.WhitelistHash:
                 case VoteKey.RemoveHash:
@@ -105,6 +106,11 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
         public void AddFederationMember(byte[] federationMemberBytes)
         {
             IFederationMember federationMember = this.consensusFactory.DeserializeFederationMember(federationMemberBytes);
+            if (federationMember == null)
+            {
+                this.logger.LogError("Could not add fed member: '{0}'.", Encoders.Hex.EncodeData(federationMemberBytes));
+                return;
+            }
 
             this.logger.LogInformation("Adding new fed member: '{0}'.", federationMember);
             this.federationManager.AddFederationMember(federationMember);
@@ -113,6 +119,11 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
         public void RemoveFederationMember(byte[] federationMemberBytes)
         {
             IFederationMember federationMember = this.consensusFactory.DeserializeFederationMember(federationMemberBytes);
+            if (federationMember == null)
+            {
+                this.logger.LogError("Could not kick fed member: '{0}'.", Encoders.Hex.EncodeData(federationMemberBytes));
+                return;
+            }
 
             this.logger.LogInformation("Kicking fed member: '{0}'.", federationMember);
             this.federationManager.RemoveFederationMember(federationMember);
