@@ -30,8 +30,6 @@ namespace Stratis.Bitcoin.Features.PoA
 
     public class SlotsManager : ISlotsManager
     {
-        private readonly IConsensus consensus;
-
         private readonly PoAConsensusOptions consensusOptions;
 
         private readonly IFederationManager federationManager;
@@ -45,7 +43,6 @@ namespace Stratis.Bitcoin.Features.PoA
             Guard.NotNull(network, nameof(network));
             this.federationManager = Guard.NotNull(federationManager, nameof(federationManager));
             this.chainIndexer = chainIndexer;
-            this.consensus = network.Consensus;
             this.consensusOptions = (network as PoANetwork).ConsensusOptions;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
