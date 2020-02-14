@@ -88,9 +88,6 @@ namespace Stratis.Bitcoin.P2P.Peer
 
         private readonly ISelfEndpointTracker selfEndpointTracker;
 
-        /// <summary>Instance logger.</summary>
-        private readonly ILogger logger;
-
         /// <summary>Provider of time functions.</summary>
         protected readonly IDateTimeProvider dateTimeProvider;
 
@@ -112,16 +109,8 @@ namespace Stratis.Bitcoin.P2P.Peer
         /// <summary>Callback that is invoked just before a message is to be sent to a peer, or <c>null</c> when nothing needs to be called.</summary>
         private Action<IPEndPoint, Payload> onSendingMessage;
 
-        /// <summary>
-        /// Initializes a new instance of the factory.
-        /// </summary>
-        /// <param name="network">Specification of the network the node runs on - regtest/testnet/mainnet.</param>
-        /// <param name="dateTimeProvider">Provider of time functions.</param>
-        /// <param name="loggerFactory">Factory for creating loggers.</param>
-        /// <param name="payloadProvider">A provider of network payload messages.</param>
-        /// <param name="selfEndpointTracker">Tracker for endpoints known to be self.</param>
-        /// <param name="initialBlockDownloadState">Provider of IBD state.</param>
-        /// <param name="connectionManagerSettings">Configuration related to incoming and outgoing connections.</param>
+        private IPeerAddressManager peerAddressManager;
+
         public NetworkPeerFactory(Network network,
             IDateTimeProvider dateTimeProvider,
             ILoggerFactory loggerFactory,
@@ -129,7 +118,8 @@ namespace Stratis.Bitcoin.P2P.Peer
             ISelfEndpointTracker selfEndpointTracker,
             IInitialBlockDownloadState initialBlockDownloadState,
             ConnectionManagerSettings connectionManagerSettings,
-            IAsyncProvider asyncProvider)
+            IAsyncProvider asyncProvider,
+            IPeerAddressManager peerAddressManager)
         {
             Guard.NotNull(network, nameof(network));
             Guard.NotNull(dateTimeProvider, nameof(dateTimeProvider));
@@ -140,10 +130,10 @@ namespace Stratis.Bitcoin.P2P.Peer
             this.loggerFactory = loggerFactory;
             this.payloadProvider = payloadProvider;
             this.selfEndpointTracker = selfEndpointTracker;
-            this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.lastClientId = 0;
             this.initialBlockDownloadState = initialBlockDownloadState;
             this.connectionManagerSettings = connectionManagerSettings;
+            this.peerAddressManager = peerAddressManager;
             this.asyncProvider = Guard.NotNull(asyncProvider, nameof(asyncProvider));
         }
 
@@ -221,7 +211,7 @@ namespace Stratis.Bitcoin.P2P.Peer
             Guard.NotNull(localEndPoint, nameof(localEndPoint));
             Guard.NotNull(externalEndPoint, nameof(externalEndPoint));
 
-            return new NetworkPeerServer(this.network, localEndPoint, externalEndPoint, version, this.loggerFactory, this, this.initialBlockDownloadState, this.connectionManagerSettings, this.asyncProvider);
+            return new NetworkPeerServer(this.network, localEndPoint, externalEndPoint, version, this.loggerFactory, this, this.initialBlockDownloadState, this.connectionManagerSettings, this.asyncProvider, this.peerAddressManager, this.dateTimeProvider);
         }
 
         /// <inheritdoc/>

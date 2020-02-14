@@ -162,9 +162,10 @@ namespace Stratis.Bitcoin.IntegrationTests
                 var signals = new Signals.Signals(loggerFactory, null);
                 var asyncProvider = new AsyncProvider(loggerFactory, signals, new NodeLifetime());
 
-                var networkPeerFactory = new NetworkPeerFactory(this.network, dateTimeProvider, loggerFactory, new PayloadProvider().DiscoverPayloads(), new SelfEndpointTracker(loggerFactory, connectionSettings), new Mock<IInitialBlockDownloadState>().Object, new ConnectionManagerSettings(nodeSettings), asyncProvider);
-
                 var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, nodeSettings.DataFolder, loggerFactory, new SelfEndpointTracker(loggerFactory, connectionSettings));
+
+                var networkPeerFactory = new NetworkPeerFactory(this.network, dateTimeProvider, loggerFactory, new PayloadProvider().DiscoverPayloads(), new SelfEndpointTracker(loggerFactory, connectionSettings), new Mock<IInitialBlockDownloadState>().Object, new ConnectionManagerSettings(nodeSettings), asyncProvider, peerAddressManager);
+
                 var peerDiscovery = new PeerDiscovery(asyncProvider, loggerFactory, this.network, networkPeerFactory, new NodeLifetime(), nodeSettings, peerAddressManager);
                 var selfEndpointTracker = new SelfEndpointTracker(loggerFactory, connectionSettings);
                 var connectionManager = new ConnectionManager(dateTimeProvider, loggerFactory, this.network, networkPeerFactory,
