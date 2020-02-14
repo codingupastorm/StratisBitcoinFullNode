@@ -189,6 +189,10 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
             ChainedHeaderBlock chBlock = blockConnected.ConnectedBlock;
             uint256 newFinalizedHash = this.finalizedBlockInfo.GetFinalizedBlockInfo().Hash;
 
+            // Pub key of a fed member that created voting data.
+            // Poll changes affect the slots so do this first.
+            string fedMemberKeyHex = this.slotsManager.GetFederationMemberForTimestamp(chBlock.Block.Header.Time).PubKey.ToHex();
+
             lock (this.locker)
             {
                 foreach (Poll poll in this.polls.Where(x => !x.IsPending && x.PollVotedInFavorBlockData.Hash == newFinalizedHash).ToList())
@@ -208,9 +212,6 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
                 this.logger.LogTrace("(-)[NO_VOTING_DATA]");
                 return;
             }
-
-            // Pub key of a fed member that created voting data.
-            string fedMemberKeyHex = this.slotsManager.GetFederationMemberForTimestamp(chBlock.Block.Header.Time).PubKey.ToHex();
 
             List<VotingData> votingDataList = this.votingDataEncoder.Decode(rawVotingData);
 
@@ -320,6 +321,7 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
                     }
 
                     // Pub key of a fed member that created voting data.
+                    // Poll changes affect the slots so do this after reverting.
                     string fedMemberKeyHex = this.slotsManager.GetFederationMemberForTimestamp(chBlock.Block.Header.Time).PubKey.ToHex();
 
                     targetPoll.PubKeysHexVotedInFavor.Remove(fedMemberKeyHex);

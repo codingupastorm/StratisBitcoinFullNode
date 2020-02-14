@@ -23,6 +23,7 @@ using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Consensus;
@@ -418,15 +419,37 @@ namespace Stratis.SmartContracts.IntegrationTests
                 IFederationManager node1FederationManager = node1.FullNode.NodeService<IFederationManager>();
                 Assert.Equal(2, node1FederationManager.GetFederationMembers().Count);
 
-                // Last of all, create a 3rd node and see him get voted in.
+                // Mine blocks based on a 2-slot federation to evoke possible bans due to incorrect slot resolution.
+                await node1.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+                await node2.MineBlocksAsync(2);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+
+                // Last of all, create a 3rd node and check that nobody gets banned.
                 CaClient client3 = this.GetClient(server);
                 (CoreNode node3, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 2, ac, client3);
                 node3.Start();
-                TestHelper.Connect(node3, node2);
-                TestHelper.Connect(node3, node1);
 
-                TestBase.WaitLoop(() => node1VotingManager.GetScheduledVotes().Count > 0);
-                TestBase.WaitLoop(() => node2VotingManager.GetScheduledVotes().Count > 0);
+                TestHelper.ConnectNoCheck(node3, node2);
+                TestHelper.ConnectNoCheck(node3, node1);
+
+                var addressManagers = new[] {
+                    node1.FullNode.NodeService<IPeerAddressManager>(),
+                    node2.FullNode.NodeService<IPeerAddressManager>(),
+                    node3.FullNode.NodeService<IPeerAddressManager>() 
+                };
+
+                bool HaveBans()
+                {
+                    return addressManagers.Any(a => a.Peers.Any(p => !string.IsNullOrEmpty(p.BanReason)));
+                }
+
+                TestBase.WaitLoop(() => HaveBans() || (TestHelper.IsNodeConnectedTo(node3, node2) && TestHelper.IsNodeConnectedTo(node3, node1)));
+
+                // See if 3rd node gets voted in.
+                TestBase.WaitLoop(() => HaveBans() || (node1VotingManager.GetScheduledVotes().Count > 0 && node2VotingManager.GetScheduledVotes().Count > 0));
+
+                Assert.False(HaveBans(), "Some node(s) got banned");
 
                 // Mine some blocks to lock in the vote
                 await node1.MineBlocksAsync(1);
