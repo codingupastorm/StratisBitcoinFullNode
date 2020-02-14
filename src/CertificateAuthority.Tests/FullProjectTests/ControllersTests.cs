@@ -294,7 +294,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
         }
 
         [Fact]
-        public async Task CantRequestCertificateTwiceForSameIdentity()
+        public async Task CantRequestCertificateTwiceForSameIdentityAndCanReset()
         {
             CredentialsModel credentials1 = this.GetPrivilegedAccount();
 
@@ -344,6 +344,18 @@ namespace CertificateAuthority.Tests.FullProjectTests
             var response2 = (ObjectResult) this.certificatesController.IssueCertificate_UsingRequestString(new IssueCertificateFromFileContentsModel(Convert.ToBase64String(signedCsr.GetDerEncoded()), credentials1.AccountId, credentials1.Password));
             Assert.Equal(403, response2.StatusCode);
             Assert.Equal("You cant access this action. IssueCertificates access is required.", response2.Value);
+
+            // Reset our permissions.
+            var resetResponse = (OkResult) this.certificatesController.GrantIssuePermission(new CredentialsModelWithTargetId(credentials1.AccountId,Settings.AdminAccountId, CaTestHelper.AdminPassword));
+            Assert.Equal(200, resetResponse.StatusCode);
+
+            // Check that our cert was revoked.
+            List<CertificateInfoModel> getCertsResponse =  CaTestHelper.GetValue<List<CertificateInfoModel>>(this.certificatesController.GetAllCertificates(credentials1));
+            Assert.Equal(CertificateStatus.Revoked, getCertsResponse[0].Status);
+
+            // Issue our certificate again. If this call doesn't fail we successfully got our certificate back!
+            CertificateInfoModel resetCertificate = CaTestHelper.GetValue<CertificateInfoModel>(this.certificatesController.IssueCertificate_UsingRequestString(
+                new IssueCertificateFromFileContentsModel(Convert.ToBase64String(signedCsr.GetDerEncoded()), credentials1.AccountId, credentials1.Password)));
         }
 
         [Fact]
