@@ -64,7 +64,7 @@ Invoke-WebRequest -Uri https://localhost:5001/api/accounts/approve_account -Meth
 # On first run, the node will request their account's certificate
 if (!(Test-Path $client_certificate) -or !(Test-Path $federation_key_file) -or !(Test-Path $transaction_key_file) -or !(Test-Path $wallet_file))
 {
-    $initial = "& dotnet $daemon_file -datadir=""$node_root"" -port=$port -apiport=$api_port -password=test -capassword=$ca_password -caaccountid=$ca_account -certificatepassword=test -mnemonic=""$mnemonic"" -certificatepassword=test"
+    $initial = "& dotnet $daemon_file -datadir=""$node_root"" -port=$port -apiport=$api_port -password=test -capassword=$ca_password -caaccountid=$ca_account -certificatepassword=test -mnemonic=""$mnemonic"""
 }
 
 # Run

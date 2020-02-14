@@ -4,6 +4,7 @@ using System.Linq;
 using CSharpFunctionalExtensions;
 using NBitcoin;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
+using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.Wallet.Models;
@@ -347,10 +348,10 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Wallet
             {
                 object[] methodParameters = this.methodParameterStringSerializer.Deserialize(request.Parameters);
 
-                return new ContractTxData(ReflectionVirtualMachine.VmVersion, (Stratis.SmartContracts.RuntimeObserver.Gas)request.GasPrice, (Stratis.SmartContracts.RuntimeObserver.Gas)request.GasLimit, contractAddress, request.MethodName, methodParameters);
+                return new ContractTxData(ReflectionVirtualMachine.VmVersion, (Stratis.SmartContracts.RuntimeObserver.Gas)0, (Stratis.SmartContracts.RuntimeObserver.Gas)SmartContractFormatLogic.GasLimitMaximum, contractAddress, request.MethodName, methodParameters);
             }
 
-            return new ContractTxData(ReflectionVirtualMachine.VmVersion, (Stratis.SmartContracts.RuntimeObserver.Gas)request.GasPrice, (Stratis.SmartContracts.RuntimeObserver.Gas)request.GasLimit, contractAddress, request.MethodName);
+            return new ContractTxData(ReflectionVirtualMachine.VmVersion, (Stratis.SmartContracts.RuntimeObserver.Gas)0, (Stratis.SmartContracts.RuntimeObserver.Gas)SmartContractFormatLogic.GasLimitMaximum, contractAddress, request.MethodName);
         }
 
         private bool CheckBalance(string address)

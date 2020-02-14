@@ -31,22 +31,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Models
         public string Amount { get; set; }
 
         /// <summary>
-        /// The gas price to use. This is used to calculate the expected expenditure
-        /// if the method is run by a miner mining a call transaction rather than
-        /// locally.  
-        /// </summary>
-        [Range(SmartContractFormatLogic.GasPriceMinimum, SmartContractFormatLogic.GasPriceMaximum)]
-        public ulong GasPrice { get; set; }
-
-        /// <summary>
-        /// The maximum amount of gas that can be spent executing this transaction.
-        /// Although the gas expenditure is theoretical rather than actual,
-        /// this limit cannot be exceeded even when the method is run locally.
-        /// </summary>
-        [Range(SmartContractFormatLogic.GasLimitCallMinimum, SmartContractFormatLogic.GasLimitMaximum)]
-        public ulong GasLimit { get; set; }
-
-        /// <summary>
         /// A wallet address containing the funds to cover transaction fees, gas, and any funds specified in the
         /// Amount field.
         /// Note that because the method call is local no funds are spent. However, the concept of the sender address
@@ -69,7 +53,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Models
         {
             var builder = new StringBuilder();
 
-            builder.Append(string.Format("{0}:{1},{2}:{3}", nameof(this.GasPrice), this.GasPrice, nameof(this.GasLimit), this.GasLimit));
             builder.Append(string.Format("{0}:{1},{2}:{3}", nameof(this.Sender), this.Sender, nameof(this.Parameters), this.Parameters));
 
             return builder.ToString();
