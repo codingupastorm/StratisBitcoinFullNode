@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using CertificateAuthority.Controllers;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
@@ -290,6 +291,59 @@ namespace CertificateAuthority.Tests.FullProjectTests
             X509Certificate cert1 = certParser.ReadCertificate(certificate4.CertificateContentDer);
 
             Assert.True(CaCertificatesManager.ValidateCertificateChain(this.caCert, cert1));
+        }
+
+        [Fact]
+        public async Task CantRequestCertificateTwiceForSameIdentity()
+        {
+            CredentialsModel credentials1 = this.GetPrivilegedAccount();
+
+            // Try do the issuance the same way a node would, by populating the relevant model and submitting it to the API.
+            // In this case we just use the same pubkey for both the certificate generation & transaction signing pubkey hash, they would ordinarily be different.
+
+            var clientAddressSpace2 = new HDWalletAddressSpace("habit misery swarm tape viable toddler young shoe immense usual faculty edge", "node");
+            var clientAddressSpace3 = new HDWalletAddressSpace("usual young shoe immense habit misery swarm tape viable toddler faculty edge", "node");
+            Key clientPrivateKey3 = clientAddressSpace3.GetKey(this.clientHdPath).PrivateKey;
+            var clientPublicKey = clientPrivateKey3.PubKey.ToBytes();
+            AsymmetricCipherKeyPair clientKey3 = clientAddressSpace2.GetCertificateKeyPair(this.clientHdPath);
+
+            Key blockSigningPrivateKey = clientAddressSpace3.GetKey(this.blockSigningHdPath).PrivateKey;
+
+            var clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
+
+            var generateModel = new GenerateCertificateSigningRequestModel(clientAddress, Convert.ToBase64String(clientPublicKey), Convert.ToBase64String(clientPrivateKey3.PubKey.Hash.ToBytes()), Convert.ToBase64String(blockSigningPrivateKey.PubKey.ToBytes()), credentials1.AccountId, credentials1.Password);
+
+            CertificateSigningRequestModel unsignedCsrModel = CaTestHelper.GetValue<CertificateSigningRequestModel>(this.certificatesController.GenerateCertificateSigningRequest(generateModel));
+
+            byte[] csrTemp = Convert.FromBase64String(unsignedCsrModel.CertificateSigningRequestContent);
+
+            var unsignedCsr = new Pkcs10CertificationRequestDelaySigned(csrTemp);
+            var signature = CaCertificatesManager.GenerateCSRSignature(unsignedCsr.GetDataToSign(), "SHA256withECDSA", clientKey3.Private);
+            unsignedCsr.SignRequest(signature);
+
+            Assert.True(unsignedCsr.Verify(clientKey3.Public));
+
+            var signedCsr = new Pkcs10CertificationRequest(unsignedCsr.GetDerEncoded());
+
+            CertificateInfoModel certificate = CaTestHelper.GetValue<CertificateInfoModel>(this.certificatesController.IssueCertificate_UsingRequestString(
+                new IssueCertificateFromFileContentsModel(Convert.ToBase64String(signedCsr.GetDerEncoded()), credentials1.AccountId, credentials1.Password)));
+
+            Assert.Equal(clientAddress, certificate.Address);
+
+            var certParser = new X509CertificateParser();
+            X509Certificate cert1 = certParser.ReadCertificate(certificate.CertificateContentDer);
+
+            Assert.True(CaCertificatesManager.ValidateCertificateChain(this.caCert, cert1));
+
+            // Now that we have a certificate on this identity, can we still generate certificate signing requests?
+            var response = (ObjectResult) this.certificatesController.GenerateCertificateSigningRequest(generateModel);
+            Assert.Equal(403, response.StatusCode);
+            Assert.Equal("You cant access this action. IssueCertificates access is required.", response.Value);
+
+            // How about issuing another certificate?
+            var response2 = (ObjectResult) this.certificatesController.IssueCertificate_UsingRequestString(new IssueCertificateFromFileContentsModel(Convert.ToBase64String(signedCsr.GetDerEncoded()), credentials1.AccountId, credentials1.Password));
+            Assert.Equal(403, response2.StatusCode);
+            Assert.Equal("You cant access this action. IssueCertificates access is required.", response2.Value);
         }
 
         [Fact]
