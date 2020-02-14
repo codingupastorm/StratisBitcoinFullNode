@@ -1,7 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace CertificateAuthority.Models
 {
+    public class Permission
+    {
+        public int Id { get; set; }
+        
+        /// <summary>The foreign key for the associated <see cref="AccountModel"/> that has this permission.</summary>
+        public int AccountModelId { get; set; }
+
+        /// <summary>The human-readable name for the permission.</summary>
+        public string Name { get; set; }
+    }
+
     /// <summary>General information about user's account.</summary>
     public class AccountInfo
     {
@@ -10,6 +22,24 @@ namespace CertificateAuthority.Models
         public AccountAccessFlags AccessInfo { get; set; }
 
         public int CreatorId { get; set; }
+
+        public string OrganizationUnit { get; set; }
+
+        public string Organization { get; set; }
+
+        public string Locality { get; set; }
+
+        public string StateOrProvince { get; set; }
+
+        public string EmailAddress { get; set; }
+
+        public string Country { get; set; }
+
+        /// <summary>The permissions that this account is approved to have.</summary>
+        public List<Permission> Permissions { get; set; }
+
+        /// <summary>Indicates whether or not the administrator has approved the creation of the account.</summary>
+        public bool Approved { get; set; }
 
         public override string ToString()
         {

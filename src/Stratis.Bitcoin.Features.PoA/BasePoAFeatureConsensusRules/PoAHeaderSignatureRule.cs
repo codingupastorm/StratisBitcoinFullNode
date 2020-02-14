@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Base;
@@ -20,15 +19,9 @@ namespace Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules
 
         private uint maxReorg;
 
-        private bool votingEnabled;
-
-        private VotingManager votingManager;
-
-        private IFederationManager federationManager;
-
         private IChainState chainState;
 
-        private PoAConsensusFactory consensusFactory;
+        private IModifiedFederation modifiedFederation;
 
         /// <inheritdoc />
         public override void Initialize()
@@ -39,75 +32,38 @@ namespace Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules
 
             this.slotsManager = engine.SlotsManager;
             this.validator = engine.PoaHeaderValidator;
-            this.votingManager = engine.VotingManager;
-            this.federationManager = engine.FederationManager;
             this.chainState = engine.ChainState;
-            this.consensusFactory = (PoAConsensusFactory)this.Parent.Network.Consensus.ConsensusFactory;
+            this.modifiedFederation = new ModifiedFederation(this.Parent.Network, engine.FederationManager, engine.VotingManager);
 
             this.maxReorg = this.Parent.Network.Consensus.MaxReorgLength;
-            this.votingEnabled = ((PoAConsensusOptions)this.Parent.Network.Consensus.Options).VotingEnabled;
         }
 
         public override void Run(RuleContext context)
         {
-            var poaHeader = context.ValidationContext.ChainedHeaderToValidate.Header as PoABlockHeader;
+            ChainedHeader currentHeader = context.ValidationContext.ChainedHeaderToValidate;
 
-            PubKey pubKey = this.slotsManager.GetFederationMemberForTimestamp(poaHeader.Time).PubKey;
+            // We're working with the federation members as after the previously connected block.
+            List<IFederationMember> modifiedFederationMembers = this.modifiedFederation.GetFederationMembersAfterBlockConnected(currentHeader.Height - 1);
 
-            if (!this.validator.VerifySignature(pubKey, poaHeader))
+            var poaHeader = currentHeader.Header as PoABlockHeader;
+            PubKey pubKey = this.slotsManager.GetFederationMemberForTimestamp(poaHeader.Time, modifiedFederationMembers).PubKey;
+
+            if (this.validator.VerifySignature(pubKey, poaHeader))
             {
-                // If voting is enabled, it is possible that the federation was modified and another federation member signed
-                // the header. Since voting changes are only applied after [max reorg] blocks have passed, we can tell exactly
-                // how the federation will look like, [max reorg] blocks ahead. The code below tries to construct the federation that is
-                // expected to exist at the moment the block that corresponds to header being validated was produced. Then
-                // this federation is used to estimate who was expected to sign a block and then the signature is verified.
-                if (this.votingEnabled)
-                {
-                    ChainedHeader currentHeader = context.ValidationContext.ChainedHeaderToValidate;
-
-                    bool mightBeInsufficient = currentHeader.Height - this.chainState.ConsensusTip.Height > this.maxReorg;
-
-                    List<IFederationMember> modifiedFederation = this.federationManager.GetFederationMembers();
-
-                    foreach (Poll poll in this.votingManager.GetFinishedPolls().Where(x => !x.IsExecuted &&
-                        ((x.VotingData.Key == VoteKey.AddFederationMember) || (x.VotingData.Key == VoteKey.KickFederationMember))))
-                    {
-                        if (currentHeader.Height - poll.PollVotedInFavorBlockData.Height <= this.maxReorg)
-                            // Not applied yet.
-                            continue;
-
-                        IFederationMember federationMember = this.consensusFactory.DeserializeFederationMember(poll.VotingData.Data);
-                        if (federationMember == null)
-                        {
-                            this.Logger.LogTrace("(-)[INVALID_VOTING_DATA]");
-                            PoAConsensusErrors.VotingDataInvalidFormat.Throw();
-                        }
-
-                        if (poll.VotingData.Key == VoteKey.AddFederationMember)
-                            modifiedFederation.Add(federationMember);
-                        else if (poll.VotingData.Key == VoteKey.KickFederationMember)
-                            modifiedFederation.Remove(federationMember);
-                    }
-
-                    pubKey = this.slotsManager.GetFederationMemberForTimestamp(poaHeader.Time, modifiedFederation).PubKey;
-
-                    if (this.validator.VerifySignature(pubKey, poaHeader))
-                    {
-                        this.Logger.LogDebug("Signature verified using updated federation.");
-                        return;
-                    }
-
-                    if (mightBeInsufficient)
-                    {
-                        // Mark header as insufficient to avoid banning the peer that presented it.
-                        // When we advance consensus we will be able to validate it.
-                        context.ValidationContext.InsufficientHeaderInformation = true;
-                    }
-                }
-
-                this.Logger.LogTrace("(-)[INVALID_SIGNATURE]");
-                PoAConsensusErrors.InvalidHeaderSignature.Throw();
+                this.Logger.LogDebug("Signature verified using updated federation.");
+                return;
             }
+
+            bool mightBeInsufficient = currentHeader.Height - this.chainState.ConsensusTip.Height > this.maxReorg;
+            if (mightBeInsufficient)
+            {
+                // Mark header as insufficient to avoid banning the peer that presented it.
+                // When we advance consensus we will be able to validate it.
+                context.ValidationContext.InsufficientHeaderInformation = true;
+            }
+
+            this.Logger.LogTrace("(-)[INVALID_SIGNATURE]");
+            PoAConsensusErrors.InvalidHeaderSignature.Throw();
         }
     }
 }

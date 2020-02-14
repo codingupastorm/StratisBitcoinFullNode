@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using CertificateAuthority.Controllers;
 using CertificateAuthority.Models;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -21,6 +22,8 @@ namespace CertificateAuthority
         private const string GenerateCertificateSigningRequestEndpoint = "api/certificates/generate_certificate_signing_request";
         private const string IssueCertificateEndpoint = "api/certificates/issue_certificate_using_request_string";
         private const string GetCertificatePublicKeysEndpoint = "api/certificates/get_certificate_public_keys";
+
+        private const string CreateAccountEndpoint = "api/accounts/create_account";
 
         private const string JsonContentType = "application/json";
         private readonly Uri baseApiUrl;
@@ -67,6 +70,28 @@ namespace CertificateAuthority
             };
 
             return this.RequestFromCA<CertificateInfoModel>(GetCaCertificateEndpoint, credentialsModel);
+        }
+
+        public int CreateAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country)
+        {
+            // TODO: Request all permissions by default, or request none and require admin to add them?
+
+            string passHash = DataHelper.ComputeSha256Hash(this.password);
+
+            var createAccountModel = new CreateAccount(name,
+                passHash,
+                (int)(AccountAccessFlags.IssueCertificates | AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.AccessAnyCertificate),
+                organizationUnit,
+                organization,
+                locality,
+                stateOrProvince,
+                emailAddress,
+                country,
+                AccountsController.ValidPermissions,
+                this.password);
+
+
+            return this.RequestFromCA<int>(CreateAccountEndpoint, createAccountModel);
         }
 
         public List<CertificateInfoModel> GetAllCertificates()

@@ -102,14 +102,15 @@ namespace CertificateAuthority.Models
 
         public CertificateStatus Status { get; set; }
 
-        public int IssuerAccountId { get; set; }
+        /// <summary>The ID of the account that this certificate belongs to.</summary>
+        public int AccountId { get; set; }
 
         public int RevokerAccountId { get; set; } = -1;
 
         public override string ToString()
         {
             return $"{nameof(this.Id)}:{this.Id},{nameof(this.Thumbprint)}:{this.Thumbprint},{nameof(this.Address)}:{this.Address},{nameof(this.TransactionSigningPubKeyHash)}:{this.TransactionSigningPubKeyHash}," +
-                   $"{nameof(this.BlockSigningPubKey)}:{this.BlockSigningPubKey},{nameof(this.Status)}:{this.Status},{nameof(this.IssuerAccountId)}:{this.IssuerAccountId}," +
+                   $"{nameof(this.BlockSigningPubKey)}:{this.BlockSigningPubKey},{nameof(this.Status)}:{this.Status},{nameof(this.AccountId)}:{this.AccountId}," +
                    $"{nameof(this.RevokerAccountId)}:{this.RevokerAccountId}";
         }
     }

@@ -79,6 +79,7 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<IWhitelistedHashesRepository, WhitelistedHashesRepository>();
 
                         services.AddSingleton<IFederationManager, FederationManager>();
+                        services.AddSingleton<IModifiedFederation, ModifiedFederation>();
                         services.AddSingleton<PoABlockHeaderValidator>();
                         services.AddSingleton<IPoAMiner, PoAMiner>();
                         services.AddSingleton<IMinerSettings, PoAMinerSettings>();

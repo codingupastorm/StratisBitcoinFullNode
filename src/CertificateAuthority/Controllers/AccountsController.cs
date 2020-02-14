@@ -14,6 +14,17 @@ namespace CertificateAuthority.Controllers
     [ApiController]
     public sealed class AccountsController : LoggedController
     {
+        public const string SendPermission = "Send";
+        public const string CallContractPermission = "CallContract";
+        public const string CreateContractPermission = "CreateContract";
+
+        public static List<string> ValidPermissions = new List<string>()
+        {
+            SendPermission,
+            CallContractPermission,
+            CreateContractPermission
+        };
+        
         private readonly DataCacheLayer repository;
 
         public AccountsController(DataCacheLayer repository) : base(LogManager.GetCurrentClassLogger())
@@ -36,7 +47,7 @@ namespace CertificateAuthority.Controllers
             });
         }
 
-        /// <summary>Provides account information of the account with id specified. AccessAccountInfo access level required.</summary>
+        /// <summary>Provides account information of all accounts. AccessAccountInfo access level required.</summary>
         /// <response code="201">Collection of <see cref="AccountModel"/> instances.</response>
         [HttpPost("list_accounts")]
         [ProducesResponseType(typeof(List<AccountModel>), 200)]
@@ -59,25 +70,35 @@ namespace CertificateAuthority.Controllers
         {
             this.LogEntry(model);
 
+            return this.Json(this.repository.CreateAccount(model));
+        }
+
+        /// <summary>Marks an unapproved account as approved.</summary>
+        [HttpPost("approve_account")]
+        [ProducesResponseType(typeof(AccountModel), 200)]
+        public IActionResult ApproveAccount([FromBody]CredentialsModelWithTargetId model)
+        {
+            this.LogEntry(model);
+
             return ExecuteRepositoryQuery(() =>
             {
-                var credentials = new CredentialsAccessWithModel<CreateAccount>(model, AccountAccessFlags.CreateAccounts);
-                return this.Json(this.repository.CreateAccount(credentials));
+                var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AdminAccess);
+                return this.Json(this.repository.ApproveAccount(credentials));
             });
         }
 
         /// <summary>Provides collection of all certificates issued by account with specified id. AccessAnyCertificate access level is required.</summary>
         /// <response code="201">Collection of <see cref="CertificateInfoModel"/> instances.</response>
-        [HttpPost("get_certificates_issued_by_account_id")]
-        [ProducesResponseType(typeof(List<CertificateInfoModel>), 200)]
-        public IActionResult GetCertificatesIssuedByAccountId([FromBody]CredentialsModelWithTargetId model)
+        [HttpPost("get_certificate_issued_by_account_id")]
+        [ProducesResponseType(typeof(CertificateInfoModel), 200)]
+        public IActionResult GetCertificateIssuedByAccountId([FromBody]CredentialsModelWithTargetId model)
         {
             this.LogEntry(model);
 
             return ExecuteRepositoryQuery(() =>
             {
                 var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AccessAnyCertificate);
-                JsonResult res = this.Json(this.repository.GetCertificatesIssuedByAccountId(credentials));
+                JsonResult res = this.Json(this.repository.GetCertificateIssuedByAccountId(credentials));
                 return res;
             });
         }
