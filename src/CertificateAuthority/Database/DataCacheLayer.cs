@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using CertificateAuthority.Controllers;
 using CertificateAuthority.Models;
 using NBitcoin.DataEncoders;
 using NLog;
@@ -33,6 +34,7 @@ namespace CertificateAuthority.Database
                     var admin = new AccountModel()
                     {
                         AccessInfo = AccountAccessFlags.AdminAccess,
+                        Approved = true,
                         CreatorId = Settings.AdminAccountId,
                         Name = Settings.AdminName,
                         PasswordHash = settings.DefaultAdminPasswordHash
@@ -93,10 +95,11 @@ namespace CertificateAuthority.Database
             this.logger.Info("Certificate id {0}, thumbprint {1} was added.");
         }
 
-        /// <summary>Provides collection of all certificates issued by account with specified id.</summary>
-        public List<CertificateInfoModel> GetCertificatesIssuedByAccountId(CredentialsAccessWithModel<CredentialsModelWithTargetId> accessWithModel)
+        /// <summary>Provides the certificate issued by the account with the specified id, if any.</summary>
+        public CertificateInfoModel GetCertificateIssuedByAccountId(CredentialsAccessWithModel<CredentialsModelWithTargetId> accessWithModel)
         {
-            return ExecuteQuery(accessWithModel, (dbContext) => { return dbContext.Certificates.Where(x => x.IssuerAccountId == accessWithModel.Model.TargetAccountId).ToList(); });
+            // TODO: We shouldn't need special access rights to retrieve the certificate for the authenticating user, i.e. when Model.AccountId == Model.TargetAccountId
+            return ExecuteQuery(accessWithModel, (dbContext) => { return dbContext.Certificates.FirstOrDefault(x => x.AccountId == accessWithModel.Model.TargetAccountId); });
         }
 
         #endregion
@@ -106,7 +109,34 @@ namespace CertificateAuthority.Database
         /// <summary>Provides account information of the account with id specified.</summary>
         public AccountInfo GetAccountInfoById(CredentialsAccessWithModel<CredentialsModelWithTargetId> credentialsModel)
         {
-            return ExecuteQuery<CredentialsAccessWithModel<CredentialsModelWithTargetId>, AccountInfo>(credentialsModel, (dbContext) => dbContext.Accounts.SingleOrDefault(x => x.Id == credentialsModel.Model.TargetAccountId));
+            AccountInfo accountInfo = ExecuteQuery<CredentialsAccessWithModel<CredentialsModelWithTargetId>, AccountInfo>(credentialsModel, (dbContext) => dbContext.Accounts.SingleOrDefault(x => x.Id == credentialsModel.Model.TargetAccountId));
+
+            // TODO: Investigate whether there is a more elegant way of handling a lack of permissions
+            if (accountInfo.Permissions == null)
+                accountInfo.Permissions = new List<Permission>();
+
+            return accountInfo;
+        }
+
+        /// <summary>Sets the Approved flag on an account.</summary>
+        public AccountInfo ApproveAccount(CredentialsAccessWithModel<CredentialsModelWithTargetId> credentialsModel)
+        {
+            return ExecuteCommand(credentialsModel, (dbContext, account) =>
+            {
+                int accountId = credentialsModel.Model.TargetAccountId;
+
+                AccountModel accountToApprove = dbContext.Accounts.SingleOrDefault(x => x.Id == accountId);
+
+                if (accountToApprove.Approved)
+                    throw new CertificateAuthorityAccountException("Account already approved!");
+
+                accountToApprove.Approved = true;
+
+                dbContext.Accounts.Update(accountToApprove);
+                dbContext.SaveChanges();
+
+                return accountToApprove;
+            });
         }
 
         /// <summary>Provides collection of all existing accounts.</summary>
@@ -116,33 +146,47 @@ namespace CertificateAuthority.Database
         }
 
         /// <summary>Creates a new account.</summary>
-        public int CreateAccount(CredentialsAccessWithModel<CreateAccount> credentialsModel)
+        /// <remarks>This method is somewhat special in that it requires no account ID for the credentials.
+        /// Only a password is required.</remarks>
+        public int CreateAccount(CreateAccount createAccountModel)
         {
-            return ExecuteQuery(credentialsModel, (dbContext, account) =>
+            CADbContext dbContext = this.CreateContext();
+
+            if (dbContext.Accounts.Any(x => x.Name == createAccountModel.CommonName))
+                throw new CertificateAuthorityAccountException("That name is already taken!");
+
+            AccountAccessFlags newAccountAccessLevel = (AccountAccessFlags)createAccountModel.RequestedAccountAccess | AccountAccessFlags.BasicAccess;
+
+            if (createAccountModel.RequestedPermissions == null)
+                throw new CertificateAuthorityAccountException("No permissions requested!");
+
+            if (createAccountModel.RequestedPermissions.Any(permission => !AccountsController.ValidPermissions.Contains(permission.Name)))
+                throw new CertificateAuthorityAccountException("Invalid permission requested!");
+
+            var newAccount = new AccountModel()
             {
-                if (dbContext.Accounts.Any(x => x.Name == credentialsModel.Model.NewAccountName))
-                    throw new CertificateAuthorityAccountException("That name is already taken!");
+                Name = createAccountModel.CommonName,
+                PasswordHash = createAccountModel.NewAccountPasswordHash,
+                AccessInfo = newAccountAccessLevel,
+                CreatorId = -1, // Not known yet, as we are creating our own account
+                OrganizationUnit = createAccountModel.OrganizationUnit,
+                Organization = createAccountModel.Organization,
+                Locality = createAccountModel.Locality,
+                StateOrProvince = createAccountModel.StateOrProvince,
+                EmailAddress = createAccountModel.EmailAddress,
+                Country = createAccountModel.Country,
+                Permissions = createAccountModel.RequestedPermissions,
+                Approved = false
+            };
 
-                AccountAccessFlags newAccountAccessLevel =
-                    (AccountAccessFlags)credentialsModel.Model.NewAccountAccess | AccountAccessFlags.BasicAccess;
+            dbContext.Accounts.Add(newAccount);
+            dbContext.SaveChanges();
+            newAccount.CreatorId = newAccount.Id;
+            dbContext.Update(newAccount);
+            dbContext.SaveChanges();
 
-                if (!DataHelper.IsCreatorHasGreaterOrEqualAccess(account.AccessInfo, newAccountAccessLevel))
-                    throw new CertificateAuthorityAccountException("You can't create an account with an access level higher than yours!");
-
-                var newAccount = new AccountModel()
-                {
-                    Name = credentialsModel.Model.NewAccountName,
-                    PasswordHash = credentialsModel.Model.NewAccountPasswordHash,
-                    AccessInfo = newAccountAccessLevel,
-                    CreatorId = account.Id
-                };
-
-                dbContext.Accounts.Add(newAccount);
-                dbContext.SaveChanges();
-
-                this.logger.Info("Account was created: '{0}', creator: '{1}'.", newAccount, account);
-                return newAccount.Id;
-            });
+            this.logger.Info("Account was created: '{0}'.", newAccount);
+            return newAccount.Id;
         }
 
         /// <summary>Deletes existing account with id specified.</summary>
@@ -222,8 +266,6 @@ namespace CertificateAuthority.Database
             dbContext.SaveChanges();
 
             this.logger.Info("Account Id {0}'s password has been updated.", accountId);
-
-            return;
         }
 
         public void ChangeAccountPassword(CredentialsAccessWithModel<ChangeAccountPasswordModel> credentialsModel)
@@ -263,6 +305,42 @@ namespace CertificateAuthority.Database
 
         #endregion
 
+        public void RemoveAccessLevels(int accountId, AccountAccessFlags flags)
+        {
+            CADbContext dbContext = this.CreateContext();
+
+            AccountModel account = dbContext.Accounts.SingleOrDefault(a => a.Id == accountId);
+
+            if (account == null)
+                throw new Exception($"The account was not found: {accountId}");
+
+            int access = (int)account.AccessInfo;
+            access &= ~(int)flags;
+
+            account.AccessInfo = (AccountAccessFlags)access;
+
+            dbContext.Update(account);
+            dbContext.SaveChanges();
+        }
+
+        public void GrantIssuePermission(CredentialsModelWithTargetId model)
+        {
+            CADbContext dbContext = this.CreateContext();
+
+            AccountModel account = dbContext.Accounts.SingleOrDefault(a => a.Id == model.TargetAccountId);
+
+            if (account == null)
+                throw new Exception($"The account was not found: {model.TargetAccountId}");
+
+            if ((account.AccessInfo & AccountAccessFlags.IssueCertificates) == AccountAccessFlags.IssueCertificates)
+                throw new Exception($"Account already has IssueCertificates access level: {model.TargetAccountId}");
+
+            account.AccessInfo |= AccountAccessFlags.IssueCertificates;
+
+            dbContext.Update(account);
+            dbContext.SaveChanges();
+        }
+
         /// <summary>Validate the account's password and access attributes for a particular action.</summary>
         /// <exception cref="InvalidCredentialsException">Thrown in case credentials are invalid.</exception>
         public void VerifyCredentialsAndAccessLevel(CredentialsAccessModel credentialsAccessModel, CADbContext dbContext, out AccountModel account)
@@ -270,6 +348,9 @@ namespace CertificateAuthority.Database
             account = dbContext.Accounts.SingleOrDefault(x => x.Id == credentialsAccessModel.AccountId);
 
             if (account == null)
+                throw InvalidCredentialsException.FromErrorCode(CredentialsExceptionErrorCodes.AccountNotFound, credentialsAccessModel.RequiredAccess);
+
+            if (!account.Approved)
                 throw InvalidCredentialsException.FromErrorCode(CredentialsExceptionErrorCodes.AccountNotFound, credentialsAccessModel.RequiredAccess);
 
             if (!account.VerifyPassword(credentialsAccessModel.Password))

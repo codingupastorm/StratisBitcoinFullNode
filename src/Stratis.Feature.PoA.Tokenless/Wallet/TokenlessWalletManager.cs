@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using CertificateAuthority;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
@@ -49,14 +50,16 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         private ExtPubKey[] extPubKeys;
         private readonly TokenlessWalletSettings walletSettings;
         private readonly CertificatesManager certificatesManager;
+        private readonly ILogger logger;
 
-        public TokenlessWalletManager(Network network, DataFolder dataFolder, TokenlessWalletSettings walletSettings, CertificatesManager certificatesManager)
+        public TokenlessWalletManager(Network network, DataFolder dataFolder, TokenlessWalletSettings walletSettings, CertificatesManager certificatesManager, ILoggerFactory loggerFactory)
         {
             this.network = network;
             this.dataFolder = dataFolder;
             this.fileStorage = new FileStorage<TokenlessWallet>(this.dataFolder.RootPath);
             this.walletSettings = walletSettings;
             this.certificatesManager = certificatesManager;
+            this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
         public bool Initialize()
@@ -69,7 +72,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             if (walletOk && blockSigningKeyFileOk && transactionKeyFileOk && certificateOk)
                 return true;
 
-            Console.WriteLine($"Restart the daemon.");
+            this.logger.LogError($"Restart the daemon.");
             return false;
         }
 
@@ -141,8 +144,8 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
                 if (password == null)
                 {
-                    Console.WriteLine($"Run this daemon with a -password=<password> argument so that the wallet file ({WalletFileName}) can be created.");
-                    Console.WriteLine($"If you are re-creating a wallet then also pass a -mnemonic=\"<mnemonic words>\" argument.");
+                    this.logger.LogError($"Run this daemon with a -password=<password> argument so that the wallet file ({WalletFileName}) can be created.");
+                    this.logger.LogError($"If you are re-creating a wallet then also pass a -mnemonic=\"<mnemonic words>\" argument.");
                     return false;
                 }
 
@@ -153,9 +156,9 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
                 this.Wallet = wallet;
 
-                Console.WriteLine($"The wallet file ({WalletFileName}) has been created.");
-                Console.WriteLine($"Record the mnemonic ({mnemonic}) in a safe place.");
-                Console.WriteLine($"IMPORTANT: You will need the mnemonic to recover the wallet.");
+                this.logger.LogError($"The wallet file ({WalletFileName}) has been created.");
+                this.logger.LogError($"Record the mnemonic ({mnemonic}) in a safe place.");
+                this.logger.LogError($"IMPORTANT: You will need the mnemonic to recover the wallet.");
 
                 // Stop the node so that the user can record the mnemonic.
                 canStart = false;
@@ -183,7 +186,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                 var keyTool = new KeyTool(this.walletSettings.RootPath);
                 keyTool.SavePrivateKey(key, KeyType.FederationKey);
 
-                Console.WriteLine($"The key file '{KeyTool.FederationKeyFileName}' has been created.");
+                this.logger.LogError($"The key file '{KeyTool.FederationKeyFileName}' has been created.");
 
                 return false;
             }
@@ -204,7 +207,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                 var keyTool = new KeyTool(this.walletSettings.RootPath);
                 keyTool.SavePrivateKey(key, KeyType.TransactionSigningKey);
 
-                Console.WriteLine($"The key file '{KeyTool.TransactionSigningKeyFileName}' has been created.");
+                this.logger.LogError($"The key file '{KeyTool.TransactionSigningKeyFileName}' has been created.");
 
                 return false;
             }
@@ -219,7 +222,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
             try
             {
-                caOk = this.certificatesManager.LoadAuthorityCertificate();
+                caOk = this.certificatesManager.LoadAuthorityCertificate(false);
                 clientOk = this.certificatesManager.LoadClientCertificate();
             }
             catch (CertificateConfigurationException certEx)
@@ -238,6 +241,23 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             if (!CheckPassword(CertificatesManager.ClientCertificateName))
                 return false;
 
+            // First check if we have created an account on the CA already.
+            if (!this.certificatesManager.HaveAccount())
+            {
+                int accountId = this.certificatesManager.CreateAccount(this.walletSettings.Name,
+                    this.walletSettings.OrganizationUnit,
+                    this.walletSettings.Organization,
+                    this.walletSettings.Locality,
+                    this.walletSettings.StateOrProvince,
+                    this.walletSettings.EmailAddress,
+                    this.walletSettings.Country);
+
+                // The CA admin will need to approve the account, so advise the user.
+                this.logger.LogError($"Account created with ID {accountId}. After account approval, please update the node configuration and restart to proceed.");
+
+                return false;
+            }
+
             // The certificate manager is responsible for creation and storage of the client certificate, the wallet manager is primarily responsible for providing the requisite private key.
             Key privateKey = this.GetKey(this.walletSettings.Password, TokenlessWalletAccount.P2PCertificates);
             PubKey transactionSigningPubKey = this.GetKey(this.walletSettings.Password, TokenlessWalletAccount.TransactionSigning).PubKey;
@@ -254,7 +274,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         {
             if (string.IsNullOrEmpty(this.walletSettings.Password))
             {
-                Console.WriteLine($"Run this daemon with a -password=<password> argument so that the '{fileName}' file can be created.");
+                this.logger.LogError($"Run this daemon with a -password=<password> argument so that the '{fileName}' file can be created.");
 
                 return false;
             }

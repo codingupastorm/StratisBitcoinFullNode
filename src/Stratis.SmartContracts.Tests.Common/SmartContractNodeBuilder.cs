@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using CertificateAuthority;
 using CertificateAuthority.Models;
+using CertificateAuthority.Tests;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Org.BouncyCastle.X509;
@@ -35,7 +36,10 @@ namespace Stratis.SmartContracts.Tests.Common
 
             CoreNode node = this.CreateNode(new SmartContractPoARunner(dataFolder, network, this.TimeProvider), "poa.conf");
 
-            var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder });
+            var settings = new NodeSettings(network, args: new string[] {
+                "-conf=poa.conf",
+                "-datadir=" + dataFolder
+            });
 
             var tool = new KeyTool(settings.DataFolder);
             tool.SavePrivateKey(network.FederationKeys[nodeIndex], KeyType.FederationKey);
@@ -46,6 +50,8 @@ namespace Stratis.SmartContracts.Tests.Common
         public (CoreNode, Key, Key) CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client, bool initialRun = true)
         {
             string dataFolder = this.GetNextDataFolderName(nodeIndex : nodeIndex);
+
+            string commonName = CaTestHelper.GenerateRandomString();
 
             var configParameters = new NodeConfigParameters()
             {
@@ -59,15 +65,32 @@ namespace Stratis.SmartContracts.Tests.Common
                 : new Mnemonic(Wordlist.English, WordCount.Twelve);
 
             string[] args = initialRun ? 
-                new string[] { "-conf=poa.conf", "-datadir=" + dataFolder, "-password=test", $"-mnemonic={ mnemonic }", "-certificatepassword=test" } :
-                new string[] { "-conf=poa.conf", "-datadir=" + dataFolder, "-certificatepassword=test" };
+                new string[] {
+                    "-conf=poa.conf",
+                    "-datadir=" + dataFolder,
+                    "-password=test",
+                    $"-mnemonic={ mnemonic }",
+                    "-certificatepassword=test",
+                    "-certificatename=" + commonName,
+                    "-certificateorganizationunit=IntegrationTests",
+                    "-certificateorganization=Stratis",
+                    "-certificatelocality=TestLocality",
+                    "-certificatestateorprovince=TestProvince",
+                    "-certificateemailaddress=" + commonName + "@example.com",
+                    "-certificatecountry=UK"
+                } : new string[]
+                {
+                    "-conf=poa.conf",
+                    "-datadir=" + dataFolder,
+                    "-certificatepassword=test"
+                };
 
             using (var settings = new NodeSettings(network, args: args))
             {
                 var loggerFactory = new LoggerFactory();
                 var revocationChecker = new RevocationChecker(settings, null, loggerFactory, new DateTimeProvider());
                 var certificatesManager = new CertificatesManager(settings.DataFolder, settings, loggerFactory, revocationChecker, network);
-                var walletManager = new TokenlessWalletManager(network, settings.DataFolder, new TokenlessWalletSettings(settings), certificatesManager);
+                var walletManager = new TokenlessWalletManager(network, settings.DataFolder, new TokenlessWalletSettings(settings), certificatesManager, loggerFactory);
 
                 walletManager.Initialize();
 
