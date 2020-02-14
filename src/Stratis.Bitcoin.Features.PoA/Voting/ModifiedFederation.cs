@@ -6,7 +6,7 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
 {
     public interface IModifiedFederation
     {
-        List<IFederationMember> GetModifiedFederation(int height);
+        List<IFederationMember> GetFederationMembersAfterBlockConnected(int height);
     }
 
     public class ModifiedFederation : IModifiedFederation
@@ -22,19 +22,19 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
             this.votingManager = votingManager;
         }
 
-        public List<IFederationMember> GetModifiedFederation(int height)
+        public List<IFederationMember> GetFederationMembersAfterBlockConnected(int blockHeight)
         {
             if (!(this.network.Consensus.Options is PoAConsensusOptions poAConsensusOptions && poAConsensusOptions.VotingEnabled))
                 return this.federationManager.GetFederationMembers();
 
             // Start at genesis when determining members for a block height potentially below the tip.
-            List<IFederationMember> modifiedFederation = poAConsensusOptions.GenesisFederationMembers;
+            var modifiedFederation = new List<IFederationMember>(poAConsensusOptions.GenesisFederationMembers);
 
             foreach (Poll poll in this.votingManager.GetFinishedPolls()
-                .Where(x => !x.IsExecuted && ((x.VotingData.Key == VoteKey.AddFederationMember) || (x.VotingData.Key == VoteKey.KickFederationMember)))
+                .Where(x => x.PollVotedInFavorBlockData != null && ((x.VotingData.Key == VoteKey.AddFederationMember) || (x.VotingData.Key == VoteKey.KickFederationMember)))
                 .OrderBy(p => p.PollVotedInFavorBlockData.Height))
             {
-                if ((height - poll.PollVotedInFavorBlockData.Height) <= this.network.Consensus.MaxReorgLength)
+                if ((poll.PollVotedInFavorBlockData.Height + this.network.Consensus.MaxReorgLength) > blockHeight)
                     // Not applied yet. Since the polls are ordered by height we can skip the remaining polls as well.
                     break;
 
