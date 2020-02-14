@@ -43,6 +43,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             if (this.headerValidator.VerifySignature(pubKey, poaHeader))
             {
                 this.Logger.LogDebug("Signature verified using updated federation.");
+                return;
             }
 
             bool mightBeInsufficient = currentHeader.Height - this.Parent.ChainState.ConsensusTip.Height > this.Parent.Network.Consensus.MaxReorgLength;
