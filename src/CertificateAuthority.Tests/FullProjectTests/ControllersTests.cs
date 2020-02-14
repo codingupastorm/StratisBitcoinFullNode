@@ -28,6 +28,16 @@ namespace CertificateAuthority.Tests.FullProjectTests
         private readonly DataCacheLayer dataCacheLayer;
         private readonly TestServer server;
 
+        private static int transactionSigningIndex = 0;
+        private static int blockSigningIndex = 1;
+        private static int clientAddressIndex = 2;
+
+        private readonly string clientHdPath = $"m/44'/105'/0'/0/{clientAddressIndex}";
+        private readonly string transactionSigningHdPath = $"m/44'/105'/0'/0/{transactionSigningIndex}";
+        private readonly string blockSigningHdPath = $"m/44'/105'/0'/0/{blockSigningIndex}";
+
+        private X509Certificate caCert;
+
         public ControllersTests()
         {
             IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder();
@@ -40,44 +50,45 @@ namespace CertificateAuthority.Tests.FullProjectTests
             this.dataCacheLayer = (DataCacheLayer)this.server.Host.Services.GetService(typeof(DataCacheLayer));
 
             CaTestHelper.InitializeCa(this.server);
-        }
 
-        [Fact]
-        private void TestCertificatesControllerMethods()
-        {
-            // Just admin on start.
+            // Only the admin user exists initially.
             Assert.Single(CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(this.adminCredentials)));
 
             AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates | AccountAccessFlags.RevokeCertificates | AccountAccessFlags.AccessAnyCertificate;
-            CredentialsModel credentials1 = CaTestHelper.CreateAccount(this.server, credentials1Access);
+            CredentialsModel credentials1 = CaTestHelper.CreateAccount(this.server.Host, credentials1Access);
 
             CertificateInfoModel caCertModel = CaTestHelper.GetValue<CertificateInfoModel>(this.certificatesController.GetCaCertificate(credentials1));
 
             var certParser = new X509CertificateParser();
 
-            X509Certificate caCert = certParser.ReadCertificate(caCertModel.CertificateContentDer);
+            this.caCert = certParser.ReadCertificate(caCertModel.CertificateContentDer);
+        }
 
-            Assert.NotNull(caCert);
+        private CredentialsModel GetPrivilegedAccount()
+        {
+            AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates | AccountAccessFlags.RevokeCertificates | AccountAccessFlags.AccessAnyCertificate;
+            
+            return CaTestHelper.CreateAccount(this.server.Host, credentials1Access);
+        }
+
+        [Fact]
+        private void TestCertificatesControllerMethods()
+        {
+            CredentialsModel credentials1 = this.GetPrivilegedAccount();
 
             // We need to be absolutely sure that the components of the subject DN are in the same order in a CSR versus the resulting certificate.
             // Otherwise the certificate chain will fail validation, and there is currently no workaround in BouncyCastle.
-            string clientName = "O=Stratis,CN=DLT Node Run By Iain McCain,OU=Administration";
+            var credModel = new CredentialsAccessModel(credentials1.AccountId, credentials1.Password, AccountAccessFlags.BasicAccess);
+            AccountModel account = this.dataCacheLayer.ExecuteQuery(credModel, (dbContext) => { return dbContext.Accounts.SingleOrDefault(x => x.Id == credModel.AccountId); });
+            string clientName = $"O={account.Organization},CN={account.Name},OU={account.OrganizationUnit},L={account.Locality},ST={account.StateOrProvince},C={account.Country}";
 
             var clientAddressSpace = new HDWalletAddressSpace("tape viable toddler young shoe immense usual faculty edge habit misery swarm", "node");
 
-            int transactionSigningIndex = 0;
-            int blockSigningIndex = 1;
-            int clientAddressIndex = 2;
+            Key clientPrivateKey = clientAddressSpace.GetKey(this.clientHdPath).PrivateKey;
+            Key transactionSigningPrivateKey = clientAddressSpace.GetKey(this.transactionSigningHdPath).PrivateKey;
+            Key blockSigningPrivateKey = clientAddressSpace.GetKey(this.blockSigningHdPath).PrivateKey;
 
-            string clientHdPath = $"m/44'/105'/0'/0/{clientAddressIndex}";
-            string transactionSigningHdPath = $"m/44'/105'/0'/0/{transactionSigningIndex}";
-            string blockSigningHdPath = $"m/44'/105'/0'/0/{blockSigningIndex}";
-
-            Key clientPrivateKey = clientAddressSpace.GetKey(clientHdPath).PrivateKey;
-            Key transactionSigningPrivateKey = clientAddressSpace.GetKey(transactionSigningHdPath).PrivateKey;
-            Key blockSigningPrivateKey = clientAddressSpace.GetKey(blockSigningHdPath).PrivateKey;
-
-            AsymmetricCipherKeyPair clientKey = clientAddressSpace.GetCertificateKeyPair(clientHdPath);
+            AsymmetricCipherKeyPair clientKey = clientAddressSpace.GetCertificateKeyPair(this.clientHdPath);
 
             string clientAddress = HDWalletAddressSpace.GetAddress(clientPrivateKey.PubKey.ToBytes(), 63);
             byte[] clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
@@ -97,9 +108,10 @@ namespace CertificateAuthority.Tests.FullProjectTests
             CertificateInfoModel certificate1 = CaTestHelper.GetValue<CertificateInfoModel>(this.certificatesController.IssueCertificate_UsingRequestString(
                 new IssueCertificateFromFileContentsModel(Convert.ToBase64String(certificateSigningRequest.GetDerEncoded()), credentials1.AccountId, credentials1.Password)));
 
+            var certParser = new X509CertificateParser();
             X509Certificate cert1 = certParser.ReadCertificate(certificate1.CertificateContentDer);
 
-            Assert.True(caCert.SubjectDN.Equivalent(cert1.IssuerDN));
+            Assert.True(this.caCert.SubjectDN.Equivalent(cert1.IssuerDN));
 
             Assert.Equal(clientAddress, certificate1.Address);
 
@@ -107,12 +119,18 @@ namespace CertificateAuthority.Tests.FullProjectTests
             Assert.Single(pubKeys);
             Assert.Equal(blockSigningPrivateKey.PubKey, pubKeys[0]);
 
-            var clientAddressSpace2 = new HDWalletAddressSpace("habit misery swarm tape viable toddler young shoe immense usual faculty edge", "node");
-            Key clientPrivateKey2 = clientAddressSpace2.GetKey(clientHdPath).PrivateKey;
-            byte[] clientPublicKey = clientPrivateKey2.PubKey.ToBytes();
-            AsymmetricCipherKeyPair clientKey2 = clientAddressSpace2.GetCertificateKeyPair(clientHdPath);
+            CredentialsModel credentials2 = this.GetPrivilegedAccount();
 
-            blockSigningPrivateKey = clientAddressSpace2.GetKey(blockSigningHdPath).PrivateKey;
+            credModel = new CredentialsAccessModel(credentials2.AccountId, credentials2.Password, AccountAccessFlags.BasicAccess);
+            account = this.dataCacheLayer.ExecuteQuery(credModel, (dbContext) => { return dbContext.Accounts.SingleOrDefault(x => x.Id == credModel.AccountId); });
+            clientName = $"O={account.Organization},CN={account.Name},OU={account.OrganizationUnit},L={account.Locality},ST={account.StateOrProvince},C={account.Country}";
+
+            var clientAddressSpace2 = new HDWalletAddressSpace("habit misery swarm tape viable toddler young shoe immense usual faculty edge", "node");
+            Key clientPrivateKey2 = clientAddressSpace2.GetKey(this.clientHdPath).PrivateKey;
+            byte[] clientPublicKey = clientPrivateKey2.PubKey.ToBytes();
+            AsymmetricCipherKeyPair clientKey2 = clientAddressSpace2.GetCertificateKeyPair(this.clientHdPath);
+
+            blockSigningPrivateKey = clientAddressSpace2.GetKey(this.blockSigningHdPath).PrivateKey;
 
             clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
             clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
@@ -132,7 +150,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             Pkcs10CertificationRequest certificateSigningRequest2 = CaCertificatesManager.CreateCertificateSigningRequest(clientName, clientKey2, new string[0], extensionData);
 
             CertificateInfoModel certificate2 = CaTestHelper.GetValue<CertificateInfoModel>(this.certificatesController.IssueCertificate_UsingRequestString(
-                new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest2.GetDerEncoded()), this.adminCredentials.AccountId, this.adminCredentials.Password)));
+                new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest2.GetDerEncoded()), credentials2.AccountId, credentials2.Password)));
 
             Assert.Equal(clientAddress, certificate2.Address);
 
@@ -146,7 +164,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             CertificateInfoModel cert1Retrieved = CaTestHelper.GetValue<CertificateInfoModel>(this.certificatesController.GetCertificateByThumbprint(
                 new CredentialsModelWithThumbprintModel(certificate1.Thumbprint, this.adminCredentials.AccountId, this.adminCredentials.Password)));
             Assert.Equal(certificate1.Id, cert1Retrieved.Id);
-            Assert.Equal(certificate1.IssuerAccountId, cert1Retrieved.IssuerAccountId);
+            Assert.Equal(certificate1.AccountId, cert1Retrieved.AccountId);
 
             string status = CaTestHelper.GetValue<string>(this.certificatesController.GetCertificateStatus(new GetCertificateStatusModel(certificate1.Thumbprint, true)));
             Assert.Equal(CertificateStatus.Good.ToString(), status);
@@ -174,22 +192,33 @@ namespace CertificateAuthority.Tests.FullProjectTests
             pubKeys = CaTestHelper.GetValue<ICollection<string>>(this.certificatesController.GetCertificatePublicKeys()).Select(s => new PubKey(s)).ToArray();
             Assert.Single(pubKeys);
             Assert.Equal(blockSigningPrivateKey.PubKey, pubKeys[0]);
+        }
 
-            // Now check that we can obtain an unsigned CSR template from the CA, which we then sign locally and receive a certificate for.
-            // First do it using the manager's methods directly.
+        [Fact]
+        public void CanIssueCertificateViaTemplateCsrFromManager()
+        {
+            CredentialsModel credentials1 = this.GetPrivilegedAccount();
+
+            // Check that we can obtain an unsigned CSR template from the CA, which we then sign locally and receive a certificate for.
+            // Do it using the manager's methods directly to verify their operation.
+            var credModel = new CredentialsAccessModel(credentials1.AccountId, credentials1.Password, AccountAccessFlags.BasicAccess);
+            AccountModel account = this.dataCacheLayer.ExecuteQuery(credModel, (dbContext) => { return dbContext.Accounts.SingleOrDefault(x => x.Id == credModel.AccountId); });
+            string clientName = $"O={account.Organization},CN={account.Name},OU={account.OrganizationUnit},L={account.Locality},ST={account.StateOrProvince},C={account.Country}";
+
+            var clientAddressSpace2 = new HDWalletAddressSpace("habit misery swarm tape viable toddler young shoe immense usual faculty edge", "node");
             var clientAddressSpace3 = new HDWalletAddressSpace("usual young shoe immense habit misery swarm tape viable toddler faculty edge", "node");
-            Key clientPrivateKey3 = clientAddressSpace3.GetKey(clientHdPath).PrivateKey;
-            clientPublicKey = clientPrivateKey3.PubKey.ToBytes();
-            AsymmetricCipherKeyPair clientKey3 = clientAddressSpace2.GetCertificateKeyPair(clientHdPath);
+            Key clientPrivateKey3 = clientAddressSpace3.GetKey(this.clientHdPath).PrivateKey;
+            var clientPublicKey = clientPrivateKey3.PubKey.ToBytes();
+            AsymmetricCipherKeyPair clientKey2 = clientAddressSpace2.GetCertificateKeyPair(this.clientHdPath);
 
-            blockSigningPrivateKey = clientAddressSpace2.GetKey(blockSigningHdPath).PrivateKey;
+            Key blockSigningPrivateKey = clientAddressSpace2.GetKey(this.blockSigningHdPath).PrivateKey;
 
-            clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
-            clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
-            clientOid142 = clientPublicKey;
-            clientOid143 = blockSigningPrivateKey.PubKey.ToBytes();
+            var clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
+            var clientOid141 = Encoding.UTF8.GetBytes(clientAddress);
+            var clientOid142 = clientPublicKey;
+            var clientOid143 = blockSigningPrivateKey.PubKey.ToBytes();
 
-            extensionData = new Dictionary<string, byte[]>
+            var extensionData = new Dictionary<string, byte[]>
             {
                 {CaCertificatesManager.P2pkhExtensionOid, clientOid141},
                 {CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid, clientOid142},
@@ -211,21 +240,43 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             Assert.Equal(clientAddress, certificate3.Address);
 
-            // Now try do it the same way a node would, by populating the relevant model and submitting it to the API.
+            var certParser = new X509CertificateParser();
+            X509Certificate cert1 = certParser.ReadCertificate(certificate3.CertificateContentDer);
+
+            Assert.True(CaCertificatesManager.ValidateCertificateChain(this.caCert, cert1));
+        }
+
+        [Fact]
+        public void CanIssueCertificateViaTemplateCsr()
+        {
+            CredentialsModel credentials1 = this.GetPrivilegedAccount();
+
+            // Try do the issuance the same way a node would, by populating the relevant model and submitting it to the API.
             // In this case we just use the same pubkey for both the certificate generation & transaction signing pubkey hash, they would ordinarily be different.
-            var generateModel = new GenerateCertificateSigningRequestModel(clientAddress, Convert.ToBase64String(clientPublicKey), Convert.ToBase64String(clientPrivateKey.PubKey.Hash.ToBytes()), Convert.ToBase64String(blockSigningPrivateKey.PubKey.ToBytes()), credentials1.AccountId, credentials1.Password);
+
+            var clientAddressSpace2 = new HDWalletAddressSpace("habit misery swarm tape viable toddler young shoe immense usual faculty edge", "node");
+            var clientAddressSpace3 = new HDWalletAddressSpace("usual young shoe immense habit misery swarm tape viable toddler faculty edge", "node");
+            Key clientPrivateKey3 = clientAddressSpace3.GetKey(this.clientHdPath).PrivateKey;
+            var clientPublicKey = clientPrivateKey3.PubKey.ToBytes();
+            AsymmetricCipherKeyPair clientKey3 = clientAddressSpace2.GetCertificateKeyPair(this.clientHdPath);
+
+            Key blockSigningPrivateKey = clientAddressSpace3.GetKey(this.blockSigningHdPath).PrivateKey;
+
+            var clientAddress = HDWalletAddressSpace.GetAddress(clientPublicKey, 63);
+
+            var generateModel = new GenerateCertificateSigningRequestModel(clientAddress, Convert.ToBase64String(clientPublicKey), Convert.ToBase64String(clientPrivateKey3.PubKey.Hash.ToBytes()), Convert.ToBase64String(blockSigningPrivateKey.PubKey.ToBytes()), credentials1.AccountId, credentials1.Password);
 
             CertificateSigningRequestModel unsignedCsrModel = CaTestHelper.GetValue<CertificateSigningRequestModel>(this.certificatesController.GenerateCertificateSigningRequest(generateModel));
 
             byte[] csrTemp = Convert.FromBase64String(unsignedCsrModel.CertificateSigningRequestContent);
 
-            unsignedCsr = new Pkcs10CertificationRequestDelaySigned(csrTemp);
-            signature = CaCertificatesManager.GenerateCSRSignature(unsignedCsr.GetDataToSign(), "SHA256withECDSA", clientKey3.Private);
+            var unsignedCsr = new Pkcs10CertificationRequestDelaySigned(csrTemp);
+            var signature = CaCertificatesManager.GenerateCSRSignature(unsignedCsr.GetDataToSign(), "SHA256withECDSA", clientKey3.Private);
             unsignedCsr.SignRequest(signature);
 
             Assert.True(unsignedCsr.Verify(clientKey3.Public));
 
-            signedCsr = new Pkcs10CertificationRequest(unsignedCsr.GetDerEncoded());
+            var signedCsr = new Pkcs10CertificationRequest(unsignedCsr.GetDerEncoded());
 
             // TODO: Why is this failing? Do a manual verification of the EC maths
             //Assert.True(signedCsr.Verify());
@@ -235,7 +286,10 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             Assert.Equal(clientAddress, certificate4.Address);
 
-            Assert.True(CaCertificatesManager.ValidateCertificateChain(caCert, cert1));
+            var certParser = new X509CertificateParser();
+            X509Certificate cert1 = certParser.ReadCertificate(certificate4.CertificateContentDer);
+
+            Assert.True(CaCertificatesManager.ValidateCertificateChain(this.caCert, cert1));
         }
 
         [Fact]
@@ -248,10 +302,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.GetAllAccounts(new CredentialsModel(accountId, password)),
                 AccountAccessFlags.AccessAccountInfo);
 
-            this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.CreateAccount(new CreateAccount("", "", (int)AccountAccessFlags.DeleteAccounts, accountId, password)),
-                AccountAccessFlags.CreateAccounts | AccountAccessFlags.DeleteAccounts);
-
-            this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.GetCertificatesIssuedByAccountId(new CredentialsModelWithTargetId(1, accountId, password)),
+            this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.GetCertificateIssuedByAccountId(new CredentialsModelWithTargetId(1, accountId, password)),
                 AccountAccessFlags.AccessAnyCertificate);
 
             this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.DeleteAccountByAccountId(new CredentialsModelWithTargetId(1, accountId, password)),
@@ -279,7 +330,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
         private void Returns403IfNoAccess(Func<int, string, object> action, AccountAccessFlags requiredAccess)
         {
-            CredentialsModel noAccessCredentials = CaTestHelper.CreateAccount(this.server);
+            CredentialsModel noAccessCredentials = CaTestHelper.CreateAccount(this.server.Host);
 
             var response = action.Invoke(noAccessCredentials.AccountId, noAccessCredentials.Password);
 
@@ -308,7 +359,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
                     break;
             }
 
-            CredentialsModel accessCredentials = CaTestHelper.CreateAccount(this.server, requiredAccess);
+            CredentialsModel accessCredentials = CaTestHelper.CreateAccount(this.server.Host, requiredAccess);
 
             response = action.Invoke(accessCredentials.AccountId, accessCredentials.Password);
 
@@ -344,7 +395,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
         private void CheckThrowsIfNoAccess(Action<int, string> action, AccountAccessFlags requiredAccess)
         {
-            CredentialsModel noAccessCredentials = CaTestHelper.CreateAccount(this.server);
+            CredentialsModel noAccessCredentials = CaTestHelper.CreateAccount(this.server.Host);
             bool throwsIfNoAccess = false;
 
             try
@@ -363,7 +414,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             if (!throwsIfNoAccess)
                 Assert.False(true, "Action was expected to throw.");
 
-            CredentialsModel accessCredentials = CaTestHelper.CreateAccount(this.server, requiredAccess);
+            CredentialsModel accessCredentials = CaTestHelper.CreateAccount(this.server.Host, requiredAccess);
 
             try
             {

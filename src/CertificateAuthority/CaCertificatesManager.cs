@@ -5,8 +5,10 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using CertificateAuthority.Controllers;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
+using Microsoft.AspNetCore.Mvc.Formatters.Internal;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NLog;
@@ -145,10 +147,11 @@ namespace CertificateAuthority
             SecureRandom random = GetSecureRandom();
             BigInteger subjectSerialNumber = GenerateSerialNumber(random);
 
+            // TODO: Does the CA certificate need any permissions, as it is not used for P2P or transacting?
             X509Certificate certificate = GenerateCertificate(random,
                 subjectName, subjectKeyPair.Public, subjectSerialNumber, subjectAlternativeNames,
                 subjectName, subjectKeyPair, subjectSerialNumber,
-                true, usages, extensionData, CaCertificateValidityPeriodYears);
+                true, usages, extensionData, CaCertificateValidityPeriodYears, new List<string>() { });
 
             return certificate;
         }
@@ -158,7 +161,7 @@ namespace CertificateAuthority
         /// </summary>
         public CertificateInfoModel IssueCertificate(CredentialsAccessWithModel<IssueCertificateFromRequestModel> model)
         {
-            this.repository.VerifyCredentialsAndAccessLevel(model, out AccountModel creator);
+            this.repository.VerifyCredentialsAndAccessLevel(model, out AccountModel requester);
 
             if (model.Model.CertificateRequestFile.Length == 0)
                 throw new Exception("Empty file!");
@@ -172,7 +175,7 @@ namespace CertificateAuthority
 
             ms.Dispose();
 
-            return this.IssueCertificate(certRequest, creator.Id);
+            return this.IssueCertificate(certRequest, model);
         }
 
         /// <summary>
@@ -188,12 +191,33 @@ namespace CertificateAuthority
 
             var certRequest = new Pkcs10CertificationRequest(requestRaw);
 
-            return this.IssueCertificate(certRequest, creator.Id);
+            return this.IssueCertificate(certRequest, model);
         }
 
-        private CertificateInfoModel IssueCertificate(Pkcs10CertificationRequest certRequest, int creatorId)
+        private CertificateInfoModel IssueCertificate(Pkcs10CertificationRequest certRequest, CredentialsModel model)
         {
-            X509Certificate certificateFromReq = IssueCertificateFromRequest(certRequest, this.caCertificate, this.caKey, new string[0], new[] { KeyPurposeID.AnyExtendedKeyUsage });
+            var cred = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(new CredentialsModelWithTargetId() { AccountId = model.AccountId, Password = model.Password, TargetAccountId = model.AccountId }, AccountAccessFlags.BasicAccess);
+
+            CertificateInfoModel existingCertificate = this.repository.GetCertificateIssuedByAccountId(cred);
+
+            // TODO: Should this actually throw instead?
+            if (existingCertificate != null)
+                return existingCertificate;
+
+            string knownSubjectDistinguishedName = this.GetClientCertificateSubjectDistinguishedName(new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.BasicAccess));
+
+            // This must match the data in the database exactly, or the node has signed a CSR that is different from what the CA would have provided initially.
+            string subjectName = certRequest.GetCertificationRequestInfo().Subject.ToString();
+
+            if (!knownSubjectDistinguishedName.Equals(subjectName))
+            {
+                this.logger.Warn("Subject name '{0}' was expected, but actually received '{1}'", knownSubjectDistinguishedName, subjectName);
+                throw new Exception("The provided subject DN differs from the expected value!");
+            }
+
+            AccountInfo accountInfo = this.repository.GetAccountInfoById(cred);
+
+            X509Certificate certificateFromReq = IssueCertificateFromRequest(certRequest, accountInfo, this.caCertificate, this.caKey, subjectName, new string[0], new[] { KeyPurposeID.AnyExtendedKeyUsage });
             Asn1Set attributes = certRequest.GetCertificationRequestInfo().Attributes;
 
             // TODO: This should come from the transaction signing pubkeyhash. Presently the address could be different to the pubkey hash, which is nonsensical.
@@ -213,7 +237,7 @@ namespace CertificateAuthority
                 TransactionSigningPubKeyHash = transactionSigningPubKeyHashBytes,
                 BlockSigningPubKey = blockSigningPubKeyBytes,
                 CertificateContentDer = certificateFromReq.GetEncoded(),
-                IssuerAccountId = creatorId
+                AccountId = model.AccountId
             };
 
             this.repository.AddNewCertificate(infoModel);
@@ -223,18 +247,20 @@ namespace CertificateAuthority
 
             File.WriteAllBytes(Path.Combine(this.settings.DataDirectory, certFilename), certificateFromReq.GetEncoded());
 
-            this.logger.Info("New certificate was issued by account id {0}; certificate: '{1}'.", creatorId, infoModel);
+            this.logger.Info("New certificate was issued by account id {0}; certificate: '{1}'.", model.AccountId, infoModel);
 
             return infoModel;
         }
 
-        private static X509Certificate IssueCertificateFromRequest(Pkcs10CertificationRequest certificateSigningRequest, X509Certificate issuerCertificate, AsymmetricCipherKeyPair issuerKeyPair, string[] subjectAlternativeNames, KeyPurposeID[] usages)
+        private static X509Certificate IssueCertificateFromRequest(Pkcs10CertificationRequest certificateSigningRequest, AccountInfo accountInfo, X509Certificate issuerCertificate, AsymmetricCipherKeyPair issuerKeyPair, string subjectName, string[] subjectAlternativeNames, KeyPurposeID[] usages)
         {
+            // TODO: Check that all the submitted details in the CSR match those in the approved account. The permissions are taken directly from the CA database
+
             SecureRandom random = GetSecureRandom();
             BigInteger subjectSerialNumber = GenerateSerialNumber(random);
 
             CertificationRequestInfo certificationRequestInfo = certificateSigningRequest.GetCertificationRequestInfo();
-            string subjectName = certificateSigningRequest.GetCertificationRequestInfo().Subject.ToString();
+
             AsymmetricKeyParameter publicKey = certificateSigningRequest.GetPublicKey();
 
             byte[] oid141 = ExtractExtensionFromCsr(certificationRequestInfo.Attributes, P2pkhExtensionOid);
@@ -251,7 +277,7 @@ namespace CertificateAuthority
             X509Certificate certificate = GenerateCertificate(random,
                 subjectName, publicKey, subjectSerialNumber, subjectAlternativeNames,
                 issuerCertificate.SubjectDN.ToString(), issuerKeyPair, issuerCertificate.SerialNumber,
-                false, usages, extensionData, CertificateValidityPeriodYears);
+                false, usages, extensionData, CertificateValidityPeriodYears, accountInfo.Permissions.Select(p => p.Name).ToList());
 
             return certificate;
         }
@@ -295,6 +321,26 @@ namespace CertificateAuthority
             return null;
         }
 
+        public string GetClientCertificateSubjectDistinguishedName(CredentialsAccessModel model)
+        {
+            AccountModel account = this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Accounts.SingleOrDefault(x => x.Id == model.AccountId); });
+
+            // TODO: Verify that this is the correct order
+            return $"O={account.Organization},CN={account.Name},OU={account.OrganizationUnit},L={account.Locality},ST={account.StateOrProvince},C={account.Country}";
+        }
+
+        public string[] GetClientCertificateSubjectAlternativeNames(CredentialsAccessModel model)
+        {
+            AccountModel account = this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Accounts.SingleOrDefault(x => x.Id == model.AccountId); });
+
+            return new string[] { $"CN={account.EmailAddress}" };
+        }
+
+        public void RemoveAccessLevels(int accountId, AccountAccessFlags flags)
+        {
+            this.repository.RemoveAccessLevels(accountId, flags);
+        }
+
         private static SecureRandom GetSecureRandom()
         {
             // Since we're on Windows, we'll use the CryptoAPI one (on the assumption
@@ -317,7 +363,8 @@ namespace CertificateAuthority
                                                            bool isCertificateAuthority,
                                                            KeyPurposeID[] usages,
                                                            Dictionary<string, byte[]> extensionData,
-                                                           int validityPeriodYears)
+                                                           int validityPeriodYears,
+                                                           List<string> permissions)
         {
             var certificateGenerator = new X509V3CertificateGenerator();
             certificateGenerator.SetSerialNumber(subjectSerialNumber);
@@ -349,7 +396,7 @@ namespace CertificateAuthority
             if (subjectAlternativeNames != null && subjectAlternativeNames.Any())
                 AddSubjectAlternativeNames(certificateGenerator, subjectAlternativeNames);
 
-            AddDltInformation(certificateGenerator, extensionData);
+            AddDltInformation(certificateGenerator, extensionData, permissions);
 
             // The certificate is signed with the issuer's private key.
             ISignatureFactory signatureFactory = new Asn1SignatureFactory("SHA256WithECDSA", issuerKeyPair.Private, random);
@@ -399,7 +446,7 @@ namespace CertificateAuthority
         /// <param name="subjectAlternativeNames"></param>
         private static void AddSubjectAlternativeNames(X509V3CertificateGenerator certificateGenerator, IEnumerable<string> subjectAlternativeNames)
         {
-            Asn1Encodable[] altnames = subjectAlternativeNames.Select(name => new GeneralName(GeneralName.DnsName, name)).ToArray<Asn1Encodable>();
+            Asn1Encodable[] altnames = subjectAlternativeNames.Select(name => new GeneralName(GeneralName.OtherName, name)).ToArray<Asn1Encodable>();
             var subjectAlternativeNamesExtension = new DerSequence(altnames);
             certificateGenerator.AddExtension(X509Extensions.SubjectAlternativeName.Id, false, subjectAlternativeNamesExtension);
         }
@@ -435,7 +482,7 @@ namespace CertificateAuthority
             certificateGenerator.AddExtension(X509Extensions.SubjectKeyIdentifier.Id, false, subjectKeyIdentifierExtension);
         }
 
-        private static void AddDltInformation(X509V3CertificateGenerator certificateGenerator, Dictionary<string, byte[]> extensionData)
+        private static void AddDltInformation(X509V3CertificateGenerator certificateGenerator, Dictionary<string, byte[]> extensionData, List<string> permissions)
         {
             if (extensionData.TryGetValue(P2pkhExtensionOid, out byte[] oid141))
                 certificateGenerator.AddExtension(P2pkhExtensionOid, false, new DerOctetString(oid141));
@@ -443,13 +490,17 @@ namespace CertificateAuthority
             if (extensionData.TryGetValue(TransactionSigningPubKeyHashExtensionOid, out byte[] oid142))
                 certificateGenerator.AddExtension(TransactionSigningPubKeyHashExtensionOid, false, new DerOctetString(oid142));
 
-            // TODO: Should this be explicitly requested in the CSR?
-            certificateGenerator.AddExtension(SendPermission, false, new byte[] { 1 });
-
             if (extensionData.TryGetValue(BlockSigningPubKeyExtensionOid, out byte[] oid143))
                 certificateGenerator.AddExtension(BlockSigningPubKeyExtensionOid, false, new DerOctetString(oid143));
-            certificateGenerator.AddExtension(CallContractPermissionOid, false, new byte[] { 1 });
-            certificateGenerator.AddExtension(CreateContractPermissionOid, false, new byte[] { 1 });
+
+            if (permissions.Contains(AccountsController.SendPermission))
+                certificateGenerator.AddExtension(SendPermission, false, new byte[] { 1 });
+
+            if (permissions.Contains(AccountsController.CallContractPermission))
+                certificateGenerator.AddExtension(CallContractPermissionOid, false, new byte[] { 1 });
+
+            if (permissions.Contains(AccountsController.CreateContractPermission))
+                certificateGenerator.AddExtension(CreateContractPermissionOid, false, new byte[] { 1 });
         }
 
         public static X509Certificate2 ConvertCertificate(X509Certificate certificate, SecureRandom random)
@@ -490,7 +541,7 @@ namespace CertificateAuthority
                 TransactionSigningPubKeyHash = null,
                 CertificateContentDer = this.caCertificate.GetEncoded(),
                 Id = 0,
-                IssuerAccountId = 0,
+                AccountId = 0,
                 RevokerAccountId = 0,
                 Status = CertificateStatus.Good,
                 Thumbprint = tempCert.Thumbprint
@@ -581,6 +632,39 @@ namespace CertificateAuthority
                     this.repository.PublicKeys.Remove(Encoders.Hex.EncodeData(certToEdit.BlockSigningPubKey));
 
                 this.repository.RevokedCertificates.Add(thumbprint);
+                this.logger.Info("Certificate id {0}, thumbprint {1} was revoked.", certToEdit.Id, certToEdit.Thumbprint);
+
+                return true;
+            });
+        }
+
+        public void GrantIssuePermission(CredentialsModelWithTargetId model)
+        {
+            var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AdminAccess);
+            this.repository.VerifyCredentialsAndAccessLevel(credentials, out _);
+            this.repository.GrantIssuePermission(model);
+        }
+
+        public bool RevokeCertificateForAccount(CredentialsAccessWithModel<CredentialsModelWithTargetId> model)
+        {
+            return this.repository.ExecuteCommand(model, (dbContext, account) =>
+            {
+                CertificateInfoModel certificate = this.repository.GetCertificateIssuedByAccountId(model);
+
+                this.repository.CertStatusesByThumbprint[certificate.Thumbprint] = CertificateStatus.Revoked;
+
+                CertificateInfoModel certToEdit = dbContext.Certificates.Single(x => x.Thumbprint == certificate.Thumbprint);
+
+                certToEdit.Status = CertificateStatus.Revoked;
+                certToEdit.RevokerAccountId = account.Id;
+
+                dbContext.Update(certToEdit);
+                dbContext.SaveChanges();
+
+                if (!dbContext.Certificates.Any(c => c.BlockSigningPubKey == certToEdit.BlockSigningPubKey && certToEdit.Status != CertificateStatus.Revoked))
+                    this.repository.PublicKeys.Remove(Encoders.Hex.EncodeData(certToEdit.BlockSigningPubKey));
+
+                this.repository.RevokedCertificates.Add(certificate.Thumbprint);
                 this.logger.Info("Certificate id {0}, thumbprint {1} was revoked.", certToEdit.Id, certToEdit.Thumbprint);
 
                 return true;

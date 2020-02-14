@@ -9,6 +9,8 @@ namespace CertificateAuthority.Database
 
         public DbSet<CertificateInfoModel> Certificates { get; set; }
 
+        public DbSet<Permission> Permissions { get; set; }
+
         private readonly Settings settings;
 
         public CADbContext(Settings settings)
@@ -25,7 +27,10 @@ namespace CertificateAuthority.Database
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<AccountModel>().ToTable("Accounts");
+            modelBuilder.Entity<AccountModel>()
+                .HasMany(a => a.Permissions)
+                .WithOne().HasForeignKey(b => b.AccountModelId)
+                .OnDelete(DeleteBehavior.Cascade);
             modelBuilder.Entity<CertificateInfoModel>().ToTable("Certificates");
 
             base.OnModelCreating(modelBuilder);

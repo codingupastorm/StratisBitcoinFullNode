@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -30,17 +31,37 @@ namespace CertificateAuthority.Tests
             return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
-        public static CredentialsModel CreateAccount(TestServer server, AccountAccessFlags access = AccountAccessFlags.BasicAccess, CredentialsModel creatorCredentialsModel = null, string callingMethod = null)
+        public static CredentialsModel CreateAccount(IWebHost server, AccountAccessFlags access = AccountAccessFlags.BasicAccess, CredentialsModel creatorCredentialsModel = null, List<string> permissions = null)
         {
+            // Default to all permissions unless otherwise restricted.
+            List<string> accountPermissions = permissions ?? AccountsController.ValidPermissions;
+
             string password = GenerateRandomString();
             string passHash = DataHelper.ComputeSha256Hash(password);
 
             var adminCredentials = new CredentialsModel(Settings.AdminAccountId, AdminPassword);
 
-            var accountsController = (AccountsController)server.Host.Services.GetService(typeof(AccountsController));
+            var accountsController = (AccountsController)server.Services.GetService(typeof(AccountsController));
 
             CredentialsModel credentialsModel = creatorCredentialsModel ?? adminCredentials;
-            int id = GetValue<int>(accountsController.CreateAccount(new CreateAccount(GenerateRandomString(), passHash, (int)access, credentialsModel.AccountId, credentialsModel.Password)));
+            int id = GetValue<int>(accountsController.CreateAccount(new CreateAccount(GenerateRandomString(),
+                passHash,
+                (int)access,
+                "dummyOrganizationUnit",
+                "dummyOrganization",
+                "dummyLocality",
+                "dummyStateOrProvince",
+                "dummyEmailAddress",
+                "dummyCountry",
+                accountPermissions, 
+                credentialsModel.Password)));
+
+            accountsController.ApproveAccount(new CredentialsModelWithTargetId()
+            {
+                TargetAccountId = id,
+                AccountId = adminCredentials.AccountId,
+                Password = adminCredentials.Password
+            });
 
             return new CredentialsModel(id, password);
         }

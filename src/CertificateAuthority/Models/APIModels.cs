@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Microsoft.AspNetCore.Http;
 
 namespace CertificateAuthority.Models
 {
     public class CredentialsModelWithTargetId : CredentialsModel
     {
-        /// <summary>Id of an account you want to get information for.</summary>
+        /// <summary>Id of an account you want to configure or otherwise interact with.</summary>
         public int TargetAccountId { get; set; }
 
         public CredentialsModelWithTargetId(int targetAccountId, int accountId, string password) : base(accountId, password)
@@ -19,22 +21,51 @@ namespace CertificateAuthority.Models
 
     #region Models for AccountsController
 
-    public class CreateAccount : CredentialsModel
+    public class CreateAccount
     {
-        /// <summary>Account name for a new account. Can't be a a nickname that is already taken.</summary>
-        public string NewAccountName { get; set; }
+        public string Password { get; set; }
+
+        /// <summary>Account name for the new account. Can't be a a name that is already taken.
+        /// This will also be used as the common name (CN) field of the requested certificate.</summary>
+        public string CommonName { get; set; }
 
         /// <summary>Sha256 hash of new account's password.</summary>
         public string NewAccountPasswordHash { get; set; }
 
-        /// <summary>Access level flag for a new account.</summary>
-        public int NewAccountAccess { get; set; }
+        /// <summary>Access level flags requested for the new account.</summary>
+        public int RequestedAccountAccess { get; set; }
 
-        public CreateAccount(string newAccountName, string newAccountPasswordHash, int newAccountAccess, int accountId, string password) : base(accountId, password)
+        public string OrganizationUnit { get; set; }
+
+        public string Organization { get; set; }
+
+        public string Locality { get; set; }
+
+        public string StateOrProvince { get; set; }
+
+        public string EmailAddress { get; set; }
+
+        public string Country { get; set; }
+
+        /// <summary>
+        /// A list of the OIDs for the permissions desired by the requester.
+        /// These can also be separately granted by the administrator prior to certificate generation.
+        /// </summary>
+        public List<Permission> RequestedPermissions { get; set; }
+
+        public CreateAccount(string commonName, string newAccountPasswordHash, int requestedAccountAccess, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country, List<string> requestedPermissions, string password)
         {
-            this.NewAccountName = newAccountName;
+            this.CommonName = commonName;
             this.NewAccountPasswordHash = newAccountPasswordHash;
-            this.NewAccountAccess = newAccountAccess;
+            this.RequestedAccountAccess = requestedAccountAccess;
+            this.OrganizationUnit = organizationUnit;
+            this.Organization = organization;
+            this.Locality = locality;
+            this.StateOrProvince = stateOrProvince;
+            this.EmailAddress = emailAddress;
+            this.Country = country;
+            this.RequestedPermissions = requestedPermissions.Select(p => new Permission() { Name = p }).ToList();
+            this.Password = password;
         }
 
         public CreateAccount()
