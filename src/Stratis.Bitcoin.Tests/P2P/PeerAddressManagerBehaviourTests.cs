@@ -31,8 +31,9 @@ namespace Stratis.Bitcoin.Tests.P2P
             this.extendedLoggerFactory = new ExtendedLoggerFactory();
             this.extendedLoggerFactory.AddConsoleWithFilters();
             this.connectionManagerSettings = new ConnectionManagerSettings(NodeSettings.Default(this.Network));
-            this.signals = new Bitcoin.Signals.Signals(extendedLoggerFactory, null);
-            this.asyncProvider = new AsyncProvider(extendedLoggerFactory, this.signals, new NodeLifetime());
+            this.signals = new Bitcoin.Signals.Signals(this.extendedLoggerFactory, null);
+            this.asyncProvider = new AsyncProvider(this.extendedLoggerFactory, this.signals, new NodeLifetime());
+            var peerAddressManager = new Mock<IPeerAddressManager>().Object;
 
             this.networkPeerFactory = new NetworkPeerFactory(this.Network,
                 DateTimeProvider.Default,
@@ -41,7 +42,8 @@ namespace Stratis.Bitcoin.Tests.P2P
                 new SelfEndpointTracker(this.extendedLoggerFactory, this.connectionManagerSettings),
                 new Mock<IInitialBlockDownloadState>().Object,
                 this.connectionManagerSettings,
-                this.asyncProvider);
+                this.asyncProvider,
+                peerAddressManager);
         }
 
         [Fact]
@@ -65,7 +67,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             var stateChanged = new AsyncExecutionEvent<INetworkPeer, NetworkPeerState>();
             networkPeer.SetupGet(n => n.StateChanged).Returns(stateChanged);
 
-            var behaviour = new PeerAddressManagerBehaviour(DateTimeProvider.Default, addressManager, new Mock<IPeerBanning>().Object,  this.extendedLoggerFactory) { Mode = PeerAddressManagerBehaviourMode.AdvertiseDiscover };
+            var behaviour = new PeerAddressManagerBehaviour(DateTimeProvider.Default, addressManager, new Mock<IPeerBanning>().Object, this.extendedLoggerFactory) { Mode = PeerAddressManagerBehaviourMode.AdvertiseDiscover };
             behaviour.Attach(networkPeer.Object);
 
             var incomingMessage = new IncomingMessage();
