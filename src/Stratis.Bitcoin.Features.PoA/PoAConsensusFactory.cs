@@ -1,4 +1,5 @@
-﻿using NBitcoin;
+﻿using System;
+using NBitcoin;
 
 namespace Stratis.Bitcoin.Features.PoA
 {
@@ -18,11 +19,18 @@ namespace Stratis.Bitcoin.Features.PoA
 
         public virtual IFederationMember DeserializeFederationMember(byte[] serializedBytes)
         {
-            var key = new PubKey(serializedBytes);
+            try
+            {
+                var key = new PubKey(serializedBytes);
 
-            IFederationMember federationMember = new FederationMember(key);
+                IFederationMember federationMember = new FederationMember(key);
 
-            return federationMember;
+                return federationMember;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public virtual byte[] SerializeFederationMember(IFederationMember federationMember)

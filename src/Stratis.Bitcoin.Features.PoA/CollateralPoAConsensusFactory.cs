@@ -9,13 +9,20 @@ namespace Stratis.Bitcoin.Features.PoA
     {
         public override IFederationMember DeserializeFederationMember(byte[] serializedBytes)
         {
-            string json = Encoding.ASCII.GetString(serializedBytes);
+            try
+            {
+                string json = Encoding.ASCII.GetString(serializedBytes);
 
-            CollateralFederationMemberModel model = Serializer.ToObject<CollateralFederationMemberModel>(json);
+                CollateralFederationMemberModel model = Serializer.ToObject<CollateralFederationMemberModel>(json);
 
-            var member = new CollateralFederationMember(new PubKey(model.PubKeyHex), new Money(model.CollateralAmountSatoshis), model.CollateralMainchainAddress);
+                var member = new CollateralFederationMember(new PubKey(model.PubKeyHex), new Money(model.CollateralAmountSatoshis), model.CollateralMainchainAddress);
 
-            return member;
+                return member;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
 
         public override byte[] SerializeFederationMember(IFederationMember federationMember)

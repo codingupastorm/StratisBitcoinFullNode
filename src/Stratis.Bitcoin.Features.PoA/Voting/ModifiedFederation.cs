@@ -39,6 +39,8 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
                     break;
 
                 IFederationMember federationMember = (this.network.Consensus.ConsensusFactory as PoAConsensusFactory).DeserializeFederationMember(poll.VotingData.Data);
+                if (federationMember == null)
+                    PoAConsensusErrors.VotingDataInvalidFormat.Throw();
 
                 if (poll.VotingData.Key == VoteKey.AddFederationMember)
                     modifiedFederation.Add(federationMember);
