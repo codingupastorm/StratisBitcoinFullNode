@@ -15,6 +15,8 @@ namespace Stratis.Bitcoin.Features.MemoryPool
     /// </summary>
     public abstract class BlockDefinition
     {
+        // TODO: Move this class to Stratis.Bitcoin at some point.
+
         /// <summary>
         /// Tip of the chain that this instance will work with without touching any shared chain resources.
         /// </summary>
