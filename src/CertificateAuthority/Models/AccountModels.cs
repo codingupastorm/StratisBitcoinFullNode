@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace CertificateAuthority.Models
 {
     public class Permission
     {
+        [JsonIgnore]
         public int Id { get; set; }
         
         /// <summary>The foreign key for the associated <see cref="AccountModel"/> that has this permission.</summary>
+        [JsonIgnore]
         public int AccountModelId { get; set; }
 
         /// <summary>The human-readable name for the permission.</summary>
