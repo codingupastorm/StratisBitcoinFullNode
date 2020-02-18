@@ -4,18 +4,19 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Utilities;
 
-namespace Stratis.Bitcoin.Features.Miner
+namespace Stratis.Bitcoin.Features.MemoryPool
 {
     /// <summary>
     /// A high level class that will allow the ability to override or inject functionality based on what type of block creation logic is used.
     /// </summary>
     public abstract class BlockDefinition
     {
+        // TODO: Move this class to Stratis.Bitcoin at some point.
+
         /// <summary>
         /// Tip of the chain that this instance will work with without touching any shared chain resources.
         /// </summary>
