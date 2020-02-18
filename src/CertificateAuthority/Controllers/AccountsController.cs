@@ -70,7 +70,7 @@ namespace CertificateAuthority.Controllers
         {
             this.LogEntry(model);
 
-            return this.Json(this.repository.CreateAccount(model));
+            return ExecuteRepositoryCommand(() => this.Json(this.repository.CreateAccount(model)));
         }
 
         /// <summary>Marks an unapproved account as approved.</summary>
