@@ -84,6 +84,7 @@ namespace CertificateAuthority.Models
         ChangeAccountAccessLevel = 32,
         CreateAccounts = 64,
         InitializeCertificateAuthority = 128,
+        ApproveAccounts = 256,
         AdminAccess = ~0 // All bits set.
     }
 
