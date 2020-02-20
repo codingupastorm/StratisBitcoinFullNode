@@ -218,7 +218,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             }
 
             uint160 addressNumeric = request.ContractAddress.ToUint160(this.coreComponent.Network);
-            byte[] storageValue = this.stateRoot.GetStorageValue(addressNumeric, Encoding.UTF8.GetBytes(request.StorageKey));
+            byte[] storageValue = this.stateRoot.GetStorageValue(addressNumeric, Encoding.UTF8.GetBytes(request.StorageKey)).Value;
 
             if (storageValue == null)
             {

@@ -12,7 +12,6 @@ using CertificateAuthority.Tests;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using Org.BouncyCastle.X509;
@@ -326,6 +325,10 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 Receipt createReceipt = receiptRepository.Retrieve(createResponse.TransactionId);
                 Assert.True(createReceipt.Success);
+
+                var stateRepository = node1.FullNode.NodeService<IStateRepositoryRoot>();
+                StorageValue storageValue = stateRepository.GetStorageValue(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("Increment"));
+                Assert.Equal(StorageValue.InsertVersion, storageValue.Version); // TODO: Ensure this is incrementing as further calls are made.
 
                 var callModel = new BuildCallContractTransactionModel()
                 {

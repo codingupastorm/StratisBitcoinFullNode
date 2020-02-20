@@ -5,7 +5,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using DBreeze;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.AsyncWork;
@@ -376,7 +375,7 @@ namespace Stratis.SmartContracts.IntegrationTests.PoW
             Transaction tx = this.AddTransactionToMempool(context, contractTxData, context.txFirst[0].GetHash(), 0, gasBudget);
             BlockTemplate blockTemplate = await this.BuildBlockAsync(context);
             uint160 newContractAddress = context.AddressGenerator.GenerateAddress(tx.GetHash(), 0);
-            byte[] ownerFromStorage = context.StateRoot.GetStorageValue(newContractAddress, Encoding.UTF8.GetBytes("Owner"));
+            byte[] ownerFromStorage = context.StateRoot.GetStorageValue(newContractAddress, Encoding.UTF8.GetBytes("Owner")).Value;
             byte[] ownerToBytes = context.PrivateKey.PubKey.GetAddress(context.network).Hash.ToBytes();
             Assert.Equal(ownerFromStorage, ownerToBytes);
             Assert.NotNull(context.StateRoot.GetCode(newContractAddress));
@@ -728,7 +727,7 @@ namespace Stratis.SmartContracts.IntegrationTests.PoW
 
             var transferContractCall = new ContractTxData(1, gasPrice, gasLimit, newContractAddress2, "ContractTransfer", testMethodParameters);
             blockTemplate = await this.AddTransactionToMemPoolAndBuildBlockAsync(context, transferContractCall, context.txFirst[2].GetHash(), fundsToSend, gasBudget);
-            Assert.Equal(Encoding.UTF8.GetBytes("testString"), context.StateRoot.GetStorageValue(newContractAddress, Encoding.UTF8.GetBytes("test")));
+            Assert.Equal(Encoding.UTF8.GetBytes("testString"), context.StateRoot.GetStorageValue(newContractAddress, Encoding.UTF8.GetBytes("test")).Value);
             Assert.Equal(3, blockTemplate.Block.Transactions.Count);
             Assert.Single(blockTemplate.Block.Transactions[2].Inputs);
             Assert.Equal(blockTemplate.Block.Transactions[1].GetHash(), blockTemplate.Block.Transactions[2].Inputs[0].PrevOut.Hash); // Input should be from the call that was just made.
@@ -782,7 +781,7 @@ namespace Stratis.SmartContracts.IntegrationTests.PoW
 
             var transferContractCallData = new ContractTxData(1, gasPrice, gasLimit, newContractAddress2, "Tester", testMethodParameters);
             blockTemplate = await this.AddTransactionToMemPoolAndBuildBlockAsync(context, transferContractCallData, context.txFirst[2].GetHash(), fundsToSend, gasBudget);
-            byte[] stateSaveValue = context.StateRoot.GetStorageValue(newContractAddress, Encoding.UTF8.GetBytes("SaveWorked"));
+            byte[] stateSaveValue = context.StateRoot.GetStorageValue(newContractAddress, Encoding.UTF8.GetBytes("SaveWorked")).Value;
             Assert.NotNull(stateSaveValue);
             Assert.Single(stateSaveValue);
             Assert.True(Convert.ToBoolean(stateSaveValue[0]));
@@ -911,8 +910,8 @@ namespace Stratis.SmartContracts.IntegrationTests.PoW
             var transferContractCallData = new ContractTxData(1, gasPrice, gasLimit, receiveContractAddress1, "SendFunds", testMethodParameters);
 
             blockTemplate = await this.AddTransactionToMemPoolAndBuildBlockAsync(context, transferContractCallData, context.txFirst[2].GetHash(), fundsToSend, gasBudget);
-            byte[] receiveInvoked = context.StateRoot.GetStorageValue(receiveContractAddress2, Encoding.UTF8.GetBytes("ReceiveInvoked"));
-            byte[] fundsReceived = context.StateRoot.GetStorageValue(receiveContractAddress2, Encoding.UTF8.GetBytes("ReceivedFunds"));
+            byte[] receiveInvoked = context.StateRoot.GetStorageValue(receiveContractAddress2, Encoding.UTF8.GetBytes("ReceiveInvoked")).Value;
+            byte[] fundsReceived = context.StateRoot.GetStorageValue(receiveContractAddress2, Encoding.UTF8.GetBytes("ReceivedFunds")).Value;
 
             var serializer = new ContractPrimitiveSerializer(context.network);
 

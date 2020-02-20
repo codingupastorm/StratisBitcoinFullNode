@@ -8,7 +8,7 @@ namespace Stratis.SmartContracts.Core.Tests
         [Fact]
         public void CanSerializeAndDeserializeStorageValue()
         {
-            var storageValue = new StorageValue(new byte[] {0, 1, 2, 3}, 0);
+            var storageValue = new StorageValue(new byte[] {0, 1, 2, 3}, "0.0");
             byte[] serialized = storageValue.ToBytes();
             StorageValue deserialized = StorageValue.FromBytes(serialized);
             Assert.Equal(storageValue.Value, deserialized.Value);
