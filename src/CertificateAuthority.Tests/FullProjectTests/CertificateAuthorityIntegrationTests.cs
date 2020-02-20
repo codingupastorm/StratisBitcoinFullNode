@@ -71,7 +71,6 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             var createAccountModel = new CreateAccount()
             {
-                Password = CaTestHelper.AdminPassword,
                 CommonName = "dummyName",
                 Country = "dummyCountry",
                 EmailAddress = "dummyEmail@example.com",
