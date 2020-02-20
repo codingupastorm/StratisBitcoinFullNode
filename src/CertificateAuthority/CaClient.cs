@@ -87,8 +87,7 @@ namespace CertificateAuthority
                 stateOrProvince,
                 emailAddress,
                 country,
-                AccountsController.ValidPermissions,
-                this.password);
+                AccountsController.ValidPermissions);
 
 
             return this.RequestFromCA<int>(CreateAccountEndpoint, createAccountModel);

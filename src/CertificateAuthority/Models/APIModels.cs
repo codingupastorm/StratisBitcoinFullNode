@@ -51,7 +51,7 @@ namespace CertificateAuthority.Models
         /// </summary>
         public List<Permission> RequestedPermissions { get; set; }
 
-        public CreateAccount(string commonName, string newAccountPasswordHash, int requestedAccountAccess, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country, List<string> requestedPermissions, string password)
+        public CreateAccount(string commonName, string newAccountPasswordHash, int requestedAccountAccess, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country, List<string> requestedPermissions)
         {
             this.CommonName = commonName;
             this.NewAccountPasswordHash = newAccountPasswordHash;
