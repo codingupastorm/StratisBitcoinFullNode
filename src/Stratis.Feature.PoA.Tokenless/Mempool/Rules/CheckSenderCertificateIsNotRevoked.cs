@@ -34,7 +34,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
                 context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "cannot-derive-sender-for-transaction"), $"Cannot derive the sender from transaction '{context.Transaction.GetHash()}': {getSenderResult.Error}").Throw();
 
             // Then check if the sender has not had it's certificate revoked.
-            if (this.revocationChecker.IsCertificateRevoked())
+            if (this.revocationChecker.IsCertificateRevoked(getSenderResult.Sender))
                 context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "sender-certificate-is-revoked"), $"Cannot send transaction '{context.Transaction.GetHash()}' as the sender '{getSenderResult.Sender}', has had it's certificate revoked.").Throw();
         }
     }

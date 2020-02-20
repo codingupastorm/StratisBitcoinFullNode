@@ -225,6 +225,13 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return certificate;
         }
 
+        internal CertificateInfoModel GetCertificateInfoForAddress(uint160 address)
+        {
+            string base64PubKeyHash = Convert.ToBase64String(address.ToBytes());
+            CertificateInfoModel retrievedCertModel = this.GetClient().GetCertificateForTransactionSigningPubKeyHash(base64PubKeyHash);
+            return retrievedCertModel;
+        }
+
         public Task<List<PubKey>> GetCertificatePublicKeysAsync()
         {
             CaClient caClient = this.GetClient();
