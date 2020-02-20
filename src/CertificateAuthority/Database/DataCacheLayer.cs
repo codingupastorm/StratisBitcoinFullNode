@@ -62,14 +62,14 @@ namespace CertificateAuthority.Database
 
             using (CADbContext dbContext = this.CreateContext())
             {
-                foreach (CertificateInfoModel info in dbContext.Certificates)
+                foreach (CertificateInfoModel certificate in dbContext.Certificates)
                 {
-                    this.CertStatusesByThumbprint.Add(info.Thumbprint, info.Status);
+                    this.CertStatusesByThumbprint.Add(certificate.Thumbprint, certificate.Status);
 
-                    if (info.Status == CertificateStatus.Revoked)
-                        this.RevokedCertificates.Add(info.Thumbprint);
-                    else if ((info.BlockSigningPubKey?.Length ?? 0) != 0)
-                        this.PublicKeys.Add(Encoders.Hex.EncodeData(info.BlockSigningPubKey));
+                    if (certificate.Status == CertificateStatus.Revoked)
+                        this.RevokedCertificates.Add(certificate.Thumbprint);
+                    else if ((certificate.BlockSigningPubKey?.Length ?? 0) != 0)
+                        this.PublicKeys.Add(Encoders.Hex.EncodeData(certificate.BlockSigningPubKey));
                 }
             }
 

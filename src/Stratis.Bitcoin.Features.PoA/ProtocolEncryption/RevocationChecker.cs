@@ -22,8 +22,6 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
     {
         private const string kvRepoKey = "revokedcerts";
 
-        private readonly NodeSettings nodeSettings;
-
         private readonly IKeyValueRepository kvRepo;
 
         private readonly ILogger logger;
@@ -44,25 +42,24 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         private Task cacheUpdatingTask;
 
-        private CancellationTokenSource cancellation;
+        private readonly CancellationTokenSource cancellationTokenSource;
 
         private readonly TimeSpan cacheUpdateInterval = TimeSpan.FromHours(1);
 
         public RevocationChecker(NodeSettings nodeSettings, IKeyValueRepository kvRepo, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
         {
-            this.nodeSettings = nodeSettings;
             this.kvRepo = kvRepo;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
-            this.cancellation = new CancellationTokenSource();
+            this.cancellationTokenSource = new CancellationTokenSource();
             this.dateTimeProvider = dateTimeProvider;
-            
+
             // Ensure that the cache is never null, but it actually gets initialised from the repository later.
             this.revokedCertsCache = new Dictionary<string, RevocationRecord>();
 
             this.configuration = nodeSettings.ConfigReader;
         }
 
-        public async Task InitializeAsync()
+        public void Initialize()
         {
             // TODO: Create a common settings class that can be injected
             this.caUrl = this.configuration.GetOrDefault<string>("caurl", "https://localhost:5001");
@@ -76,7 +73,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             if (this.revokedCertsCache == null)
             {
                 this.revokedCertsCache = new Dictionary<string, RevocationRecord>();
-                await this.UpdateRevokedCertsCacheAsync().ConfigureAwait(false);
+                this.UpdateRevokedCertsCache();
             }
 
             this.cacheUpdatingTask = this.UpdateRevokedCertsCacheContinuouslyAsync();
@@ -95,7 +92,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         /// <param name="thumbprint">The thumbprint of the certificate to check the revocation status of.</param>
         /// <param name="allowCached">Indicate whether it is acceptable to use the checker's local cache of the status, or force a check with the CA.</param>
         /// <returns><c>true</c> if the given certificate has been revoked.</returns>
-        public async Task<bool> IsCertificateRevokedAsync(string thumbprint, bool allowCached = true)
+        public bool IsCertificateRevoked(string thumbprint, bool allowCached = true)
         {
             RevocationRecord record = null;
 
@@ -126,13 +123,13 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return record.LastStatus;
         }
 
-        private async Task UpdateRevokedCertsCacheAsync()
+        private void UpdateRevokedCertsCache()
         {
             try
             {
-                ICollection<string> result = this.client.GetRevokedCertificates();
+                ICollection<string> thumbprints = this.client.GetRevokedCertificates();
 
-                foreach (string thumbprint in result)
+                foreach (string thumbprint in thumbprints)
                 {
                     // We don't actually care what the previous state was, only that it is revoked now.
                     this.revokedCertsCache[thumbprint] = new RevocationRecord() { LastChecked = this.dateTimeProvider.GetUtcNow(), LastStatus = true };
@@ -147,25 +144,25 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         private async Task UpdateRevokedCertsCacheContinuouslyAsync()
         {
-            while (!this.cancellation.IsCancellationRequested)
+            while (!this.cancellationTokenSource.IsCancellationRequested)
             {
                 try
                 {
-                    await Task.Delay(this.cacheUpdateInterval, this.cancellation.Token);
+                    await Task.Delay(this.cacheUpdateInterval, this.cancellationTokenSource.Token);
                 }
                 catch (OperationCanceledException)
                 {
                     return;
                 }
 
-                await this.UpdateRevokedCertsCacheAsync().ConfigureAwait(false);
+                this.UpdateRevokedCertsCache();
             }
         }
 
         public void Dispose()
         {
             this.kvRepo?.SaveValueJson(kvRepoKey, this.revokedCertsCache);
-            this.cancellation.Cancel();
+            this.cancellationTokenSource.Cancel();
             this.cacheUpdatingTask?.GetAwaiter().GetResult();
         }
     }

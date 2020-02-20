@@ -661,7 +661,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                     // Confirm that the certificate is revoked.
                     RevocationChecker revocationChecker = node1.FullNode.NodeService<RevocationChecker>();
-                    TestBase.WaitLoop(() => revocationChecker.IsCertificateRevokedAsync(revokedThumbprint).GetAwaiter().GetResult());
+                    TestBase.WaitLoop(() => revocationChecker.IsCertificateRevoked(revokedThumbprint).GetAwaiter().GetResult());
 
                     // Stop the node.
                     node1.FullNode.Dispose();
@@ -674,7 +674,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     node1.Start();
 
                     // Is the certificate stil revoked even though we are running without a CA?
-                    Assert.True(revocationChecker.IsCertificateRevokedAsync(revokedThumbprint).GetAwaiter().GetResult());
+                    Assert.True(revocationChecker.IsCertificateRevoked(revokedThumbprint).GetAwaiter().GetResult());
                 }
             }
         }

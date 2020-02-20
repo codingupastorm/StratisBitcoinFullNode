@@ -86,7 +86,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             // TODO: Apart from the existence of the P2PKH address in the certificate, do we need to verify it against anything?
 
-            bool revoked = await this.RevocationChecker.IsCertificateRevokedAsync(peerCertificate.Thumbprint, true);
+            bool revoked = await this.RevocationChecker.IsCertificateRevoked(peerCertificate.Thumbprint, true);
 
             if (revoked)
                 peer.Disconnect("Peer certificate is revoked.");

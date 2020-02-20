@@ -11,7 +11,6 @@ using CertificateAuthority;
 using CertificateAuthority.Models;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Org.BouncyCastle.Asn1;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
@@ -21,7 +20,7 @@ using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 
 namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 {
-    public class CertificatesManager
+    public sealed class CertificatesManager
     {
         /// <summary>Name of authority .crt certificate that is supposed to be found in application folder.</summary>
         /// <remarks>This certificate is automatically copied during the build.</remarks>
@@ -58,7 +57,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         private readonly TextFileConfiguration configuration;
 
-        private string caUrl;
+        private readonly string caUrl;
 
         private string caPassword;
 
@@ -80,7 +79,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         /// <summary>Loads client and authority certificates and validates them.</summary>
         /// <exception cref="CertificateConfigurationException">Thrown in case required certificates are not found or are not valid.</exception>
-        public async Task InitializeAsync()
+        public void Initialize()
         {
             this.LoadAuthorityCertificate();
             this.LoadClientCertificate();
@@ -92,7 +91,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         }
 
         public bool LoadAuthorityCertificate(bool requireAccountId = true)
-        { 
+        {
             string acPath = Path.Combine(this.dataFolder.RootPath, AuthorityCertificateName);
 
             if (!File.Exists(acPath))
@@ -118,7 +117,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             }
 
             var certParser = new X509CertificateParser();
-            
+
             this.AuthorityCertificate = certParser.ReadCertificate(File.ReadAllBytes(acPath));
 
             return true;
@@ -163,7 +162,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             X509Certificate2 tempClientCert = CaCertificatesManager.ConvertCertificate(this.ClientCertificate, new SecureRandom());
 
-            bool revoked = this.revocationChecker.IsCertificateRevokedAsync(tempClientCert.Thumbprint, false).ConfigureAwait(false).GetAwaiter().GetResult();
+            bool revoked = this.revocationChecker.IsCertificateRevoked(tempClientCert.Thumbprint, false);
 
             if (revoked)
                 throw new CertificateConfigurationException("Provided client certificate was revoked!");
@@ -236,7 +235,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         public static byte[] ExtractCertificateExtension(X509Certificate certificate, string oid)
         {
             X509Certificate2 cert = CaCertificatesManager.ConvertCertificate(certificate, new SecureRandom());
-            
+
             foreach (X509Extension extension in cert.Extensions)
             {
                 if (extension.Oid.Value == oid)
@@ -261,20 +260,12 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
                     // This is truly horrible, but it isn't clear how we can correctly go from the DER bytes in the extension, to a relevant BC class, to a string.
                     // Perhaps we are meant to recursively evaluate the extension data as ASN.1 until we land up with raw data that can't be decoded further?
                     var temp = extension.RawData.Skip(2).ToArray();
-                    
+
                     return Encoding.UTF8.GetString(temp);
                 }
             }
 
             return null;
-        }
-
-        private static Asn1Object ToAsn1Object(byte[] data)
-        {
-            var inStream = new MemoryStream(data);
-            var asnInputStream = new Asn1InputStream(inStream);
-
-            return asnInputStream.ReadObject();
         }
     }
 

@@ -113,8 +113,8 @@ namespace Stratis.Bitcoin.Features.PoA
 
             if (options.EnablePermissionedMembership)
             {
-                await this.revocationChecker.InitializeAsync().ConfigureAwait(false);
-                await this.certificatesManager.InitializeAsync().ConfigureAwait(false);
+                await this.revocationChecker.Initialize().ConfigureAwait(false);
+                await this.certificatesManager.Initialize().ConfigureAwait(false);
             }
 
             this.miner.InitializeMining();
