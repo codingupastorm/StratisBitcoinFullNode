@@ -23,8 +23,6 @@ namespace CertificateAuthority.Models
 
     public class CreateAccount
     {
-        public string Password { get; set; }
-
         /// <summary>Account name for the new account. Can't be a a name that is already taken.
         /// This will also be used as the common name (CN) field of the requested certificate.</summary>
         public string CommonName { get; set; }
@@ -65,7 +63,6 @@ namespace CertificateAuthority.Models
             this.EmailAddress = emailAddress;
             this.Country = country;
             this.RequestedPermissions = requestedPermissions.Select(p => new Permission() { Name = p }).ToList();
-            this.Password = password;
         }
 
         public CreateAccount()
