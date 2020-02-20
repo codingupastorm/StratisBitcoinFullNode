@@ -2,18 +2,17 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using DBreeze;
-using DBreeze.DataTypes;
 using DBreeze.Utils;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Bitcoin.Features.PoA.Voting
 {
     public class PollsRepository : IDisposable
     {
-        private readonly DBreezeEngine dbreeze;
+        /// <summary>The database engine.</summary>
+        IKeyValueStore KeyValueStore { get; }
 
         private readonly ILogger logger;
 
@@ -25,20 +24,11 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
 
         private int highestPollId;
 
-        public PollsRepository(DataFolder dataFolder, ILoggerFactory loggerFactory, RepositorySerializer repositorySerializer)
-            : this(dataFolder.PollsPath, loggerFactory, repositorySerializer)
+        public PollsRepository(ILoggerFactory loggerFactory, IPollsKeyValueStore pollsKeyValueStore)
         {
-        }
-
-        public PollsRepository(string folder, ILoggerFactory loggerFactory, RepositorySerializer repositorySerializer)
-        {
-            Guard.NotEmpty(folder, nameof(folder));
-
-            Directory.CreateDirectory(folder);
-            this.dbreeze = new DBreezeEngine(folder);
+            this.KeyValueStore = pollsKeyValueStore;
 
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
-            this.repositorySerializer = repositorySerializer;
         }
 
         public void Initialize()
@@ -46,12 +36,10 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
             // Load highest index.
             this.highestPollId = -1;
 
-            using (DBreeze.Transactions.Transaction transaction = this.dbreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                Row<byte[], int> row = transaction.Select<byte[], int>(TableName, RepositoryHighestIndexKey);
-
-                if (row.Exists)
-                    this.highestPollId = row.Value;
+                if (transaction.Select<byte[], int>(TableName, RepositoryHighestIndexKey, out int highestPollId))
+                    this.highestPollId = highestPollId;
             }
 
             this.logger.LogDebug("Polls repo initialized with highest id: {0}.", this.highestPollId);
@@ -63,7 +51,7 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
             return this.highestPollId;
         }
 
-        private void SaveHighestPollId(DBreeze.Transactions.Transaction transaction)
+        private void SaveHighestPollId(IKeyValueStoreTransaction transaction)
         {
             transaction.Insert<byte[], int>(TableName, RepositoryHighestIndexKey, this.highestPollId);
         }
@@ -71,14 +59,15 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
         /// <summary>Removes polls under provided ids.</summary>
         public void RemovePolls(params int[] ids)
         {
-            using (DBreeze.Transactions.Transaction transaction = this.dbreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 foreach (int pollId in ids.Reverse())
                 {
                     if (this.highestPollId != pollId)
                         throw new ArgumentException("Only deletion of the most recent item is allowed!");
 
-                    transaction.RemoveKey<byte[]>(TableName, pollId.ToBytes());
+                    if (transaction.Select(TableName, pollId, out Poll poll))
+                        transaction.RemoveKey(TableName, pollId, poll);
 
                     this.highestPollId--;
                     this.SaveHighestPollId(transaction);
@@ -91,16 +80,14 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
         /// <summary>Adds new poll.</summary>
         public void AddPolls(params Poll[] polls)
         {
-            using (DBreeze.Transactions.Transaction transaction = this.dbreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 foreach (Poll pollToAdd in polls)
                 {
                     if (pollToAdd.Id != this.highestPollId + 1)
                         throw new ArgumentException("Id is incorrect. Gaps are not allowed.");
 
-                    byte[] bytes = this.repositorySerializer.Serialize(pollToAdd);
-
-                    transaction.Insert<byte[], byte[]>(TableName, pollToAdd.Id.ToBytes(), bytes);
+                    transaction.Insert<int, Poll>(TableName, pollToAdd.Id, pollToAdd);
 
                     this.highestPollId++;
                     this.SaveHighestPollId(transaction);
@@ -113,16 +100,12 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
         /// <summary>Updates existing poll.</summary>
         public void UpdatePoll(Poll poll)
         {
-            using (DBreeze.Transactions.Transaction transaction = this.dbreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
-                Row<byte[], byte[]> row = transaction.Select<byte[], byte[]>(TableName, poll.Id.ToBytes());
-
-                if (!row.Exists)
+                if (!transaction.Exists<int>(TableName, poll.Id))
                     throw new ArgumentException("Value doesn't exist!");
 
-                byte[] bytes = this.repositorySerializer.Serialize(poll);
-
-                transaction.Insert<byte[], byte[]>(TableName, poll.Id.ToBytes(), bytes);
+                transaction.Insert<int, Poll>(TableName, poll.Id, poll);
 
                 transaction.Commit();
             }
@@ -131,18 +114,14 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
         /// <summary>Loads polls under provided keys from the database.</summary>
         public List<Poll> GetPolls(params int[] ids)
         {
-            using (DBreeze.Transactions.Transaction transaction = this.dbreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
                 var polls = new List<Poll>(ids.Length);
 
                 foreach (int id in ids)
                 {
-                    Row<byte[], byte[]> row = transaction.Select<byte[], byte[]>(TableName, id.ToBytes());
-
-                    if (!row.Exists)
+                    if (!transaction.Select<int, Poll>(TableName, id, out Poll poll))
                         throw new ArgumentException("Value under provided key doesn't exist!");
-
-                    Poll poll = this.repositorySerializer.Deserialize<Poll>(row.Value);
 
                     polls.Add(poll);
                 }
@@ -154,15 +133,14 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
         /// <summary>Loads all polls from the database.</summary>
         public List<Poll> GetAllPolls()
         {
-            using (DBreeze.Transactions.Transaction transaction = this.dbreeze.GetTransaction())
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
                 var polls = new List<Poll>(this.highestPollId + 1);
 
                 for (int i = 0; i < this.highestPollId + 1; i++)
                 {
-                    Row<byte[], byte[]> row = transaction.Select<byte[], byte[]>(TableName, i.ToBytes());
-
-                    Poll poll = this.repositorySerializer.Deserialize<Poll>(row.Value);
+                    if (!transaction.Select<int, Poll>(TableName, i, out Poll poll))
+                        throw new ArgumentException("Value under provided key doesn't exist!");
 
                     polls.Add(poll);
                 }
@@ -174,7 +152,6 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
         /// <inheritdoc />
         public void Dispose()
         {
-            this.dbreeze.Dispose();
         }
     }
 }

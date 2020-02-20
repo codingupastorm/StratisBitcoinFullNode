@@ -42,6 +42,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoA
 
                         // Voting.
                         services.AddSingleton<VotingManager>();
+                        services.AddSingleton<IPollsKeyValueStore, PollsKeyValueStore>();
                         services.AddSingleton<IPollResultExecutor, PollResultExecutor>();
                         services.AddSingleton<IWhitelistedHashesRepository, WhitelistedHashesRepository>();
                         services.AddSingleton<IdleFederationMembersKicker>();

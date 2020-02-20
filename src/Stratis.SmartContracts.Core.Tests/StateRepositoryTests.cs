@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using DBreeze;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Interfaces;
