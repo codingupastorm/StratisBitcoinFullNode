@@ -35,7 +35,7 @@ namespace CertificateAuthority.Database
                     {
                         AccessInfo = AccountAccessFlags.AdminAccess,
                         Approved = true,
-                        CreatorId = Settings.AdminAccountId,
+                        ApproverId = Settings.AdminAccountId,
                         Name = Settings.AdminName,
                         PasswordHash = settings.DefaultAdminPasswordHash
                     };
@@ -127,10 +127,14 @@ namespace CertificateAuthority.Database
 
                 AccountModel accountToApprove = dbContext.Accounts.SingleOrDefault(x => x.Id == accountId);
 
+                if (accountToApprove == null)
+                    throw new CertificateAuthorityAccountException("Account does not exist!");
+
                 if (accountToApprove.Approved)
                     throw new CertificateAuthorityAccountException("Account already approved!");
 
                 accountToApprove.Approved = true;
+                accountToApprove.ApproverId = credentialsModel.AccountId;
 
                 dbContext.Accounts.Update(accountToApprove);
                 dbContext.SaveChanges();
@@ -148,41 +152,38 @@ namespace CertificateAuthority.Database
         /// <summary>Creates a new account.</summary>
         /// <remarks>This method is somewhat special in that it requires no account ID for the credentials.
         /// Only a password is required.</remarks>
-        public int CreateAccount(CreateAccount createAccountModel)
+        public int RequestAccount(RequestAccount requestAccountModel)
         {
             CADbContext dbContext = this.CreateContext();
 
-            if (dbContext.Accounts.Any(x => x.Name == createAccountModel.CommonName))
+            if (dbContext.Accounts.Any(x => x.Name == requestAccountModel.CommonName))
                 throw new CertificateAuthorityAccountException("That name is already taken!");
 
-            AccountAccessFlags newAccountAccessLevel = (AccountAccessFlags)createAccountModel.RequestedAccountAccess | AccountAccessFlags.BasicAccess;
+            AccountAccessFlags newAccountAccessLevel = (AccountAccessFlags)requestAccountModel.RequestedAccountAccess | AccountAccessFlags.BasicAccess;
 
-            if (createAccountModel.RequestedPermissions == null)
+            if (requestAccountModel.RequestedPermissions == null)
                 throw new CertificateAuthorityAccountException("No permissions requested!");
 
-            if (createAccountModel.RequestedPermissions.Any(permission => !AccountsController.ValidPermissions.Contains(permission.Name)))
+            if (requestAccountModel.RequestedPermissions.Any(permission => !AccountsController.ValidPermissions.Contains(permission.Name)))
                 throw new CertificateAuthorityAccountException("Invalid permission requested!");
 
             var newAccount = new AccountModel()
             {
-                Name = createAccountModel.CommonName,
-                PasswordHash = createAccountModel.NewAccountPasswordHash,
+                Name = requestAccountModel.CommonName,
+                PasswordHash = requestAccountModel.NewAccountPasswordHash,
                 AccessInfo = newAccountAccessLevel,
-                CreatorId = -1, // Not known yet, as we are creating our own account
-                OrganizationUnit = createAccountModel.OrganizationUnit,
-                Organization = createAccountModel.Organization,
-                Locality = createAccountModel.Locality,
-                StateOrProvince = createAccountModel.StateOrProvince,
-                EmailAddress = createAccountModel.EmailAddress,
-                Country = createAccountModel.Country,
-                Permissions = createAccountModel.RequestedPermissions,
+                ApproverId = -1, // Not known yet, as we are creating our own account
+                OrganizationUnit = requestAccountModel.OrganizationUnit,
+                Organization = requestAccountModel.Organization,
+                Locality = requestAccountModel.Locality,
+                StateOrProvince = requestAccountModel.StateOrProvince,
+                EmailAddress = requestAccountModel.EmailAddress,
+                Country = requestAccountModel.Country,
+                Permissions = requestAccountModel.RequestedPermissions,
                 Approved = false
             };
 
             dbContext.Accounts.Add(newAccount);
-            dbContext.SaveChanges();
-            newAccount.CreatorId = newAccount.Id;
-            dbContext.Update(newAccount);
             dbContext.SaveChanges();
 
             this.logger.Info("Account was created: '{0}'.", newAccount);

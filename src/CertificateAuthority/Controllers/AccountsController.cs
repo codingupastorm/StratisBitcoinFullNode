@@ -64,13 +64,13 @@ namespace CertificateAuthority.Controllers
 
         /// <summary>Creates new account.</summary>
         /// <response code="201">Account id as integer. CreateAccounts access level is required.</response>
-        [HttpPost("create_account")]
+        [HttpPost("request_account")]
         [ProducesResponseType(typeof(int), 200)]
-        public IActionResult CreateAccount([FromBody]CreateAccount model)
+        public IActionResult RequestAccount([FromBody]RequestAccount model)
         {
             this.LogEntry(model);
 
-            return ExecuteRepositoryCommand(() => this.Json(this.repository.CreateAccount(model)));
+            return ExecuteRepositoryCommand(() => this.Json(this.repository.RequestAccount(model)));
         }
 
         /// <summary>Marks an unapproved account as approved.</summary>
