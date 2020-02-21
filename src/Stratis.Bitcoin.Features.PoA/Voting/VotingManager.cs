@@ -4,7 +4,6 @@ using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.EventBus;
 using Stratis.Bitcoin.EventBus.CoreEvents;
 using Stratis.Bitcoin.Primitives;
@@ -52,7 +51,7 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
         private bool isInitialized;
 
         public VotingManager(IFederationManager federationManager, ILoggerFactory loggerFactory, ISlotsManager slotsManager, IPollResultExecutor pollResultExecutor,
-            INodeStats nodeStats, DataFolder dataFolder, RepositorySerializer repositorySerializer, ISignals signals, IFinalizedBlockInfoRepository finalizedBlockInfo)
+            INodeStats nodeStats, ISignals signals, IFinalizedBlockInfoRepository finalizedBlockInfo, IPollsKeyValueStore pollsKeyValueStore)
         {
             this.federationManager = Guard.NotNull(federationManager, nameof(federationManager));
             this.slotsManager = Guard.NotNull(slotsManager, nameof(slotsManager));
@@ -64,7 +63,7 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
             this.locker = new object();
             this.votingDataEncoder = new VotingDataEncoder(loggerFactory);
             this.scheduledVotingData = new List<VotingData>();
-            this.pollsRepository = new PollsRepository(dataFolder, loggerFactory, repositorySerializer);
+            this.pollsRepository = new PollsRepository(loggerFactory, pollsKeyValueStore);
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
 
             this.isInitialized = false;
