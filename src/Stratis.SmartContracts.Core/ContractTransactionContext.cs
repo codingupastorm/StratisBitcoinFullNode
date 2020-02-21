@@ -8,6 +8,8 @@ namespace Stratis.SmartContracts.Core
     {
         private readonly ulong blockHeight;
 
+        private readonly ulong txIndex;
+
         private readonly uint160 coinbaseAddress;
 
         private readonly Transaction transaction;
@@ -66,6 +68,12 @@ namespace Stratis.SmartContracts.Core
             get { return this.blockHeight; }
         }
 
+        /// <inheritdoc />
+        public ulong TxIndex
+        {
+            get { return this.txIndex; }
+        }
+
         public uint Time
         {
             get
@@ -76,12 +84,14 @@ namespace Stratis.SmartContracts.Core
 
         public ContractTransactionContext(
             ulong blockHeight,
+            ulong txIndex,
             uint160 coinbaseAddress,
             Money mempoolFee,
             uint160 sender,
             Transaction transaction)
         {
             this.blockHeight = blockHeight;
+            this.txIndex = txIndex;
             this.coinbaseAddress = coinbaseAddress;
             this.transaction = transaction;
             this.contractTxOut = transaction.Outputs.FirstOrDefault(x => x.ScriptPubKey.IsSmartContractExec());

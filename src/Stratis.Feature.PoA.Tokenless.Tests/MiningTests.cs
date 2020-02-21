@@ -238,7 +238,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             this.reflectionVirtualMachine = new ReflectionVirtualMachine(this.validator, this.helper.LoggerFactory, this.assemblyLoader, this.moduleDefinitionReader, this.contractCache, contractInitializer);
             this.stateProcessor = new StateProcessor(this.reflectionVirtualMachine, this.AddressGenerator);
-            this.internalTxExecutorFactory = new InternalExecutorFactory(this.helper.LoggerFactory, this.stateProcessor);
+            this.internalTxExecutorFactory = new InternalExecutorFactory(this.stateProcessor);
             this.primitiveSerializer = new ContractPrimitiveSerializer(this.helper.Network);
             this.serializer = new Serializer(this.primitiveSerializer);
             this.smartContractStateFactory = new SmartContractStateFactory(this.primitiveSerializer, this.internalTxExecutorFactory, this.serializer);

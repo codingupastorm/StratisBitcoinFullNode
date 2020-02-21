@@ -261,6 +261,10 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Receipt createReceipt = receiptRepository.Retrieve(createTransaction.GetHash());
                 Assert.True(createReceipt.Success);
 
+                StorageValue value1 = stateRepo.GetStorageValue(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("Increment"));
+                Assert.NotNull(value1);
+                Assert.Equal("1.1", value1.Version); // Block height 1, tx index 1.
+
                 Transaction callTransaction = CreateContractCallTransaction(node1, createReceipt.NewContractAddress, txPrivKey1);
                 await node1.BroadcastTransactionAsync(callTransaction);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
@@ -270,7 +274,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Receipt callReceipt = receiptRepository.Retrieve(callTransaction.GetHash());
                 Assert.True(callReceipt.Success);
 
-                Assert.NotNull(stateRepo.GetStorageValue(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("Increment")));
+                StorageValue value2 = stateRepo.GetStorageValue(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("Increment"));
+                Assert.Equal("2.1", value1.Version); // Block height 1, tx index 1.
             }
         }
 
@@ -325,10 +330,6 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 Receipt createReceipt = receiptRepository.Retrieve(createResponse.TransactionId);
                 Assert.True(createReceipt.Success);
-
-                var stateRepository = node1.FullNode.NodeService<IStateRepositoryRoot>();
-                StorageValue storageValue = stateRepository.GetStorageValue(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("Increment"));
-                Assert.Equal(StorageValue.InsertVersion, storageValue.Version); // TODO: Ensure this is incrementing as further calls are made.
 
                 var callModel = new BuildCallContractTransactionModel()
                 {

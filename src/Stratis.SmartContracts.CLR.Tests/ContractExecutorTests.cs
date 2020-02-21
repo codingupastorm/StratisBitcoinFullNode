@@ -18,6 +18,7 @@ namespace Stratis.SmartContracts.CLR.Tests
     public sealed class ContractExecutorTests
     {
         private const ulong BlockHeight = 0;
+        private const ulong TxIndex = 0;
         private static readonly uint160 CoinbaseAddress = 0;
         private static readonly uint160 ToAddress = 1;
         private static readonly uint160 SenderAddress = 2;
@@ -61,7 +62,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             var contractInitializer = new ContractInitializer<SmartContract>();
             this.vm = new ReflectionVirtualMachine(this.validator, this.loggerFactory, this.assemblyLoader, this.moduleDefinitionReader, this.contractCache, contractInitializer);
             this.stateProcessor = new StateProcessor(this.vm, this.addressGenerator);
-            this.internalTxExecutorFactory = new InternalExecutorFactory(this.loggerFactory, this.stateProcessor);
+            this.internalTxExecutorFactory = new InternalExecutorFactory(this.stateProcessor);
             this.smartContractStateFactory = new SmartContractStateFactory(this.contractPrimitiveSerializer, this.internalTxExecutorFactory, this.serializer);
             
             this.callDataSerializer = new CallDataSerializer(this.contractPrimitiveSerializer);
@@ -92,7 +93,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             this.state.SetCode(new uint160(1), contractExecutionCode);
             this.state.SetContractType(new uint160(1), "ThrowExceptionContract");
 
-            IContractTransactionContext transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, SenderAddress, transactionCall);
+            IContractTransactionContext transactionContext = new ContractTransactionContext(BlockHeight, TxIndex, CoinbaseAddress, MempoolFee, SenderAddress, transactionCall);
             
             var executor = new ContractExecutor(
                 this.callDataSerializer,
@@ -124,7 +125,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             TxOut txOut = transaction.AddOutput(0, new Script(this.callDataSerializer.Serialize(contractTxData)));
             txOut.Value = 100;
 
-            IContractTransactionContext transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, new uint160(2), transaction);
+            IContractTransactionContext transactionContext = new ContractTransactionContext(BlockHeight, TxIndex, CoinbaseAddress, MempoolFee, new uint160(2), transaction);
 
             var executor = new ContractExecutor(
                 this.callDataSerializer,
@@ -150,7 +151,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             var tx = new Transaction();
             tx.AddOutput(0, new Script(this.callDataSerializer.Serialize(contractTxData)));
 
-            IContractTransactionContext transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, new uint160(2), tx);
+            IContractTransactionContext transactionContext = new ContractTransactionContext(BlockHeight, TxIndex, CoinbaseAddress, MempoolFee, new uint160(2), tx);
 
             var executor = new ContractExecutor(
                 this.callDataSerializer,
@@ -181,7 +182,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             var tx = new Transaction();
             tx.AddOutput(0, new Script(this.callDataSerializer.Serialize(contractTxData)));
 
-            IContractTransactionContext transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, new uint160(2), tx);
+            IContractTransactionContext transactionContext = new ContractTransactionContext(BlockHeight, TxIndex, CoinbaseAddress, MempoolFee, new uint160(2), tx);
 
             var executor = new ContractExecutor(
                 this.callDataSerializer,
@@ -210,7 +211,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             var tx = new Transaction();
             tx.AddOutput(0, new Script(this.callDataSerializer.Serialize(contractTxData)));
 
-            IContractTransactionContext transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, new uint160(2), tx);
+            IContractTransactionContext transactionContext = new ContractTransactionContext(BlockHeight, TxIndex, CoinbaseAddress, MempoolFee, new uint160(2), tx);
 
             var executor = new ContractExecutor(
                 this.callDataSerializer,
@@ -247,7 +248,7 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             //Deserialize the contract from the transaction----------
             //and get the module definition
-            IContractTransactionContext transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, SenderAddress, transaction);
+            IContractTransactionContext transactionContext = new ContractTransactionContext(BlockHeight, TxIndex, CoinbaseAddress, MempoolFee, SenderAddress, transaction);
 
             var executor = new ContractExecutor(
                 this.callDataSerializer,
@@ -283,7 +284,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             //and get the module definition
             //-------------------------------------------------------
 
-            transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, SenderAddress, transaction);
+            transactionContext = new ContractTransactionContext(BlockHeight, TxIndex, CoinbaseAddress, MempoolFee, SenderAddress, transaction);
 
             result = executor.Execute(transactionContext);
 
@@ -300,7 +301,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             txOut = transaction.AddOutput(0, new Script(this.callDataSerializer.Serialize(contractTxData)));
             txOut.Value = 100;
 
-            transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, SenderAddress, transaction);
+            transactionContext = new ContractTransactionContext(BlockHeight, TxIndex, CoinbaseAddress, MempoolFee, SenderAddress, transaction);
 
             var callExecutor = new ContractExecutor(
                 this.callDataSerializer,
@@ -357,7 +358,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             var transaction = new Transaction();
             TxOut txOut = transaction.AddOutput(0, new Script(this.callDataSerializer.Serialize(contractTxData)));
             txOut.Value = transactionValue;
-            var transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, SenderAddress, transaction);
+            var transactionContext = new ContractTransactionContext(BlockHeight, TxIndex, CoinbaseAddress, MempoolFee, SenderAddress, transaction);
 
             IContractExecutionResult result = executor.Execute(transactionContext);
             uint160 contractAddress = result.NewContractAddress;
@@ -367,7 +368,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             transaction = new Transaction();
             txOut = transaction.AddOutput(0, new Script(this.callDataSerializer.Serialize(contractTxData)));
             txOut.Value = transactionValue;
-            transactionContext = new ContractTransactionContext(BlockHeight, CoinbaseAddress, MempoolFee, SenderAddress, transaction);
+            transactionContext = new ContractTransactionContext(BlockHeight, TxIndex, CoinbaseAddress, MempoolFee, SenderAddress, transaction);
 
             result = executor.Execute(transactionContext);
 

@@ -1,4 +1,5 @@
 ﻿using NBitcoin;
+using Stratis.SmartContracts.RuntimeObserver;
 
 namespace Stratis.SmartContracts.CLR
 {
@@ -7,8 +8,8 @@ namespace Stratis.SmartContracts.CLR
     /// </summary>
     public class ExternalCallMessage : CallMessage
     {
-        public ExternalCallMessage(uint160 to, uint160 from, ulong amount, RuntimeObserver.Gas gasLimit, MethodCall methodCall) 
-            : base(to, from, amount, gasLimit, methodCall)
+        public ExternalCallMessage(uint160 to, uint160 from, ulong amount, Gas gasLimit, string version, MethodCall methodCall) 
+            : base(to, from, amount, gasLimit, version, methodCall)
         {
         }
     }

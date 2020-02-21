@@ -122,7 +122,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             this.state = new SmartContractState(
                 new Block(1, this.TestAddress),
                 new Message(this.TestAddress, this.TestAddress, 0),
-                new PersistentState(new MeteredPersistenceStrategy(this.repository, this.gasMeter, new BasicKeyEncodingStrategy()),
+                new PersistentState(new MeteredPersistenceStrategy(this.repository, this.gasMeter, new BasicKeyEncodingStrategy(), "1.1"),
                     context.Serializer, this.TestAddress.ToUint160()),
                 context.Serializer,
                 new ContractLogHolder(),

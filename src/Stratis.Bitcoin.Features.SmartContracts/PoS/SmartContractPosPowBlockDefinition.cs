@@ -182,7 +182,15 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoS
             if (!getSenderResult.Success)
                 throw new ConsensusErrorException(new ConsensusError("sc-block-assembler-addcontracttoblock", getSenderResult.Error));
 
-            IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)this.height, this.coinbaseAddress, mempoolEntry.Fee, getSenderResult.Sender, mempoolEntry.Transaction);
+            ulong txIndex = (ulong)this.inBlock.Count + 1; // Number ahead of us in block + the coinbase will give us our index.
+
+            IContractTransactionContext transactionContext = new ContractTransactionContext(
+                (ulong)this.height,
+                txIndex,
+                this.coinbaseAddress,
+                mempoolEntry.Fee,
+                getSenderResult.Sender,
+                mempoolEntry.Transaction);
             IContractExecutor executor = this.executorFactory.CreateExecutor(this.stateSnapshot, transactionContext);
             IContractExecutionResult result = executor.Execute(transactionContext);
 
