@@ -83,7 +83,7 @@ namespace Stratis.Feature.PoA.Tokenless
             var options = (PoAConsensusOptions)this.coreComponent.Network.Consensus.Options;
             if (options.EnablePermissionedMembership)
             {
-                await this.revocationChecker.Initialize().ConfigureAwait(false);
+                this.revocationChecker.Initialize();
                 // We do not need to initialize the CertificatesManager here like it would have been in the regular PoA feature, because the TokenlessWalletManager is now responsible for ensuring a client certificate is created instead.
             }
 
@@ -100,7 +100,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 try
                 {
                     await this.SynchronizeMembersAsync();
-                } 
+                }
                 catch (Exception e)
                 {
                     this.logger.LogDebug(e, "Exception raised when calling CA to synchronize members.");

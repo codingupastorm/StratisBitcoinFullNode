@@ -239,6 +239,17 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return caClient.GetCertificatePublicKeysAsync();
         }
 
+        /// <summary>
+        /// Determines whether a certificate has been revoked by checking the sender (node)'s address.
+        /// </summary>
+        /// <param name="address">The address of the node.</param>
+        /// <returns><c>true</c> if the given certificate has been revoked.</returns>
+        public bool IsCertificateRevokedByAddress(uint160 address)
+        {
+            CertificateInfoModel certificate = GetCertificateInfoForAddress(address);
+            return this.revocationChecker.IsCertificateRevoked(certificate.Thumbprint);
+        }
+
         public static byte[] ExtractCertificateExtension(X509Certificate certificate, string oid)
         {
             X509Certificate2 cert = CaCertificatesManager.ConvertCertificate(certificate, new SecureRandom());

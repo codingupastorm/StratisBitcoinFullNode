@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -73,7 +72,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             if (address == null)
             {
                 peer.Disconnect("Peer certificate does not contain a valid address.");
-                
+
                 return;
             }
 
@@ -85,8 +84,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             }
 
             // TODO: Apart from the existence of the P2PKH address in the certificate, do we need to verify it against anything?
-
-            bool revoked = await this.RevocationChecker.IsCertificateRevoked(peerCertificate.Thumbprint, true);
+            bool revoked = this.RevocationChecker.IsCertificateRevoked(peerCertificate.Thumbprint, true);
 
             if (revoked)
                 peer.Disconnect("Peer certificate is revoked.");

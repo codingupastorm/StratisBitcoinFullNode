@@ -4,9 +4,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using CertificateAuthority;
-using CertificateAuthority.Models;
 using Microsoft.Extensions.Logging;
-using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Utilities;
 using TextFileConfiguration = Stratis.Bitcoin.Configuration.TextFileConfiguration;
@@ -20,7 +18,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         public bool LastStatus { get; set; }
     }
 
-    public class RevocationChecker : IDisposable
+    public sealed class RevocationChecker : IDisposable
     {
         private const string kvRepoKey = "revokedcerts";
 
@@ -31,7 +29,6 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         private readonly IDateTimeProvider dateTimeProvider;
 
         private readonly TextFileConfiguration configuration;
-        private readonly CertificatesManager certificateManager;
 
         private string caUrl;
         private string caPassword;
@@ -50,8 +47,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         public RevocationChecker(NodeSettings nodeSettings,
             IKeyValueRepository kvRepo,
             ILoggerFactory loggerFactory,
-            IDateTimeProvider dateTimeProvider,
-            CertificatesManager certificatesManager)
+            IDateTimeProvider dateTimeProvider)
         {
             this.kvRepo = kvRepo;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
@@ -62,7 +58,6 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             this.revokedCertsCache = new Dictionary<string, RevocationRecord>();
 
             this.configuration = nodeSettings.ConfigReader;
-            this.certificateManager = certificatesManager;
         }
 
         public void Initialize()
@@ -90,12 +85,6 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             var httpClient = new HttpClient();
 
             return new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
-        }
-
-        public bool IsCertificateRevokedByAddress(string address, bool allowCached = true)
-        {
-            CertificateInfoModel certificate = this.certificateManager.GetCertificateInfoForAddress(new uint160(address));
-            return IsCertificateRevoked(certificate.Thumbprint);
         }
 
         /// <summary>

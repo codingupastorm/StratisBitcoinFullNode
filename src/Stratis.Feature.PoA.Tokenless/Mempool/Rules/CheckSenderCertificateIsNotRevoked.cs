@@ -10,7 +10,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
 {
     public sealed class CheckSenderCertificateIsNotRevoked : MempoolRule
     {
-        private readonly RevocationChecker revocationChecker;
+        private readonly CertificatesManager certificateManager;
         private readonly ITokenlessSigner tokenlessSigner;
 
         public CheckSenderCertificateIsNotRevoked(
@@ -19,10 +19,10 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
             MempoolSettings settings,
             ChainIndexer chainIndexer,
             ILoggerFactory loggerFactory,
-            RevocationChecker revocationChecker,
+            CertificatesManager certificateManager,
             ITokenlessSigner tokenlessSigner) : base(network, mempool, settings, chainIndexer, loggerFactory)
         {
-            this.revocationChecker = revocationChecker;
+            this.certificateManager = certificateManager;
             this.tokenlessSigner = tokenlessSigner;
         }
 
@@ -34,7 +34,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
                 context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "cannot-derive-sender-for-transaction"), $"Cannot derive the sender from transaction '{context.Transaction.GetHash()}': {getSenderResult.Error}").Throw();
 
             // Then check if the sender has not had it's certificate revoked.
-            if (this.revocationChecker.IsCertificateRevoked(getSenderResult.Sender))
+            if (this.certificateManager.IsCertificateRevokedByAddress(getSenderResult.Sender))
                 context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "sender-certificate-is-revoked"), $"Cannot send transaction '{context.Transaction.GetHash()}' as the sender '{getSenderResult.Sender}', has had it's certificate revoked.").Throw();
         }
     }
