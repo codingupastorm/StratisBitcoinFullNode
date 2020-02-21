@@ -880,7 +880,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task NodeGetsCertificateRevokedCannotPropagateTransactionsAsync()
+        public void NodeGetsCertificateRevokedCannotPropagateTransactions()
         {
             using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
             using (var nodeBuilder = SmartContractNodeBuilder.Create(this))
@@ -908,16 +908,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TestHelper.Connect(node1, node2);
 
                 // Revoke node 2's certificate.
-                var node2Certificate = caAdminClient.GetCaCertificate
-                Assert.True(caAdminClient.RevokeCertificate());
-
-                // Mine 20 blocks
-                await node1.MineBlocksAsync(20);
-                TestHelper.IsNodeSyncedAtHeight(node1, 20);
-
-                // Restart the node and ensure that it is still at height 20.
-                node1.Restart();
-                TestHelper.IsNodeSyncedAtHeight(node1, 20);
+                Assert.True(caAdminClient.RevokeCertificate(node2.ClientCertificate.Thumbprint));
             }
         }
 

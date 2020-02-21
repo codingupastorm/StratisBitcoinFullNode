@@ -6,13 +6,13 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using CertificateAuthority.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Protocol;
-using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
@@ -493,7 +493,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         }
 
         public DateTimeOffset? MockTime { get; set; }
-        public X509Certificate ClientCertificate { get; set; }
+        public CertificateInfoModel ClientCertificate { get; set; }
 
         public void SetMinerSecret(BitcoinSecret secret)
         {

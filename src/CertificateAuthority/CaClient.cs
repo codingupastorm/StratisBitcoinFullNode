@@ -21,7 +21,7 @@ namespace CertificateAuthority
         private const string GenerateCertificateSigningRequestEndpoint = "api/certificates/generate_certificate_signing_request";
         private const string IssueCertificateEndpoint = "api/certificates/issue_certificate_using_request_string";
         private const string GetCertificatePublicKeysEndpoint = "api/certificates/get_certificate_public_keys";
-        private const string RevokeCertificateEndpoint = "api/certificates/get_certificate_public_keys";
+        private const string RevokeCertificateEndpoint = "api/certificates/revoke_certificate";
 
         private const string CreateAccountEndpoint = "api/accounts/create_account";
 

@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Models;
 using Microsoft.Extensions.Logging;
@@ -232,7 +231,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return retrievedCertModel;
         }
 
-        public Task<List<PubKey>> GetCertificatePublicKeysAsync()
+        public List<PubKey> GetCertificatePublicKeysAsync()
         {
             CaClient caClient = this.GetClient();
 

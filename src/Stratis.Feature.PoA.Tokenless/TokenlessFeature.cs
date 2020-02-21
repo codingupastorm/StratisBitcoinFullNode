@@ -121,7 +121,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 return;
             }
 
-            List<PubKey> allowedMembers = await this.certificatesManager.GetCertificatePublicKeysAsync();
+            List<PubKey> allowedMembers = this.certificatesManager.GetCertificatePublicKeysAsync();
             List<IFederationMember> currentMembers = this.federationManager.GetFederationMembers();
 
             // Check for differences and kick members without valid certificates.                

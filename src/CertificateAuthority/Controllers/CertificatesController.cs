@@ -51,11 +51,11 @@ namespace CertificateAuthority.Controllers
         {
             this.LogEntry(model);
 
-            var data = new CredentialsAccessWithModel<CredentialsModelWithThumbprintModel>(model, AccountAccessFlags.RevokeCertificates);
+            var credentialsWithThumbprintModel = new CredentialsAccessWithModel<CredentialsModelWithThumbprintModel>(model, AccountAccessFlags.RevokeCertificates);
 
             return ExecuteCaMethod(() =>
             {
-                var revokeCertificateResult = this.caCertificateManager.RevokeCertificate(data);
+                var revokeCertificateResult = this.caCertificateManager.RevokeCertificate(credentialsWithThumbprintModel);
                 return this.Json(this.LogExit(revokeCertificateResult));
             });
         }
