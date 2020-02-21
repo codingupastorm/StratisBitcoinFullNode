@@ -6,12 +6,12 @@ using System.Text;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers;
 using Stratis.Bitcoin.Features.SmartContracts.Wallet;
-using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.Wallet.Models;
@@ -304,7 +304,7 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
         /// </summary>
         public byte[] GetStorageValue(string contractAddress, string key)
         {
-            return this.stateRoot.GetStorageValue(contractAddress.ToUint160(this.CoreNode.FullNode.Network), Encoding.UTF8.GetBytes(key));
+            return this.stateRoot.GetStorageValue(contractAddress.ToUint160(this.CoreNode.FullNode.Network), Encoding.UTF8.GetBytes(key)).Value;
         }
 
         /// <summary>

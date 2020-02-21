@@ -111,7 +111,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             uint160 contractAddress = this.AddressGenerator.GenerateAddress(transaction.GetHash(), 0);
             Assert.NotNull(result.MutatedStateRepository.GetCode(contractAddress));
 
-            byte[] senderValue = result.MutatedStateRepository.GetStorageValue(contractAddress, Encoding.UTF8.GetBytes("Sender"));
+            byte[] senderValue = result.MutatedStateRepository.GetStorageValue(contractAddress, Encoding.UTF8.GetBytes("Sender")).Value;
             byte[] expectedSenderValue = key.PubKey.GetAddress(this.helper.Network).ToString().ToUint160(this.helper.Network).ToBytes();
             Assert.Equal(expectedSenderValue, senderValue);
         }
