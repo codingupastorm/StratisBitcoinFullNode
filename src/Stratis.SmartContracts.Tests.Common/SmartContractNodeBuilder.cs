@@ -47,9 +47,9 @@ namespace Stratis.SmartContracts.Tests.Common
             return node;
         }
 
-        public (CoreNode, Key, Key) CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client, bool initialRun = true)
+        public CoreNode CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client, bool initialRun = true)
         {
-            string dataFolder = this.GetNextDataFolderName(nodeIndex : nodeIndex);
+            string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
 
             string commonName = CaTestHelper.GenerateRandomString();
 
@@ -64,7 +64,7 @@ namespace Stratis.SmartContracts.Tests.Common
                 ? TokenlessNetwork.Mnemonics[nodeIndex]
                 : new Mnemonic(Wordlist.English, WordCount.Twelve);
 
-            string[] args = initialRun ? 
+            string[] args = initialRun ?
                 new string[] {
                     "-conf=poa.conf",
                     "-datadir=" + dataFolder,
@@ -95,31 +95,28 @@ namespace Stratis.SmartContracts.Tests.Common
                 walletManager.Initialize();
 
                 if (!initialRun)
-                    return (node, null, null);
+                    return node;
+
+                node.ClientCertificatePrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.P2PCertificates);
+                node.TransactionSigningPrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.TransactionSigning);
+
+                BitcoinPubKeyAddress address = node.ClientCertificatePrivateKey.PubKey.GetAddress(network);
 
                 Key miningKey = walletManager.GetKey("test", TokenlessWalletAccount.BlockSigning);
-                PubKey miningPubKey = miningKey.PubKey;
 
-                Key clientCertificatePrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.P2PCertificates);
-                PubKey pubKey = clientCertificatePrivateKey.PubKey;
-                Key transactionSigningPrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.TransactionSigning);
-                PubKey transactionSigningPubKey = transactionSigningPrivateKey.PubKey;
-                BitcoinPubKeyAddress address = pubKey.GetAddress(network);
-                PubKey blockSigningPubKey = miningKey.PubKey;
+                node.ClientCertificate = IssueCertificate(client, node.ClientCertificatePrivateKey, node.TransactionSigningPrivateKey.PubKey, address, miningKey.PubKey);
+                Assert.NotNull(node.ClientCertificate);
 
-                X509Certificate clientCertificate = IssueCertificate(client, clientCertificatePrivateKey, transactionSigningPubKey, address, blockSigningPubKey);
-
-                Assert.NotNull(clientCertificate);
-
-                if (authorityCertificate != null && clientCertificate != null)
+                if (authorityCertificate != null && node.ClientCertificate != null)
                 {
                     File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.AuthorityCertificateName), authorityCertificate.GetEncoded());
-                    File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCertificate, clientCertificatePrivateKey, "test"));
+                    File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(node.ClientCertificate, node.ClientCertificatePrivateKey, "test"));
                 }
 
-                return (node, clientCertificatePrivateKey, transactionSigningPrivateKey);
+                return node;
             }
         }
+
         private X509Certificate IssueCertificate(CaClient client, Key privKey, PubKey transactionSigningPubKey, BitcoinPubKeyAddress address, PubKey blockSigningPubKey)
         {
             CertificateSigningRequestModel response = client.GenerateCertificateSigningRequest(Convert.ToBase64String(privKey.PubKey.ToBytes()), address.ToString(), Convert.ToBase64String(transactionSigningPubKey.Hash.ToBytes()), Convert.ToBase64String(blockSigningPubKey.ToBytes()));

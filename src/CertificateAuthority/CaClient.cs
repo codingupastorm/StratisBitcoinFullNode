@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Threading.Tasks;
 using CertificateAuthority.Controllers;
 using CertificateAuthority.Models;
 using NBitcoin;
@@ -22,6 +21,7 @@ namespace CertificateAuthority
         private const string GenerateCertificateSigningRequestEndpoint = "api/certificates/generate_certificate_signing_request";
         private const string IssueCertificateEndpoint = "api/certificates/issue_certificate_using_request_string";
         private const string GetCertificatePublicKeysEndpoint = "api/certificates/get_certificate_public_keys";
+        private const string RevokeCertificateEndpoint = "api/certificates/get_certificate_public_keys";
 
         private const string CreateAccountEndpoint = "api/accounts/create_account";
 
@@ -104,7 +104,7 @@ namespace CertificateAuthority
             return this.RequestFromCA<List<CertificateInfoModel>>(GetAllCertificatesEndpoint, credentialsModel);
         }
 
-        public async Task<List<PubKey>> GetCertificatePublicKeysAsync()
+        public List<PubKey> GetCertificatePublicKeys()
         {
             var credentialsModel = new CredentialsModel()
             {
@@ -181,6 +181,23 @@ namespace CertificateAuthority
             };
 
             return this.RequestFromCA<CertificateInfoModel>(IssueCertificateEndpoint, issueCertModel);
+        }
+
+        /// <summary>
+        /// Revokes a certificate by thumbprint.
+        /// </summary>
+        /// <param name="thumbprint">The thumbprint of the certificate to revoke.</param>
+        /// <returns><c>True</c> if successfully revoked.</returns>
+        public bool RevokeCertificate(string thumbprint)
+        {
+            var model = new CredentialsModelWithThumbprintModel()
+            {
+                AccountId = this.accountId,
+                Password = this.password,
+                Thumbprint = thumbprint
+            };
+
+            return this.RequestFromCA<bool>(RevokeCertificateEndpoint, model);
         }
 
         /// <summary>

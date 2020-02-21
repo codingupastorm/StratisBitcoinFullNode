@@ -236,7 +236,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         {
             CaClient caClient = this.GetClient();
 
-            return caClient.GetCertificatePublicKeysAsync();
+            return caClient.GetCertificatePublicKeys();
         }
 
         /// <summary>

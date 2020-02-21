@@ -12,6 +12,7 @@ using Moq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Protocol;
+using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
@@ -79,6 +80,9 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         private SubscriptionToken blockConnectedSubscription;
         private SubscriptionToken blockDisconnectedSubscription;
+
+        public Key ClientCertificatePrivateKey { get; set; }
+        public Key TransactionSigningPrivateKey { get; set; }
 
         public CoreNode(NodeRunner runner, NodeConfigParameters configParameters, string configfile, bool useCookieAuth = false)
         {
@@ -489,6 +493,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         }
 
         public DateTimeOffset? MockTime { get; set; }
+        public X509Certificate ClientCertificate { get; set; }
 
         public void SetMinerSecret(BitcoinSecret secret)
         {
