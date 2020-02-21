@@ -7,7 +7,6 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
-using Stratis.Bitcoin.Utilities;
 using TracerAttributes;
 using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 
@@ -21,8 +20,6 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         private readonly ILoggerFactory LoggerFactory;
 
-        private readonly ILogger Logger;
-
         private readonly RevocationChecker RevocationChecker;
 
         public RevocationBehavior(NodeSettings nodeSettings,
@@ -33,7 +30,6 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             this.NodeSettings = nodeSettings;
             this.Network = network;
             this.LoggerFactory = loggerFactory;
-            this.Logger = loggerFactory.CreateLogger(this.GetType().FullName, $"[{this.GetHashCode():x}] ");
             this.RevocationChecker = revocationChecker;
         }
 
