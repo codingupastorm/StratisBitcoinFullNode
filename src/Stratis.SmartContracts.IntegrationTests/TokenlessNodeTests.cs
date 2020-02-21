@@ -155,7 +155,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TestHelper.Connect(node1, node2);
 
                 // Build and send a transaction from one node.
-                Transaction transaction = this.CreateBasicOpReturnTransaction(node1, node1.TransactionSigningPrivateKey);
+                Transaction transaction = this.CreateBasicOpReturnTransaction(node1);
                 await node1.BroadcastTransactionAsync(transaction);
 
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
@@ -208,7 +208,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TestHelper.Connect(node1, node2);
 
                 // Build and send a transaction from one node.
-                Transaction transaction = this.CreateBasicOpReturnTransaction(node1, node1.TransactionSigningPrivateKey);
+                Transaction transaction = this.CreateBasicOpReturnTransaction(node1);
                 await node1.BroadcastTransactionAsync(transaction);
 
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
@@ -502,7 +502,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TestHelper.Connect(node1, node2);
 
                 // Build and send a transaction from one node.
-                Transaction transaction = this.CreateBasicOpReturnTransaction(node1, node1.TransactionSigningPrivateKey);
+                Transaction transaction = this.CreateBasicOpReturnTransaction(node1);
                 await node1.BroadcastTransactionAsync(transaction);
 
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
@@ -523,7 +523,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     .GetAddress(this.network).ToString().ToUint160(this.network)));
 
                 // Send another transaction from the same address.
-                transaction = this.CreateBasicOpReturnTransaction(node1, node1.TransactionSigningPrivateKey);
+                transaction = this.CreateBasicOpReturnTransaction(node1);
                 await node1.BroadcastTransactionAsync(transaction);
 
                 // Other node receives and mines transaction, validating it came from a permitted sender, having got the certificate locally this time.
@@ -562,7 +562,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Dispose();
 
                 // Build and send a transaction from one node.
-                Transaction transaction = this.CreateBasicOpReturnTransaction(node1, node1.TransactionSigningPrivateKey);
+                Transaction transaction = this.CreateBasicOpReturnTransaction(node1);
                 await node1.BroadcastTransactionAsync(transaction);
 
                 // Node1 should still let it in the mempool as it's from himself.
@@ -880,7 +880,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public void NodeGetsCertificateRevokedCannotPropagateTransactions()
+        public async Task NodeGetsCertificateRevokedCannotPropagateTransactionsAsync()
         {
             using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
             using (var nodeBuilder = SmartContractNodeBuilder.Create(this))
@@ -909,6 +909,16 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Revoke node 2's certificate.
                 Assert.True(caAdminClient.RevokeCertificate(node2.ClientCertificate.Thumbprint));
+
+                // Create a transaction on node2 and try and propagate it.
+                var transaction = this.CreateBasicOpReturnTransaction(node2);
+                await node2.BroadcastTransactionAsync(transaction);
+
+                // Mine a block on node 1 and check that the transaction was never received and/or included.
+                await node1.MineBlocksAsync(1);
+
+                var block = node1.FullNode.BlockStore().GetBlock(node1.FullNode.ConsensusManager().Tip.HashBlock);
+                Assert.DoesNotContain(transaction.GetHash(), block.Transactions.Select(t => t.GetHash()));
             }
         }
 
@@ -1014,14 +1024,14 @@ namespace Stratis.SmartContracts.IntegrationTests
             return transaction;
         }
 
-        private Transaction CreateBasicOpReturnTransaction(CoreNode node, Key key)
+        private Transaction CreateBasicOpReturnTransaction(CoreNode node)
         {
             Transaction transaction = this.network.CreateTransaction();
             Script outputScript = TxNullDataTemplate.Instance.GenerateScriptPubKey(new byte[] { 0, 1, 2, 3 });
             transaction.Outputs.Add(new TxOut(Money.Zero, outputScript));
 
             ITokenlessSigner signer = node.FullNode.NodeService<ITokenlessSigner>();
-            signer.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
+            signer.InsertSignedTxIn(transaction, node.TransactionSigningPrivateKey.GetBitcoinSecret(this.network));
 
             return transaction;
         }
