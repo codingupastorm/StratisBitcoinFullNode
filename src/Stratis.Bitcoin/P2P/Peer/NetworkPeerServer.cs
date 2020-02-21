@@ -28,7 +28,7 @@ namespace Stratis.Bitcoin.P2P.Peer
         /// <summary>The parameters that will be cloned and applied for each peer connecting to <see cref="NetworkPeerServer"/>.</summary>
         NetworkPeerConnectionParameters InboundNetworkPeerConnectionParameters { get; set; }
 
-        public int? ConnectedInboundPeersCount { get; }
+        int? ConnectedInboundPeersCount { get; }
 
         /// <summary>IP address and port, on which the server listens to incoming connections.</summary>
         IPEndPoint LocalEndpoint { get; }
