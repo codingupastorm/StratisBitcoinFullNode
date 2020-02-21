@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
@@ -16,7 +15,6 @@ using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Wallet;
-using Stratis.SmartContracts.Networks;
 using Xunit;
 
 namespace Stratis.SmartContracts.Tests.Common
@@ -28,23 +26,6 @@ namespace Stratis.SmartContracts.Tests.Common
         public SmartContractNodeBuilder(string rootFolder) : base(rootFolder)
         {
             this.TimeProvider = new EditableTimeProvider();
-        }
-
-        public CoreNode CreateSmartContractPoANode(SmartContractsPoARegTest network, int nodeIndex)
-        {
-            string dataFolder = this.GetNextDataFolderName();
-
-            CoreNode node = this.CreateNode(new SmartContractPoARunner(dataFolder, network, this.TimeProvider), "poa.conf");
-
-            var settings = new NodeSettings(network, args: new string[] {
-                "-conf=poa.conf",
-                "-datadir=" + dataFolder
-            });
-
-            var tool = new KeyTool(settings.DataFolder);
-            tool.SavePrivateKey(network.FederationKeys[nodeIndex], KeyType.FederationKey);
-
-            return node;
         }
 
         public (CoreNode, Key, Key) CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client, bool initialRun = true)
@@ -134,30 +115,6 @@ namespace Stratis.SmartContracts.Tests.Common
             var certParser = new X509CertificateParser();
 
             return certParser.ReadCertificate(certInfo.CertificateContentDer);
-        }
-
-        public CoreNode CreateWhitelistedContractPoANode(SmartContractsPoAWhitelistRegTest network, int nodeIndex)
-        {
-            string dataFolder = this.GetNextDataFolderName();
-
-            CoreNode node = this.CreateNode(new WhitelistedContractPoARunner(dataFolder, network, this.TimeProvider), "poa.conf");
-            var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder });
-
-            var tool = new KeyTool(settings.DataFolder);
-            tool.SavePrivateKey(network.FederationKeys[nodeIndex], KeyType.FederationKey);
-            return node;
-        }
-
-        public CoreNode CreateSmartContractPowNode()
-        {
-            Network network = new SmartContractsRegTest();
-            return CreateNode(new StratisSmartContractNode(this.GetNextDataFolderName(), network), "stratis.conf");
-        }
-
-        public CoreNode CreateSmartContractPosNode()
-        {
-            Network network = new SmartContractPosRegTest();
-            return CreateNode(new StratisSmartContractPosNode(this.GetNextDataFolderName(), network), "stratis.conf");
         }
 
         public static SmartContractNodeBuilder Create(object caller, [CallerMemberName] string callingMethod = null)
