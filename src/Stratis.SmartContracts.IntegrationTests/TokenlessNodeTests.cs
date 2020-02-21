@@ -275,7 +275,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.True(callReceipt.Success);
 
                 StorageValue value2 = stateRepo.GetStorageValue(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("Increment"));
-                Assert.Equal("2.1", value1.Version); // Block height 1, tx index 1.
+                Assert.Equal("2.1", value2.Version); // Block height 1, tx index 1.
             }
         }
 
