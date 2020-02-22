@@ -94,15 +94,15 @@ namespace Stratis.SmartContracts.Tests.Common
 
                 walletManager.Initialize();
 
-                if (!initialRun)
-                    return node;
-
                 node.ClientCertificatePrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.P2PCertificates);
                 node.TransactionSigningPrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.TransactionSigning);
 
                 BitcoinPubKeyAddress address = node.ClientCertificatePrivateKey.PubKey.GetAddress(network);
 
                 Key miningKey = walletManager.GetKey("test", TokenlessWalletAccount.BlockSigning);
+
+                if (!initialRun)
+                    return node;
 
                 (X509Certificate x509, CertificateInfoModel CertificateInfo) issueResult = IssueCertificate(client, node.ClientCertificatePrivateKey, node.TransactionSigningPrivateKey.PubKey, address, miningKey.PubKey);
                 node.ClientCertificate = issueResult.CertificateInfo;

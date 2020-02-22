@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using CertificateAuthority;
+using CertificateAuthority.Models;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Utilities;
@@ -135,12 +136,15 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         {
             try
             {
-                ICollection<string> thumbprints = this.client.GetRevokedCertificates();
-
-                foreach (string thumbprint in thumbprints)
+                // We should get the status of every certificate known to the CA, in case the CA is not online when a previously unseen certificate is first encountered later.
+                // TODO: Perhaps certificate updates should be broadcast instead of potentially having a stale cache entry?
+                List<CertificateInfoModel> certificateInfoModels = this.client.GetAllCertificates();
+                foreach (CertificateInfoModel certificateInfoModel in certificateInfoModels)
                 {
-                    // We don't actually care what the previous state was, only that it is revoked now.
-                    this.revokedCertsCache[thumbprint] = new RevocationRecord() { LastChecked = this.dateTimeProvider.GetUtcNow(), LastStatus = true };
+                    if (certificateInfoModel.Status == CertificateStatus.Good || certificateInfoModel.Status == CertificateStatus.Unknown)
+                        this.revokedCertsCache[certificateInfoModel.Thumbprint] = new RevocationRecord() { LastChecked = this.dateTimeProvider.GetUtcNow(), LastStatus = false };
+                    else
+                        this.revokedCertsCache[certificateInfoModel.Thumbprint] = new RevocationRecord() { LastChecked = this.dateTimeProvider.GetUtcNow(), LastStatus = true };
                 }
             }
             catch (Exception e)
