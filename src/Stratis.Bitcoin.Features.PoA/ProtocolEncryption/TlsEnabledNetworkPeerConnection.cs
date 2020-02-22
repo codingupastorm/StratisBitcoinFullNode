@@ -36,10 +36,11 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         private TlsClientProtocol tlsClientProtocol;
 
         public TlsEnabledNetworkPeerConnection(Network network, INetworkPeer peer, TcpClient client, int clientId, ProcessMessageAsync<IncomingMessage> processMessageAsync,
-            IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, PayloadProvider payloadProvider, IAsyncProvider asyncProvider, CertificatesManager certManager, bool isServer)
+            IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, PayloadProvider payloadProvider, IAsyncProvider asyncProvider, ICertificatesManager certManager, bool isServer)
             : base(network, peer, client, clientId, processMessageAsync, dateTimeProvider, loggerFactory, payloadProvider, asyncProvider)
         {
-            this.certManager = certManager;
+            // TODO: Fix this hack, make the public properties accessible via method instead?
+            this.certManager = certManager as CertificatesManager;
             this.isServer = isServer;
         }
 

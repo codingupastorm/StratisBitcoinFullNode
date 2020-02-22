@@ -20,12 +20,12 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         private readonly ILoggerFactory LoggerFactory;
 
-        private readonly RevocationChecker RevocationChecker;
+        private readonly IRevocationChecker RevocationChecker;
 
         public RevocationBehavior(NodeSettings nodeSettings,
             Network network,
             ILoggerFactory loggerFactory,
-            RevocationChecker revocationChecker)
+            IRevocationChecker revocationChecker)
         {
             this.NodeSettings = nodeSettings;
             this.Network = network;

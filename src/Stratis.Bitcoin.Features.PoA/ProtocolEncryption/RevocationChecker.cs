@@ -21,6 +21,8 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
     public interface IRevocationChecker : IDisposable
     {
         bool IsCertificateRevoked(string thumbprint, bool allowCached = true);
+
+        void Initialize();
     }
 
     public sealed class RevocationChecker : IRevocationChecker

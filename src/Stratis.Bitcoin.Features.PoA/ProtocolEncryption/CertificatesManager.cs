@@ -32,6 +32,8 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         X509Certificate RequestNewCertificate(Key privateKey, PubKey transactionSigningPubKey, PubKey blockSigningPubKey);
 
         bool IsCertificateRevokedByAddress(uint160 address);
+
+        List<PubKey> GetCertificatePublicKeysAsync();
     }
 
     public sealed class CertificatesManager : ICertificatesManager

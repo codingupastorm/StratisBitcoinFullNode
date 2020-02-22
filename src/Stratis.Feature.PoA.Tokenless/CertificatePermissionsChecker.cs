@@ -25,11 +25,12 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly ILogger logger;
 
         public CertificatePermissionsChecker(ICertificateCache certificateCache,
-            CertificatesManager certificatesManager,
+            ICertificatesManager certificatesManager,
             ILoggerFactory loggerFactory)
         {
             this.certificateCache = certificateCache;
-            this.certificatesManager = certificatesManager;
+            // TODO: Fix this hack
+            this.certificatesManager = certificatesManager as CertificatesManager;
             this.logger = loggerFactory.CreateLogger(this.GetType());
         }
 
