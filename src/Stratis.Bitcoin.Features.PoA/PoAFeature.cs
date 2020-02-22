@@ -61,13 +61,13 @@ namespace Stratis.Bitcoin.Features.PoA
 
         private readonly CertificatesManager certificatesManager;
 
-        private readonly RevocationChecker revocationChecker;
+        private readonly IRevocationChecker revocationChecker;
 
         public PoAFeature(IFederationManager federationManager, PayloadProvider payloadProvider, IConnectionManager connectionManager, ChainIndexer chainIndexer,
             IInitialBlockDownloadState initialBlockDownloadState, IConsensusManager consensusManager, IPeerBanning peerBanning, ILoggerFactory loggerFactory,
             IPoAMiner miner, VotingManager votingManager, Network network, IWhitelistedHashesRepository whitelistedHashesRepository,
-            IdleFederationMembersKicker idleFederationMembersKicker, IChainState chainState, IBlockStoreQueue blockStoreQueue, CertificatesManager certificatesManager,
-            RevocationChecker revocationChecker)
+            IdleFederationMembersKicker idleFederationMembersKicker, IChainState chainState, IBlockStoreQueue blockStoreQueue, ICertificatesManager certificatesManager,
+            IRevocationChecker revocationChecker)
         {
             this.federationManager = federationManager;
             this.connectionManager = connectionManager;
@@ -83,7 +83,7 @@ namespace Stratis.Bitcoin.Features.PoA
             this.idleFederationMembersKicker = idleFederationMembersKicker;
             this.chainState = chainState;
             this.blockStoreQueue = blockStoreQueue;
-            this.certificatesManager = certificatesManager;
+            this.certificatesManager = certificatesManager as CertificatesManager;
             this.revocationChecker = revocationChecker;
 
             payloadProvider.DiscoverPayloads(this.GetType().Assembly);
@@ -212,8 +212,8 @@ namespace Stratis.Bitcoin.Features.PoA
                         services.AddSingleton<IdleFederationMembersKicker>();
 
                         // Permissioned membership.
-                        services.AddSingleton<CertificatesManager>();
-                        services.AddSingleton<RevocationChecker>();
+                        services.AddSingleton<ICertificatesManager, CertificatesManager>();
+                        services.AddSingleton<IRevocationChecker, RevocationChecker>();
 
                         var options = (PoAConsensusOptions)network.Consensus.Options;
 
