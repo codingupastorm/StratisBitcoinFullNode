@@ -104,7 +104,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
                 Key miningKey = walletManager.GetKey("test", TokenlessWalletAccount.BlockSigning);
 
-                (X509Certificate x509, CertificateInfoModel CertificateInfo) issueResult = IssueCertificate(client, node.ClientCertificatePrivateKey, node.TransactionSigningPrivateKey.PubKey, address, miningKey.PubKey); ;
+                (X509Certificate x509, CertificateInfoModel CertificateInfo) issueResult = IssueCertificate(client, node.ClientCertificatePrivateKey, node.TransactionSigningPrivateKey.PubKey, address, miningKey.PubKey);
                 node.ClientCertificate = issueResult.CertificateInfo;
                 Assert.NotNull(node.ClientCertificate);
 
