@@ -19,7 +19,22 @@ using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 
 namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 {
-    public sealed class CertificatesManager
+    public interface ICertificatesManager
+    {
+        bool HaveAccount();
+
+        bool LoadAuthorityCertificate(bool requireAccountId = true);
+
+        bool LoadClientCertificate();
+
+        int CreateAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country);
+
+        X509Certificate RequestNewCertificate(Key privateKey, PubKey transactionSigningPubKey, PubKey blockSigningPubKey);
+
+        bool IsCertificateRevokedByAddress(uint160 address);
+    }
+
+    public sealed class CertificatesManager : ICertificatesManager
     {
         /// <summary>Name of authority .crt certificate that is supposed to be found in application folder.</summary>
         /// <remarks>This certificate is automatically copied during the build.</remarks>
@@ -48,7 +63,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         private readonly DataFolder dataFolder;
 
-        private readonly RevocationChecker revocationChecker;
+        private readonly IRevocationChecker revocationChecker;
 
         private readonly ILogger logger;
 
@@ -64,7 +79,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         private string clientCertificatePassword;
 
-        public CertificatesManager(DataFolder dataFolder, NodeSettings nodeSettings, ILoggerFactory loggerFactory, RevocationChecker revocationChecker, Network network)
+        public CertificatesManager(DataFolder dataFolder, NodeSettings nodeSettings, ILoggerFactory loggerFactory, IRevocationChecker revocationChecker, Network network)
         {
             this.dataFolder = dataFolder;
             this.configuration = nodeSettings.ConfigReader;

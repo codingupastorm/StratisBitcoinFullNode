@@ -18,7 +18,12 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         public bool LastStatus { get; set; }
     }
 
-    public sealed class RevocationChecker : IDisposable
+    public interface IRevocationChecker : IDisposable
+    {
+        bool IsCertificateRevoked(string thumbprint, bool allowCached = true);
+    }
+
+    public sealed class RevocationChecker : IRevocationChecker
     {
         private const string kvRepoKey = "revokedcerts";
 

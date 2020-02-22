@@ -10,7 +10,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
 {
     public sealed class CheckSenderCertificateIsNotRevoked : MempoolRule
     {
-        private readonly CertificatesManager certificateManager;
+        private readonly ICertificatesManager certificateManager;
         private readonly ITokenlessSigner tokenlessSigner;
 
         public CheckSenderCertificateIsNotRevoked(
@@ -19,7 +19,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
             MempoolSettings settings,
             ChainIndexer chainIndexer,
             ILoggerFactory loggerFactory,
-            CertificatesManager certificateManager,
+            ICertificatesManager certificateManager,
             ITokenlessSigner tokenlessSigner) : base(network, mempool, settings, chainIndexer, loggerFactory)
         {
             this.certificateManager = certificateManager;
