@@ -23,7 +23,6 @@ using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.CLR.Decompilation;
 using Stratis.SmartContracts.CLR.Loader;
 using Stratis.SmartContracts.CLR.Local;
-using Stratis.SmartContracts.CLR.ResultProcessors;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.CLR.Validation;
 using Stratis.SmartContracts.Core;
@@ -148,35 +147,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts
             });
 
             return fullNodeBuilder;
-        }
-
-        /// <summary>
-        /// This node will be configured with the reflection contract executor.
-        /// <para>
-        /// Should we require another executor, we will need to create a separate daemon and network.
-        /// </para>
-        /// </summary>
-        public static SmartContractOptions UseReflectionExecutor(this SmartContractOptions options)
-        {
-            IServiceCollection services = options.Services;
-
-            // Validator
-            services.AddSingleton<ISmartContractValidator, SmartContractValidator>();
-
-            // Executor et al.
-            services.AddSingleton<IContractRefundProcessor, ContractRefundProcessor>();
-            services.AddSingleton<IContractTransferProcessor, ContractTransferProcessor>();
-            services.AddSingleton<IKeyEncodingStrategy, BasicKeyEncodingStrategy>();
-            services.AddSingleton<IContractExecutorFactory, ReflectionExecutorFactory>();
-            services.AddSingleton<IContractPrimitiveSerializer, ContractPrimitiveSerializer>();
-            services.AddSingleton<ISerializer, Serializer>();
-
-            services.AddSingleton<ICallDataSerializer, CallDataSerializer>();
-
-            // Controllers + utils
-            services.AddSingleton<CSharpContractDecompiler>();
-
-            return options;
         }
 
         public static SmartContractOptions UseTokenlessReflectionExecutor(this SmartContractOptions options)
