@@ -6,6 +6,8 @@ namespace Stratis.SmartContracts.CLR.Tests
 {
     public class InternalExecutorSpecification
     {
+        private const string VersionString = "1.1";
+
         [Fact]
         public void Create_StateTransition_Success()
         {
@@ -26,7 +28,8 @@ namespace Stratis.SmartContracts.CLR.Tests
             var internalExecutor = new InternalExecutor(
                 fixture.GasMeter.Object,
                 fixture.State.Object,
-                fixture.StateProcessor.Object);
+                fixture.StateProcessor.Object,
+                VersionString);
 
             ICreateResult result = internalExecutor.Create<string>(fixture.SmartContractState, amount, parameters, gasLimit);
 
@@ -69,7 +72,8 @@ namespace Stratis.SmartContracts.CLR.Tests
             var internalExecutor = new InternalExecutor(
                 fixture.GasMeter.Object,
                 fixture.State.Object,
-                fixture.StateProcessor.Object);
+                fixture.StateProcessor.Object,
+                VersionString);
 
             ICreateResult result = internalExecutor.Create<string>(fixture.SmartContractState, amount, parameters, gasLimit);
 
@@ -106,7 +110,8 @@ namespace Stratis.SmartContracts.CLR.Tests
             var internalExecutor = new InternalExecutor(
                 fixture.GasMeter.Object,
                 fixture.State.Object,
-                fixture.StateProcessor.Object);
+                fixture.StateProcessor.Object,
+                VersionString);
 
             ICreateResult result = internalExecutor.Create<string>(fixture.SmartContractState, amount, parameters, gasLimit);
 
@@ -146,7 +151,8 @@ namespace Stratis.SmartContracts.CLR.Tests
             var internalExecutor = new InternalExecutor(
                 fixture.GasMeter.Object,
                 fixture.State.Object,
-                fixture.StateProcessor.Object);
+                fixture.StateProcessor.Object,
+                VersionString);
 
             ITransferResult result = internalExecutor.Call(fixture.SmartContractState, to, amount, method, parameters, gasLimit);
 
@@ -192,7 +198,8 @@ namespace Stratis.SmartContracts.CLR.Tests
             var internalExecutor = new InternalExecutor(
                 fixture.GasMeter.Object,
                 fixture.State.Object,
-                fixture.StateProcessor.Object);
+                fixture.StateProcessor.Object,
+                VersionString);
 
             ITransferResult result = internalExecutor.Call(fixture.SmartContractState, to, amount, method, parameters, gasLimit);
 
@@ -232,7 +239,8 @@ namespace Stratis.SmartContracts.CLR.Tests
             var internalExecutor = new InternalExecutor(
                 fixture.GasMeter.Object,
                 fixture.State.Object,
-                fixture.StateProcessor.Object);
+                fixture.StateProcessor.Object,
+                VersionString);
 
             ITransferResult result = internalExecutor.Call(fixture.SmartContractState, to, amount, method, parameters, gasLimit);
 
@@ -268,7 +276,8 @@ namespace Stratis.SmartContracts.CLR.Tests
             var internalExecutor = new InternalExecutor(
                 fixture.GasMeter.Object,
                 fixture.State.Object,
-                fixture.StateProcessor.Object);
+                fixture.StateProcessor.Object,
+                VersionString);
 
             ITransferResult result = internalExecutor.Transfer(fixture.SmartContractState, to, amount);
 
@@ -309,7 +318,8 @@ namespace Stratis.SmartContracts.CLR.Tests
             var internalExecutor = new InternalExecutor(
                 fixture.GasMeter.Object,
                 fixture.State.Object,
-                fixture.StateProcessor.Object);
+                fixture.StateProcessor.Object,
+                VersionString);
 
             ITransferResult result = internalExecutor.Transfer(fixture.SmartContractState, to, amount);
 
@@ -344,7 +354,8 @@ namespace Stratis.SmartContracts.CLR.Tests
             var internalExecutor = new InternalExecutor(
                 fixture.GasMeter.Object,
                 fixture.State.Object,
-                fixture.StateProcessor.Object);
+                fixture.StateProcessor.Object,
+                VersionString);
 
             ITransferResult result = internalExecutor.Transfer(fixture.SmartContractState, to, amount);
 

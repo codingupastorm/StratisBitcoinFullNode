@@ -12,6 +12,8 @@ namespace Stratis.SmartContracts.Core.Tests
 {
     public class StateRepositoryTests
     {
+        private const string VersionString = "1.1";
+
         private static readonly byte[] empty = new byte[0];
         private static readonly byte[] dog = Encoding.UTF8.GetBytes("dog");
         private static readonly byte[] dodecahedron = Encoding.UTF8.GetBytes("dodecahedron");
@@ -68,8 +70,8 @@ namespace Stratis.SmartContracts.Core.Tests
 
             IStateRepository repository = root.StartTracking();
 
-            repository.SetStorageValue(new uint160(cow), cowKey, cowValue);
-            repository.SetStorageValue(new uint160(horse), horseKey, horseValue);
+            repository.SetStorageValue(new uint160(cow), cowKey, cowValue, VersionString);
+            repository.SetStorageValue(new uint160(horse), horseKey, horseValue, VersionString);
             repository.Commit();
 
             Assert.Equal(cowValue, root.GetStorageValue(new uint160(cow), cowKey).Value);
@@ -105,16 +107,16 @@ namespace Stratis.SmartContracts.Core.Tests
             uint160 horseAddress = new uint160(horse);
 
             IStateRepository track2 = repository.StartTracking(); //repository
-            track2.SetStorageValue(cowAddress, cowKey1, cowVal1);
-            track2.SetStorageValue(horseAddress, horseKey1, horseVal1);
+            track2.SetStorageValue(cowAddress, cowKey1, cowVal1, VersionString);
+            track2.SetStorageValue(horseAddress, horseKey1, horseVal1, VersionString);
             track2.Commit();
             repository.Commit();
 
             byte[] root2 = repository.Root;
 
             track2 = repository.StartTracking(); //repository
-            track2.SetStorageValue(cowAddress, cowKey2, cowVal0);
-            track2.SetStorageValue(horseAddress, horseKey2, horseVal0);
+            track2.SetStorageValue(cowAddress, cowKey2, cowVal0, VersionString);
+            track2.SetStorageValue(horseAddress, horseKey2, horseVal0, VersionString);
             track2.Commit();
             repository.Commit();
 
@@ -157,16 +159,16 @@ namespace Stratis.SmartContracts.Core.Tests
             uint160 horseAddress = new uint160(horse);
 
             IStateRepository track2 = repository.StartTracking(); //repository
-            track2.SetStorageValue(cowAddress, cowKey1, cowVal1);
-            track2.SetStorageValue(horseAddress, horseKey1, horseVal1);
+            track2.SetStorageValue(cowAddress, cowKey1, cowVal1, VersionString);
+            track2.SetStorageValue(horseAddress, horseKey1, horseVal1, VersionString);
             track2.Commit();
             repository.Commit();
 
             byte[] root2 = repository.Root;
 
             track2 = repository.StartTracking(); //repository
-            track2.SetStorageValue(cowAddress, cowKey2, cowVal0);
-            track2.SetStorageValue(horseAddress, horseKey2, horseVal0);
+            track2.SetStorageValue(cowAddress, cowKey2, cowVal0, VersionString);
+            track2.SetStorageValue(horseAddress, horseKey2, horseVal0, VersionString);
             track2.Commit();
             repository.Commit();
 
@@ -198,17 +200,17 @@ namespace Stratis.SmartContracts.Core.Tests
             StateRepositoryRoot repository = new StateRepositoryRoot(stateDB);
             IStateRepository txTrack = repository.StartTracking();
             txTrack.CreateAccount(testAddress);
-            txTrack.SetStorageValue(testAddress, dog, cat);
+            txTrack.SetStorageValue(testAddress, dog, cat, VersionString);
             txTrack.Commit();
             repository.Commit();
             byte[] root1 = repository.Root;
 
             IStateRepository txTrack2 = repository.StartTracking();
-            txTrack2.SetStorageValue(testAddress, dog, fish);
+            txTrack2.SetStorageValue(testAddress, dog, fish, VersionString);
             txTrack2.Rollback();
 
             IStateRepository txTrack3 = repository.StartTracking();
-            txTrack3.SetStorageValue(testAddress, dodecahedron, bird);
+            txTrack3.SetStorageValue(testAddress, dodecahedron, bird, VersionString);
             txTrack3.Commit();
             repository.Commit();
 
@@ -234,7 +236,7 @@ namespace Stratis.SmartContracts.Core.Tests
 
             IStateRepository txTrack = repository.StartTracking();
             txTrack.CreateAccount(testAddress);
-            txTrack.SetStorageValue(testAddress, dog, cat);
+            txTrack.SetStorageValue(testAddress, dog, cat, VersionString);
             txTrack.SetContractType(testAddress, testContractType);
             txTrack.Commit();
             repository.Commit();
@@ -255,7 +257,7 @@ namespace Stratis.SmartContracts.Core.Tests
             StateRepositoryRoot repository = new StateRepositoryRoot(stateDB);
             IStateRepository txTrack = repository.StartTracking();
             txTrack.CreateAccount(testAddress);
-            txTrack.SetStorageValue(testAddress, dog, cat);
+            txTrack.SetStorageValue(testAddress, dog, cat, VersionString);
             Assert.Null(repository.GetStorageValue(testAddress, dog));
             txTrack.Commit();
             Assert.Equal(cat, repository.GetStorageValue(testAddress, dog).Value);
@@ -269,7 +271,7 @@ namespace Stratis.SmartContracts.Core.Tests
             ISource<byte[], byte[]> stateDB = new NoDeleteSource<byte[], byte[]>(new MemoryDictionarySource());
             StateRepositoryRoot repository = new StateRepositoryRoot(stateDB);
             repository.CreateAccount(testAddress);
-            repository.SetStorageValue(testAddress, dog, new byte[0]);
+            repository.SetStorageValue(testAddress, dog, new byte[0], VersionString);
             Assert.Equal(new byte[0], repository.GetStorageValue(testAddress, dog).Value);
             repository.Commit();
 

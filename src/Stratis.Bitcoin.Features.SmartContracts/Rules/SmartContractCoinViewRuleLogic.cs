@@ -8,8 +8,6 @@ using NBitcoin;
 using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.SmartContracts.Caching;
 using Stratis.Bitcoin.Features.SmartContracts.PoW;
@@ -284,6 +282,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Rules
         public IContractTransactionContext GetSmartContractTransactionContext(RuleContext context, Transaction transaction)
         {
             ulong blockHeight = Convert.ToUInt64(context.ValidationContext.ChainedHeaderToValidate.Height);
+            ulong txIndex = (ulong) context.ValidationContext.BlockToValidate.Transactions.IndexOf(transaction);
 
             GetSenderResult getSenderResult = this.senderRetriever.GetSender(transaction, this.coinView, this.blockTxsProcessed);
 
@@ -298,7 +297,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Rules
 
             Money mempoolFee = transaction.GetFee(((UtxoRuleContext)context).UnspentOutputSet);
 
-            return new ContractTransactionContext(blockHeight, coinbaseAddress, mempoolFee, getSenderResult.Sender, transaction);
+            return new ContractTransactionContext(blockHeight, txIndex, coinbaseAddress, mempoolFee, getSenderResult.Sender, transaction);
         }
 
         /// <summary>

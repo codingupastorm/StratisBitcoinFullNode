@@ -4,11 +4,9 @@ using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.SmartContracts.Caching;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Bitcoin.Mining;
@@ -226,7 +224,15 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoW
             if (!getSenderResult.Success)
                 throw new ConsensusErrorException(new ConsensusError("sc-block-assembler-addcontracttoblock", getSenderResult.Error));
 
-            IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)this.height, this.coinbaseAddress, mempoolEntry.Fee, getSenderResult.Sender, mempoolEntry.Transaction);
+            ulong txIndex = (ulong)this.inBlock.Count + 1; // Number ahead of us in block + the coinbase will give us our index.
+
+            IContractTransactionContext transactionContext = new ContractTransactionContext(
+                (ulong)this.height,
+                txIndex,
+                this.coinbaseAddress,
+                mempoolEntry.Fee,
+                getSenderResult.Sender,
+                mempoolEntry.Transaction);
             IContractExecutor executor = this.executorFactory.CreateExecutor(this.stateSnapshot, transactionContext);
             IContractExecutionResult result = executor.Execute(transactionContext);
             Result<ContractTxData> deserializedCallData = this.callDataSerializer.Deserialize(transactionContext.Data);

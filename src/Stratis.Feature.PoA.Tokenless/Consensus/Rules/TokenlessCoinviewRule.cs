@@ -8,7 +8,6 @@ using NBitcoin;
 using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Caching;
@@ -174,7 +173,9 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             if (!getSenderResult.Success)
                 throw new ConsensusErrorException(new ConsensusError("sc-consensusvalidator-executecontracttransaction-sender", getSenderResult.Error));
 
-            IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)validationContext.ChainedHeaderToValidate.Height, new uint160(0), 0, getSenderResult.Sender, transaction);
+            ulong txIndex = (ulong) validationContext.BlockToValidate.Transactions.IndexOf(transaction);
+
+            IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)validationContext.ChainedHeaderToValidate.Height, txIndex, new uint160(0), 0, getSenderResult.Sender, transaction);
             IContractExecutor executor = this.executorFactory.CreateExecutor(this.mutableStateRepository, transactionContext);
             Result<ContractTxData> deserializedCallData = this.callDataSerializer.Deserialize(transactionContext.Data);
             IContractExecutionResult result = executor.Execute(transactionContext);

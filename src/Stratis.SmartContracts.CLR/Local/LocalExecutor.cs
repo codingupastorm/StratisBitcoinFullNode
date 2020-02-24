@@ -51,12 +51,15 @@ namespace Stratis.SmartContracts.CLR.Local
             StateTransitionResult result;
             IState newState = state.Snapshot();
 
+            string version = StorageValue.InsertVersion;
+
             if (creation)
             {
                 var message = new ExternalCreateMessage(
                     sender,
                     txOutValue,
                     callData.GasLimit,
+                    version,
                     callData.ContractExecutionCode,
                     callData.MethodParameters
                 );
@@ -70,6 +73,7 @@ namespace Stratis.SmartContracts.CLR.Local
                         sender,
                         txOutValue,
                         callData.GasLimit,
+                        version,
                         new MethodCall(callData.MethodName, callData.MethodParameters)
                 );
 

@@ -14,7 +14,12 @@ namespace Stratis.SmartContracts.CLR
         private readonly RuntimeObserver.IGasMeter gasMeter;
         private readonly IKeyEncodingStrategy keyEncodingStrategy;
 
-        public MeteredPersistenceStrategy(IStateRepository stateDb, RuntimeObserver.IGasMeter gasMeter, IKeyEncodingStrategy keyEncodingStrategy)
+        private readonly string version;
+
+        public MeteredPersistenceStrategy(IStateRepository stateDb,
+            RuntimeObserver.IGasMeter gasMeter,
+            IKeyEncodingStrategy keyEncodingStrategy,
+            string version)
         {
             Guard.NotNull(stateDb, nameof(stateDb));
             Guard.NotNull(gasMeter, nameof(gasMeter));
@@ -23,6 +28,7 @@ namespace Stratis.SmartContracts.CLR
             this.stateDb = stateDb;
             this.gasMeter = gasMeter;
             this.keyEncodingStrategy = keyEncodingStrategy;
+            this.version = version;
         }
 
         public bool ContractExists(uint160 address)
@@ -51,7 +57,7 @@ namespace Stratis.SmartContracts.CLR
                 value);
 
             this.gasMeter.Spend(operationCost);
-            this.stateDb.SetStorageValue(address, encodedKey, value);
+            this.stateDb.SetStorageValue(address, encodedKey, value, version);
         }
     }
 }

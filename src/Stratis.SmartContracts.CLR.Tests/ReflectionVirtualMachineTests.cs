@@ -18,6 +18,8 @@ namespace Stratis.SmartContracts.CLR.Tests
 {
     public sealed class ReflectionVirtualMachineTests
     {
+        public const string ContractStateVersion = "1.1";
+
         private readonly Network network;
         private readonly ReflectionVirtualMachine vm;
 
@@ -203,7 +205,7 @@ public class Contract : SmartContract
             byte[] keyToClear = Encoding.UTF8.GetBytes(ClearStorage.KeyToClear);
 
             // Set a value to be cleared
-            this.state.SetStorageValue(contractAddress, keyToClear, new byte[] { 1, 2, 3 });
+            this.state.SetStorageValue(contractAddress, keyToClear, new byte[] { 1, 2, 3 },  ContractStateVersion);
 
             var executionContext = new ExecutionContext(new Observer(this.gasMeter, new MemoryMeter(100_000)));
 
@@ -313,7 +315,7 @@ public class Contract : SmartContract
 
         public void StoreBytes(uint160 address, byte[] key, byte[] value)
         {
-            this.stateDb.SetStorageValue(address, key, value);
+            this.stateDb.SetStorageValue(address, key, value, ReflectionVirtualMachineTests.ContractStateVersion);
         }
     }
 }

@@ -81,12 +81,12 @@ namespace Stratis.SmartContracts.Core.State
             return accountState != null ? accountState.CodeHash : new byte[0]; // TODO: REPLACE THIS BYTE0 with something
         }
 
-        public void SetStorageValue(uint160 addr, byte[] key, byte[] value)
+        public void SetStorageValue(uint160 addr, byte[] key, byte[] value, string version)
         {
             this.GetOrCreateAccountState(addr);
             ISource<byte[], byte[]> contractStorage = this.storageCaches.Get(addr.ToBytes());
 
-            StorageValue versionedValue = new StorageValue(value, StorageValue.InsertVersion);// TODO: Insert version in here.
+            StorageValue versionedValue = new StorageValue(value, version);
 
             contractStorage.Put(key, versionedValue.ToBytes()); // TODO: Check if 0
         }

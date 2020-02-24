@@ -1,5 +1,6 @@
 ﻿using NBitcoin;
 using Stratis.SmartContracts.Core.State;
+using Stratis.SmartContracts.RuntimeObserver;
 
 namespace Stratis.SmartContracts.CLR
 {
@@ -7,8 +8,12 @@ namespace Stratis.SmartContracts.CLR
     {
         /// <summary>
         /// Sets up a new <see cref="ISmartContractState"/> based on the current state.
-        /// </summary>        
-        ISmartContractState Create(IState state, RuntimeObserver.IGasMeter gasMeter, uint160 address, BaseMessage message,
+        /// </summary>
+        /// <param name="version">The version that will be stored with any writes.</param>
+        ISmartContractState Create(IState state,
+            IGasMeter gasMeter,
+            uint160 address,
+            BaseMessage message,
             IStateRepository repository);
     }
 }
