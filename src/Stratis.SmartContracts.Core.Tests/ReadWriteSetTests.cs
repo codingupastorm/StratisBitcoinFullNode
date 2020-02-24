@@ -11,7 +11,7 @@ namespace Stratis.SmartContracts.Core.Tests
         private const string Key4 = "key4";
         private const string Version1 = "1.1";
         private const string Version2 = "1.2";
-        private static readonly byte[] Value1 = new byte[] { 0, 1, 2, 3 };
+        private static byte[] Value1 = new byte[] { 0, 1, 2, 3 };
         private static readonly byte[] Value2 = new byte[] { 4, 5, 6, 7 };
 
         [Fact]
@@ -65,6 +65,22 @@ namespace Stratis.SmartContracts.Core.Tests
 
             // But the read that occurred after it should not, as we were reading a value set during the execution anyhow.
             Assert.Empty(rws.ReadSet);
+        }
+
+        [Fact]
+        public void ChangesToBytesDoesntAffectReadWriteSet()
+        {
+            var rws = new ReadWriteSet();
+
+            byte[] value = new byte[]{0,1,2,3};
+
+            rws.AddWriteItem(Key1, value);
+
+            // If something messes with the bytes after they are set in the RWS
+            value[0] = 68;
+
+            // They should still have the correct value.
+            Assert.Equal(0, rws.WriteSet.ToList()[0].Value[0]);
         }
     }
 }

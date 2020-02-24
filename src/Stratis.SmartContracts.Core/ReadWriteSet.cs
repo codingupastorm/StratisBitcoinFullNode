@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Stratis.SmartContracts.Core
 {
@@ -11,12 +12,12 @@ namespace Stratis.SmartContracts.Core
         /// <summary>
         /// Key: {storageKey}, Value: {version}.
         /// </summary>
-        private Dictionary<string, string> readSet;
+        private readonly Dictionary<string, string> readSet;
 
         /// <summary>
         /// Key: {storageKey}, Value: {writtenBytes}.
         /// </summary>
-        private Dictionary<string, byte[]> writeSet;
+        private readonly Dictionary<string, byte[]> writeSet;
 
         public IReadOnlyCollection<KeyValuePair<string, string>> ReadSet => this.readSet;
 
@@ -43,8 +44,10 @@ namespace Stratis.SmartContracts.Core
 
         public void AddWriteItem(string key, byte[] value)
         {
-            // Always use the last value.
-            this.writeSet[key] = value;
+            // Always store the last value for every key. We clone to avoid issues where the byte array might be altered afterwards.
+            byte[] clonedValue = new byte[value.Length];
+            Array.Copy(value, clonedValue, value.Length);
+            this.writeSet[key] = clonedValue;
         }
     }
 }
