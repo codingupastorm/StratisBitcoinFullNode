@@ -20,9 +20,6 @@ namespace Stratis.Bitcoin.KeyValueStore
         /// <summary>The underlying key-value repository provider.</summary>
         private readonly KeyValueStoreRepository repository;
 
-        /// <summary>Interface providing control over the updating of transient lookups.</summary>
-        public IKeyValueStoreTrackers Lookups { get; private set; }
-
         /// <summary>The mode of the transaction.</summary>
         private readonly KeyValueStoreTransactionMode mode;
 
@@ -53,7 +50,6 @@ namespace Stratis.Bitcoin.KeyValueStore
         {
             this.repository = (KeyValueStoreRepository)keyValueStoreRepository;
             this.mode = mode;
-            this.Lookups = this.repository.KeyValueStore.Lookups;
             this.Trackers = this.repository.KeyValueStore.Lookups?.CreateTrackers(tables);
             this.TableUpdates = new ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>>();
             this.TablesCleared = new ConcurrentBag<string>();
@@ -330,10 +326,6 @@ namespace Stratis.Bitcoin.KeyValueStore
 
             this.TableUpdates.Clear();
             this.TablesCleared = new ConcurrentBag<string>();
-
-            // Having trackers allows us to postpone updating the lookups
-            // until after a successful commit.
-            this.Lookups?.OnCommit(this.Trackers);
         }
 
         /// <inheritdoc />
