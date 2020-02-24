@@ -1,8 +1,6 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using DBreeze.Utils;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Stratis.Bitcoin.Controllers.Models;
@@ -218,7 +216,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
 
             await this.node1.MineBlocksAsync(1);
 
-            var model = new HashModel() { Hash = Hashes.Hash256(RandomUtils.GetUInt64().ToBytes()).ToString() };
+            var model = new HashModel() { Hash = Hashes.Hash256(RandomUtils.GetBytes(8)).ToString() };
 
             // Node 1 votes to add hash
             this.node1.FullNode.NodeController<DefaultVotingController>().VoteWhitelistHash(model);

@@ -75,6 +75,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
                         // PoA Specific
                         services.AddSingleton<VotingManager>();
+                        services.AddSingleton<IPollsKeyValueStore, PollsKeyValueStore>();
                         services.AddSingleton<IPollResultExecutor, PollResultExecutor>();
                         services.AddSingleton<IWhitelistedHashesRepository, WhitelistedHashesRepository>();
 
