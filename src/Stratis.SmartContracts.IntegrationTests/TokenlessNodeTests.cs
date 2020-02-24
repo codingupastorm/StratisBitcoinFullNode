@@ -659,7 +659,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     node1.Start();
 
                     // Confirm that the certificate is revoked.
-                    RevocationChecker revocationChecker = node1.FullNode.NodeService<RevocationChecker>();
+                    IRevocationChecker revocationChecker = node1.FullNode.NodeService<IRevocationChecker>();
                     TestBase.WaitLoop(() => revocationChecker.IsCertificateRevoked(revokedThumbprint));
 
                     // Stop the node.
