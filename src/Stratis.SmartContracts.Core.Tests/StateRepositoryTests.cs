@@ -72,8 +72,8 @@ namespace Stratis.SmartContracts.Core.Tests
             repository.SetStorageValue(new uint160(horse), horseKey, horseValue);
             repository.Commit();
 
-            Assert.Equal(cowValue, root.GetStorageValue(new uint160(cow), cowKey));
-            Assert.Equal(horseValue, root.GetStorageValue(new uint160(horse), horseKey));
+            Assert.Equal(cowValue, root.GetStorageValue(new uint160(cow), cowKey).Value);
+            Assert.Equal(horseValue, root.GetStorageValue(new uint160(horse), horseKey).Value);
         }
 
         [Fact]
@@ -127,16 +127,16 @@ namespace Stratis.SmartContracts.Core.Tests
             Assert.Null(snapshot.GetStorageValue(horseAddress, horseKey2));
 
             snapshot = new StateRepositoryRoot(stateDB, root2);
-            Assert.Equal(cowVal1, snapshot.GetStorageValue(cowAddress, cowKey1));
+            Assert.Equal(cowVal1, snapshot.GetStorageValue(cowAddress, cowKey1).Value);
             Assert.Null(snapshot.GetStorageValue(cowAddress, cowKey2));
-            Assert.Equal(horseVal1, snapshot.GetStorageValue(horseAddress, horseKey1));
+            Assert.Equal(horseVal1, snapshot.GetStorageValue(horseAddress, horseKey1).Value);
             Assert.Null(snapshot.GetStorageValue(horseAddress, horseKey2));
 
             snapshot = new StateRepositoryRoot(stateDB, root3);
-            Assert.Equal(cowVal1, snapshot.GetStorageValue(cowAddress, cowKey1));
-            Assert.Equal(cowVal0, snapshot.GetStorageValue(cowAddress, cowKey2));
-            Assert.Equal(horseVal1, snapshot.GetStorageValue(horseAddress, horseKey1));
-            Assert.Equal(horseVal0, snapshot.GetStorageValue(horseAddress, horseKey2));
+            Assert.Equal(cowVal1, snapshot.GetStorageValue(cowAddress, cowKey1).Value);
+            Assert.Equal(cowVal0, snapshot.GetStorageValue(cowAddress, cowKey2).Value);
+            Assert.Equal(horseVal1, snapshot.GetStorageValue(horseAddress, horseKey1).Value);
+            Assert.Equal(horseVal0, snapshot.GetStorageValue(horseAddress, horseKey2).Value);
         }
 
         [Fact]
@@ -179,16 +179,16 @@ namespace Stratis.SmartContracts.Core.Tests
             Assert.Null(snapshot.GetStorageValue(horseAddress, horseKey2));
 
             snapshot = new StateRepositoryRoot(stateDB, root2);
-            Assert.Equal(cowVal1, snapshot.GetStorageValue(cowAddress, cowKey1));
+            Assert.Equal(cowVal1, snapshot.GetStorageValue(cowAddress, cowKey1).Value);
             Assert.Null(snapshot.GetStorageValue(cowAddress, cowKey2));
-            Assert.Equal(horseVal1, snapshot.GetStorageValue(horseAddress, horseKey1));
+            Assert.Equal(horseVal1, snapshot.GetStorageValue(horseAddress, horseKey1).Value);
             Assert.Null(snapshot.GetStorageValue(horseAddress, horseKey2));
 
             snapshot = new StateRepositoryRoot(stateDB, root3);
-            Assert.Equal(cowVal1, snapshot.GetStorageValue(cowAddress, cowKey1));
-            Assert.Equal(cowVal0, snapshot.GetStorageValue(cowAddress, cowKey2));
-            Assert.Equal(horseVal1, snapshot.GetStorageValue(horseAddress, horseKey1));
-            Assert.Equal(horseVal0, snapshot.GetStorageValue(horseAddress, horseKey2));
+            Assert.Equal(cowVal1, snapshot.GetStorageValue(cowAddress, cowKey1).Value);
+            Assert.Equal(cowVal0, snapshot.GetStorageValue(cowAddress, cowKey2).Value);
+            Assert.Equal(horseVal1, snapshot.GetStorageValue(horseAddress, horseKey1).Value);
+            Assert.Equal(horseVal0, snapshot.GetStorageValue(horseAddress, horseKey2).Value);
         }
 
         [Fact]
@@ -214,12 +214,12 @@ namespace Stratis.SmartContracts.Core.Tests
 
             byte[] upToDateRoot = repository.Root;
 
-            Assert.Equal(cat, repository.GetStorageValue(testAddress, dog));
-            Assert.Equal(bird, repository.GetStorageValue(testAddress, dodecahedron));
+            Assert.Equal(cat, repository.GetStorageValue(testAddress, dog).Value);
+            Assert.Equal(bird, repository.GetStorageValue(testAddress, dodecahedron).Value);
             IStateRepository snapshot = repository.GetSnapshotTo(root1);
 
             repository.SyncToRoot(root1);
-            Assert.Equal(cat, snapshot.GetStorageValue(testAddress, dog));
+            Assert.Equal(cat, snapshot.GetStorageValue(testAddress, dog).Value);
             Assert.Null(snapshot.GetStorageValue(testAddress, dodecahedron));
         }
 
@@ -258,7 +258,7 @@ namespace Stratis.SmartContracts.Core.Tests
             txTrack.SetStorageValue(testAddress, dog, cat);
             Assert.Null(repository.GetStorageValue(testAddress, dog));
             txTrack.Commit();
-            Assert.Equal(cat, repository.GetStorageValue(testAddress, dog));
+            Assert.Equal(cat, repository.GetStorageValue(testAddress, dog).Value);
         }
 
         [Fact]
@@ -270,7 +270,7 @@ namespace Stratis.SmartContracts.Core.Tests
             StateRepositoryRoot repository = new StateRepositoryRoot(stateDB);
             repository.CreateAccount(testAddress);
             repository.SetStorageValue(testAddress, dog, new byte[0]);
-            Assert.Equal(new byte[0], repository.GetStorageValue(testAddress, dog));
+            Assert.Equal(new byte[0], repository.GetStorageValue(testAddress, dog).Value);
             repository.Commit();
 
             // We have pushed byte[0] to the kv store. Should come back as byte[0] right?

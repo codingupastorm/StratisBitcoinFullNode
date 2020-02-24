@@ -35,7 +35,7 @@ namespace Stratis.SmartContracts.CLR
         public byte[] FetchBytes(uint160 address, byte[] key)
         {
             byte[] encodedKey = this.keyEncodingStrategy.GetBytes(key);
-            byte[] value = this.stateDb.GetStorageValue(address, encodedKey);
+            byte[] value = this.stateDb.GetStorageValue(address, encodedKey).Value;
 
             RuntimeObserver.Gas operationCost = GasPriceList.StorageRetrieveOperationCost(encodedKey, value);
             this.gasMeter.Spend(operationCost);

@@ -308,7 +308,7 @@ public class Contract : SmartContract
 
         public byte[] FetchBytes(uint160 address, byte[] key)
         {
-            return this.stateDb.GetStorageValue(address, key);
+            return this.stateDb.GetStorageValue(address, key).Value;
         }
 
         public void StoreBytes(uint160 address, byte[] key, byte[] value)
