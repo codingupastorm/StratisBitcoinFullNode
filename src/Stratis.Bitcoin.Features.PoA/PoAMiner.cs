@@ -140,6 +140,10 @@ namespace Stratis.Bitcoin.Features.PoA
                     this.logger.LogDebug("IsInitialBlockDownload={0}, AnyConnectedPeers={1}, BootstrappingMode={2}, IsFederationMember={3}",
                         this.ibdState.IsInitialBlockDownload(), this.connectionManager.ConnectedPeers.Any(), this.settings.BootstrappingMode, this.federationManager.IsFederationMember);
 
+                    // Wait for a mining slot BEFORE deciding whether to mine. This lessens the likelihood
+                    // that we mine when there are no connected peers.
+                    uint miningTimestamp = await this.WaitUntilMiningSlotAsync().ConfigureAwait(false);
+
                     // Don't mine in IBD in case we are connected to any node unless bootstrapping mode is enabled.
                     if (((this.ibdState.IsInitialBlockDownload() || !this.connectionManager.ConnectedPeers.Any()) && !this.settings.BootstrappingMode)
                         || !this.federationManager.IsFederationMember)
@@ -149,8 +153,6 @@ namespace Stratis.Bitcoin.Features.PoA
 
                         continue;
                     }
-
-                    uint miningTimestamp = await this.WaitUntilMiningSlotAsync().ConfigureAwait(false);
 
                     ChainedHeader chainedHeader = await this.MineBlockAtTimestampAsync(miningTimestamp).ConfigureAwait(false);
 
