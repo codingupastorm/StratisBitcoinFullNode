@@ -23,9 +23,6 @@ namespace Stratis.Bitcoin.KeyValueStore
         /// <summary>The mode of the transaction.</summary>
         private readonly KeyValueStoreTransactionMode mode;
 
-        /// <summary>Tracking changes allows updating of transient lookups after a successful commit operation.</summary>
-        internal Dictionary<string, IKeyValueStoreTracker> Trackers { get; private set; }
-
         /// <summary>Used to buffer changes to records until a commit takes place.</summary>
         internal ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>> TableUpdates { get; private set; }
 
@@ -50,7 +47,6 @@ namespace Stratis.Bitcoin.KeyValueStore
         {
             this.repository = (KeyValueStoreRepository)keyValueStoreRepository;
             this.mode = mode;
-            this.Trackers = this.repository.KeyValueStore.Lookups?.CreateTrackers(tables);
             this.TableUpdates = new ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>>();
             this.TablesCleared = new ConcurrentBag<string>();
 
@@ -294,13 +290,6 @@ namespace Stratis.Bitcoin.KeyValueStore
             }
 
             kv[keyBytes] = null;
-
-            // If this is a tracked table.
-            if (this.Trackers != null && this.Trackers.TryGetValue(tableName, out IKeyValueStoreTracker tracker))
-            {
-                // Record the object and its old value.
-                tracker.ObjectEvent(obj, KeyValueStoreEvent.ObjectDeleted);
-            }
         }
 
         /// <inheritdoc />

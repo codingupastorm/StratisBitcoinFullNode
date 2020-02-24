@@ -17,8 +17,6 @@ namespace Stratis.Bitcoin.KeyValueStore
 
         public IRepositorySerializer RepositorySerializer { get; private set; }
 
-        internal IKeyValueStoreTrackers Lookups { get; private set; }
-
         /// <summary>
         /// Creates a key-value store.
         /// </summary>
@@ -28,7 +26,6 @@ namespace Stratis.Bitcoin.KeyValueStore
         {
             this.LoggerFactory = loggerFactory;
             this.RepositorySerializer = repositorySerializer;
-            this.Lookups = null;
         }
 
         public abstract IKeyValueStoreTransaction CreateTransaction(KeyValueStoreTransactionMode mode, params string[] tables);
@@ -36,12 +33,6 @@ namespace Stratis.Bitcoin.KeyValueStore
         public string[] GetTables()
         {
             return ((KeyValueStoreRepository)this.Repository).Tables.Select(t => t.Value.TableName).ToArray();
-        }
-
-        /// <inheritdoc/>
-        public void SetLookups(IKeyValueStoreTrackers keyValueStoreTrackers)
-        {
-            this.Lookups = keyValueStoreTrackers;
         }
 
         // Public implementation of Dispose pattern callable by consumers.
