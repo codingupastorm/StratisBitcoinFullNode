@@ -24,7 +24,7 @@ namespace CertificateAuthority.Models
 
         public AccountAccessFlags AccessInfo { get; set; }
 
-        public int CreatorId { get; set; }
+        public int ApproverId { get; set; }
 
         public string OrganizationUnit { get; set; }
 
@@ -46,7 +46,7 @@ namespace CertificateAuthority.Models
 
         public override string ToString()
         {
-            return $"{nameof(this.Name)}:{this.Name},{nameof(this.AccessInfo)}:{(int)this.AccessInfo},{nameof(this.CreatorId)}:{this.CreatorId}";
+            return $"{nameof(this.Name)}:{this.Name},{nameof(this.AccessInfo)}:{(int)this.AccessInfo},{nameof(this.ApproverId)}:{this.ApproverId}";
         }
     }
 

@@ -44,7 +44,7 @@ namespace CertificateAuthority.Tests
             var accountsController = (AccountsController)server.Services.GetService(typeof(AccountsController));
 
             CredentialsModel credentialsModel = creatorCredentialsModel ?? adminCredentials;
-            int id = GetValue<int>(accountsController.CreateAccount(new CreateAccount(GenerateRandomString(),
+            int id = GetValue<int>(accountsController.RequestAccount(new RequestAccount(GenerateRandomString(),
                 passHash,
                 (int)access,
                 "dummyOrganizationUnit",

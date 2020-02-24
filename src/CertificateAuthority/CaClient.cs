@@ -23,7 +23,7 @@ namespace CertificateAuthority
         private const string IssueCertificateEndpoint = "api/certificates/issue_certificate_using_request_string";
         private const string GetCertificatePublicKeysEndpoint = "api/certificates/get_certificate_public_keys";
 
-        private const string CreateAccountEndpoint = "api/accounts/create_account";
+        private const string RequestAccountEndpoint = "api/accounts/request_account";
 
         private const string JsonContentType = "application/json";
         private readonly Uri baseApiUrl;
@@ -72,13 +72,13 @@ namespace CertificateAuthority
             return this.RequestFromCA<CertificateInfoModel>(GetCaCertificateEndpoint, credentialsModel);
         }
 
-        public int CreateAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country)
+        public int RequestAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country)
         {
             // TODO: Request all permissions by default, or request none and require admin to add them?
 
             string passHash = DataHelper.ComputeSha256Hash(this.password);
 
-            var createAccountModel = new CreateAccount(name,
+            var requestAccountModel = new RequestAccount(name,
                 passHash,
                 (int)(AccountAccessFlags.IssueCertificates | AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.AccessAnyCertificate),
                 organizationUnit,
@@ -89,8 +89,7 @@ namespace CertificateAuthority
                 country,
                 AccountsController.ValidPermissions);
 
-
-            return this.RequestFromCA<int>(CreateAccountEndpoint, createAccountModel);
+            return this.RequestFromCA<int>(RequestAccountEndpoint, requestAccountModel);
         }
 
         public List<CertificateInfoModel> GetAllCertificates()
