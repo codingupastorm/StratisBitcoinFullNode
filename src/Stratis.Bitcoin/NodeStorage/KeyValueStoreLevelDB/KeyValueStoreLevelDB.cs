@@ -50,7 +50,7 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
         private SingleThreadResource transactionLock;
         private ByteArrayComparer byteArrayComparer;
 
-        public KeyValueStoreLevelDB(KeyValueStore.KeyValueStore keyValueStore) : base(keyValueStore)
+        public KeyValueStoreLevelDB(KeyValueStore.KeyValueStore keyValueStore) : base(keyValueStore.RepositorySerializer)
         {
             var logger = keyValueStore.LoggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
 
