@@ -13,9 +13,6 @@ namespace Stratis.Bitcoin.KeyValueStore
     {
         public IKeyValueStoreRepository Repository { get; protected set; }
 
-        private readonly IDateTimeProvider dateTimeProvider;
-        private readonly string rootPath;
-
         internal ILoggerFactory LoggerFactory { get; private set; }
 
         public IRepositorySerializer RepositorySerializer { get; private set; }
@@ -25,15 +22,11 @@ namespace Stratis.Bitcoin.KeyValueStore
         /// <summary>
         /// Creates a key-value store.
         /// </summary>
-        /// <param name="rootPath">The location to create the store.</param>
         /// <param name="loggerFactory">The logger factory.</param>
-        /// <param name="dateTimeProvider">The datetime provider.</param>
         /// <param name="repositorySerializer">The serializer to use.</param>
-        public KeyValueStore(string rootPath, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, IRepositorySerializer repositorySerializer)
+        public KeyValueStore(ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer)
         {
-            this.rootPath = rootPath;
             this.LoggerFactory = loggerFactory;
-            this.dateTimeProvider = dateTimeProvider;
             this.RepositorySerializer = repositorySerializer;
             this.Lookups = null;
         }
@@ -79,7 +72,7 @@ namespace Stratis.Bitcoin.KeyValueStore
         /// <param name="dateTimeProvider">The datetime provider.</param>
         /// <param name="repositorySerializer">The serializer to use.</param>
         public KeyValueStore(string rootPath, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, IRepositorySerializer repositorySerializer) :
-            base(rootPath, loggerFactory, dateTimeProvider, repositorySerializer)
+            base(loggerFactory, repositorySerializer)
         {
             this.Repository = (R)Activator.CreateInstance(typeof(R), (KeyValueStore)this);
             this.Repository.Init(rootPath);
