@@ -92,7 +92,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         }
 
         public bool LoadAuthorityCertificate(bool requireAccountId = true)
-        { 
+        {
             string acPath = Path.Combine(this.dataFolder.RootPath, AuthorityCertificateName);
 
             if (!File.Exists(acPath))
@@ -118,7 +118,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             }
 
             var certParser = new X509CertificateParser();
-            
+
             this.AuthorityCertificate = certParser.ReadCertificate(File.ReadAllBytes(acPath));
 
             return true;
@@ -190,7 +190,6 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         public int RequestAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country)
         {
             CaClient caClient = this.GetClient();
-
             return caClient.RequestAccount(name, organizationUnit, organization, locality, stateOrProvince, emailAddress, country);
         }
 
@@ -226,17 +225,16 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return certificate;
         }
 
-        public Task<List<PubKey>> GetCertificatePublicKeysAsync()
+        public List<PubKey> GetCertificatePublicKeys()
         {
             CaClient caClient = this.GetClient();
-
-            return caClient.GetCertificatePublicKeysAsync();
+            return caClient.GetCertificatePublicKeys();
         }
 
         public static byte[] ExtractCertificateExtension(X509Certificate certificate, string oid)
         {
             X509Certificate2 cert = CaCertificatesManager.ConvertCertificate(certificate, new SecureRandom());
-            
+
             foreach (X509Extension extension in cert.Extensions)
             {
                 if (extension.Oid.Value == oid)
@@ -261,7 +259,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
                     // This is truly horrible, but it isn't clear how we can correctly go from the DER bytes in the extension, to a relevant BC class, to a string.
                     // Perhaps we are meant to recursively evaluate the extension data as ASN.1 until we land up with raw data that can't be decoded further?
                     var temp = extension.RawData.Skip(2).ToArray();
-                    
+
                     return Encoding.UTF8.GetString(temp);
                 }
             }
