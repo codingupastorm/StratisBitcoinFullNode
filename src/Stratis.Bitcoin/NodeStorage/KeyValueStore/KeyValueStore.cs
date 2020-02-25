@@ -64,7 +64,7 @@ namespace Stratis.Bitcoin.KeyValueStore
         public KeyValueStore(string rootPath, ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer) :
             base(loggerFactory, repositorySerializer)
         {
-            this.Repository = (R)Activator.CreateInstance(typeof(R), (KeyValueStore)this);
+            this.Repository = (R)Activator.CreateInstance(typeof(R), loggerFactory, repositorySerializer);
             this.Repository.Init(rootPath);
         }
 

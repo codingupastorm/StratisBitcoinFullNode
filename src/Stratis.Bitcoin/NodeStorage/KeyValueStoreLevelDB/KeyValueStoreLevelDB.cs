@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using LevelDB;
+using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Bitcoin.Utilities;
@@ -50,9 +51,9 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
         private SingleThreadResource transactionLock;
         private ByteArrayComparer byteArrayComparer;
 
-        public KeyValueStoreLevelDB(KeyValueStore.KeyValueStore keyValueStore) : base(keyValueStore.RepositorySerializer)
+        public KeyValueStoreLevelDB(ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer) : base(repositorySerializer)
         {
-            var logger = keyValueStore.LoggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
+            var logger = loggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
 
             this.transactionLock = new SingleThreadResource($"{nameof(this.transactionLock)}", logger);
             this.byteArrayComparer = new ByteArrayComparer();
