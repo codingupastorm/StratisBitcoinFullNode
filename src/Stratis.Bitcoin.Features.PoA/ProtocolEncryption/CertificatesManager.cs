@@ -44,7 +44,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         bool LoadClientCertificate();
 
-        int CreateAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country);
+        int RequestAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country);
 
         X509Certificate RequestNewCertificate(Key privateKey, PubKey transactionSigningPubKey, PubKey blockSigningPubKey);
 
