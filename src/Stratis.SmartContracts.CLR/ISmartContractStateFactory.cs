@@ -1,4 +1,5 @@
 ﻿using NBitcoin;
+using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
 
@@ -11,6 +12,7 @@ namespace Stratis.SmartContracts.CLR
         /// </summary>
         /// <param name="version">The version that will be stored with any writes.</param>
         ISmartContractState Create(IState state,
+            ReadWriteSet readWriteSet,
             IGasMeter gasMeter,
             uint160 address,
             BaseMessage message,

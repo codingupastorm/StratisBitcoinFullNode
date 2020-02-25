@@ -2,9 +2,11 @@
 using NBitcoin;
 using Stratis.SmartContracts.CLR.ContractLogging;
 using Stratis.SmartContracts.CLR.Serialization;
+using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.State.AccountAbstractionLayer;
+using Stratis.SmartContracts.RuntimeObserver;
 
 namespace Stratis.SmartContracts.CLR
 {
@@ -22,7 +24,7 @@ namespace Stratis.SmartContracts.CLR
         void AddInternalTransfer(TransferInfo transferInfo);
         ulong GetBalance(uint160 address);
         uint160 GenerateAddress(IAddressGenerator addressGenerator);
-        ISmartContractState CreateSmartContractState(IState state, RuntimeObserver.IGasMeter gasMeter, uint160 address, BaseMessage message, IStateRepository repository);
+        ISmartContractState CreateSmartContractState(IState state, ReadWriteSet readWriteSet, IGasMeter gasMeter, uint160 address, BaseMessage message, IStateRepository repository);
         void AddInitialTransfer(TransferInfo initialTransfer);
     }
 }

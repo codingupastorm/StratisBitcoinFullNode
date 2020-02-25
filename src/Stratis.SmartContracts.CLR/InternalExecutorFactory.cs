@@ -1,4 +1,5 @@
-﻿using Stratis.SmartContracts.RuntimeObserver;
+﻿using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.RuntimeObserver;
 
 namespace Stratis.SmartContracts.CLR
 {
@@ -14,9 +15,9 @@ namespace Stratis.SmartContracts.CLR
             this.stateProcessor = stateProcessor;
         }
 
-        public IInternalTransactionExecutor Create(IGasMeter gasMeter, IState state, string version)
+        public IInternalTransactionExecutor Create(IGasMeter gasMeter, ReadWriteSet readWriteSet, IState state, string version)
         {
-            return new InternalExecutor(gasMeter, state, this.stateProcessor, version);
+            return new InternalExecutor(gasMeter, readWriteSet, state, this.stateProcessor, version);
         }
     }
 }

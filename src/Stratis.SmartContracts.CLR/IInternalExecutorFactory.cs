@@ -1,7 +1,9 @@
-﻿namespace Stratis.SmartContracts.CLR
+﻿using Stratis.SmartContracts.Core;
+
+namespace Stratis.SmartContracts.CLR
 {
     public interface IInternalExecutorFactory
     {
-        IInternalTransactionExecutor Create(RuntimeObserver.IGasMeter gasMeter, IState state, string version);
+        IInternalTransactionExecutor Create(RuntimeObserver.IGasMeter gasMeter, ReadWriteSet readWriteSet, IState state, string version);
     }
 }

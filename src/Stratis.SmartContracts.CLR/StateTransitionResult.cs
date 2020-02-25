@@ -48,11 +48,13 @@ namespace Stratis.SmartContracts.CLR
         public StateTransitionSuccess(
             RuntimeObserver.Gas gasConsumed,
             uint160 contractAddress,
+            ReadWriteSet readWriteSet,
             object result = null)
         {
             this.GasConsumed = gasConsumed;
             this.ContractAddress = contractAddress;
             this.ExecutionResult = result;
+            this.ReadWriteSet = readWriteSet;
         }
 
         /// <summary>
@@ -69,6 +71,11 @@ namespace Stratis.SmartContracts.CLR
         /// The receiving contract's address.
         /// </summary>
         public uint160 ContractAddress { get; }
+
+        /// <summary>
+        /// The collection of changes made during this state transition.
+        /// </summary>
+        public ReadWriteSet ReadWriteSet { get; }
 
     }
 
@@ -165,10 +172,11 @@ namespace Stratis.SmartContracts.CLR
         /// </summary>
         public static StateTransitionResult Ok(RuntimeObserver.Gas gasConsumed,
             uint160 contractAddress,
+            ReadWriteSet readWriteSet,
             object result = null)
         {
             return new StateTransitionResult(
-                new StateTransitionSuccess(gasConsumed, contractAddress, result));
+                new StateTransitionSuccess(gasConsumed, contractAddress, readWriteSet, result));
         }
 
         /// <summary>

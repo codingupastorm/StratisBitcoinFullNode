@@ -224,7 +224,7 @@ public class Contract : SmartContract
             Assert.Null(cachedAssembly.Assembly.GetObserver());
 
             Assert.Null(result.Error);
-            Assert.Null(this.state.GetStorageValue(contractAddress, keyToClear));
+            Assert.Null(this.state.GetStorageValue(contractAddress, keyToClear).Value); // Value set to null, but version increased.
         }
 
         [Fact]
