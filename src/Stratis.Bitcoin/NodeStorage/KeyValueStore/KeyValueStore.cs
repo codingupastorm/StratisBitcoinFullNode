@@ -15,17 +15,13 @@ namespace Stratis.Bitcoin.KeyValueStore
 
         internal ILoggerFactory LoggerFactory { get; private set; }
 
-        public IRepositorySerializer RepositorySerializer { get; private set; }
-
         /// <summary>
         /// Creates a key-value store.
         /// </summary>
         /// <param name="loggerFactory">The logger factory.</param>
-        /// <param name="repositorySerializer">The serializer to use.</param>
-        public KeyValueStore(ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer)
+        public KeyValueStore(ILoggerFactory loggerFactory)
         {
             this.LoggerFactory = loggerFactory;
-            this.RepositorySerializer = repositorySerializer;
         }
 
         public abstract IKeyValueStoreTransaction CreateTransaction(KeyValueStoreTransactionMode mode, params string[] tables);
@@ -62,7 +58,7 @@ namespace Stratis.Bitcoin.KeyValueStore
         /// <param name="loggerFactory">The logger factory.</param>
         /// <param name="repositorySerializer">The serializer to use.</param>
         public KeyValueStore(string rootPath, ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer) :
-            base(loggerFactory, repositorySerializer)
+            base(loggerFactory)
         {
             this.Repository = (R)Activator.CreateInstance(typeof(R), loggerFactory, repositorySerializer);
             this.Repository.Init(rootPath);
