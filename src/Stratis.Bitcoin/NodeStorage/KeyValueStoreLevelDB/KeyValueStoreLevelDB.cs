@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -68,7 +69,15 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             this.Close();
 
             Directory.CreateDirectory(rootPath);
-            this.Storage = new DB(options, rootPath);
+
+            try
+            {
+                this.Storage = new DB(options, rootPath);
+            }
+            catch (Exception err)
+            {
+                throw new Exception($"An error occurred while attempting to open the LevelDB database at '{rootPath}': {err.Message}'", err);
+            }
 
             Guard.NotNull(this.Storage, nameof(this.Storage));
 
