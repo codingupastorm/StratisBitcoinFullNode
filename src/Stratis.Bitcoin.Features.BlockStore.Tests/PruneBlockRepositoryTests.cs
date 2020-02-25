@@ -26,7 +26,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
             var keyValueStore = new BlockKeyValueStore(repositorySerializer, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
-            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore);
+            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore, repositorySerializer);
 
             blockRepository.PutBlocks(new HashHeightPair(posBlocks.Last().GetHash(), 50), posBlocks);
 
@@ -58,7 +58,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
             var keyValueStore = new BlockKeyValueStore(repositorySerializer, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
-            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore);
+            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore, repositorySerializer);
 
             blockRepository.PutBlocks(new HashHeightPair(posBlocks.Take(100).Last().GetHash(), 100), posBlocks.Take(100).ToList());
 
@@ -99,7 +99,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
             var keyValueStore = new BlockKeyValueStore(repositorySerializer, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
-            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore);
+            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore, repositorySerializer);
 
             blockRepository.PutBlocks(new HashHeightPair(posBlocks.Last().GetHash(), 50), posBlocks);
 

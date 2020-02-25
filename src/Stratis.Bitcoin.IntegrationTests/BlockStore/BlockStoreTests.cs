@@ -34,7 +34,7 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 
             var keyValueStore = new BlockKeyValueStore(new RepositorySerializer(this.network.Consensus.ConsensusFactory), dataFolder, this.loggerFactory, DateTimeProvider.Default);
 
-            using (var blockRepository = new BlockRepository(this.network, this.loggerFactory, keyValueStore))
+            using (var blockRepository = new BlockRepository(this.network, this.loggerFactory, keyValueStore, this.repositorySerializer))
             {
                 blockRepository.SetTxIndex(true);
 

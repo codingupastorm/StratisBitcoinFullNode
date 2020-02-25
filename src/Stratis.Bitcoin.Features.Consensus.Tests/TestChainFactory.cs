@@ -145,10 +145,11 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             testChainContext.IntegrityValidator = new IntegrityValidator(testChainContext.ConsensusRules, testChainContext.LoggerFactory);
             testChainContext.PartialValidator = new PartialValidator(testChainContext.AsyncProvider, testChainContext.ConsensusRules, testChainContext.LoggerFactory);
             testChainContext.FullValidator = new FullValidator(testChainContext.ConsensusRules, testChainContext.LoggerFactory);
+            
+            var repositorySerializer = new RepositorySerializer(testChainContext.Network.Consensus.ConsensusFactory);
+            var keyValueStore = new BlockKeyValueStore(repositorySerializer, dataFolder, testChainContext.LoggerFactory, DateTimeProvider.Default);
 
-            var keyValueStore = new BlockKeyValueStore(new RepositorySerializer(testChainContext.Network.Consensus.ConsensusFactory), dataFolder, testChainContext.LoggerFactory, DateTimeProvider.Default);
-
-            var blockRepository = new BlockRepository(testChainContext.Network, testChainContext.LoggerFactory, keyValueStore);
+            var blockRepository = new BlockRepository(testChainContext.Network, testChainContext.LoggerFactory, keyValueStore, repositorySerializer);
 
             var blockStoreFlushCondition = new BlockStoreQueueFlushCondition(testChainContext.ChainState, testChainContext.InitialBlockDownloadState);
 
