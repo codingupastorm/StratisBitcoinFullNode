@@ -28,7 +28,7 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
         private SingleThreadResource transactionLock;
 
         public KeyValueStoreDBreeze(KeyValueStore.KeyValueStore keyValueStore)
-            : base(keyValueStore)
+            : base(keyValueStore.RepositorySerializer)
         {
             var logger = keyValueStore.LoggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
 

@@ -201,7 +201,7 @@ namespace CertificateAuthority
             CertificateInfoModel existingCertificate = this.repository.GetCertificateIssuedByAccountId(cred);
 
             // TODO: Should this actually throw instead?
-            if (existingCertificate != null)
+            if (existingCertificate != null && existingCertificate.Status != CertificateStatus.Revoked)
                 return existingCertificate;
 
             string knownSubjectDistinguishedName = this.GetClientCertificateSubjectDistinguishedName(new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.BasicAccess));

@@ -69,7 +69,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             var accountsController = (AccountsController)server.Host.Services.GetService(typeof(AccountsController));
 
-            var createAccountModel = new CreateAccount()
+            var requestAccountModel = new RequestAccount()
             {
                 CommonName = "dummyName",
                 Country = "dummyCountry",
@@ -83,7 +83,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 RequestedPermissions = new List<Permission>() { new Permission() { Name = AccountsController.SendPermission } }
             };
 
-            int id = CaTestHelper.GetValue<int>(accountsController.CreateAccount(createAccountModel));
+            int id = CaTestHelper.GetValue<int>(accountsController.RequestAccount(requestAccountModel));
 
             var lowPrivilegeClient = new CaClient(server.BaseAddress, server.CreateClient(), id, "test");
 

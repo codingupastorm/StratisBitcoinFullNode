@@ -8,7 +8,7 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
     public partial class ProofOfWorkSpendingSpecification : BddSpecification
     {
         [Fact]
-        public void Attempt_to_spend_coin_earned_through_proof_of_work_BEFORE_coin_maturity_will_fail()
+        public void SpendingImmaturePOWRewardFails()
         {
             Given(a_sending_and_receiving_stratis_bitcoin_node_and_wallet);
             And(a_block_is_mined_creating_spendable_coins);
@@ -18,7 +18,7 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
         }
 
         [Fact]
-        public void Attempt_to_spend_coin_earned_through_proof_of_work_AFTER_maturity_will_succeed()
+        public void SpendingMaturePOWRewardSucceeds()
         {
             Given(a_sending_and_receiving_stratis_bitcoin_node_and_wallet);
             And(a_block_is_mined_creating_spendable_coins);

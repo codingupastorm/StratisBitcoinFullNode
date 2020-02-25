@@ -11,15 +11,15 @@ namespace Stratis.Bitcoin.KeyValueStore
     /// </summary>
     public abstract class KeyValueStoreRepository : IKeyValueStoreRepository
     {
-        public KeyValueStore KeyValueStore { get; protected set; }
-
         public Dictionary<string, KeyValueStoreTable> Tables { get; protected set; }
 
-        public KeyValueStoreRepository(KeyValueStore keyValueStore)
+        public KeyValueStoreRepository(IRepositorySerializer repositorySerializer)
         {
-            this.KeyValueStore = keyValueStore;
+            this.RepositorySerializer = repositorySerializer;
             this.Tables = new Dictionary<string, KeyValueStoreTable>();
         }
+
+        public IRepositorySerializer RepositorySerializer { get; }
 
         public virtual byte[] Serialize<T>(T obj)
         {
@@ -50,7 +50,7 @@ namespace Stratis.Bitcoin.KeyValueStore
 
             Guard.Assert(!typeof(T).IsValueType);
 
-            return this.KeyValueStore.RepositorySerializer.Serialize(obj);
+            return this.RepositorySerializer.Serialize(obj);
         }
 
         public virtual T Deserialize<T>(byte[] objBytes)
@@ -85,7 +85,7 @@ namespace Stratis.Bitcoin.KeyValueStore
 
             Guard.Assert(!typeof(T).IsValueType);
 
-            return (T)this.KeyValueStore.RepositorySerializer.Deserialize(objBytes, typeof(T));
+            return (T)this.RepositorySerializer.Deserialize(objBytes, typeof(T));
         }
 
         /// <inheritdoc />
