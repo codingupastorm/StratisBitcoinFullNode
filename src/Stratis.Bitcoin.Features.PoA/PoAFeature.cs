@@ -59,7 +59,7 @@ namespace Stratis.Bitcoin.Features.PoA
 
         private readonly IBlockStoreQueue blockStoreQueue;
 
-        private readonly CertificatesManager certificatesManager;
+        private readonly ICertificatesManager certificatesManager;
 
         private readonly IRevocationChecker revocationChecker;
 
@@ -83,7 +83,7 @@ namespace Stratis.Bitcoin.Features.PoA
             this.idleFederationMembersKicker = idleFederationMembersKicker;
             this.chainState = chainState;
             this.blockStoreQueue = blockStoreQueue;
-            this.certificatesManager = certificatesManager as CertificatesManager;
+            this.certificatesManager = certificatesManager;
             this.revocationChecker = revocationChecker;
 
             payloadProvider.DiscoverPayloads(this.GetType().Assembly);

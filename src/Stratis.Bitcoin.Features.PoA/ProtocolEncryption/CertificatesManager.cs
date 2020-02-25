@@ -21,6 +21,23 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 {
     public interface ICertificatesManager
     {
+        /// <summary>Root certificate of the certificate authority for the current network.</summary>
+        X509Certificate AuthorityCertificate { get; }
+
+        /// <summary>Client certificate that is used to establish connections with other peers.</summary>
+        X509Certificate ClientCertificate { get; }
+
+        /// <summary>The private key associated with the loaded client certificate. Intended to be used for TLS communication only.</summary>
+        AsymmetricKeyParameter ClientCertificatePrivateKey { get; }
+
+        /// <summary>Retrieves a certificate by address.</summary>
+        /// <returns>The <see cref="X509Certificate"/> for the given address.</returns>
+        X509Certificate GetCertificateForAddress(uint160 address);
+
+        /// <summary>Loads client and authority certificates and validates them.</summary>
+        /// <exception cref="CertificateConfigurationException">Thrown in case required certificates are not found or are not valid.</exception>
+        void Initialize();
+
         bool HaveAccount();
 
         bool LoadAuthorityCertificate(bool requireAccountId = true);
@@ -54,13 +71,13 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         /// <summary>The password used by the node to query the CA.</summary>
         public const string CaPasswordKey = "capassword";
 
-        /// <summary>Root certificate of the certificate authority for the current network.</summary>
+        /// <inheritdoc/>
         public X509Certificate AuthorityCertificate { get; private set; }
 
-        /// <summary>Client certificate that is used to establish connections with other peers.</summary>
+        /// <inheritdoc/>
         public X509Certificate ClientCertificate { get; private set; }
 
-        /// <summary>The private key associated with the loaded client certificate. Intended to be used for TLS communication only.</summary>
+        /// <inheritdoc/>
         public AsymmetricKeyParameter ClientCertificatePrivateKey { get; private set; }
 
         private readonly DataFolder dataFolder;
@@ -93,8 +110,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
-        /// <summary>Loads client and authority certificates and validates them.</summary>
-        /// <exception cref="CertificateConfigurationException">Thrown in case required certificates are not found or are not valid.</exception>
+        /// <inheritdoc/>
         public void Initialize()
         {
             this.LoadAuthorityCertificate();
@@ -228,6 +244,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return certificate;
         }
 
+        /// <inheritdoc/>
         public X509Certificate GetCertificateForAddress(uint160 address)
         {
             CaClient caClient = this.GetClient();
@@ -241,17 +258,9 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return certificate;
         }
 
-        internal CertificateInfoModel GetCertificateInfoForAddress(uint160 address)
-        {
-            string base64PubKeyHash = Convert.ToBase64String(address.ToBytes());
-            CertificateInfoModel retrievedCertModel = this.GetClient().GetCertificateForTransactionSigningPubKeyHash(base64PubKeyHash);
-            return retrievedCertModel;
-        }
-
         public List<PubKey> GetCertificatePublicKeysAsync()
         {
             CaClient caClient = this.GetClient();
-
             return caClient.GetCertificatePublicKeys();
         }
 
@@ -262,8 +271,8 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         /// <returns><c>true</c> if the given certificate has been revoked.</returns>
         public bool IsCertificateRevokedByAddress(uint160 address)
         {
-            CertificateInfoModel certificate = GetCertificateInfoForAddress(address);
-            return this.revocationChecker.IsCertificateRevoked(certificate.Thumbprint);
+            string base64PubKeyHash = Convert.ToBase64String(address.ToBytes());
+            return this.revocationChecker.IsCertificateRevokedByTransactionSigningKeyHash(base64PubKeyHash);
         }
 
         public static byte[] ExtractCertificateExtension(X509Certificate certificate, string oid)

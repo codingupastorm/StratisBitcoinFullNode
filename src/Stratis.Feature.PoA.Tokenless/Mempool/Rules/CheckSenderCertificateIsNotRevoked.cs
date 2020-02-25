@@ -8,6 +8,12 @@ using Stratis.SmartContracts.Core.Util;
 
 namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
 {
+    /// <summary>
+    /// Checks whether the sender has not had it's certificate revoked.
+    /// <para>
+    /// If the CA is down or we cannot determin the certificate's status, we reject the transaction.
+    /// </para>
+    /// </summary>
     public sealed class CheckSenderCertificateIsNotRevoked : MempoolRule
     {
         private readonly ICertificatesManager certificateManager;
@@ -35,7 +41,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
 
             // Then check if the sender has not had it's certificate revoked.
             if (this.certificateManager.IsCertificateRevokedByAddress(getSenderResult.Sender))
-                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "sender-certificate-is-revoked"), $"Cannot send transaction '{context.Transaction.GetHash()}' as the sender '{getSenderResult.Sender}', has had it's certificate revoked.").Throw();
+                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "sender-certificate-is-revoked"), $"Cannot send transaction '{context.Transaction.GetHash()}' as the sender '{getSenderResult.Sender}', has had it's certificate revoked or the CA is uncontactable to determine it's status.").Throw();
         }
     }
 }

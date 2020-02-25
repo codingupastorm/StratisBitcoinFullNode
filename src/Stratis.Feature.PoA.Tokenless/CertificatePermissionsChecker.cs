@@ -18,19 +18,19 @@ namespace Stratis.Feature.PoA.Tokenless
         bool CheckSenderCertificateHasPermission(uint160 address, TransactionSendingPermission permission);
     }
 
-    public class CertificatePermissionsChecker : ICertificatePermissionsChecker
+    public sealed class CertificatePermissionsChecker : ICertificatePermissionsChecker
     {
         private readonly ICertificateCache certificateCache;
-        private readonly CertificatesManager certificatesManager;
+        private readonly ICertificatesManager certificatesManager;
         private readonly ILogger logger;
 
-        public CertificatePermissionsChecker(ICertificateCache certificateCache,
+        public CertificatePermissionsChecker(
+            ICertificateCache certificateCache,
             ICertificatesManager certificatesManager,
             ILoggerFactory loggerFactory)
         {
             this.certificateCache = certificateCache;
-            // TODO: Fix this hack
-            this.certificatesManager = certificatesManager as CertificatesManager;
+            this.certificatesManager = certificatesManager;
             this.logger = loggerFactory.CreateLogger(this.GetType());
         }
 
@@ -71,10 +71,9 @@ namespace Stratis.Feature.PoA.Tokenless
                 }
                 return certificate;
             }
-            catch (CaClientException exception)
+            catch (CaClientException)
             {
                 // If there is an error when contacting the CA, don't explode. Just deny the transaction for now.
-
                 this.logger.LogWarning("Error when asking the CA for a sender certificate. Denying transaction.");
                 return null;
             }
