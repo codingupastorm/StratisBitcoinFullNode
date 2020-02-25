@@ -5,12 +5,11 @@ namespace Stratis.SmartContracts.CLR
 {
     public abstract class BaseMessage
     {
-        protected BaseMessage(uint160 from, ulong amount, Gas gasLimit, string version)
+        protected BaseMessage(uint160 from, ulong amount, Gas gasLimit)
         {
             this.From = from;
             this.Amount = amount;
             this.GasLimit = gasLimit;
-            this.Version = version;
         }
 
         /// <summary>
@@ -27,10 +26,5 @@ namespace Stratis.SmartContracts.CLR
         /// The maximum amount of gas that can be expended while executing the message.
         /// </summary>
         public Gas GasLimit { get; }
-
-        /// <summary>
-        /// The version to save with smart contract state data. In the current iteration this will be of the form {blockNumber}.{txNumber}
-        /// </summary>
-        public string Version { get; }
     }
 }

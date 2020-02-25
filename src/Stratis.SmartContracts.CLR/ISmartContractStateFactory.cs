@@ -9,7 +9,6 @@ namespace Stratis.SmartContracts.CLR
         /// <summary>
         /// Sets up a new <see cref="ISmartContractState"/> based on the current state.
         /// </summary>
-        /// <param name="version">The version that will be stored with any writes.</param>
         ISmartContractState Create(IState state,
             IGasMeter gasMeter,
             uint160 address,

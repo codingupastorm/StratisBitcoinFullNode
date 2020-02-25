@@ -8,8 +8,6 @@ namespace Stratis.SmartContracts.CLR.Tests
 {
     public class StateTransitionSpecification
     {
-        private const string VersionString = "1.1";
-
         private readonly Mock<IStateRepository> trackedState;
         private readonly Mock<IStateRepositoryRoot> contractStateRoot;
         private readonly Mock<IAddressGenerator> addressGenerator;
@@ -38,7 +36,6 @@ namespace Stratis.SmartContracts.CLR.Tests
                 uint160.Zero,
                 10,
                 (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000),
-                VersionString,
                 new byte[0],
                 null
             );
@@ -81,7 +78,6 @@ namespace Stratis.SmartContracts.CLR.Tests
                 uint160.Zero,
                 10,
                 (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000),
-                VersionString,
                 new byte[0],
                 null
             );
@@ -126,7 +122,6 @@ namespace Stratis.SmartContracts.CLR.Tests
                 uint160.Zero,
                 0,
                 gasLimit,
-                VersionString,
                 new MethodCall("Test", null)
             );
 
@@ -183,7 +178,6 @@ namespace Stratis.SmartContracts.CLR.Tests
                 uint160.Zero,
                 0,
                 gasLimit,
-                VersionString,
                 new MethodCall("Test")
             );
 
@@ -233,7 +227,6 @@ namespace Stratis.SmartContracts.CLR.Tests
                 uint160.Zero,
                 0,
                 gasLimit,
-                VersionString,
                 new MethodCall("Test")
             );
 
@@ -272,7 +265,6 @@ namespace Stratis.SmartContracts.CLR.Tests
                 uint160.Zero,
                 10,
                 (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000),
-                VersionString,
                 new object[] {},
                 typeName
             );
@@ -339,7 +331,6 @@ namespace Stratis.SmartContracts.CLR.Tests
                 uint160.Zero,
                 10,
                 (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000),
-                VersionString,
                 new object[] { },
                 typeName
             );
@@ -395,7 +386,6 @@ namespace Stratis.SmartContracts.CLR.Tests
                 uint160.Zero,
                 10,
                 (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000),
-                VersionString,
                 new object[] { },
                 typeName
             );
@@ -429,7 +419,6 @@ namespace Stratis.SmartContracts.CLR.Tests
                 uint160.Zero,
                 10,
                 (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000),
-                VersionString,
                 new byte[0],
                 null
             );
@@ -474,7 +463,6 @@ namespace Stratis.SmartContracts.CLR.Tests
                 uint160.Zero,
                 10,
                 (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000),
-                VersionString,
                 new MethodCall("Test", new object[] {})
             );
 
@@ -538,7 +526,6 @@ namespace Stratis.SmartContracts.CLR.Tests
                 uint160.Zero,
                 10,
                 (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000),
-                VersionString,
                 new MethodCall("Test", new object[] { })
             );
 
@@ -593,7 +580,6 @@ namespace Stratis.SmartContracts.CLR.Tests
                 uint160.Zero,
                 10,
                 (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000),
-                VersionString,
                 new MethodCall("Test", new object[] { })
             );
 
@@ -624,7 +610,6 @@ namespace Stratis.SmartContracts.CLR.Tests
                 uint160.Zero,
                 10,
                 (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000),
-                VersionString,
                 new MethodCall("Test", new object[] { })
             );
 
@@ -663,7 +648,6 @@ namespace Stratis.SmartContracts.CLR.Tests
                 uint160.Zero,
                 10,
                 (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000),
-                VersionString,
                 new MethodCall("Test", new object[] { })
             );
 
@@ -717,8 +701,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 uint160.One,
                 uint160.Zero,
                 10,
-                (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000),
-                VersionString
+                (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000)
             );
 
             // Code must be returned for this test to ensure we apply the call.
@@ -781,8 +764,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 uint160.One,
                 uint160.Zero,
                 10,
-                (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000),
-                VersionString
+                (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000)
             );
 
             this.vm.Setup(v => v.ExecuteMethod(
@@ -835,8 +817,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 uint160.One,
                 uint160.Zero,
                 10,
-                (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000),
-                VersionString
+                (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000)
             );
 
             var state = new Mock<IState>();
@@ -868,8 +849,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 uint160.One,
                 uint160.Zero,
                 10,
-                (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000),
-                VersionString
+                (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000)
             );
 
             // No code should be returned

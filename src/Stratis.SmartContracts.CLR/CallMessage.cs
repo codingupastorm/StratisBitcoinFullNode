@@ -8,8 +8,8 @@ namespace Stratis.SmartContracts.CLR
     /// </summary>
     public abstract class CallMessage : BaseMessage
     {
-        protected CallMessage(uint160 to, uint160 from, ulong amount, Gas gasLimit, string version, MethodCall methodCall)
-            : base(from, amount, gasLimit, version)
+        protected CallMessage(uint160 to, uint160 from, ulong amount, Gas gasLimit, MethodCall methodCall)
+            : base(from, amount, gasLimit)
         {
             this.To = to;
             this.Method = methodCall;

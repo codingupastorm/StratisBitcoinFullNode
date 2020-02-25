@@ -9,8 +9,8 @@ namespace Stratis.SmartContracts.CLR
     /// </summary>
     public class InternalCreateMessage : BaseMessage
     {
-        public InternalCreateMessage(uint160 from, ulong amount, Gas gasLimit, string version, object[] parameters, string typeName)
-            : base(from, amount, gasLimit, version)
+        public InternalCreateMessage(uint160 from, ulong amount, Gas gasLimit, object[] parameters, string typeName)
+            : base(from, amount, gasLimit)
         {
             this.Parameters = parameters;
             this.Type = typeName;
