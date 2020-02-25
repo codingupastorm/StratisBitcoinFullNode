@@ -71,6 +71,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         public override BlockTemplate Build(ChainedHeader chainTip, Script scriptPubKey)
         {
             this.ChainTip = chainTip;
+            this.height = chainTip.Height + 1;
 
             this.stateSnapshot = this.stateRoot.GetSnapshotTo(((ISmartContractBlockHeader)this.ConsensusManager.Tip.Header).HashStateRoot.ToBytes());
             this.receipts.Clear();
@@ -238,7 +239,10 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         private IContractExecutionResult ExecuteSmartContract(TxMempoolEntry mempoolEntry)
         {
             GetSenderResult getSenderResult = this.tokenlessSigner.GetSender(mempoolEntry.Transaction);
-            IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)this.height, new uint160(0), Money.Zero, getSenderResult.Sender, mempoolEntry.Transaction);
+
+            ulong txIndex = (ulong) this.block.Transactions.Count; // Number ahead of us in block + the coinbase will give us our index.
+
+            IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)this.height, txIndex, new uint160(0), Money.Zero, getSenderResult.Sender, mempoolEntry.Transaction);
             IContractExecutor executor = this.executorFactory.CreateExecutor(this.stateSnapshot, transactionContext);
             IContractExecutionResult result = executor.Execute(transactionContext);
             Result<ContractTxData> deserializedCallData = this.callDataSerializer.Deserialize(transactionContext.Data);

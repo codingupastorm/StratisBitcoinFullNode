@@ -13,7 +13,6 @@ namespace Stratis.SmartContracts.CLR.Tests
         private readonly Mock<IAddressGenerator> addressGenerator;
         private readonly Mock<IVirtualMachine> vm;
         private readonly Mock<IStateRepository> trackedState2;
-
         public StateTransitionSpecification()
         {
             this.trackedState = new Mock<IStateRepository>();

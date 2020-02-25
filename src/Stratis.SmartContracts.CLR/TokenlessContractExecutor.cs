@@ -43,11 +43,14 @@ namespace Stratis.SmartContracts.CLR
                 transactionContext.CoinbaseAddress.ToAddress()
             );
 
+            string version = $"{transactionContext.BlockHeight}.{transactionContext.TxIndex}";
+
             IState state = this.stateFactory.Create(
                 this.stateRoot,
                 block,
                 transactionContext.TxOutValue,
-                transactionContext.TransactionHash);
+                transactionContext.TransactionHash,
+                version);
 
             StateTransitionResult result;
             IState newState = state.Snapshot();

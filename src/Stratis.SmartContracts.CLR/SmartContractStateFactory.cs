@@ -23,10 +23,11 @@ namespace Stratis.SmartContracts.CLR
 
         /// <summary>
         /// Sets up a new <see cref="ISmartContractState"/> based on the current state.
-        /// </summary>        
+        /// </summary>
+        /// <param name="version">The version that will be stored with any writes.</param>
         public ISmartContractState Create(IState state, RuntimeObserver.IGasMeter gasMeter, uint160 address, BaseMessage message, IStateRepository repository)
         {
-            IPersistenceStrategy persistenceStrategy = new MeteredPersistenceStrategy(repository, gasMeter, new BasicKeyEncodingStrategy());
+            IPersistenceStrategy persistenceStrategy = new MeteredPersistenceStrategy(repository, gasMeter, new BasicKeyEncodingStrategy(), state.Version);
 
             var persistentState = new PersistentState(persistenceStrategy, this.serializer, address);
 

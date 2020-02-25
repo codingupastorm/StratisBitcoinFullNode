@@ -42,11 +42,14 @@ namespace Stratis.SmartContracts.CLR.Local
                 Address.Zero
             );
 
+            string version = StorageValue.InsertVersion;
+
             IState state = this.stateFactory.Create(
                 this.stateRoot.StartTracking(),
                 block,
                 txOutValue,
-                new uint256());
+                new uint256(),
+                version);
 
             StateTransitionResult result;
             IState newState = state.Snapshot();

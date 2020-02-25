@@ -18,11 +18,11 @@ namespace Stratis.SmartContracts.CLR
             this.smartContractStateFactory = smartContractStateFactory;
         }
 
-        public IState Create(IStateRepository stateRoot, IBlock block, ulong txOutValue, uint256 transactionHash)
+        public IState Create(IStateRepository stateRoot, IBlock block, ulong txOutValue, uint256 transactionHash, string version)
         {
             var logHolder = new ContractLogHolder();
             var internalTransfers = new List<TransferInfo>();
-            return new State(this.smartContractStateFactory, stateRoot, logHolder, internalTransfers, block, transactionHash);
+            return new State(this.smartContractStateFactory, stateRoot, logHolder, internalTransfers, block, transactionHash, version);
         }
     }
 }

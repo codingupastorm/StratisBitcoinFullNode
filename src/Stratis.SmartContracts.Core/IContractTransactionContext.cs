@@ -45,6 +45,11 @@ namespace Stratis.SmartContracts.Core
         ulong BlockHeight { get; }
 
         /// <summary>
+        /// The index of the transaction in the block.
+        /// </summary>
+        ulong TxIndex { get; }
+
+        /// <summary>
         /// Time as set on transaction.
         /// </summary>
         uint Time { get; }

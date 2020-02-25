@@ -50,7 +50,8 @@ namespace Stratis.SmartContracts.CLR.Tests
                     trackedMock,
                     It.IsAny<IBlock>(),
                     fixture.ContractTransactionContext.TxOutValue,
-                    It.IsAny<uint256>()),
+                    It.IsAny<uint256>(),
+                    It.IsAny<string>()),
                 Times.Once);
 
             // We only apply the message to the snapshot.
@@ -111,7 +112,8 @@ namespace Stratis.SmartContracts.CLR.Tests
                         trackedMock,
                         It.IsAny<IBlock>(),
                         fixture.ContractTransactionContext.TxOutValue,
-                        It.IsAny<uint256>()),
+                        It.IsAny<uint256>(),
+                        It.IsAny<string>()),
                 Times.Once);
 
             // We only apply the message to the snapshot.
