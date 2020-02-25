@@ -82,7 +82,7 @@ namespace CertificateAuthority.Controllers
 
             return ExecuteRepositoryQuery(() =>
             {
-                var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AdminAccess);
+                var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.ApproveAccounts);
                 return this.Json(this.repository.ApproveAccount(credentials));
             });
         }
