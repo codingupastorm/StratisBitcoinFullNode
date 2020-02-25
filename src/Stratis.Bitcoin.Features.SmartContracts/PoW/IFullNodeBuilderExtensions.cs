@@ -6,13 +6,6 @@ using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.Consensus.Rules;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.Miner;
-using Stratis.Bitcoin.Features.Miner.Interfaces;
-using Stratis.Bitcoin.Features.RPC;
-using Stratis.Bitcoin.Features.SmartContracts.PoS;
-using Stratis.Bitcoin.Features.SmartContracts.Wallet;
-using Stratis.Bitcoin.Mining;
 
 namespace Stratis.Bitcoin.Features.SmartContracts.PoW
 {
@@ -38,34 +31,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoW
                     services.AddSingleton<ICoinView, CachedCoinView>();
                     services.AddSingleton<IConsensusRuleEngine, PowConsensusRuleEngine>();
                 });
-            });
-
-            return fullNodeBuilder;
-        }
-
-        /// <summary>
-        /// Adds mining to the smart contract node.
-        /// <para>We inject <see cref="IPowMining"/> with a smart contract block provider and definition.</para>
-        /// </summary>
-        public static IFullNodeBuilder UseSmartContractPowMining(this IFullNodeBuilder fullNodeBuilder)
-        {
-            LoggingConfiguration.RegisterFeatureNamespace<MiningFeature>("mining");
-
-            fullNodeBuilder.ConfigureFeature(features =>
-            {
-                features
-                    .AddFeature<MiningFeature>()
-                    .DependOn<MempoolFeature>()
-                    .DependOn<RPCFeature>()
-                    .DependOn<SmartContractWalletFeature>()
-                    .FeatureServices(services =>
-                    {
-                        services.AddSingleton<IPowMining, PowMining>();
-                        services.AddSingleton<IBlockProvider, SmartContractBlockProvider>();
-                        services.AddSingleton<BlockDefinition, SmartContractBlockDefinition>();
-                        services.AddSingleton<IBlockBufferGenerator, BlockBufferGenerator>();
-                        services.AddSingleton<IMinerSettings, MinerSettings>();
-                    });
             });
 
             return fullNodeBuilder;
