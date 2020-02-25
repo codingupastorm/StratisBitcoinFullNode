@@ -11,7 +11,7 @@ namespace Stratis.SmartContracts.CLR.Tests
 {
     public class MethodParameterByteSerializerTests
     {
-        public static Network Network = new SmartContractPosRegTest();
+        public static Network Network = new SmartContractsRegTest();
         public IMethodParameterSerializer Serializer = new MethodParameterByteSerializer(new ContractPrimitiveSerializer(Network));
 
         [Theory]
