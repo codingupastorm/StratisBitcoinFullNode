@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CertificateAuthority.Controllers;
 using CertificateAuthority.Models;
+using Microsoft.EntityFrameworkCore;
 using NBitcoin.DataEncoders;
 using NLog;
 
@@ -109,7 +109,7 @@ namespace CertificateAuthority.Database
         /// <summary>Provides account information of the account with id specified.</summary>
         public AccountInfo GetAccountInfoById(CredentialsAccessWithModel<CredentialsModelWithTargetId> credentialsModel)
         {
-            AccountInfo accountInfo = ExecuteQuery<CredentialsAccessWithModel<CredentialsModelWithTargetId>, AccountInfo>(credentialsModel, (dbContext) => dbContext.Accounts.SingleOrDefault(x => x.Id == credentialsModel.Model.TargetAccountId));
+            AccountInfo accountInfo = ExecuteQuery<CredentialsAccessWithModel<CredentialsModelWithTargetId>, AccountInfo>(credentialsModel, (dbContext) => dbContext.Accounts.Include(a => a.Permissions).SingleOrDefault(x => x.Id == credentialsModel.Model.TargetAccountId));
 
             // TODO: Investigate whether there is a more elegant way of handling a lack of permissions
             if (accountInfo.Permissions == null)
@@ -154,7 +154,7 @@ namespace CertificateAuthority.Database
         /// Only a password is required.</remarks>
         public int RequestAccount(RequestAccount requestAccountModel)
         {
-            CADbContext dbContext = this.CreateContext();
+            CADbContext dbContext = CreateContext();
 
             if (dbContext.Accounts.Any(x => x.Name == requestAccountModel.CommonName))
                 throw new CertificateAuthorityAccountException("That name is already taken!");
@@ -164,7 +164,7 @@ namespace CertificateAuthority.Database
             if (requestAccountModel.RequestedPermissions == null)
                 throw new CertificateAuthorityAccountException("No permissions requested!");
 
-            if (requestAccountModel.RequestedPermissions.Any(permission => !AccountsController.ValidPermissions.Contains(permission.Name)))
+            if (requestAccountModel.RequestedPermissions.Any(permission => !CaCertificatesManager.ValidPermissions.Contains(permission.Name)))
                 throw new CertificateAuthorityAccountException("Invalid permission requested!");
 
             var newAccount = new AccountModel()

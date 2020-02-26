@@ -221,7 +221,6 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         public int RequestAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country)
         {
             CaClient caClient = this.GetClient();
-
             return caClient.RequestAccount(name, organizationUnit, organization, locality, stateOrProvince, emailAddress, country);
         }
 
@@ -258,7 +257,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return certificate;
         }
 
-        public List<PubKey> GetCertificatePublicKeysAsync()
+        public List<PubKey> GetCertificatePublicKeys()
         {
             CaClient caClient = this.GetClient();
             return caClient.GetCertificatePublicKeys();

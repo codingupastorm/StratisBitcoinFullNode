@@ -68,12 +68,12 @@ namespace CertificateAuthority.Tests.FullProjectTests
         private CredentialsModel GetPrivilegedAccount()
         {
             AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates | AccountAccessFlags.RevokeCertificates | AccountAccessFlags.AccessAnyCertificate;
-            
+
             return CaTestHelper.CreateAccount(this.server.Host, credentials1Access);
         }
 
         [Fact]
-        private void TestCertificatesControllerMethods()
+        public void TestCertificatesControllerMethods()
         {
             CredentialsModel credentials1 = this.GetPrivilegedAccount();
 
@@ -143,7 +143,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 {CaCertificatesManager.P2pkhExtensionOid, clientOid141},
                 {CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid, clientOid142},
                 {CaCertificatesManager.BlockSigningPubKeyExtensionOid, clientOid143},
-                {CaCertificatesManager.SendPermission, new byte[] { 1 } },
+                {CaCertificatesManager.SendPermissionOid, new byte[] { 1 } },
                 {CaCertificatesManager.CallContractPermissionOid, new byte[] { 1 } },
                 {CaCertificatesManager.CreateContractPermissionOid, new byte[] { 1 } }
             };
@@ -151,7 +151,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             Pkcs10CertificationRequest certificateSigningRequest2 = CaCertificatesManager.CreateCertificateSigningRequest(clientName, clientKey2, new string[0], extensionData);
 
             CertificateInfoModel certificate2 = CaTestHelper.GetValue<CertificateInfoModel>(this.certificatesController.IssueCertificate_UsingRequestString(
-                new IssueCertificateFromFileContentsModel(System.Convert.ToBase64String(certificateSigningRequest2.GetDerEncoded()), credentials2.AccountId, credentials2.Password)));
+                new IssueCertificateFromFileContentsModel(Convert.ToBase64String(certificateSigningRequest2.GetDerEncoded()), credentials2.AccountId, credentials2.Password)));
 
             Assert.Equal(clientAddress, certificate2.Address);
 
@@ -336,21 +336,21 @@ namespace CertificateAuthority.Tests.FullProjectTests
             Assert.True(CaCertificatesManager.ValidateCertificateChain(this.caCert, cert1));
 
             // Now that we have a certificate on this identity, can we still generate certificate signing requests?
-            var response = (ObjectResult) this.certificatesController.GenerateCertificateSigningRequest(generateModel);
+            var response = (ObjectResult)this.certificatesController.GenerateCertificateSigningRequest(generateModel);
             Assert.Equal(403, response.StatusCode);
             Assert.Equal("You cant access this action. IssueCertificates access is required.", response.Value);
 
             // How about issuing another certificate?
-            var response2 = (ObjectResult) this.certificatesController.IssueCertificate_UsingRequestString(new IssueCertificateFromFileContentsModel(Convert.ToBase64String(signedCsr.GetDerEncoded()), credentials1.AccountId, credentials1.Password));
+            var response2 = (ObjectResult)this.certificatesController.IssueCertificate_UsingRequestString(new IssueCertificateFromFileContentsModel(Convert.ToBase64String(signedCsr.GetDerEncoded()), credentials1.AccountId, credentials1.Password));
             Assert.Equal(403, response2.StatusCode);
             Assert.Equal("You cant access this action. IssueCertificates access is required.", response2.Value);
 
             // Reset our permissions.
-            var resetResponse = (OkResult) this.certificatesController.GrantIssuePermission(new CredentialsModelWithTargetId(credentials1.AccountId,Settings.AdminAccountId, CaTestHelper.AdminPassword));
+            var resetResponse = (OkResult)this.certificatesController.GrantIssuePermission(new CredentialsModelWithTargetId(credentials1.AccountId, Settings.AdminAccountId, CaTestHelper.AdminPassword));
             Assert.Equal(200, resetResponse.StatusCode);
 
             // Check that our cert was revoked.
-            List<CertificateInfoModel> getCertsResponse =  CaTestHelper.GetValue<List<CertificateInfoModel>>(this.certificatesController.GetAllCertificates(credentials1));
+            List<CertificateInfoModel> getCertsResponse = CaTestHelper.GetValue<List<CertificateInfoModel>>(this.certificatesController.GetAllCertificates(credentials1));
             Assert.Equal(CertificateStatus.Revoked, getCertsResponse[0].Status);
 
             // Issue our certificate again. If this call doesn't fail we successfully got our certificate back!
