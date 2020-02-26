@@ -14,8 +14,7 @@ namespace Stratis.SmartContracts.CLR
             ISerializer serializer,
             IContractLogger contractLogger,
             IInternalTransactionExecutor internalTransactionExecutor,
-            IInternalHashHelper internalHashHelper,
-            Func<ulong> getBalance)
+            IInternalHashHelper internalHashHelper)
         {
             this.Block = block;
             this.Message = message;
@@ -24,7 +23,6 @@ namespace Stratis.SmartContracts.CLR
             this.ContractLogger = contractLogger;
             this.InternalTransactionExecutor = internalTransactionExecutor;
             this.InternalHashHelper = internalHashHelper;
-            this.GetBalance = getBalance;
         }
 
         public IBlock Block { get; }
@@ -34,13 +32,12 @@ namespace Stratis.SmartContracts.CLR
         public IPersistentState PersistentState { get; }
 
         public ISerializer Serializer { get; }
+        public Func<ulong> GetBalance => throw new InvalidOperationException("Shouldn't be touched in Tokenless.");
 
         public IContractLogger ContractLogger { get; }
 
         public IInternalTransactionExecutor InternalTransactionExecutor { get; }
 
         public IInternalHashHelper InternalHashHelper { get; }
-
-        public Func<ulong> GetBalance { get; }
     }
 }

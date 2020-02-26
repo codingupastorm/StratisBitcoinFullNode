@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core.State;
@@ -17,6 +16,8 @@ namespace Stratis.SmartContracts.CLR.Local
         private readonly IStateFactory stateFactory;
         private readonly IStateProcessor stateProcessor;
         private readonly IContractPrimitiveSerializer contractPrimitiveSerializer;
+
+        // TODO: Tokenless probably needs its own LocalExecutor
 
         public LocalExecutor(ILoggerFactory loggerFactory,
             ICallDataSerializer serializer,
@@ -82,7 +83,6 @@ namespace Stratis.SmartContracts.CLR.Local
                 Revert = result.IsFailure,
                 GasConsumed = result.GasConsumed,
                 Return = result.Success?.ExecutionResult,
-                InternalTransfers = state.InternalTransfers.ToList(),
                 Logs = state.GetLogs(this.contractPrimitiveSerializer)
             };
 

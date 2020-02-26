@@ -43,8 +43,7 @@ namespace Stratis.SmartContracts.CLR
                 this.serializer,
                 contractLogger,
                 this.InternalTransactionExecutorFactory.Create(gasMeter, state),
-                new InternalHashHelper(),
-                () => state.GetBalance(address));
+                new InternalHashHelper());
 
             return contractState;
         }

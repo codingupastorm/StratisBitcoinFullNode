@@ -1,6 +1,5 @@
 ﻿using NBitcoin;
 using Stratis.SmartContracts.CLR.Metering;
-using Stratis.SmartContracts.Core.State.AccountAbstractionLayer;
 using Stratis.SmartContracts.RuntimeObserver;
 
 namespace Stratis.SmartContracts.CLR
@@ -61,10 +60,6 @@ namespace Stratis.SmartContracts.CLR
             // We need to generate an address here so that we can set the initial balance.
             uint160 address = state.GenerateAddress(this.AddressGenerator);
 
-            // For external creates we need to increment the balance state to take into
-            // account any funds sent as part of the original contract invocation transaction.
-            state.AddInitialTransfer(new TransferInfo(message.From, address, message.Amount));
-
             return this.ApplyCreate(state, message.Parameters, message.Code, message, address, executionContext);
         }
 
@@ -73,11 +68,6 @@ namespace Stratis.SmartContracts.CLR
         /// </summary>
         public StateTransitionResult Apply(IState state, InternalCreateMessage message)
         {
-            bool enoughBalance = this.EnsureSenderHasEnoughBalance(state, message.From, message.Amount);
-
-            if (!enoughBalance)
-                return StateTransitionResult.Fail((Gas)0, StateTransitionErrorKind.InsufficientBalance); // Trivial - just return and let the MethodCall gas account for it.
-
             var gasMeter = new GasMeter(message.GasLimit);
             gasMeter.Spend((Gas)GasPriceList.CreateCost);
             var observer = new Observer(gasMeter, new MemoryMeter(ReflectionVirtualMachine.MemoryUnitLimit));
@@ -86,11 +76,6 @@ namespace Stratis.SmartContracts.CLR
             byte[] contractCode = state.ContractState.GetCode(message.From);
 
             uint160 address = state.GenerateAddress(this.AddressGenerator);
-
-            // For internal creates we need to add the value contained in the contract invocation transaction
-            // to the internal transfer list. This must occur before we apply the message to the state.
-            // For external creates we do not need to do this.
-            state.AddInternalTransfer(new TransferInfo(message.From, address, message.Amount));
 
             StateTransitionResult result = this.ApplyCreate(state, message.Parameters, contractCode, message, address, executionContext, message.Type);
             
@@ -133,11 +118,6 @@ namespace Stratis.SmartContracts.CLR
         /// </summary>
         public StateTransitionResult Apply(IState state, InternalCallMessage message)
         {
-            bool enoughBalance = this.EnsureSenderHasEnoughBalance(state, message.From, message.Amount);
-
-            if (!enoughBalance)
-                return StateTransitionResult.Fail((Gas)0, StateTransitionErrorKind.InsufficientBalance); // Trivial - just return and let the MethodCall gas account for it.
-
             var gasMeter = new GasMeter(message.GasLimit);
             gasMeter.Spend((Gas)GasPriceList.BaseCost);
             var observer = new Observer(gasMeter, new MemoryMeter(ReflectionVirtualMachine.MemoryUnitLimit));
@@ -149,11 +129,6 @@ namespace Stratis.SmartContracts.CLR
             {
                 return StateTransitionResult.Fail(gasMeter.GasConsumed, StateTransitionErrorKind.NoCode);
             }
-
-            // For internal calls we need to add the value contained in the contract invocation transaction
-            // to the internal transfer list. This must occur before we apply the message to the state.
-            // For external calls we do not need to do this.
-            state.AddInternalTransfer(new TransferInfo(message.From, message.To, message.Amount));
 
             StateTransitionResult result = this.ApplyCall(state, message, contractCode, executionContext);
 
@@ -178,10 +153,6 @@ namespace Stratis.SmartContracts.CLR
                 return StateTransitionResult.Fail(gasMeter.GasConsumed, StateTransitionErrorKind.NoCode);
             }
 
-            // For external calls we need to increment the balance state to take into
-            // account any funds sent as part of the original contract invocation transaction.
-            state.AddInitialTransfer(new TransferInfo(message.From, message.To, message.Amount));
-
             return this.ApplyCall(state, message, contractCode, executionContext);
         }
 
@@ -190,11 +161,6 @@ namespace Stratis.SmartContracts.CLR
         /// </summary>
         public StateTransitionResult Apply(IState state, ContractTransferMessage message)
         {
-            bool enoughBalance = this.EnsureSenderHasEnoughBalance(state, message.From, message.Amount);
-
-            if (!enoughBalance)
-                return StateTransitionResult.Fail((Gas)0, StateTransitionErrorKind.InsufficientBalance);
-
             var gasMeter = new GasMeter(message.GasLimit);
 
             // If it's not a contract, create a regular P2PKH tx
@@ -205,33 +171,16 @@ namespace Stratis.SmartContracts.CLR
             {
                 gasMeter.Spend((Gas)GasPriceList.TransferCost);
 
-                // No contract at this address, create a regular P2PKH xfer
-                state.AddInternalTransfer(new TransferInfo(message.From, message.To, message.Amount));
-
                 return StateTransitionResult.Ok(gasMeter.GasConsumed, message.To);
             }
 
             var observer = new Observer(gasMeter, new MemoryMeter(ReflectionVirtualMachine.MemoryUnitLimit));
             var executionContext = new ExecutionContext(observer);
 
-            // For internal contract-contract transfers we need to add the value contained in the contract invocation transaction
-            // to the internal transfer list. This must occur before we apply the message to the state.
-            state.AddInternalTransfer(new TransferInfo(message.From, message.To, message.Amount));
-
             gasMeter.Spend((Gas)GasPriceList.BaseCost);
             StateTransitionResult result = this.ApplyCall(state, message, contractCode, executionContext);
             
             return result;
-        }
-
-        /// <summary>
-        /// Checks whether a contract has enough funds to make this transaction.
-        /// </summary>
-        private bool EnsureSenderHasEnoughBalance(IState state, uint160 contractAddress, ulong amountToTransfer)
-        {
-            ulong balance = state.GetBalance(contractAddress);
-
-            return balance >= amountToTransfer;
         }
     }
 }

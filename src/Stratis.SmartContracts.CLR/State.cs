@@ -38,11 +38,6 @@ namespace Stratis.SmartContracts.CLR
             this.LogHolder = new ContractLogHolder();
             this.LogHolder.AddRawLogs(state.LogHolder.GetRawLogs());
 
-            // We create a new list but use references to the original transfers.
-            this.internalTransfers = new List<TransferInfo>(state.InternalTransfers);
-
-            // Create a new balance state based off the old one but with the repository and internal transfers list reference
-            this.BalanceState = new BalanceState(this.ContractState, this.internalTransfers, state.BalanceState.InitialTransfer);
             this.NonceGenerator = state.NonceGenerator;
             this.Block = state.Block;
             this.TransactionHash = state.TransactionHash;
@@ -59,7 +54,6 @@ namespace Stratis.SmartContracts.CLR
             this.ContractState = repository;
             this.LogHolder = contractLogHolder;
             this.internalTransfers = internalTransfers;
-            this.BalanceState = new BalanceState(this.ContractState, this.InternalTransfers);
             this.NonceGenerator = new NonceGenerator();
             this.Block = block;
             this.TransactionHash = transactionHash;
@@ -74,10 +68,6 @@ namespace Stratis.SmartContracts.CLR
 
         public IContractLogHolder LogHolder { get; }
 
-        public BalanceState BalanceState { get; }
-
-        public IReadOnlyList<TransferInfo> InternalTransfers => this.internalTransfers;
-
         public IStateRepository ContractState { get; }
 
         /// <summary>
@@ -86,21 +76,6 @@ namespace Stratis.SmartContracts.CLR
         public ISmartContractState CreateSmartContractState(IState state, RuntimeObserver.IGasMeter gasMeter, uint160 address, BaseMessage message, IStateRepository repository) 
         {
             return this.smartContractStateFactory.Create(state, gasMeter, address, message, repository);
-        }
-
-        /// <summary>
-        /// Adds the initial transfer to the BalanceState. It is necessary to call this method if an external create or call
-        /// is being executed in order to reflect the balance of the of the UTXO sent along with the contract invocation transaction.
-        /// This method can only be used to set an initial transfer once.
-        /// </summary>
-        public void AddInitialTransfer(TransferInfo initialTransfer)
-        {
-            if (this.BalanceState.InitialTransfer != null)
-            {
-                throw new NotSupportedException("Cannot add an initial transfer twice!");
-            }
-
-            this.BalanceState.AddInitialTransfer(initialTransfer);
         }
 
         /// <summary>
@@ -118,10 +93,6 @@ namespace Stratis.SmartContracts.CLR
                 throw new ArgumentException("New state must be a child of this state.");
             }
 
-            // Update internal transfers
-            this.internalTransfers.Clear();
-            this.internalTransfers.AddRange(state.InternalTransfers);
-
             // Update logs
             this.LogHolder.Clear();
             this.LogHolder.AddRawLogs(state.LogHolder.GetRawLogs());
@@ -130,16 +101,6 @@ namespace Stratis.SmartContracts.CLR
             state.ContractState.Commit();
 
             this.child = null;
-        }
-
-        public void AddInternalTransfer(TransferInfo transferInfo)
-        {
-            this.internalTransfers.Add(transferInfo);
-        }
-
-        public ulong GetBalance(uint160 address)
-        {
-            return this.BalanceState.GetBalance(address);
         }
 
         public uint160 GenerateAddress(IAddressGenerator addressGenerator)
