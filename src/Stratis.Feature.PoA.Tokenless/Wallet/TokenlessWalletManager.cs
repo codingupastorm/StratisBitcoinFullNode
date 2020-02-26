@@ -49,10 +49,10 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         private readonly FileStorage<TokenlessWallet> fileStorage;
         private ExtPubKey[] extPubKeys;
         private readonly TokenlessWalletSettings walletSettings;
-        private readonly CertificatesManager certificatesManager;
+        private readonly ICertificatesManager certificatesManager;
         private readonly ILogger logger;
 
-        public TokenlessWalletManager(Network network, DataFolder dataFolder, TokenlessWalletSettings walletSettings, CertificatesManager certificatesManager, ILoggerFactory loggerFactory)
+        public TokenlessWalletManager(Network network, DataFolder dataFolder, TokenlessWalletSettings walletSettings, ICertificatesManager certificatesManager, ILoggerFactory loggerFactory)
         {
             this.network = network;
             this.dataFolder = dataFolder;

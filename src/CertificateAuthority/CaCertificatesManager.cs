@@ -591,13 +591,16 @@ namespace CertificateAuthority
 
         /// <summary>
         /// Finds issued certificate by pubkey hash and returns it or null if it wasn't found.
+        /// <para>
+        /// This will filter out revoked certificates.
+        /// </para>
         /// </summary>
         public CertificateInfoModel GetCertificateByTransactionSigningPubKeyHash(CredentialsAccessWithModel<CredentialsModelWithPubKeyHashModel> model)
         {
             byte[] transactionSigningPubKeyHash = Convert.FromBase64String(model.Model.PubKeyHash);
             var byteArrayComparer = new ByteArrayComparer();
 
-            return this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Certificates.SingleOrDefault(x => byteArrayComparer.Equals(x.TransactionSigningPubKeyHash, transactionSigningPubKeyHash)); });
+            return this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Certificates.SingleOrDefault(x => x.Status == CertificateStatus.Good && byteArrayComparer.Equals(x.TransactionSigningPubKeyHash, transactionSigningPubKeyHash)); });
         }
 
         /// <summary>

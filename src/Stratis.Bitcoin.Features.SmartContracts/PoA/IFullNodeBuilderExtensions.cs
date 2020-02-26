@@ -46,8 +46,8 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoA
                         services.AddSingleton<IdleFederationMembersKicker>();
 
                         // Purely to make DI work, shouldn't be used.
-                        services.AddSingleton<CertificatesManager>();
-                        services.AddSingleton<RevocationChecker>();
+                        services.AddSingleton<ICertificatesManager, CertificatesManager>();
+                        services.AddSingleton<IRevocationChecker, RevocationChecker>();
                     });
             });
 

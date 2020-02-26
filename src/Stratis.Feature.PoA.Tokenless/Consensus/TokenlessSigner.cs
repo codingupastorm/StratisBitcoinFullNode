@@ -56,13 +56,13 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
         public GetSenderResult GetSender(Transaction transaction)
         {
             if (transaction.Inputs.Count != 1)
-                return GetSenderResult.CreateFailure("Transaction must be in prescribed format with 1 input.");
+                return GetSenderResult.CreateFailure("Transaction must be in prescribed format: Inputs does not equal 1.");
 
             Script senderScript = transaction.Inputs.First().ScriptSig;
             IList<Op> ops = senderScript.ToOps();
 
             if (ops.Count != InputOpsLength)
-                return GetSenderResult.CreateFailure("Transaction input must be in prescribed format.");
+                return GetSenderResult.CreateFailure("Transaction input must be in prescribed format: Invalid Ops Count.");
 
             Op[] senderOps = new Op[5];
             Array.Copy(ops.ToArray(), SenderScriptStartOpIndex, senderOps, 0, 5);

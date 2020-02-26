@@ -18,14 +18,15 @@ namespace Stratis.Feature.PoA.Tokenless
         bool CheckSenderCertificateHasPermission(uint160 address, TransactionSendingPermission permission);
     }
 
-    public class CertificatePermissionsChecker : ICertificatePermissionsChecker
+    public sealed class CertificatePermissionsChecker : ICertificatePermissionsChecker
     {
         private readonly ICertificateCache certificateCache;
-        private readonly CertificatesManager certificatesManager;
+        private readonly ICertificatesManager certificatesManager;
         private readonly ILogger logger;
 
-        public CertificatePermissionsChecker(ICertificateCache certificateCache,
-            CertificatesManager certificatesManager,
+        public CertificatePermissionsChecker(
+            ICertificateCache certificateCache,
+            ICertificatesManager certificatesManager,
             ILoggerFactory loggerFactory)
         {
             this.certificateCache = certificateCache;
@@ -36,7 +37,7 @@ namespace Stratis.Feature.PoA.Tokenless
         /// <inheritdoc />
         public bool CheckSenderCertificateHasPermission(uint160 address, TransactionSendingPermission permission)
         {
-            X509Certificate certificate = this.GetCertificate(address); 
+            X509Certificate certificate = this.GetCertificate(address);
             return ValidateCertificateHasPermission(certificate, permission);
         }
 
@@ -47,7 +48,7 @@ namespace Stratis.Feature.PoA.Tokenless
             {
                 // TODO: This value could be cached, or retrieved from the wallet?
                 byte[] myCertTransactionSigningHash = CertificatesManager.ExtractCertificateExtension(this.certificatesManager.ClientCertificate, CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid);
-                uint160 myCertAddress = new uint160(myCertTransactionSigningHash);
+                var myCertAddress = new uint160(myCertTransactionSigningHash);
 
                 if (myCertAddress == address)
                 {
@@ -55,9 +56,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 }
             }
 
-            X509Certificate certificate = this.certificateCache.GetCertificate(address) 
-                                           ?? GetCertificateFromCA(address);
-
+            X509Certificate certificate = this.certificateCache.GetCertificate(address) ?? GetCertificateFromCA(address);
             return certificate;
         }
 
@@ -72,10 +71,9 @@ namespace Stratis.Feature.PoA.Tokenless
                 }
                 return certificate;
             }
-            catch (CaClientException exception)
+            catch (CaClientException)
             {
                 // If there is an error when contacting the CA, don't explode. Just deny the transaction for now.
-
                 this.logger.LogWarning("Error when asking the CA for a sender certificate. Denying transaction.");
                 return null;
             }

@@ -25,11 +25,11 @@ namespace Stratis.Feature.PoA.Tokenless
     {
         private readonly ICoreComponent coreComponent;
 
-        private readonly CertificatesManager certificatesManager;
+        private readonly ICertificatesManager certificatesManager;
         private readonly VotingManager votingManager;
         private readonly IFederationManager federationManager;
         private readonly IPoAMiner miner;
-        private readonly RevocationChecker revocationChecker;
+        private readonly IRevocationChecker revocationChecker;
         private readonly NodeSettings nodeSettings;
         private readonly IAsyncProvider asyncProvider;
         private readonly INodeLifetime nodeLifetime;
@@ -37,13 +37,13 @@ namespace Stratis.Feature.PoA.Tokenless
         private IAsyncLoop caPubKeysLoop;
 
         public TokenlessFeature(
-            CertificatesManager certificatesManager,
+            ICertificatesManager certificatesManager,
             VotingManager votingManager,
             ICoreComponent coreComponent,
             IFederationManager federationManager,
             IPoAMiner miner,
             PayloadProvider payloadProvider,
-            RevocationChecker revocationChecker,
+            IRevocationChecker revocationChecker,
             StoreSettings storeSettings,
             NodeSettings nodeSettings,
             IAsyncProvider asyncProvider,
@@ -83,7 +83,7 @@ namespace Stratis.Feature.PoA.Tokenless
             var options = (PoAConsensusOptions)this.coreComponent.Network.Consensus.Options;
             if (options.EnablePermissionedMembership)
             {
-                await this.revocationChecker.InitializeAsync().ConfigureAwait(false);
+                this.revocationChecker.Initialize();
                 // We do not need to initialize the CertificatesManager here like it would have been in the regular PoA feature, because the TokenlessWalletManager is now responsible for ensuring a client certificate is created instead.
             }
 

@@ -62,14 +62,14 @@ namespace CertificateAuthority.Database
 
             using (CADbContext dbContext = this.CreateContext())
             {
-                foreach (CertificateInfoModel info in dbContext.Certificates)
+                foreach (CertificateInfoModel certificate in dbContext.Certificates)
                 {
-                    this.CertStatusesByThumbprint.Add(info.Thumbprint, info.Status);
+                    this.CertStatusesByThumbprint.Add(certificate.Thumbprint, certificate.Status);
 
-                    if (info.Status == CertificateStatus.Revoked)
-                        this.RevokedCertificates.Add(info.Thumbprint);
-                    else if ((info.BlockSigningPubKey?.Length ?? 0) != 0)
-                        this.PublicKeys.Add(Encoders.Hex.EncodeData(info.BlockSigningPubKey));
+                    if (certificate.Status == CertificateStatus.Revoked)
+                        this.RevokedCertificates.Add(certificate.Thumbprint);
+                    else if ((certificate.BlockSigningPubKey?.Length ?? 0) != 0)
+                        this.PublicKeys.Add(Encoders.Hex.EncodeData(certificate.BlockSigningPubKey));
                 }
             }
 
@@ -95,11 +95,16 @@ namespace CertificateAuthority.Database
             this.logger.Info("Certificate id {0}, thumbprint {1} was added.");
         }
 
-        /// <summary>Provides the certificate issued by the account with the specified id, if any.</summary>
+        /// <summary>
+        /// Provides the certificate issued by the account with the specified id, if any.
+        /// <para>
+        /// Revoked certificates will be ignored.
+        /// </para>
+        /// </summary>
         public CertificateInfoModel GetCertificateIssuedByAccountId(CredentialsAccessWithModel<CredentialsModelWithTargetId> accessWithModel)
         {
             // TODO: We shouldn't need special access rights to retrieve the certificate for the authenticating user, i.e. when Model.AccountId == Model.TargetAccountId
-            return ExecuteQuery(accessWithModel, (dbContext) => { return dbContext.Certificates.FirstOrDefault(x => x.AccountId == accessWithModel.Model.TargetAccountId); });
+            return ExecuteQuery(accessWithModel, (dbContext) => { return dbContext.Certificates.FirstOrDefault(x => x.Status == CertificateStatus.Good && x.AccountId == accessWithModel.Model.TargetAccountId); });
         }
 
         #endregion
