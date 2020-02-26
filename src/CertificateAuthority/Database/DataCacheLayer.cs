@@ -95,11 +95,16 @@ namespace CertificateAuthority.Database
             this.logger.Info("Certificate id {0}, thumbprint {1} was added.");
         }
 
-        /// <summary>Provides the certificate issued by the account with the specified id, if any.</summary>
+        /// <summary>
+        /// Provides the certificate issued by the account with the specified id, if any.
+        /// <para>
+        /// Revoked certificates will be ignored.
+        /// </para>
+        /// </summary>
         public CertificateInfoModel GetCertificateIssuedByAccountId(CredentialsAccessWithModel<CredentialsModelWithTargetId> accessWithModel)
         {
             // TODO: We shouldn't need special access rights to retrieve the certificate for the authenticating user, i.e. when Model.AccountId == Model.TargetAccountId
-            return ExecuteQuery(accessWithModel, (dbContext) => { return dbContext.Certificates.FirstOrDefault(x => x.AccountId == accessWithModel.Model.TargetAccountId); });
+            return ExecuteQuery(accessWithModel, (dbContext) => { return dbContext.Certificates.FirstOrDefault(x => x.Status == CertificateStatus.Good && x.AccountId == accessWithModel.Model.TargetAccountId); });
         }
 
         #endregion
