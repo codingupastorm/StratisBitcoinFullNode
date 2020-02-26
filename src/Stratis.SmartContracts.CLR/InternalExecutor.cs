@@ -14,22 +14,15 @@ namespace Stratis.SmartContracts.CLR
         private readonly IGasMeter gasMeter;
         private readonly ReadWriteSet readWriteSet;
 
-        /// <summary>
-        /// Version to be used when storing smart contract state data.
-        /// </summary>
-        private readonly string version;
-
         public InternalExecutor(IGasMeter gasMeter,
             ReadWriteSet readWriteSet,
             IState state,
-            IStateProcessor stateProcessor,
-            string version)
+            IStateProcessor stateProcessor)
         {
             this.gasMeter = gasMeter;
             this.readWriteSet = readWriteSet;
             this.state = state;
             this.stateProcessor = stateProcessor;
-            this.version = version;
         }
 
         ///<inheritdoc />
@@ -52,7 +45,6 @@ namespace Stratis.SmartContracts.CLR
                 smartContractState.Message.ContractAddress.ToUint160(),
                 amountToTransfer,
                 (Gas) gasBudget,
-                this.version,
                 parameters,
                 typeof(T).Name
             );
@@ -99,7 +91,6 @@ namespace Stratis.SmartContracts.CLR
                 smartContractState.Message.ContractAddress.ToUint160(),
                 amountToTransfer,
                 (Gas) gasBudget,
-                this.version,
                 new MethodCall(methodName, parameters)
             );
 
@@ -139,8 +130,7 @@ namespace Stratis.SmartContracts.CLR
                 addressTo.ToUint160(),
                 smartContractState.Message.ContractAddress.ToUint160(),
                 amountToTransfer,
-                (Gas) gasBudget,
-                this.version
+                (Gas) gasBudget
             );
 
             // Create a snapshot of the current state

@@ -49,6 +49,7 @@ namespace Stratis.SmartContracts.CLR
             this.Block = state.Block;
             this.TransactionHash = state.TransactionHash;
             this.smartContractStateFactory = state.smartContractStateFactory;
+            this.Version = state.Version;
         }
 
         public State(ISmartContractStateFactory smartContractStateFactory,
@@ -56,7 +57,8 @@ namespace Stratis.SmartContracts.CLR
             IContractLogHolder contractLogHolder,
             List<TransferInfo> internalTransfers,
             IBlock block,
-            uint256 transactionHash)
+            uint256 transactionHash,
+            string version)
         {
             this.ContractState = repository;
             this.LogHolder = contractLogHolder;
@@ -66,7 +68,10 @@ namespace Stratis.SmartContracts.CLR
             this.Block = block;
             this.TransactionHash = transactionHash;
             this.smartContractStateFactory = smartContractStateFactory;
+            this.Version = version;
         }
+
+        public string Version { get; }
         
         public uint256 TransactionHash { get; }
 

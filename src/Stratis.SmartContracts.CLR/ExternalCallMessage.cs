@@ -8,8 +8,8 @@ namespace Stratis.SmartContracts.CLR
     /// </summary>
     public class ExternalCallMessage : CallMessage
     {
-        public ExternalCallMessage(uint160 to, uint160 from, ulong amount, Gas gasLimit, string version, MethodCall methodCall) 
-            : base(to, from, amount, gasLimit, version, methodCall)
+        public ExternalCallMessage(uint160 to, uint160 from, ulong amount, Gas gasLimit, MethodCall methodCall) 
+            : base(to, from, amount, gasLimit, methodCall)
         {
         }
     }

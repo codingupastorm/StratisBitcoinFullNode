@@ -12,6 +12,7 @@ namespace Stratis.SmartContracts.CLR
 {
     public interface IState
     {
+        string Version { get; }
         IBlock Block { get; }
         BalanceState BalanceState { get; }
         IStateRepository ContractState { get; }

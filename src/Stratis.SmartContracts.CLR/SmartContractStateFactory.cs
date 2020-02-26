@@ -27,7 +27,7 @@ namespace Stratis.SmartContracts.CLR
         /// </summary>
         public ISmartContractState Create(IState state, ReadWriteSet readWriteSet, IGasMeter gasMeter, uint160 address, BaseMessage message, IStateRepository repository)
         {
-            IPersistenceStrategy persistenceStrategy = new MeteredPersistenceStrategy(repository, gasMeter, new BasicKeyEncodingStrategy(), readWriteSet, message.Version);
+            IPersistenceStrategy persistenceStrategy = new MeteredPersistenceStrategy(repository, gasMeter, new BasicKeyEncodingStrategy(), readWriteSet, state.Version);
 
             var persistentState = new PersistentState(persistenceStrategy, this.serializer, address);
 
@@ -43,7 +43,7 @@ namespace Stratis.SmartContracts.CLR
                 persistentState,
                 this.serializer,
                 contractLogger,
-                this.internalTransactionExecutorFactory.Create(gasMeter, readWriteSet, state, message.Version),
+                this.internalTransactionExecutorFactory.Create(gasMeter, readWriteSet, state),
                 new InternalHashHelper(),
                 () => state.GetBalance(address));
 
