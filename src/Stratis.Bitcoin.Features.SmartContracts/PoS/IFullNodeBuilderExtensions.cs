@@ -11,7 +11,6 @@ using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.Miner.Interfaces;
 using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.SmartContracts.PoW;
-using Stratis.Bitcoin.Features.SmartContracts.Wallet;
 using Stratis.Bitcoin.Mining;
 
 namespace Stratis.Bitcoin.Features.SmartContracts.PoS
@@ -38,35 +37,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoS
                         services.AddSingleton<StakeChainStore>().AddSingleton<IStakeChain, StakeChainStore>(provider => provider.GetService<StakeChainStore>());
                         services.AddSingleton<IStakeValidator, StakeValidator>();
                         services.AddSingleton<IConsensusRuleEngine, PosConsensusRuleEngine>();
-                    });
-            });
-
-            return fullNodeBuilder;
-        }
-
-        /// <summary>
-        /// Adds mining to the smart contract node.
-        /// <para>We inject <see cref="IPowMining"/> with a smart contract block provider and definition.</para>
-        /// </summary>
-        public static IFullNodeBuilder UseSmartContractPosPowMining(this IFullNodeBuilder fullNodeBuilder)
-        {
-            LoggingConfiguration.RegisterFeatureNamespace<MiningFeature>("mining");
-
-            fullNodeBuilder.ConfigureFeature(features =>
-            {
-                features
-                    .AddFeature<MiningFeature>()
-                    .DependOn<MempoolFeature>()
-                    .DependOn<RPCFeature>()
-                    .DependOn<SmartContractWalletFeature>()
-                    .FeatureServices(services =>
-                    {
-                        services.AddSingleton<IPowMining, PowMining>();
-                        services.AddSingleton<IBlockProvider, SmartContractBlockProvider>();
-                        services.AddSingleton<BlockDefinition, SmartContractBlockDefinition>();
-                        services.AddSingleton<BlockDefinition, SmartContractPosPowBlockDefinition>();
-                        services.AddSingleton<IBlockBufferGenerator, BlockBufferGenerator>();
-                        services.AddSingleton<IMinerSettings, MinerSettings>();
                     });
             });
 
