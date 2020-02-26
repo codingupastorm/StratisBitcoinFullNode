@@ -17,7 +17,7 @@ namespace Stratis.Feature.PoA.Tokenless
             switch (permission)
             {
                 case TransactionSendingPermission.Send:
-                    return CaCertificatesManager.SendPermission;
+                    return CaCertificatesManager.SendPermissionOid;
                 case TransactionSendingPermission.CallContract:
                     return CaCertificatesManager.CallContractPermissionOid;
                 case TransactionSendingPermission.CreateContract:

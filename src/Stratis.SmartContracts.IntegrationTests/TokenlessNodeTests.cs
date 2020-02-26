@@ -12,7 +12,6 @@ using CertificateAuthority.Tests;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using Org.BouncyCastle.X509;
@@ -52,7 +51,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         // TODO: Lots of repetition in this file.
 
         [Fact]
-        public async Task StartCACorrectlyAndTestApiAsync()
+        public void StartCACorrectlyAndTestApi()
         {
             using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
@@ -93,7 +92,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.Equal(nodeCert.NotBefore.AddYears(CaCertificatesManager.CertificateValidityPeriodYears), nodeCert.NotAfter);
 
                 // Get public keys from the API.
-                List<PubKey> pubkeys = await client.GetCertificatePublicKeysAsync();
+                List<PubKey> pubkeys = client.GetCertificatePublicKeys();
                 Assert.Single(pubkeys);
             }
         }
@@ -105,7 +104,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
-                
+
                 // Start + Initialize CA.
                 var client = GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
@@ -436,7 +435,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var addressManagers = new[] {
                     node1.FullNode.NodeService<IPeerAddressManager>(),
                     node2.FullNode.NodeService<IPeerAddressManager>(),
-                    node3.FullNode.NodeService<IPeerAddressManager>() 
+                    node3.FullNode.NodeService<IPeerAddressManager>()
                 };
 
                 bool HaveBans()
@@ -582,7 +581,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task RestartCAAndEverythingStillWorksAsync()
+        public void RestartCAAndEverythingStillWorks()
         {
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
@@ -621,14 +620,14 @@ namespace Stratis.SmartContracts.IntegrationTests
                     List<CertificateInfoModel> nodeCerts = client.GetAllCertificates();
                     Assert.Equal(2, nodeCerts.Count);
 
-                    List<PubKey> pubkeys = await client.GetCertificatePublicKeysAsync();
+                    List<PubKey> pubkeys = client.GetCertificatePublicKeys();
                     Assert.Equal(2, pubkeys.Count);
                 }
             }
         }
 
         [Fact]
-        public async Task RestartNodeWithoutCARemembersWhichCertificatesRevokedAsync()
+        public void RestartNodeWithoutCARemembersWhichCertificatesRevoked()
         {
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
@@ -652,7 +651,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                     // Revoke a certificate.
                     this.RevokeCertificateFromInitializedCAServer(server);
-                    
+
                     // Get the thumbprint of the revoked certificate.
                     string revokedThumbprint = client.GetRevokedCertificates().First();
 
@@ -696,7 +695,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
                 CaClient client1 = this.GetClient(server);
-                
+
                 (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
 
                 node1.Start();
@@ -865,8 +864,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 {
                     TransactionHex = opReturnResponse.Hex
                 });
-                
-                var sendTransactionResult = (JsonResult) result;
+
+                var sendTransactionResult = (JsonResult)result;
                 var sendTransactionResponse = (Bitcoin.Features.MemoryPool.Broadcasting.SendTransactionModel)sendTransactionResult.Value;
 
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);

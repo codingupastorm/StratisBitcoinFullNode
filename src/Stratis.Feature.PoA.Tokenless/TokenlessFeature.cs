@@ -99,8 +99,8 @@ namespace Stratis.Feature.PoA.Tokenless
             {
                 try
                 {
-                    await this.SynchronizeMembersAsync();
-                } 
+                    this.SynchronizeMembers();
+                }
                 catch (Exception e)
                 {
                     this.logger.LogDebug(e, "Exception raised when calling CA to synchronize members.");
@@ -112,7 +112,7 @@ namespace Stratis.Feature.PoA.Tokenless
             startAfter: TimeSpans.Minute);
         }
 
-        private async Task SynchronizeMembersAsync()
+        private void SynchronizeMembers()
         {
             // If we're not a federation member, it's not our job to vote. Don't schedule any votes until we are one.
             if (!this.federationManager.IsFederationMember)
@@ -121,7 +121,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 return;
             }
 
-            List<PubKey> allowedMembers = await this.certificatesManager.GetCertificatePublicKeysAsync();
+            List<PubKey> allowedMembers = this.certificatesManager.GetCertificatePublicKeys();
             List<IFederationMember> currentMembers = this.federationManager.GetFederationMembers();
 
             // Check for differences and kick members without valid certificates.                

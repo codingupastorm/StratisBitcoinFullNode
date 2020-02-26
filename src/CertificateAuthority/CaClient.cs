@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Threading.Tasks;
-using CertificateAuthority.Controllers;
 using CertificateAuthority.Models;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -50,7 +48,7 @@ namespace CertificateAuthority
         {
             // Happy to not use RequestFromCA method for now because this is a more specialised method, might need different logic at some point.
 
-            var mnemonicModel = new InitializeCertificateAuthorityModel(mnemonic, mnemonicPassword, network.Consensus.CoinType, network.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS][0], this.password);
+            var mnemonicModel = new InitializeCertificateAuthorityModel(mnemonic, mnemonicPassword, network.Consensus.CoinType, this.password);
 
             HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{InitializeCertificateAuthorityEndpoint}", mnemonicModel).GetAwaiter().GetResult();
 
@@ -87,7 +85,7 @@ namespace CertificateAuthority
                 stateOrProvince,
                 emailAddress,
                 country,
-                AccountsController.ValidPermissions);
+                CaCertificatesManager.ValidPermissions);
 
             return this.RequestFromCA<int>(RequestAccountEndpoint, requestAccountModel);
         }
@@ -103,7 +101,7 @@ namespace CertificateAuthority
             return this.RequestFromCA<List<CertificateInfoModel>>(GetAllCertificatesEndpoint, credentialsModel);
         }
 
-        public async Task<List<PubKey>> GetCertificatePublicKeysAsync()
+        public List<PubKey> GetCertificatePublicKeys()
         {
             var credentialsModel = new CredentialsModel()
             {
