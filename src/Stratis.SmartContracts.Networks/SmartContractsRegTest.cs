@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Protocol;
-using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.MemoryPool.Rules;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.MempoolRules;
 using Stratis.Bitcoin.Features.SmartContracts.PoA.MempoolRules;
 using Stratis.Bitcoin.Features.SmartContracts.PoW;
-using Stratis.Bitcoin.Features.SmartContracts.PoW.Rules;
 using Stratis.Bitcoin.Features.SmartContracts.Rules;
 using Stratis.SmartContracts.Networks.Policies;
 
@@ -163,7 +161,7 @@ namespace Stratis.SmartContracts.Networks
                 .Register<OpSpendRule>()
                 .Register<CanGetSenderRule>()
                 .Register<P2PKHNotContractRule>()
-                .Register<SmartContractPowCoinviewRule>()
+                //.Register<SmartContractPowCoinviewRule>() // We want to keep this network around for now because tests use it. But this rule has been deleted as we don't need it.
                 .Register<SaveCoinviewRule>();
         }
 
