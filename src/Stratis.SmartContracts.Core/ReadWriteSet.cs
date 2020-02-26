@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using NBitcoin;
+using Newtonsoft.Json;
 using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.SmartContracts.Core
 {
     public class ReadWriteSet
     {
-        // TODO: Nested execution!
-
         // TODO: These types are a little dirty. Can we do something nicer than IReadOnlyCollection?
 
         /// <summary>
@@ -66,6 +65,56 @@ namespace Stratis.SmartContracts.Core
                 this.AddWriteItem(write.Key, write.Value);
             }
         }
+
+        public string ToJsonString()
+        {
+            // TODO: Might be best off having something else do this.
+            return JsonConvert.SerializeObject(new RawReadWriteSet(this));
+        }
+    }
+
+    public class RawReadWriteSet
+    {
+        public List<RawReadItem> Reads { get; set; }
+
+        public List<RawWriteItem> Writes { get; set; }
+
+        public RawReadWriteSet(ReadWriteSet rws)
+        {
+            this.Reads = rws.ReadSet.ToList().Select(x => new RawReadItem
+            {
+                ContractAddressHex = x.Key.ContractAddress.ToString(),
+                KeyHex = x.Key.Key.ToHexString(),
+                Version = x.Value
+            }).ToList();
+
+            this.Writes = rws.WriteSet.ToList().Select(x => new RawWriteItem
+            {
+                ContractAddressHex = x.Key.ContractAddress.ToString(),
+                KeyHex = x.Key.Key.ToHexString(),
+                ValueHex = x.Value.ToHexString()
+            }).ToList();
+        }
+
+
+    }
+
+    public class RawReadItem
+    {
+        public string ContractAddressHex { get; set; }
+
+        public string KeyHex { get; set; }
+
+        public string Version { get; set; }
+    }
+
+    public class RawWriteItem
+    {
+        public string ContractAddressHex { get; set; }
+
+        public string KeyHex { get; set; }
+
+        public string ValueHex { get; set; }
     }
 
     public struct ReadWriteSetKey

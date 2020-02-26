@@ -229,6 +229,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Rules
                 result.ErrorMessage,
                 deserializedCallData.Value.GasPrice,
                 txContext.TxOutValue,
+                result.ReadWriteSet.ToJsonString(),
                 deserializedCallData.Value.IsCreateContract ? null : deserializedCallData.Value.MethodName,
                 txContext.BlockHeight)
             {

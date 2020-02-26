@@ -30,6 +30,7 @@ using Stratis.Feature.PoA.Tokenless.Controllers;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Compilation;
+using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
@@ -265,6 +266,9 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.NotNull(value1);
                 Assert.Equal("1.1", value1.Version); // Block height 1, tx index 1.
 
+                // Check that our readwriteset contains the hex for the key we saved. TODO: Parse the json.
+                Assert.Contains(Encoding.UTF8.GetBytes("Increment").ToHexString(), createReceipt.ReadWriteSet);
+
                 Transaction callTransaction = CreateContractCallTransaction(node1, createReceipt.NewContractAddress, txPrivKey1);
                 await node1.BroadcastTransactionAsync(callTransaction);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
@@ -276,6 +280,9 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 StorageValue value2 = stateRepo.GetStorageValue(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("Increment"));
                 Assert.Equal("2.1", value2.Version); // Block height 1, tx index 1.
+
+                // Check that our readwriteset contains the version for the key we read. TODO: Parse the json.
+                Assert.Contains("\"1.1\"", callReceipt.ReadWriteSet);
             }
         }
 

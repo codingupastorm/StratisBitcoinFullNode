@@ -44,6 +44,12 @@ namespace Stratis.SmartContracts.Core.Receipts
         /// Logs created during contract execution. 
         /// </summary>
         public Log[] Logs { get; }
+
+        /// <summary>
+        /// String output of the readwrite set generated during execution.
+        /// </summary>
+        public string ReadWriteSet { get; }
+
         #endregion
 
         #region Storage Properties
@@ -117,9 +123,10 @@ namespace Stratis.SmartContracts.Core.Receipts
             string errorMessage,
             ulong gasPrice,
             ulong amount,
+            string readWriteSet,
             string methodName = null,
             ulong? blockNumber = null) 
-            : this(postState, gasUsed, logs, BuildBloom(logs), transactionHash, null, @from, to, newContractAddress, success, result, errorMessage, gasPrice, amount, methodName, blockNumber)
+            : this(postState, gasUsed, logs, BuildBloom(logs), transactionHash, null, @from, to, newContractAddress, success, result, errorMessage, gasPrice, amount, readWriteSet, methodName, blockNumber)
         { }
 
         /// <summary>
@@ -128,7 +135,7 @@ namespace Stratis.SmartContracts.Core.Receipts
         public Receipt(uint256 postState,
             ulong gasUsed,
             Log[] logs)
-            : this(postState, gasUsed, logs, BuildBloom(logs), null, null, null, null, null, false, null, null, 0, 0, null, null)
+            : this(postState, gasUsed, logs, BuildBloom(logs), null, null, null, null, null, false, null, null, 0, 0, null, null, null)
         { }
 
         /// <summary>
@@ -139,7 +146,7 @@ namespace Stratis.SmartContracts.Core.Receipts
             ulong gasUsed,
             Log[] logs,
             Bloom bloom) 
-            : this(postState, gasUsed, logs, bloom, null, null, null, null, null, false, null, null, 0, 0, null, null)
+            : this(postState, gasUsed, logs, bloom, null, null, null, null, null, false, null, null, 0, 0, null, null, null)
         { }
 
         private Receipt(uint256 postState,
@@ -156,6 +163,7 @@ namespace Stratis.SmartContracts.Core.Receipts
             string errorMessage,
             ulong gasPrice,
             ulong amount,
+            string readWriteSet,
             string methodName,
             ulong? blockNumber)
         {
@@ -173,6 +181,7 @@ namespace Stratis.SmartContracts.Core.Receipts
             this.Result = result;
             this.ErrorMessage = errorMessage;
             this.Amount = amount;
+            this.ReadWriteSet = readWriteSet;
             this.MethodName = methodName;
             this.BlockNumber = blockNumber;
         }
@@ -272,8 +281,9 @@ namespace Stratis.SmartContracts.Core.Receipts
                 innerList[11].RLPData != null ? Encoding.UTF8.GetString(innerList[11].RLPData) : null,
                 BitConverter.ToUInt64(innerList[12].RLPData),
                 BitConverter.ToUInt64(innerList[13].RLPData),
-                hasMethodName && innerList[14].RLPData != null ? Encoding.UTF8.GetString(innerList[14].RLPData) : null,
-                hasBlockNumber && innerList[15].RLPData != null ? BitConverter.ToUInt64(innerList[15].RLPData) : (ulong?) null);
+                innerList[14].RLPData != null ? Encoding.UTF8.GetString(innerList[14].RLPData) : null,
+                hasMethodName && innerList[15].RLPData != null ? Encoding.UTF8.GetString(innerList[15].RLPData) : null,
+                hasBlockNumber && innerList[16].RLPData != null ? BitConverter.ToUInt64(innerList[16].RLPData) : (ulong?) null);
 
             return receipt;
         }
@@ -300,6 +310,7 @@ namespace Stratis.SmartContracts.Core.Receipts
                 RLP.EncodeElement(Encoding.UTF8.GetBytes(this.ErrorMessage ?? "")),
                 RLP.EncodeElement(BitConverter.GetBytes(this.GasPrice)),
                 RLP.EncodeElement(BitConverter.GetBytes(this.Amount)),
+                RLP.EncodeElement(Encoding.UTF8.GetBytes(this.ReadWriteSet ?? "")),
                 RLP.EncodeElement(Encoding.UTF8.GetBytes(this.MethodName ?? "")),
                 RLP.EncodeElement(this.BlockNumber.HasValue ? BitConverter.GetBytes(this.BlockNumber.Value) : null)
             );

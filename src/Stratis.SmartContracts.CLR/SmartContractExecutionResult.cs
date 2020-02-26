@@ -40,6 +40,9 @@ namespace Stratis.SmartContracts.CLR
         /// <inheritdoc />
         public IList<Log> Logs { get; set; }
 
+        /// <inheritdoc />
+        public ReadWriteSet ReadWriteSet { get; set; }
+
         public SmartContractExecutionResult()
         {
             this.Logs = new List<Log>();
