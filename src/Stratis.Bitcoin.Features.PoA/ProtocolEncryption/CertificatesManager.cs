@@ -50,7 +50,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         bool IsCertificateRevokedByAddress(uint160 address);
 
-        List<PubKey> GetCertificatePublicKeysAsync();
+        List<PubKey> GetCertificatePublicKeys();
     }
 
     public sealed class CertificatesManager : ICertificatesManager

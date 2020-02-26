@@ -50,7 +50,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             this.blockRepository = new Mock<IBlockRepository>().Object;
             this.CallDataSerializer = new NoGasCallDataSerializer(new ContractPrimitiveSerializer(this.Network));
-            
+
             this.CertificatePermissionsChecker = new Mock<ICertificatePermissionsChecker>();
             this.CertificatePermissionsChecker.Setup(c => c.CheckSenderCertificateHasPermission(It.IsAny<uint160>(), It.IsAny<TransactionSendingPermission>())).Returns(true);
 
@@ -62,7 +62,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             this.BlockPolicyEstimator = new BlockPolicyEstimator(this.MempoolSettings, this.LoggerFactory, this.NodeSettings);
             this.Mempool = new TokenlessMempool(this.BlockPolicyEstimator, this.LoggerFactory, this.NodeSettings);
-            
+
             // TODO: Ostensibly need to be able to test the revoked case too
             this.RevocationChecker = new Mock<IRevocationChecker>();
             this.RevocationChecker.Setup(c => c.IsCertificateRevoked(It.IsAny<string>(), It.IsAny<bool>())).Returns(false);
