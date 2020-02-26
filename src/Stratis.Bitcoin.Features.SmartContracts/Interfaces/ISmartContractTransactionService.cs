@@ -1,7 +1,7 @@
 ﻿using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.SmartContracts.CLR;
 
-namespace Stratis.Bitcoin.Features.SmartContracts.Wallet
+namespace Stratis.Bitcoin.Features.SmartContracts.Interfaces
 {
     public interface ISmartContractTransactionService
     {
