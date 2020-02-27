@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DBreeze;
 using DBreeze.Utils;
+using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Bitcoin.Utilities;
@@ -27,10 +28,10 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
         private DBreezeEngine storage;
         private SingleThreadResource transactionLock;
 
-        public KeyValueStoreDBreeze(KeyValueStore.KeyValueStore keyValueStore)
-            : base(keyValueStore)
+        public KeyValueStoreDBreeze(ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer)
+            : base(repositorySerializer)
         {
-            var logger = keyValueStore.LoggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
+            var logger = loggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
 
             this.transactionLock = new SingleThreadResource($"{nameof(this.transactionLock)}", logger);
         }

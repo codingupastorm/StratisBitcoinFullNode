@@ -8,9 +8,6 @@ namespace CertificateAuthority.Models
     public sealed class InitializeCertificateAuthorityModel
     {
         [Required]
-        public byte AddressPrefix { get; set; }
-
-        [Required]
         public int CoinType { get; set; }
 
         /// <summary>Mnemonic words used to derive certificate authority's private key.</summary>
@@ -32,9 +29,8 @@ namespace CertificateAuthority.Models
         {
         }
 
-        public InitializeCertificateAuthorityModel(string mnemonic, string mnemonicPassword, int coinType, byte addressPrefix, string password)
+        public InitializeCertificateAuthorityModel(string mnemonic, string mnemonicPassword, int coinType, string password)
         {
-            this.AddressPrefix = addressPrefix;
             this.CoinType = coinType;
             this.Mnemonic = mnemonic;
             this.MnemonicPassword = mnemonicPassword;

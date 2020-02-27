@@ -35,7 +35,7 @@ namespace CertificateAuthority.Controllers
 
             return ExecuteCaMethod(() =>
             {
-                var certificateCreationResult = this.caCertificateManager.InitializeCertificateAuthority(model.AddressPrefix, model.AdminPassword, model.CoinType, model.Mnemonic, model.MnemonicPassword);
+                var certificateCreationResult = this.caCertificateManager.InitializeCertificateAuthority(model.AdminPassword, model.CoinType, model.Mnemonic, model.MnemonicPassword);
                 return this.Json(this.LogExit(certificateCreationResult));
             });
         }
@@ -51,11 +51,11 @@ namespace CertificateAuthority.Controllers
         {
             this.LogEntry(model);
 
-            var data = new CredentialsAccessWithModel<CredentialsModelWithThumbprintModel>(model, AccountAccessFlags.RevokeCertificates);
+            var credentialsWithThumbprintModel = new CredentialsAccessWithModel<CredentialsModelWithThumbprintModel>(model, AccountAccessFlags.RevokeCertificates);
 
             return ExecuteCaMethod(() =>
             {
-                var revokeCertificateResult = this.caCertificateManager.RevokeCertificate(data);
+                var revokeCertificateResult = this.caCertificateManager.RevokeCertificate(credentialsWithThumbprintModel);
                 return this.Json(this.LogExit(revokeCertificateResult));
             });
         }

@@ -21,7 +21,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 {
     public class TlsEnabledNetworkPeerConnection : NetworkPeerConnection
     {
-        private readonly CertificatesManager certManager;
+        private readonly ICertificatesManager certificateManager;
 
         private X509Certificate peerCertificate;
 
@@ -36,10 +36,10 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         private TlsClientProtocol tlsClientProtocol;
 
         public TlsEnabledNetworkPeerConnection(Network network, INetworkPeer peer, TcpClient client, int clientId, ProcessMessageAsync<IncomingMessage> processMessageAsync,
-            IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, PayloadProvider payloadProvider, IAsyncProvider asyncProvider, CertificatesManager certManager, bool isServer)
+            IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, PayloadProvider payloadProvider, IAsyncProvider asyncProvider, ICertificatesManager certificateManager, bool isServer)
             : base(network, peer, client, clientId, processMessageAsync, dateTimeProvider, loggerFactory, payloadProvider, asyncProvider)
         {
-            this.certManager = certManager;
+            this.certificateManager = certificateManager;
             this.isServer = isServer;
         }
 
@@ -55,14 +55,14 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             this.stream = this.tcpClient.GetStream();
 
-            if (this.certManager.ClientCertificate == null || this.certManager.ClientCertificatePrivateKey == null)
+            if (this.certificateManager.ClientCertificate == null || this.certificateManager.ClientCertificatePrivateKey == null)
                 throw new OperationCanceledException("The client certificate has not been loaded yet.");
 
             X509Certificate receivedCert;
             if (this.isServer)
             {
                 // We call it a 'client certificate' but for peers connecting to us, we are the server and thus use our client certificate as the server's certificate.
-                this.tlsServer = new CustomTlsServer(this.certManager.ClientCertificate, this.certManager.ClientCertificatePrivateKey);
+                this.tlsServer = new CustomTlsServer(this.certificateManager.ClientCertificate, this.certificateManager.ClientCertificatePrivateKey);
                 this.tlsServerProtocol = new TlsServerProtocol(this.stream, new SecureRandom());
                 this.tlsServerProtocol.Accept(this.tlsServer);
                 receivedCert = this.tlsServer.ReceivedCertificate;
@@ -70,7 +70,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             }
             else
             {
-                this.tlsClient = new CustomTlsClient(null, this.certManager.ClientCertificate, this.certManager.ClientCertificatePrivateKey);
+                this.tlsClient = new CustomTlsClient(null, this.certificateManager.ClientCertificate, this.certificateManager.ClientCertificatePrivateKey);
                 this.tlsClientProtocol = new TlsClientProtocol(this.stream, new SecureRandom());
                 this.tlsClientProtocol.Connect(this.tlsClient);
                 receivedCert = this.tlsClient.Authentication.ReceivedCertificate;
@@ -79,7 +79,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             this.peerCertificate = receivedCert;
 
-            if (!CaCertificatesManager.ValidateCertificateChain(this.certManager.AuthorityCertificate, this.peerCertificate))
+            if (!CaCertificatesManager.ValidateCertificateChain(this.certificateManager.AuthorityCertificate, this.peerCertificate))
                 return null;
 
             return this.stream;
@@ -168,7 +168,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             TlsSession newSession = mContext.ResumableSession;
 
-            if (newSession == null) 
+            if (newSession == null)
                 return;
 
             byte[] newSessionID = newSession.SessionID;
@@ -229,8 +229,8 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         public override CertificateRequest GetCertificateRequest()
         {
-            byte[] certificateTypes = new byte[]{ ClientCertificateType.ecdsa_sign };
-            
+            byte[] certificateTypes = new byte[] { ClientCertificateType.ecdsa_sign };
+
             // TODO: Do we need to send the actual CA certificate's subject down the wire?
             IList certificateAuthorities = new ArrayList() { this.certificate.IssuerDN };
 
@@ -253,7 +253,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         {
             var cert = new Certificate(new X509CertificateStructure[] { this.certificate.CertificateStructure });
             var sigAlg = new SignatureAndHashAlgorithm(HashAlgorithm.sha256, SignatureAlgorithm.ecdsa);
-            
+
             return new DefaultTlsSignerCredentials(this.mContext, cert, this.privateKey, sigAlg);
         }
     }

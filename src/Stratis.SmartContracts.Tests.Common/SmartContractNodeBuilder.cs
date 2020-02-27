@@ -28,9 +28,9 @@ namespace Stratis.SmartContracts.Tests.Common
             this.TimeProvider = new EditableTimeProvider();
         }
 
-        public (CoreNode, Key, Key) CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client, bool initialRun = true)
+        public CoreNode CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client, bool initialRun = true)
         {
-            string dataFolder = this.GetNextDataFolderName(nodeIndex : nodeIndex);
+            string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
 
             string commonName = CaTestHelper.GenerateRandomString();
 
@@ -45,7 +45,7 @@ namespace Stratis.SmartContracts.Tests.Common
                 ? TokenlessNetwork.Mnemonics[nodeIndex]
                 : new Mnemonic(Wordlist.English, WordCount.Twelve);
 
-            string[] args = initialRun ? 
+            string[] args = initialRun ?
                 new string[] {
                     "-conf=poa.conf",
                     "-datadir=" + dataFolder,
@@ -69,52 +69,50 @@ namespace Stratis.SmartContracts.Tests.Common
             using (var settings = new NodeSettings(network, args: args))
             {
                 var loggerFactory = new LoggerFactory();
-                var revocationChecker = new RevocationChecker(settings, null, loggerFactory, new DateTimeProvider());
+                var revocationChecker = new RevocationChecker(settings, null, loggerFactory, DateTimeProvider.Default);
                 var certificatesManager = new CertificatesManager(settings.DataFolder, settings, loggerFactory, revocationChecker, network);
                 var walletManager = new TokenlessWalletManager(network, settings.DataFolder, new TokenlessWalletSettings(settings), certificatesManager, loggerFactory);
 
                 walletManager.Initialize();
 
-                if (!initialRun)
-                    return (node, null, null);
+                node.ClientCertificatePrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.P2PCertificates);
+                node.TransactionSigningPrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.TransactionSigning);
+
+                BitcoinPubKeyAddress address = node.ClientCertificatePrivateKey.PubKey.GetAddress(network);
 
                 Key miningKey = walletManager.GetKey("test", TokenlessWalletAccount.BlockSigning);
-                PubKey miningPubKey = miningKey.PubKey;
 
-                Key clientCertificatePrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.P2PCertificates);
-                PubKey pubKey = clientCertificatePrivateKey.PubKey;
-                Key transactionSigningPrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.TransactionSigning);
-                PubKey transactionSigningPubKey = transactionSigningPrivateKey.PubKey;
-                BitcoinPubKeyAddress address = pubKey.GetAddress(network);
-                PubKey blockSigningPubKey = miningKey.PubKey;
+                if (!initialRun)
+                    return node;
 
-                X509Certificate clientCertificate = IssueCertificate(client, clientCertificatePrivateKey, transactionSigningPubKey, address, blockSigningPubKey);
+                (X509Certificate x509, CertificateInfoModel CertificateInfo) issueResult = IssueCertificate(client, node.ClientCertificatePrivateKey, node.TransactionSigningPrivateKey.PubKey, address, miningKey.PubKey);
+                node.ClientCertificate = issueResult.CertificateInfo;
+                Assert.NotNull(node.ClientCertificate);
 
-                Assert.NotNull(clientCertificate);
-
-                if (authorityCertificate != null && clientCertificate != null)
+                if (authorityCertificate != null && node.ClientCertificate != null)
                 {
                     File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.AuthorityCertificateName), authorityCertificate.GetEncoded());
-                    File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCertificate, clientCertificatePrivateKey, "test"));
+                    File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(issueResult.x509, node.ClientCertificatePrivateKey, "test"));
                 }
 
-                return (node, clientCertificatePrivateKey, transactionSigningPrivateKey);
+                return node;
             }
         }
-        private X509Certificate IssueCertificate(CaClient client, Key privKey, PubKey transactionSigningPubKey, BitcoinPubKeyAddress address, PubKey blockSigningPubKey)
+
+        private (X509Certificate, CertificateInfoModel) IssueCertificate(CaClient client, Key privKey, PubKey transactionSigningPubKey, BitcoinPubKeyAddress address, PubKey blockSigningPubKey)
         {
             CertificateSigningRequestModel response = client.GenerateCertificateSigningRequest(Convert.ToBase64String(privKey.PubKey.ToBytes()), address.ToString(), Convert.ToBase64String(transactionSigningPubKey.Hash.ToBytes()), Convert.ToBase64String(blockSigningPubKey.ToBytes()));
 
             string signedCsr = CaCertificatesManager.SignCertificateSigningRequest(response.CertificateSigningRequestContent, privKey);
 
-            CertificateInfoModel certInfo = client.IssueCertificate(signedCsr);
+            CertificateInfoModel certificateInfo = client.IssueCertificate(signedCsr);
 
-            Assert.NotNull(certInfo);
-            Assert.Equal(address.ToString(), certInfo.Address);
+            Assert.NotNull(certificateInfo);
+            Assert.Equal(address.ToString(), certificateInfo.Address);
 
             var certParser = new X509CertificateParser();
 
-            return certParser.ReadCertificate(certInfo.CertificateContentDer);
+            return (certParser.ReadCertificate(certificateInfo.CertificateContentDer), certificateInfo);
         }
 
         public static SmartContractNodeBuilder Create(object caller, [CallerMemberName] string callingMethod = null)

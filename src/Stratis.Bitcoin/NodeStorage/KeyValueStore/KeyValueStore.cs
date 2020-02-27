@@ -13,29 +13,19 @@ namespace Stratis.Bitcoin.KeyValueStore
     {
         public IKeyValueStoreRepository Repository { get; protected set; }
 
-        private readonly IDateTimeProvider dateTimeProvider;
-        private readonly string rootPath;
-
         internal ILoggerFactory LoggerFactory { get; private set; }
 
         public IRepositorySerializer RepositorySerializer { get; private set; }
 
-        internal IKeyValueStoreTrackers Lookups { get; private set; }
-
         /// <summary>
         /// Creates a key-value store.
         /// </summary>
-        /// <param name="rootPath">The location to create the store.</param>
         /// <param name="loggerFactory">The logger factory.</param>
-        /// <param name="dateTimeProvider">The datetime provider.</param>
         /// <param name="repositorySerializer">The serializer to use.</param>
-        public KeyValueStore(string rootPath, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, IRepositorySerializer repositorySerializer)
+        public KeyValueStore(ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer)
         {
-            this.rootPath = rootPath;
             this.LoggerFactory = loggerFactory;
-            this.dateTimeProvider = dateTimeProvider;
             this.RepositorySerializer = repositorySerializer;
-            this.Lookups = null;
         }
 
         public abstract IKeyValueStoreTransaction CreateTransaction(KeyValueStoreTransactionMode mode, params string[] tables);
@@ -43,12 +33,6 @@ namespace Stratis.Bitcoin.KeyValueStore
         public string[] GetTables()
         {
             return ((KeyValueStoreRepository)this.Repository).Tables.Select(t => t.Value.TableName).ToArray();
-        }
-
-        /// <inheritdoc/>
-        public void SetLookups(IKeyValueStoreTrackers keyValueStoreTrackers)
-        {
-            this.Lookups = keyValueStoreTrackers;
         }
 
         // Public implementation of Dispose pattern callable by consumers.
@@ -76,12 +60,11 @@ namespace Stratis.Bitcoin.KeyValueStore
         /// </summary>
         /// <param name="rootPath">The location to create the store.</param>
         /// <param name="loggerFactory">The logger factory.</param>
-        /// <param name="dateTimeProvider">The datetime provider.</param>
         /// <param name="repositorySerializer">The serializer to use.</param>
-        public KeyValueStore(string rootPath, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, IRepositorySerializer repositorySerializer) :
-            base(rootPath, loggerFactory, dateTimeProvider, repositorySerializer)
+        public KeyValueStore(string rootPath, ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer) :
+            base(loggerFactory, repositorySerializer)
         {
-            this.Repository = (R)Activator.CreateInstance(typeof(R), (KeyValueStore)this);
+            this.Repository = (R)Activator.CreateInstance(typeof(R), loggerFactory, repositorySerializer);
             this.Repository.Init(rootPath);
         }
 
