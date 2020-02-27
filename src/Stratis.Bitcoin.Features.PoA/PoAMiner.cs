@@ -75,7 +75,7 @@ namespace Stratis.Bitcoin.Features.PoA
 
         private readonly IAsyncProvider asyncProvider;
 
-        private Task miningTask;
+        protected Task miningTask;
 
         public PoAMiner(
             IConsensusManager consensusManager,

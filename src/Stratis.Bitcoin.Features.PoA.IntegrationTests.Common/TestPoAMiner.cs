@@ -123,6 +123,9 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
 
         public async Task MineBlocksAsync(int count)
         {
+            if (base.miningTask == null)
+                return;
+
             for (int i = 0; i < count; i++)
             {
                 this.dateTimeProvider.AdjustedTimeOffset += TimeSpan.FromSeconds(

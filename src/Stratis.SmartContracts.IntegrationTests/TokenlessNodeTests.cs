@@ -922,7 +922,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             }
         }
 
-        [Fact]
+        [Fact(Skip = "Skip until next permissions are configurable")]
         public async Task TokenlessNodeDoesNotHaveMiningPermissionDoesNotMineAsync()
         {
             using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
@@ -944,13 +944,11 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 node1.Start();
 
-                // Mine 20 blocks
-                await node1.MineBlocksAsync(20);
-                TestHelper.IsNodeSyncedAtHeight(node1, 20);
+                // Try and mine 2 blocks
+                await node1.MineBlocksAsync(2);
 
-                // Restart the node and ensure that it is still at height 20.
-                node1.Restart();
-                TestHelper.IsNodeSyncedAtHeight(node1, 20);
+                // The height should not have increased.
+                Assert.Equal(0, node1.FullNode.ConsensusManager().Tip.Height);
             }
         }
 
