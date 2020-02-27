@@ -1,4 +1,6 @@
 ﻿using NBitcoin;
+using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
 
@@ -10,6 +12,7 @@ namespace Stratis.SmartContracts.CLR
         /// Sets up a new <see cref="ISmartContractState"/> based on the current state.
         /// </summary>
         ISmartContractState Create(IState state,
+            ReadWriteSet readWriteSet,
             IGasMeter gasMeter,
             uint160 address,
             BaseMessage message,

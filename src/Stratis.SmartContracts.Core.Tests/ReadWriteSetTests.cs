@@ -1,14 +1,18 @@
 ﻿using System.Linq;
+using System.Text;
+using NBitcoin;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Xunit;
 
 namespace Stratis.SmartContracts.Core.Tests
 {
     public class ReadWriteSetTests
     {
-        private const string Key1 = "key1";
-        private const string Key2 = "key2";
-        private const string Key3 = "key3";
-        private const string Key4 = "key4";
+        private static readonly ReadWriteSetKey Key1 = new ReadWriteSetKey(uint160.One, Encoding.UTF8.GetBytes("key1"));
+        private static readonly ReadWriteSetKey Key2 = new ReadWriteSetKey(uint160.One, Encoding.UTF8.GetBytes("key2"));
+        private static readonly ReadWriteSetKey Key3 = new ReadWriteSetKey(uint160.One, Encoding.UTF8.GetBytes("key3"));
+        private static readonly ReadWriteSetKey Key4 = new ReadWriteSetKey(uint160.One, Encoding.UTF8.GetBytes("key4"));
+        private static readonly ReadWriteSetKey Key1DifferentReference = new ReadWriteSetKey(uint160.One, Encoding.UTF8.GetBytes("key1"));
         private const string Version1 = "1.1";
         private const string Version2 = "1.2";
         private static byte[] Value1 = new byte[] { 0, 1, 2, 3 };
@@ -47,6 +51,7 @@ namespace Stratis.SmartContracts.Core.Tests
             // Only the last written value is in the RWS.
             var rws = new ReadWriteSet();
             rws.AddWriteItem(Key1, Value1);
+            rws.AddWriteItem(Key1DifferentReference, Value1);
             rws.AddWriteItem(Key1, Value2);
             Assert.Single(rws.WriteSet);
             Assert.Equal(Value2, rws.WriteSet.ToList()[0].Value);

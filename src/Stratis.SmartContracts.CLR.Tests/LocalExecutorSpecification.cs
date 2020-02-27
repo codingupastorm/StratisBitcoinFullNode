@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using Moq;
 using NBitcoin;
 using Stratis.SmartContracts.CLR.Local;
+using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.State.AccountAbstractionLayer;
@@ -19,7 +21,7 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             VmExecutionResult vmExecutionResult = VmExecutionResult.Ok(new object(), null);
 
-            StateTransitionResult stateTransitionResult = StateTransitionResult.Ok((RuntimeObserver.Gas)100, uint160.One, vmExecutionResult.Success.Result);
+            StateTransitionResult stateTransitionResult = StateTransitionResult.Ok((RuntimeObserver.Gas)100, uint160.One, new ReadWriteSet(), vmExecutionResult.Success.Result);
 
             var fixture = new ExecutorFixture(contractTxData);
             IState snapshot = fixture.State.Object.Snapshot();

@@ -1,5 +1,7 @@
 ﻿using Moq;
 using NBitcoin;
+using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.State.AccountAbstractionLayer;
 using Xunit;
@@ -57,7 +59,7 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             this.contractStateRoot.Verify(s => s.CreateAccount(newContractAddress), Times.Once);
 
-            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<RuntimeObserver.IGasMeter>(), newContractAddress, externalCreateMessage, this.contractStateRoot.Object));
+            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<ReadWriteSet>(), It.IsAny<RuntimeObserver.IGasMeter>(), newContractAddress, externalCreateMessage, this.contractStateRoot.Object));
 
             this.vm.Verify(v => v.Create(this.contractStateRoot.Object, It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), externalCreateMessage.Code, externalCreateMessage.Parameters, null), Times.Once);
 
@@ -150,7 +152,7 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             this.contractStateRoot.Verify(sr => sr.GetContractType(externalCallMessage.To), Times.Once);
 
-            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<RuntimeObserver.IGasMeter>(), externalCallMessage.To, externalCallMessage, this.contractStateRoot.Object));
+            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<ReadWriteSet>(), It.IsAny<RuntimeObserver.IGasMeter>(), externalCallMessage.To, externalCallMessage, this.contractStateRoot.Object));
 
             this.vm.Verify(
                 v => v.ExecuteMethod(It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), externalCallMessage.Method, code, typeName),
@@ -204,7 +206,7 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             this.contractStateRoot.Verify(sr => sr.GetContractType(externalCallMessage.To), Times.Once);
 
-            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<RuntimeObserver.IGasMeter>(), externalCallMessage.To, externalCallMessage, this.contractStateRoot.Object));
+            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<ReadWriteSet>(), It.IsAny<RuntimeObserver.IGasMeter>(), externalCallMessage.To, externalCallMessage, this.contractStateRoot.Object));
 
             this.vm.Verify(
                 v => v.ExecuteMethod(It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), externalCallMessage.Method, code, typeName),
@@ -299,7 +301,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             this.contractStateRoot.Verify(s => s.CreateAccount(newContractAddress), Times.Once);
 
             // Verify we set up the smart contract state
-            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<RuntimeObserver.IGasMeter>(), newContractAddress, internalCreateMessage, this.contractStateRoot.Object));
+            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<ReadWriteSet>(), It.IsAny<RuntimeObserver.IGasMeter>(), newContractAddress, internalCreateMessage, this.contractStateRoot.Object));
 
             // Verify the VM was invoked
             this.vm.Verify(v => v.Create(this.contractStateRoot.Object, It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), code, internalCreateMessage.Parameters, internalCreateMessage.Type), Times.Once);
@@ -358,7 +360,7 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             StateTransitionResult result = stateProcessor.Apply(state.Object, internalCreateMessage);
         
-            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<RuntimeObserver.IGasMeter>(), newContractAddress, internalCreateMessage, this.contractStateRoot.Object));
+            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<ReadWriteSet>(), It.IsAny<RuntimeObserver.IGasMeter>(), newContractAddress, internalCreateMessage, this.contractStateRoot.Object));
 
             this.vm.Verify(
                 v => v.Create(
@@ -495,7 +497,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             this.contractStateRoot.Verify(s => s.GetCode(internalCallMessage.To), Times.Once);
 
             // Verify we set up the smart contract state
-            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<RuntimeObserver.IGasMeter>(), internalCallMessage.To, internalCallMessage, this.contractStateRoot.Object));
+            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<ReadWriteSet>(), It.IsAny<RuntimeObserver.IGasMeter>(), internalCallMessage.To, internalCallMessage, this.contractStateRoot.Object));
 
             // Verify the VM was invoked
             this.vm.Verify(v => v.ExecuteMethod(It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), internalCallMessage.Method, code, typeName), Times.Once);
@@ -554,7 +556,7 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             StateTransitionResult result = stateProcessor.Apply(state.Object, internalCallMessage);
 
-            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<RuntimeObserver.IGasMeter>(), internalCallMessage.To, internalCallMessage, this.contractStateRoot.Object));
+            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<ReadWriteSet>(), It.IsAny<RuntimeObserver.IGasMeter>(), internalCallMessage.To, internalCallMessage, this.contractStateRoot.Object));
 
             this.vm.Verify(
                 v => v.ExecuteMethod(
@@ -672,7 +674,7 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             StateTransitionResult result = stateProcessor.Apply(state.Object, callMessage);
 
-            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<RuntimeObserver.IGasMeter>(), callMessage.To, callMessage, this.contractStateRoot.Object));
+            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<ReadWriteSet>(), It.IsAny<RuntimeObserver.IGasMeter>(), callMessage.To, callMessage, this.contractStateRoot.Object));
 
             this.vm.Verify(
                 v => v.ExecuteMethod(
@@ -734,7 +736,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             this.contractStateRoot.Verify(s => s.GetCode(contractTransferMessage.To), Times.Once);
 
             // Verify we set up the smart contract state
-            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<RuntimeObserver.IGasMeter>(), contractTransferMessage.To, contractTransferMessage, this.contractStateRoot.Object));
+            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<ReadWriteSet>(), It.IsAny<RuntimeObserver.IGasMeter>(), contractTransferMessage.To, contractTransferMessage, this.contractStateRoot.Object));
 
             // Verify the VM was invoked
             this.vm.Verify(v => v.ExecuteMethod(It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), contractTransferMessage.Method, code, typeName), Times.Once);
@@ -792,7 +794,7 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             StateTransitionResult result = stateProcessor.Apply(state.Object, contractTransferMessage);
 
-            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<RuntimeObserver.IGasMeter>(), contractTransferMessage.To, contractTransferMessage, this.contractStateRoot.Object));
+            state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<ReadWriteSet>(), It.IsAny<RuntimeObserver.IGasMeter>(), contractTransferMessage.To, contractTransferMessage, this.contractStateRoot.Object));
 
             this.vm.Verify(
                 v => v.ExecuteMethod(

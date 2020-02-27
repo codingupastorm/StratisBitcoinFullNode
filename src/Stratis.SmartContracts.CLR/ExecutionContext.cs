@@ -1,4 +1,6 @@
-﻿using Stratis.SmartContracts.RuntimeObserver;
+﻿using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
+using Stratis.SmartContracts.RuntimeObserver;
 
 namespace Stratis.SmartContracts.CLR
 {
@@ -7,10 +9,13 @@ namespace Stratis.SmartContracts.CLR
         public ExecutionContext(Observer observer)
         {
             this.Observer = observer;
+            this.ReadWriteSet = new ReadWriteSet();
         }
 
         public Observer Observer { get; }
 
         public IGasMeter GasMeter => this.Observer.GasMeter;
+
+        public ReadWriteSet ReadWriteSet { get; }
     }
 }

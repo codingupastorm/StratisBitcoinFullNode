@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.RuntimeObserver;
 
 namespace Stratis.SmartContracts.CLR
@@ -11,12 +13,15 @@ namespace Stratis.SmartContracts.CLR
         private readonly IState state;
         private readonly IStateProcessor stateProcessor;
         private readonly IGasMeter gasMeter;
+        private readonly ReadWriteSet readWriteSet;
 
         public InternalExecutor(IGasMeter gasMeter,
+            ReadWriteSet readWriteSet,
             IState state,
             IStateProcessor stateProcessor)
         {
             this.gasMeter = gasMeter;
+            this.readWriteSet = readWriteSet;
             this.state = state;
             this.stateProcessor = stateProcessor;
         }
@@ -53,7 +58,10 @@ namespace Stratis.SmartContracts.CLR
 
             // Transition the current state to the new state
             if (result.IsSuccess)
+            {
                 this.state.TransitionTo(newState);
+                this.readWriteSet.Merge(result.Success.ReadWriteSet);
+            }
 
             this.gasMeter.Spend(result.GasConsumed);
 
@@ -95,7 +103,10 @@ namespace Stratis.SmartContracts.CLR
 
             // Transition the current state to the new state
             if (result.IsSuccess)
+            {
                 this.state.TransitionTo(newState);
+                this.readWriteSet.Merge(result.Success.ReadWriteSet);
+            }
 
             this.gasMeter.Spend(result.GasConsumed);
 
@@ -131,7 +142,10 @@ namespace Stratis.SmartContracts.CLR
 
             // Transition the current state to the new state
             if (result.IsSuccess)
+            {
                 this.state.TransitionTo(newState);
+                this.readWriteSet.Merge(result.Success.ReadWriteSet);
+            }
 
             this.gasMeter.Spend(result.GasConsumed);
 
