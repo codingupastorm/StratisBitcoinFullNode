@@ -87,7 +87,13 @@ namespace CertificateAuthority.Controllers
             return ExecuteRepositoryQuery(() =>
             {
                 var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AccessAnyCertificate);
-                JsonResult res = this.Json(this.repository.GetCertificateIssuedByAccountId(credentials));
+
+                CertificateInfoModel cert = this.repository.GetCertificateIssuedByAccountId(credentials);
+
+                if (cert == null)
+                    return this.LogErrorExit(StatusCode(StatusCodes.Status404NotFound));
+
+                JsonResult res = this.Json(cert);
                 return res;
             });
         }
