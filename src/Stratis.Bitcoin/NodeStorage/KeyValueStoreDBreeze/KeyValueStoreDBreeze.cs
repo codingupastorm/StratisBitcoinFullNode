@@ -29,13 +29,14 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
         private DBreezeEngine storage;
         private SingleThreadResource transactionLock;
 
-        public KeyValueStoreDBreeze(ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer)
+        public KeyValueStoreDBreeze(string rootPath, ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer)
         {
             var logger = loggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
 
             this.transactionLock = new SingleThreadResource($"{nameof(this.transactionLock)}", logger);
             this.RepositorySerializer = repositorySerializer;
             this.Tables = new Dictionary<string, KeyValueStoreTable>();
+            this.Init(rootPath);
         }
 
         public byte[] Serialize<T>(T obj)
@@ -115,7 +116,7 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
 
         public Dictionary<string, KeyValueStoreTable> Tables { get; }
 
-        public void Init(string rootPath)
+        private void Init(string rootPath)
         {
             this.Close();
             this.storage = new DBreezeEngine(rootPath);
