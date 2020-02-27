@@ -91,7 +91,7 @@ namespace Stratis.SmartContracts.CLR
         /// <summary>
         /// Sets up a new <see cref="ISmartContractState"/> based on the current state.
         /// </summary>
-        public ISmartContractState CreateSmartContractState(IState state, ReadWriteSet readWriteSet, IGasMeter gasMeter, uint160 address, BaseMessage message, IStateRepository repository) 
+        public ISmartContractState CreateSmartContractState(IState state, ReadWriteSetBuilder readWriteSet, IGasMeter gasMeter, uint160 address, BaseMessage message, IStateRepository repository) 
         {
             return this.smartContractStateFactory.Create(state, readWriteSet, gasMeter, address, message, repository);
         }

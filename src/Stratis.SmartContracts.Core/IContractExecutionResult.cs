@@ -67,6 +67,6 @@ namespace Stratis.SmartContracts.Core
         /// <summary>
         /// Reads and writes made during execution.
         /// </summary>
-        ReadWriteSet ReadWriteSet { get; set; }
+        ReadWriteSetBuilder ReadWriteSet { get; set; }
     }
 }

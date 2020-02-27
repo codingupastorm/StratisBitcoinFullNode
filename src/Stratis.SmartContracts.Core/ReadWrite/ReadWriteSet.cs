@@ -1,70 +1,79 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using NBitcoin;
 using Newtonsoft.Json;
 
 namespace Stratis.SmartContracts.Core.ReadWrite
 {
+    /// <summary>
+    /// A DTO for the ReadWriteSet. Used to carry information around and go to and from JSON.
+    /// </summary>
     public class ReadWriteSet
     {
-        /// <summary>
-        /// Key: {storageKey}, Value: {version}.
-        /// </summary>
-        private readonly Dictionary<ReadWriteSetKey, string> readSet;
+        // TODO: Immutability would be nice but serialization take more configuration.
+
+        public List<ReadItem> Reads { get; set; }
+
+        public List<WriteItem> Writes { get; set; }
 
         /// <summary>
-        /// Key: {storageKey}, Value: {writtenBytes}.
+        /// Empty constructor required for serialization.
         /// </summary>
-        private readonly Dictionary<ReadWriteSetKey, byte[]> writeSet;
+        public ReadWriteSet() { }
 
-        public IReadOnlyDictionary<ReadWriteSetKey, string> ReadSet => this.readSet;
-
-        public IReadOnlyDictionary<ReadWriteSetKey, byte[]> WriteSet => this.writeSet;
-
-        public ReadWriteSet()
+        public static ReadWriteSet FromBuilder(ReadWriteSetBuilder rws)
         {
-            this.readSet = new Dictionary<ReadWriteSetKey, string>();
-            this.writeSet = new Dictionary<ReadWriteSetKey, byte[]>();
-        }
-
-        public void AddReadItem(ReadWriteSetKey key, string version)
-        {
-            // If an item is already in the list, don't add it again.
-            if (this.readSet.ContainsKey(key))
-                return;
-
-            // If an item is already in the write set, don't add it. We would be reading that value, not the previous version's' value.
-            if (this.writeSet.ContainsKey(key))
-                return;
-
-            this.readSet[key] = version;
-        }
-
-        public void AddWriteItem(ReadWriteSetKey key, byte[] value)
-        {
-            // Always store the last value for every key. We clone to avoid issues where the byte array might be altered afterwards.
-            byte[] clonedValue = new byte[value.Length];
-            Array.Copy(value, clonedValue, value.Length);
-            this.writeSet[key] = clonedValue;
-        }
-
-        public void Merge(ReadWriteSet toMerge)
-        {
-            foreach (KeyValuePair<ReadWriteSetKey, string> read in toMerge.ReadSet.ToList())
+            return new ReadWriteSet
             {
-                this.AddReadItem(read.Key, read.Value);
-            }
+                Reads = rws.ReadSet.ToList().Select(x => new ReadItem
+                {
+                    ContractAddress = x.Key.ContractAddress,
+                    Key = x.Key.Key,
+                    Version = x.Value
+                }).ToList(),
 
-            foreach (KeyValuePair<ReadWriteSetKey, byte[]> write in toMerge.WriteSet.ToList())
-            {
-                this.AddWriteItem(write.Key, write.Value);
-            }
+                Writes = rws.WriteSet.ToList().Select(x => new WriteItem
+                {
+                    ContractAddress = x.Key.ContractAddress,
+                    Key = x.Key.Key,
+                    Value = x.Value
+                }).ToList()
+            };
         }
 
-        public string ToJsonString()
+        // TODO: Don't be responsible for own serialization.
+
+        public ReadWriteSet FromJson(string json)
         {
-            // TODO: Might be best off having something else do this.
-            return JsonConvert.SerializeObject(new ReadWriteSetDto(this));
+            return JsonConvert.DeserializeObject<ReadWriteSet>(json);
         }
+
+        public string ToJson()
+        {
+            return JsonConvert.SerializeObject(this);
+        }
+    }
+
+    public class ReadItem
+    {
+        [JsonConverter(typeof(Uint160HexConverter))]
+        public uint160 ContractAddress { get; set; }
+
+        [JsonConverter(typeof(ByteArrayHexConverter))]
+        public byte[] Key { get; set; }
+
+        public string Version { get; set; }
+    }
+
+    public class WriteItem
+    {
+        [JsonConverter(typeof(Uint160HexConverter))]
+        public uint160 ContractAddress { get; set; }
+
+        [JsonConverter(typeof(ByteArrayHexConverter))]
+        public byte[] Key { get; set; }
+
+        [JsonConverter(typeof(ByteArrayHexConverter))]
+        public byte[] Value { get; set; }
     }
 }

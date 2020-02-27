@@ -13,10 +13,10 @@ namespace Stratis.SmartContracts.CLR
         private readonly IState state;
         private readonly IStateProcessor stateProcessor;
         private readonly IGasMeter gasMeter;
-        private readonly ReadWriteSet readWriteSet;
+        private readonly ReadWriteSetBuilder readWriteSet;
 
         public InternalExecutor(IGasMeter gasMeter,
-            ReadWriteSet readWriteSet,
+            ReadWriteSetBuilder readWriteSet,
             IState state,
             IStateProcessor stateProcessor)
         {

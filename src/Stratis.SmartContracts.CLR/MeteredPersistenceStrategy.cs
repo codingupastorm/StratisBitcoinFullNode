@@ -15,14 +15,14 @@ namespace Stratis.SmartContracts.CLR
         private readonly IStateRepository stateDb;
         private readonly RuntimeObserver.IGasMeter gasMeter;
         private readonly IKeyEncodingStrategy keyEncodingStrategy;
-        private readonly ReadWriteSet readWriteSet;
+        private readonly ReadWriteSetBuilder readWriteSet;
 
         private readonly string version;
 
         public MeteredPersistenceStrategy(IStateRepository stateDb,
             RuntimeObserver.IGasMeter gasMeter,
             IKeyEncodingStrategy keyEncodingStrategy,
-            ReadWriteSet readWriteSet,
+            ReadWriteSetBuilder readWriteSet,
             string version)
         {
             Guard.NotNull(stateDb, nameof(stateDb));

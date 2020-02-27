@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Stratis.SmartContracts.Core.State;
 
 namespace Stratis.SmartContracts.Core.ReadWrite
@@ -10,19 +9,19 @@ namespace Stratis.SmartContracts.Core.ReadWrite
 
         public bool IsReadWriteSetValid(IStateRepository stateRepository, ReadWriteSet readWriteSet)
         {
-            foreach (KeyValuePair<ReadWriteSetKey, string> kvp in readWriteSet.ReadSet)
+            foreach (ReadItem read in readWriteSet.Reads)
             {
-                StorageValue storageValue = stateRepository.GetStorageValue(kvp.Key.ContractAddress, kvp.Key.Key);
+                StorageValue storageValue = stateRepository.GetStorageValue(read.ContractAddress, read.Key);
 
                 // Does the version match?
-                if (storageValue.Version != kvp.Value)
+                if (storageValue.Version != read.Version)
                     return false;
             }
 
             return true;
         }
 
-        public void ApplyReadWriteSet(IStateRepository stateRepository, ReadWriteSet readWriteSet)
+        public void ApplyReadWriteSet(IStateRepository stateRepository, ReadWriteSetBuilder readWriteSet)
         {
             throw new NotImplementedException("To be used when applying the read write set inside of a block.");
         }

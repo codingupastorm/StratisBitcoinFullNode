@@ -6,7 +6,7 @@ using Xunit;
 
 namespace Stratis.SmartContracts.Core.Tests
 {
-    public class ReadWriteSetTests
+    public class ReadWriteSetBuilderTests
     {
         private static readonly ReadWriteSetKey Key1 = new ReadWriteSetKey(uint160.One, Encoding.UTF8.GetBytes("key1"));
         private static readonly ReadWriteSetKey Key2 = new ReadWriteSetKey(uint160.One, Encoding.UTF8.GetBytes("key2"));
@@ -21,7 +21,7 @@ namespace Stratis.SmartContracts.Core.Tests
         [Fact]
         public void InsertSeparateValues()
         {
-            var rws = new ReadWriteSet();
+            var rws = new ReadWriteSetBuilder();
 
             rws.AddReadItem(Key1, Version1);
             rws.AddReadItem(Key2, Version2);
@@ -43,13 +43,23 @@ namespace Stratis.SmartContracts.Core.Tests
             Assert.Equal(Value1, writeSet[0].Value);
             Assert.Equal(Key4, writeSet[1].Key);
             Assert.Equal(Value2, writeSet[1].Value);
+
+            // Check that serialization and deserialization to json is working.
+            ReadWriteSet readWriteSet = rws.GetReadWriteSet();
+            string json = readWriteSet.ToJson();
+            ReadWriteSet deserialized = readWriteSet.FromJson(json);
+            Assert.Equal(readWriteSet.Reads.Count, deserialized.Reads.Count);
+            Assert.Equal(readWriteSet.Writes.Count, deserialized.Writes.Count);
+            Assert.Equal(readWriteSet.Reads[0].ContractAddress, deserialized.Reads[0].ContractAddress);
+            Assert.Equal(readWriteSet.Reads[0].Key, deserialized.Reads[0].Key);
+            Assert.Equal(readWriteSet.Reads[0].Version, deserialized.Reads[0].Version);
         }
 
         [Fact]
         public void MultipleWritesSameKey()
         {
             // Only the last written value is in the RWS.
-            var rws = new ReadWriteSet();
+            var rws = new ReadWriteSetBuilder();
             rws.AddWriteItem(Key1, Value1);
             rws.AddWriteItem(Key1DifferentReference, Value1);
             rws.AddWriteItem(Key1, Value2);
@@ -60,7 +70,7 @@ namespace Stratis.SmartContracts.Core.Tests
         [Fact]
         public void ReadAfterWriteNotIncluded()
         {
-            var rws = new ReadWriteSet();
+            var rws = new ReadWriteSetBuilder();
 
             rws.AddWriteItem(Key1, Value1);
             rws.AddReadItem(Key1, Version1);
@@ -75,7 +85,7 @@ namespace Stratis.SmartContracts.Core.Tests
         [Fact]
         public void ChangesToBytesDoesntAffectReadWriteSet()
         {
-            var rws = new ReadWriteSet();
+            var rws = new ReadWriteSetBuilder();
 
             byte[] value = new byte[]{0,1,2,3};
 

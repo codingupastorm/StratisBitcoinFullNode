@@ -258,7 +258,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
                 result.ErrorMessage,
                 deserializedCallData.Value.GasPrice,
                 transactionContext.TxOutValue,
-                result.ReadWriteSet.ToJsonString(),
+                result.ReadWriteSet.GetReadWriteSet().ToJson(),
                 deserializedCallData.Value.IsCreateContract ? null : deserializedCallData.Value.MethodName);
 
             this.receipts.Add(receipt);

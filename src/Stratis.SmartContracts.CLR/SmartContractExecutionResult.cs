@@ -42,7 +42,7 @@ namespace Stratis.SmartContracts.CLR
         public IList<Log> Logs { get; set; }
 
         /// <inheritdoc />
-        public ReadWriteSet ReadWriteSet { get; set; }
+        public ReadWriteSetBuilder ReadWriteSet { get; set; }
 
         public SmartContractExecutionResult()
         {

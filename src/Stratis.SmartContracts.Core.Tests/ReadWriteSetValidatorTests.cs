@@ -28,9 +28,11 @@ namespace Stratis.SmartContracts.Core.Tests
                 .Returns(new StorageValue(Key2Bytes, Version1));
 
             // Add some reads which use version 1.
-            var readWriteSet = new ReadWriteSet();
-            readWriteSet.AddReadItem(new ReadWriteSetKey(TestAddress, Key1Bytes), Version1);
-            readWriteSet.AddReadItem(new ReadWriteSetKey(TestAddress, Key2Bytes), Version1);
+            var readWriteSetBuilder = new ReadWriteSetBuilder();
+            readWriteSetBuilder.AddReadItem(new ReadWriteSetKey(TestAddress, Key1Bytes), Version1);
+            readWriteSetBuilder.AddReadItem(new ReadWriteSetKey(TestAddress, Key2Bytes), Version1);
+
+            ReadWriteSet readWriteSet = readWriteSetBuilder.GetReadWriteSet();
 
             var validator = new ReadWriteSetValidator();
             Assert.True(validator.IsReadWriteSetValid(stateRepoMock.Object, readWriteSet));
@@ -47,9 +49,11 @@ namespace Stratis.SmartContracts.Core.Tests
                 .Returns(new StorageValue(Key2Bytes, Version2));
 
             // Add some reads which use version 1.
-            var readWriteSet = new ReadWriteSet();
-            readWriteSet.AddReadItem(new ReadWriteSetKey(TestAddress, Key1Bytes), Version1);
-            readWriteSet.AddReadItem(new ReadWriteSetKey(TestAddress, Key2Bytes), Version1);
+            var readWriteSetBuilder = new ReadWriteSetBuilder();
+            readWriteSetBuilder.AddReadItem(new ReadWriteSetKey(TestAddress, Key1Bytes), Version1);
+            readWriteSetBuilder.AddReadItem(new ReadWriteSetKey(TestAddress, Key2Bytes), Version1);
+
+            ReadWriteSet readWriteSet = readWriteSetBuilder.GetReadWriteSet();
 
             var validator = new ReadWriteSetValidator();
             Assert.False(validator.IsReadWriteSetValid(stateRepoMock.Object, readWriteSet));
