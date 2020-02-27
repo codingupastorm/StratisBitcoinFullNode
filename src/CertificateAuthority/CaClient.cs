@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Threading.Tasks;
-using CertificateAuthority.Controllers;
 using CertificateAuthority.Models;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -22,8 +20,9 @@ namespace CertificateAuthority
         private const string GenerateCertificateSigningRequestEndpoint = "api/certificates/generate_certificate_signing_request";
         private const string IssueCertificateEndpoint = "api/certificates/issue_certificate_using_request_string";
         private const string GetCertificatePublicKeysEndpoint = "api/certificates/get_certificate_public_keys";
+        private const string RevokeCertificateEndpoint = "api/certificates/revoke_certificate";
 
-        private const string CreateAccountEndpoint = "api/accounts/create_account";
+        private const string RequestAccountEndpoint = "api/accounts/request_account";
 
         private const string JsonContentType = "application/json";
         private readonly Uri baseApiUrl;
@@ -50,7 +49,7 @@ namespace CertificateAuthority
         {
             // Happy to not use RequestFromCA method for now because this is a more specialised method, might need different logic at some point.
 
-            var mnemonicModel = new InitializeCertificateAuthorityModel(mnemonic, mnemonicPassword, network.Consensus.CoinType, network.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS][0], this.password);
+            var mnemonicModel = new InitializeCertificateAuthorityModel(mnemonic, mnemonicPassword, network.Consensus.CoinType, this.password);
 
             HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{InitializeCertificateAuthorityEndpoint}", mnemonicModel).GetAwaiter().GetResult();
 
@@ -72,13 +71,13 @@ namespace CertificateAuthority
             return this.RequestFromCA<CertificateInfoModel>(GetCaCertificateEndpoint, credentialsModel);
         }
 
-        public int CreateAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country)
+        public int RequestAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country)
         {
             // TODO: Request all permissions by default, or request none and require admin to add them?
 
             string passHash = DataHelper.ComputeSha256Hash(this.password);
 
-            var createAccountModel = new CreateAccount(name,
+            var requestAccountModel = new RequestAccount(name,
                 passHash,
                 (int)(AccountAccessFlags.IssueCertificates | AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.AccessAnyCertificate),
                 organizationUnit,
@@ -87,10 +86,9 @@ namespace CertificateAuthority
                 stateOrProvince,
                 emailAddress,
                 country,
-                AccountsController.ValidPermissions);
+                CaCertificatesManager.ValidPermissions);
 
-
-            return this.RequestFromCA<int>(CreateAccountEndpoint, createAccountModel);
+            return this.RequestFromCA<int>(RequestAccountEndpoint, requestAccountModel);
         }
 
         public List<CertificateInfoModel> GetAllCertificates()
@@ -104,7 +102,7 @@ namespace CertificateAuthority
             return this.RequestFromCA<List<CertificateInfoModel>>(GetAllCertificatesEndpoint, credentialsModel);
         }
 
-        public async Task<List<PubKey>> GetCertificatePublicKeysAsync()
+        public List<PubKey> GetCertificatePublicKeys()
         {
             var credentialsModel = new CredentialsModel()
             {
@@ -181,6 +179,23 @@ namespace CertificateAuthority
             };
 
             return this.RequestFromCA<CertificateInfoModel>(IssueCertificateEndpoint, issueCertModel);
+        }
+
+        /// <summary>
+        /// Revokes a certificate by thumbprint.
+        /// </summary>
+        /// <param name="thumbprint">The thumbprint of the certificate to revoke.</param>
+        /// <returns><c>True</c> if successfully revoked.</returns>
+        public bool RevokeCertificate(string thumbprint)
+        {
+            var model = new CredentialsModelWithThumbprintModel()
+            {
+                AccountId = this.accountId,
+                Password = this.password,
+                Thumbprint = thumbprint
+            };
+
+            return this.RequestFromCA<bool>(RevokeCertificateEndpoint, model);
         }
 
         /// <summary>

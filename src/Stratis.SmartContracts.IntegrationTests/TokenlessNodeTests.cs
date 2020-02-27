@@ -51,7 +51,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         // TODO: Lots of repetition in this file.
 
         [Fact]
-        public async Task StartCACorrectlyAndTestApiAsync()
+        public void StartCACorrectlyAndTestApi()
         {
             using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
@@ -68,7 +68,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
                 // Create a node so we have 1 available public key.
-                (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
 
                 // Get the date again in case it has changed. The idea is that the certificate date will be one of the two dates. 
                 // Either the initial one or the second one if a date change occurred while the certificates were being generated.
@@ -92,7 +92,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.Equal(nodeCert.NotBefore.AddYears(CaCertificatesManager.CertificateValidityPeriodYears), nodeCert.NotAfter);
 
                 // Get public keys from the API.
-                List<PubKey> pubkeys = await client.GetCertificatePublicKeysAsync();
+                List<PubKey> pubkeys = client.GetCertificatePublicKeys();
                 Assert.Single(pubkeys);
             }
         }
@@ -104,7 +104,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
                 server.Start();
-                
+
                 // Start + Initialize CA.
                 var client = GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
@@ -116,8 +116,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client1 = this.GetClient(server);
                 CaClient client2 = this.GetClient(server);
 
-                (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                (CoreNode node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -147,15 +147,15 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client1 = this.GetClient(server);
                 CaClient client2 = this.GetClient(server);
 
-                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
                 TestHelper.Connect(node1, node2);
 
                 // Build and send a transaction from one node.
-                Transaction transaction = this.CreateBasicOpReturnTransaction(node1, txPrivKey1);
+                Transaction transaction = this.CreateBasicOpReturnTransaction(node1);
                 await node1.BroadcastTransactionAsync(transaction);
 
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
@@ -188,8 +188,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client1 = this.GetClient(server);
                 CaClient client2 = this.GetClient(server);
 
-                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -199,8 +199,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 node2.FullNode.Dispose();
 
                 // Now start the nodes without passwords.
-                (node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1, false);
-                (node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2, false);
+                node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1, false);
+                node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2, false);
 
                 node1.Start();
                 node2.Start();
@@ -208,7 +208,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TestHelper.Connect(node1, node2);
 
                 // Build and send a transaction from one node.
-                Transaction transaction = this.CreateBasicOpReturnTransaction(node1, txPrivKey1);
+                Transaction transaction = this.CreateBasicOpReturnTransaction(node1);
                 await node1.BroadcastTransactionAsync(transaction);
 
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
@@ -240,8 +240,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client1 = this.GetClient(server);
                 CaClient client2 = this.GetClient(server);
 
-                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -252,7 +252,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
                 var stateRepo = node2.FullNode.NodeService<IStateRepositoryRoot>();
 
-                Transaction createTransaction = this.CreateContractCreateTransaction(node1, txPrivKey1);
+                Transaction createTransaction = this.CreateContractCreateTransaction(node1, node1.TransactionSigningPrivateKey);
                 await node1.BroadcastTransactionAsync(createTransaction);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
@@ -261,11 +261,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Receipt createReceipt = receiptRepository.Retrieve(createTransaction.GetHash());
                 Assert.True(createReceipt.Success);
 
-                StorageValue value1 = stateRepo.GetStorageValue(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("Increment"));
-                Assert.NotNull(value1);
-                Assert.Equal("1.1", value1.Version); // Block height 1, tx index 1.
-
-                Transaction callTransaction = CreateContractCallTransaction(node1, createReceipt.NewContractAddress, txPrivKey1);
+                Transaction callTransaction = CreateContractCallTransaction(node1, createReceipt.NewContractAddress, node1.TransactionSigningPrivateKey);
                 await node1.BroadcastTransactionAsync(callTransaction);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
@@ -297,8 +293,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client1 = this.GetClient(server);
                 CaClient client2 = this.GetClient(server);
 
-                (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                (CoreNode node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -389,8 +385,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client1 = this.GetClient(server);
                 CaClient client2 = this.GetClient(server);
 
-                (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                (CoreNode node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -431,7 +427,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Last of all, create a 3rd node and check that nobody gets banned.
                 CaClient client3 = this.GetClient(server);
-                (CoreNode node3, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 2, ac, client3);
+                CoreNode node3 = nodeBuilder.CreateFullTokenlessNode(this.network, 2, ac, client3);
                 node3.Start();
 
                 TestHelper.ConnectNoCheck(node3, node2);
@@ -440,7 +436,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var addressManagers = new[] {
                     node1.FullNode.NodeService<IPeerAddressManager>(),
                     node2.FullNode.NodeService<IPeerAddressManager>(),
-                    node3.FullNode.NodeService<IPeerAddressManager>() 
+                    node3.FullNode.NodeService<IPeerAddressManager>()
                 };
 
                 bool HaveBans()
@@ -499,15 +495,15 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client1 = this.GetClient(server);
                 CaClient client2 = this.GetClient(server);
 
-                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
                 TestHelper.Connect(node1, node2);
 
                 // Build and send a transaction from one node.
-                Transaction transaction = this.CreateBasicOpReturnTransaction(node1, txPrivKey1);
+                Transaction transaction = this.CreateBasicOpReturnTransaction(node1);
                 await node1.BroadcastTransactionAsync(transaction);
 
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
@@ -520,15 +516,15 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.Equal(2, block.Transactions.Count);
 
                 // On the original node, the certificate shouldn't be stored in the cache as it is from "itself"
-                Assert.Null(node1.FullNode.NodeService<ICertificateCache>().GetCertificate(txPrivKey1.PubKey
+                Assert.Null(node1.FullNode.NodeService<ICertificateCache>().GetCertificate(node1.TransactionSigningPrivateKey.PubKey
                     .GetAddress(this.network).ToString().ToUint160(this.network)));
 
                 // Check that the certificate is now stored on the node.
-                Assert.NotNull(node2.FullNode.NodeService<ICertificateCache>().GetCertificate(txPrivKey1.PubKey
+                Assert.NotNull(node2.FullNode.NodeService<ICertificateCache>().GetCertificate(node1.TransactionSigningPrivateKey.PubKey
                     .GetAddress(this.network).ToString().ToUint160(this.network)));
 
                 // Send another transaction from the same address.
-                transaction = this.CreateBasicOpReturnTransaction(node1, txPrivKey1);
+                transaction = this.CreateBasicOpReturnTransaction(node1);
                 await node1.BroadcastTransactionAsync(transaction);
 
                 // Other node receives and mines transaction, validating it came from a permitted sender, having got the certificate locally this time.
@@ -538,7 +534,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task TokenlessNodesFunctionIfCATurnsOff()
+        public async Task TokenlessNodesFunctionIfCATurnsOffAsync()
         {
             using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
@@ -556,8 +552,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client1 = this.GetClient(server);
                 CaClient client2 = this.GetClient(server);
 
-                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -567,7 +563,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Dispose();
 
                 // Build and send a transaction from one node.
-                Transaction transaction = this.CreateBasicOpReturnTransaction(node1, txPrivKey1);
+                Transaction transaction = this.CreateBasicOpReturnTransaction(node1);
                 await node1.BroadcastTransactionAsync(transaction);
 
                 // Node1 should still let it in the mempool as it's from himself.
@@ -586,7 +582,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task RestartCAAndEverythingStillWorksAsync()
+        public void RestartCAAndEverythingStillWorks()
         {
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
@@ -608,7 +604,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     // Create 1 tokenless node.
                     CaClient client1 = this.GetClient(server);
 
-                    (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                    CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
                 }
 
                 // Server has been killed. Restart it.
@@ -620,19 +616,19 @@ namespace Stratis.SmartContracts.IntegrationTests
                     // Check that we can still create nodes and make API calls.
                     CaClient client1 = this.GetClient(server);
 
-                    (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client1);
+                    CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client1);
 
                     List<CertificateInfoModel> nodeCerts = client.GetAllCertificates();
                     Assert.Equal(2, nodeCerts.Count);
 
-                    List<PubKey> pubkeys = await client.GetCertificatePublicKeysAsync();
+                    List<PubKey> pubkeys = client.GetCertificatePublicKeys();
                     Assert.Equal(2, pubkeys.Count);
                 }
             }
         }
 
         [Fact]
-        public async Task RestartNodeWithoutCARemembersWhichCertificatesRevokedAsync()
+        public void RestartNodeWithoutCARemembersWhichCertificatesRevoked()
         {
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
             {
@@ -652,11 +648,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                     ac = GetCertificateFromInitializedCAServer(server);
 
                     // Create 1 tokenless node.
-                    (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                    CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
 
                     // Revoke a certificate.
                     this.RevokeCertificateFromInitializedCAServer(server);
-                    
+
                     // Get the thumbprint of the revoked certificate.
                     string revokedThumbprint = client.GetRevokedCertificates().First();
 
@@ -664,8 +660,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                     node1.Start();
 
                     // Confirm that the certificate is revoked.
-                    RevocationChecker revocationChecker = node1.FullNode.NodeService<RevocationChecker>();
-                    TestBase.WaitLoop(() => revocationChecker.IsCertificateRevokedAsync(revokedThumbprint).GetAwaiter().GetResult());
+                    IRevocationChecker revocationChecker = node1.FullNode.NodeService<IRevocationChecker>();
+                    TestBase.WaitLoop(() => revocationChecker.IsCertificateRevoked(revokedThumbprint));
 
                     // Stop the node.
                     node1.FullNode.Dispose();
@@ -674,11 +670,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                     server.Dispose();
 
                     // Restart the node.
-                    (node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client, false);
+                    node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client, false);
                     node1.Start();
 
                     // Is the certificate stil revoked even though we are running without a CA?
-                    Assert.True(revocationChecker.IsCertificateRevokedAsync(revokedThumbprint).GetAwaiter().GetResult());
+                    Assert.True(revocationChecker.IsCertificateRevoked(revokedThumbprint));
                 }
             }
         }
@@ -700,8 +696,8 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
                 CaClient client1 = this.GetClient(server);
-                
-                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+
+                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
 
                 node1.Start();
 
@@ -740,7 +736,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task AddedNodeCanMineWithoutBreaking()
+        public async Task AddedNodeCanMineWithoutBreakingAsync()
         {
             using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
@@ -759,9 +755,9 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client2 = this.GetClient(server);
                 CaClient client3 = this.GetClient(server);
 
-                (CoreNode node1, Key privKey1, Key txPrivKey1) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                (CoreNode node2, Key privKey2, Key txPrivKey2) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
-                (CoreNode node3, Key privKey3, Key txPrivKey3) = nodeBuilder.CreateFullTokenlessNode(this.network, 2, ac, client3);
+                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node3 = nodeBuilder.CreateFullTokenlessNode(this.network, 2, ac, client3);
 
                 // Get them connected and mining
                 node1.Start();
@@ -777,7 +773,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Now add a 4th
                 CaClient client4 = this.GetClient(server);
 
-                (CoreNode node4, Key privKey4, Key txPrivKey4) = nodeBuilder.CreateFullTokenlessNode(this.network, 3, ac, client4);
+                CoreNode node4 = nodeBuilder.CreateFullTokenlessNode(this.network, 3, ac, client4);
                 node4.Start();
 
                 VotingManager node1VotingManager = node1.FullNode.NodeService<VotingManager>();
@@ -828,8 +824,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client1 = this.GetClient(server);
                 CaClient client2 = this.GetClient(server);
 
-                (CoreNode node1, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                (CoreNode node2, _, _) = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -869,8 +865,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 {
                     TransactionHex = opReturnResponse.Hex
                 });
-                
-                var sendTransactionResult = (JsonResult) result;
+
+                var sendTransactionResult = (JsonResult)result;
                 var sendTransactionResponse = (Bitcoin.Features.MemoryPool.Broadcasting.SendTransactionModel)sendTransactionResult.Value;
 
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
@@ -878,9 +874,52 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TokenlessTestHelper.WaitForNodeToSync(node1, node2);
 
                 // Confirm that the tx was mined.
-                Assert.True(node1.GetTip().Block.Transactions.Any(t => t.GetHash() == transactionId2));
+                Assert.Contains(node1.GetTip().Block.Transactions, t => t.GetHash() == transactionId2);
                 Assert.NotEqual(transactionId1, transactionId2);
                 Assert.NotEqual(tx1.Time, tx2.Time);
+            }
+        }
+
+        [Fact]
+        public async Task NodeGetsCertificateRevokedCannotPropagateTransactionsAsync()
+        {
+            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(this))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var caAdminClient = GetAdminClient();
+                Assert.True(caAdminClient.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
+
+                // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CaClient client1 = this.GetClient(server);
+                CaClient client2 = this.GetClient(server);
+
+                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+
+                node1.Start();
+                node2.Start();
+
+                // Connect the 2 nodes.
+                TestHelper.Connect(node1, node2);
+
+                // Revoke node 2's certificate.
+                Assert.True(caAdminClient.RevokeCertificate(node2.ClientCertificate.Thumbprint));
+
+                // Create a transaction on node2 and try and propagate it.
+                var transaction = this.CreateBasicOpReturnTransaction(node2);
+                await node2.BroadcastTransactionAsync(transaction);
+
+                // Mine a block on node 1 and check that the transaction was never received and/or included.
+                await node1.MineBlocksAsync(1);
+
+                var block = node1.FullNode.BlockStore().GetBlock(node1.FullNode.ConsensusManager().Tip.HashBlock);
+                Assert.DoesNotContain(transaction.GetHash(), block.Transactions.Select(t => t.GetHash()));
             }
         }
 
@@ -910,7 +949,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         /// </summary>
         private X509Certificate GetCertificateFromInitializedCAServer(IWebHost server)
         {
-            Settings settings = (Settings)server.Services.GetService(typeof(Settings));
+            var settings = (Settings)server.Services.GetService(typeof(Settings));
             var acLocation = Path.Combine(settings.DataDirectory, CaCertificatesManager.CaCertFilename);
             var certParser = new X509CertificateParser();
             return certParser.ReadCertificate(File.ReadAllBytes(acLocation));
@@ -986,14 +1025,14 @@ namespace Stratis.SmartContracts.IntegrationTests
             return transaction;
         }
 
-        private Transaction CreateBasicOpReturnTransaction(CoreNode node, Key key)
+        private Transaction CreateBasicOpReturnTransaction(CoreNode node)
         {
             Transaction transaction = this.network.CreateTransaction();
             Script outputScript = TxNullDataTemplate.Instance.GenerateScriptPubKey(new byte[] { 0, 1, 2, 3 });
             transaction.Outputs.Add(new TxOut(Money.Zero, outputScript));
 
             ITokenlessSigner signer = node.FullNode.NodeService<ITokenlessSigner>();
-            signer.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
+            signer.InsertSignedTxIn(transaction, node.TransactionSigningPrivateKey.GetBitcoinSecret(this.network));
 
             return transaction;
         }

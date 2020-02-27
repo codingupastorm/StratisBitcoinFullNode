@@ -13,8 +13,9 @@ namespace Stratis.Bitcoin.Features.Consensus
     public class DBCoinViewStore : KeyValueStore<KeyValueStoreLevelDB.KeyValueStoreLevelDB>, IDBCoinViewStore
     {
         public DBCoinViewStore(IRepositorySerializer repositorySerializer, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
-            : base(dataFolder.CoinViewPath, loggerFactory, dateTimeProvider, repositorySerializer)
+            : base(new KeyValueStoreLevelDB.KeyValueStoreLevelDB(loggerFactory, repositorySerializer))
         {
+            this.Repository.Init(dataFolder.CoinViewPath);
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -8,7 +7,6 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
-using Stratis.Bitcoin.Utilities;
 using TracerAttributes;
 using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 
@@ -22,19 +20,16 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         private readonly ILoggerFactory LoggerFactory;
 
-        private readonly ILogger Logger;
-
-        private readonly RevocationChecker RevocationChecker;
+        private readonly IRevocationChecker RevocationChecker;
 
         public RevocationBehavior(NodeSettings nodeSettings,
             Network network,
             ILoggerFactory loggerFactory,
-            RevocationChecker revocationChecker)
+            IRevocationChecker revocationChecker)
         {
             this.NodeSettings = nodeSettings;
             this.Network = network;
             this.LoggerFactory = loggerFactory;
-            this.Logger = loggerFactory.CreateLogger(this.GetType().FullName, $"[{this.GetHashCode():x}] ");
             this.RevocationChecker = revocationChecker;
         }
 
@@ -73,7 +68,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             if (address == null)
             {
                 peer.Disconnect("Peer certificate does not contain a valid address.");
-                
+
                 return;
             }
 
@@ -85,8 +80,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             }
 
             // TODO: Apart from the existence of the P2PKH address in the certificate, do we need to verify it against anything?
-
-            bool revoked = await this.RevocationChecker.IsCertificateRevokedAsync(peerCertificate.Thumbprint, true);
+            bool revoked = this.RevocationChecker.IsCertificateRevoked(peerCertificate.Thumbprint, true);
 
             if (revoked)
                 peer.Disconnect("Peer certificate is revoked.");

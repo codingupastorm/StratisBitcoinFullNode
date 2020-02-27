@@ -15,10 +15,10 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 {
     public class TlsEnabledNetworkPeerFactory : NetworkPeerFactory
     {
-        private readonly CertificatesManager certManager;
+        private readonly ICertificatesManager certManager;
 
         public TlsEnabledNetworkPeerFactory(Network network, IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, PayloadProvider payloadProvider, ISelfEndpointTracker selfEndpointTracker,
-            IInitialBlockDownloadState initialBlockDownloadState, ConnectionManagerSettings connectionManagerSettings, IAsyncProvider asyncProvider, CertificatesManager certManager, IPeerAddressManager peerAddressManager)
+            IInitialBlockDownloadState initialBlockDownloadState, ConnectionManagerSettings connectionManagerSettings, IAsyncProvider asyncProvider, ICertificatesManager certManager, IPeerAddressManager peerAddressManager)
             : base(network, dateTimeProvider, loggerFactory, payloadProvider, selfEndpointTracker, initialBlockDownloadState, connectionManagerSettings, asyncProvider, peerAddressManager)
         {
             this.certManager = certManager;

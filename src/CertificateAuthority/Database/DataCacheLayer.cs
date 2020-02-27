@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CertificateAuthority.Controllers;
 using CertificateAuthority.Models;
+using Microsoft.EntityFrameworkCore;
 using NBitcoin.DataEncoders;
 using NLog;
 
@@ -35,7 +35,7 @@ namespace CertificateAuthority.Database
                     {
                         AccessInfo = AccountAccessFlags.AdminAccess,
                         Approved = true,
-                        CreatorId = Settings.AdminAccountId,
+                        ApproverId = Settings.AdminAccountId,
                         Name = Settings.AdminName,
                         PasswordHash = settings.DefaultAdminPasswordHash
                     };
@@ -62,14 +62,14 @@ namespace CertificateAuthority.Database
 
             using (CADbContext dbContext = this.CreateContext())
             {
-                foreach (CertificateInfoModel info in dbContext.Certificates)
+                foreach (CertificateInfoModel certificate in dbContext.Certificates)
                 {
-                    this.CertStatusesByThumbprint.Add(info.Thumbprint, info.Status);
+                    this.CertStatusesByThumbprint.Add(certificate.Thumbprint, certificate.Status);
 
-                    if (info.Status == CertificateStatus.Revoked)
-                        this.RevokedCertificates.Add(info.Thumbprint);
-                    else if ((info.BlockSigningPubKey?.Length ?? 0) != 0)
-                        this.PublicKeys.Add(Encoders.Hex.EncodeData(info.BlockSigningPubKey));
+                    if (certificate.Status == CertificateStatus.Revoked)
+                        this.RevokedCertificates.Add(certificate.Thumbprint);
+                    else if ((certificate.BlockSigningPubKey?.Length ?? 0) != 0)
+                        this.PublicKeys.Add(Encoders.Hex.EncodeData(certificate.BlockSigningPubKey));
                 }
             }
 
@@ -95,11 +95,16 @@ namespace CertificateAuthority.Database
             this.logger.Info("Certificate id {0}, thumbprint {1} was added.");
         }
 
-        /// <summary>Provides the certificate issued by the account with the specified id, if any.</summary>
+        /// <summary>
+        /// Provides the certificate issued by the account with the specified id, if any.
+        /// <para>
+        /// Revoked certificates will be ignored.
+        /// </para>
+        /// </summary>
         public CertificateInfoModel GetCertificateIssuedByAccountId(CredentialsAccessWithModel<CredentialsModelWithTargetId> accessWithModel)
         {
             // TODO: We shouldn't need special access rights to retrieve the certificate for the authenticating user, i.e. when Model.AccountId == Model.TargetAccountId
-            return ExecuteQuery(accessWithModel, (dbContext) => { return dbContext.Certificates.FirstOrDefault(x => x.AccountId == accessWithModel.Model.TargetAccountId); });
+            return ExecuteQuery(accessWithModel, (dbContext) => { return dbContext.Certificates.FirstOrDefault(x => x.Status == CertificateStatus.Good && x.AccountId == accessWithModel.Model.TargetAccountId); });
         }
 
         #endregion
@@ -109,7 +114,7 @@ namespace CertificateAuthority.Database
         /// <summary>Provides account information of the account with id specified.</summary>
         public AccountInfo GetAccountInfoById(CredentialsAccessWithModel<CredentialsModelWithTargetId> credentialsModel)
         {
-            AccountInfo accountInfo = ExecuteQuery<CredentialsAccessWithModel<CredentialsModelWithTargetId>, AccountInfo>(credentialsModel, (dbContext) => dbContext.Accounts.SingleOrDefault(x => x.Id == credentialsModel.Model.TargetAccountId));
+            AccountInfo accountInfo = ExecuteQuery<CredentialsAccessWithModel<CredentialsModelWithTargetId>, AccountInfo>(credentialsModel, (dbContext) => dbContext.Accounts.Include(a => a.Permissions).SingleOrDefault(x => x.Id == credentialsModel.Model.TargetAccountId));
 
             // TODO: Investigate whether there is a more elegant way of handling a lack of permissions
             if (accountInfo.Permissions == null)
@@ -127,10 +132,14 @@ namespace CertificateAuthority.Database
 
                 AccountModel accountToApprove = dbContext.Accounts.SingleOrDefault(x => x.Id == accountId);
 
+                if (accountToApprove == null)
+                    throw new CertificateAuthorityAccountException("Account does not exist!");
+
                 if (accountToApprove.Approved)
                     throw new CertificateAuthorityAccountException("Account already approved!");
 
                 accountToApprove.Approved = true;
+                accountToApprove.ApproverId = credentialsModel.AccountId;
 
                 dbContext.Accounts.Update(accountToApprove);
                 dbContext.SaveChanges();
@@ -148,41 +157,38 @@ namespace CertificateAuthority.Database
         /// <summary>Creates a new account.</summary>
         /// <remarks>This method is somewhat special in that it requires no account ID for the credentials.
         /// Only a password is required.</remarks>
-        public int CreateAccount(CreateAccount createAccountModel)
+        public int RequestAccount(RequestAccount requestAccountModel)
         {
-            CADbContext dbContext = this.CreateContext();
+            CADbContext dbContext = CreateContext();
 
-            if (dbContext.Accounts.Any(x => x.Name == createAccountModel.CommonName))
+            if (dbContext.Accounts.Any(x => x.Name == requestAccountModel.CommonName))
                 throw new CertificateAuthorityAccountException("That name is already taken!");
 
-            AccountAccessFlags newAccountAccessLevel = (AccountAccessFlags)createAccountModel.RequestedAccountAccess | AccountAccessFlags.BasicAccess;
+            AccountAccessFlags newAccountAccessLevel = (AccountAccessFlags)requestAccountModel.RequestedAccountAccess | AccountAccessFlags.BasicAccess;
 
-            if (createAccountModel.RequestedPermissions == null)
+            if (requestAccountModel.RequestedPermissions == null)
                 throw new CertificateAuthorityAccountException("No permissions requested!");
 
-            if (createAccountModel.RequestedPermissions.Any(permission => !AccountsController.ValidPermissions.Contains(permission.Name)))
+            if (requestAccountModel.RequestedPermissions.Any(permission => !CaCertificatesManager.ValidPermissions.Contains(permission.Name)))
                 throw new CertificateAuthorityAccountException("Invalid permission requested!");
 
             var newAccount = new AccountModel()
             {
-                Name = createAccountModel.CommonName,
-                PasswordHash = createAccountModel.NewAccountPasswordHash,
+                Name = requestAccountModel.CommonName,
+                PasswordHash = requestAccountModel.NewAccountPasswordHash,
                 AccessInfo = newAccountAccessLevel,
-                CreatorId = -1, // Not known yet, as we are creating our own account
-                OrganizationUnit = createAccountModel.OrganizationUnit,
-                Organization = createAccountModel.Organization,
-                Locality = createAccountModel.Locality,
-                StateOrProvince = createAccountModel.StateOrProvince,
-                EmailAddress = createAccountModel.EmailAddress,
-                Country = createAccountModel.Country,
-                Permissions = createAccountModel.RequestedPermissions,
+                ApproverId = -1, // Not known yet, as we are creating our own account
+                OrganizationUnit = requestAccountModel.OrganizationUnit,
+                Organization = requestAccountModel.Organization,
+                Locality = requestAccountModel.Locality,
+                StateOrProvince = requestAccountModel.StateOrProvince,
+                EmailAddress = requestAccountModel.EmailAddress,
+                Country = requestAccountModel.Country,
+                Permissions = requestAccountModel.RequestedPermissions,
                 Approved = false
             };
 
             dbContext.Accounts.Add(newAccount);
-            dbContext.SaveChanges();
-            newAccount.CreatorId = newAccount.Id;
-            dbContext.Update(newAccount);
             dbContext.SaveChanges();
 
             this.logger.Info("Account was created: '{0}'.", newAccount);

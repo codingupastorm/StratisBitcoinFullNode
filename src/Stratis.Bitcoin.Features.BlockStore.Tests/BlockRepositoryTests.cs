@@ -645,7 +645,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
 
         private IBlockRepository SetupRepository(Network main)
         {
-            var repository = new BlockRepository(main, this.LoggerFactory.Object, this.keyValueStore);
+            var repository = new BlockRepository(main, this.LoggerFactory.Object, this.keyValueStore, this.RepositorySerializer);
             repository.Initialize();
 
             return repository;

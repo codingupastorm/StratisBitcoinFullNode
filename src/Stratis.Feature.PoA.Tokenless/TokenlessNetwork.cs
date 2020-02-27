@@ -24,7 +24,7 @@ namespace Stratis.Feature.PoA.Tokenless
         /// <summary> The default name used for the Stratis configuration file. </summary>
         private const string NetworkDefaultConfigFilename = "tokenless.conf";
 
-        public static Mnemonic[] Mnemonics = 
+        public static Mnemonic[] Mnemonics =
         {
             new Mnemonic("lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom"),
             new Mnemonic("idle power swim wash diesel blouse photo among eager reward govern menu"),
@@ -207,6 +207,7 @@ namespace Stratis.Feature.PoA.Tokenless
         {
             consensus.MempoolRules = new List<Type>()
             {
+                typeof(CheckSenderCertificateIsNotRevoked),
                 typeof(NoDuplicateTransactionExistOnChainMempoolRule),
                 typeof(CreateTokenlessMempoolEntryRule),
                 typeof(IsSmartContractWellFormedMempoolRule),

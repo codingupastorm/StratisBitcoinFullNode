@@ -15,8 +15,9 @@ namespace Stratis.Bitcoin.Utilities
     public class KeyValueRepositoryStore : KeyValueStore<KeyValueStoreLevelDB.KeyValueStoreLevelDB>, IKeyValueRepositoryStore
     {
         public KeyValueRepositoryStore(IRepositorySerializer repositorySerializer, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
-            : base(dataFolder.KeyValueRepositoryPath, loggerFactory, dateTimeProvider, repositorySerializer)
+            : base(new KeyValueStoreLevelDB.KeyValueStoreLevelDB(loggerFactory, repositorySerializer))
         {
+            this.Repository.Init(dataFolder.KeyValueRepositoryPath);
         }
     }
 
