@@ -68,7 +68,11 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
 
         public Dictionary<string, KeyValueStoreTable> Tables { get; }
 
-        public void Init(string rootPath)
+        /// <summary>
+        /// Initialize the underlying database / glue-layer.
+        /// </summary>
+        /// <param name="rootPath">The location of the key-value store.</param>
+        private void Init(string rootPath)
         {
             var options = new Options()
             {

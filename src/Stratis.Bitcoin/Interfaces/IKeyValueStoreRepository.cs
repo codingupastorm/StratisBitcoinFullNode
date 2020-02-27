@@ -19,12 +19,6 @@ namespace Stratis.Bitcoin.Interfaces
         Dictionary<string, KeyValueStoreTable> Tables { get; }
 
         /// <summary>
-        /// Initialize the underlying database / glue-layer.
-        /// </summary>
-        /// <param name="rootPath">The location of the key-value store.</param>
-        void Init(string rootPath);
-
-        /// <summary>
         /// Request the underlying database to start a transaction.
         /// </summary>
         /// <param name="mode">The transaction mode.</param>
