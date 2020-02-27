@@ -34,46 +34,4 @@ namespace Stratis.Bitcoin.KeyValueStore
         {
         }
     }
-
-    /// <summary>
-    /// Generic key-value store template. The template parameter supplies the database type.
-    /// </summary>
-    /// <typeparam name="R">The database-specific repository class.</typeparam>
-    public class KeyValueStore<R> : KeyValueStore where R : KeyValueStoreRepository
-    {
-        /// <summary>
-        /// Creates a key-value store.
-        /// </summary>
-        /// <param name="repository"></param>
-        public KeyValueStore(IKeyValueStoreRepository repository)
-        {
-            this.Repository = repository;
-        }
-
-        /// <inheritdoc/>
-        public override IKeyValueStoreTransaction CreateTransaction(KeyValueStoreTransactionMode mode, params string[] tables)
-        {
-            return this.Repository.CreateKeyValueStoreTransaction(mode, tables);
-        }
-
-        // Flag: Has Dispose already been called?
-        private bool disposed = false;
-
-        // Protected implementation of Dispose pattern.
-        protected override void Dispose(bool disposing)
-        {
-            if (this.disposed)
-                return;
-
-            if (disposing)
-            {
-                this.Repository.Dispose();
-            }
-
-            this.disposed = true;
-
-            // Call the base class implementation.
-            base.Dispose(disposing);
-        }
-    }
 }
