@@ -206,9 +206,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
             PubKey pubKey1 = privateKey1.PubKey;
             BitcoinPubKeyAddress address1 = pubKey1.GetAddress(this.network);
 
-            var createAccountModel = new CreateAccount()
+            var createAccountModel = new RequestAccount
             {
-                Password = "test",
                 CommonName = "Org1",
                 Country = "UK",
                 EmailAddress = "org1@example.com",
@@ -218,11 +217,11 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 OrganizationUnit = "IT",
                 StateOrProvince = "England",
                 RequestedAccountAccess = (int)AccountAccessFlags.IssueCertificates,
-                RequestedPermissions = new List<Permission>() { new Permission() { Name = AccountsController.SendPermission } }
+                RequestedPermissions = new List<Permission>() { new Permission() { Name = CaCertificatesManager.SendPermission } }
             };
 
             // Create account for org 1
-            int id1 = CaTestHelper.GetValue<int>(accountsController.CreateAccount(createAccountModel));
+            int id1 = CaTestHelper.GetValue<int>(accountsController.RequestAccount(createAccountModel));
 
             var credentialsModel = new CredentialsModelWithTargetId() { AccountId = Settings.AdminAccountId, Password = CaTestHelper.AdminPassword, TargetAccountId = id1 };
 
@@ -233,9 +232,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
             PubKey pubKey2 = privateKey2.PubKey;
             BitcoinPubKeyAddress address2 = pubKey2.GetAddress(this.network);
 
-            var createAccountModel2 = new CreateAccount()
+            var createAccountModel2 = new RequestAccount()
             {
-                Password = "test",
                 CommonName = "Org2",
                 Country = "AU",
                 EmailAddress = "org2@example.com",
@@ -245,11 +243,11 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 OrganizationUnit = "IT",
                 StateOrProvince = "NSW",
                 RequestedAccountAccess = (int)AccountAccessFlags.IssueCertificates,
-                RequestedPermissions = new List<Permission>() { new Permission() { Name = AccountsController.SendPermission } }
+                RequestedPermissions = new List<Permission>() { new Permission() { Name = CaCertificatesManager.SendPermission } }
             };
 
             // Create account for org 2
-            int id2 = CaTestHelper.GetValue<int>(accountsController.CreateAccount(createAccountModel2));
+            int id2 = CaTestHelper.GetValue<int>(accountsController.RequestAccount(createAccountModel2));
 
             credentialsModel = new CredentialsModelWithTargetId() { AccountId = Settings.AdminAccountId, Password = CaTestHelper.AdminPassword, TargetAccountId = id2 };
 
