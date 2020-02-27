@@ -44,13 +44,10 @@ namespace Stratis.Bitcoin.KeyValueStore
         /// <summary>
         /// Creates a key-value store.
         /// </summary>
-        /// <param name="rootPath">The location to create the store.</param>
-        /// <param name="loggerFactory">The logger factory.</param>
-        /// <param name="repositorySerializer">The serializer to use.</param>
-        public KeyValueStore(string rootPath, ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer)
+        /// <param name="repository"></param>
+        public KeyValueStore(IKeyValueStoreRepository repository)
         {
-            this.Repository = (R)Activator.CreateInstance(typeof(R), loggerFactory, repositorySerializer);
-            this.Repository.Init(rootPath);
+            this.Repository = repository;
         }
 
         /// <inheritdoc/>
