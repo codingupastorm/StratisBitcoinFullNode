@@ -53,7 +53,7 @@ namespace CertificateAuthority.Controllers
 
         /// <summary>Creates new account.</summary>
         /// <response code="201">Account id as integer. CreateAccounts access level is required.</response>
-        [HttpPost("request_account")]
+        [HttpPost("create_account")]
         [ProducesResponseType(typeof(int), 200)]
         public IActionResult CreateAccount([FromBody]CreateAccountModel model)
         {

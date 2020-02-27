@@ -22,7 +22,7 @@ namespace CertificateAuthority
         private const string GetCertificatePublicKeysEndpoint = "api/certificates/get_certificate_public_keys";
         private const string RevokeCertificateEndpoint = "api/certificates/revoke_certificate";
 
-        private const string RequestAccountEndpoint = "api/accounts/request_account";
+        private const string CreateAccountEndpoint = "api/accounts/create_account";
 
         private const string JsonContentType = "application/json";
         private readonly Uri baseApiUrl;
@@ -77,7 +77,7 @@ namespace CertificateAuthority
 
             string passHash = DataHelper.ComputeSha256Hash(this.password);
 
-            var requestAccountModel = new CreateAccountModel(name,
+            var createAccountModel = new CreateAccountModel(name,
                 passHash,
                 (int)(AccountAccessFlags.IssueCertificates | AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.AccessAnyCertificate),
                 organizationUnit,
@@ -88,7 +88,7 @@ namespace CertificateAuthority
                 country,
                 CaCertificatesManager.ValidPermissions);
 
-            return this.RequestFromCA<int>(RequestAccountEndpoint, requestAccountModel);
+            return this.RequestFromCA<int>(CreateAccountEndpoint, createAccountModel);
         }
 
         public List<CertificateInfoModel> GetAllCertificates()
