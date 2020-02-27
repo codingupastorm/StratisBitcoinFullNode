@@ -141,6 +141,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
         private readonly ILogger logger;
 
         internal readonly Network network;
+        private readonly IRepositorySerializer repositorySerializer;
 
         private static readonly byte[] RepositoryTipKey = new byte[0];
 
@@ -154,7 +155,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
         private readonly IReadOnlyDictionary<uint256, Transaction> genesisTransactions;
 
-        public BlockRepository(Network network, ILoggerFactory loggerFactory, IBlockKeyValueStore blockKeyValueStore)
+        public BlockRepository(Network network, ILoggerFactory loggerFactory, IBlockKeyValueStore blockKeyValueStore, IRepositorySerializer repositorySerializer)
         {
             Guard.NotNull(network, nameof(network));
 
@@ -162,6 +163,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.network = network;
+            this.repositorySerializer = repositorySerializer;
             this.genesisTransactions = network.GetGenesis().Transactions.ToDictionary(k => k.GetHash());
             this.heightByHash = new Dictionary<uint256, int>();
         }
@@ -196,7 +198,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
                 foreach ((byte[] key, byte[] value) in repo.GetAll(tran, repo.GetTable("Block"), true))
                 {
-                    var blockTableKey = (BlockTableKey)((BlockKeyValueStore)this.KeyValueStore).RepositorySerializer.Deserialize(key, typeof(BlockTableKey));
+                    var blockTableKey = (BlockTableKey)this.repositorySerializer.Deserialize(key, typeof(BlockTableKey));
                     this.heightByHash[blockTableKey.Hash] = blockTableKey.Height;
                 }
             }
