@@ -8,6 +8,7 @@ using Stratis.Bitcoin.Features.Wallet.Controllers;
 using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Bitcoin.Models;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common.TestFramework;
 using Stratis.Bitcoin.Utilities.JsonErrors;

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Base;
@@ -15,7 +16,6 @@ using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.Consensus.Rules;
 using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Caching;
 using Stratis.Bitcoin.Mining;
@@ -162,6 +162,15 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
         private BlockDefinition CreateBlockDefinition()
         {
+            uint blockMaxSize = this.helper.Network.Consensus.Options.MaxBlockSerializedSize;
+            uint blockMaxWeight = this.helper.Network.Consensus.Options.MaxBlockWeight;
+
+            var blockDefinitionOptions = new BlockDefinitionOptions(blockMaxWeight, blockMaxSize).RestrictForNetwork(this.helper.Network);
+
+            var minerSettings = new Mock<IMinerSettings>();
+            minerSettings.Setup(c => c.BlockDefinitionOptions)
+                .Returns(blockDefinitionOptions);
+
             return new TokenlessBlockDefinition(
                 new BlockBufferGenerator(),
                 this.cachedCoinView,
@@ -171,7 +180,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 new ExtendedLoggerFactory(),
                 this.helper.Mempool,
                 this.mempoolLock,
-                new MinerSettings(this.helper.NodeSettings),
+                minerSettings.Object,
                 this.helper.Network,
                 this.helper.TokenlessSigner,
                 this.stateRoot,
