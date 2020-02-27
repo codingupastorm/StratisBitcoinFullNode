@@ -6,7 +6,7 @@ using Stratis.Bitcoin.Interfaces;
 
 namespace Stratis.Bitcoin.Features.BlockStore
 {
-    public interface IBlockKeyValueStore : IKeyValueStore
+    public interface IBlockKeyValueStore : IKeyValueStoreRepository
     {
     }
 
