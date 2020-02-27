@@ -12,6 +12,7 @@ using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.Wallet.Controllers;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.Wallet.Models;
+using Stratis.Bitcoin.Models;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
@@ -1746,6 +1747,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             controller.ModelState.AddModelError("WalletName", "A walletname is required.");
             IActionResult result = controller.BuildTransaction(new BuildTransactionRequest
             {
+                AccountName = WalletManager.DefaultAccount,
                 WalletName = ""
             });
 
