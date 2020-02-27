@@ -7,7 +7,7 @@ namespace Stratis.Bitcoin.Interfaces
     /// <summary>
     /// Represents a glue-layer containing the basic methods that all key-value databases should support.
     /// </summary>
-    public interface IKeyValueStoreRepository : IDisposable
+    public interface IKeyValueStoreRepository : IKeyValueStore, IDisposable
     {
         /// <summary>
         /// Initialize the underlying database / glue-layer.

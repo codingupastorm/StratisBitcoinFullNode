@@ -134,5 +134,15 @@ namespace Stratis.Bitcoin.KeyValueStore
             if (disposing)
                 this.Close();
         }
+
+        public string[] GetTables()
+        {
+            return this.Tables.Select(t => t.Value.TableName).ToArray();
+        }
+
+        public IKeyValueStoreTransaction CreateTransaction(KeyValueStoreTransactionMode mode, params string[] tables)
+        {
+            return this.CreateKeyValueStoreTransaction(mode, tables);
+        }
     }
 }
