@@ -7,8 +7,6 @@ namespace Stratis.SmartContracts.Core.ReadWrite
 {
     public class ReadWriteSet
     {
-        // TODO: These types are a little dirty. Can we do something nicer than IReadOnlyCollection?
-
         /// <summary>
         /// Key: {storageKey}, Value: {version}.
         /// </summary>

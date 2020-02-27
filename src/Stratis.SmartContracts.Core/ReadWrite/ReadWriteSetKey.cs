@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using NBitcoin;
 using Stratis.Bitcoin.Utilities;
 
@@ -12,7 +13,9 @@ namespace Stratis.SmartContracts.Core.ReadWrite
         public ReadWriteSetKey(uint160 contractAddress, byte[] key)
         {
             this.ContractAddress = contractAddress;
-            this.Key = key;
+            byte[] clonedKey = new byte[key.Length];
+            Array.Copy(key, clonedKey, key.Length);
+            this.Key = clonedKey;
         }
 
         // TODO: These may be slow.
