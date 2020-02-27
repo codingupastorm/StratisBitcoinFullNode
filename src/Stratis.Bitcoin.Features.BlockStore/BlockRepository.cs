@@ -17,7 +17,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
     public interface IBlockRepository : IBlockStore
     {
         /// <summary> The dbreeze database engine.</summary>
-        IKeyValueStore KeyValueStore { get; }
+        IKeyValueStoreRepository KeyValueStore { get; }
 
         /// <summary>
         /// Deletes blocks and indexes for transactions that belong to deleted blocks.
@@ -136,7 +136,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
         internal const string TransactionTableName = "Transaction";
 
-        public IKeyValueStore KeyValueStore { get; }
+        public IKeyValueStoreRepository KeyValueStore { get; }
 
         private readonly ILogger logger;
 
@@ -155,7 +155,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
         private readonly IReadOnlyDictionary<uint256, Transaction> genesisTransactions;
 
-        public BlockRepository(Network network, ILoggerFactory loggerFactory, IBlockKeyValueStore blockKeyValueStore, IRepositorySerializer repositorySerializer)
+        public BlockRepository(Network network, ILoggerFactory loggerFactory, BlockKeyValueStore blockKeyValueStore, IRepositorySerializer repositorySerializer)
         {
             Guard.NotNull(network, nameof(network));
 
@@ -194,7 +194,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
             using (KeyValueStoreTransaction tran = (KeyValueStoreTransaction)this.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                var repo = ((KeyValueStore.KeyValueStore)this.KeyValueStore).Repository;
+                var repo = this.KeyValueStore;
 
                 foreach ((byte[] key, byte[] value) in repo.GetAll(tran, repo.GetTable("Block"), true))
                 {
