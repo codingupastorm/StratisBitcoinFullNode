@@ -77,6 +77,8 @@ namespace Stratis.Bitcoin.Features.PoA
 
         protected Task miningTask;
 
+        public virtual bool MiningInitialized { get { return this.miningTask != null; } }
+
         public PoAMiner(
             IConsensusManager consensusManager,
             IDateTimeProvider dateTimeProvider,
