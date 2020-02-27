@@ -38,6 +38,7 @@ cd $node_root
 Write-Host "Running Stratis.TokenlessD..." -foregroundcolor "magenta"
 
 $bootstrap = $args[1]
+$create_account = $args[2]
 
 # Require initial run to create files?
 $initial = ""
@@ -48,18 +49,21 @@ $federation_key_file = "$node_data\miningKey.dat"
 $transaction_key_file = "$node_data\transactionSigning.dat"
 $wallet_file = "$node_data\nodeid.json"
 
-# Create account before starting up the test node, for simplicity, so that we have an account ID available
-$params = @{ "commonName" = "node$node"; "newAccountPasswordHash" = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"; "requestedAccountAccess" = 255; "organizationUnit" = "TestScripts"; "organization" = "Stratis"; "locality" = "TestLocality"; "stateOrProvince" = "TestState"; "emailAddress" = "node$node@example.com"; "country" = "UK"; "requestedPermissions" = @(@{"name" = "Send"}, @{"name" = "CallContract"}, @{"name" = "CreateContract"}) }
-Write-Host ($params|ConvertTo-Json)
-$result = Invoke-WebRequest -Uri https://localhost:5001/api/accounts/create_account -Method post -Body ($params|ConvertTo-Json) -ContentType "application/json"
+if ($create_account -eq 1)
+{
+  # Create account before starting up the test node, for simplicity, so that we have an account ID available
+  $params = @{ "commonName" = "node$node"; "newAccountPasswordHash" = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"; "requestedAccountAccess" = 255; "organizationUnit" = "TestScripts"; "organization" = "Stratis"; "locality" = "TestLocality"; "stateOrProvince" = "TestState"; "emailAddress" = "node$node@example.com"; "country" = "UK"; "requestedPermissions" = @(@{"name" = "Send"}, @{"name" = "CallContract"}, @{"name" = "CreateContract"}) }
+  Write-Host ($params|ConvertTo-Json)
+  $result = Invoke-WebRequest -Uri https://localhost:5001/api/accounts/request_account -Method post -Body ($params|ConvertTo-Json) -ContentType "application/json"
 
-# Get the accountId (effectively the username) from the response
-$ca_account = $result|ConvertFrom-Json
+  # Get the accountId (effectively the username) from the response
+  $ca_account = $result|ConvertFrom-Json
 
-# Approve the created account, using the admin's credentials
-$params = @{ "accountId" = "$admin_account_id"; "password" = "$admin_password"; "targetAccountId" = "$ca_account" }
-Write-Host ($params|ConvertTo-Json)
-Invoke-WebRequest -Uri https://localhost:5001/api/accounts/approve_account -Method post -Body ($params|ConvertTo-Json) -ContentType "application/json"
+  # Approve the created account, using the admin's credentials
+  $params = @{ "accountId" = "$admin_account_id"; "password" = "$admin_password"; "targetAccountId" = "$ca_account" }
+  Write-Host ($params|ConvertTo-Json)
+  Invoke-WebRequest -Uri https://localhost:5001/api/accounts/approve_account -Method post -Body ($params|ConvertTo-Json) -ContentType "application/json"
+}
 
 # On first run, the node will request their account's certificate
 if (!(Test-Path $client_certificate) -or !(Test-Path $federation_key_file) -or !(Test-Path $transaction_key_file) -or !(Test-Path $wallet_file))
