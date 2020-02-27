@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Text;
 using NBitcoin;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Xunit;
 
 namespace Stratis.SmartContracts.Core.Tests

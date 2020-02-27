@@ -1,6 +1,7 @@
 using NBitcoin;
 using Stratis.Bitcoin.Utilities;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 
 namespace Stratis.SmartContracts.CLR

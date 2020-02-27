@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
-using NBitcoin;
 using Stratis.Feature.PoA.Tokenless;
 
 namespace CertificateAuthority.Tests
@@ -23,7 +22,7 @@ namespace CertificateAuthority.Tests
         public const string CaMnemonic = "young shoe immense usual faculty edge habit misery swarm tape viable toddler";
         public const string CaMnemonicPassword = "node";
 
-        private static Random random = new Random();
+        private static readonly Random random = new Random();
 
         public static string GenerateRandomString(int length = 10)
         {
@@ -34,7 +33,7 @@ namespace CertificateAuthority.Tests
         public static CredentialsModel CreateAccount(IWebHost server, AccountAccessFlags access = AccountAccessFlags.BasicAccess, CredentialsModel creatorCredentialsModel = null, List<string> permissions = null)
         {
             // Default to all permissions unless otherwise restricted.
-            List<string> accountPermissions = permissions ?? AccountsController.ValidPermissions;
+            List<string> accountPermissions = permissions ?? CaCertificatesManager.ValidPermissions;
 
             string password = GenerateRandomString();
             string passHash = DataHelper.ComputeSha256Hash(password);
@@ -44,7 +43,7 @@ namespace CertificateAuthority.Tests
             var accountsController = (AccountsController)server.Services.GetService(typeof(AccountsController));
 
             CredentialsModel credentialsModel = creatorCredentialsModel ?? adminCredentials;
-            int id = GetValue<int>(accountsController.CreateAccount(new CreateAccount(GenerateRandomString(),
+            int id = GetValue<int>(accountsController.RequestAccount(new RequestAccount(GenerateRandomString(),
                 passHash,
                 (int)access,
                 "dummyOrganizationUnit",
@@ -70,7 +69,7 @@ namespace CertificateAuthority.Tests
             var network = new TokenlessNetwork();
 
             var certificatesController = (CertificatesController)server.Host.Services.GetService(typeof(CertificatesController));
-            var model = new InitializeCertificateAuthorityModel(CaMnemonic, CaMnemonicPassword, network.Consensus.CoinType, network.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS][0], AdminPassword);
+            var model = new InitializeCertificateAuthorityModel(CaMnemonic, CaMnemonicPassword, network.Consensus.CoinType, AdminPassword);
             certificatesController.InitializeCertificateAuthority(model);
         }
 

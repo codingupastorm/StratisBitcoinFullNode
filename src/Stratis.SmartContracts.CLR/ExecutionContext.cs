@@ -1,4 +1,5 @@
 ﻿using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.RuntimeObserver;
 
 namespace Stratis.SmartContracts.CLR

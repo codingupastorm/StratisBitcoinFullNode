@@ -7,7 +7,6 @@ using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using NBitcoin;
-using Newtonsoft.Json;
 using Org.BouncyCastle.Pkcs;
 using Stratis.Bitcoin.Networks;
 using Xunit;
@@ -63,13 +62,13 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
-            var privateKey = new Key();
-            PubKey pubKey = privateKey.PubKey;
+            PubKey pubKey = new Key().PubKey;
             BitcoinPubKeyAddress address = pubKey.GetAddress(this.network);
 
             var accountsController = (AccountsController)server.Host.Services.GetService(typeof(AccountsController));
 
-            var createAccountModel = new CreateAccount()
+            var permissions = new List<Permission>() { new Permission() { Name = CaCertificatesManager.MiningPermission }, new Permission() { Name = CaCertificatesManager.SendPermission } };
+            var requestAccountModel = new RequestAccount()
             {
                 CommonName = "dummyName",
                 Country = "dummyCountry",
@@ -80,18 +79,34 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 OrganizationUnit = "dummyOrganizationUnit",
                 StateOrProvince = "dummyState",
                 RequestedAccountAccess = (int)AccountAccessFlags.IssueCertificates,
-                RequestedPermissions = new List<Permission>() { new Permission() { Name = AccountsController.SendPermission } }
+                RequestedPermissions = permissions
             };
 
-            int id = CaTestHelper.GetValue<int>(accountsController.CreateAccount(createAccountModel));
+            int accountId = CaTestHelper.GetValue<int>(accountsController.RequestAccount(requestAccountModel));
 
-            var lowPrivilegeClient = new CaClient(server.BaseAddress, server.CreateClient(), id, "test");
+            AccountInfo account = CaTestHelper.GetValue<AccountInfo>(accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(accountId, Settings.AdminAccountId, CaTestHelper.AdminPassword)));
+
+            Assert.Equal(AccountAccessFlags.IssueCertificates, account.AccessInfo);
+            Assert.False(account.Approved);
+            Assert.Equal(-1, account.ApproverId);
+            Assert.Equal("dummyCountry", account.Country);
+            Assert.Equal("dummyEmail@example.com", account.EmailAddress);
+            Assert.Equal("dummyLocality", account.Locality);
+            Assert.Equal("dummyName", account.Name);
+            Assert.Equal("dummyOrganization", account.Organization);
+            Assert.Equal("dummyOrganizationUnit", account.OrganizationUnit);
+            Assert.Equal(2, account.Permissions.Count);
+            Assert.Contains(CaCertificatesManager.MiningPermission, account.Permissions.Select(p => p.Name));
+            Assert.Contains(CaCertificatesManager.SendPermission, account.Permissions.Select(p => p.Name));
+            Assert.Equal("dummyState", account.StateOrProvince);
+
+            var lowPrivilegeClient = new CaClient(server.BaseAddress, server.CreateClient(), accountId, "test");
 
             // The requirement for an account to be approved prior to use must be enforced.
             // TODO: The type of exception thrown here should be more meaningful, and represent the actual error (unapproved account)
             Assert.Throws<CaClientException>(() => lowPrivilegeClient.GenerateCertificateSigningRequest(Convert.ToBase64String(pubKey.ToBytes()), address.ToString(), Convert.ToBase64String(pubKey.Hash.ToBytes()), Convert.ToBase64String(pubKey.ToBytes())));
 
-            var credentialsModel = new CredentialsModelWithTargetId() {AccountId = Settings.AdminAccountId, Password = CaTestHelper.AdminPassword, TargetAccountId = id};
+            var credentialsModel = new CredentialsModelWithTargetId() { AccountId = Settings.AdminAccountId, Password = CaTestHelper.AdminPassword, TargetAccountId = accountId };
 
             accountsController.ApproveAccount(credentialsModel);
 
@@ -191,9 +206,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
             PubKey pubKey1 = privateKey1.PubKey;
             BitcoinPubKeyAddress address1 = pubKey1.GetAddress(this.network);
 
-            var createAccountModel = new CreateAccount()
+            var createAccountModel = new RequestAccount
             {
-                Password = "test",
                 CommonName = "Org1",
                 Country = "UK",
                 EmailAddress = "org1@example.com",
@@ -203,11 +217,11 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 OrganizationUnit = "IT",
                 StateOrProvince = "England",
                 RequestedAccountAccess = (int)AccountAccessFlags.IssueCertificates,
-                RequestedPermissions = new List<Permission>() { new Permission() { Name = AccountsController.SendPermission } }
+                RequestedPermissions = new List<Permission>() { new Permission() { Name = CaCertificatesManager.SendPermission } }
             };
 
             // Create account for org 1
-            int id1 = CaTestHelper.GetValue<int>(accountsController.CreateAccount(createAccountModel));
+            int id1 = CaTestHelper.GetValue<int>(accountsController.RequestAccount(createAccountModel));
 
             var credentialsModel = new CredentialsModelWithTargetId() { AccountId = Settings.AdminAccountId, Password = CaTestHelper.AdminPassword, TargetAccountId = id1 };
 
@@ -218,9 +232,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
             PubKey pubKey2 = privateKey2.PubKey;
             BitcoinPubKeyAddress address2 = pubKey2.GetAddress(this.network);
 
-            var createAccountModel2 = new CreateAccount()
+            var createAccountModel2 = new RequestAccount()
             {
-                Password = "test",
                 CommonName = "Org2",
                 Country = "AU",
                 EmailAddress = "org2@example.com",
@@ -230,11 +243,11 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 OrganizationUnit = "IT",
                 StateOrProvince = "NSW",
                 RequestedAccountAccess = (int)AccountAccessFlags.IssueCertificates,
-                RequestedPermissions = new List<Permission>() { new Permission() { Name = AccountsController.SendPermission } }
+                RequestedPermissions = new List<Permission>() { new Permission() { Name = CaCertificatesManager.SendPermission } }
             };
 
             // Create account for org 2
-            int id2 = CaTestHelper.GetValue<int>(accountsController.CreateAccount(createAccountModel2));
+            int id2 = CaTestHelper.GetValue<int>(accountsController.RequestAccount(createAccountModel2));
 
             credentialsModel = new CredentialsModelWithTargetId() { AccountId = Settings.AdminAccountId, Password = CaTestHelper.AdminPassword, TargetAccountId = id2 };
 

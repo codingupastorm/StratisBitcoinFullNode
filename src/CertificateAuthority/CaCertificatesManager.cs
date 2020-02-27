@@ -5,10 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using CertificateAuthority.Controllers;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
-using Microsoft.AspNetCore.Mvc.Formatters.Internal;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NLog;
@@ -55,12 +53,26 @@ namespace CertificateAuthority
         public const string P2pkhExtensionOid = "1.4.1";
         public const string TransactionSigningPubKeyHashExtensionOid = "1.4.2";
         public const string BlockSigningPubKeyExtensionOid = "1.4.3";
-        public const string SendPermission = "1.5.1";
+        public const string SendPermissionOid = "1.5.1";
         public const string CallContractPermissionOid = "1.5.2";
         public const string CreateContractPermissionOid = "1.5.3";
+        public const string MiningPermissionOid = "1.5.4";
 
         public const int CertificateValidityPeriodYears = 10;
         public const int CaCertificateValidityPeriodYears = 10;
+
+        public const string SendPermission = "Send";
+        public const string CallContractPermission = "CallContract";
+        public const string CreateContractPermission = "CreateContract";
+        public const string MiningPermission = "Mine";
+
+        public static List<string> ValidPermissions = new List<string>()
+        {
+            SendPermission,
+            CallContractPermission,
+            CreateContractPermission,
+            MiningPermission
+        };
 
         public CaCertificatesManager(DataCacheLayer repository, Settings settings)
         {
@@ -92,7 +104,7 @@ namespace CertificateAuthority
             this.caKey = new AsymmetricCipherKeyPair(pub, ec); // TODO: This method of deriving pubkey from private could be made into its own method.
         }
 
-        public bool InitializeCertificateAuthority(byte addressPrefix, string adminPassword, int coinType, string mnemonic, string mnemonicPassword)
+        public bool InitializeCertificateAuthority(string adminPassword, int coinType, string mnemonic, string mnemonicPassword)
         {
             if (this.caCertificate != null)
             {
@@ -108,7 +120,7 @@ namespace CertificateAuthority
 
                 var caAddressSpace = new HDWalletAddressSpace(mnemonic, mnemonicPassword);
                 Key caPrivateKey = caAddressSpace.GetKey(hdPath).PrivateKey;
-                
+
                 // The CA is the big boss, and won't be signing transactions itself, so no extensions.
                 var extensionData = new Dictionary<string, byte[]>();
 
@@ -183,7 +195,7 @@ namespace CertificateAuthority
         /// </summary>
         public CertificateInfoModel IssueCertificate(CredentialsAccessWithModel<IssueCertificateFromFileContentsModel> model)
         {
-            this.repository.VerifyCredentialsAndAccessLevel(model, out AccountModel creator);
+            this.repository.VerifyCredentialsAndAccessLevel(model, out _);
 
             this.logger.Info("Issuing certificate from the following request: '{0}'.", model.Model.CertificateRequestFileContents);
 
@@ -201,7 +213,7 @@ namespace CertificateAuthority
             CertificateInfoModel existingCertificate = this.repository.GetCertificateIssuedByAccountId(cred);
 
             // TODO: Should this actually throw instead?
-            if (existingCertificate != null)
+            if (existingCertificate != null && existingCertificate.Status != CertificateStatus.Revoked)
                 return existingCertificate;
 
             string knownSubjectDistinguishedName = this.GetClientCertificateSubjectDistinguishedName(new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.BasicAccess));
@@ -396,7 +408,7 @@ namespace CertificateAuthority
             if (subjectAlternativeNames != null && subjectAlternativeNames.Any())
                 AddSubjectAlternativeNames(certificateGenerator, subjectAlternativeNames);
 
-            AddDltInformation(certificateGenerator, extensionData, permissions);
+            AddPermissionsToCertificate(certificateGenerator, extensionData, permissions);
 
             // The certificate is signed with the issuer's private key.
             ISignatureFactory signatureFactory = new Asn1SignatureFactory("SHA256WithECDSA", issuerKeyPair.Private, random);
@@ -414,7 +426,7 @@ namespace CertificateAuthority
         /// <returns></returns>
         private static BigInteger GenerateSerialNumber(SecureRandom random)
         {
-            BigInteger serialNumber = BigIntegers.CreateRandomInRange(BigInteger.One, BigInteger.ValueOf(Int64.MaxValue), random);
+            BigInteger serialNumber = BigIntegers.CreateRandomInRange(BigInteger.One, BigInteger.ValueOf(long.MaxValue), random);
 
             return serialNumber;
         }
@@ -482,7 +494,7 @@ namespace CertificateAuthority
             certificateGenerator.AddExtension(X509Extensions.SubjectKeyIdentifier.Id, false, subjectKeyIdentifierExtension);
         }
 
-        private static void AddDltInformation(X509V3CertificateGenerator certificateGenerator, Dictionary<string, byte[]> extensionData, List<string> permissions)
+        private static void AddPermissionsToCertificate(X509V3CertificateGenerator certificateGenerator, Dictionary<string, byte[]> extensionData, List<string> permissions)
         {
             if (extensionData.TryGetValue(P2pkhExtensionOid, out byte[] oid141))
                 certificateGenerator.AddExtension(P2pkhExtensionOid, false, new DerOctetString(oid141));
@@ -493,14 +505,17 @@ namespace CertificateAuthority
             if (extensionData.TryGetValue(BlockSigningPubKeyExtensionOid, out byte[] oid143))
                 certificateGenerator.AddExtension(BlockSigningPubKeyExtensionOid, false, new DerOctetString(oid143));
 
-            if (permissions.Contains(AccountsController.SendPermission))
-                certificateGenerator.AddExtension(SendPermission, false, new byte[] { 1 });
+            if (permissions.Contains(SendPermission))
+                certificateGenerator.AddExtension(SendPermissionOid, false, new byte[] { 1 });
 
-            if (permissions.Contains(AccountsController.CallContractPermission))
+            if (permissions.Contains(CallContractPermission))
                 certificateGenerator.AddExtension(CallContractPermissionOid, false, new byte[] { 1 });
 
-            if (permissions.Contains(AccountsController.CreateContractPermission))
+            if (permissions.Contains(CreateContractPermission))
                 certificateGenerator.AddExtension(CreateContractPermissionOid, false, new byte[] { 1 });
+
+            if (permissions.Contains(MiningPermission))
+                certificateGenerator.AddExtension(MiningPermissionOid, false, new byte[] { 1 });
         }
 
         public static X509Certificate2 ConvertCertificate(X509Certificate certificate, SecureRandom random)
@@ -576,13 +591,16 @@ namespace CertificateAuthority
 
         /// <summary>
         /// Finds issued certificate by pubkey hash and returns it or null if it wasn't found.
+        /// <para>
+        /// This will filter out revoked certificates.
+        /// </para>
         /// </summary>
         public CertificateInfoModel GetCertificateByTransactionSigningPubKeyHash(CredentialsAccessWithModel<CredentialsModelWithPubKeyHashModel> model)
         {
             byte[] transactionSigningPubKeyHash = Convert.FromBase64String(model.Model.PubKeyHash);
             var byteArrayComparer = new ByteArrayComparer();
 
-            return this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Certificates.SingleOrDefault(x => byteArrayComparer.Equals(x.TransactionSigningPubKeyHash, transactionSigningPubKeyHash)); });
+            return this.repository.ExecuteQuery(model, (dbContext) => { return dbContext.Certificates.SingleOrDefault(x => x.Status == CertificateStatus.Good && byteArrayComparer.Equals(x.TransactionSigningPubKeyHash, transactionSigningPubKeyHash)); });
         }
 
         /// <summary>
@@ -688,7 +706,7 @@ namespace CertificateAuthority
                 values.Add(new X509Extension(true, new DerOctetString(oid142)));
             }
 
-            oids.Add(new DerObjectIdentifier(SendPermission));
+            oids.Add(new DerObjectIdentifier(SendPermissionOid));
             oids.Add(new DerObjectIdentifier(CallContractPermissionOid));
             oids.Add(new DerObjectIdentifier(CreateContractPermissionOid));
 

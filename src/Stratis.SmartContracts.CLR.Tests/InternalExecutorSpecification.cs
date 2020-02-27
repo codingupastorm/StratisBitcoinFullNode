@@ -1,6 +1,7 @@
 ﻿using Moq;
 using NBitcoin;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Xunit;
 
 namespace Stratis.SmartContracts.CLR.Tests

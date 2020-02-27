@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using CertificateAuthority.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -79,6 +80,9 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         private SubscriptionToken blockConnectedSubscription;
         private SubscriptionToken blockDisconnectedSubscription;
+
+        public Key ClientCertificatePrivateKey { get; set; }
+        public Key TransactionSigningPrivateKey { get; set; }
 
         public CoreNode(NodeRunner runner, NodeConfigParameters configParameters, string configfile, bool useCookieAuth = false)
         {
@@ -489,6 +493,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         }
 
         public DateTimeOffset? MockTime { get; set; }
+        public CertificateInfoModel ClientCertificate { get; set; }
 
         public void SetMinerSecret(BitcoinSecret secret)
         {

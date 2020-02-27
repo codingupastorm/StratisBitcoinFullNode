@@ -1,6 +1,7 @@
 ﻿using Moq;
 using NBitcoin;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.State.AccountAbstractionLayer;
 using Xunit;

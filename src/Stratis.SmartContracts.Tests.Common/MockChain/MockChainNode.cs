@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
@@ -11,15 +9,12 @@ using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers;
-using Stratis.Bitcoin.Features.SmartContracts.Wallet;
 using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities.JsonErrors;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Local;
 using Stratis.SmartContracts.Core;
@@ -39,7 +34,7 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
 
         // Services on the node. Used to retrieve information about the state of the network.
         private readonly SmartContractsController smartContractsController;
-        private readonly SmartContractWalletController smartContractWalletController;
+        //private readonly SmartContractWalletController smartContractWalletController;
         private readonly IStateRepositoryRoot stateRoot;
         private readonly IBlockStore blockStore;
 
@@ -94,7 +89,7 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
             this.CoreNode.SetMinerSecret(new BitcoinSecret(key, this.CoreNode.FullNode.Network));
 
             // Set up services for later
-            this.smartContractWalletController = this.CoreNode.FullNode.NodeController<SmartContractWalletController>();
+            //this.smartContractWalletController = this.CoreNode.FullNode.NodeController<SmartContractWalletController>();
             this.smartContractsController = this.CoreNode.FullNode.NodeController<SmartContractsController>();
             this.stateRoot = this.CoreNode.FullNode.NodeService<IStateRepositoryRoot>();
             this.blockStore = this.CoreNode.FullNode.NodeService<IBlockStore>();
@@ -115,62 +110,6 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
         public HdAddress GetUnusedAddress()
         {
             return this.CoreNode.FullNode.WalletManager().GetUnusedAddress(new WalletAccountReference(this.WalletName, this.AccountName));
-        }
-
-        /// <summary>
-        /// Send a normal transaction.
-        /// </summary>
-        public Result<SendTransactionModel> SendTransaction(Script scriptPubKey, Money amount, int utxos = 0, List<OutPoint> selectedInputs = null)
-        {
-            Recipient[] recipients;
-
-            if (utxos > 0)
-            {
-                if (amount % utxos != 0)
-                {
-                    throw new ArgumentException("Amount should be divisible by utxos if utxos are specified!");
-                }
-
-                recipients = new Recipient[utxos];
-                for (int i = 0; i < recipients.Length; i++)
-                {
-                    recipients[i] = new Recipient { Amount = amount / utxos, ScriptPubKey = scriptPubKey };
-                }
-            }
-            else
-            {
-                recipients = new[] { new Recipient { Amount = amount, ScriptPubKey = scriptPubKey } };
-            }
-
-            if (selectedInputs == null)
-            {
-                selectedInputs = this.CoreNode.FullNode.WalletManager().GetSpendableInputsForAddress(this.WalletName, this.MinerAddress.Address, 1); // Always send from the MinerAddress. Simplifies things.
-            }
-
-            var txBuildContext = new TransactionBuildContext(this.CoreNode.FullNode.Network)
-            {
-                AccountReference = new WalletAccountReference(this.WalletName, this.AccountName),
-                MinConfirmations = 1,
-                FeeType = FeeType.Medium,
-                WalletPassword = this.Password,
-                Recipients = recipients.ToList(),
-                SelectedInputs = selectedInputs,
-                ChangeAddress = this.MinerAddress // yes this is unconventional, but helps us to keep the balance on the same addresses
-            };
-
-            Transaction trx = (this.CoreNode.FullNode.NodeService<IWalletTransactionHandler>() as SmartContractWalletTransactionHandler).BuildTransaction(txBuildContext);
-
-            // Broadcast to the other node.
-
-            IActionResult result = this.smartContractWalletController.SendTransaction(new SendTransactionRequest(trx.ToHex()));
-            if (result is ErrorResult errorResult)
-            {
-                var errorResponse = (ErrorResponse)errorResult.Value;
-                return Result.Fail<SendTransactionModel>(errorResponse.Errors[0].Message);
-            }
-
-            JsonResult response = (JsonResult)result;
-            return Result.Ok((SendTransactionModel)response.Value);
         }
 
         /// <summary>

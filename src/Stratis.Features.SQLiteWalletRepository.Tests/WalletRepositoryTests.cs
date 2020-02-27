@@ -66,9 +66,10 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
             // Set up block store.
             this.NodeSettings = new NodeSettings(network, args: new[] { $"-datadir={dataDir}" }, protocolVersion: ProtocolVersion.ALT_PROTOCOL_VERSION);
 
-            var keyValueStore = new BlockKeyValueStore(new RepositorySerializer(network.Consensus.ConsensusFactory), new DataFolder(dataDir), this.NodeSettings.LoggerFactory, DateTimeProvider.Default);
+            var repositorySerializer = new RepositorySerializer(network.Consensus.ConsensusFactory);
+            var keyValueStore = new BlockKeyValueStore(repositorySerializer, new DataFolder(dataDir), this.NodeSettings.LoggerFactory, DateTimeProvider.Default);
 
-            this.BlockRepo = new BlockRepository(network, this.NodeSettings.LoggerFactory, keyValueStore);
+            this.BlockRepo = new BlockRepository(network, this.NodeSettings.LoggerFactory, keyValueStore, repositorySerializer);
             this.BlockRepo.Initialize();
 
             var prevBlock = new Dictionary<uint256, uint256>();

@@ -24,7 +24,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
 {
     public sealed class TokenlessBlockDefinition : BlockDefinition
     {
-        private readonly ICoinView coinView;
         private readonly IContractExecutorFactory executorFactory;
         private readonly ILogger logger;
         private readonly List<Receipt> receipts;
@@ -51,7 +50,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             ICallDataSerializer callDataSerializer)
             : base(consensusManager, dateTimeProvider, loggerFactory, mempool, mempoolLock, minerSettings, network)
         {
-            this.coinView = coinView;
             this.executorFactory = executorFactory;
             this.logger = loggerFactory.CreateLogger(this.GetType());
             this.stateRoot = stateRoot;

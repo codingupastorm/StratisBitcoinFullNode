@@ -90,8 +90,8 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<IBlockBufferGenerator, BlockBufferGenerator>();
 
                         // Permissioned membership.
-                        services.AddSingleton<CertificatesManager>();
-                        services.AddSingleton<RevocationChecker>();
+                        services.AddSingleton<ICertificatesManager, CertificatesManager>();
+                        services.AddSingleton<IRevocationChecker, RevocationChecker>();
                         services.AddSingleton<ICertificatePermissionsChecker, CertificatePermissionsChecker>();
                         services.AddSingleton<ICertificateCache, CertificateCache>();
 

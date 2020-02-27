@@ -48,20 +48,20 @@ namespace Stratis.SmartContracts.Core.Tests.Receipts
 
             var receipt = new Receipt(new uint256(1234), 12345, new Log[] { log1, log2 });
             TestConsensusSerialize(receipt);
-            receipt = new Receipt(receipt.PostState, receipt.GasUsed, receipt.Logs, new uint256(12345), new uint160(25), new uint160(24), new uint160(23), true, null, null, 54321, 1_000_000) { BlockHash = new uint256(1234) };
+            receipt = new Receipt(receipt.PostState, receipt.GasUsed, receipt.Logs, new uint256(12345), new uint160(25), new uint160(24), new uint160(23), true, null, null, 54321, 1_000_000, "RWS") { BlockHash = new uint256(1234) };
             TestStorageSerialize(receipt);
 
             // Test cases where either the sender or contract is null - AKA CALL vs CREATE
-            receipt = new Receipt(receipt.PostState, receipt.GasUsed, receipt.Logs, new uint256(12345), new uint160(25), new uint160(24), null, true, "Test Result", "Test Error Message", 54321, 1_000_000, "TestMethodName", 123456) { BlockHash = new uint256(1234) };
+            receipt = new Receipt(receipt.PostState, receipt.GasUsed, receipt.Logs, new uint256(12345), new uint160(25), new uint160(24), null, true, "Test Result", "Test Error Message", 54321, 1_000_000, "RWS", "TestMethodName", 123456) { BlockHash = new uint256(1234) };
             TestStorageSerialize(receipt);
-            receipt = new Receipt(receipt.PostState, receipt.GasUsed, receipt.Logs, new uint256(12345), new uint160(25), null, new uint160(23), true, "Test Result 2", "Test Error Message 2", 54321, 1_000_000) { BlockHash = new uint256(1234) };
+            receipt = new Receipt(receipt.PostState, receipt.GasUsed, receipt.Logs, new uint256(12345), new uint160(25), null, new uint160(23), true, "Test Result 2", "Test Error Message 2", 54321, 1_000_000, "RWS") { BlockHash = new uint256(1234) };
             TestStorageSerialize(receipt);
         }
 
         [Fact]
         public void Receipt_With_No_MethodName_Or_BlockNumber_Deserializes_Correctly()
         {
-            var receipt = new Receipt(new uint256(1234), 12345, new Log[]{}, new uint256(12345), new uint160(25), new uint160(24), null, true, "Test Result", "Test Error Message", 54321, 1_000_000) { BlockHash = new uint256(1234) };
+            var receipt = new Receipt(new uint256(1234), 12345, new Log[]{}, new uint256(12345), new uint160(25), new uint160(24), null, true, "Test Result", "Test Error Message", 54321, 1_000_000, "RWS") { BlockHash = new uint256(1234) };
 
             byte[] serialized = ToStorageBytesRlp_NoMethodName(receipt);
 

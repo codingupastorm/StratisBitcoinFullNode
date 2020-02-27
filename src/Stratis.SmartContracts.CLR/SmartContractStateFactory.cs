@@ -2,6 +2,7 @@
 using Stratis.SmartContracts.CLR.ContractLogging;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
 

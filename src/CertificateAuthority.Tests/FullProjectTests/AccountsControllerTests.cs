@@ -49,7 +49,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
                 // First user can access admin's data'
                 AccountInfo info2 = CaTestHelper.GetValue<AccountInfo>(this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(this.adminCredentials.AccountId, credentials1.AccountId, credentials1.Password)));
-                Assert.Equal(this.adminCredentials.AccountId, info2.CreatorId);
+                Assert.Equal(this.adminCredentials.AccountId, info2.ApproverId);
                 Assert.Equal(Settings.AdminName, info2.Name);
 
                 // User without rights fails.

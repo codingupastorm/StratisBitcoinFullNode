@@ -1,9 +1,11 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using LevelDB;
+using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Bitcoin.Utilities;
@@ -50,9 +52,9 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
         private SingleThreadResource transactionLock;
         private ByteArrayComparer byteArrayComparer;
 
-        public KeyValueStoreLevelDB(KeyValueStore.KeyValueStore keyValueStore) : base(keyValueStore)
+        public KeyValueStoreLevelDB(ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer) : base(repositorySerializer)
         {
-            var logger = keyValueStore.LoggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
+            var logger = loggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
 
             this.transactionLock = new SingleThreadResource($"{nameof(this.transactionLock)}", logger);
             this.byteArrayComparer = new ByteArrayComparer();
@@ -68,7 +70,15 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             this.Close();
 
             Directory.CreateDirectory(rootPath);
-            this.Storage = new DB(options, rootPath);
+
+            try
+            {
+                this.Storage = new DB(options, rootPath);
+            }
+            catch (Exception err)
+            {
+                throw new Exception($"An error occurred while attempting to open the LevelDB database at '{rootPath}': {err.Message}'", err);
+            }
 
             Guard.NotNull(this.Storage, nameof(this.Storage));
 

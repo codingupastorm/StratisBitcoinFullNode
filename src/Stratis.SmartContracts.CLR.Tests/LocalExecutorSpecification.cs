@@ -3,6 +3,7 @@ using Moq;
 using NBitcoin;
 using Stratis.SmartContracts.CLR.Local;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.State.AccountAbstractionLayer;

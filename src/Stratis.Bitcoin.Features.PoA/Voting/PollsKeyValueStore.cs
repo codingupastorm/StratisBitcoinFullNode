@@ -14,8 +14,9 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
     public class PollsKeyValueStore : KeyValueStore<KeyValueStoreLevelDB.KeyValueStoreLevelDB>, IPollsKeyValueStore
     {
         public PollsKeyValueStore(IRepositorySerializer repositorySerializer, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
-            : base(dataFolder.PollsPath, loggerFactory, dateTimeProvider, repositorySerializer)
+            : base(new KeyValueStoreLevelDB.KeyValueStoreLevelDB(loggerFactory, repositorySerializer))
         {
+            this.Repository.Init(dataFolder.PollsPath);
         }
     }
 }

@@ -10,6 +10,7 @@ using Stratis.SmartContracts.CLR.Loader;
 using Stratis.SmartContracts.CLR.Metering;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Networks;
 using Stratis.SmartContracts.RuntimeObserver;

@@ -11,7 +11,6 @@ using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Caching;
-using Stratis.Bitcoin.Features.SmartContracts.Rules;
 using Stratis.Bitcoin.Utilities;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core;
@@ -51,7 +50,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             this.stateRepositoryRoot = stateRepositoryRoot;
             this.tokenlessSigner = tokenlessSigner;
 
-            this.logger = loggerFactory.CreateLogger<SmartContractCoinViewRuleLogic>();
+            this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
         /// <inheritdoc />

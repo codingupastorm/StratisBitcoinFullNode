@@ -3,6 +3,7 @@ using Moq;
 using NBitcoin;
 using Stratis.SmartContracts.CLR.Metering;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 using Xunit;
 
