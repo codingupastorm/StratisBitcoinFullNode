@@ -71,13 +71,13 @@ namespace CertificateAuthority
             return this.RequestFromCA<CertificateInfoModel>(GetCaCertificateEndpoint, credentialsModel);
         }
 
-        public int RequestAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country)
+        public int CreateAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country)
         {
             // TODO: Request all permissions by default, or request none and require admin to add them?
 
             string passHash = DataHelper.ComputeSha256Hash(this.password);
 
-            var requestAccountModel = new RequestAccount(name,
+            var requestAccountModel = new CreateAccountModel(name,
                 passHash,
                 (int)(AccountAccessFlags.IssueCertificates | AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.AccessAnyCertificate),
                 organizationUnit,

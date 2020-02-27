@@ -157,7 +157,7 @@ namespace CertificateAuthority.Database
         /// <summary>Creates a new account.</summary>
         /// <remarks>This method is somewhat special in that it requires no account ID for the credentials.
         /// Only a password is required.</remarks>
-        public int RequestAccount(RequestAccount requestAccountModel)
+        public int CreateAccount(CreateAccountModel requestAccountModel)
         {
             CADbContext dbContext = CreateContext();
 

@@ -922,6 +922,38 @@ namespace Stratis.SmartContracts.IntegrationTests
             }
         }
 
+        [Fact]
+        public async Task TokenlessNodeDoesNotHaveMiningPermissionDoesNotMineAsync()
+        {
+            using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(this))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = GetAdminClient();
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = GetCertificateFromInitializedCAServer(server);
+
+                // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CaClient client1 = this.GetClient(server);
+
+                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+
+                node1.Start();
+
+                // Mine 20 blocks
+                await node1.MineBlocksAsync(20);
+                TestHelper.IsNodeSyncedAtHeight(node1, 20);
+
+                // Restart the node and ensure that it is still at height 20.
+                node1.Restart();
+                TestHelper.IsNodeSyncedAtHeight(node1, 20);
+            }
+        }
+
         /// <summary>
         /// Used to instantiate a CA client with the admin's credentials. If multiple nodes need to interact with the CA in a test, they will need their own accounts & clients created.
         /// </summary>

@@ -71,7 +71,6 @@ namespace CertificateAuthority
             SendPermission,
             CallContractPermission,
             CreateContractPermission,
-            MiningPermission
         };
 
         public CaCertificatesManager(DataCacheLayer repository, Settings settings)
