@@ -100,7 +100,7 @@ namespace Stratis.Feature.PoA.Tokenless
             if (this.certificatePermissionsChecker.CheckOwnCertificatePermission(CaCertificatesManager.MiningPermissionOid))
                 this.miner.InitializeMining();
 
-            // Initialize the CA public key / federaton member voting loop.
+            // Initialize the CA public key / federation member voting loop.
             this.caPubKeysLoop = this.asyncProvider.CreateAndRunAsyncLoop("PeriodicCAKeys", async (cancellation) =>
             {
                 try
