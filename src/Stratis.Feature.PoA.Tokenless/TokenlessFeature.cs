@@ -97,7 +97,7 @@ namespace Stratis.Feature.PoA.Tokenless
             }
 
             // Check the local node's certificate for the mining permission.
-            if (this.certificatePermissionsChecker.CheckLocalCertificatePermission(CaCertificatesManager.MiningPermissionOid))
+            if (this.certificatePermissionsChecker.CheckOwnCertificatePermission(CaCertificatesManager.MiningPermissionOid))
                 this.miner.InitializeMining();
 
             // Initialize the CA public key / federaton member voting loop.
