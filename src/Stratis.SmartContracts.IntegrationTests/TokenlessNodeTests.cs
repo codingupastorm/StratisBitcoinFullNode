@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Models;
-using CertificateAuthority.Tests;
+using CertificateAuthority.Tests.Common;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
