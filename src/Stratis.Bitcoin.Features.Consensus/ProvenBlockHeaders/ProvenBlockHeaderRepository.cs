@@ -15,12 +15,12 @@ namespace Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders
     {
     }
 
-    public class ProvenBlockHeaderKeyValueStore : KeyValueStore<KeyValueStoreLevelDB.KeyValueStoreLevelDB>, IProvenBlockHeaderKeyValueStore
+    public class ProvenBlockHeaderKeyValueStore : KeyValueStoreLevelDB.KeyValueStoreLevelDB, IProvenBlockHeaderKeyValueStore
     {
         public ProvenBlockHeaderKeyValueStore(Network network, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, IRepositorySerializer repositorySerializer)
-            : base(new KeyValueStoreLevelDB.KeyValueStoreLevelDB(loggerFactory, repositorySerializer))
+            : base(loggerFactory, repositorySerializer)
         {
-            this.Repository.Init(dataFolder.ProvenBlockHeaderPath);
+            this.Init(dataFolder.ProvenBlockHeaderPath);
         }
     }
 

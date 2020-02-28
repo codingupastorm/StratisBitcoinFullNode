@@ -10,12 +10,12 @@ namespace Stratis.Bitcoin.Base
     {
     }
 
-    public class ChainRepositoryStore : KeyValueStore<KeyValueStoreLevelDB.KeyValueStoreLevelDB>, IChainRepositoryStore
+    public class ChainRepositoryStore : KeyValueStoreLevelDB.KeyValueStoreLevelDB, IChainRepositoryStore
     {
         public ChainRepositoryStore(IRepositorySerializer repositorySerializer, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
-            : base(new KeyValueStoreLevelDB.KeyValueStoreLevelDB(loggerFactory, repositorySerializer))
+            : base(loggerFactory, repositorySerializer)
         {
-            this.Repository.Init(dataFolder.ChainPath);
+            this.Init(dataFolder.ChainPath);
         }
     }
 }

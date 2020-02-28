@@ -213,7 +213,7 @@ namespace CertificateAuthority
             CertificateInfoModel existingCertificate = this.repository.GetCertificateIssuedByAccountId(cred);
 
             // TODO: Should this actually throw instead?
-            if (existingCertificate != null && existingCertificate.Status != CertificateStatus.Revoked)
+            if (existingCertificate != null)
                 return existingCertificate;
 
             string knownSubjectDistinguishedName = this.GetClientCertificateSubjectDistinguishedName(new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.BasicAccess));
@@ -668,6 +668,10 @@ namespace CertificateAuthority
             return this.repository.ExecuteCommand(model, (dbContext, account) =>
             {
                 CertificateInfoModel certificate = this.repository.GetCertificateIssuedByAccountId(model);
+
+                // TODO: Should this actually throw instead?
+                if (certificate == null)
+                    return true;
 
                 this.repository.CertStatusesByThumbprint[certificate.Thumbprint] = CertificateStatus.Revoked;
 
