@@ -71,14 +71,12 @@ namespace CertificateAuthority
             return this.RequestFromCA<CertificateInfoModel>(GetCaCertificateEndpoint, credentialsModel);
         }
 
-        public int CreateAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country)
+        public int CreateAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country, string[] requestedPermissions = null)
         {
-            // TODO: Request all permissions by default, or request none and require admin to add them?
-
-            string passHash = DataHelper.ComputeSha256Hash(this.password);
+            string passwordHash = DataHelper.ComputeSha256Hash(this.password);
 
             var createAccountModel = new CreateAccountModel(name,
-                passHash,
+                passwordHash,
                 (int)(AccountAccessFlags.IssueCertificates | AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.AccessAnyCertificate),
                 organizationUnit,
                 organization,
@@ -86,7 +84,7 @@ namespace CertificateAuthority
                 stateOrProvince,
                 emailAddress,
                 country,
-                CaCertificatesManager.ValidPermissions);
+                requestedPermissions.ToList());
 
             return this.RequestFromCA<int>(CreateAccountEndpoint, createAccountModel);
         }

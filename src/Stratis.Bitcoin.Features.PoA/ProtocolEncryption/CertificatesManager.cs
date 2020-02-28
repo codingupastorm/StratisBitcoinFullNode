@@ -44,7 +44,10 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         bool LoadClientCertificate();
 
-        int CreateAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country);
+        /// <summary>Creates an account on the Certificate Authority server.</summary>
+        /// <para>If no permissions are specified, then create teh account with all.</para>
+        /// <returns>The id of the newly created account.</returns>
+        int CreateAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country, string[] requestedPermissions = null);
 
         X509Certificate RequestNewCertificate(Key privateKey, PubKey transactionSigningPubKey, PubKey blockSigningPubKey);
 
@@ -218,10 +221,11 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
         }
 
-        public int CreateAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country)
+        /// <inheritdoc/>
+        public int CreateAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country, string[] requestedPermissions = null)
         {
             CaClient caClient = this.GetClient();
-            return caClient.CreateAccount(name, organizationUnit, organization, locality, stateOrProvince, emailAddress, country);
+            return caClient.CreateAccount(name, organizationUnit, organization, locality, stateOrProvince, emailAddress, country, requestedPermissions);
         }
 
         public X509Certificate RequestNewCertificate(Key privateKey, PubKey transactionSigningPubKey, PubKey blockSigningPubKey)

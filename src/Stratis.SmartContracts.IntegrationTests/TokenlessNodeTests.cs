@@ -922,7 +922,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             }
         }
 
-        [Fact(Skip = "Skip until next permissions are configurable")]
+        [Fact]
         public async Task TokenlessNodeDoesNotHaveMiningPermissionDoesNotMineAsync()
         {
             using (IWebHost server = CreateWebHostBuilder(GetDataFolderName()).Build())
@@ -938,7 +938,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate ac = GetCertificateFromInitializedCAServer(server);
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CaClient client1 = this.GetClient(server);
+                CaClient client1 = this.GetClient(server, new List<string>() { CaCertificatesManager.SendPermission });
 
                 CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
 
@@ -964,12 +964,10 @@ namespace Stratis.SmartContracts.IntegrationTests
         /// <summary>
         /// Creates a new account against the supplied running CA from scratch, and returns the client for it.
         /// </summary>
-        private CaClient GetClient(IWebHost server)
+        private CaClient GetClient(IWebHost server, List<string> requestedPermissions = null)
         {
             var httpClient = new HttpClient();
-
-            // TODO: Pass custom permission list in, to make tests with nodes that have heterogeneous permissions
-            CredentialsModel credentials = CaTestHelper.CreateAccount(server, AccountAccessFlags.AdminAccess);
+            CredentialsModel credentials = CaTestHelper.CreateAccount(server, AccountAccessFlags.AdminAccess, permissions: requestedPermissions);
             return new CaClient(new Uri(this.BaseAddress), httpClient, credentials.AccountId, credentials.Password);
         }
 

@@ -77,7 +77,7 @@ namespace Stratis.Bitcoin.Features.PoA
 
         protected Task miningTask;
 
-        public virtual bool MiningInitialized { get { return this.miningTask != null; } }
+        public bool MiningInitialized { get; set; }
 
         public PoAMiner(
             IConsensusManager consensusManager,
@@ -130,6 +130,7 @@ namespace Stratis.Bitcoin.Features.PoA
             {
                 this.miningTask = this.CreateBlocksAsync();
                 this.asyncProvider.RegisterTask($"{nameof(PoAMiner)}.{nameof(this.miningTask)}", this.miningTask);
+                this.MiningInitialized = true;
             }
         }
 
