@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Stratis.Feature.PoA.Tokenless;
 
-namespace CertificateAuthority.Tests
+namespace CertificateAuthority.Tests.Common
 {
     public static class CaTestHelper
     {
@@ -64,7 +64,7 @@ namespace CertificateAuthority.Tests
             return new CredentialsModel(id, password);
         }
 
-        internal static void InitializeCa(TestServer server)
+        public static void InitializeCa(TestServer server)
         {
             var network = new TokenlessNetwork();
 

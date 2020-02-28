@@ -13,7 +13,7 @@ namespace Stratis.Bitcoin.NodeStorage
 {
     public class Migrate
     {
-        public void MigrateKeyValueStore<TFrom, TTo>(Network network, DataFolder sourceDataFolder, DataFolder targetDataFolder) where TFrom : KeyValueStoreRepository where TTo : KeyValueStoreRepository
+        public void MigrateKeyValueStore<TFrom, TTo>(Network network, DataFolder sourceDataFolder, DataFolder targetDataFolder) where TFrom : IKeyValueStoreRepository where TTo : IKeyValueStoreRepository
         {
             void CopyTable<K, V>(IKeyValueStore keyValueStoreFrom, IKeyValueStore keyValueStoreTo, string tableName, Action<string, IKeyValueStoreTransaction, IKeyValueStoreTransaction> action = null)
             {
@@ -81,13 +81,13 @@ namespace Stratis.Bitcoin.NodeStorage
             // Copy Block Store.
             if (Directory.Exists(sourceDataFolder.BlockPath))
             {
-                using (var blockStoreSource = new KeyValueStore<TFrom>(new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory))))
+                using (var blockStoreSource = new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory)))
                 {
-                    blockStoreSource.Repository.Init(sourceDataFolder.BlockPath);
+                    blockStoreSource.Init(sourceDataFolder.BlockPath);
 
-                    using (var blockStoreTarget = new KeyValueStore<TTo>(new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory))))
+                    using (var blockStoreTarget = new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory)))
                     {
-                        blockStoreTarget.Repository.Init(targetDataFolder.BlockPath);
+                        blockStoreTarget.Init(targetDataFolder.BlockPath);
 
                         CopyTable<byte[], byte[]>(blockStoreSource, blockStoreTarget, "Block");
                         CopyTable<byte[], byte[]>(blockStoreSource, blockStoreTarget, "Transaction");
@@ -105,13 +105,13 @@ namespace Stratis.Bitcoin.NodeStorage
             // Copy Chain Repository.
             if (Directory.Exists(sourceDataFolder.ChainPath))
             {
-                using (var chainRepoSource = new KeyValueStore<TFrom>(new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory))))
+                using (var chainRepoSource = new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory)))
                 {
-                    chainRepoSource.Repository.Init(sourceDataFolder.ChainPath);
+                    chainRepoSource.Init(sourceDataFolder.ChainPath);
 
-                    using (var chainRepoTarget = new KeyValueStore<TTo>(new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory))))
+                    using (var chainRepoTarget = new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory)))
                     {
-                        chainRepoTarget.Repository.Init(targetDataFolder.ChainPath);
+                        chainRepoTarget.Init(targetDataFolder.ChainPath);
 
                         // Primitive types must be used.
                         CopyTable<int, byte[]>(chainRepoSource, chainRepoTarget, "Chain");
@@ -122,13 +122,13 @@ namespace Stratis.Bitcoin.NodeStorage
             // Copy CoinView.
             if (Directory.Exists(sourceDataFolder.CoinViewPath))
             {
-                using (var coinViewSource = new KeyValueStore<TFrom>(new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory))))
+                using (var coinViewSource = new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory)))
                 {
-                    coinViewSource.Repository.Init(sourceDataFolder.CoinViewPath);
+                    coinViewSource.Init(sourceDataFolder.CoinViewPath);
 
-                    using (var coinViewTarget = new KeyValueStore<TTo>(new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory))))
+                    using (var coinViewTarget = new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory)))
                     {
-                        coinViewTarget.Repository.Init(targetDataFolder.CoinViewPath);
+                        coinViewTarget.Init(targetDataFolder.CoinViewPath);
 
                         CopyTable<byte[], byte[]>(coinViewSource, coinViewTarget, "Coins");
                         // Primitive types must be used.
@@ -142,13 +142,13 @@ namespace Stratis.Bitcoin.NodeStorage
             // Copy ProvenBlockHeader.
             if (Directory.Exists(sourceDataFolder.ProvenBlockHeaderPath))
             {
-                using (var provenSource = new KeyValueStore<TFrom>(new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory))))
+                using (var provenSource = new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory)))
                 {
-                    provenSource.Repository.Init(sourceDataFolder.ProvenBlockHeaderPath);
+                    provenSource.Init(sourceDataFolder.ProvenBlockHeaderPath);
 
-                    using (var provenTarget = new KeyValueStore<TTo>(new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory))))
+                    using (var provenTarget = new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory)))
                     {
-                        provenTarget.Repository.Init(targetDataFolder.ProvenBlockHeaderPath);
+                        provenTarget.Init(targetDataFolder.ProvenBlockHeaderPath);
 
                         // Primitive types must be used.
                         CopyTable<int, byte[]>(provenSource, provenTarget, "ProvenBlockHeader");
@@ -160,13 +160,13 @@ namespace Stratis.Bitcoin.NodeStorage
             // Copy KeyValueRepository.
             if (Directory.Exists(sourceDataFolder.KeyValueRepositoryPath))
             {
-                using (var kvSource = new KeyValueStore<TFrom>(new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory))))
+                using (var kvSource = new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory)))
                 {
-                    kvSource.Repository.Init(sourceDataFolder.KeyValueRepositoryPath);
+                    kvSource.Init(sourceDataFolder.KeyValueRepositoryPath);
 
-                    using (var kvTarget = new KeyValueStore<TTo>(new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory))))
+                    using (var kvTarget = new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory)))
                     {
-                        kvTarget.Repository.Init(targetDataFolder.KeyValueRepositoryPath);
+                        kvTarget.Init(targetDataFolder.KeyValueRepositoryPath);
 
                         // Primitive types must be used.
                         CopyTable<byte[], byte[]>(kvSource, kvTarget, "common");
@@ -177,13 +177,13 @@ namespace Stratis.Bitcoin.NodeStorage
             // Copy SmartContractState.
             if (Directory.Exists(sourceDataFolder.SmartContractStatePath))
             {
-                using (var kvSource = new KeyValueStore<TFrom>(new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory))))
+                using (var kvSource = new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory)))
                 {
-                    kvSource.Repository.Init(sourceDataFolder.SmartContractStatePath);
+                    kvSource.Init(sourceDataFolder.SmartContractStatePath);
 
-                    using (var kvTarget = new KeyValueStore<TTo>(new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory))))
+                    using (var kvTarget = new KeyValueStoreLevelDB.KeyValueStoreLevelDB(new LoggerFactory(), new RepositorySerializer(network.Consensus.ConsensusFactory)))
                     {
-                        kvTarget.Repository.Init(targetDataFolder.SmartContractStatePath);
+                        kvTarget.Init(targetDataFolder.SmartContractStatePath);
 
                         foreach (string tableName in kvSource.GetTables())
                         {

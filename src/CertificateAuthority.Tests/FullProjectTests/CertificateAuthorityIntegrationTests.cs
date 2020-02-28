@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using CertificateAuthority.Controllers;
 using CertificateAuthority.Models;
+using CertificateAuthority.Tests.Common;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using NBitcoin;
