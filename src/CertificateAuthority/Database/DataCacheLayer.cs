@@ -157,34 +157,34 @@ namespace CertificateAuthority.Database
         /// <summary>Creates a new account.</summary>
         /// <remarks>This method is somewhat special in that it requires no account ID for the credentials.
         /// Only a password is required.</remarks>
-        public int RequestAccount(RequestAccount requestAccountModel)
+        public int CreateAccount(CreateAccountModel createAccountModel)
         {
             CADbContext dbContext = CreateContext();
 
-            if (dbContext.Accounts.Any(x => x.Name == requestAccountModel.CommonName))
+            if (dbContext.Accounts.Any(x => x.Name == createAccountModel.CommonName))
                 throw new CertificateAuthorityAccountException("That name is already taken!");
 
-            AccountAccessFlags newAccountAccessLevel = (AccountAccessFlags)requestAccountModel.RequestedAccountAccess | AccountAccessFlags.BasicAccess;
+            AccountAccessFlags newAccountAccessLevel = (AccountAccessFlags)createAccountModel.RequestedAccountAccess | AccountAccessFlags.BasicAccess;
 
-            if (requestAccountModel.RequestedPermissions == null)
+            if (createAccountModel.RequestedPermissions == null)
                 throw new CertificateAuthorityAccountException("No permissions requested!");
 
-            if (requestAccountModel.RequestedPermissions.Any(permission => !CaCertificatesManager.ValidPermissions.Contains(permission.Name)))
+            if (createAccountModel.RequestedPermissions.Any(permission => !CaCertificatesManager.ValidPermissions.Contains(permission.Name)))
                 throw new CertificateAuthorityAccountException("Invalid permission requested!");
 
             var newAccount = new AccountModel()
             {
-                Name = requestAccountModel.CommonName,
-                PasswordHash = requestAccountModel.NewAccountPasswordHash,
+                Name = createAccountModel.CommonName,
+                PasswordHash = createAccountModel.NewAccountPasswordHash,
                 AccessInfo = newAccountAccessLevel,
                 ApproverId = -1, // Not known yet, as we are creating our own account
-                OrganizationUnit = requestAccountModel.OrganizationUnit,
-                Organization = requestAccountModel.Organization,
-                Locality = requestAccountModel.Locality,
-                StateOrProvince = requestAccountModel.StateOrProvince,
-                EmailAddress = requestAccountModel.EmailAddress,
-                Country = requestAccountModel.Country,
-                Permissions = requestAccountModel.RequestedPermissions,
+                OrganizationUnit = createAccountModel.OrganizationUnit,
+                Organization = createAccountModel.Organization,
+                Locality = createAccountModel.Locality,
+                StateOrProvince = createAccountModel.StateOrProvince,
+                EmailAddress = createAccountModel.EmailAddress,
+                Country = createAccountModel.Country,
+                Permissions = createAccountModel.RequestedPermissions,
                 Approved = false
             };
 

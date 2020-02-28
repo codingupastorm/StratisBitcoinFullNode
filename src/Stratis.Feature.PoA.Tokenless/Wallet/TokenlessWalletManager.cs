@@ -244,7 +244,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             // First check if we have created an account on the CA already.
             if (!this.certificatesManager.HaveAccount())
             {
-                int accountId = this.certificatesManager.RequestAccount(this.walletSettings.Name,
+                int accountId = this.certificatesManager.CreateAccount(this.walletSettings.Name,
                     this.walletSettings.OrganizationUnit,
                     this.walletSettings.Organization,
                     this.walletSettings.Locality,

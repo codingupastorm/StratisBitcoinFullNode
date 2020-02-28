@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CertificateAuthority;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.AsyncWork;
@@ -26,6 +27,7 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly ICoreComponent coreComponent;
 
         private readonly ICertificatesManager certificatesManager;
+        private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
         private readonly VotingManager votingManager;
         private readonly IFederationManager federationManager;
         private readonly IPoAMiner miner;
@@ -38,6 +40,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         public TokenlessFeature(
             ICertificatesManager certificatesManager,
+            ICertificatePermissionsChecker certificatePermissionsChecker,
             VotingManager votingManager,
             ICoreComponent coreComponent,
             IFederationManager federationManager,
@@ -51,6 +54,7 @@ namespace Stratis.Feature.PoA.Tokenless
             ILoggerFactory loggerFactory)
         {
             this.certificatesManager = certificatesManager;
+            this.certificatePermissionsChecker = certificatePermissionsChecker;
             this.votingManager = votingManager;
             this.coreComponent = coreComponent;
             this.federationManager = federationManager;
@@ -92,9 +96,11 @@ namespace Stratis.Feature.PoA.Tokenless
                 this.votingManager.Initialize();
             }
 
-            this.miner.InitializeMining();
+            // Check the local node's certificate for the mining permission.
+            if (this.certificatePermissionsChecker.CheckOwnCertificatePermission(CaCertificatesManager.MiningPermissionOid))
+                this.miner.InitializeMining();
 
-            // Initialize the CA public key / federaton member voting loop.
+            // Initialize the CA public key / federation member voting loop.
             this.caPubKeysLoop = this.asyncProvider.CreateAndRunAsyncLoop("PeriodicCAKeys", async (cancellation) =>
             {
                 try

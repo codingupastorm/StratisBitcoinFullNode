@@ -69,7 +69,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             var accountsController = (AccountsController)server.Host.Services.GetService(typeof(AccountsController));
 
             var permissions = new List<Permission>() { new Permission() { Name = CaCertificatesManager.MiningPermission }, new Permission() { Name = CaCertificatesManager.SendPermission } };
-            var requestAccountModel = new RequestAccount()
+            var createAccountModel = new CreateAccountModel()
             {
                 CommonName = "dummyName",
                 Country = "dummyCountry",
@@ -83,7 +83,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 RequestedPermissions = permissions
             };
 
-            int accountId = CaTestHelper.GetValue<int>(accountsController.RequestAccount(requestAccountModel));
+            int accountId = CaTestHelper.GetValue<int>(accountsController.CreateAccount(createAccountModel));
 
             AccountInfo account = CaTestHelper.GetValue<AccountInfo>(accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(accountId, Settings.AdminAccountId, CaTestHelper.AdminPassword)));
 

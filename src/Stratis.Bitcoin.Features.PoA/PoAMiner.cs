@@ -75,7 +75,9 @@ namespace Stratis.Bitcoin.Features.PoA
 
         private readonly IAsyncProvider asyncProvider;
 
-        private Task miningTask;
+        protected Task miningTask;
+
+        public virtual bool MiningInitialized { get { return this.miningTask != null; } }
 
         public PoAMiner(
             IConsensusManager consensusManager,
