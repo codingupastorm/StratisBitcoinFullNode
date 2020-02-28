@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
-using Stratis.Bitcoin.Features.Miner.Models;
+using Stratis.Bitcoin.Models;
 using Xunit;
 
 namespace Stratis.Bitcoin.Features.RPC.Tests.Models
