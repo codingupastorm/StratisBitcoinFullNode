@@ -24,7 +24,7 @@ namespace Stratis.SmartContracts.Core.Store
         public TransientKeyValueStore(DataFolder dataFolder, ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer) 
             : base(loggerFactory, repositorySerializer)
         {
-
+            this.Init(dataFolder.TransientStorePath);
         }
     }
 
