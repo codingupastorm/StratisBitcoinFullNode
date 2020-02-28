@@ -1,5 +1,5 @@
 ﻿using CertificateAuthority;
-using CertificateAuthority.Tests;
+using CertificateAuthority.Tests.Common;
 using NBitcoin;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Base;

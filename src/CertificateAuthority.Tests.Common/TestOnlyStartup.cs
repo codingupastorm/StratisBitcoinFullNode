@@ -5,7 +5,7 @@ using CertificateAuthority.Controllers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CertificateAuthority.Tests
+namespace CertificateAuthority.Tests.Common
 {
     public class TestOnlyStartup : Startup
     {
