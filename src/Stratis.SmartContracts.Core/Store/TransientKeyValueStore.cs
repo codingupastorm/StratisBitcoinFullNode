@@ -37,6 +37,9 @@ namespace Stratis.SmartContracts.Core.Store
             this.repository = repository;
         }
 
+        public void Persist()
+        {
 
+        }
     }
 }
