@@ -20,7 +20,7 @@ using Stratis.Bitcoin.Features.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Fee;
-using Stratis.Bitcoin.Features.Miner;
+using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.P2P;
@@ -218,9 +218,17 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
         private static BlockTemplate CreateBlockTemplate(TestChainContext testChainContext, Script scriptPubKey,
             TxMempool mempool, MempoolSchedulerLock mempoolLock)
         {
-            PowBlockDefinition blockAssembler = new PowBlockDefinition(testChainContext.Consensus,
+            uint blockMaxSize = testChainContext.Network.Consensus.Options.MaxBlockSerializedSize;
+            uint blockMaxWeight = testChainContext.Network.Consensus.Options.MaxBlockWeight;
+            var blockDefinitionOptions = new BlockDefinitionOptions(blockMaxWeight, blockMaxSize).RestrictForNetwork(testChainContext.Network);
+
+            var minerSettings = new Mock<IMinerSettings>();
+            minerSettings.Setup((c) => c.BlockDefinitionOptions)
+                .Returns(blockDefinitionOptions);
+
+            var blockAssembler = new PoABlockDefinition(testChainContext.Consensus,
                 testChainContext.DateTimeProvider, testChainContext.LoggerFactory as LoggerFactory, mempool, mempoolLock,
-                new MinerSettings(testChainContext.NodeSettings), testChainContext.Network, testChainContext.ConsensusRules);
+                testChainContext.Network, minerSettings.Object);
 
             BlockTemplate newBlock = blockAssembler.Build(testChainContext.ChainIndexer.Tip, scriptPubKey);
 
