@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStoreLevelDB;
 using Stratis.Bitcoin.Utilities;
-using Stratis.SmartContracts.Core.ReadWrite;
 
 namespace Stratis.SmartContracts.Core.Store
 {
@@ -42,19 +39,13 @@ namespace Stratis.SmartContracts.Core.Store
             this.repository = repository;
         }
 
-        public void Persist(uint256 txId, uint blockHeight, ReadWriteSet rws)
+        public void Persist(uint256 txId, uint blockHeight, TransientStorePrivateData data)
         {
-            // Ensure we're working with the write set only.
-            // TODO ensure it's the private write set only.
-            var rwsCopy = new ReadWriteSet();
-            rwsCopy.MergeWriteSet(rws);
-            
             var key = new TransientStoreKey(txId.ToBytes(), Guid.NewGuid(), blockHeight);
 
             using (IKeyValueStoreTransaction tx = this.repository.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, Table))
             {
-                // TODO check serialization formats.
-                tx.Insert(Table, key.ToBytes(), rwsCopy.ToJsonString());
+                tx.Insert(Table, key.ToBytes(), data.ToBytes());
                 tx.Commit();
             }
         }
@@ -87,6 +78,30 @@ namespace Stratis.SmartContracts.Core.Store
             Array.Copy(this.TxId, result, this.TxId.Length);
             Array.Copy(guid, 0, result, this.TxId.Length, guid.Length);
             Array.Copy(BitConverter.GetBytes(this.BlockHeight), 0, result, this.TxId.Length + guid.Length, sizeof(uint));
+
+            return result;
+        }
+    }
+
+    /// <summary>
+    /// Contains a representation of private data for storage in the transient store.
+    ///
+    /// TODO the data represented here may change, but the final representation should always be as a byte array.
+    /// </summary>
+    public class TransientStorePrivateData
+    {
+        private readonly byte[] data;
+
+        public TransientStorePrivateData(byte[] data)
+        {
+            this.data = new byte[data.Length];
+            Array.Copy(data, this.data, data.Length);
+        }
+
+        public byte[] ToBytes()
+        {
+            var result = new byte[this.data.Length];
+            Array.Copy(this.data, result, this.data.Length);
 
             return result;
         }

@@ -60,20 +60,19 @@ namespace Stratis.SmartContracts.Core.Tests.Store
             ))
             .Returns(transaction.Object);
 
-            var txId = uint256.One;
+            uint256 txId = uint256.One;
             uint blockHeight = 1;
+            var privateData = new byte[] {0xAA, 0xBB, 0xCC};
+            var data = new TransientStorePrivateData(privateData);
 
-            var rws = new ReadWriteSet();
-            rws.AddReadItem(new ReadWriteSetKey(uint160.One, new byte[] { 0xAA}), "1");
-            rws.AddWriteItem(new ReadWriteSetKey(uint160.One, new byte[] { 0xCC }), new byte[]{ 0xDD });
+            this.store.Persist(txId, blockHeight, data);
 
-            var writeSet = new ReadWriteSet();
-            writeSet.MergeWriteSet(rws);
-            var serializedWriteSet = writeSet.ToJsonString();
+            transaction.Verify(t => t.Insert(
+                TransientStore.Table, 
+                It.IsAny<byte[]>(), 
+                It.Is<byte[]>(d => privateData.SequenceEqual(data.ToBytes()))
+            ));
 
-            this.store.Persist(txId, blockHeight, rws);
-
-            transaction.Verify(t => t.Insert(TransientStore.Table, It.IsAny<byte[]>(), serializedWriteSet));
             transaction.Verify(t => t.Commit(), Times.Once);
         }
     }
