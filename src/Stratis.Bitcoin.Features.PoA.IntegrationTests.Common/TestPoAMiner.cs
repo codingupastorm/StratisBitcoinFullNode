@@ -97,11 +97,6 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
 
         private readonly ISlotsManager slotsManager;
 
-        public override bool MiningInitialized
-        {
-            get { return true; }
-        }
-
         public TokenlessTestPoAMiner(
             ICoreComponent coreComponent,
             BlockDefinition blockDefinition,
@@ -123,6 +118,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
 
         public override void InitializeMining()
         {
+            this.MiningInitialized = true;
         }
 
         public async Task MineBlocksAsync(int count)

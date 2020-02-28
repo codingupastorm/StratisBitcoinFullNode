@@ -47,7 +47,6 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         private readonly Network network;
         private readonly DataFolder dataFolder;
         private readonly FileStorage<TokenlessWallet> fileStorage;
-        private ExtPubKey[] extPubKeys;
         private readonly TokenlessWalletSettings walletSettings;
         private readonly ICertificatesManager certificatesManager;
         private readonly ILogger logger;
@@ -168,8 +167,6 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                 this.Wallet = this.LoadWallet();
             }
 
-            this.extPubKeys = new ExtPubKey[] { ExtPubKey.Parse(this.Wallet.ExtPubKey0), ExtPubKey.Parse(this.Wallet.ExtPubKey1), ExtPubKey.Parse(this.Wallet.ExtPubKey2) };
-
             return canStart;
         }
 
@@ -250,7 +247,8 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                     this.walletSettings.Locality,
                     this.walletSettings.StateOrProvince,
                     this.walletSettings.EmailAddress,
-                    this.walletSettings.Country);
+                    this.walletSettings.Country,
+                    this.walletSettings.RequestedPermissions);
 
                 // The CA admin will need to approve the account, so advise the user.
                 this.logger.LogError($"Account created with ID {accountId}. After account approval, please update the node configuration and restart to proceed.");
