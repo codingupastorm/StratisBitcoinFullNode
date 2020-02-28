@@ -47,7 +47,6 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         private readonly Network network;
         private readonly DataFolder dataFolder;
         private readonly FileStorage<TokenlessWallet> fileStorage;
-        private ExtPubKey[] extPubKeys;
         private readonly TokenlessWalletSettings walletSettings;
         private readonly ICertificatesManager certificatesManager;
         private readonly ILogger logger;
