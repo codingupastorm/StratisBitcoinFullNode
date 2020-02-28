@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Moq;
+using NBitcoin;
+using Stratis.Bitcoin.Interfaces;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Store;
 using Xunit;
 
@@ -49,7 +52,29 @@ namespace Stratis.SmartContracts.Core.Tests.Store
         [Fact]
         public void Can_Persist_Data()
         {
-            
+            var transaction = new Mock<IKeyValueStoreTransaction>();
+
+            this.repository.Setup(r => r.CreateTransaction(
+                It.IsAny<KeyValueStoreTransactionMode>(),
+                It.IsAny<string>()
+            ))
+            .Returns(transaction.Object);
+
+            var txId = uint256.One;
+            uint blockHeight = 1;
+
+            var rws = new ReadWriteSet();
+            rws.AddReadItem(new ReadWriteSetKey(uint160.One, new byte[] { 0xAA}), "1");
+            rws.AddWriteItem(new ReadWriteSetKey(uint160.One, new byte[] { 0xCC }), new byte[]{ 0xDD });
+
+            var writeSet = new ReadWriteSet();
+            writeSet.MergeWriteSet(rws);
+            var serializedWriteSet = writeSet.ToJsonString();
+
+            this.store.Persist(txId, blockHeight, rws);
+
+            transaction.Verify(t => t.Insert(TransientStore.Table, It.IsAny<byte[]>(), serializedWriteSet));
+            transaction.Verify(t => t.Commit(), Times.Once);
         }
     }
 }

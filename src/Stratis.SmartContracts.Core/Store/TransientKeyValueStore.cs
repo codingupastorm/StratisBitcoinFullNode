@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Extensions.Logging;
+using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStoreLevelDB;
@@ -32,7 +33,7 @@ namespace Stratis.SmartContracts.Core.Store
     /// </summary>
     public class TransientStore
     {
-        private const string Table = "transient";
+        public const string Table = "transient";
 
         private readonly ITransientKeyValueStore repository;
 
@@ -41,11 +42,19 @@ namespace Stratis.SmartContracts.Core.Store
             this.repository = repository;
         }
 
-        public void Persist(ReadWriteSet rws)
+        public void Persist(uint256 txId, uint blockHeight, ReadWriteSet rws)
         {
+            // Ensure we're working with the write set only.
+            // TODO ensure it's the private write set only.
+            var rwsCopy = new ReadWriteSet();
+            rwsCopy.MergeWriteSet(rws);
+            
+            var key = new TransientStoreKey(txId.ToBytes(), Guid.NewGuid(), blockHeight);
+
             using (IKeyValueStoreTransaction tx = this.repository.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, Table))
             {
-                tx.Insert(Table, "", "");
+                // TODO check serialization formats.
+                tx.Insert(Table, key.ToBytes(), rwsCopy.ToJsonString());
                 tx.Commit();
             }
         }
