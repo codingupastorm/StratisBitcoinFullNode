@@ -30,15 +30,13 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             this.certificateCache.SetCertificate(testAddress, cert);
 
-            X509Certificate2 cert1 = CaCertificatesManager.ConvertCertificate(cert, new SecureRandom());
-            X509Certificate2 returnCert = CaCertificatesManager.ConvertCertificate(this.certificateCache.GetCertificate(testAddress), new SecureRandom());
+            X509Certificate returnCert = this.certificateCache.GetCertificate(testAddress);
 
             Assert.NotNull(returnCert);
-
+            
             // It's a different reference so the objects are different, but the values are identical.
-            Assert.Equal(cert1.FriendlyName, returnCert.FriendlyName);
-            Assert.Equal(cert1.PublicKey.Oid.Value, returnCert.PublicKey.Oid.Value);
-            Assert.Equal(cert1.IssuerName.Name, returnCert.IssuerName.Name);
+            Assert.Equal(cert.SerialNumber, returnCert.SerialNumber);
+            Assert.Equal(CaCertificatesManager.GetThumbprint(cert), CaCertificatesManager.GetThumbprint(returnCert));
         }
     }
 }
