@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Moq;
 using Stratis.SmartContracts.Core.Store;
@@ -19,9 +20,36 @@ namespace Stratis.SmartContracts.Core.Tests.Store
         }
 
         [Fact]
-        public void Persist_Data()
+        public void TransientStoreKey_Uses_TxId_Copy()
         {
-            this.store.Per
+            var txId = new byte[] {0x00};
+            
+            var key = new TransientStoreKey(txId, Guid.Empty, 0);
+
+            Assert.NotSame(txId, key.TxId);
+        }
+
+        [Fact]
+        public void TransientStoreKey_Serializes_Correctly()
+        {
+            var txId = new byte[] { 0xAA, 0xBB, 0xCC };
+            var guid = Guid.NewGuid();
+            var blockHeight = uint.MaxValue;
+
+            var key = new TransientStoreKey(txId, guid, blockHeight);
+
+            var keyBytes = key.ToBytes();
+
+            Assert.True(keyBytes.Take(txId.Length).ToArray().SequenceEqual(txId));
+            Assert.True(keyBytes.Skip(txId.Length).Take(guid.ToByteArray().Length).ToArray().SequenceEqual(guid.ToByteArray()));
+            var blockHeightBytes = BitConverter.GetBytes(blockHeight);
+            Assert.True(keyBytes.Skip(txId.Length + guid.ToByteArray().Length).Take(blockHeightBytes.Length).ToArray().SequenceEqual(blockHeightBytes));
+        }
+
+        [Fact]
+        public void Can_Persist_Data()
+        {
+            
         }
     }
 }
