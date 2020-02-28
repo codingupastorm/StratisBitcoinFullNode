@@ -4,8 +4,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Utilities;
@@ -119,8 +117,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
             // Adding to the mem pool can only be done sequentially so use the sequential scheduler for that.
             await this.mempoolLock.WriteAsync(() =>
             {
-                context.View.LoadViewLocked(context.Transaction);
-
                 // If the transaction already exists in the mempool,
                 // we only record the state but do not throw an exception.
                 // This is because the caller will check if the state is invalid
