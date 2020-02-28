@@ -21,6 +21,7 @@ using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
+using Stratis.Bitcoin.Models;
 using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Bitcoin.Features.Miner.Staking
@@ -178,7 +179,7 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
         /// <summary>Information about node's staking for RPC "getstakinginfo" command.</summary>
         /// <remarks>This object does not need a synchronized access because there is no execution logic
         /// that depends on the reported information.</remarks>
-        private Models.GetStakingInfoModel rpcGetStakingInfoModel;
+        private GetStakingInfoModel rpcGetStakingInfoModel;
 
         /// <summary>Estimation of the total staking weight of all nodes on the network.</summary>
         private long networkWeight;
@@ -258,7 +259,7 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
             this.targetReserveBalance = 0; // TODO:settings.targetReserveBalance
             this.currentState = (int)CurrentState.Idle;
 
-            this.rpcGetStakingInfoModel = new Models.GetStakingInfoModel();
+            this.rpcGetStakingInfoModel = new GetStakingInfoModel();
 
             Guard.Assert(minerSettings is MinerSettings);
 
@@ -1136,9 +1137,9 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
         }
 
         /// <inheritdoc/>
-        public Models.GetStakingInfoModel GetGetStakingInfoModel()
+        public GetStakingInfoModel GetGetStakingInfoModel()
         {
-            return (Models.GetStakingInfoModel)this.rpcGetStakingInfoModel.Clone();
+            return (GetStakingInfoModel)this.rpcGetStakingInfoModel.Clone();
         }
 
         /// <summary>

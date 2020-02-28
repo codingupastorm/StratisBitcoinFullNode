@@ -1,6 +1,6 @@
 using System;
 using Stratis.Bitcoin.EventBus;
-using Stratis.Bitcoin.Features.Miner.Models;
+using Stratis.Bitcoin.Models;
 
 namespace Stratis.Bitcoin.Features.SignalR.Events
 {
