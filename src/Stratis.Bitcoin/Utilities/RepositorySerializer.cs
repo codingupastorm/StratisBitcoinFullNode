@@ -68,6 +68,14 @@ namespace Stratis.Bitcoin.Utilities
                 return bytes;
             }
 
+            if (typeof(T) == typeof(ulong) || typeof(T) == typeof(ulong?))
+            {
+                byte[] bytes = BitConverter.GetBytes((ulong)(object)obj);
+                if (BitConverter.IsLittleEndian)
+                    bytes = bytes.Reverse().ToArray();
+                return bytes;
+            }
+
             Guard.Assert(!typeof(T).IsValueType);
 
             if (obj is IBitcoinSerializable serializable)
@@ -148,6 +156,14 @@ namespace Stratis.Bitcoin.Utilities
                 if (BitConverter.IsLittleEndian)
                     clonedBytes = clonedBytes.Reverse().ToArray();
                 return (T)(object)BitConverter.ToUInt32(clonedBytes, 0);
+            }
+
+            if (typeof(T) == typeof(ulong) || typeof(T) == typeof(ulong?))
+            {
+                var clonedBytes = (byte[])bytes.Clone();
+                if (BitConverter.IsLittleEndian)
+                    clonedBytes = clonedBytes.Reverse().ToArray();
+                return (T)(object)BitConverter.ToUInt64(clonedBytes, 0);
             }
 
             Guard.Assert(!typeof(T).IsValueType);
