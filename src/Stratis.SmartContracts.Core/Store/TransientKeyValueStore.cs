@@ -82,6 +82,62 @@ namespace Stratis.SmartContracts.Core.Store
         }
     }
 
+    public struct PurgeIndexKey
+    {
+        public uint PurgeIndexHeight;
+
+        public PurgeIndexKey(uint purgeIndexHeight)
+        {
+            this.PurgeIndexHeight = purgeIndexHeight;
+        }
+
+        public byte[] ToBytes()
+        {
+            return BitConverter.GetBytes(this.PurgeIndexHeight);
+        }
+    }
+
+    public struct BlockHeightKey
+    {
+        public uint BlockHeight;
+
+        public BlockHeightKey(uint blockHeight)
+        {
+            this.BlockHeight = blockHeight;
+        }
+
+        public byte[] ToBytes()
+        {
+            return BitConverter.GetBytes(this.BlockHeight);
+        }
+    }
+
+    public struct CompositePurgeIndexKey
+    {
+        public uint PurgeIndexHeight; 
+        public uint BlockHeight;
+
+        public CompositePurgeIndexKey(uint purgeIndex, uint blockHeight)
+        {
+            this.PurgeIndexHeight = purgeIndex;
+            this.BlockHeight = blockHeight;
+        }
+
+        public byte[] ToBytes()
+        {
+            var purgeIndex = BitConverter.GetBytes(this.PurgeIndexHeight);
+            var blockHeight = BitConverter.GetBytes(this.BlockHeight);
+            var separator = new byte[] {0x00};
+
+            var result = new byte[purgeIndex.Length + blockHeight.Length + separator.Length];
+            Array.Copy(purgeIndex, result, purgeIndex.Length);
+            Array.Copy(separator, 0, result, purgeIndex.Length, separator.Length);
+            Array.Copy(blockHeight, 0, result, purgeIndex.Length + separator.Length, blockHeight.Length);
+
+            return result;
+        }
+    }
+
     /// <summary>
     /// Contains a representation of private data for storage in the transient store.
     ///
