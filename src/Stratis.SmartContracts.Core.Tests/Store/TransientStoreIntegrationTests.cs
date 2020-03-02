@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
@@ -8,7 +9,7 @@ using Xunit;
 
 namespace Stratis.SmartContracts.Core.Tests.Store
 {
-    public class TransientStoreIntegrationTests : TestBase
+    public class TransientStoreIntegrationTests : TestBase, IDisposable
     {
         private TransientStore store;
         private TransientKeyValueStore repo;
@@ -26,7 +27,7 @@ namespace Stratis.SmartContracts.Core.Tests.Store
         public void Dispose()
         {
             this.repo.Dispose();
-            Directory.Delete(this.dir);
+            Directory.Delete(this.dir, true);
         }
 
         [Fact]
