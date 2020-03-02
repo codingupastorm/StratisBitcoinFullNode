@@ -194,10 +194,8 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             if (!clientCertValid)
                 throw new CertificateConfigurationException("Provided client certificate isn't valid or isn't signed by the authority certificate!");
-
-            X509Certificate2 tempClientCert = CaCertificatesManager.ConvertCertificate(this.ClientCertificate, new SecureRandom());
-
-            bool revoked = this.revocationChecker.IsCertificateRevoked(tempClientCert.Thumbprint, false);
+            
+            bool revoked = this.revocationChecker.IsCertificateRevoked(CaCertificatesManager.GetThumbprint(this.ClientCertificate), false);
 
             if (revoked)
                 throw new CertificateConfigurationException("Provided client certificate was revoked!");

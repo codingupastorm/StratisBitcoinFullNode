@@ -15,6 +15,7 @@ using Org.BouncyCastle.Asn1.Pkcs;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Asn1.X9;
 using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Crypto.Operators;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Crypto.Prng;
@@ -238,13 +239,11 @@ namespace CertificateAuthority
 
             var transactionSigningPubKeyHashBytes = ExtractExtensionFromCsr(attributes, TransactionSigningPubKeyHashExtensionOid);
             byte[] blockSigningPubKeyBytes = ExtractExtensionFromCsr(attributes, BlockSigningPubKeyExtensionOid);
-
-            X509Certificate2 tempCert = ConvertCertificate(certificateFromReq, GetSecureRandom());
-
+            
             var infoModel = new CertificateInfoModel()
             {
                 Status = CertificateStatus.Good,
-                Thumbprint = tempCert.Thumbprint,
+                Thumbprint = GetThumbprint(certificateFromReq),
                 Address = p2pkh,
                 TransactionSigningPubKeyHash = transactionSigningPubKeyHashBytes,
                 BlockSigningPubKey = blockSigningPubKeyBytes,
@@ -518,6 +517,17 @@ namespace CertificateAuthority
                 certificateGenerator.AddExtension(MiningPermissionOid, false, new byte[] { 1 });
         }
 
+        public static string GetThumbprint(X509Certificate certificate)
+        {
+            byte[] certificateBytes = certificate.GetEncoded();
+            var hash = new Sha1Digest();
+            hash.BlockUpdate(certificateBytes, 0, certificateBytes.Length);
+            byte[] result = new byte[hash.GetDigestSize()];
+            hash.DoFinal(result, 0);
+            
+            return BitConverter.ToString(result).Replace("-", string.Empty);
+        }
+        
         public static X509Certificate2 ConvertCertificate(X509Certificate certificate, SecureRandom random)
         {
             // Now to convert the Bouncy Castle certificate to a .NET certificate.
@@ -546,9 +556,7 @@ namespace CertificateAuthority
         {
             if (this.caCertificate == null)
                 return null;
-
-            X509Certificate2 tempCert = ConvertCertificate(this.caCertificate, GetSecureRandom());
-
+            
             return new CertificateInfoModel()
             {
                 // TODO: Technically there is an address associated with the CA's pubkey, should we use it?
@@ -559,7 +567,7 @@ namespace CertificateAuthority
                 AccountId = 0,
                 RevokerAccountId = 0,
                 Status = CertificateStatus.Good,
-                Thumbprint = tempCert.Thumbprint
+                Thumbprint = GetThumbprint(this.caCertificate)
             };
         }
 
