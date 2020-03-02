@@ -16,8 +16,6 @@ namespace Stratis.SmartContracts.Core
 
         private readonly uint160 sender;
 
-        private readonly Money mempoolFee;
-
         /// <inheritdoc />
         public uint256 TransactionHash
         {
@@ -49,12 +47,6 @@ namespace Stratis.SmartContracts.Core
         }
 
         /// <inheritdoc />
-        public Money MempoolFee
-        {
-            get { return this.mempoolFee; }
-        }
-
-        /// <inheritdoc />
         public uint160 CoinbaseAddress
         {
             get { return this.coinbaseAddress; }
@@ -77,7 +69,6 @@ namespace Stratis.SmartContracts.Core
         public ContractTransactionContext(
             ulong blockHeight,
             uint160 coinbaseAddress,
-            Money mempoolFee,
             uint160 sender,
             Transaction transaction)
         {
@@ -88,7 +79,6 @@ namespace Stratis.SmartContracts.Core
             Guard.NotNull(this.contractTxOut, nameof(this.contractTxOut));
 
             this.sender = sender;
-            this.mempoolFee = mempoolFee;
         }
     }
 }
