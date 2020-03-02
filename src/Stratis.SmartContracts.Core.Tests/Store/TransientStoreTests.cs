@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Store;
 using Xunit;
 

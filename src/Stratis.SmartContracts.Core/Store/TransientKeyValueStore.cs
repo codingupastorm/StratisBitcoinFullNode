@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
@@ -31,6 +32,7 @@ namespace Stratis.SmartContracts.Core.Store
     public class TransientStore
     {
         public const string Table = "transient";
+        private byte[] MinBlockHeightKey = Encoding.ASCII.GetBytes("MinBlockHeight");
 
         private readonly ITransientKeyValueStore repository;
 
@@ -46,25 +48,32 @@ namespace Stratis.SmartContracts.Core.Store
 
             using (IKeyValueStoreTransaction tx = this.repository.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, Table))
             {
+                var hasValue = tx.Select(Table, MinBlockHeightKey, out uint minBlockHeight);
+
+                // Update the min block height if necessary.
+                if (!hasValue || minBlockHeight > blockHeight)
+                {
+                    tx.Insert(Table, MinBlockHeightKey, blockHeight);
+                }
+
                 tx.Insert(Table, key.ToBytes(), data.ToBytes());
                 tx.Insert(Table, compositePurgeIndexKey.ToBytes(), new byte[] {});
                 tx.Commit();
             }
         }
 
-        ///// <summary>
-        ///// Returns the lowest block height for the data remaining in the transient store.
-        ///// </summary>
-        ///// <returns></returns>
-        //public ulong GetMinBlockHeight()
-        //{
-        //    var key = new TransientStoreKey(null, null, 0);
-
-        //    using (var tx = this.repository.CreateTransaction(KeyValueStoreTransactionMode.Read, Table))
-        //    {
-        //        var results = tx.SelectForward<byte[], byte[]>(Table, true);
-        //    }
-        //}
+        /// <summary>
+        /// Returns the lowest block height for the data remaining in the transient store.
+        /// </summary>
+        /// <returns></returns>
+        public ulong GetMinBlockHeight()
+        {
+            using (IKeyValueStoreTransaction tx = this.repository.CreateTransaction(KeyValueStoreTransactionMode.Read, Table))
+            {
+                // TODO repository serializer does not support ulongs, so we need to read the return value from DB as a uint
+                return !tx.Select(Table, this.MinBlockHeightKey, out uint minBlockHeight) ? 0 : minBlockHeight;
+            }
+        }
     }
 
     /// <summary>
