@@ -108,7 +108,7 @@ namespace Stratis.Bitcoin.Utilities
             if (bytes == null)
                 return default(T);
 
-            T value = (T)this.repositorySerializer.Deserialize(bytes, typeof(T));
+            T value = this.repositorySerializer.Deserialize<T>(bytes);
             return value;
         }
 
