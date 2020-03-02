@@ -107,37 +107,6 @@ namespace Stratis.SmartContracts.Core.Store
             return result;
         }
     }
-
-    public struct PurgeIndexKey
-    {
-        public uint PurgeIndexHeight;
-
-        public PurgeIndexKey(uint purgeIndexHeight)
-        {
-            this.PurgeIndexHeight = purgeIndexHeight;
-        }
-
-        public byte[] ToBytes()
-        {
-            return BitConverter.GetBytes(this.PurgeIndexHeight);
-        }
-    }
-
-    public struct BlockHeightKey
-    {
-        public uint BlockHeight;
-
-        public BlockHeightKey(uint blockHeight)
-        {
-            this.BlockHeight = blockHeight;
-        }
-
-        public byte[] ToBytes()
-        {
-            return BitConverter.GetBytes(this.BlockHeight);
-        }
-    }
-
     public struct CompositePurgeIndexKey
     {
         public byte[] PurgeHeightPrefix;
