@@ -14,7 +14,6 @@ namespace Stratis.SmartContracts.CLR.Tests
 {
     public class ExecutorFixture
     {
-        public ulong MempoolFee { get; } = 2UL;
         public Money Fee { get; } = new Money(0);
         public TxOut Refund { get; } = new TxOut(Money.Zero, new Script());
         public byte[] Data { get; } = new byte[] {0x11, 0x22, 0x33};
@@ -24,7 +23,6 @@ namespace Stratis.SmartContracts.CLR.Tests
         {
             this.ContractTransactionContext = Mock.Of<IContractTransactionContext>(c =>
                 c.Data == this.Data &&
-                c.MempoolFee == this.MempoolFee &&
                 c.Sender == uint160.One &&
                 c.CoinbaseAddress == uint160.Zero);
 

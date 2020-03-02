@@ -236,7 +236,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         private IContractExecutionResult ExecuteSmartContract(TxMempoolEntry mempoolEntry)
         {
             GetSenderResult getSenderResult = this.tokenlessSigner.GetSender(mempoolEntry.Transaction);
-            IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)this.height, new uint160(0), Money.Zero, getSenderResult.Sender, mempoolEntry.Transaction);
+            IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)this.height, new uint160(0), getSenderResult.Sender, mempoolEntry.Transaction);
             IContractExecutor executor = this.executorFactory.CreateExecutor(this.stateSnapshot, transactionContext);
             IContractExecutionResult result = executor.Execute(transactionContext);
             Result<ContractTxData> deserializedCallData = this.callDataSerializer.Deserialize(transactionContext.Data);
