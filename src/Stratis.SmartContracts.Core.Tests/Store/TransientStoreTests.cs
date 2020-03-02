@@ -70,6 +70,13 @@ namespace Stratis.SmartContracts.Core.Tests.Store
                 It.Is<byte[]>(d => privateData.SequenceEqual(data.ToBytes()))
             ));
 
+            // Verify the min block height was updated.
+            transaction.Verify(t => t.Insert(
+                TransientStore.Table,
+                It.Is<byte[]>(d => this.store.MinBlockHeightKey.SequenceEqual(d)),
+                It.Is<uint>(d => d == blockHeight)
+            ));
+
             var purgeKey = new CompositePurgeIndexKey(blockHeight);
 
             // Verify the purge key was inserted.

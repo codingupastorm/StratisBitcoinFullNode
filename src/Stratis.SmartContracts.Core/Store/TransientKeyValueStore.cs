@@ -32,7 +32,7 @@ namespace Stratis.SmartContracts.Core.Store
     public class TransientStore
     {
         public const string Table = "transient";
-        private byte[] MinBlockHeightKey = Encoding.ASCII.GetBytes("MinBlockHeight");
+        public byte[] MinBlockHeightKey = Encoding.ASCII.GetBytes("MinBlockHeight");
 
         private readonly ITransientKeyValueStore repository;
 
