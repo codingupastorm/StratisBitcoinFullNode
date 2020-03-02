@@ -117,7 +117,7 @@ namespace CertificateAuthority.Database
             AccountInfo accountInfo = ExecuteQuery<CredentialsAccessWithModel<CredentialsModelWithTargetId>, AccountInfo>(credentialsModel, (dbContext) => dbContext.Accounts.Include(a => a.Permissions).SingleOrDefault(x => x.Id == credentialsModel.Model.TargetAccountId));
 
             // TODO: Investigate whether there is a more elegant way of handling a lack of permissions
-            if (accountInfo.Permissions == null)
+            if (accountInfo != null && accountInfo.Permissions == null)
                 accountInfo.Permissions = new List<Permission>();
 
             return accountInfo;
@@ -142,6 +142,28 @@ namespace CertificateAuthority.Database
                 accountToApprove.ApproverId = credentialsModel.AccountId;
 
                 dbContext.Accounts.Update(accountToApprove);
+                dbContext.SaveChanges();
+
+                return accountToApprove;
+            });
+        }
+
+        /// <summary>Rejects the account by deleting it.</summary>
+        public AccountInfo RejectAccount(CredentialsAccessWithModel<CredentialsModelWithTargetId> credentialsModel)
+        {
+            return ExecuteCommand(credentialsModel, (dbContext, account) =>
+            {
+                int accountId = credentialsModel.Model.TargetAccountId;
+
+                AccountModel accountToApprove = dbContext.Accounts.SingleOrDefault(x => x.Id == accountId);
+
+                if (accountToApprove == null)
+                    throw new CertificateAuthorityAccountException("Account does not exist.");
+
+                if (accountToApprove.Approved)
+                    throw new CertificateAuthorityAccountException("Cannot reject an account that is approved.");
+
+                dbContext.Accounts.Remove(accountToApprove);
                 dbContext.SaveChanges();
 
                 return accountToApprove;

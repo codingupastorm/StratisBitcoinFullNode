@@ -22,7 +22,7 @@ namespace CertificateAuthority
         private const string GetCertificatePublicKeysEndpoint = "api/certificates/get_certificate_public_keys";
         private const string RevokeCertificateEndpoint = "api/certificates/revoke_certificate";
 
-        private const string CreateAccountEndpoint = "api/accounts/create_account";
+        private const string CreateAccountEndpoint = "api/accounts/create";
 
         private const string JsonContentType = "application/json";
         private readonly Uri baseApiUrl;

@@ -32,7 +32,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
         }
 
         [Fact]
-        private void TestAccountsControllerMethods()
+        public void TestAccountsControllerMethods()
         {
             // Just admin on start.
             Assert.Single(CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(this.adminCredentials)));
@@ -161,6 +161,30 @@ namespace CertificateAuthority.Tests.FullProjectTests
             AccountModel userB_Account = accounts.FirstOrDefault(a => a.Id == userB_Credentials.AccountId);
             Assert.False(userB_Account.VerifyPassword("newpassword"));
             Assert.True(userB_Account.VerifyPassword(userB_Credentials.Password));
+        }
+
+        [Fact]
+        public void RejectAccount_Pass()
+        {
+            CredentialsModel userA_Credentials = CaTestHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess, approve: false);
+
+            var model = new CredentialsModelWithTargetId(userA_Credentials.AccountId, this.adminCredentials.AccountId, this.adminCredentials.Password);
+            this.accountsController.RejectAccount(model);
+
+            AccountInfo account = CaTestHelper.GetValue<AccountInfo>(this.accountsController.GetAccountInfoById(model));
+            Assert.Null(account);
+        }
+
+        [Fact]
+        public void RejectAccount_AccountAlreadyApproved_Fail()
+        {
+            CredentialsModel userA_Credentials = CaTestHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess);
+
+            var model = new CredentialsModelWithTargetId(userA_Credentials.AccountId, this.adminCredentials.AccountId, this.adminCredentials.Password);
+            this.accountsController.RejectAccount(model);
+
+            AccountInfo account = CaTestHelper.GetValue<AccountInfo>(this.accountsController.GetAccountInfoById(model));
+            Assert.NotNull(account);
         }
     }
 }

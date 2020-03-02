@@ -38,7 +38,7 @@ namespace CertificateAuthority.Controllers
 
         /// <summary>Provides account information of all accounts. AccessAccountInfo access level required.</summary>
         /// <response code="201">Collection of <see cref="AccountModel"/> instances.</response>
-        [HttpPost("list_accounts")]
+        [HttpPost("list")]
         [ProducesResponseType(typeof(List<AccountModel>), 200)]
         public IActionResult GetAllAccounts([FromBody]CredentialsModel model)
         {
@@ -53,7 +53,7 @@ namespace CertificateAuthority.Controllers
 
         /// <summary>Creates new account.</summary>
         /// <response code="201">Account id as integer. CreateAccounts access level is required.</response>
-        [HttpPost("create_account")]
+        [HttpPost("create")]
         [ProducesResponseType(typeof(int), 200)]
         public IActionResult CreateAccount([FromBody]CreateAccountModel model)
         {
@@ -63,7 +63,7 @@ namespace CertificateAuthority.Controllers
         }
 
         /// <summary>Marks an unapproved account as approved.</summary>
-        [HttpPost("approve_account")]
+        [HttpPost("approve")]
         [ProducesResponseType(typeof(AccountModel), 200)]
         public IActionResult ApproveAccount([FromBody]CredentialsModelWithTargetId model)
         {
@@ -73,6 +73,20 @@ namespace CertificateAuthority.Controllers
             {
                 var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.ApproveAccounts);
                 return this.Json(this.repository.ApproveAccount(credentials));
+            });
+        }
+
+        /// <summary>Rejects an unapproved account by removing it.</summary>
+        [HttpPost("reject")]
+        [ProducesResponseType(typeof(AccountModel), 200)]
+        public IActionResult RejectAccount([FromBody]CredentialsModelWithTargetId model)
+        {
+            this.LogEntry(model);
+
+            return ExecuteRepositoryQuery(() =>
+            {
+                var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.ApproveAccounts);
+                return this.Json(this.repository.RejectAccount(credentials));
             });
         }
 
