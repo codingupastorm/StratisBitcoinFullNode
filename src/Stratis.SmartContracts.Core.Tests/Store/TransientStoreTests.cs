@@ -73,6 +73,15 @@ namespace Stratis.SmartContracts.Core.Tests.Store
                 It.Is<byte[]>(d => privateData.SequenceEqual(data.ToBytes()))
             ));
 
+            var purgeKey = new CompositePurgeIndexKey(blockHeight);
+
+            // Verify the purge key was inserted.
+            transaction.Verify(t => t.Insert(
+                TransientStore.Table,
+                It.Is<byte[]>(d => purgeKey.ToBytes().SequenceEqual(d)),
+                It.IsAny<byte[]>()
+            ));
+
             transaction.Verify(t => t.Commit(), Times.Once);
         }
     }

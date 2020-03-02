@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
@@ -41,13 +42,29 @@ namespace Stratis.SmartContracts.Core.Store
         public void Persist(uint256 txId, uint blockHeight, TransientStorePrivateData data)
         {
             var key = new TransientStoreKey(txId.ToBytes(), Guid.NewGuid(), blockHeight);
+            var compositePurgeIndexKey = new CompositePurgeIndexKey(blockHeight);
 
             using (IKeyValueStoreTransaction tx = this.repository.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, Table))
             {
                 tx.Insert(Table, key.ToBytes(), data.ToBytes());
+                tx.Insert(Table, compositePurgeIndexKey.ToBytes(), new byte[] {});
                 tx.Commit();
             }
         }
+
+        ///// <summary>
+        ///// Returns the lowest block height for the data remaining in the transient store.
+        ///// </summary>
+        ///// <returns></returns>
+        //public ulong GetMinBlockHeight()
+        //{
+        //    var key = new TransientStoreKey(null, null, 0);
+
+        //    using (var tx = this.repository.CreateTransaction(KeyValueStoreTransactionMode.Read, Table))
+        //    {
+        //        var results = tx.SelectForward<byte[], byte[]>(Table, true);
+        //    }
+        //}
     }
 
     /// <summary>
@@ -114,25 +131,24 @@ namespace Stratis.SmartContracts.Core.Store
 
     public struct CompositePurgeIndexKey
     {
-        public uint PurgeIndexHeight; 
+        public byte[] PurgeHeightPrefix;
         public uint BlockHeight;
 
-        public CompositePurgeIndexKey(uint purgeIndex, uint blockHeight)
+        public CompositePurgeIndexKey(uint blockHeight)
         {
-            this.PurgeIndexHeight = purgeIndex;
+            this.PurgeHeightPrefix = BitConverter.GetBytes('H').Take(1).ToArray();
             this.BlockHeight = blockHeight;
         }
 
         public byte[] ToBytes()
         {
-            var purgeIndex = BitConverter.GetBytes(this.PurgeIndexHeight);
             var blockHeight = BitConverter.GetBytes(this.BlockHeight);
             var separator = new byte[] {0x00};
 
-            var result = new byte[purgeIndex.Length + blockHeight.Length + separator.Length];
-            Array.Copy(purgeIndex, result, purgeIndex.Length);
-            Array.Copy(separator, 0, result, purgeIndex.Length, separator.Length);
-            Array.Copy(blockHeight, 0, result, purgeIndex.Length + separator.Length, blockHeight.Length);
+            var result = new byte[this.PurgeHeightPrefix.Length + blockHeight.Length + separator.Length];
+            Array.Copy(this.PurgeHeightPrefix, result, this.PurgeHeightPrefix.Length);
+            Array.Copy(separator, 0, result, this.PurgeHeightPrefix.Length, separator.Length);
+            Array.Copy(blockHeight, 0, result, this.PurgeHeightPrefix.Length + separator.Length, blockHeight.Length);
 
             return result;
         }
