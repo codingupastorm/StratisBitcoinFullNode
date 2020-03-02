@@ -66,11 +66,10 @@ namespace Stratis.SmartContracts.Core.Store
         /// Returns the lowest block height for the data remaining in the transient store.
         /// </summary>
         /// <returns></returns>
-        public ulong GetMinBlockHeight()
+        public uint GetMinBlockHeight()
         {
             using (IKeyValueStoreTransaction tx = this.repository.CreateTransaction(KeyValueStoreTransactionMode.Read, Table))
             {
-                // TODO repository serializer does not support ulongs, so we need to read the return value from DB as a uint
                 return !tx.Select(Table, this.MinBlockHeightKey, out uint minBlockHeight) ? 0 : minBlockHeight;
             }
         }
