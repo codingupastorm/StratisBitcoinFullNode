@@ -36,11 +36,16 @@ namespace CertificateAuthority.Controllers
             });
         }
 
-        /// <summary>Provides account information of all accounts. AccessAccountInfo access level required.</summary>
+        /// <summary>
+        /// Provides account information of all accounts.
+        /// <para>
+        /// <see cref="AccountAccessFlags.AccessAccountInfo"/> access required.
+        /// </para>
+        /// </summary>
         /// <response code="201">Collection of <see cref="AccountModel"/> instances.</response>
-        [HttpPost("list")]
+        [HttpPost("list/all")]
         [ProducesResponseType(typeof(List<AccountModel>), 200)]
-        public IActionResult GetAllAccounts([FromBody]CredentialsModel model)
+        public IActionResult ListAll([FromBody]CredentialsModel model)
         {
             this.LogEntry(model);
 
@@ -48,6 +53,26 @@ namespace CertificateAuthority.Controllers
             {
                 var credentials = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAccountInfo);
                 return this.Json(this.repository.GetAllAccounts(credentials));
+            });
+        }
+
+        /// <summary>
+        /// List all unapproved accounts.
+        /// <para>
+        /// <see cref="AccountAccessFlags.AccessAccountInfo"/> access required.
+        /// </para>
+        /// </summary>
+        /// <response code="201">Collection of <see cref="AccountModel"/> instances.</response>
+        [HttpPost("list/unapproved")]
+        [ProducesResponseType(typeof(List<AccountModel>), 200)]
+        public IActionResult ListUnapproved([FromBody]CredentialsModel model)
+        {
+            this.LogEntry(model);
+
+            return ExecuteRepositoryQuery(() =>
+            {
+                var credentials = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAccountInfo);
+                return this.Json(this.repository.GetAllAccounts(credentials, true));
             });
         }
 

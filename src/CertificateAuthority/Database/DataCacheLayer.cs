@@ -170,9 +170,16 @@ namespace CertificateAuthority.Database
             });
         }
 
-        /// <summary>Provides collection of all existing accounts.</summary>
-        public List<AccountModel> GetAllAccounts(CredentialsAccessModel credentialsModel)
+        /// <summary>
+        /// Provides collection of all existing accounts.
+        /// </summary>
+        /// <param name="credentialsModel">Required to verify account access.</param>
+        /// <param name="excludeApproved">If <c>True</c>, only return unapproved accounts.</param>
+        public List<AccountModel> GetAllAccounts(CredentialsAccessModel credentialsModel, bool excludeApproved = false)
         {
+            if (excludeApproved)
+                return ExecuteQuery(credentialsModel, (dbContext) => dbContext.Accounts.Where(a => !a.Approved).ToList());
+
             return ExecuteQuery(credentialsModel, (dbContext) => dbContext.Accounts.ToList());
         }
 
