@@ -239,8 +239,8 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             GetSenderResult getSenderResult = this.tokenlessSigner.GetSender(mempoolEntry.Transaction);
 
             ulong txIndex = (ulong) this.block.Transactions.Count; // Number ahead of us in block + the coinbase will give us our index.
+            IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)this.height, txIndex, new uint160(0), getSenderResult.Sender, mempoolEntry.Transaction);
 
-            IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)this.height, txIndex, new uint160(0), Money.Zero, getSenderResult.Sender, mempoolEntry.Transaction);
             IContractExecutor executor = this.executorFactory.CreateExecutor(this.stateSnapshot, transactionContext);
             IContractExecutionResult result = executor.Execute(transactionContext);
             Result<ContractTxData> deserializedCallData = this.callDataSerializer.Deserialize(transactionContext.Data);

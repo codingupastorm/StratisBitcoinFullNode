@@ -198,7 +198,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
                 foreach ((byte[] key, byte[] value) in repo.GetAll(tran, repo.GetTable("Block"), true))
                 {
-                    var blockTableKey = (BlockTableKey)this.repositorySerializer.Deserialize(key, typeof(BlockTableKey));
+                    var blockTableKey = this.repositorySerializer.Deserialize<BlockTableKey>(key);
                     this.heightByHash[blockTableKey.Hash] = blockTableKey.Height;
                 }
             }

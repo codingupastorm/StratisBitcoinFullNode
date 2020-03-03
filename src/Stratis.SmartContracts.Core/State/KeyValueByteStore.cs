@@ -12,9 +12,8 @@ namespace Stratis.SmartContracts.Core.State
     public class ContractStateTableStore : KeyValueStoreLevelDB
     {
         public ContractStateTableStore(string rootFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, IRepositorySerializer repositorySerializer)
-            : base(loggerFactory, repositorySerializer)
+            : base(rootFolder, loggerFactory, repositorySerializer)
         {
-            this.Init(rootFolder);
         }
     }
 

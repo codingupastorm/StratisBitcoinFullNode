@@ -44,7 +44,10 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
         bool LoadClientCertificate();
 
-        int RequestAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country);
+        /// <summary>Creates an account on the Certificate Authority server.</summary>
+        /// <para>If no permissions are specified, then create the account with all.</para>
+        /// <returns>The id of the newly created account.</returns>
+        int CreateAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country, string[] requestedPermissions = null);
 
         X509Certificate RequestNewCertificate(Key privateKey, PubKey transactionSigningPubKey, PubKey blockSigningPubKey);
 
@@ -191,10 +194,8 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             if (!clientCertValid)
                 throw new CertificateConfigurationException("Provided client certificate isn't valid or isn't signed by the authority certificate!");
-
-            X509Certificate2 tempClientCert = CaCertificatesManager.ConvertCertificate(this.ClientCertificate, new SecureRandom());
-
-            bool revoked = this.revocationChecker.IsCertificateRevoked(tempClientCert.Thumbprint, false);
+            
+            bool revoked = this.revocationChecker.IsCertificateRevoked(CaCertificatesManager.GetThumbprint(this.ClientCertificate), false);
 
             if (revoked)
                 throw new CertificateConfigurationException("Provided client certificate was revoked!");
@@ -218,10 +219,11 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             return new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
         }
 
-        public int RequestAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country)
+        /// <inheritdoc/>
+        public int CreateAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country, string[] requestedPermissions = null)
         {
             CaClient caClient = this.GetClient();
-            return caClient.RequestAccount(name, organizationUnit, organization, locality, stateOrProvince, emailAddress, country);
+            return caClient.CreateAccount(name, organizationUnit, organization, locality, stateOrProvince, emailAddress, country, requestedPermissions);
         }
 
         public X509Certificate RequestNewCertificate(Key privateKey, PubKey transactionSigningPubKey, PubKey blockSigningPubKey)

@@ -138,6 +138,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CertificateAuthority.Tests"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CertificateAuthority.API", "CertificateAuthority.API\CertificateAuthority.API.csproj", "{5A0A1334-49E2-4EE1-94E5-91E65D8805F6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CertificateAuthority.Tests.Common", "CertificateAuthority.Tests.Common\CertificateAuthority.Tests.Common.csproj", "{7A1A920F-88C7-4087-90FA-CE3E086A2ED2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -352,6 +354,10 @@ Global
 		{5A0A1334-49E2-4EE1-94E5-91E65D8805F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5A0A1334-49E2-4EE1-94E5-91E65D8805F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5A0A1334-49E2-4EE1-94E5-91E65D8805F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A1A920F-88C7-4087-90FA-CE3E086A2ED2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A1A920F-88C7-4087-90FA-CE3E086A2ED2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A1A920F-88C7-4087-90FA-CE3E086A2ED2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A1A920F-88C7-4087-90FA-CE3E086A2ED2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -407,6 +413,7 @@ Global
 		{EE3A494D-5AAC-4A61-B993-5056A6D1C3A3} = {1B9A916F-DDAC-4675-B424-EDEDC1A58231}
 		{85EA24B1-DB43-46E0-8602-4847CABC17C6} = {1B9A916F-DDAC-4675-B424-EDEDC1A58231}
 		{5A0A1334-49E2-4EE1-94E5-91E65D8805F6} = {1B9A916F-DDAC-4675-B424-EDEDC1A58231}
+		{7A1A920F-88C7-4087-90FA-CE3E086A2ED2} = {1B9A916F-DDAC-4675-B424-EDEDC1A58231}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6C780ABA-5872-4B83-AD3F-A5BD423AD907}

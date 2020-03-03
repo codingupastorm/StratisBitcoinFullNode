@@ -3,7 +3,6 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Bitcoin.Utilities.JsonConverters;
 
 namespace Stratis.Bitcoin.Utilities
@@ -15,9 +14,8 @@ namespace Stratis.Bitcoin.Utilities
     public class KeyValueRepositoryStore : KeyValueStoreLevelDB.KeyValueStoreLevelDB, IKeyValueRepositoryStore
     {
         public KeyValueRepositoryStore(IRepositorySerializer repositorySerializer, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
-            : base(loggerFactory, repositorySerializer)
+            : base(dataFolder.KeyValueRepositoryPath, loggerFactory, repositorySerializer)
         {
-            this.Init(dataFolder.KeyValueRepositoryPath);
         }
     }
 
@@ -108,7 +106,7 @@ namespace Stratis.Bitcoin.Utilities
             if (bytes == null)
                 return default(T);
 
-            T value = (T)this.repositorySerializer.Deserialize(bytes, typeof(T));
+            T value = this.repositorySerializer.Deserialize<T>(bytes);
             return value;
         }
 

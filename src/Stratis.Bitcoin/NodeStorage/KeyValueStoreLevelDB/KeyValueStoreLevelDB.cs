@@ -52,7 +52,8 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
         private SingleThreadResource transactionLock;
         private ByteArrayComparer byteArrayComparer;
 
-        public KeyValueStoreLevelDB(ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer)
+        public KeyValueStoreLevelDB(string rootPath, ILoggerFactory loggerFactory,
+            IRepositorySerializer repositorySerializer)
         {
             var logger = loggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
 
@@ -60,13 +61,18 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             this.byteArrayComparer = new ByteArrayComparer();
             this.RepositorySerializer = repositorySerializer;
             this.Tables = new Dictionary<string, KeyValueStoreTable>();
+            this.Init(rootPath);
         }
 
         public IRepositorySerializer RepositorySerializer { get; }
 
         public Dictionary<string, KeyValueStoreTable> Tables { get; }
 
-        public void Init(string rootPath)
+        /// <summary>
+        /// Initialize the underlying database / glue-layer.
+        /// </summary>
+        /// <param name="rootPath">The location of the key-value store.</param>
+        private void Init(string rootPath)
         {
             var options = new Options()
             {
@@ -305,69 +311,12 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
 
         public byte[] Serialize<T>(T obj)
         {
-            if (typeof(T) == typeof(byte[]))
-                return (byte[])(object)obj;
-
-            if (obj == null)
-                return new byte[] { };
-
-            if (typeof(T) == typeof(bool) || typeof(T) == typeof(bool?))
-                return new byte[] { (byte)((bool)(object)obj ? 1 : 0) };
-
-            if (typeof(T) == typeof(int) || typeof(T) == typeof(int?))
-            {
-                byte[] bytes = BitConverter.GetBytes((int)(object)obj);
-                if (BitConverter.IsLittleEndian)
-                    bytes = bytes.Reverse().ToArray();
-                return bytes;
-            }
-
-            if (typeof(T) == typeof(uint) || typeof(T) == typeof(uint?))
-            {
-                byte[] bytes = BitConverter.GetBytes((uint)(object)obj);
-                if (BitConverter.IsLittleEndian)
-                    bytes = bytes.Reverse().ToArray();
-                return bytes;
-            }
-
-            Guard.Assert(!typeof(T).IsValueType);
-
             return this.RepositorySerializer.Serialize(obj);
         }
 
         public T Deserialize<T>(byte[] objBytes)
         {
-            if (objBytes == null)
-                return default;
-
-            if (typeof(T) == typeof(byte[]))
-                return (T)(object)objBytes;
-
-            if (objBytes.Length == 0)
-                return default;
-
-            if (typeof(T) == typeof(bool) || typeof(T) == typeof(bool?))
-                return (T)(object)(objBytes[0] != 0);
-
-            if (typeof(T) == typeof(int) || typeof(T) == typeof(int?))
-            {
-                var bytes = (byte[])objBytes.Clone();
-                if (BitConverter.IsLittleEndian)
-                    bytes = bytes.Reverse().ToArray();
-                return (T)(object)BitConverter.ToInt32(bytes, 0);
-            }
-
-            if (typeof(T) == typeof(uint) || typeof(T) == typeof(uint?))
-            {
-                var bytes = (byte[])objBytes.Clone();
-                if (BitConverter.IsLittleEndian)
-                    bytes = bytes.Reverse().ToArray();
-                return (T)(object)BitConverter.ToUInt32(bytes, 0);
-            }
-
-            Guard.Assert(!typeof(T).IsValueType);
-
-            return (T)this.RepositorySerializer.Deserialize(objBytes, typeof(T));
+            return this.RepositorySerializer.Deserialize<T>(objBytes);
         }
     }
 }

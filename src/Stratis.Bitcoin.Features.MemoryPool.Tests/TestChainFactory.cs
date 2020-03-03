@@ -20,7 +20,7 @@ using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.MemoryPool.Fee;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Features.MemoryPool.Rules;
-using Stratis.Bitcoin.Features.Miner;
+using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
@@ -192,10 +192,16 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Tests
             var mempool = new TxMempool(dateTimeProvider, blockPolicyEstimator, loggerFactory, nodeSettings);
             var mempoolLock = new MempoolSchedulerLock();
 
-            var minerSettings = new MinerSettings(nodeSettings);
+            uint blockMaxSize = network.Consensus.Options.MaxBlockSerializedSize;
+            uint blockMaxWeight = network.Consensus.Options.MaxBlockWeight;
+            var blockDefinitionOptions = new BlockDefinitionOptions(blockMaxWeight, blockMaxSize).RestrictForNetwork(network);
+
+            var minerSettings = new Mock<IMinerSettings>();
+            minerSettings.Setup((c) => c.BlockDefinitionOptions)
+                .Returns(blockDefinitionOptions);
 
             // Simple block creation, nothing special yet:
-            var blockDefinition = new PowBlockDefinition(consensus, dateTimeProvider, loggerFactory, mempool, mempoolLock, minerSettings, network, consensusRules);
+            var blockDefinition = new PoABlockDefinition(consensus, dateTimeProvider, loggerFactory, mempool, mempoolLock, network, minerSettings.Object);
             BlockTemplate newBlock = blockDefinition.Build(chain.Tip, scriptPubKey);
 
             await consensus.BlockMinedAsync(newBlock.Block);
@@ -231,7 +237,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Tests
             }
 
             // Just to make sure we can still make simple blocks
-            blockDefinition = new PowBlockDefinition(consensus, dateTimeProvider, loggerFactory, mempool, mempoolLock, minerSettings, network, consensusRules);
+            blockDefinition = new PoABlockDefinition(consensus, dateTimeProvider, loggerFactory, mempool, mempoolLock, network, minerSettings.Object);
             blockDefinition.Build(chain.Tip, scriptPubKey);
 
             var mempoolSettings = new MempoolSettings(nodeSettings);

@@ -25,7 +25,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 
         public override Task RunAsync(RuleContext context)
         {
-            foreach (Transaction transaction in context.ValidationContext.BlockToValidate.Transactions.Where(x=> !x.IsCoinBase))
+            foreach (Transaction transaction in context.ValidationContext.BlockToValidate.Transactions.Where(x => !x.IsCoinBase))
             {
                 this.ValidateTransaction(transaction);
             }
