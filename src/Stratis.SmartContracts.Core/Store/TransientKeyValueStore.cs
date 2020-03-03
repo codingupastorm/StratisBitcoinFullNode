@@ -125,11 +125,87 @@ namespace Stratis.SmartContracts.Core.Store
     public static class TransientStoreQueryParams
     {
         public static byte[] CompositeKeySeparator = {0x00};
-        public static byte[] PurgeIndexByHeightPrefix = BitConverter.GetBytes('H').Take(1).ToArray();
+        public static byte[] PurgeIndexByHeightPrefix = BitConverter.GetBytes('H').Take(1).Reverse().ToArray();
+
+        /// <summary>
+        /// Checks if byte array 1 is smaller than byte array 2.
+        /// </summary>
+        /// <param name="arr1"></param>
+        /// <param name="arr2"></param>
+        /// <returns></returns>
+        public static bool LessThan(byte[] arr1, byte[] arr2)
+        {
+            return LexicographicalCompare(arr1, arr2) < 0;
+        }
+
+        /// <summary>
+        /// Checks if byte array 1 is smaller than byte array 2.
+        /// </summary>
+        /// <param name="arr1"></param>
+        /// <param name="arr2"></param>
+        /// <returns></returns>
+        public static bool GreaterThan(byte[] arr1, byte[] arr2)
+        {
+            return LexicographicalCompare(arr1, arr2) > 0;
+        }
+
+        /// <summary>
+        /// Checks if byte array 1 is equal to byte array 2.
+        /// </summary>
+        /// <param name="arr1"></param>
+        /// <param name="arr2"></param>
+        /// <returns></returns>
+        public static bool EqualTo(byte[] arr1, byte[] arr2)
+        {
+            return LexicographicalCompare(arr1, arr2) == 0;
+        }
 
         public static int StructuralCompare(byte[] arr1, byte[] arr2)
         {
-            return ((IStructuralComparable)arr1).CompareTo(arr2, Comparer<byte>.Default);
+            var result = ((IStructuralComparable)arr1).CompareTo(arr2, Comparer<byte>.Default);
+            return result;
+        }
+
+        private static int LexicographicalCompare<T>(IEnumerable<T> seq1, IEnumerable<T> seq2)
+        {
+            Comparer<T> comparator = Comparer<T>.Default;
+
+            using (IEnumerator<T> seq1Enumerator = seq1.GetEnumerator())
+            using (IEnumerator<T> seq2Enumerator = seq2.GetEnumerator())
+            {
+                for (; ; )
+                {
+                    var seq1Next = seq1Enumerator.MoveNext();
+                    var seq2Next = seq2Enumerator.MoveNext();
+
+                    // If seq2 is longer than seq1, return -1, otherwise return 1
+                    if (seq1Next != seq2Next)
+                        return seq2Next ? -1 : 1;
+
+                    // We've reached the end of both and not found a difference.
+                    if (!seq1Next)
+                        return 0;
+
+                    // Compare the elements and return the difference if there is one.
+                    int diff = comparator.Compare(seq1Enumerator.Current, seq2Enumerator.Current);
+                    if (diff != 0)
+                        return diff;
+                }
+            }
+        }
+
+        public static byte[] CreateCompositeKeyForPurgeIndexByHeight(uint height, uint256 txId, Guid guid)
+        {
+            var compositeKey = new byte[0];
+            compositeKey = compositeKey.Combine(TransientStoreQueryParams.PurgeIndexByHeightPrefix);
+            compositeKey = compositeKey.Combine(TransientStoreQueryParams.CompositeKeySeparator);
+            compositeKey = compositeKey.Combine(BitConverter.GetBytes(height).Reverse().ToArray());
+            compositeKey = compositeKey.Combine(TransientStoreQueryParams.CompositeKeySeparator);
+            compositeKey = compositeKey.Combine(txId.ToBytes(false));
+            compositeKey = compositeKey.Combine(TransientStoreQueryParams.CompositeKeySeparator);
+            compositeKey = compositeKey.Combine(guid.ToByteArray().Reverse().ToArray());
+
+            return compositeKey;
         }
 
         // TODO make key classes?
@@ -138,7 +214,8 @@ namespace Stratis.SmartContracts.Core.Store
             var startKey = new byte[0];
             startKey = startKey.Combine(TransientStoreQueryParams.PurgeIndexByHeightPrefix);
             startKey = startKey.Combine(TransientStoreQueryParams.CompositeKeySeparator);
-            startKey = startKey.Combine(BitConverter.GetBytes(height)); // TODO need to encode this in an order-preserving way.
+            // TODO handle endianness nicer. It's pretty safe to assume all systems running this will be little-endian, but just in case...
+            startKey = startKey.Combine(BitConverter.GetBytes(height).Reverse().ToArray());
             startKey = startKey.Combine(TransientStoreQueryParams.CompositeKeySeparator);
 
             return startKey;
@@ -149,12 +226,13 @@ namespace Stratis.SmartContracts.Core.Store
             var endKey = new byte[0];
             endKey = endKey.Combine(TransientStoreQueryParams.PurgeIndexByHeightPrefix);
             endKey = endKey.Combine(TransientStoreQueryParams.CompositeKeySeparator);
-            endKey = endKey.Combine(BitConverter.GetBytes(height));
+            endKey = endKey.Combine(BitConverter.GetBytes(height).Reverse().ToArray());
             endKey = endKey.Combine(new byte[] { 0xFF });
 
             return endKey;
         }
     }
+
     public static class ByteArrayExtensions
     {
         public static byte[] Combine(this byte[] arr, byte[] other)
