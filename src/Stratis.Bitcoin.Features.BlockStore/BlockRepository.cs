@@ -377,7 +377,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
 
                     this.logger.LogInformation(warningMessage.ToString());
 
-                    foreach ((BlockTableKey blockKey, Block block) in dbTransaction.SelectForward<BlockTableKey, Block>(BlockTableName))
+                    foreach ((BlockTableKey blockKey, Block block) in dbTransaction.SelectAll<BlockTableKey, Block>(BlockTableName))
                     {
                         dbTransaction.InsertMultiple(TransactionTableName, block.Transactions.Select(t => (t.GetHash(), blockKey.Hash)).ToArray());
 
