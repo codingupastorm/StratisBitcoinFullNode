@@ -117,7 +117,7 @@ namespace CertificateAuthority.Database
             AccountInfo accountInfo = ExecuteQuery<CredentialsAccessWithModel<CredentialsModelWithTargetId>, AccountInfo>(credentialsModel, (dbContext) => dbContext.Accounts.Include(a => a.Permissions).SingleOrDefault(x => x.Id == credentialsModel.Model.TargetAccountId));
 
             // TODO: Investigate whether there is a more elegant way of handling a lack of permissions
-            if (accountInfo.Permissions == null)
+            if (accountInfo != null && accountInfo.Permissions == null)
                 accountInfo.Permissions = new List<Permission>();
 
             return accountInfo;
@@ -148,9 +148,36 @@ namespace CertificateAuthority.Database
             });
         }
 
-        /// <summary>Provides collection of all existing accounts.</summary>
-        public List<AccountModel> GetAllAccounts(CredentialsAccessModel credentialsModel)
+        /// <summary>Rejects the account by deleting it.</summary>
+        public void RejectAccount(CredentialsAccessWithModel<CredentialsModelWithTargetId> credentialsModel)
         {
+            ExecuteCommand(credentialsModel, (dbContext, account) =>
+            {
+                int accountId = credentialsModel.Model.TargetAccountId;
+
+                AccountModel accountToReject = dbContext.Accounts.SingleOrDefault(x => x.Id == accountId);
+
+                if (accountToReject == null)
+                    throw new CertificateAuthorityAccountException("Account does not exist.");
+
+                if (accountToReject.Approved)
+                    throw new CertificateAuthorityAccountException("Cannot reject an account that is approved.");
+
+                dbContext.Accounts.Remove(accountToReject);
+                dbContext.SaveChanges();
+            });
+        }
+
+        /// <summary>
+        /// Provides collection of all existing accounts.
+        /// </summary>
+        /// <param name="credentialsModel">Required to verify account access.</param>
+        /// <param name="excludeApproved">If <c>True</c>, only return unapproved accounts.</param>
+        public List<AccountModel> GetAllAccounts(CredentialsAccessModel credentialsModel, bool excludeApproved = false)
+        {
+            if (excludeApproved)
+                return ExecuteQuery(credentialsModel, (dbContext) => dbContext.Accounts.Where(a => !a.Approved).ToList());
+
             return ExecuteQuery(credentialsModel, (dbContext) => dbContext.Accounts.ToList());
         }
 
