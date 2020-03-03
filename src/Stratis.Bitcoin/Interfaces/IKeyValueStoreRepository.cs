@@ -53,8 +53,13 @@ namespace Stratis.Bitcoin.Interfaces
         /// <param name="keyValueStoreTable">The table to read.</param>
         /// <param name="keysOnly">Set to <c>true</c> if values are optional.</param>
         /// <param name="backwards">Set to <c>true</c> to iterate backwards.</param>
+        /// <param name="firstKey">The lowest key to include in the result.</param>
+        /// <param name="lastKey">The highest key to include in the result.</param>
+        /// <param name="includeFirstKey">Omits the first key from the result if set.</param>
+        /// <param name="includeLastKey">Omits the last key from the result if set.</param>
         /// <returns>The keys and values as byte arrays.</returns>
-        IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable keyValueStoreTable, bool keysOnly = false, bool backwards = false);
+        IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable keyValueStoreTable, bool keysOnly = false, bool backwards = false,
+            byte[] firstKey = null, byte[] lastKey = null, bool includeFirstKey = true, bool includeLastKey = true);
 
         /// <summary>
         /// A call-back indicating that the transaction is starting.

@@ -123,8 +123,12 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
             return res;
         }
 
-        public IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table, bool keysOnly, bool backwards = false)
+        public IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table, bool keysOnly = false, bool backwards = false,
+            byte[] firstKey = null, byte[] lastKey = null, bool includeFirstKey = true, bool includeLastKey = true)
         {
+            if (firstKey != null || lastKey != null || !includeFirstKey || !includeLastKey)
+                throw new NotSupportedException();
+
             var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
             var dbTransaction = tran.DBreezeTransaction;
 

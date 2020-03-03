@@ -20,9 +20,11 @@ namespace Stratis.Bitcoin.Interfaces
 
         Dictionary<TKey, TObject> SelectDictionary<TKey, TObject>(string tableName);
 
-        IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName, bool keysOnly = false);
+        IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly = false, bool backwards = false);
 
-        IEnumerable<(TKey, TObject)> SelectBackward<TKey, TObject>(string tableName, bool keysOnly = false);
+        IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName, TKey firstKey, bool keysOnly = false);
+
+        IEnumerable<(TKey, TObject)> SelectBackward<TKey, TObject>(string tableName, TKey lastKey, bool keysOnly = false);
 
         void RemoveKey<TKey, TObject>(string tableName, TKey key, TObject obj);
 

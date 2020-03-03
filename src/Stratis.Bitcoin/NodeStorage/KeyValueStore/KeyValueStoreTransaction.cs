@@ -217,13 +217,27 @@ namespace Stratis.Bitcoin.KeyValueStore
                 }
             }
         }
-
-        private IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly = false, bool? backwards = null)
+      
+        private IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly, bool? backwards = null,
+            byte[] firstKeyBytes = null, byte[] lastKeyBytes = null, bool includeFirstKey = true, bool includeLastKey = true)
         {
             IEnumerable<(byte[], byte[])> res = null;
             bool ignoreDB = this.TablesCleared.Contains(tableName);
 
-            this.TableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> upd);
+            var byteListComparer = new ByteArrayComparer();
+
+            IEnumerable<KeyValuePair<byte[], byte[]>> upd = null;
+
+            if (this.TableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> tableUpdates))
+            {
+                upd = tableUpdates.Select(u => u);
+
+                if (firstKeyBytes != null)
+                    upd = upd.Where(u => byteListComparer.Compare(u.Key, firstKeyBytes) >= (includeFirstKey ? 0 : 1));
+
+                if (lastKeyBytes != null)
+                    upd = upd.Where(u => byteListComparer.Compare(u.Key, lastKeyBytes) <= (includeLastKey ? 0 : -1));
+            }
 
             // Not sorted?
             if (backwards == null)
@@ -232,20 +246,23 @@ namespace Stratis.Bitcoin.KeyValueStore
 
                 if (!ignoreDB)
                 {
-                    var dbRows = this.repository.GetAll(this, this.GetTable(tableName), keysOnly: keysOnly, backwards: backwards ?? false);
+                    var dbRows = this.repository.GetAll(this, this.GetTable(tableName), keysOnly: keysOnly, backwards: (bool)backwards,
+                        firstKey: firstKeyBytes, lastKey: lastKeyBytes, includeFirstKey: includeFirstKey, includeLastKey: includeLastKey);
 
-                    res = (res == null) ? dbRows : res.Concat(dbRows.Where(k => !upd.ContainsKey(k.Item1)));
+                    res = (res == null) ? dbRows : res.Concat(dbRows.Where(k => tableUpdates == null || !tableUpdates.ContainsKey(k.Item1)));
                 }
             }
             else
             {
                 var table = this.GetTable(tableName);
-                var byteListComparer = new ByteArrayComparer();
+
                 var updates = (upd == null) ? null : ((bool)backwards ? upd.OrderByDescending(k => k.Key, byteListComparer) : upd.OrderBy(k => k.Key, byteListComparer)).Select(k => (k.Key, keysOnly ? null : k.Value));
 
                 if (!ignoreDB && !this.TablesCleared.Contains(tableName))
                 {
-                    var dbrows = this.repository.GetAll(this, table, keysOnly: keysOnly, backwards: (bool)backwards);
+                    var dbrows = this.repository.GetAll(this, table, keysOnly: keysOnly, backwards: (bool)backwards,
+                        firstKey: firstKeyBytes, lastKey: lastKeyBytes, includeFirstKey: includeFirstKey, includeLastKey: includeLastKey);
+
                     if (updates == null)
                         res = dbrows;
                     else
@@ -265,15 +282,25 @@ namespace Stratis.Bitcoin.KeyValueStore
         }
 
         /// <inheritdoc />
-        public IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName, bool keysOnly = false)
+        public IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly = false, bool backwards = false)
         {
-            return this.SelectAll<TKey, TObject>(tableName, backwards: false, keysOnly: keysOnly);
+            return this.SelectAll<TKey, TObject>(tableName, keysOnly, backwards, firstKeyBytes: null);
         }
 
         /// <inheritdoc />
-        public IEnumerable<(TKey, TObject)> SelectBackward<TKey, TObject>(string tableName, bool keysOnly = false)
+        public IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName, TKey firstKey, bool keysOnly = false)
         {
-            return this.SelectAll<TKey, TObject>(tableName, backwards: true, keysOnly: keysOnly);
+            byte[] firstKeyBytes = (firstKey != null) ? this.Serialize(firstKey) : null;
+
+            return this.SelectAll<TKey, TObject>(tableName, keysOnly, false, firstKeyBytes: firstKeyBytes);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<(TKey, TObject)> SelectBackward<TKey, TObject>(string tableName, TKey lastKey, bool keysOnly = false)
+        {
+            byte[] lastKeyBytes = (lastKey != null) ? this.Serialize(lastKey) : null;
+
+            return this.SelectAll<TKey, TObject>(tableName, keysOnly, true, lastKeyBytes: lastKeyBytes);
         }
 
         /// <inheritdoc />
