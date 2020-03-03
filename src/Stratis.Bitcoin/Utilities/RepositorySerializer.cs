@@ -13,7 +13,7 @@ namespace Stratis.Bitcoin.Utilities
         /// </summary>
         /// <param name="obj">Object to be serialized.</param>
         /// <returns>Binary data representing the serialized object.</returns>
-        byte[] Serialize(object obj);
+        byte[] Serialize<T>(T obj);
 
         /// <summary>
         /// Deserializes binary data to an object of specific type.
@@ -21,7 +21,7 @@ namespace Stratis.Bitcoin.Utilities
         /// <param name="bytes">Binary data representing a serialized object.</param>
         /// <param name="type">Type of the serialized object.</param>
         /// <returns>Deserialized object.</returns>
-        object Deserialize(byte[] bytes, Type type);
+        T Deserialize<T>(byte[] bytes);
     }
 
     /// <summary>
@@ -41,8 +41,43 @@ namespace Stratis.Bitcoin.Utilities
         /// </summary>
         /// <param name="obj">Object to be serialized.</param>
         /// <returns>Binary data representing the serialized object.</returns>
-        public byte[] Serialize(object obj)
+        public byte[] Serialize<T>(T obj)
         {
+            if (typeof(T) == typeof(byte[]))
+                return (byte[])(object)obj;
+
+            if (obj == null)
+                return new byte[] { };
+
+            if (typeof(T) == typeof(bool) || typeof(T) == typeof(bool?))
+                return new byte[] { (byte)((bool)(object)obj ? 1 : 0) };
+
+            if (typeof(T) == typeof(int) || typeof(T) == typeof(int?))
+            {
+                byte[] bytes = BitConverter.GetBytes((int)(object)obj);
+                if (BitConverter.IsLittleEndian)
+                    bytes = bytes.Reverse().ToArray();
+                return bytes;
+            }
+
+            if (typeof(T) == typeof(uint) || typeof(T) == typeof(uint?))
+            {
+                byte[] bytes = BitConverter.GetBytes((uint)(object)obj);
+                if (BitConverter.IsLittleEndian)
+                    bytes = bytes.Reverse().ToArray();
+                return bytes;
+            }
+
+            if (typeof(T) == typeof(ulong) || typeof(T) == typeof(ulong?))
+            {
+                byte[] bytes = BitConverter.GetBytes((ulong)(object)obj);
+                if (BitConverter.IsLittleEndian)
+                    bytes = bytes.Reverse().ToArray();
+                return bytes;
+            }
+
+            Guard.Assert(!typeof(T).IsValueType);
+
             if (obj is IBitcoinSerializable serializable)
                 return serializable.ToBytes(this.consensusFactory);
 
@@ -95,7 +130,45 @@ namespace Stratis.Bitcoin.Utilities
 
         public T Deserialize<T>(byte[] bytes)
         {
-            return (T) this.Deserialize(bytes, typeof(T));
+            if (bytes == null)
+                return default;
+
+            if (typeof(T) == typeof(byte[]))
+                return (T)(object)bytes;
+
+            if (bytes.Length == 0)
+                return default;
+
+            if (typeof(T) == typeof(bool) || typeof(T) == typeof(bool?))
+                return (T)(object)(bytes[0] != 0);
+
+            if (typeof(T) == typeof(int) || typeof(T) == typeof(int?))
+            {
+                var clonedBytes = (byte[])bytes.Clone();
+                if (BitConverter.IsLittleEndian)
+                    clonedBytes = clonedBytes.Reverse().ToArray();
+                return (T)(object)BitConverter.ToInt32(clonedBytes, 0);
+            }
+
+            if (typeof(T) == typeof(uint) || typeof(T) == typeof(uint?))
+            {
+                var clonedBytes = (byte[])bytes.Clone();
+                if (BitConverter.IsLittleEndian)
+                    clonedBytes = clonedBytes.Reverse().ToArray();
+                return (T)(object)BitConverter.ToUInt32(clonedBytes, 0);
+            }
+
+            if (typeof(T) == typeof(ulong) || typeof(T) == typeof(ulong?))
+            {
+                var clonedBytes = (byte[])bytes.Clone();
+                if (BitConverter.IsLittleEndian)
+                    clonedBytes = clonedBytes.Reverse().ToArray();
+                return (T)(object)BitConverter.ToUInt64(clonedBytes, 0);
+            }
+
+            Guard.Assert(!typeof(T).IsValueType);
+
+            return (T)this.Deserialize(bytes, typeof(T));
         }
 
         /// <summary>
@@ -104,7 +177,7 @@ namespace Stratis.Bitcoin.Utilities
         /// <param name="bytes">Binary data representing a serialized object.</param>
         /// <param name="type">Type of the serialized object.</param>
         /// <returns>Deserialized object.</returns>
-        public object Deserialize(byte[] bytes, Type type)
+        private object Deserialize(byte[] bytes, Type type)
         {
             if (type == typeof(BlockHeader))
             {

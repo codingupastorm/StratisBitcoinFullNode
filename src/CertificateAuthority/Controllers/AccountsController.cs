@@ -53,13 +53,13 @@ namespace CertificateAuthority.Controllers
 
         /// <summary>Creates new account.</summary>
         /// <response code="201">Account id as integer. CreateAccounts access level is required.</response>
-        [HttpPost("request_account")]
+        [HttpPost("create_account")]
         [ProducesResponseType(typeof(int), 200)]
-        public IActionResult RequestAccount([FromBody]RequestAccount model)
+        public IActionResult CreateAccount([FromBody]CreateAccountModel model)
         {
             this.LogEntry(model);
 
-            return ExecuteRepositoryCommand(() => this.Json(this.repository.RequestAccount(model)));
+            return ExecuteRepositoryCommand(() => this.Json(this.repository.CreateAccount(model)));
         }
 
         /// <summary>Marks an unapproved account as approved.</summary>
@@ -87,7 +87,13 @@ namespace CertificateAuthority.Controllers
             return ExecuteRepositoryQuery(() =>
             {
                 var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AccessAnyCertificate);
-                JsonResult res = this.Json(this.repository.GetCertificateIssuedByAccountId(credentials));
+
+                CertificateInfoModel cert = this.repository.GetCertificateIssuedByAccountId(credentials);
+
+                if (cert == null)
+                    return this.LogErrorExit(StatusCode(StatusCodes.Status404NotFound));
+
+                JsonResult res = this.Json(cert);
                 return res;
             });
         }

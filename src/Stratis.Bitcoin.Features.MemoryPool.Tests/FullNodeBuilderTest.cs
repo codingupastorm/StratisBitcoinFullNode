@@ -13,16 +13,21 @@ using Xunit;
 
 namespace Stratis.Bitcoin.Features.MemoryPool.Tests
 {
-    public class FullNodeBuilderTest
+    public class FullNodeBuilderTest : TestBase
     {
+        public FullNodeBuilderTest() : base(KnownNetworks.TestNet) 
+        { 
+        }
+
         [Fact]
         public void CanHaveAllFullnodeServicesTest()
         {
             // This test is put in the mempool feature because the
             // mempool requires all the features to be a fullnode.
 
-            var nodeSettings = new NodeSettings(KnownNetworks.TestNet, args: new string[] {
-                $"-datadir=../../../TestData/FullNodeBuilderTest/CanHaveAllServicesTest" });
+            string dataDir = GetTestDirectoryPath(this);
+
+            var nodeSettings = new NodeSettings(this.Network, args: new string[] {$"-datadir={dataDir}" });
 
             var fullNodeBuilder = new FullNodeBuilder(nodeSettings);
             IFullNode fullNode = fullNodeBuilder

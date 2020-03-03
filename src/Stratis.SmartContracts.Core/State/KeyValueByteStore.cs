@@ -9,12 +9,11 @@ using Stratis.Patricia;
 
 namespace Stratis.SmartContracts.Core.State
 {
-    public class ContractStateTableStore : KeyValueStore<KeyValueStoreLevelDB>
+    public class ContractStateTableStore : KeyValueStoreLevelDB
     {
         public ContractStateTableStore(string rootFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, IRepositorySerializer repositorySerializer)
-            : base(new KeyValueStoreLevelDB(loggerFactory, repositorySerializer))
+            : base(rootFolder, loggerFactory, repositorySerializer)
         {
-            this.Repository.Init(rootFolder);
         }
     }
 

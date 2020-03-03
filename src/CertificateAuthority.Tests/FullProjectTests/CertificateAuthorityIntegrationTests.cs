@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using CertificateAuthority.Controllers;
 using CertificateAuthority.Models;
+using CertificateAuthority.Tests.Common;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using NBitcoin;
@@ -68,7 +69,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             var accountsController = (AccountsController)server.Host.Services.GetService(typeof(AccountsController));
 
             var permissions = new List<Permission>() { new Permission() { Name = CaCertificatesManager.MiningPermission }, new Permission() { Name = CaCertificatesManager.SendPermission } };
-            var requestAccountModel = new RequestAccount()
+            var createAccountModel = new CreateAccountModel()
             {
                 CommonName = "dummyName",
                 Country = "dummyCountry",
@@ -82,7 +83,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 RequestedPermissions = permissions
             };
 
-            int accountId = CaTestHelper.GetValue<int>(accountsController.RequestAccount(requestAccountModel));
+            int accountId = CaTestHelper.GetValue<int>(accountsController.CreateAccount(createAccountModel));
 
             AccountInfo account = CaTestHelper.GetValue<AccountInfo>(accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(accountId, Settings.AdminAccountId, CaTestHelper.AdminPassword)));
 
@@ -206,7 +207,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             PubKey pubKey1 = privateKey1.PubKey;
             BitcoinPubKeyAddress address1 = pubKey1.GetAddress(this.network);
 
-            var createAccountModel = new RequestAccount
+            var createAccountModel = new CreateAccountModel
             {
                 CommonName = "Org1",
                 Country = "UK",
@@ -221,7 +222,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             };
 
             // Create account for org 1
-            int id1 = CaTestHelper.GetValue<int>(accountsController.RequestAccount(createAccountModel));
+            int id1 = CaTestHelper.GetValue<int>(accountsController.CreateAccount(createAccountModel));
 
             var credentialsModel = new CredentialsModelWithTargetId() { AccountId = Settings.AdminAccountId, Password = CaTestHelper.AdminPassword, TargetAccountId = id1 };
 
@@ -232,7 +233,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             PubKey pubKey2 = privateKey2.PubKey;
             BitcoinPubKeyAddress address2 = pubKey2.GetAddress(this.network);
 
-            var createAccountModel2 = new RequestAccount()
+            var createAccountModel2 = new CreateAccountModel
             {
                 CommonName = "Org2",
                 Country = "AU",
@@ -247,7 +248,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             };
 
             // Create account for org 2
-            int id2 = CaTestHelper.GetValue<int>(accountsController.RequestAccount(createAccountModel2));
+            int id2 = CaTestHelper.GetValue<int>(accountsController.CreateAccount(createAccountModel2));
 
             credentialsModel = new CredentialsModelWithTargetId() { AccountId = Settings.AdminAccountId, Password = CaTestHelper.AdminPassword, TargetAccountId = id2 };
 

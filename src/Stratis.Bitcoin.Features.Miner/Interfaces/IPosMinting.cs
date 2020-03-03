@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Bitcoin.Features.Miner.Staking;
 using Stratis.Bitcoin.Mining;
+using Stratis.Bitcoin.Models;
 
 namespace Stratis.Bitcoin.Features.Miner.Interfaces
 {
@@ -49,7 +50,7 @@ namespace Stratis.Bitcoin.Features.Miner.Interfaces
         /// Constructs model for RPC "getstakinginfo" call.
         /// </summary>
         /// <returns>Staking information RPC response.</returns>
-        Models.GetStakingInfoModel GetGetStakingInfoModel();
+        GetStakingInfoModel GetGetStakingInfoModel();
 
         /// <summary>
         /// Calculates the total balance from all UTXOs in the wallet that are mature.

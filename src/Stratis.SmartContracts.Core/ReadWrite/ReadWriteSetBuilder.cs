@@ -52,11 +52,20 @@ namespace Stratis.SmartContracts.Core.ReadWrite
 
         public void Merge(ReadWriteSetBuilder toMerge)
         {
+            MergeReadSet(toMerge);
+            MergeWriteSet(toMerge);
+        }
+
+        public void MergeReadSet(ReadWriteSetBuilder toMerge)
+        {
             foreach (KeyValuePair<ReadWriteSetKey, string> read in toMerge.ReadSet.ToList())
             {
                 this.AddReadItem(read.Key, read.Value);
             }
+        }
 
+        public void MergeWriteSet(ReadWriteSetBuilder toMerge)
+        {
             foreach (KeyValuePair<ReadWriteSetKey, byte[]> write in toMerge.WriteSet.ToList())
             {
                 this.AddWriteItem(write.Key, write.Value);

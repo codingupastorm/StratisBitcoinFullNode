@@ -91,7 +91,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
         }
     }
 
-    public class TokenlessTestPoAMiner : PoAMiner
+    public sealed class TokenlessTestPoAMiner : PoAMiner
     {
         private readonly EditableTimeProvider dateTimeProvider;
 
@@ -101,7 +101,6 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
             ICoreComponent coreComponent,
             BlockDefinition blockDefinition,
             ISlotsManager slotsManager,
-            IConnectionManager connectionManager,
             PoABlockHeaderValidator poaHeaderValidator,
             IFederationManager federationManager,
             IIntegrityValidator integrityValidator,
@@ -119,10 +118,14 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
 
         public override void InitializeMining()
         {
+            this.MiningInitialized = true;
         }
 
         public async Task MineBlocksAsync(int count)
         {
+            if (!this.MiningInitialized)
+                return;
+
             for (int i = 0; i < count; i++)
             {
                 this.dateTimeProvider.AdjustedTimeOffset += TimeSpan.FromSeconds(

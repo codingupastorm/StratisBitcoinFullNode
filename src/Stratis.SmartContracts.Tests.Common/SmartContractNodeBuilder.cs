@@ -3,7 +3,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using CertificateAuthority;
 using CertificateAuthority.Models;
-using CertificateAuthority.Tests;
+using CertificateAuthority.Tests.Common;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Org.BouncyCastle.X509;

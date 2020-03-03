@@ -18,7 +18,7 @@ namespace Stratis.Bitcoin.KeyValueStore
     public abstract class KeyValueStoreTransaction : IKeyValueStoreTransaction
     {
         /// <summary>The underlying key-value repository provider.</summary>
-        private readonly KeyValueStoreRepository repository;
+        private readonly IKeyValueStoreRepository repository;
 
         /// <summary>The mode of the transaction.</summary>
         private readonly KeyValueStoreTransactionMode mode;
@@ -45,7 +45,7 @@ namespace Stratis.Bitcoin.KeyValueStore
             KeyValueStoreTransactionMode mode,
             params string[] tables)
         {
-            this.repository = (KeyValueStoreRepository)keyValueStoreRepository;
+            this.repository = keyValueStoreRepository;
             this.mode = mode;
             this.TableUpdates = new ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>>();
             this.TablesCleared = new ConcurrentBag<string>();
