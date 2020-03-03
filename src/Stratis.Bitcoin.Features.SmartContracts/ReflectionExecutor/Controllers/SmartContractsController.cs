@@ -14,7 +14,6 @@ using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.SmartContracts.Interfaces;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities.JsonErrors;
 using Stratis.Bitcoin.Utilities.ModelStateErrors;
@@ -47,7 +46,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
         private readonly ILogger logger;
         private readonly Network network;
         private readonly IStateRepositoryRoot stateRoot;
-        private readonly IWalletManager walletManager;
         private readonly ISerializer serializer;
         private readonly IContractPrimitiveSerializer primitiveSerializer;
         private readonly IReceiptRepository receiptRepository;
@@ -62,7 +60,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             ILoggerFactory loggerFactory,
             Network network,
             IStateRepositoryRoot stateRoot,
-            IWalletManager walletManager,
             ISerializer serializer,
             IContractPrimitiveSerializer primitiveSerializer,
             IReceiptRepository receiptRepository,
@@ -76,7 +73,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             this.network = network;
             this.chainIndexer = chainIndexer;
             this.blockStore = blockStore;
-            this.walletManager = walletManager;
             this.broadcasterManager = broadcasterManager;
             this.serializer = serializer;
             this.primitiveSerializer = primitiveSerializer;

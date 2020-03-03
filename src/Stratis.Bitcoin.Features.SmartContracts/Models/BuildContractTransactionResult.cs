@@ -1,4 +1,4 @@
-﻿using Stratis.Bitcoin.Features.Wallet.Models;
+﻿using Stratis.Bitcoin.Models;
 
 namespace Stratis.Bitcoin.Features.SmartContracts.Models
 {

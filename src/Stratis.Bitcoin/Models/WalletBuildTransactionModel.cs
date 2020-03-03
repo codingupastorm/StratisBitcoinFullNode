@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using Stratis.Bitcoin.Utilities.JsonConverters;
 
-namespace Stratis.Bitcoin.Features.Wallet.Models
+namespace Stratis.Bitcoin.Models
 {
     public class WalletBuildTransactionModel
     {

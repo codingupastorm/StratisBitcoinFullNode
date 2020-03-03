@@ -3,20 +3,18 @@ using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.KeyValueStore;
 
 namespace Stratis.Bitcoin.Features.BlockStore
 {
-    public interface IBlockKeyValueStore : IKeyValueStore
+    public interface IBlockKeyValueStore : IKeyValueStoreRepository
     {
     }
 
-    public class BlockKeyValueStore : KeyValueStore<KeyValueStoreLevelDB.KeyValueStoreLevelDB>, IBlockKeyValueStore
+    public class BlockKeyValueStore : KeyValueStoreLevelDB.KeyValueStoreLevelDB, IBlockKeyValueStore
     {
         public BlockKeyValueStore(IRepositorySerializer repositorySerializer, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
-            : base(new KeyValueStoreLevelDB.KeyValueStoreLevelDB(loggerFactory, repositorySerializer))
+            : base(dataFolder.BlockPath, loggerFactory, repositorySerializer)
         {
-            this.Repository.Init(dataFolder.BlockPath);
         }
     }
 }

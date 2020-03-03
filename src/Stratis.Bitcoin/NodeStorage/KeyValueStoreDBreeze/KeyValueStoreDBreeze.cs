@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using DBreeze;
@@ -10,7 +11,7 @@ using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Bitcoin.KeyValueStoreDBreeze
 {
-    public class KeyValueStoreDBreeze : KeyValueStoreRepository
+    public class KeyValueStoreDBreeze : IKeyValueStoreRepository
     {
         internal class KeyValueStoreDBZTransaction : KeyValueStoreTransaction
         {
@@ -28,31 +29,37 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
         private DBreezeEngine storage;
         private SingleThreadResource transactionLock;
 
-        public KeyValueStoreDBreeze(ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer)
-            : base(repositorySerializer)
+        public KeyValueStoreDBreeze(string rootPath, ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer)
         {
             var logger = loggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
 
             this.transactionLock = new SingleThreadResource($"{nameof(this.transactionLock)}", logger);
+            this.RepositorySerializer = repositorySerializer;
+            this.Tables = new Dictionary<string, KeyValueStoreTable>();
+            this.Init(rootPath);
         }
 
-        public override T Deserialize<T>(byte[] objBytes)
-        {
-            if (typeof(T).IsValueType)
-                return (T)(object)DBreeze.DataTypes.DataTypesConvertor.ConvertBack<T>(objBytes);
-
-            return base.Deserialize<T>(objBytes);
-        }
-
-        public override byte[] Serialize<T>(T obj)
+        public byte[] Serialize<T>(T obj)
         {
             if (typeof(T).IsValueType)
                 return ((T)obj).ToBytes();
 
-            return base.Serialize(obj);
+            return this.RepositorySerializer.Serialize(obj);
         }
 
-        public override void Init(string rootPath)
+        public T Deserialize<T>(byte[] objBytes)
+        {
+            if (typeof(T).IsValueType)
+                return (T)(object)DBreeze.DataTypes.DataTypesConvertor.ConvertBack<T>(objBytes);
+
+            return this.RepositorySerializer.Deserialize<T>(objBytes);
+        }
+
+        public IRepositorySerializer RepositorySerializer { get; }
+
+        public Dictionary<string, KeyValueStoreTable> Tables { get; }
+
+        private void Init(string rootPath)
         {
             this.Close();
             this.storage = new DBreezeEngine(rootPath);
@@ -66,7 +73,7 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
             }
         }
 
-        public override int Count(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table)
+        public int Count(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table)
         {
             var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
             var dbTransaction = tran.DBreezeTransaction;
@@ -74,7 +81,7 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
             return (int)dbTransaction.Count(table.TableName);
         }
 
-        public override bool[] Exists(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table, byte[][] keys)
+        public bool[] Exists(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table, byte[][] keys)
         {
             var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
             var dbTransaction = tran.DBreezeTransaction;
@@ -96,7 +103,7 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
             }
         }
 
-        public override byte[][] Get(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table, byte[][] keys)
+        public byte[][] Get(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table, byte[][] keys)
         {
             var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
             var dbTransaction = tran.DBreezeTransaction;
@@ -116,7 +123,7 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
             return res;
         }
 
-        public override IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table, bool keysOnly, bool backwards = false)
+        public IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable table, bool keysOnly, bool backwards = false)
         {
             var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
             var dbTransaction = tran.DBreezeTransaction;
@@ -146,7 +153,7 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
             }
         }
 
-        public override KeyValueStoreTable GetTable(string tableName)
+        public KeyValueStoreTable GetTable(string tableName)
         {
             if (!this.Tables.TryGetValue(tableName, out KeyValueStoreTable table))
             {
@@ -162,12 +169,12 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
             return table;
         }
 
-        public override KeyValueStoreTransaction CreateKeyValueStoreTransaction(KeyValueStoreTransactionMode mode, params string[] tables)
+        public KeyValueStoreTransaction CreateKeyValueStoreTransaction(KeyValueStoreTransactionMode mode, params string[] tables)
         {
             return new KeyValueStoreDBZTransaction(this, mode, tables);
         }
 
-        public override void OnBeginTransaction(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTransactionMode mode)
+        public void OnBeginTransaction(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTransactionMode mode)
         {
             if (mode == KeyValueStoreTransactionMode.ReadWrite)
             {
@@ -175,7 +182,7 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
             }
         }
 
-        public override void OnCommit(KeyValueStoreTransaction keyValueStoreTransaction)
+        public void OnCommit(KeyValueStoreTransaction keyValueStoreTransaction)
         {
             var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
             var dbTransaction = tran.DBreezeTransaction;
@@ -219,7 +226,7 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
             }
         }
 
-        public override void OnRollback(KeyValueStoreTransaction keyValueStoreTransaction)
+        public void OnRollback(KeyValueStoreTransaction keyValueStoreTransaction)
         {
             var tran = (KeyValueStoreDBZTransaction)keyValueStoreTransaction;
             var dbTransaction = tran.DBreezeTransaction;
@@ -230,10 +237,34 @@ namespace Stratis.Bitcoin.KeyValueStoreDBreeze
             this.transactionLock.Release();
         }
 
-        public override void Close()
+        public void Close()
         {
             this.storage?.Dispose();
             this.storage = null;
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>Protected implementation of Dispose pattern.</summary>
+        /// <param name="disposing">Indicates whether disposing.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+                this.Close();
+        }
+
+        public string[] GetTables()
+        {
+            return this.Tables.Select(t => t.Value.TableName).ToArray();
+        }
+
+        public IKeyValueStoreTransaction CreateTransaction(KeyValueStoreTransactionMode mode, params string[] tables)
+        {
+            return this.CreateKeyValueStoreTransaction(mode, tables);
         }
     }
 }

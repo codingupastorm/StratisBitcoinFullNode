@@ -45,8 +45,6 @@ namespace Stratis.Bitcoin.Features.PoA
         /// <summary>Factory for creating loggers.</summary>
         private readonly ILoggerFactory loggerFactory;
 
-        private readonly IPoAMiner miner;
-
         private readonly VotingManager votingManager;
 
         private readonly Network network;
@@ -65,7 +63,7 @@ namespace Stratis.Bitcoin.Features.PoA
 
         public PoAFeature(IFederationManager federationManager, PayloadProvider payloadProvider, IConnectionManager connectionManager, ChainIndexer chainIndexer,
             IInitialBlockDownloadState initialBlockDownloadState, IConsensusManager consensusManager, IPeerBanning peerBanning, ILoggerFactory loggerFactory,
-            IPoAMiner miner, VotingManager votingManager, Network network, IWhitelistedHashesRepository whitelistedHashesRepository,
+            VotingManager votingManager, Network network, IWhitelistedHashesRepository whitelistedHashesRepository,
             IdleFederationMembersKicker idleFederationMembersKicker, IChainState chainState, IBlockStoreQueue blockStoreQueue, ICertificatesManager certificatesManager,
             IRevocationChecker revocationChecker)
         {
@@ -76,7 +74,6 @@ namespace Stratis.Bitcoin.Features.PoA
             this.consensusManager = consensusManager;
             this.peerBanning = peerBanning;
             this.loggerFactory = loggerFactory;
-            this.miner = miner;
             this.votingManager = votingManager;
             this.whitelistedHashesRepository = whitelistedHashesRepository;
             this.network = network;
@@ -116,8 +113,6 @@ namespace Stratis.Bitcoin.Features.PoA
                 this.revocationChecker.Initialize();
                 this.certificatesManager.Initialize();
             }
-
-            this.miner.InitializeMining();
         }
 
         /// <summary>Replaces default <see cref="ConsensusManagerBehavior"/> with <see cref="PoAConsensusManagerBehavior"/>.</summary>
@@ -151,8 +146,6 @@ namespace Stratis.Bitcoin.Features.PoA
         /// <inheritdoc />
         public override void Dispose()
         {
-            this.miner.Dispose();
-
             this.votingManager.Dispose();
 
             this.idleFederationMembersKicker.Dispose();

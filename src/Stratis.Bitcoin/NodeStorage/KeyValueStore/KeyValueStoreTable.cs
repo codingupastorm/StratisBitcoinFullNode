@@ -1,9 +1,11 @@
-﻿namespace Stratis.Bitcoin.KeyValueStore
+﻿using Stratis.Bitcoin.Interfaces;
+
+namespace Stratis.Bitcoin.KeyValueStore
 {
     public class KeyValueStoreTable
     {
         public string TableName { get; internal set; }
 
-        public KeyValueStoreRepository Repository { get; internal set; }
+        public IKeyValueStoreRepository Repository { get; internal set; }
     }
 }

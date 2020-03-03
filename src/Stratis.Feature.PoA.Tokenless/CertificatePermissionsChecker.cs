@@ -9,6 +9,16 @@ namespace Stratis.Feature.PoA.Tokenless
     public interface ICertificatePermissionsChecker
     {
         /// <summary>
+        /// Determines whether or not the node's own certificate contains a given permission.
+        /// </summary>
+        /// <para>
+        /// The CA will not be contacted if the certificate is not present.
+        /// </para>
+        /// <param name="oId">The permission we're checking for.</param>
+        /// <returns>Whether or not is has the required permission.</returns>
+        bool CheckOwnCertificatePermission(string oId);
+
+        /// <summary>
         /// Determines whether a given sender has the permission required to send transactions on the network by
         /// checking their certificate. If the certificate isn't known and stored locally, it will be retrieved from the CA.
         /// </summary>
@@ -32,6 +42,17 @@ namespace Stratis.Feature.PoA.Tokenless
             this.certificateCache = certificateCache;
             this.certificatesManager = certificatesManager;
             this.logger = loggerFactory.CreateLogger(this.GetType());
+        }
+
+        /// <inheritdoc />
+        public bool CheckOwnCertificatePermission(string oId)
+        {
+            // We don't have our own certificate so return false as the required permission cannot be determined.
+            if (this.certificatesManager.ClientCertificate == null)
+                return false;
+
+            byte[] permissionBytes = CertificatesManager.ExtractCertificateExtension(this.certificatesManager.ClientCertificate, oId);
+            return permissionBytes != null;
         }
 
         /// <inheritdoc />

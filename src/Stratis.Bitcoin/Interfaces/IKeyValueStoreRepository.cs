@@ -1,19 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using Stratis.Bitcoin.KeyValueStore;
+using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Bitcoin.Interfaces
 {
     /// <summary>
     /// Represents a glue-layer containing the basic methods that all key-value databases should support.
     /// </summary>
-    public interface IKeyValueStoreRepository : IDisposable
+    public interface IKeyValueStoreRepository : IKeyValueStore, IDisposable
     {
-        /// <summary>
-        /// Initialize the underlying database / glue-layer.
-        /// </summary>
-        /// <param name="rootPath">The location of the key-value store.</param>
-        void Init(string rootPath);
+        byte[] Serialize<T>(T obj);
+
+        T Deserialize<T>(byte[] objBytes);
+
+        IRepositorySerializer RepositorySerializer { get; }
+
+        Dictionary<string, KeyValueStoreTable> Tables { get; }
 
         /// <summary>
         /// Request the underlying database to start a transaction.

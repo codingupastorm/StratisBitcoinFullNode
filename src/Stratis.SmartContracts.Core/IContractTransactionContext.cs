@@ -30,11 +30,6 @@ namespace Stratis.SmartContracts.Core
         byte[] Data { get; }
 
         /// <summary>
-        /// Total fee for transaction.
-        /// </summary>
-        Money MempoolFee { get; }
-
-        /// <summary>
         /// Address of the coinbase for the current block.
         /// </summary>
         uint160 CoinbaseAddress { get; }
