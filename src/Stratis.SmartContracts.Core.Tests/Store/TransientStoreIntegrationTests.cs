@@ -3,6 +3,8 @@ using System.IO;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.SmartContracts.Core.Store;
 using Xunit;
@@ -42,6 +44,40 @@ namespace Stratis.SmartContracts.Core.Tests.Store
             this.store.Persist(uint256.Zero, 50, new TransientStorePrivateData(new byte[] {}));
 
             Assert.Equal(50UL, this.store.GetMinBlockHeight());
+        }
+
+        [Fact]
+        public void PurgeBelowHeight_Success()
+        {
+            var recordsToAdd = 100;
+            uint blockHeightToPurge = 50;
+
+            // Add some fake data
+            for (uint i = 0; i < recordsToAdd; i++)
+            {
+                this.store.Persist(new uint256(i), i, new TransientStorePrivateData(new byte[] { }));
+            }
+
+            Assert.Equal(0U, this.store.GetMinBlockHeight());
+
+            // Check that the values exist.
+            using (var tx = this.repo.CreateTransaction(KeyValueStoreTransactionMode.Read))
+            {
+                // n data + n index + 1 min block height
+                Assert.Equal(recordsToAdd * 2 + 1, tx.Count(TransientStore.Table));
+            }
+
+            // Attempt to purge everything below 50.
+            this.store.PurgeBelowHeight(blockHeightToPurge);
+
+            var remainingRecords = recordsToAdd - blockHeightToPurge;
+
+            using (var tx = this.repo.CreateTransaction(KeyValueStoreTransactionMode.Read))
+            {
+                Assert.Equal(remainingRecords * 2 + 1, tx.Count(TransientStore.Table));
+            }
+
+            Assert.Equal(blockHeightToPurge, this.store.GetMinBlockHeight());
         }
     }
 }

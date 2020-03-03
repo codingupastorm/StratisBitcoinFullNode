@@ -45,8 +45,9 @@ namespace Stratis.SmartContracts.Core.Store
 
         public void Persist(uint256 txId, uint blockHeight, TransientStorePrivateData data)
         {
-            var key = new TransientStoreKey(txId.ToBytes(), Guid.NewGuid(), blockHeight);
-            var compositePurgeIndexKey = new CompositePurgeIndexKey(blockHeight);
+            var uuid = Guid.NewGuid();
+            var key = TransientStoreQueryParams.CreateCompositeKeyForPvtRWSet(blockHeight, txId, uuid);
+            var compositePurgeIndexKey = TransientStoreQueryParams.CreateCompositeKeyForPurgeIndexByHeight(blockHeight, txId, uuid);
 
             using (IKeyValueStoreTransaction tx = this.repository.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, Table))
             {
@@ -58,8 +59,8 @@ namespace Stratis.SmartContracts.Core.Store
                     tx.Insert(Table, MinBlockHeightKey, blockHeight);
                 }
 
-                tx.Insert(Table, key.ToBytes(), data.ToBytes());
-                tx.Insert(Table, compositePurgeIndexKey.ToBytes(), new byte[] {});
+                tx.Insert(Table, key, data.ToBytes());
+                tx.Insert(Table, compositePurgeIndexKey, new byte[] {});
                 tx.Commit();
             }
         }
@@ -82,7 +83,7 @@ namespace Stratis.SmartContracts.Core.Store
         /// <param name="txId"></param>
         public void Purge(string[] txId)
         {
-
+            throw new NotImplementedException("TODO");
         }
 
         /// <summary>
@@ -91,12 +92,12 @@ namespace Stratis.SmartContracts.Core.Store
         /// <param name="height"></param>
         public void PurgeBelowHeight(uint height)
         {
-            using (var tx = this.repository.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, Table))
+            using (IKeyValueStoreTransaction tx = this.repository.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, Table))
             {
                 var purgeKeyStart = TransientStoreQueryParams.CreatePurgeIndexByHeightRangeStartKey(0);
                 var purgeKeyEnd = TransientStoreQueryParams.CreatePurgeIndexByHeightRangeEndKey(height - 1);
 
-                // TODO use a range query here.
+                // TODO use a range query here (awaiting implementation)
                 var values = tx.SelectForward<byte[], byte[]>(Table, true);
 
                 foreach (var record in values)
@@ -105,16 +106,31 @@ namespace Stratis.SmartContracts.Core.Store
 
                     // Query for keys below this height
                     // Key is greater than purgeKeyStart and less than purgeKeyEnd
-                    if (TransientStoreQueryParams.StructuralCompare(key, purgeKeyStart) == 1 && TransientStoreQueryParams.StructuralCompare(key, purgeKeyEnd) == -1)
+                    var gt = TransientStoreQueryParams.GreaterThan(key, purgeKeyStart);
+                    var lt = TransientStoreQueryParams.LessThan(key, purgeKeyEnd);
+                    if (!(gt && lt))
                     {
-                        // We're in the right range
-                        // Remove data key value
-                        // Remove tx purge key
-                        // Remove block height purge key
-
-                        //tx.RemoveKey();
+                        // Ignore keys outside the range
+                        continue;
                     }
+
+                    // We're in the right range
+                    // Explode key
+                    (uint256 txId, Guid uuid, uint blockHeight) = TransientStoreQueryParams.SplitCompositeKeyOfPurgeIndexByHeight(key);
+
+                    // Remove data key value
+                    var dataKey = TransientStoreQueryParams.CreateCompositeKeyForPvtRWSet(blockHeight, txId, uuid);
+                    tx.RemoveKey(Table, dataKey, (object)null);
+
+                    // Remove block height purge key
+                    var purgeKey = TransientStoreQueryParams.CreateCompositeKeyForPurgeIndexByHeight(blockHeight, txId, uuid);
+                    tx.RemoveKey(Table, purgeKey, (object)null);
+
+                    // TODO Remove tx purge key when it's implemented.
                 }
+
+                // Update min block height.
+                tx.Insert(Table, MinBlockHeightKey, height);
 
                 // Commit
                 tx.Commit();
@@ -126,9 +142,10 @@ namespace Stratis.SmartContracts.Core.Store
     {
         public static byte[] CompositeKeySeparator = {0x00};
         public static byte[] PurgeIndexByHeightPrefix = BitConverter.GetBytes('H').Take(1).Reverse().ToArray();
+        public static byte[] PrivateReadWriteSetPrefix = BitConverter.GetBytes('P').Take(1).Reverse().ToArray();
 
         /// <summary>
-        /// Checks if byte array 1 is smaller than byte array 2.
+        /// Checks if byte array 1 is smaller than byte array 2. Arr1 &lt; Arr2
         /// </summary>
         /// <param name="arr1"></param>
         /// <param name="arr2"></param>
@@ -139,7 +156,7 @@ namespace Stratis.SmartContracts.Core.Store
         }
 
         /// <summary>
-        /// Checks if byte array 1 is smaller than byte array 2.
+        /// Checks if byte array 1 is greater than byte array 2. Arr1 &gt; Arr2.
         /// </summary>
         /// <param name="arr1"></param>
         /// <param name="arr2"></param>
@@ -150,7 +167,7 @@ namespace Stratis.SmartContracts.Core.Store
         }
 
         /// <summary>
-        /// Checks if byte array 1 is equal to byte array 2.
+        /// Checks if byte array 1 is equal to byte array 2. Arr1 == Arr2.
         /// </summary>
         /// <param name="arr1"></param>
         /// <param name="arr2"></param>
@@ -194,6 +211,28 @@ namespace Stratis.SmartContracts.Core.Store
             }
         }
 
+        public static byte[] CreateCompositeKeyForPvtRWSet(uint height, uint256 txId, Guid guid)
+        {
+            var compositeKey = new byte[0];
+            compositeKey = compositeKey.Combine(TransientStoreQueryParams.PrivateReadWriteSetPrefix);
+            compositeKey = compositeKey.Combine(TransientStoreQueryParams.CompositeKeySeparator);
+            compositeKey = compositeKey.Combine(CreateCompositeKeyWithoutPrefixForTxid(height, txId, guid));
+
+            return compositeKey;
+        }
+
+        private static byte[] CreateCompositeKeyWithoutPrefixForTxid(uint height, uint256 txId, Guid guid)
+        {
+            var compositeKey = new byte[0];
+            compositeKey = compositeKey.Combine(txId.ToBytes(true));
+            compositeKey = compositeKey.Combine(TransientStoreQueryParams.CompositeKeySeparator);
+            compositeKey = compositeKey.Combine(guid.ToByteArray().Reverse().ToArray());
+            compositeKey = compositeKey.Combine(TransientStoreQueryParams.CompositeKeySeparator);
+            compositeKey = compositeKey.Combine(BitConverter.GetBytes(height).Reverse().ToArray());
+
+            return compositeKey;
+        }
+
         public static byte[] CreateCompositeKeyForPurgeIndexByHeight(uint height, uint256 txId, Guid guid)
         {
             var compositeKey = new byte[0];
@@ -206,6 +245,16 @@ namespace Stratis.SmartContracts.Core.Store
             compositeKey = compositeKey.Combine(guid.ToByteArray().Reverse().ToArray());
 
             return compositeKey;
+        }
+
+        public static (uint256 txId, Guid uuid, uint blockHeight) SplitCompositeKeyOfPurgeIndexByHeight(byte[] key)
+        {
+            // TODO fix this ugly mess
+            var heightBytes = key.Skip(PurgeIndexByHeightPrefix.Length + CompositeKeySeparator.Length).Take(sizeof(uint)).Reverse().ToArray();
+            var txIdBytes = key.Skip(PurgeIndexByHeightPrefix.Length + CompositeKeySeparator.Length + sizeof(uint) + 1).Take(32).Reverse().ToArray();
+            var guidBytes = key.Skip(PurgeIndexByHeightPrefix.Length + CompositeKeySeparator.Length + sizeof(uint) + 32 + 2).Take(16).Reverse().ToArray();
+
+            return (new uint256(txIdBytes), new Guid(guidBytes), BitConverter.ToUInt32(heightBytes));
         }
 
         // TODO make key classes?

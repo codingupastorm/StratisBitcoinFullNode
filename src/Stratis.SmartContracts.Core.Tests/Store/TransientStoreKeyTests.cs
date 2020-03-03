@@ -19,8 +19,25 @@ namespace Stratis.SmartContracts.Core.Tests.Store
 
             // Check that the purge index key is greater than the start key.
             Assert.True(TransientStoreQueryParams.GreaterThan(purgeIndexKey, purgeIndexStartKey));
-            Assert.True(TransientStoreQueryParams.LessThan(purgeIndexEndKey, purgeIndexKey));
+
+            // The key should not be less than the end key
+            Assert.False(TransientStoreQueryParams.LessThan(purgeIndexKey, purgeIndexEndKey));
             Assert.True(TransientStoreQueryParams.EqualTo(purgeIndexKey, purgeIndexKey));
+        }
+
+        [Fact]
+        public void SplitCompositeKeyOfPurgeIndexByHeight_Success()
+        {
+            var height = 100U;
+            var txId = uint256.One;
+            var guid = Guid.NewGuid();
+            var purgeIndexKey = TransientStoreQueryParams.CreateCompositeKeyForPurgeIndexByHeight(height, txId, guid);
+
+            var split = TransientStoreQueryParams.SplitCompositeKeyOfPurgeIndexByHeight(purgeIndexKey);
+
+            Assert.Equal(height, split.blockHeight);
+            Assert.Equal(txId, split.txId);
+            Assert.Equal(guid, split.uuid);
         }
     }
 }
