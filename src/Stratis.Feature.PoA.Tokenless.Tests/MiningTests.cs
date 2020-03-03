@@ -207,14 +207,11 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                     consensusRulesContainer,
                     this.consensusSettings,
                     DateTimeProvider.Default,
-                    null,
                     new InvalidBlockHashStore(this.helper.DateTimeProvider),
                     this.helper.LoggerFactory,
                     this.helper.Network,
                     new NodeDeployments(this.helper.Network, this.helper.ChainIndexer),
-                    new NodeStats(this.helper.DateTimeProvider, this.helper.LoggerFactory),
-                    null,
-                    null)
+                    new NodeStats(this.helper.DateTimeProvider, this.helper.LoggerFactory))
                 .SetupRulesEngineParent();
         }
 

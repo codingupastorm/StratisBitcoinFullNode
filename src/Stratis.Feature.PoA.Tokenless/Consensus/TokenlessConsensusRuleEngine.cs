@@ -8,7 +8,6 @@ using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus;
-using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Feature.PoA.Tokenless.Consensus
@@ -16,21 +15,12 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
     /// <inheritdoc />
     public sealed class TokenlessConsensusRuleEngine : ConsensusRuleEngine
     {
-        public ISlotsManager SlotsManager { get; private set; }
-
-        public PoABlockHeaderValidator PoaHeaderValidator { get; private set; }
-
-        public IFederationManager FederationManager { get; private set; }
-
         public TokenlessConsensusRuleEngine(ChainIndexer chainIndexer, IChainState chainState, ICheckpoints checkpoints,
-            ConsensusRulesContainer consensusRulesContainer, ConsensusSettings consensusSettings, IDateTimeProvider dateTimeProvider, IFederationManager federationManager,
+            ConsensusRulesContainer consensusRulesContainer, ConsensusSettings consensusSettings, IDateTimeProvider dateTimeProvider,
             IInvalidBlockHashStore invalidBlockHashStore, ILoggerFactory loggerFactory, Network network, NodeDeployments nodeDeployments,
-            INodeStats nodeStats, PoABlockHeaderValidator poaHeaderValidator, ISlotsManager slotsManager)
+            INodeStats nodeStats)
             : base(network, loggerFactory, dateTimeProvider, chainIndexer, nodeDeployments, consensusSettings, checkpoints, chainState, invalidBlockHashStore, nodeStats, consensusRulesContainer)
         {
-            this.FederationManager = federationManager;
-            this.PoaHeaderValidator = poaHeaderValidator;
-            this.SlotsManager = slotsManager;
         }
 
         /// <summary>
