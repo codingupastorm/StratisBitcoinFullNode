@@ -189,8 +189,10 @@ namespace Stratis.Bitcoin.KeyValueStore
             return this.SelectAll<TKey, TObject>(tableName).ToDictionary(kv => kv.Item1, kv => kv.Item2);
         }
 
-        private IEnumerable<O> MergeSortedEnumerations<O, T>(IEnumerable<O> primary, IEnumerable<O> secondary, Func<O, T> keySelector, IComparer<T> comparer, bool descending = false)
+        private IEnumerable<O> MergeSortedEnumerations<O, T>(IEnumerable<O> primary, IEnumerable<O> secondary, Func<O, T> keySelector, IComparer<T> comparer, SortOrder sortOrder)
         {
+            Guard.Assert(sortOrder != SortOrder.Unsorted);
+
             while (true)
             {
                 O first = primary.FirstOrDefault();
@@ -199,7 +201,7 @@ namespace Stratis.Bitcoin.KeyValueStore
                 if (first == null && second == null)
                     break;
 
-                int cmp = (second == null) ? -1 : ((first != null) ? comparer.Compare(keySelector(first), keySelector(second)) * (descending ? -1 : 1) : 1);
+                int cmp = (second == null) ? -1 : ((first != null) ? comparer.Compare(keySelector(first), keySelector(second)) * ((sortOrder == SortOrder.Descending) ? -1 : 1) : 1);
 
                 if (cmp <= 0)
                 {
@@ -218,7 +220,7 @@ namespace Stratis.Bitcoin.KeyValueStore
             }
         }
       
-        private IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly, bool? backwards = null,
+        private IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly, SortOrder sortOrder = SortOrder.Ascending,
             byte[] firstKeyBytes = null, byte[] lastKeyBytes = null, bool includeFirstKey = true, bool includeLastKey = true)
         {
             IEnumerable<(byte[], byte[])> res = null;
@@ -239,14 +241,13 @@ namespace Stratis.Bitcoin.KeyValueStore
                     upd = upd.Where(u => byteListComparer.Compare(u.Key, lastKeyBytes) <= (includeLastKey ? 0 : -1));
             }
 
-            // Not sorted?
-            if (backwards == null)
+            if (sortOrder == SortOrder.Unsorted)
             {
                 res = upd?.Where(k => k.Value != null).Select(k => (k.Key, k.Value));
 
                 if (!ignoreDB)
                 {
-                    var dbRows = this.repository.GetAll(this, this.GetTable(tableName), keysOnly: keysOnly, backwards: (bool)backwards,
+                    var dbRows = this.repository.GetAll(this, this.GetTable(tableName), keysOnly: keysOnly, sortOrder: sortOrder,
                         firstKey: firstKeyBytes, lastKey: lastKeyBytes, includeFirstKey: includeFirstKey, includeLastKey: includeLastKey);
 
                     res = (res == null) ? dbRows : res.Concat(dbRows.Where(k => tableUpdates == null || !tableUpdates.ContainsKey(k.Item1)));
@@ -256,17 +257,17 @@ namespace Stratis.Bitcoin.KeyValueStore
             {
                 var table = this.GetTable(tableName);
 
-                var updates = (upd == null) ? null : ((bool)backwards ? upd.OrderByDescending(k => k.Key, byteListComparer) : upd.OrderBy(k => k.Key, byteListComparer)).Select(k => (k.Key, keysOnly ? null : k.Value));
+                var updates = (upd == null) ? null : ((sortOrder == SortOrder.Descending) ? upd.OrderByDescending(k => k.Key, byteListComparer) : upd.OrderBy(k => k.Key, byteListComparer)).Select(k => (k.Key, keysOnly ? null : k.Value));
 
                 if (!ignoreDB && !this.TablesCleared.Contains(tableName))
                 {
-                    var dbrows = this.repository.GetAll(this, table, keysOnly: keysOnly, backwards: (bool)backwards,
+                    var dbrows = this.repository.GetAll(this, table, keysOnly: keysOnly, sortOrder: sortOrder,
                         firstKey: firstKeyBytes, lastKey: lastKeyBytes, includeFirstKey: includeFirstKey, includeLastKey: includeLastKey);
 
                     if (updates == null)
                         res = dbrows;
                     else
-                        res = this.MergeSortedEnumerations<(byte[], byte[]), byte[]>(dbrows, updates, k => k.Item1, byteListComparer, descending: (bool)backwards);
+                        res = this.MergeSortedEnumerations<(byte[], byte[]), byte[]>(dbrows, updates, k => k.Item1, byteListComparer, sortOrder: sortOrder);
                 }
                 else
                 {
@@ -282,9 +283,9 @@ namespace Stratis.Bitcoin.KeyValueStore
         }
 
         /// <inheritdoc />
-        public IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly = false, bool backwards = false)
+        public IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly = false, SortOrder sortOrder = SortOrder.Descending)
         {
-            return this.SelectAll<TKey, TObject>(tableName, keysOnly, backwards, firstKeyBytes: null);
+            return this.SelectAll<TKey, TObject>(tableName, keysOnly, sortOrder, firstKeyBytes: null);
         }
 
         /// <inheritdoc />
@@ -292,7 +293,7 @@ namespace Stratis.Bitcoin.KeyValueStore
         {
             byte[] firstKeyBytes = (firstKey != null) ? this.Serialize(firstKey) : null;
 
-            return this.SelectAll<TKey, TObject>(tableName, keysOnly, false, firstKeyBytes: firstKeyBytes, includeFirstKey: includeFirstKey);
+            return this.SelectAll<TKey, TObject>(tableName, keysOnly, SortOrder.Ascending, firstKeyBytes: firstKeyBytes, includeFirstKey: includeFirstKey);
         }
 
         /// <inheritdoc />
@@ -300,7 +301,7 @@ namespace Stratis.Bitcoin.KeyValueStore
         {
             byte[] lastKeyBytes = (lastKey != null) ? this.Serialize(lastKey) : null;
 
-            return this.SelectAll<TKey, TObject>(tableName, keysOnly, true, lastKeyBytes: lastKeyBytes, includeLastKey: includeLastKey);
+            return this.SelectAll<TKey, TObject>(tableName, keysOnly, SortOrder.Descending, lastKeyBytes: lastKeyBytes, includeLastKey: includeLastKey);
         }
 
         /// <inheritdoc />
@@ -309,7 +310,7 @@ namespace Stratis.Bitcoin.KeyValueStore
             byte[] firstKeyBytes = (firstKey != null) ? this.Serialize(firstKey) : null;
             byte[] lastKeyBytes = (lastKey != null) ? this.Serialize(lastKey) : null;
 
-            return this.SelectAll<TKey, TObject>(tableName, keysOnly, false, firstKeyBytes: firstKeyBytes, lastKeyBytes: lastKeyBytes, includeFirstKey: includeFirstKey, includeLastKey: includeLastKey);
+            return this.SelectAll<TKey, TObject>(tableName, keysOnly, SortOrder.Ascending, firstKeyBytes: firstKeyBytes, lastKeyBytes: lastKeyBytes, includeFirstKey: includeFirstKey, includeLastKey: includeLastKey);
         }
 
         /// <inheritdoc />
@@ -318,7 +319,7 @@ namespace Stratis.Bitcoin.KeyValueStore
             byte[] firstKeyBytes = (firstKey != null) ? this.Serialize(firstKey) : null;
             byte[] lastKeyBytes = (lastKey != null) ? this.Serialize(lastKey) : null;
 
-            return this.SelectAll<TKey, TObject>(tableName, keysOnly, true, firstKeyBytes: firstKeyBytes, lastKeyBytes: lastKeyBytes, includeFirstKey: includeFirstKey, includeLastKey: includeLastKey);
+            return this.SelectAll<TKey, TObject>(tableName, keysOnly, SortOrder.Descending, firstKeyBytes: firstKeyBytes, lastKeyBytes: lastKeyBytes, includeFirstKey: includeFirstKey, includeLastKey: includeLastKey);
         }
 
         /// <inheritdoc />

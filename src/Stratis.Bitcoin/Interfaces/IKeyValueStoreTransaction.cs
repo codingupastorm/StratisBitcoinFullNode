@@ -3,6 +3,13 @@ using System.Collections.Generic;
 
 namespace Stratis.Bitcoin.Interfaces
 {
+    public enum SortOrder
+    {
+        Ascending,
+        Descending,
+        Unsorted
+    }
+
     /// <summary>
     /// The high-level methods for manipulating values in the key-value store.
     /// </summary>
@@ -20,7 +27,7 @@ namespace Stratis.Bitcoin.Interfaces
 
         Dictionary<TKey, TObject> SelectDictionary<TKey, TObject>(string tableName);
 
-        IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly = false, bool backwards = false);
+        IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly = false, SortOrder sortOrder = SortOrder.Ascending);
 
         IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName, TKey firstKey, bool includeFirstKey = true, bool keysOnly = false);
 

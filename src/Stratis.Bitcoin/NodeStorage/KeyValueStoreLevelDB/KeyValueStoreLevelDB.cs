@@ -175,7 +175,7 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             return res;
         }
 
-        public IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction tran, KeyValueStoreTable table, bool keysOnly = false, bool backwards = false,
+        public IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction tran, KeyValueStoreTable table, bool keysOnly = false, SortOrder sortOrder = SortOrder.Ascending,
             byte[] firstKey = null, byte[] lastKey = null, bool includeFirstKey = true, bool includeLastKey = true)
         {
             using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).ReadOptions))
@@ -184,7 +184,7 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
                 byte[] firstKeyBytes = (firstKey == null) ? null : new[] { keyPrefix }.Concat(firstKey).ToArray();
                 byte[] lastKeyBytes = (lastKey == null) ? null : new[] { keyPrefix }.Concat(lastKey).ToArray();
 
-                if (backwards)
+                if (sortOrder == SortOrder.Descending)
                 {
                     if (lastKeyBytes == null)
                     {
@@ -223,7 +223,7 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
                     if (keyBytes[0] != keyPrefix)
                         break;
 
-                    if (backwards)
+                    if (sortOrder == SortOrder.Descending)
                     {
                         if (firstKeyBytes != null && this.byteArrayComparer.Compare(keyBytes, firstKeyBytes) <= 0)
                         {
@@ -247,7 +247,7 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
                     if (done)
                         break;
 
-                    if (backwards)
+                    if (sortOrder == SortOrder.Descending)
                         iterator.Prev();
                     else
                         iterator.Next();
