@@ -181,7 +181,7 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).ReadOptions))
             {
                 byte keyPrefix = ((KeyValueStoreLDBTable)table).KeyPrefix;
-                byte[] firstKeyBytes = (firstKey == null) ?  null : new[] { keyPrefix }.Concat(firstKey).ToArray();
+                byte[] firstKeyBytes = (firstKey == null) ? null : new[] { keyPrefix }.Concat(firstKey).ToArray();
                 byte[] lastKeyBytes = (lastKey == null) ? null : new[] { keyPrefix }.Concat(lastKey).ToArray();
 
                 if (backwards)

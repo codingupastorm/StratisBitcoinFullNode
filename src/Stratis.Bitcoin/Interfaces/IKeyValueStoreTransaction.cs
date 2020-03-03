@@ -22,9 +22,13 @@ namespace Stratis.Bitcoin.Interfaces
 
         IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly = false, bool backwards = false);
 
-        IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName, TKey firstKey, bool keysOnly = false);
+        IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName, TKey firstKey, bool includeFirstKey = true, bool keysOnly = false);
 
-        IEnumerable<(TKey, TObject)> SelectBackward<TKey, TObject>(string tableName, TKey lastKey, bool keysOnly = false);
+        IEnumerable<(TKey, TObject)> SelectBackward<TKey, TObject>(string tableName, TKey lastKey, bool includeLastKey = true, bool keysOnly = false);
+
+        IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName, TKey firstKey, TKey lastKey, bool includeFirstKey = true, bool includeLastKey = true, bool keysOnly = false);
+
+        IEnumerable<(TKey, TObject)> SelectBackward<TKey, TObject>(string tableName, TKey firstKey, TKey lastKey, bool includeFirstKey = true, bool includeLastKey = true, bool keysOnly = false);
 
         void RemoveKey<TKey, TObject>(string tableName, TKey key, TObject obj);
 
