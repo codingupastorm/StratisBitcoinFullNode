@@ -16,7 +16,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
     public class TokenlessMempoolValidator : IMempoolValidator
     {
         private readonly ChainIndexer chainIndexer;
-        private readonly ICoinView coinView;
         private readonly IDateTimeProvider dateTimeProvider;
         private readonly ILogger logger;
         private readonly ITxMempool mempool;
@@ -36,7 +35,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
 
         public TokenlessMempoolValidator(
             ChainIndexer chainIndexer,
-            ICoinView coinView,
             IDateTimeProvider dateTimeProvider,
             ILoggerFactory loggerFactory,
             ITxMempool memPool,
@@ -45,7 +43,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
             MempoolSettings mempoolSettings)
         {
             this.chainIndexer = chainIndexer;
-            this.coinView = coinView;
             this.dateTimeProvider = dateTimeProvider;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.mempool = memPool;
@@ -97,7 +94,8 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         /// <inheritdoc />
         public Task SanityCheck()
         {
-            return this.mempoolLock.ReadAsync(() => this.mempool.Check(this.coinView));
+            // Not applicable in a tokenless network.
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -110,9 +108,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
             var context = new TokenlessMempoolValidationContext(transaction, mempoolValidationState);
 
             this.PreMempoolChecks(context);
-
-            // Create the MemPoolCoinView and load relevant utxoset
-            context.View = new MempoolCoinView(this.coinView, this.mempool, this.mempoolLock, this);
 
             // Adding to the mem pool can only be done sequentially so use the sequential scheduler for that.
             await this.mempoolLock.WriteAsync(() =>

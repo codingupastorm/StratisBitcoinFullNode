@@ -6,22 +6,19 @@ using System.Text;
 using System.Threading.Tasks;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.Consensus.Rules;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Caching;
 using Stratis.Bitcoin.Mining;
-using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mining;
 using Stratis.Patricia;
@@ -42,7 +39,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
     {
         private readonly TokenlessTestHelper helper;
 
-        private readonly CachedCoinView cachedCoinView;
         private readonly ConsensusSettings consensusSettings;
 
         private StateRepositoryRoot stateRoot;
@@ -58,7 +54,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         private Serializer serializer;
         private SmartContractStateFactory smartContractStateFactory;
         private StateFactory stateFactory;
-        private BasicKeyEncodingStrategy keyEncodingStrategy;
         private string folder;
 
         private TokenlessReflectionExecutorFactory executorFactory;
@@ -73,7 +68,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             this.helper = new TokenlessTestHelper();
             this.consensusSettings = new ConsensusSettings(this.helper.NodeSettings);
-            this.cachedCoinView = new CachedCoinView(this.helper.InMemoryCoinView, this.helper.DateTimeProvider, this.helper.LoggerFactory, new NodeStats(this.helper.DateTimeProvider, this.helper.LoggerFactory), this.consensusSettings);
         }
 
         [Fact]
@@ -151,7 +145,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             return new TokenlessMempoolValidator(
                 this.helper.ChainIndexer,
-                this.cachedCoinView,
                 this.helper.DateTimeProvider,
                 this.helper.LoggerFactory,
                 this.helper.Mempool,
@@ -165,7 +158,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             uint blockMaxSize = this.helper.Network.Consensus.Options.MaxBlockSerializedSize;
             uint blockMaxWeight = this.helper.Network.Consensus.Options.MaxBlockWeight;
 
-            var blockDefinitionOptions = new BlockDefinitionOptions(blockMaxWeight, blockMaxSize).RestrictForNetwork(this.helper.Network);
+            BlockDefinitionOptions blockDefinitionOptions = new BlockDefinitionOptions(blockMaxWeight, blockMaxSize).RestrictForNetwork(this.helper.Network);
 
             var minerSettings = new Mock<IMinerSettings>();
             minerSettings.Setup(c => c.BlockDefinitionOptions)
@@ -173,7 +166,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             return new TokenlessBlockDefinition(
                 new BlockBufferGenerator(),
-                this.cachedCoinView,
                 this.consensusManager,
                 this.helper.DateTimeProvider,
                 this.executorFactory,
@@ -197,7 +189,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             InitializeConsensusRules();
 
-            this.consensusManager = ConsensusManagerHelper.CreateConsensusManager(this.helper.Network, chainState: this.chainState, inMemoryCoinView: this.helper.InMemoryCoinView, chainIndexer: this.helper.ChainIndexer, consensusRules: this.consensusRules);
+            this.consensusManager = ConsensusManagerHelper.CreateConsensusManager(this.helper.Network, chainState: this.chainState, chainIndexer: this.helper.ChainIndexer, consensusRules: this.consensusRules);
             await this.consensusManager.InitializeAsync(this.helper.ChainIndexer.Tip);
             this.mempoolLock = new MempoolSchedulerLock();
 
@@ -208,27 +200,23 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             var consensusRulesContainer = new ConsensusRulesContainer();
 
-            this.consensusRules = new PowConsensusRuleEngine(
-                    this.helper.Network,
-                    this.helper.LoggerFactory,
-                    DateTimeProvider.Default,
+            this.consensusRules = new TokenlessConsensusRuleEngine(
                     this.helper.ChainIndexer,
-                    new NodeDeployments(this.helper.Network, this.helper.ChainIndexer),
-                    this.consensusSettings,
-                    new Checkpoints(),
-                    this.cachedCoinView,
                     this.chainState,
+                    new Checkpoints(),
+                    consensusRulesContainer,
+                    this.consensusSettings,
+                    DateTimeProvider.Default,
                     new InvalidBlockHashStore(this.helper.DateTimeProvider),
-                    new NodeStats(this.helper.DateTimeProvider, this.helper.LoggerFactory),
-                    new AsyncProvider(this.helper.LoggerFactory, new Signals(this.helper.LoggerFactory, null), new NodeLifetime()),
-                    consensusRulesContainer)
+                    this.helper.LoggerFactory,
+                    this.helper.Network,
+                    new NodeDeployments(this.helper.Network, this.helper.ChainIndexer),
+                    new NodeStats(this.helper.DateTimeProvider, this.helper.LoggerFactory))
                 .SetupRulesEngineParent();
         }
 
         private void InitializeSmartContractComponents([CallerMemberName] string callingMethod = "")
         {
-            this.keyEncodingStrategy = BasicKeyEncodingStrategy.Default;
-
             this.folder = TestBase.AssureEmptyDir(Path.Combine(AppContext.BaseDirectory, "TestCase", callingMethod));
             var engine = new ContractStateTableStore(Path.Combine(this.folder, "contracts"), this.helper.LoggerFactory, this.helper.DateTimeProvider, new RepositorySerializer(this.helper.Network.Consensus.ConsensusFactory));
             var byteStore = new KeyValueByteStore(engine, "ContractState1");

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Fee;
@@ -35,9 +34,10 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         private readonly TxlinksMap mapLinks;
 
         private readonly ILogger logger;
+
         private readonly ISignals signals;
 
-        public TokenlessMempool(BlockPolicyEstimator blockPolicyEstimator, ILoggerFactory loggerFactory, NodeSettings nodeSettings, ISignals signals = null)
+        public TokenlessMempool(BlockPolicyEstimator blockPolicyEstimator, ILoggerFactory loggerFactory, ISignals signals = null)
         {
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.signals = signals;
