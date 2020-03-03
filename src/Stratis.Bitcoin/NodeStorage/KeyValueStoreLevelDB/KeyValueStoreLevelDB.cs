@@ -181,10 +181,12 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).ReadOptions))
             {
                 byte keyPrefix = ((KeyValueStoreLDBTable)table).KeyPrefix;
+                byte[] firstKeyBytes = (firstKey == null) ?  null : new[] { keyPrefix }.Concat(firstKey).ToArray();
+                byte[] lastKeyBytes = (lastKey == null) ? null : new[] { keyPrefix }.Concat(lastKey).ToArray();
 
                 if (backwards)
                 {
-                    if (lastKey == null)
+                    if (lastKeyBytes == null)
                     {
                         iterator.Seek(new[] { (byte)(keyPrefix + 1) });
                         if (iterator.IsValid())
@@ -194,25 +196,26 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
                     }
                     else
                     {
-                        iterator.Seek(lastKey);
-                        if (!includeLastKey && this.byteArrayComparer.Equals(iterator.Key(), lastKey))
+                        iterator.Seek(lastKeyBytes);
+                        if (!includeLastKey && this.byteArrayComparer.Equals(iterator.Key(), lastKeyBytes))
                             iterator.Prev();
                     }
                 }
                 else
                 {
-                    if (firstKey == null)
+                    if (firstKeyBytes == null)
                     {
                         iterator.Seek(new[] { keyPrefix });
                     }
                     else
                     {
-                        iterator.Seek(firstKey);
-                        if (!includeFirstKey && this.byteArrayComparer.Equals(iterator.Key(), firstKey))
+                        iterator.Seek(firstKeyBytes);
+                        if (!includeFirstKey && this.byteArrayComparer.Equals(iterator.Key(), firstKeyBytes))
                             iterator.Next();
                     }
                 }
 
+                bool done = false;
                 while (iterator.IsValid())
                 {
                     byte[] keyBytes = iterator.Key();
@@ -220,7 +223,29 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
                     if (keyBytes[0] != keyPrefix)
                         break;
 
+                    if (backwards)
+                    {
+                        if (firstKeyBytes != null && this.byteArrayComparer.Compare(keyBytes, firstKeyBytes) <= 0)
+                        {
+                            if (!includeFirstKey)
+                                break;
+                            done = true;
+                        }
+                    }
+                    else
+                    {
+                        if (lastKeyBytes != null && this.byteArrayComparer.Compare(keyBytes, lastKeyBytes) >= 0)
+                        {
+                            if (!includeLastKey)
+                                break;
+                            done = true;
+                        }
+                    }
+
                     yield return (keyBytes.Skip(1).ToArray(), keysOnly ? null : iterator.Value());
+
+                    if (done)
+                        break;
 
                     if (backwards)
                         iterator.Prev();
