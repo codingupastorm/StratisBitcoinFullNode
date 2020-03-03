@@ -2,6 +2,11 @@
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
+    public interface IEndorsementRequestValidator
+    {
+        bool ValidateRequest(EndorsementRequest request);
+    }
+
     public class EndorsementRequestValidator : IEndorsementRequestValidator
     {
         /*
@@ -16,13 +21,8 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
         public bool ValidateRequest(EndorsementRequest request)
         {
-            throw new NotImplementedException("Check transaction vs rules.");
+            throw new NotImplementedException("Check transaction vs consensus rules and rules above.");
         }
 
-    }
-
-    public interface IEndorsementRequestValidator
-    {
-        bool ValidateRequest(EndorsementRequest request);
     }
 }

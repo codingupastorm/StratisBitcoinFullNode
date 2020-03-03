@@ -11,7 +11,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     {
         public void Sign(EndorsementRequest request)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException("Work out how signing process is intended to work and then sign using key from this node.");
         }
     }
 }

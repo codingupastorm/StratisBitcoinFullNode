@@ -1,7 +1,12 @@
-﻿namespace Stratis.Feature.PoA.Tokenless.Endorsement
+﻿using NBitcoin;
+
+namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
     public class EndorsementRequest
     {
-        // TODO: Contain things required to execute smart contract.
+        public Transaction ContractTransaction { get; set; }
+
+        // TODO: Put transient data in here.
+        public byte[] TransientData { get; set; }
     }
 }
