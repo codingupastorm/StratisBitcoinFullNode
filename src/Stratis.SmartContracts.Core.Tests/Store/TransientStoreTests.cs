@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Store;
 using Xunit;
 
@@ -71,6 +68,22 @@ namespace Stratis.SmartContracts.Core.Tests.Store
                 TransientStore.Table, 
                 It.IsAny<byte[]>(), 
                 It.Is<byte[]>(d => privateData.SequenceEqual(data.ToBytes()))
+            ));
+
+            // Verify the min block height was updated.
+            transaction.Verify(t => t.Insert(
+                TransientStore.Table,
+                It.Is<byte[]>(d => this.store.MinBlockHeightKey.SequenceEqual(d)),
+                It.Is<uint>(d => d == blockHeight)
+            ));
+
+            var purgeKey = new CompositePurgeIndexKey(blockHeight);
+
+            // Verify the purge key was inserted.
+            transaction.Verify(t => t.Insert(
+                TransientStore.Table,
+                It.Is<byte[]>(d => purgeKey.ToBytes().SequenceEqual(d)),
+                It.IsAny<byte[]>()
             ));
 
             transaction.Verify(t => t.Commit(), Times.Once);
