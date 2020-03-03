@@ -111,7 +111,7 @@ namespace CertificateAuthority.Controllers
             return ExecuteRepositoryQuery(() =>
             {
                 var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.ApproveAccounts);
-                return this.Json(this.repository.RejectAccount(credentials));
+                return this.Ok();
             });
         }
 

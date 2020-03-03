@@ -149,24 +149,22 @@ namespace CertificateAuthority.Database
         }
 
         /// <summary>Rejects the account by deleting it.</summary>
-        public AccountInfo RejectAccount(CredentialsAccessWithModel<CredentialsModelWithTargetId> credentialsModel)
+        public void RejectAccount(CredentialsAccessWithModel<CredentialsModelWithTargetId> credentialsModel)
         {
-            return ExecuteCommand(credentialsModel, (dbContext, account) =>
+            ExecuteCommand(credentialsModel, (dbContext, account) =>
             {
                 int accountId = credentialsModel.Model.TargetAccountId;
 
-                AccountModel accountToApprove = dbContext.Accounts.SingleOrDefault(x => x.Id == accountId);
+                AccountModel accountToReject = dbContext.Accounts.SingleOrDefault(x => x.Id == accountId);
 
-                if (accountToApprove == null)
+                if (accountToReject == null)
                     throw new CertificateAuthorityAccountException("Account does not exist.");
 
-                if (accountToApprove.Approved)
+                if (accountToReject.Approved)
                     throw new CertificateAuthorityAccountException("Cannot reject an account that is approved.");
 
-                dbContext.Accounts.Remove(accountToApprove);
+                dbContext.Accounts.Remove(accountToReject);
                 dbContext.SaveChanges();
-
-                return accountToApprove;
             });
         }
 
