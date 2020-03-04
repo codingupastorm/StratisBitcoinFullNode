@@ -4,7 +4,6 @@ using FluentAssertions;
 using FluentAssertions.Common;
 using NBitcoin;
 using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
@@ -84,10 +83,9 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
 
         protected void the_transaction_is_propagated_to_nodeC()
         {
-            RPCClient rpc = this.nodeC.CreateRPCClient();
-            TestBase.WaitLoop(() => rpc.GetRawMempool().Any());
+            TestBase.WaitLoop(() => this.nodeC.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Any());
 
-            rpc.GetRawMempool()
+            this.nodeC.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult()
                 .Should().ContainSingle()
                 .Which.IsSameOrEqualTo(this.transaction.GetHash());
         }

@@ -62,9 +62,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                     return false;
             }
 
-            if (node1.CreateRPCClient().GetBestBlockHash() != node2.CreateRPCClient().GetBestBlockHash())
-                return false;
-
             return true;
         }
 
