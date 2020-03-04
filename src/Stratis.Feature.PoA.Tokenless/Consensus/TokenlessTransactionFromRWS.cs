@@ -32,5 +32,18 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
 
             return transaction;
         }
+
+        public ReadWriteSet Parse(Transaction tx)
+        {
+            if (tx.Outputs.Count < 1)
+                return null;
+
+            var rwsData = TxRWSDataTemplate.Instance.ExtractScriptPubKeyParameters(tx.Outputs[0].ScriptPubKey);
+            if (rwsData == null || rwsData.Length != 1)
+                return null;
+
+            string json = Encoding.UTF8.GetString(rwsData[0]);
+            return new ReadWriteSet().FromJson(json);
+        }
     }
 }

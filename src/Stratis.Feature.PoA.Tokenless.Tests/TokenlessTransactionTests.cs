@@ -76,12 +76,12 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             TokenlessTransactionFromRWS builder = GetBuilder();
             Transaction tx = builder.Build(readWriteSet);
 
-            // Recover the ReadWriteSet's json from the transaction.
-            var rwsData = TxRWSDataTemplate.Instance.ExtractScriptPubKeyParameters(tx.Outputs[0].ScriptPubKey);
-            string json = Encoding.UTF8.GetString(rwsData[0]);
+            // Recover the ReadWriteSet from the transaction.
+            ReadWriteSet readWriteSet2 = builder.Parse(tx);
+            Assert.NotNull(readWriteSet2);
 
             // Compare the original ReadWriteSet's json with the recovered ReadWriteSet's json.
-            Assert.Equal(readWriteSet.ToJson(), json);
+            Assert.Equal(readWriteSet.ToJson(), readWriteSet2.ToJson());
         }
     }
 }
