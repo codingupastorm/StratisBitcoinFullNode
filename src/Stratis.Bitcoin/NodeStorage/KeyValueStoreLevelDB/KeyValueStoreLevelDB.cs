@@ -194,15 +194,24 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
                 {
                     if (lastKeyBytes == null)
                     {
+                        // If no last key was provided then seek to the last record with this prefix
+                        // by first seeking to the first record with the next prefix...
                         iterator.Seek(new[] { (byte)(keyPrefix + 1) });
+
+                        // ...then back up to the previous value if the iterator is still valid.
                         if (iterator.IsValid())
                             iterator.Prev();
                         else
+                            // If the iterator is invalid then there were no records with greater prefixes.
+                            // In this case we can simply seek to the last record.
                             iterator.SeekToLast();
                     }
                     else
                     {
+                        // Seek to the last key if it was provided.
                         iterator.Seek(lastKeyBytes);
+
+                        // If it won't be returned, and is current/found, then move to the previous value.
                         if (!includeLastKey && this.byteArrayComparer.Equals(iterator.Key(), lastKeyBytes))
                             iterator.Prev();
                     }
@@ -212,12 +221,15 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
                         int cmp = this.byteArrayComparer.Compare(keyBytes, firstKeyBytes);
                         if (cmp <= 0)
                         {
+                            // If this is the first key and its not included or we've overshot the range then stop without yielding a value.
                             if (!includeFirstKey || cmp < 0)
                                 return true;
 
+                            // Stop after yielding the value.
                             done = true;
                         }
 
+                        // Keep going.
                         return false;
                     };
 
@@ -227,11 +239,15 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
                 {
                     if (firstKeyBytes == null)
                     {
+                        // If no first key was provided then use the key prefix to find the first value.
                         iterator.Seek(new[] { keyPrefix });
                     }
                     else
                     {
+                        // Seek to the first key if it was provided.
                         iterator.Seek(firstKeyBytes);
+
+                        // If it won't be returned, and is current/found, then move to the next value.
                         if (!includeFirstKey && this.byteArrayComparer.Equals(iterator.Key(), firstKeyBytes))
                             iterator.Next();
                     }
@@ -241,12 +257,15 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
                         int cmp = this.byteArrayComparer.Compare(keyBytes, lastKeyBytes);
                         if (cmp >= 0)
                         {
+                            // If this is the last key and its not included or we've overshot the range then stop without yielding a value.
                             if (!includeLastKey || cmp > 0)
                                 return true;
 
+                            // Stop after yielding the value.
                             done = true;
                         }
 
+                        // Keep going.
                         return false;
                     };
 
