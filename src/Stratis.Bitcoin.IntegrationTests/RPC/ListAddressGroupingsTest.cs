@@ -137,7 +137,7 @@ namespace Stratis.Bitcoin.IntegrationTests.RPC
             var transaction = from.FullNode.WalletTransactionHandler().BuildTransaction(WalletTests.CreateContext(from.FullNode.Network, new WalletAccountReference(walletName, accountName), password, toAddress.ScriptPubKey, coins, FeeType.Medium, 10));
             from.FullNode.NodeController<WalletController>().SendTransaction(new SendTransactionRequest(transaction.ToHex()));
 
-            TestBase.WaitLoop(() => from.CreateRPCClient().GetRawMempool().Length > 0);
+            TestBase.WaitLoop(() => from.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count > 0);
 
             // Mine the transaction.
             TestHelper.MineBlocks(this.miner, 10);

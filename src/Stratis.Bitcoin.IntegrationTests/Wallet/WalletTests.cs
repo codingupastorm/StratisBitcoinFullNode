@@ -61,7 +61,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                 stratisSender.FullNode.NodeController<WalletController>().SendTransaction(new SendTransactionRequest(trx.ToHex()));
 
                 // Wait for the transaction to arrive
-                TestBase.WaitLoop(() => stratisReceiver.CreateRPCClient().GetRawMempool().Length > 0);
+                TestBase.WaitLoop(() => stratisReceiver.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count > 0);
                 TestBase.WaitLoop(() => stratisReceiver.FullNode.WalletManager().GetSpendableTransactionsInWallet(WalletName).Any());
 
                 long receivetotal = stratisReceiver.FullNode.WalletManager().GetSpendableTransactionsInWallet(WalletName).Sum(s => s.Transaction.Amount);
@@ -70,7 +70,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                 // Check that on the sending node, the Spendable Balance includes unconfirmed transactions.
                 // The transaction will have consumed 3 outputs, leaving us 3, and will also return us some as change.
                 // Change is always the First output because Shuffle is false!
-                Money expectedSenderSpendableBalance = Money.COIN * 3 * 50 + trx.Outputs.First().Value; 
+                Money expectedSenderSpendableBalance = Money.COIN * 3 * 50 + trx.Outputs.First().Value;
                 AccountBalance senderBalance = stratisSender.FullNode.WalletManager().GetBalances(WalletName).First();
                 Assert.Equal(expectedSenderSpendableBalance, senderBalance.SpendableAmount);
 
@@ -159,7 +159,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                 stratisSender.FullNode.NodeController<WalletController>().SendTransaction(new SendTransactionRequest(transaction1.ToHex()));
 
                 // Wait for the transaction to arrive.
-                TestBase.WaitLoop(() => stratisReceiver.CreateRPCClient().GetRawMempool().Length > 0);
+                TestBase.WaitLoop(() => stratisReceiver.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count > 0);
                 Assert.NotNull(stratisReceiver.CreateRPCClient().GetRawTransaction(transaction1.GetHash(), null, false));
                 TestBase.WaitLoop(() => stratisReceiver.FullNode.WalletManager().GetSpendableTransactionsInWallet(WalletName).Any());
 
@@ -192,7 +192,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                 stratisSender.FullNode.NodeController<WalletController>().SendTransaction(new SendTransactionRequest(transaction2.ToHex()));
 
                 // Wait for the transaction to arrive
-                TestBase.WaitLoop(() => stratisReceiver.CreateRPCClient().GetRawMempool().Length > 0);
+                TestBase.WaitLoop(() => stratisReceiver.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count > 0);
                 Assert.NotNull(stratisReceiver.CreateRPCClient().GetRawTransaction(transaction2.GetHash(), null, false));
                 TestBase.WaitLoop(() => stratisReceiver.FullNode.WalletManager().GetSpendableTransactionsInWallet(WalletName).Any());
                 long newamount = stratisReceiver.FullNode.WalletManager().GetSpendableTransactionsInWallet(WalletName).Sum(s => s.Transaction.Amount);
@@ -234,7 +234,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                 // ReBuild Transaction 2.
                 // After the reorg transaction2 was returned back to mempool.
                 stratisSender.FullNode.NodeController<WalletController>().SendTransaction(new SendTransactionRequest(transaction2.ToHex()));
-                TestBase.WaitLoop(() => stratisReceiver.CreateRPCClient().GetRawMempool().Length > 0);
+                TestBase.WaitLoop(() => stratisReceiver.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count > 0);
 
                 // Mine the transaction again.
                 TestHelper.MineBlocks(stratisSender, 1);
@@ -260,7 +260,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                 CoreNode node1 = builder.CreateStratisPowNode(this.network).WithWallet().Start();
                 CoreNode node2 = builder.CreateStratisPowNode(this.network).WithWallet().Start();
 
-                int maturity = (int) node1.FullNode.Network.Consensus.CoinbaseMaturity;
+                int maturity = (int)node1.FullNode.Network.Consensus.CoinbaseMaturity;
                 TestHelper.MineBlocks(node1, maturity + 1 + 15);
 
                 int currentBestHeight = maturity + 1 + 15;
@@ -281,7 +281,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                     SendManyUtxosTransaction(node1, sendto.ScriptPubKey, Money.FromUnit(907700, MoneyUnit.Satoshi), utxosToSend);
                 }
 
-                TestBase.WaitLoop(() => node1.CreateRPCClient().GetRawMempool().Length == howManyTimes);
+                TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == howManyTimes);
                 TestHelper.MineBlocks(node1, 1);
                 TestHelper.WaitForNodeToSync(node1, node2);
 
@@ -307,7 +307,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                         }
                     });
 
-                JsonResult jsonResult = (JsonResult) result;
+                JsonResult jsonResult = (JsonResult)result;
                 Assert.NotNull(((WalletBuildTransactionModel)jsonResult.Value).TransactionId);
             }
         }

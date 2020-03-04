@@ -154,7 +154,7 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 
         private void bobs_transaction_is_now_in_the_mem_pool()
         {
-            this.daveNode.CreateRPCClient().GetRawMempool()
+            this.daveNode.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult()
                 .Should().Contain(x => x == this.shorterChainTransaction.GetHash(), "transaction should be in the mempool when not mined in a longer chain");
         }
 
