@@ -209,9 +209,10 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
 
                     breakLoop = (firstKeyBytes == null) ? (Func<byte[], bool>)null : (keyBytes) =>
                     {
-                        if (this.byteArrayComparer.Compare(keyBytes, firstKeyBytes) <= 0)
+                        int cmp = this.byteArrayComparer.Compare(keyBytes, firstKeyBytes);
+                        if (cmp <= 0)
                         {
-                            if (!includeFirstKey)
+                            if (!includeFirstKey || cmp < 0)
                                 return true;
 
                             done = true;
@@ -237,9 +238,10 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
 
                     breakLoop = (lastKeyBytes == null) ? (Func<byte[], bool>)null : (keyBytes) =>
                     {
-                        if (this.byteArrayComparer.Compare(keyBytes, lastKeyBytes) >= 0)
+                        int cmp = this.byteArrayComparer.Compare(keyBytes, lastKeyBytes);
+                        if (cmp >= 0)
                         {
-                            if (!includeLastKey)
+                            if (!includeLastKey || cmp > 0)
                                 return true;
 
                             done = true;
