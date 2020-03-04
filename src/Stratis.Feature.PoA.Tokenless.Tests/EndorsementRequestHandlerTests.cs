@@ -2,11 +2,13 @@
 using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
+using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Util;
 using Stratis.SmartContracts.RuntimeObserver;
 using Xunit;
@@ -36,6 +38,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var signerMock = new Mock<IEndorsementSigner>();
 
+            var stateRootMock = new Mock<IStateRepositoryRoot>();
+
             var executorMock = new Mock<IContractExecutor>();
             executorMock.Setup(x => x.Execute(It.IsAny<IContractTransactionContext>()))
                 .Returns(new SmartContractExecutionResult
@@ -43,13 +47,17 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                     Revert = false
                 });
 
+            var executorFactoryMock = new Mock<IContractExecutorFactory>();
+            executorFactoryMock.Setup(x => x.CreateExecutor(It.IsAny<IStateRepositoryRoot>()))
+                .Returns(executorMock.Object);
+
             var tokenlessSignerMock = new Mock<ITokenlessSigner>();
             tokenlessSignerMock.Setup(x => x.GetSender(It.IsAny<Transaction>()))
                 .Returns(GetSenderResult.CreateSuccess(sender));
 
             var consensusManagerMock = new Mock<IConsensusManager>();
             consensusManagerMock.Setup(x => x.Tip)
-                .Returns(new ChainedHeader(new BlockHeader(), uint256.One, height));
+                .Returns(new ChainedHeader(new SmartContractBlockHeader(), uint256.One, height));
 
             var loggerFactoryMock = new Mock<ILoggerFactory>();
             loggerFactoryMock.Setup(x => x.CreateLogger(It.IsAny<string>()))
@@ -57,9 +65,10 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var endorsementRequestHandler = new EndorsementRequestHandler(validatorMock.Object,
                 signerMock.Object,
-                executorMock.Object,
+                executorFactoryMock.Object,
                 tokenlessSignerMock.Object,
                 consensusManagerMock.Object,
+                stateRootMock.Object,
                 loggerFactoryMock.Object
                 );
 
@@ -88,7 +97,9 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var signerMock = new Mock<IEndorsementSigner>();
 
-            var executorMock = new Mock<IContractExecutor>();
+            var stateRootMock = new Mock<IStateRepositoryRoot>();
+
+            var executorFactoryMock = new Mock<IContractExecutorFactory>();
 
             var tokenlessSignerMock = new Mock<ITokenlessSigner>();
 
@@ -100,9 +111,10 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var endorsementRequestHandler = new EndorsementRequestHandler(validatorMock.Object,
                 signerMock.Object,
-                executorMock.Object,
+                executorFactoryMock.Object,
                 tokenlessSignerMock.Object,
                 consensusManagerMock.Object,
+                stateRootMock.Object,
                 loggerFactoryMock.Object
                 );
 

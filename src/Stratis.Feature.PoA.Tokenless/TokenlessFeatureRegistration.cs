@@ -20,6 +20,7 @@ using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Core;
+using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mining;
 using Stratis.Feature.PoA.Tokenless.Wallet;
@@ -44,6 +45,12 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<BlockDefinition, TokenlessBlockDefinition>();
                         services.AddSingleton<ITokenlessSigner, TokenlessSigner>();
                         services.AddSingleton<ICoreComponent, CoreComponent>();
+                        services.AddSingleton<ITokenlessBroadcaster, TokenlessBroadcaster>();
+
+                        // Endorsement. For now everyone gets this. May not be the case in the future.
+                        services.AddSingleton<IEndorsementRequestHandler, EndorsementRequestHandler>();
+                        services.AddSingleton<IEndorsementRequestValidator, EndorsementRequestValidator>();
+                        services.AddSingleton<IEndorsementSigner, EndorsementSigner>();
 
                         // In place of wallet.
                         services.AddSingleton<IBroadcasterManager, FullNodeBroadcasterManager>();

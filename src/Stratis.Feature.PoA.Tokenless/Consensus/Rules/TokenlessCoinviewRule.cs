@@ -175,7 +175,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             ulong txIndex = (ulong) validationContext.BlockToValidate.Transactions.IndexOf(transaction);
             IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)validationContext.ChainedHeaderToValidate.Height, txIndex, new uint160(0),  getSenderResult.Sender, transaction);
 
-            IContractExecutor executor = this.executorFactory.CreateExecutor(this.mutableStateRepository, transactionContext);
+            IContractExecutor executor = this.executorFactory.CreateExecutor(this.mutableStateRepository);
             Result<ContractTxData> deserializedCallData = this.callDataSerializer.Deserialize(transactionContext.Data);
             IContractExecutionResult result = executor.Execute(transactionContext);
 
