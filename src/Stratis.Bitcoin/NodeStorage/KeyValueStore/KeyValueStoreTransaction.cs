@@ -291,7 +291,7 @@ namespace Stratis.Bitcoin.KeyValueStore
         /// <inheritdoc />
         public IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName, TKey firstKey, bool includeFirstKey = true, bool keysOnly = false)
         {
-            byte[] firstKeyBytes = (firstKey != null) ? this.Serialize(firstKey) : null;
+            byte[] firstKeyBytes = this.Serialize(firstKey);
 
             return this.SelectAll<TKey, TObject>(tableName, keysOnly, SortOrder.Ascending, firstKeyBytes: firstKeyBytes, includeFirstKey: includeFirstKey);
         }
@@ -299,7 +299,7 @@ namespace Stratis.Bitcoin.KeyValueStore
         /// <inheritdoc />
         public IEnumerable<(TKey, TObject)> SelectBackward<TKey, TObject>(string tableName, TKey lastKey, bool includeLastKey = true, bool keysOnly = false)
         {
-            byte[] lastKeyBytes = (lastKey != null) ? this.Serialize(lastKey) : null;
+            byte[] lastKeyBytes = this.Serialize(lastKey);
 
             return this.SelectAll<TKey, TObject>(tableName, keysOnly, SortOrder.Descending, lastKeyBytes: lastKeyBytes, includeLastKey: includeLastKey);
         }
@@ -307,8 +307,8 @@ namespace Stratis.Bitcoin.KeyValueStore
         /// <inheritdoc />
         public IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName, TKey firstKey, TKey lastKey, bool includeFirstKey = true, bool includeLastKey = true, bool keysOnly = false)
         {
-            byte[] firstKeyBytes = (firstKey != null) ? this.Serialize(firstKey) : null;
-            byte[] lastKeyBytes = (lastKey != null) ? this.Serialize(lastKey) : null;
+            byte[] firstKeyBytes = this.Serialize(firstKey);
+            byte[] lastKeyBytes = this.Serialize(lastKey);
 
             return this.SelectAll<TKey, TObject>(tableName, keysOnly, SortOrder.Ascending, firstKeyBytes: firstKeyBytes, lastKeyBytes: lastKeyBytes, includeFirstKey: includeFirstKey, includeLastKey: includeLastKey);
         }
@@ -316,8 +316,8 @@ namespace Stratis.Bitcoin.KeyValueStore
         /// <inheritdoc />
         public IEnumerable<(TKey, TObject)> SelectBackward<TKey, TObject>(string tableName, TKey firstKey, TKey lastKey, bool includeFirstKey = true, bool includeLastKey = true, bool keysOnly = false)
         {
-            byte[] firstKeyBytes = (firstKey != null) ? this.Serialize(firstKey) : null;
-            byte[] lastKeyBytes = (lastKey != null) ? this.Serialize(lastKey) : null;
+            byte[] firstKeyBytes = this.Serialize(firstKey);
+            byte[] lastKeyBytes = this.Serialize(lastKey);
 
             return this.SelectAll<TKey, TObject>(tableName, keysOnly, SortOrder.Descending, firstKeyBytes: firstKeyBytes, lastKeyBytes: lastKeyBytes, includeFirstKey: includeFirstKey, includeLastKey: includeLastKey);
         }
