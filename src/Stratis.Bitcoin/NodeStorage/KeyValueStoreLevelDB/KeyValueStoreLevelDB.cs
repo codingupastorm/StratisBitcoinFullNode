@@ -183,6 +183,7 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
                 byte keyPrefix = ((KeyValueStoreLDBTable)table).KeyPrefix;
                 byte[] firstKeyBytes = (firstKey == null) ? null : new[] { keyPrefix }.Concat(firstKey).ToArray();
                 byte[] lastKeyBytes = (lastKey == null) ? null : new[] { keyPrefix }.Concat(lastKey).ToArray();
+                bool done = false;
 
                 if (sortOrder == SortOrder.Descending)
                 {
@@ -200,8 +201,30 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
                         if (!includeLastKey && this.byteArrayComparer.Equals(iterator.Key(), lastKeyBytes))
                             iterator.Prev();
                     }
+
+                    while (iterator.IsValid())
+                    {
+                        byte[] keyBytes = iterator.Key();
+
+                        if (keyBytes[0] != keyPrefix)
+                            break;
+
+                        if (firstKeyBytes != null && this.byteArrayComparer.Compare(keyBytes, firstKeyBytes) <= 0)
+                        {
+                            if (!includeFirstKey)
+                                break;
+                            done = true;
+                        }
+
+                        yield return (keyBytes.Skip(1).ToArray(), keysOnly ? null : iterator.Value());
+
+                        if (done)
+                            break;
+
+                        iterator.Prev();
+                    }
                 }
-                else
+                else /* Ascending */
                 {
                     if (firstKeyBytes == null)
                     {
@@ -213,44 +236,28 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
                         if (!includeFirstKey && this.byteArrayComparer.Equals(iterator.Key(), firstKeyBytes))
                             iterator.Next();
                     }
-                }
 
-                bool done = false;
-                while (iterator.IsValid())
-                {
-                    byte[] keyBytes = iterator.Key();
-
-                    if (keyBytes[0] != keyPrefix)
-                        break;
-
-                    if (sortOrder == SortOrder.Descending)
+                    while (iterator.IsValid())
                     {
-                        if (firstKeyBytes != null && this.byteArrayComparer.Compare(keyBytes, firstKeyBytes) <= 0)
-                        {
-                            if (!includeFirstKey)
-                                break;
-                            done = true;
-                        }
-                    }
-                    else
-                    {
+                        byte[] keyBytes = iterator.Key();
+
+                        if (keyBytes[0] != keyPrefix)
+                            break;
+
                         if (lastKeyBytes != null && this.byteArrayComparer.Compare(keyBytes, lastKeyBytes) >= 0)
                         {
                             if (!includeLastKey)
                                 break;
                             done = true;
                         }
-                    }
 
-                    yield return (keyBytes.Skip(1).ToArray(), keysOnly ? null : iterator.Value());
+                        yield return (keyBytes.Skip(1).ToArray(), keysOnly ? null : iterator.Value());
 
-                    if (done)
-                        break;
+                        if (done)
+                            break;
 
-                    if (sortOrder == SortOrder.Descending)
-                        iterator.Prev();
-                    else
                         iterator.Next();
+                    }
                 }
             }
         }
