@@ -272,6 +272,9 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
         {
             if (!this.Tables.TryGetValue(tableName, out KeyValueStoreTable table))
             {
+                if (this.nextTablePrefix >= 0xfe)
+                    throw new Exception($"Too many tables");
+
                 table = new KeyValueStoreLDBTable()
                 {
                     Repository = this,
