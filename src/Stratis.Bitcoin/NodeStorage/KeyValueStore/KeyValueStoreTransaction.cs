@@ -198,10 +198,13 @@ namespace Stratis.Bitcoin.KeyValueStore
                 O first = primary.FirstOrDefault();
                 O second = secondary.FirstOrDefault();
 
-                if (first == null && second == null)
+                bool firstAtEnd = first.Equals(default(O));
+                bool secondAtEnd = second.Equals(default(O));
+
+                if (firstAtEnd && secondAtEnd)
                     break;
 
-                int cmp = (second == null) ? -1 : ((first != null) ? comparer.Compare(keySelector(first), keySelector(second)) * ((sortOrder == SortOrder.Descending) ? -1 : 1) : 1);
+                int cmp = secondAtEnd ? -1 : (!firstAtEnd ? comparer.Compare(keySelector(first), keySelector(second)) * ((sortOrder == SortOrder.Descending) ? -1 : 1) : 1);
 
                 if (cmp <= 0)
                 {

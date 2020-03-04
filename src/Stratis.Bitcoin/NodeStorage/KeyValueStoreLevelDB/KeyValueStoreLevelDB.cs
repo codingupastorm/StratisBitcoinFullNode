@@ -212,7 +212,7 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
                         iterator.Seek(lastKeyBytes);
 
                         // If it won't be returned, and is current/found, then move to the previous value.
-                        if (!includeLastKey && this.byteArrayComparer.Equals(iterator.Key(), lastKeyBytes))
+                        if (!includeLastKey && iterator.IsValid() && this.byteArrayComparer.Equals(iterator.Key(), lastKeyBytes))
                             iterator.Prev();
                     }
 
@@ -248,7 +248,7 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
                         iterator.Seek(firstKeyBytes);
 
                         // If it won't be returned, and is current/found, then move to the next value.
-                        if (!includeFirstKey && this.byteArrayComparer.Equals(iterator.Key(), firstKeyBytes))
+                        if (!includeFirstKey && iterator.IsValid() && this.byteArrayComparer.Equals(iterator.Key(), firstKeyBytes))
                             iterator.Next();
                     }
 
