@@ -11,7 +11,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
             this.MaxScriptSizeLimit = maxScriptSize;
         }
 
-        private static readonly TxRWSDataTemplate _Instance = new TxRWSDataTemplate(MAX_OP_RWS_RELAY);
+        private static readonly TxRWSDataTemplate _Instance = new TxRWSDataTemplate(MAX_OP_READWRITE_RELAY);
 
         public static TxRWSDataTemplate Instance
         {
@@ -31,7 +31,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
         {
             byte[] bytes = scriptPubKey.ToBytes(true);
 
-            if (bytes.Length == 0 || bytes[0] != (byte)OpcodeType.OP_RWS || bytes.Length > this.MaxScriptSizeLimit)
+            if (bytes.Length == 0 || bytes[0] != (byte)OpcodeType.OP_READWRITE || bytes.Length > this.MaxScriptSizeLimit)
             {
                 needMoreCheck = false;
                 return false;
@@ -65,14 +65,14 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
             return false;
         }
 
-        public const int MAX_OP_RWS_RELAY = 1_024_003; //! bytes (+1 for OP_RWS, +2 for the pushdata opcodes)
+        public const int MAX_OP_READWRITE_RELAY = 1_024_003; //! bytes (+1 for OP_RWS, +2 for the pushdata opcodes)
 
         public Script GenerateScriptPubKey(params byte[][] data)
         {
             if (data == null)
                 throw new ArgumentNullException("data");
             var ops = new Op[data.Length + 1];
-            ops[0] = OpcodeType.OP_RWS;
+            ops[0] = OpcodeType.OP_READWRITE;
             for (int i = 0; i < data.Length; i++)
             {
                 ops[1 + i] = Op.GetPushOp(data[i]);
@@ -87,7 +87,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
         {
             get
             {
-                return TxOutType.TX_RWS_DATA;
+                return TxOutType.TX_READWRITE_DATA;
             }
         }
     }
