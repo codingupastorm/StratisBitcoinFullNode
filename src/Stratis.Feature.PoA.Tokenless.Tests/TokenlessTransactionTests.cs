@@ -45,8 +45,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         [Fact]
         public void CanBuildTransactionWithRWS()
         {
-            TokenlessTransactionFromRWS builder = GetBuilder();
-
+            // Build a ReadWriteSet.
             var rws = new ReadWriteSetBuilder();
 
             rws.AddReadItem(Key1, Version1);
@@ -70,15 +69,18 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             Assert.Equal(Key4, writeSet[1].Key);
             Assert.Equal(Value2, writeSet[1].Value);
 
-            // Check that serialization and deserialization to json is working.
+            // Record the ReadWriteSet.
             ReadWriteSet readWriteSet = rws.GetReadWriteSet();
 
+            // Create a transaction containing the ReadWriteSet.
+            TokenlessTransactionFromRWS builder = GetBuilder();
             Transaction tx = builder.Build(readWriteSet);
 
+            // Recover the ReadWriteSet's json from the transaction.
             var rwsData = TxRWSDataTemplate.Instance.ExtractScriptPubKeyParameters(tx.Outputs[0].ScriptPubKey);
-
             string json = Encoding.UTF8.GetString(rwsData[0]);
 
+            // Compare the original ReadWriteSet's json with the recovered ReadWriteSet's json.
             Assert.Equal(readWriteSet.ToJson(), json);
         }
     }
