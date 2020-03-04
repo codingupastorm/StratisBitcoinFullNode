@@ -7,7 +7,6 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Builder.Feature;
-using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
 
 namespace Stratis.Bitcoin.Features.RPC
@@ -16,19 +15,16 @@ namespace Stratis.Bitcoin.Features.RPC
     {
         private readonly FullNode fullNode;
 
-        private readonly NodeSettings nodeSettings;
-
         private readonly ILogger logger;
 
         private readonly IFullNodeBuilder fullNodeBuilder;
 
         private readonly RpcSettings rpcSettings;
 
-        public RPCFeature(IFullNodeBuilder fullNodeBuilder, FullNode fullNode, NodeSettings nodeSettings, ILoggerFactory loggerFactory, RpcSettings rpcSettings)
+        public RPCFeature(IFullNodeBuilder fullNodeBuilder, FullNode fullNode, ILoggerFactory loggerFactory, RpcSettings rpcSettings)
         {
             this.fullNodeBuilder = fullNodeBuilder;
             this.fullNode = fullNode;
-            this.nodeSettings = nodeSettings;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.rpcSettings = rpcSettings;
         }
@@ -65,7 +61,7 @@ namespace Stratis.Bitcoin.Features.RPC
                 // TODO: The web host wants to create IServiceProvider, so build (but not start)
                 // earlier, if you want to use dependency injection elsewhere
                 this.fullNode.RPCHost = new WebHostBuilder()
-                .UseKestrel()
+                .UseKestrel(o => o.AllowSynchronousIO = true)
                 .ForFullNode(this.fullNode)
                 .UseUrls(this.rpcSettings.GetUrls())
                 .UseIISIntegration()
@@ -107,7 +103,7 @@ namespace Stratis.Bitcoin.Features.RPC
             {
                 this.logger.LogInformation("RPC Server is off based on configuration.");
             }
-            
+
             return Task.CompletedTask;
         }
     }
