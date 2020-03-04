@@ -22,7 +22,6 @@ namespace Stratis.SmartContracts.CLR.Tests
         public ContractTransferProcessorTests()
         {
             this.loggerFactory = new ExtendedLoggerFactory();
-            this.loggerFactory.AddConsoleWithFilters();
             this.network = new SmartContractsRegTest();
             this.transferProcessor = new ContractTransferProcessor(this.loggerFactory, this.network);
         }
@@ -248,7 +247,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             Assert.Equal(txContextMock.Object.TransactionHash, internalTransaction.Inputs[0].PrevOut.Hash);
             Assert.Equal(txContextMock.Object.Nvout, internalTransaction.Inputs[0].PrevOut.N);
             Assert.Equal(new uint256(1), internalTransaction.Inputs[1].PrevOut.Hash);
-            Assert.Equal((uint) 1, internalTransaction.Inputs[1].PrevOut.N);
+            Assert.Equal((uint)1, internalTransaction.Inputs[1].PrevOut.N);
             Assert.True(internalTransaction.Outputs[0].ScriptPubKey.IsSmartContractInternalCall());
             Assert.Equal(200, internalTransaction.Outputs[0].Value);
 
@@ -296,7 +295,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             Assert.Single(internalTransaction.Inputs);
             Assert.Equal(2, internalTransaction.Outputs.Count);
             Assert.Equal(new uint256(1), internalTransaction.Inputs[0].PrevOut.Hash);
-            Assert.Equal((uint) 1, internalTransaction.Inputs[0].PrevOut.N);
+            Assert.Equal((uint)1, internalTransaction.Inputs[0].PrevOut.N);
             string output1Address = PayToPubkeyHashTemplate.Instance.ExtractScriptPubKeyParameters(internalTransaction.Outputs[0].ScriptPubKey).GetAddress(this.network).ToString();
             Assert.Equal(receiverAddress.ToBase58Address(this.network), output1Address);
             Assert.Equal(75, internalTransaction.Outputs[0].Value);
@@ -459,7 +458,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             Assert.Single(refundTransaction.Outputs);
             Assert.Equal(new uint256(123), refundTransaction.Inputs[0].PrevOut.Hash);
             Assert.Equal((uint)1, refundTransaction.Inputs[0].PrevOut.N);
-            Assert.Equal(txContextMock.Object.TxOutValue, (ulong) refundTransaction.Outputs[0].Value);
+            Assert.Equal(txContextMock.Object.TxOutValue, (ulong)refundTransaction.Outputs[0].Value);
             string outputAddress = PayToPubkeyHashTemplate.Instance.ExtractScriptPubKeyParameters(refundTransaction.Outputs[0].ScriptPubKey).GetAddress(this.network).ToString();
 
             Assert.Equal(txContextMock.Object.Sender.ToBase58Address(this.network), outputAddress);

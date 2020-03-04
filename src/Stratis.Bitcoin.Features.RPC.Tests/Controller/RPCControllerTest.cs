@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Text;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.Controllers;
@@ -187,7 +186,7 @@ namespace Stratis.Bitcoin.Features.RPC.Tests.Controller
             this.controller.ControllerContext.HttpContext = new DefaultHttpContext();
             this.controller.ControllerContext.HttpContext.Request.Query = new QueryCollection(values);
 
-            var body = JObject.FromObject(new {methodName = "getblockheader"});
+            var body = JObject.FromObject(new { methodName = "getblockheader" });
             IActionResult controllerResult = this.controller.CallByName(body);
 
             var errorResult = Assert.IsType<ErrorResult>(controllerResult);

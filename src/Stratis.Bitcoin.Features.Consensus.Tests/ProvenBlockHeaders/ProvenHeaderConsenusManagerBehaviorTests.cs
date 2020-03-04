@@ -5,8 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.AsyncWork;
+using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
@@ -42,7 +42,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
             this.chainState = new Mock<IChainState>().Object;
             this.checkpoints = new Mock<ICheckpoints>().Object;
             this.connectionManagerSettings = new ConnectionManagerSettings(NodeSettings.Default(this.Network));
-            this.extendedLoggerFactory = new ExtendedLoggerFactory(); this.extendedLoggerFactory.AddConsoleWithFilters();
+            this.extendedLoggerFactory = new ExtendedLoggerFactory();
             this.initialBlockDownloadState = new Mock<IInitialBlockDownloadState>().Object;
             this.peerBanning = new Mock<IPeerBanning>().Object;
             this.provenBlockHeaderStore = new Mock<IProvenBlockHeaderStore>().Object;

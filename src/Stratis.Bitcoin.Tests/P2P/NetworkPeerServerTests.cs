@@ -28,7 +28,6 @@ namespace Stratis.Bitcoin.Tests.P2P
         {
             this.testOutput = output;
             this.extendedLoggerFactory = new ExtendedLoggerFactory();
-            this.extendedLoggerFactory.AddConsoleWithFilters();
         }
 
         [Theory]

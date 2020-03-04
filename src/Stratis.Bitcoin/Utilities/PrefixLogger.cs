@@ -1,6 +1,5 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Configuration.Logging;
 using TracerAttributes;
 
 namespace Stratis.Bitcoin.Utilities
@@ -18,16 +17,16 @@ namespace Stratis.Bitcoin.Utilities
     public class PrefixLogger : ILogger
     {
         /// <summary>Internal NLog logger instance.</summary>
-        private NLog.Logger logger;
+        private readonly NLog.Logger logger;
 
         /// <summary>Internal console logger instance.</summary>
-        private ILogger consoleLogger;
+        private readonly ILogger consoleLogger;
 
         /// <summary>Prefix to put in front of every message.</summary>
-        private string prefix;
+        private readonly string prefix;
 
         /// <summary>Wrapper class type for the NLog callsite to skip it.</summary>
-        private Type wrapperType;
+        private readonly Type wrapperType;
 
         /// <summary>
         /// Creates a logger instance with given prefix.
@@ -38,9 +37,9 @@ namespace Stratis.Bitcoin.Utilities
         public PrefixLogger(ILoggerFactory loggerFactory, string categoryName, string prefix = null)
         {
             this.logger = NLog.LogManager.GetLogger(categoryName);
-            this.consoleLogger = loggerFactory.GetConsoleLoggerProvider().CreateLogger(categoryName);
+            this.consoleLogger = loggerFactory.CreateLogger(categoryName);
 
-            this.prefix = prefix != null ? prefix : string.Empty;
+            this.prefix = prefix ?? string.Empty;
             this.wrapperType = typeof(PrefixLogger);
         }
 
