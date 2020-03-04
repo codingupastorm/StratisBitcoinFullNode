@@ -329,17 +329,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
                 configParameters.SetDefaultValueIfUndefined("rpcpassword", this.creds.Password);
             }
 
-            // The debug log is disabled in stratisX when printtoconsole is enabled.
-            // While further integration tests are being developed it makes sense
-            // to always have the debug logs available, as there is minimal other
-            // insight into the stratisd process while it is running.
-            if (this.runner is StratisXRunner)
-            {
-                configParameters.SetDefaultValueIfUndefined("printtoconsole", "0");
-                configParameters.SetDefaultValueIfUndefined("debug", "1");
-            }
-            else
-                configParameters.SetDefaultValueIfUndefined("printtoconsole", "1");
+            configParameters.SetDefaultValueIfUndefined("printtoconsole", "1");
 
             configParameters.SetDefaultValueIfUndefined("keypool", "10");
             configParameters.SetDefaultValueIfUndefined("agentprefix", "node" + this.ProtocolPort);
