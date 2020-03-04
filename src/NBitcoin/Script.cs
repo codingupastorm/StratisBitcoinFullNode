@@ -308,6 +308,7 @@ namespace NBitcoin
         OP_CHECKLOCKTIMEVERIFY = 0xb1,
         OP_CHECKSEQUENCEVERIFY = 0xb2,
         OP_CHECKCOLDSTAKEVERIFY = 0xb9,
+        OP_RWS = 0xb8,
 
         // expansion
         OP_NOP1 = 0xb0,
