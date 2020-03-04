@@ -14,7 +14,7 @@ namespace Stratis.SmartContracts.Core.ReadWrite
                 StorageValue storageValue = stateRepository.GetStorageValue(read.ContractAddress, read.Key);
 
                 // Does the version match?
-                if (storageValue.Version != read.Version)
+                if (storageValue == null || storageValue.Version != read.Version)
                     return false;
             }
 

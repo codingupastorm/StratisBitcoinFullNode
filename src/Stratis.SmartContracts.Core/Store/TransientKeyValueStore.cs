@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
@@ -30,6 +32,7 @@ namespace Stratis.SmartContracts.Core.Store
     public class TransientStore
     {
         public const string Table = "transient";
+        public byte[] MinBlockHeightKey = Encoding.ASCII.GetBytes("MinBlockHeight");
 
         private readonly ITransientKeyValueStore repository;
 
@@ -41,11 +44,33 @@ namespace Stratis.SmartContracts.Core.Store
         public void Persist(uint256 txId, uint blockHeight, TransientStorePrivateData data)
         {
             var key = new TransientStoreKey(txId.ToBytes(), Guid.NewGuid(), blockHeight);
+            var compositePurgeIndexKey = new CompositePurgeIndexKey(blockHeight);
 
             using (IKeyValueStoreTransaction tx = this.repository.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, Table))
             {
+                var hasValue = tx.Select(Table, MinBlockHeightKey, out uint minBlockHeight);
+
+                // Update the min block height if necessary.
+                if (!hasValue || minBlockHeight > blockHeight)
+                {
+                    tx.Insert(Table, MinBlockHeightKey, blockHeight);
+                }
+
                 tx.Insert(Table, key.ToBytes(), data.ToBytes());
+                tx.Insert(Table, compositePurgeIndexKey.ToBytes(), new byte[] {});
                 tx.Commit();
+            }
+        }
+
+        /// <summary>
+        /// Returns the lowest block height for the data remaining in the transient store.
+        /// </summary>
+        /// <returns></returns>
+        public uint GetMinBlockHeight()
+        {
+            using (IKeyValueStoreTransaction tx = this.repository.CreateTransaction(KeyValueStoreTransactionMode.Read, Table))
+            {
+                return !tx.Select(Table, this.MinBlockHeightKey, out uint minBlockHeight) ? 0 : minBlockHeight;
             }
         }
     }
@@ -77,6 +102,30 @@ namespace Stratis.SmartContracts.Core.Store
             Array.Copy(this.TxId, result, this.TxId.Length);
             Array.Copy(guid, 0, result, this.TxId.Length, guid.Length);
             Array.Copy(BitConverter.GetBytes(this.BlockHeight), 0, result, this.TxId.Length + guid.Length, sizeof(uint));
+
+            return result;
+        }
+    }
+    public struct CompositePurgeIndexKey
+    {
+        public byte[] PurgeHeightPrefix;
+        public uint BlockHeight;
+
+        public CompositePurgeIndexKey(uint blockHeight)
+        {
+            this.PurgeHeightPrefix = BitConverter.GetBytes('H').Take(1).ToArray();
+            this.BlockHeight = blockHeight;
+        }
+
+        public byte[] ToBytes()
+        {
+            var blockHeight = BitConverter.GetBytes(this.BlockHeight);
+            var separator = new byte[] {0x00};
+
+            var result = new byte[this.PurgeHeightPrefix.Length + blockHeight.Length + separator.Length];
+            Array.Copy(this.PurgeHeightPrefix, result, this.PurgeHeightPrefix.Length);
+            Array.Copy(separator, 0, result, this.PurgeHeightPrefix.Length, separator.Length);
+            Array.Copy(blockHeight, 0, result, this.PurgeHeightPrefix.Length + separator.Length, blockHeight.Length);
 
             return result;
         }

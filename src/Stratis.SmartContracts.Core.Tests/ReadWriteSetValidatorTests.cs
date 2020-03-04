@@ -58,5 +58,26 @@ namespace Stratis.SmartContracts.Core.Tests
             var validator = new ReadWriteSetValidator();
             Assert.False(validator.IsReadWriteSetValid(stateRepoMock.Object, readWriteSet));
         }
+
+        [Fact]
+        public void ANullReturnsFalse()
+        {
+            // Set up our current state to have one version 2. Imagine this was updated in a block before this RWS came in.
+            var stateRepoMock = new Mock<IStateRepository>();
+            stateRepoMock.Setup(x => x.GetStorageValue(TestAddress, Key1Bytes))
+                .Returns(new StorageValue(Key1Bytes, Version1));
+            stateRepoMock.Setup(x => x.GetStorageValue(TestAddress, Key2Bytes))
+                .Returns((StorageValue)null);
+
+            // Add some reads which use version 1.
+            var readWriteSetBuilder = new ReadWriteSetBuilder();
+            readWriteSetBuilder.AddReadItem(new ReadWriteSetKey(TestAddress, Key1Bytes), Version1);
+            readWriteSetBuilder.AddReadItem(new ReadWriteSetKey(TestAddress, Key2Bytes), Version1);
+
+            ReadWriteSet readWriteSet = readWriteSetBuilder.GetReadWriteSet();
+
+            var validator = new ReadWriteSetValidator();
+            Assert.False(validator.IsReadWriteSetValid(stateRepoMock.Object, readWriteSet));
+        }
     }
 }
