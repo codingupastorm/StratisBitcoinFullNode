@@ -378,7 +378,7 @@ namespace Stratis.Bitcoin.Features.RPC
             catch (NotImplementedException)
             {
             }
-  
+
             if (address == null)
             {
                 setResult(false);
