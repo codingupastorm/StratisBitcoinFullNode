@@ -26,7 +26,7 @@ namespace Stratis.SmartContracts.CLR
         void AddInternalTransfer(TransferInfo transferInfo);
         ulong GetBalance(uint160 address);
         uint160 GenerateAddress(IAddressGenerator addressGenerator);
-        ISmartContractState CreateSmartContractState(IState state, ReadWriteSet readWriteSet, IGasMeter gasMeter, uint160 address, BaseMessage message, IStateRepository repository);
+        ISmartContractState CreateSmartContractState(IState state, ReadWriteSetBuilder readWriteSet, IGasMeter gasMeter, uint160 address, BaseMessage message, IStateRepository repository);
         void AddInitialTransfer(TransferInfo initialTransfer);
     }
 }

@@ -192,7 +192,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
                 result.ErrorMessage,
                 deserializedCallData.Value.GasPrice,
                 transactionContext.TxOutValue,
-                result.ReadWriteSet.ToJsonString(),
+                result.ReadWriteSet.GetReadWriteSet().ToJson(),
                 deserializedCallData.Value.IsCreateContract ? null : deserializedCallData.Value.MethodName,
                 transactionContext.BlockHeight)
             {

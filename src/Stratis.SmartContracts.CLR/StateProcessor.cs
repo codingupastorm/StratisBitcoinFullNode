@@ -212,7 +212,7 @@ namespace Stratis.SmartContracts.CLR
                 // No contract at this address, create a regular P2PKH xfer
                 state.AddInternalTransfer(new TransferInfo(message.From, message.To, message.Amount));
 
-                return StateTransitionResult.Ok(gasMeter.GasConsumed, message.To, new ReadWriteSet());
+                return StateTransitionResult.Ok(gasMeter.GasConsumed, message.To, new ReadWriteSetBuilder());
             }
 
             var observer = new Observer(gasMeter, new MemoryMeter(ReflectionVirtualMachine.MemoryUnitLimit));

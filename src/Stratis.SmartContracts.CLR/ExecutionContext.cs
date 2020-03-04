@@ -9,13 +9,13 @@ namespace Stratis.SmartContracts.CLR
         public ExecutionContext(Observer observer)
         {
             this.Observer = observer;
-            this.ReadWriteSet = new ReadWriteSet();
+            this.ReadWriteSet = new ReadWriteSetBuilder();
         }
 
         public Observer Observer { get; }
 
         public IGasMeter GasMeter => this.Observer.GasMeter;
 
-        public ReadWriteSet ReadWriteSet { get; }
+        public ReadWriteSetBuilder ReadWriteSet { get; }
     }
 }
