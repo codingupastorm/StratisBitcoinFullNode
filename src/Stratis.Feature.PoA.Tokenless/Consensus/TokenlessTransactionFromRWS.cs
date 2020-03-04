@@ -5,7 +5,13 @@ using Stratis.SmartContracts.Core.ReadWrite;
 
 namespace Stratis.Feature.PoA.Tokenless.Consensus
 {
-    public class TokenlessTransactionFromRWS
+    public interface ITokenlessTransactionFromRWS 
+    {
+        Transaction Build(ReadWriteSet readWriteSet);
+        ReadWriteSet GetReadWriteSet(Transaction tx);
+    }
+
+    public class TokenlessTransactionFromRWS : ITokenlessTransactionFromRWS
     {
         private readonly Network network;
         private readonly ITokenlessWalletManager tokenlessWalletManager;
@@ -23,7 +29,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
             string json = readWriteSet.ToJson();
             byte[] opRWSData = Encoding.UTF8.GetBytes(json);
             Transaction transaction = this.network.CreateTransaction();
-            Script outputScript = TxRWSDataTemplate.Instance.GenerateScriptPubKey(opRWSData);
+            Script outputScript = TxReadWriteDataTemplate.Instance.GenerateScriptPubKey(opRWSData);
             transaction.Outputs.Add(new TxOut(Money.Zero, outputScript));
 
             Key key = this.tokenlessWalletManager.LoadTransactionSigningKey();
@@ -33,12 +39,12 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
             return transaction;
         }
 
-        public ReadWriteSet Parse(Transaction tx)
+        public ReadWriteSet GetReadWriteSet(Transaction tx)
         {
             if (tx.Outputs.Count < 1)
                 return null;
 
-            var rwsData = TxRWSDataTemplate.Instance.ExtractScriptPubKeyParameters(tx.Outputs[0].ScriptPubKey);
+            var rwsData = TxReadWriteDataTemplate.Instance.ExtractScriptPubKeyParameters(tx.Outputs[0].ScriptPubKey);
             if (rwsData == null || rwsData.Length != 1)
                 return null;
 

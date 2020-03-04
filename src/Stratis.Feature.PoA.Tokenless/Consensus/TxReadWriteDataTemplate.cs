@@ -4,16 +4,16 @@ using NBitcoin;
 
 namespace Stratis.Feature.PoA.Tokenless.Consensus
 {
-    public class TxRWSDataTemplate : ScriptTemplate
+    public class TxReadWriteDataTemplate : ScriptTemplate
     {
-        public TxRWSDataTemplate(int maxScriptSize)
+        public TxReadWriteDataTemplate(int maxScriptSize)
         {
             this.MaxScriptSizeLimit = maxScriptSize;
         }
 
-        private static readonly TxRWSDataTemplate _Instance = new TxRWSDataTemplate(MAX_OP_READWRITE_RELAY);
+        private static readonly TxReadWriteDataTemplate _Instance = new TxReadWriteDataTemplate(MAX_OP_READWRITE_RELAY);
 
-        public static TxRWSDataTemplate Instance
+        public static TxReadWriteDataTemplate Instance
         {
             get
             {

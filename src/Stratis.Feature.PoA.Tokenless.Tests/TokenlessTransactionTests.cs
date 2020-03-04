@@ -77,7 +77,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             Transaction tx = builder.Build(readWriteSet);
 
             // Recover the ReadWriteSet from the transaction.
-            ReadWriteSet readWriteSet2 = builder.Parse(tx);
+            ReadWriteSet readWriteSet2 = builder.GetReadWriteSet(tx);
             Assert.NotNull(readWriteSet2);
 
             // Compare the original ReadWriteSet's json with the recovered ReadWriteSet's json.
