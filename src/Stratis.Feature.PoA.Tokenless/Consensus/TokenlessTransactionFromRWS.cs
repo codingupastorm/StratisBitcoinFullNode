@@ -7,7 +7,6 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
 {
     public class TokenlessTransactionFromRWS
     {
-        private const int maxScriptSizeLimit = 1_024_000;
         private readonly Network network;
         private readonly ITokenlessWalletManager tokenlessWalletManager;
         private readonly ITokenlessSigner tokenlessSigner;
