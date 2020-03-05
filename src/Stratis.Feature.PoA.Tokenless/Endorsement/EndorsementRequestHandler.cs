@@ -11,7 +11,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
     public interface IEndorsementRequestHandler
     {
-        bool ExecuteAndSignProposal(EndorsementRequest request);
+        IContractExecutionResult ExecuteAndSignProposal(EndorsementRequest request);
     }
 
     public class EndorsementRequestHandler : IEndorsementRequestHandler
@@ -45,12 +45,12 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
-        public bool ExecuteAndSignProposal(EndorsementRequest request)
+        public IContractExecutionResult ExecuteAndSignProposal(EndorsementRequest request)
         {
             if (!this.validator.ValidateRequest(request))
             {
                 this.logger.LogDebug("Request for endorsement was invalid.");
-                return false;
+                return null;
             }
 
             ChainedHeader tip = this.consensus.Tip;
@@ -67,13 +67,13 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             if (result.Revert)
             {
                 this.logger.LogDebug("Request for endorsement resulted in failed contract execution.");
-                return false;
+                return null;
             }
 
             // TODO: We definitely need to check some properties about the read-write set?
 
             this.signer.Sign(request);
-            return true;
+            return result;
         }
     }
 }
