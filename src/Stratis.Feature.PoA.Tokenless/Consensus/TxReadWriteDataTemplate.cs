@@ -37,14 +37,14 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
                 return false;
             }
 
-            needMoreCheck = true;
+            needMoreCheck = false;
 
             return true;
         }
 
         protected override bool CheckScriptPubKeyCore(Script scriptPubKey, Op[] scriptPubKeyOps)
         {
-            return scriptPubKeyOps.Skip(1).All(o => o.PushData != null && !o.IsInvalid);
+            return true;
         }
 
         public byte[][] ExtractScriptPubKeyParameters(Script scriptPubKey)
@@ -53,11 +53,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
             if (!FastCheckScriptPubKey(scriptPubKey, out needMoreCheck))
                 return null;
 
-            Op[] ops = scriptPubKey.ToOps().ToArray();
-            if (!CheckScriptPubKeyCore(scriptPubKey, ops))
-                return null;
-
-            return ops.Skip(1).Select(o => o.PushData).ToArray();
+            return new[] { scriptPubKey.ToBytes().Skip(1).ToArray() };
         }
 
         protected override bool CheckScriptSigCore(Network network, Script scriptSig, Op[] scriptSigOps, Script scriptPubKey, Op[] scriptPubKeyOps)
@@ -65,21 +61,18 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
             return false;
         }
 
-        public const int MAX_OP_READWRITE_RELAY = 1_024_003; //! bytes (+1 for OP_RWS, +2 for the pushdata opcodes)
+        public const int MAX_OP_READWRITE_RELAY = 1_024_001; // +1 for OP_READWRITE.
 
         public Script GenerateScriptPubKey(params byte[][] data)
         {
-            if (data == null)
+            if (data == null || data.Length != 1)
                 throw new ArgumentNullException("data");
-            var ops = new Op[data.Length + 1];
-            ops[0] = OpcodeType.OP_READWRITE;
-            for (int i = 0; i < data.Length; i++)
-            {
-                ops[1 + i] = Op.GetPushOp(data[i]);
-            }
-            var script = new Script(ops);
-            if (script.ToBytes(true).Length > this.MaxScriptSizeLimit)
-                throw new ArgumentOutOfRangeException("data", "Data in OP_RWS should have a maximum size of " + this.MaxScriptSizeLimit + " bytes");
+
+            byte[] scriptBytes = new[] { (byte)OpcodeType.OP_READWRITE }.Concat(data[0]).ToArray();
+            var script = new Script(scriptBytes);
+            if (scriptBytes.Length > this.MaxScriptSizeLimit)
+                throw new ArgumentOutOfRangeException("data", "Data in OP_READWRITE should have a maximum size of " + this.MaxScriptSizeLimit + " bytes");
+
             return script;
         }
 
