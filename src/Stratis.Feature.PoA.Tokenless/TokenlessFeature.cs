@@ -19,6 +19,7 @@ using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Core;
+using Stratis.Feature.PoA.Tokenless.Endorsement;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -30,6 +31,7 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
         private readonly VotingManager votingManager;
         private readonly IFederationManager federationManager;
+        private readonly IEndorsementRequestHandler requestHandler;
         private readonly IPoAMiner miner;
         private readonly IRevocationChecker revocationChecker;
         private readonly NodeSettings nodeSettings;
@@ -44,6 +46,7 @@ namespace Stratis.Feature.PoA.Tokenless
             VotingManager votingManager,
             ICoreComponent coreComponent,
             IFederationManager federationManager,
+            IEndorsementRequestHandler requestHandler,
             IPoAMiner miner,
             PayloadProvider payloadProvider,
             IRevocationChecker revocationChecker,
@@ -58,6 +61,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.votingManager = votingManager;
             this.coreComponent = coreComponent;
             this.federationManager = federationManager;
+            this.requestHandler = requestHandler;
             this.miner = miner;
             this.revocationChecker = revocationChecker;
             this.nodeSettings = nodeSettings;
@@ -70,6 +74,7 @@ namespace Stratis.Feature.PoA.Tokenless
             storeSettings.TxIndex = true;
 
             payloadProvider.DiscoverPayloads(typeof(PoAFeature).Assembly);
+            payloadProvider.DiscoverPayloads(this.GetType().Assembly);
         }
 
         /// <inheritdoc />
@@ -80,6 +85,8 @@ namespace Stratis.Feature.PoA.Tokenless
             this.ReplaceConsensusManagerBehavior(connectionParameters);
 
             this.ReplaceBlockStoreBehavior(connectionParameters);
+
+            connectionParameters.TemplateBehaviors.Add(new EndorsementRequestBehavior(this.requestHandler));
 
             this.federationManager.Initialize();
 

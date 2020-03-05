@@ -3,7 +3,7 @@ using Stratis.Bitcoin.P2P.Protocol.Payloads;
 
 namespace Stratis.Feature.PoA.Tokenless.Payloads
 {
-    [Payload("endorsement-request")]
+    [Payload("endorseplz")]
     public class EndorsementRequestPayload : Payload
     {
         private Transaction transaction;
