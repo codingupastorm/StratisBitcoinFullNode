@@ -15,8 +15,6 @@ using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
-using Stratis.Bitcoin.IntegrationTests.Common;
-using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
 using Xunit;
@@ -192,41 +190,6 @@ namespace Stratis.Bitcoin.IntegrationTests
                 // coinsE[0] should now not exist in CoinView anymore.
                 Assert.False(tester.Exists(coinsD[0]));
                 Assert.False(tester.Exists(coinsE[0]));
-            }
-        }
-
-        [Fact]
-        public void CanHandleReorgs()
-        {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                CoreNode stratisNode = builder.CreateStratisPowNode(this.regTest, "cv-1-stratisNode").Start();
-                CoreNode coreNode1 = builder.CreateBitcoinCoreNode().Start();
-                CoreNode coreNode2 = builder.CreateBitcoinCoreNode().Start();
-
-                //Core1 discovers 10 blocks, sends to stratis
-                coreNode1.FindBlock(10).Last();
-                TestHelper.ConnectAndSync(stratisNode, coreNode1);
-                TestHelper.Disconnect(stratisNode, coreNode1);
-
-                //Core2 discovers 20 blocks, sends to stratis
-                coreNode2.FindBlock(20).Last();
-                TestHelper.ConnectAndSync(stratisNode, coreNode2);
-                TestHelper.Disconnect(stratisNode, coreNode2);
-                ((CachedCoinView)stratisNode.FullNode.CoinView()).Flush();
-
-                //Core1 discovers 30 blocks, sends to stratis
-                coreNode1.FindBlock(30).Last();
-                TestHelper.ConnectAndSync(stratisNode, coreNode1);
-                TestHelper.Disconnect(stratisNode, coreNode1);
-
-                //Core2 discovers 50 blocks, sends to stratis
-                coreNode2.FindBlock(50).Last();
-                TestHelper.ConnectAndSync(stratisNode, coreNode2);
-                TestHelper.Disconnect(stratisNode, coreNode2);
-                ((CachedCoinView)stratisNode.FullNode.CoinView()).Flush();
-
-                TestBase.WaitLoop(() => TestHelper.AreNodesSynced(stratisNode, coreNode2));
             }
         }
 

@@ -35,7 +35,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
 
         public TokenlessBlockDefinition(
             IBlockBufferGenerator blockBufferGenerator,
-            ICoinView coinView,
             IConsensusManager consensusManager,
             IDateTimeProvider dateTimeProvider,
             IContractExecutorFactory executorFactory,

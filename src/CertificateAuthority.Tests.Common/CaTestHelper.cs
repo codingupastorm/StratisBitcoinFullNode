@@ -30,7 +30,7 @@ namespace CertificateAuthority.Tests.Common
             return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
         }
 
-        public static CredentialsModel CreateAccount(IWebHost server, AccountAccessFlags access = AccountAccessFlags.BasicAccess, CredentialsModel creatorCredentialsModel = null, List<string> permissions = null)
+        public static CredentialsModel CreateAccount(IWebHost server, AccountAccessFlags access = AccountAccessFlags.BasicAccess, bool approve = true, List<string> permissions = null)
         {
             // Default to all permissions unless otherwise restricted.
             List<string> accountPermissions = permissions ?? CaCertificatesManager.ValidPermissions;
@@ -53,12 +53,15 @@ namespace CertificateAuthority.Tests.Common
                 "dummyCountry",
                 accountPermissions)));
 
-            accountsController.ApproveAccount(new CredentialsModelWithTargetId()
+            if (approve)
             {
-                TargetAccountId = id,
-                AccountId = adminCredentials.AccountId,
-                Password = adminCredentials.Password
-            });
+                accountsController.ApproveAccount(new CredentialsModelWithTargetId()
+                {
+                    TargetAccountId = id,
+                    AccountId = adminCredentials.AccountId,
+                    Password = adminCredentials.Password
+                });
+            }
 
             return new CredentialsModel(id, password);
         }
