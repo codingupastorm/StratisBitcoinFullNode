@@ -430,7 +430,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
             featuresNamespaces.Should().Contain("Stratis.Bitcoin.Features.Consensus.PowConsensusFeature");
             featuresNamespaces.Should().Contain("Stratis.Bitcoin.Features.MemoryPool.MempoolFeature");
             featuresNamespaces.Should().Contain("Stratis.Bitcoin.Features.Miner.MiningFeature");
-            featuresNamespaces.Should().Contain("Stratis.Bitcoin.Features.RPC.RPCFeature");
             featuresNamespaces.Should().Contain("Stratis.Bitcoin.Features.Wallet.WalletFeature");
 
             statusResponse.FeaturesData.All(f => f.State == "Initialized").Should().BeTrue();
