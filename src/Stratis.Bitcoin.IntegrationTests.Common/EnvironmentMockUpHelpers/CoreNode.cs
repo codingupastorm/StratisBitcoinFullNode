@@ -14,7 +14,6 @@ using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Protocol;
 using Stratis.Bitcoin.AsyncWork;
-using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
@@ -247,17 +246,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         public INetworkPeer CreateNetworkPeerClient()
         {
-            ConnectionManagerSettings connectionManagerSettings = null;
-
-            if (this.runner is BitcoinCoreRunner)
-            {
-                var nodeSettings = new NodeSettings(this.runner.Network, args: new string[] { "-conf=bitcoin.conf", "-datadir=" + this.runner.DataFolder });
-                connectionManagerSettings = new ConnectionManagerSettings(nodeSettings);
-            }
-            else
-            {
-                connectionManagerSettings = this.runner.FullNode.ConnectionManager.ConnectionSettings;
-            }
+            ConnectionManagerSettings connectionManagerSettings = this.runner.FullNode.ConnectionManager.ConnectionSettings;
 
             var selfEndPointTracker = new SelfEndpointTracker(this.loggerFactory, connectionManagerSettings);
 
@@ -314,10 +303,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
                 this.State = CoreNodeState.Starting;
             }
 
-            if ((this.runner is BitcoinCoreRunner) || (this.runner is StratisXRunner))
-                WaitForExternalNodeStartup();
-            else
-                StartStratisRunner();
+            StartStratisRunner();
 
             this.State = CoreNodeState.Running;
 
@@ -343,17 +329,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
                 configParameters.SetDefaultValueIfUndefined("rpcpassword", this.creds.Password);
             }
 
-            // The debug log is disabled in stratisX when printtoconsole is enabled.
-            // While further integration tests are being developed it makes sense
-            // to always have the debug logs available, as there is minimal other
-            // insight into the stratisd process while it is running.
-            if (this.runner is StratisXRunner)
-            {
-                configParameters.SetDefaultValueIfUndefined("printtoconsole", "0");
-                configParameters.SetDefaultValueIfUndefined("debug", "1");
-            }
-            else
-                configParameters.SetDefaultValueIfUndefined("printtoconsole", "1");
+            configParameters.SetDefaultValueIfUndefined("printtoconsole", "1");
 
             configParameters.SetDefaultValueIfUndefined("keypool", "10");
             configParameters.SetDefaultValueIfUndefined("agentprefix", "node" + this.ProtocolPort);
@@ -366,30 +342,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         {
             this.Kill();
             this.Start();
-        }
-
-        /// <summary>
-        /// Used with precompiled bitcoind and stratisd node
-        /// executables, not SBFN runners.
-        /// </summary>
-        private void WaitForExternalNodeStartup()
-        {
-            TimeSpan duration = TimeSpan.FromMinutes(5);
-            var cancellationToken = new CancellationTokenSource(duration).Token;
-            TestBase.WaitLoop(() =>
-            {
-                try
-                {
-                    CreateRPCClient().GetBlockHashAsync(0).GetAwaiter().GetResult();
-                    this.State = CoreNodeState.Running;
-                    return true;
-                }
-                catch
-                {
-                    return false;
-                }
-            }, cancellationToken: cancellationToken,
-                failureReason: $"Failed to invoke GetBlockHash on node instance after {duration}");
         }
 
         private void StartStratisRunner()
@@ -468,15 +420,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             }
         }
 
-        public void SelectMempoolTransactions()
-        {
-            RPCClient rpc = this.CreateRPCClient();
-            uint256[] txs = rpc.GetRawMempool();
-            Task<Transaction>[] tasks = txs.Select(t => rpc.GetRawTransactionAsync(t)).ToArray();
-            Task.WaitAll(tasks);
-            this.transactions.AddRange(tasks.Select(t => t.Result).ToArray());
-        }
-
         public void Kill()
         {
             lock (this.lockObject)
@@ -498,57 +441,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         public void SetMinerSecret(BitcoinSecret secret)
         {
             this.MinerSecret = secret;
-        }
-
-        public async Task<Block[]> GenerateAsync(int blockCount, bool includeUnbroadcasted = true, bool broadcast = true)
-        {
-            RPCClient rpc = this.CreateRPCClient();
-            BitcoinSecret dest = this.GetFirstSecret(rpc);
-            uint256 bestBlock = rpc.GetBestBlockHash();
-            var blocks = new List<Block>();
-            DateTimeOffset now = this.MockTime == null ? DateTimeOffset.UtcNow : this.MockTime.Value;
-
-            using (INetworkPeer peer = this.CreateNetworkPeerClient())
-            {
-                await peer.VersionHandshakeAsync().ConfigureAwait(false);
-
-                var chain = bestBlock == this.runner.Network.GenesisHash ? new ChainIndexer(this.runner.Network) : this.GetChain(peer);
-
-                for (int i = 0; i < blockCount; i++)
-                {
-                    uint nonce = 0;
-
-                    var block = this.runner.Network.Consensus.ConsensusFactory.CreateBlock();
-                    block.Header.HashPrevBlock = chain.Tip.HashBlock;
-                    block.Header.Bits = block.Header.GetWorkRequired(rpc.Network, chain.Tip);
-                    block.Header.UpdateTime(now, rpc.Network, chain.Tip);
-
-                    var coinbase = this.runner.Network.CreateTransaction();
-                    coinbase.AddInput(TxIn.CreateCoinbase(chain.Height + 1));
-                    coinbase.AddOutput(new TxOut(rpc.Network.GetReward(chain.Height + 1), dest.GetAddress()));
-                    block.AddTransaction(coinbase);
-
-                    if (includeUnbroadcasted)
-                    {
-                        this.transactions = TestHelper.Reorder(this.transactions);
-                        block.Transactions.AddRange(this.transactions);
-                        this.transactions.Clear();
-                    }
-
-                    block.UpdateMerkleRoot();
-
-                    while (!block.CheckProofOfWork())
-                        block.Header.Nonce = ++nonce;
-
-                    blocks.Add(block);
-                    chain.SetTip(block.Header);
-                }
-
-                if (broadcast)
-                    await this.BroadcastBlocksAsync(blocks.ToArray(), peer);
-            }
-
-            return blocks.ToArray();
         }
 
         /// <summary>
@@ -709,25 +601,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
                 await peer.SendMessageAsync(new BlockPayload(block));
             }
             await this.PingPongAsync(peer);
-        }
-
-        public Block[] FindBlock(int blockCount = 1, bool includeMempool = true)
-        {
-            this.SelectMempoolTransactions();
-            return this.GenerateAsync(blockCount, includeMempool).GetAwaiter().GetResult();
-        }
-
-        private BitcoinSecret GetFirstSecret(RPCClient rpc)
-        {
-            if (this.MinerSecret != null)
-                return this.MinerSecret;
-
-            BitcoinSecret dest = rpc.ListSecrets().FirstOrDefault();
-            if (dest != null) return dest;
-
-            BitcoinAddress address = rpc.GetNewAddress();
-            dest = rpc.DumpPrivKey(address);
-            return dest;
         }
 
         public ChainedHeader GetTip()

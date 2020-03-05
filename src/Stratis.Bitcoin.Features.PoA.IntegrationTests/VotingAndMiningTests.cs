@@ -351,11 +351,11 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
 
                 nodeA.FullNode.NodeController<WalletController>().SendTransaction(new SendTransactionRequest(trx.ToHex()));
 
-                TestBase.WaitLoop(() => nodeA.CreateRPCClient().GetRawMempool().Length == 1 && nodeB.CreateRPCClient().GetRawMempool().Length == 1);
+                TestBase.WaitLoop(() => nodeA.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 1 && nodeB.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 1);
 
                 await nodeB.MineBlocksAsync((int)toMineCount).ConfigureAwait(false);
 
-                TestBase.WaitLoop(() => nodeA.CreateRPCClient().GetRawMempool().Length == 0 && nodeB.CreateRPCClient().GetRawMempool().Length == 0);
+                TestBase.WaitLoop(() => nodeA.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 0 && nodeB.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 0);
 
                 IWalletManager walletManager = nodeB.FullNode.NodeService<IWalletManager>();
 
