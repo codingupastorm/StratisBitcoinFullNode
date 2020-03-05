@@ -65,8 +65,11 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
 
         public Script GenerateScriptPubKey(params byte[][] data)
         {
-            if (data == null || data.Length != 1)
+            if (data == null)
                 throw new ArgumentNullException("data");
+
+            if (data.Length != 1)
+                throw new InvalidOperationException("data");
 
             byte[] scriptBytes = new[] { (byte)OpcodeType.OP_READWRITE }.Concat(data[0]).ToArray();
             var script = new Script(scriptBytes);
