@@ -13,7 +13,6 @@ using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
-using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities;
@@ -37,8 +36,6 @@ namespace Stratis.Bitcoin.Features.Wallet
 
         private readonly IWalletManager walletManager;
 
-        private readonly Signals.ISignals signals;
-
         private readonly IConnectionManager connectionManager;
 
         private readonly IAddressBookManager addressBookManager;
@@ -60,7 +57,6 @@ namespace Stratis.Bitcoin.Features.Wallet
             IWalletSyncManager walletSyncManager,
             IWalletManager walletManager,
             IAddressBookManager addressBookManager,
-            Signals.ISignals signals,
             IConnectionManager connectionManager,
             BroadcasterBehavior broadcasterBehavior,
             INodeStats nodeStats,
@@ -69,7 +65,6 @@ namespace Stratis.Bitcoin.Features.Wallet
             this.walletSyncManager = walletSyncManager;
             this.walletManager = walletManager;
             this.addressBookManager = addressBookManager;
-            this.signals = signals;
             this.connectionManager = connectionManager;
             this.broadcasterBehavior = broadcasterBehavior;
             this.walletRepository = walletRepository;
@@ -165,7 +160,6 @@ namespace Stratis.Bitcoin.Features.Wallet
                 .AddFeature<WalletFeature>()
                 .DependOn<MempoolFeature>()
                 .DependOn<BlockStoreFeature>()
-                .DependOn<RPCFeature>()
                 .FeatureServices(services =>
                     {
                         services.AddSingleton<IWalletSyncManager, WalletSyncManager>();
