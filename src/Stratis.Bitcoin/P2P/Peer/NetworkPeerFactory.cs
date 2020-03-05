@@ -109,7 +109,7 @@ namespace Stratis.Bitcoin.P2P.Peer
         /// <summary>Callback that is invoked just before a message is to be sent to a peer, or <c>null</c> when nothing needs to be called.</summary>
         private Action<IPEndPoint, Payload> onSendingMessage;
 
-        private IPeerAddressManager peerAddressManager;
+        private readonly IPeerAddressManager peerAddressManager;
 
         public NetworkPeerFactory(Network network,
             IDateTimeProvider dateTimeProvider,

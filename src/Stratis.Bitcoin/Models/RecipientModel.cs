@@ -10,7 +10,7 @@ namespace Stratis.Bitcoin.Models
         /// The destination address.
         /// </summary>
         [Required(ErrorMessage = "A destination address is required.")]
-        [IsBitcoinAddress()]
+        [IsBitcoinAddress]
         public string DestinationAddress { get; set; }
 
         /// <summary>
