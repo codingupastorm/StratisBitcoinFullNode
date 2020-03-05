@@ -82,14 +82,14 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 ContractTransaction = transaction
             };
 
-            Assert.True(endorsementRequestHandler.ExecuteAndSignProposal(request));
+            Assert.NotNull(endorsementRequestHandler.ExecuteAndSignProposal(request));
 
             executorMock.Verify(x=>x.Execute(It.Is<ContractTransactionContext>(y =>
                 y.TxIndex == 0 && y.BlockHeight == height && y.CoinbaseAddress == uint160.Zero && y.Sender == sender && y.TransactionHash == transaction.GetHash())));
         }
 
         [Fact]
-        public void ValidationFailsReturnsFalse()
+        public void ValidationFailsReturnsNull()
         {
             var validatorMock = new Mock<IEndorsementRequestValidator>();
             validatorMock.Setup(x => x.ValidateRequest(It.IsAny<EndorsementRequest>()))
@@ -128,7 +128,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 ContractTransaction = transaction
             };
 
-            Assert.False(endorsementRequestHandler.ExecuteAndSignProposal(request));
+            Assert.Null(endorsementRequestHandler.ExecuteAndSignProposal(request));
         }
     }
 }
