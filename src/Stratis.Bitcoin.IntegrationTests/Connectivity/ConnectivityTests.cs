@@ -7,7 +7,6 @@ using FluentAssertions;
 using NBitcoin;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Networks;
@@ -154,9 +153,8 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
 
                 node1 = BanNode(node1, node2);
 
-                // Here we have to use the RPC client directly so that we can get the exception.
-                Action connectAction = () => node1.CreateRPCClient().AddNode(node2.Endpoint, true);
-                connectAction.Should().Throw<RPCException>().WithMessage("Internal error");
+                Action connectAction = () => node1.FullNode.ConnectionManager.ConnectAsync(node2.Endpoint).GetAwaiter().GetResult();
+                connectAction.Should().Throw<OperationCanceledException>().WithMessage("The peer has been disconnected");
 
                 node1.FullNode.ConnectionManager.ConnectedPeers.Should().BeEmpty();
 
@@ -210,11 +208,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
                 try
                 {
                     // Manually call AddNode so that we can catch the exception.
-                    node2.CreateRPCClient().AddNode(node1.Endpoint, true);
+                    node2.FullNode.ConnectionManager.ConnectAsync(node1.Endpoint).GetAwaiter().GetResult();
                 }
                 catch (Exception ex)
                 {
-                    Assert.IsType<RPCException>(ex);
+                    ex.Message.Contains("actively refused");
                 }
 
                 Assert.False(TestHelper.IsNodeConnectedTo(node2, node1));
@@ -239,11 +237,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
                 try
                 {
                     // Manually call AddNode so that we can catch the exception.
-                    node2.CreateRPCClient().AddNode(node1.Endpoint, true);
+                    node2.FullNode.ConnectionManager.ConnectAsync(node1.Endpoint).GetAwaiter().GetResult();
                 }
                 catch (Exception ex)
                 {
-                    Assert.IsType<RPCException>(ex);
+                    ex.Message.Contains("actively refused");
                 }
 
                 Assert.False(TestHelper.IsNodeConnectedTo(node2, node1));
