@@ -1,37 +1,47 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
+using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Util;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
-    public class EndorsementRequestHandler
+    public interface IEndorsementRequestHandler
+    {
+        bool ExecuteAndSignProposal(EndorsementRequest request);
+    }
+
+    public class EndorsementRequestHandler : IEndorsementRequestHandler
     {
         private const int TxIndexToUse = 0;
         private static readonly uint160 CoinbaseToUse = uint160.Zero;
 
         private readonly IEndorsementRequestValidator validator;
         private readonly IEndorsementSigner signer;
-        private readonly IContractExecutor executor;
+        private readonly IContractExecutorFactory executorFactory;
         private readonly ITokenlessSigner senderRetriever;
         private readonly IConsensusManager consensus; // Is this the correct way to get the tip? ChainIndexer not behind interface :(
+        private readonly IStateRepositoryRoot stateRoot;
         private readonly ILogger logger;
 
         public EndorsementRequestHandler(
             IEndorsementRequestValidator validator,
             IEndorsementSigner signer,
-            IContractExecutor executor,
+            IContractExecutorFactory executorFactory,
             ITokenlessSigner senderRetriever,
             IConsensusManager consensus,
+            IStateRepositoryRoot stateRoot,
             ILoggerFactory loggerFactory)
         {
             this.validator = validator;
             this.signer = signer;
-            this.executor = executor;
+            this.executorFactory = executorFactory;
             this.senderRetriever = senderRetriever;
             this.consensus = consensus;
+            this.stateRoot = stateRoot;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
@@ -43,13 +53,16 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 return false;
             }
 
-            // TODO: Check that multiple things don't execute in the executor at the same time (e.g. blocks validated at same time as endorsement happening)
+            ChainedHeader tip = this.consensus.Tip;
 
-            // Because of rule checks in the validator, we assume this is always correct.
-            GetSenderResult getSenderResult = this.senderRetriever.GetSender(request.ContractTransaction);
+            IStateRepositoryRoot stateSnapshot = this.stateRoot.GetSnapshotTo(((ISmartContractBlockHeader)tip.Header).HashStateRoot.ToBytes());
+            IContractExecutor executor = this.executorFactory.CreateExecutor(stateSnapshot);
 
-            var executionContext = new ContractTransactionContext((ulong) this.consensus.Tip.Height,TxIndexToUse,CoinbaseToUse, getSenderResult.Sender, request.ContractTransaction);
-            IContractExecutionResult result = this.executor.Execute(executionContext);
+            GetSenderResult getSenderResult = this.senderRetriever.GetSender(request.ContractTransaction); // Because of rule checks in the validator, we assume this is always correct.
+
+            var executionContext = new ContractTransactionContext((ulong) tip.Height,TxIndexToUse,CoinbaseToUse, getSenderResult.Sender, request.ContractTransaction);
+
+            IContractExecutionResult result = executor.Execute(executionContext);
 
             if (result.Revert)
             {

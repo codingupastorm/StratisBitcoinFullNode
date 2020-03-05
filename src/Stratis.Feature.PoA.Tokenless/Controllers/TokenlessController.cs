@@ -18,6 +18,7 @@ using Stratis.Bitcoin.Utilities.ModelStateErrors;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.Feature.PoA.Tokenless.Core;
+using Stratis.Feature.PoA.Tokenless.Payloads;
 using Stratis.Feature.PoA.Tokenless.Wallet;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR;
@@ -46,6 +47,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         private readonly IReceiptRepository receiptRepository;
         private readonly CSharpContractDecompiler contractDecompiler;
         private readonly IContractPrimitiveSerializer primitiveSerializer;
+        private readonly ITokenlessBroadcaster tokenlessBroadcaster;
         private readonly ISerializer serializer;
         private readonly ILogger logger;
 
@@ -57,11 +59,11 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             IAddressGenerator addressGenerator,
             IBroadcasterManager broadcasterManager,
             IMethodParameterStringSerializer methodParameterSerializer,
-            ChainIndexer chainIndexer,
             IStateRepositoryRoot stateRoot,
             IReceiptRepository receiptRepository,
             CSharpContractDecompiler contractDecompiler,
             IContractPrimitiveSerializer primitiveSerializer,
+            ITokenlessBroadcaster tokenlessBroadcaster,
             ISerializer serializer)
         {
             this.coreComponent = coreComponent;
@@ -74,6 +76,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             this.stateRoot = stateRoot;
             this.receiptRepository = receiptRepository;
             this.contractDecompiler = contractDecompiler;
+            this.tokenlessBroadcaster = tokenlessBroadcaster;
             this.primitiveSerializer = primitiveSerializer;
             this.serializer = serializer;
             this.logger = coreComponent.LoggerFactory.CreateLogger(this.GetType());
@@ -155,6 +158,40 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             {
                 this.logger.LogError("Exception occurred: '{0}'", ex.ToString());
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, ex.Message, ex.ToString());
+            }
+        }
+
+        [Route("send-endorsement")]
+        [HttpPost]
+        public async Task<IActionResult> SendEndorsementAsync(SendEndorsementModel model)
+        {
+            if (!this.coreComponent.ConnectionManager.ConnectedPeers.Any())
+            {
+                this.logger.LogTrace("(-)[NO_CONNECTED_PEERS]");
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.Forbidden, "Can't send endorsement request: sending endorsement request requires at least one connection!", string.Empty);
+            }
+
+            try
+            {
+                Transaction transaction = this.coreComponent.Network.CreateTransaction(model.TransactionHex);
+
+                // Build message to send to other nodes
+                var message = new EndorsementRequestPayload(transaction);
+
+                // Broadcast message
+                await this.tokenlessBroadcaster.BroadcastToFirstInOrganisationAsync(message, model.Organisation);
+
+                // Just let user know that it has been sent off. The endorsement and sending of the transaction will happen asynchronously.
+
+                return this.Json(new
+                {
+                    Message = "Transaction has been sent to endorsing node for execution."
+                });
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError("Exception occurred: {0}", e.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
             }
         }
 
