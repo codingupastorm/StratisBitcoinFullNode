@@ -211,16 +211,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
             this.responseText.Should().BeEmpty();
         }
 
-        private void calling_rpc_getblockhash_via_callbyname()
-        {
-            this.send_api_post_request(RPCCallByNameUri, new { methodName = "getblockhash", height = 0 });
-        }
-
-        private void calling_rpc_listmethods()
-        {
-            this.send_api_get_request($"{RPCListmethodsUri}");
-        }
-
         private void calling_recover_via_extpubkey_for_account_0()
         {
             this.RecoverViaExtPubKey(WalletName, "xpub6DGguHV1FQFPvZ5Xu7VfeENyiySv4R2bdd6VtvwxWGVTVNnHUmphMNgTRkLe8j2JdAv332ogZcyhqSuz1yUPnN4trJ49cFQXmEhwNQHUqk1", 0);

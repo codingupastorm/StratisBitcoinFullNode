@@ -21,14 +21,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         }
 
         [Fact]
-        public void Getblockhash_via_rpc_callbyname_returns_the_blockhash()
-        {
-            Given(a_proof_of_work_node_with_api_enabled);
-            When(calling_rpc_getblockhash_via_callbyname);
-            Then(the_blockhash_is_returned_from_post);
-        }
-
-        [Fact]
         public void CreateExtPubKeyOnlyWallet_creates_wallet_with_extra_flag()
         {
             Given(a_proof_of_stake_node_with_api_enabled);
