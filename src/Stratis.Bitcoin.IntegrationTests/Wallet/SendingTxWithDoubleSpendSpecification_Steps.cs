@@ -70,7 +70,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
 
             this.stratisSender.FullNode.NodeController<WalletController>().SendTransaction(new SendTransactionRequest(this.transaction.ToHex()));
 
-            TestBase.WaitLoop(() => this.stratisReceiver.CreateRPCClient().GetRawMempool().Length > 0);
+            TestBase.WaitLoop(() => this.stratisReceiver.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count > 0);
             TestBase.WaitLoop(() => this.stratisReceiver.FullNode.WalletManager().GetSpendableTransactionsInWallet(Name).Any());
 
             var receivetotal = this.stratisReceiver.FullNode.WalletManager().GetSpendableTransactionsInWallet(Name).Sum(s => s.Transaction.Amount);
