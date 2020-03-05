@@ -54,7 +54,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             CaTestHelper.InitializeCa(this.server);
 
             // Only the admin user exists initially.
-            Assert.Single(CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(this.adminCredentials)));
+            Assert.Single(CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.ListAll(this.adminCredentials)));
 
             AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates | AccountAccessFlags.RevokeCertificates | AccountAccessFlags.AccessAnyCertificate;
             CredentialsModel credentials1 = CaTestHelper.CreateAccount(this.server.Host, credentials1Access);
@@ -366,7 +366,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(1, accountId, password)),
                 AccountAccessFlags.AccessAccountInfo);
 
-            this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.GetAllAccounts(new CredentialsModel(accountId, password)),
+            this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.ListAll(new CredentialsModel(accountId, password)),
                 AccountAccessFlags.AccessAccountInfo);
 
             this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.GetCertificateIssuedByAccountId(new CredentialsModelWithTargetId(1, accountId, password)),

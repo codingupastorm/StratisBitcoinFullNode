@@ -6,7 +6,6 @@ using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Fee;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
@@ -28,7 +27,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public readonly ICallDataSerializer CallDataSerializer;
         public readonly ChainIndexer ChainIndexer;
         private readonly Mock<ICertificatePermissionsChecker> CertificatePermissionsChecker;
-        public readonly InMemoryCoinView InMemoryCoinView;
         public readonly IDateTimeProvider DateTimeProvider;
         public readonly ILoggerFactory LoggerFactory;
         public readonly ITxMempool Mempool;
@@ -55,13 +53,12 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             this.CertificatePermissionsChecker.Setup(c => c.CheckSenderCertificateHasPermission(It.IsAny<uint160>(), It.IsAny<TransactionSendingPermission>())).Returns(true);
 
             this.ChainIndexer = new ChainIndexer(this.Network);
-            this.InMemoryCoinView = new InMemoryCoinView(this.Network.GenesisHash);
             this.DateTimeProvider = Bitcoin.Utilities.DateTimeProvider.Default;
             this.MempoolSettings = new MempoolSettings(this.NodeSettings) { MempoolExpiry = Bitcoin.Features.MemoryPool.MempoolValidator.DefaultMempoolExpiry };
             this.TokenlessSigner = new TokenlessSigner(this.Network, new SenderRetriever());
 
             this.BlockPolicyEstimator = new BlockPolicyEstimator(this.MempoolSettings, this.LoggerFactory, this.NodeSettings);
-            this.Mempool = new TokenlessMempool(this.BlockPolicyEstimator, this.LoggerFactory, this.NodeSettings);
+            this.Mempool = new TokenlessMempool(this.BlockPolicyEstimator, this.LoggerFactory);
 
             // TODO: Ostensibly need to be able to test the revoked case too
             this.RevocationChecker = new Mock<IRevocationChecker>();
@@ -72,7 +69,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             this.CertificatesManager.Setup(c => c.IsCertificateRevokedByAddress(It.IsAny<uint160>())).Returns(false);
 
             this.MempoolRules = CreateMempoolRules();
-            this.MempoolValidator = new TokenlessMempoolValidator(this.ChainIndexer, this.InMemoryCoinView, this.DateTimeProvider, this.LoggerFactory, this.Mempool, new MempoolSchedulerLock(), this.MempoolRules, this.MempoolSettings);
+            this.MempoolValidator = new TokenlessMempoolValidator(this.ChainIndexer, this.DateTimeProvider, this.LoggerFactory, this.Mempool, new MempoolSchedulerLock(), this.MempoolRules, this.MempoolSettings);
         }
 
         public IEnumerable<IMempoolRule> CreateMempoolRules()

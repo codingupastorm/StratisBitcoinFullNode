@@ -32,10 +32,10 @@ namespace CertificateAuthority.Tests.FullProjectTests
         }
 
         [Fact]
-        private void TestAccountsControllerMethods()
+        public void TestAccountsControllerMethods()
         {
             // Just admin on start.
-            Assert.Single(CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(this.adminCredentials)));
+            Assert.Single(CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.ListAll(this.adminCredentials)));
 
             AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates;
             CredentialsModel credentials1 = CaTestHelper.CreateAccount(this.server.Host, credentials1Access);
@@ -58,14 +58,14 @@ namespace CertificateAuthority.Tests.FullProjectTests
                 Assert.True(((ObjectResult)result).StatusCode == 403);
             }
 
-            // GetAllAccounts
-            List<AccountModel> allAccounts = CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(this.adminCredentials));
+            // ListAll
+            List<AccountModel> allAccounts = CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.ListAll(this.adminCredentials));
             Assert.Equal(4, allAccounts.Count);
 
             // DeleteAccountByAccountId
             {
                 this.accountsController.DeleteAccountByAccountId(new CredentialsModelWithTargetId(accToDelete.AccountId, credentials2.AccountId, credentials2.Password));
-                Assert.Equal(3, CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(this.adminCredentials)).Count);
+                Assert.Equal(3, CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.ListAll(this.adminCredentials)).Count);
 
                 IActionResult result = this.accountsController.DeleteAccountByAccountId(new CredentialsModelWithTargetId(credentials2.AccountId, credentials1.AccountId, credentials1.Password));
                 Assert.True(((ObjectResult)result).StatusCode == 403);
@@ -106,6 +106,16 @@ namespace CertificateAuthority.Tests.FullProjectTests
         }
 
         [Fact]
+        public void ListUnapprovedAccounts()
+        {
+            _ = CaTestHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess, approve: false);
+            _ = CaTestHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess);
+
+            List<AccountModel> unapprovedAccounts = CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.ListUnapproved(this.adminCredentials));
+            Assert.Single(unapprovedAccounts);
+        }
+
+        [Fact]
         public void ChangeAccountPassword_CurrentUser_Pass()
         {
             CredentialsModel credentials = CaTestHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess);
@@ -114,7 +124,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             this.accountsController.ChangeAccountPassword(model);
 
             var adminCredentialsModel = new CredentialsModel(this.adminCredentials.AccountId, this.adminCredentials.Password);
-            List<AccountModel> accounts = CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(adminCredentialsModel));
+            List<AccountModel> accounts = CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.ListAll(adminCredentialsModel));
             AccountModel account = accounts.FirstOrDefault(a => a.Id == credentials.AccountId);
             Assert.True(account.VerifyPassword("newpassword"));
         }
@@ -128,7 +138,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             this.accountsController.ChangeAccountPassword(model);
 
             var adminCredentialsModel = new CredentialsModel(this.adminCredentials.AccountId, this.adminCredentials.Password);
-            List<AccountModel> accounts = CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(adminCredentialsModel));
+            List<AccountModel> accounts = CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.ListAll(adminCredentialsModel));
             AccountModel account = accounts.FirstOrDefault(a => a.Id == credentials.AccountId);
             Assert.False(account.VerifyPassword("newpassword"));
         }
@@ -142,7 +152,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             this.accountsController.ChangeAccountPassword(changePasswordModel);
 
             var adminCredentialsModel = new CredentialsModel(this.adminCredentials.AccountId, this.adminCredentials.Password);
-            List<AccountModel> accounts = CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(adminCredentialsModel));
+            List<AccountModel> accounts = CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.ListAll(adminCredentialsModel));
             AccountModel account = accounts.FirstOrDefault(a => a.Id == userA_Credentials.AccountId);
             Assert.True(account.VerifyPassword("newpassword"));
         }
@@ -157,10 +167,34 @@ namespace CertificateAuthority.Tests.FullProjectTests
             this.accountsController.ChangeAccountPassword(model);
 
             var adminCredentialsModel = new CredentialsModel(this.adminCredentials.AccountId, this.adminCredentials.Password);
-            List<AccountModel> accounts = CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.GetAllAccounts(adminCredentialsModel));
+            List<AccountModel> accounts = CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.ListAll(adminCredentialsModel));
             AccountModel userB_Account = accounts.FirstOrDefault(a => a.Id == userB_Credentials.AccountId);
             Assert.False(userB_Account.VerifyPassword("newpassword"));
             Assert.True(userB_Account.VerifyPassword(userB_Credentials.Password));
+        }
+
+        [Fact]
+        public void RejectAccount_Pass()
+        {
+            CredentialsModel userA_Credentials = CaTestHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess, approve: false);
+
+            var model = new CredentialsModelWithTargetId(userA_Credentials.AccountId, this.adminCredentials.AccountId, this.adminCredentials.Password);
+            this.accountsController.RejectAccount(model);
+
+            AccountInfo account = CaTestHelper.GetValue<AccountInfo>(this.accountsController.GetAccountInfoById(model));
+            Assert.Null(account);
+        }
+
+        [Fact]
+        public void RejectAccount_AccountAlreadyApproved_Fail()
+        {
+            CredentialsModel userA_Credentials = CaTestHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess);
+
+            var model = new CredentialsModelWithTargetId(userA_Credentials.AccountId, this.adminCredentials.AccountId, this.adminCredentials.Password);
+            this.accountsController.RejectAccount(model);
+
+            AccountInfo account = CaTestHelper.GetValue<AccountInfo>(this.accountsController.GetAccountInfoById(model));
+            Assert.NotNull(account);
         }
     }
 }
