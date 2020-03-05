@@ -66,10 +66,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         private const string StatusUri = "api/node/status";
         private const string ValidateAddressUri = "api/node/validateaddress";
 
-        // RPC
-        private const string RPCCallByNameUri = "api/rpc/callbyname";
-        private const string RPCListmethodsUri = "api/rpc/listmethods";
-
         // Staking
         private const string StartStakingUri = "api/staking/startstaking";
         private const string GetStakingInfoUri = "api/staking/getstakinginfo";
@@ -403,12 +399,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         private void the_blockhash_is_returned()
         {
             this.responseText.Should().Be("\"" + KnownNetworks.RegTest.Consensus.HashGenesisBlock.ToString() + "\"");
-        }
-
-        private void the_blockhash_is_returned_from_post()
-        {
-            var responseContent = this.response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            responseContent.Should().Be("\"" + KnownNetworks.RegTest.Consensus.HashGenesisBlock.ToString() + "\"");
         }
 
         private void status_information_is_returned()
