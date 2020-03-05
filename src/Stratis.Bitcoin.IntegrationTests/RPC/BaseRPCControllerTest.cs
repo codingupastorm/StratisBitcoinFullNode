@@ -3,7 +3,6 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
 
@@ -31,7 +30,6 @@ namespace Stratis.Bitcoin.IntegrationTests.RPC
                 .UseBlockStore()
                 .UsePowConsensus()
                 .UseMempool()
-                .AddRPC()
                 .Build();
 
             return fullNode;

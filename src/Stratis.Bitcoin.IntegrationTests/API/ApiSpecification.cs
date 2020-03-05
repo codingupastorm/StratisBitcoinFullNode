@@ -29,14 +29,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         }
 
         [Fact]
-        public void Listmethods_via_rpc_returns_non_empty_list()
-        {
-            Given(a_proof_of_stake_node_with_api_enabled);
-            When(calling_rpc_listmethods);
-            Then(a_full_list_of_available_commands_is_returned);
-        }
-
-        [Fact]
         public void CreateExtPubKeyOnlyWallet_creates_wallet_with_extra_flag()
         {
             Given(a_proof_of_stake_node_with_api_enabled);
