@@ -15,7 +15,6 @@ using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.Miner.Interfaces;
 using Stratis.Bitcoin.Features.Miner.Staking;
-using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Utilities;
@@ -37,9 +36,6 @@ namespace Stratis.Bitcoin.Features.Miner
         /// <summary>Settings relevant to mining or staking.</summary>
         private readonly MinerSettings minerSettings;
 
-        /// <summary>Settings relevant to node.</summary>
-        private readonly NodeSettings nodeSettings;
-
         /// <summary>POW miner.</summary>
         private readonly IPowMining powMining;
 
@@ -56,7 +52,6 @@ namespace Stratis.Bitcoin.Features.Miner
             ConnectionManagerSettings connectionManagerSettings,
             Network network,
             IMinerSettings minerSettings,
-            NodeSettings nodeSettings,
             ILoggerFactory loggerFactory,
             ITimeSyncBehaviorState timeSyncBehaviorState,
             IPowMining powMining,
@@ -68,7 +63,6 @@ namespace Stratis.Bitcoin.Features.Miner
             Guard.Assert(minerSettings is MinerSettings);
             this.minerSettings = (MinerSettings)minerSettings;
 
-            this.nodeSettings = nodeSettings;
             this.powMining = powMining;
             this.timeSyncBehaviorState = timeSyncBehaviorState;
             this.posMinting = posMinting;
@@ -218,7 +212,6 @@ namespace Stratis.Bitcoin.Features.Miner
                 features
                     .AddFeature<MiningFeature>()
                     .DependOn<MempoolFeature>()
-                    .DependOn<RPCFeature>()
                     .DependOn<BaseWalletFeature>()
                     .FeatureServices(services =>
                     {
@@ -246,7 +239,6 @@ namespace Stratis.Bitcoin.Features.Miner
                 features
                     .AddFeature<MiningFeature>()
                     .DependOn<MempoolFeature>()
-                    .DependOn<RPCFeature>()
                     // TODO: Need a better way to check dependencies. This is really just dependent on IWalletManager...
                     // Alternatively "DependsOn" should take a list of features that will satisfy the dependency.
                     //.DependOn<WalletFeature>()
