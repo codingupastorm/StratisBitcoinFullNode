@@ -75,25 +75,22 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 return false;
             }
 
-            // Send the result back.
-            if (request.Peer != null)
+            // TODO: We definitely need to check some properties about the read-write set?
+
+            this.signer.Sign(request);
+
+            Transaction signedRWSTransaction = this.readWriteSetTransactionSerializer.Build(result.ReadWriteSet.GetReadWriteSet());
+
+            var payload = new EndorsementPayload(signedRWSTransaction);
+
+            try
             {
-                // TODO: We definitely need to check some properties about the read-write set?
-
-                this.signer.Sign(request);
-
-                Transaction signedRWSTransaction = this.readWriteSetTransactionSerializer.Build(result.ReadWriteSet.GetReadWriteSet());
-
-                var payload = new EndorsementPayload(signedRWSTransaction);
-
-                try
-                {
-                    request.Peer.SendMessageAsync(payload).ConfigureAwait(false).GetAwaiter().GetResult();
-                }
-                catch (OperationCanceledException)
-                {
-                    // This catch is a bit dirty but is copied from FederatedPegBroadcaster code.
-                }
+                // Send the result back.
+                request.Peer.SendMessageAsync(payload).ConfigureAwait(false).GetAwaiter().GetResult();
+            }
+            catch (OperationCanceledException)
+            {
+                // This catch is a bit dirty but is copied from FederatedPegBroadcaster code.
             }
 
             return true;

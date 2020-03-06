@@ -3,6 +3,7 @@ using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.SmartContracts;
+using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.SmartContracts.CLR;
@@ -41,10 +42,13 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var stateRootMock = new Mock<IStateRepositoryRoot>();
 
+            var readWriteSetBuilder = new ReadWriteSetBuilder();
+
             var executorMock = new Mock<IContractExecutor>();
             executorMock.Setup(x => x.Execute(It.IsAny<IContractTransactionContext>()))
                 .Returns(new SmartContractExecutionResult
                 {
+                    ReadWriteSet = readWriteSetBuilder,
                     Revert = false
                 });
 
@@ -85,8 +89,11 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             byte[] outputScript = this.callDataSerializer.Serialize(contractTxData);
             transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
 
+            var mockPeer = new Mock<INetworkPeer>();
+
             var request = new EndorsementRequest
             {
+                Peer = mockPeer.Object,
                 ContractTransaction = transaction
             };
 
