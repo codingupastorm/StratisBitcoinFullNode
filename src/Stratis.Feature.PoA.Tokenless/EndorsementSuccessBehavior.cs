@@ -16,12 +16,12 @@ namespace Stratis.Feature.PoA.Tokenless
     public class EndorsementSuccessBehavior : NetworkPeerBehavior
     {
         private readonly IEndorsementRequestHandler requestHandler;
-        private readonly ITokenlessTransactionFromRWS tokenlessTransactionFromRWS;
+        private readonly IReadWriteSetTransactionSerializer readWriteSetTransactionSerializer;
 
-        public EndorsementSuccessBehavior(IEndorsementRequestHandler requestHandler, ITokenlessTransactionFromRWS tokenlessTransactionFromRWS)
+        public EndorsementSuccessBehavior(IEndorsementRequestHandler requestHandler, IReadWriteSetTransactionSerializer readWriteSetTransactionSerializer)
         {
             this.requestHandler = requestHandler;
-            this.tokenlessTransactionFromRWS = tokenlessTransactionFromRWS;
+            this.readWriteSetTransactionSerializer = readWriteSetTransactionSerializer;
         }
 
         protected override void AttachCore()
@@ -36,7 +36,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         public override object Clone()
         {
-            return new EndorsementSuccessBehavior(this.requestHandler, this.tokenlessTransactionFromRWS);
+            return new EndorsementSuccessBehavior(this.requestHandler, this.readWriteSetTransactionSerializer);
         }
 
         private async Task OnMessageReceivedAsync(INetworkPeer peer, IncomingMessage message)
@@ -46,7 +46,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
             Transaction signedRWSTransaction = payload.Transaction;
 
-            ReadWriteSet readWriteSet = this.tokenlessTransactionFromRWS.GetReadWriteSet(signedRWSTransaction);
+            ReadWriteSet readWriteSet = this.readWriteSetTransactionSerializer.GetReadWriteSet(signedRWSTransaction);
 
             // TODO: Act on signed proposal.
         }
