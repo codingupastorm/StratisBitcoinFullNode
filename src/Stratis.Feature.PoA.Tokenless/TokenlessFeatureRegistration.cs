@@ -46,6 +46,7 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<ITokenlessSigner, TokenlessSigner>();
                         services.AddSingleton<ICoreComponent, CoreComponent>();
                         services.AddSingleton<ITokenlessBroadcaster, TokenlessBroadcaster>();
+                        services.AddSingleton<ITokenlessTransactionFromRWS, TokenlessTransactionFromRWS>();
 
                         // Endorsement. For now everyone gets this. May not be the case in the future.
                         services.AddSingleton<IEndorsementRequestHandler, EndorsementRequestHandler>();
