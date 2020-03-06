@@ -48,7 +48,7 @@ namespace Stratis.Bitcoin.Tests.BlockPulling
 
             return networkPeer.Object;
         }
-        
+
         private void Disconnected(Mock<INetworkPeer> peer, string reason, Exception exception)
         {
             peer.SetupGet(n => n.State).Returns(NetworkPeerState.Offline);
@@ -70,7 +70,6 @@ namespace Stratis.Bitcoin.Tests.BlockPulling
 
             // Create behaviour using the test wraper which exposes protected properties and methods
             ExtendedLoggerFactory loggerFactory = new ExtendedLoggerFactory();
-            loggerFactory.AddConsoleWithFilters();
             EnforcePeerVersionCheckBehaviorWrapper behavior = new EnforcePeerVersionCheckBehaviorWrapper(chain, nodeSettings, this.Network, loggerFactory);
 
             // Intentionally set Peer Version to 0 as its value it shouldn't be used anythere in the test.
@@ -114,7 +113,6 @@ namespace Stratis.Bitcoin.Tests.BlockPulling
 
             // Create behaviour using the test wraper which exposes protected properties and methods
             ExtendedLoggerFactory loggerFactory = new ExtendedLoggerFactory();
-            loggerFactory.AddConsoleWithFilters();
             EnforcePeerVersionCheckBehaviorWrapper behavior = new EnforcePeerVersionCheckBehaviorWrapper(chain, nodeSettings, this.Network, loggerFactory);
 
             // Intentionally set Peer Version to 0 as its value it shouldn't be used anythere in the test.

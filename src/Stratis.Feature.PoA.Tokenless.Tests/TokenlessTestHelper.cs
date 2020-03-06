@@ -44,7 +44,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             this.Network = new TokenlessNetwork();
             this.NodeSettings = NodeSettings.Default(this.Network);
             this.LoggerFactory = new ExtendedLoggerFactory();
-            this.LoggerFactory.AddConsoleWithFilters();
 
             this.blockRepository = new Mock<IBlockRepository>().Object;
             this.CallDataSerializer = new NoGasCallDataSerializer(new ContractPrimitiveSerializer(this.Network));
