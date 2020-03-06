@@ -53,15 +53,16 @@ namespace Stratis.Feature.PoA.Tokenless
             };
 
             IContractExecutionResult result = this.requestHandler.ExecuteAndSignProposal(endorsementRequest);
+            if (result != null)
+            {
+                Transaction signedRWSTransaction = this.tokenlessTransactionFromRWS.Build(result.ReadWriteSet.GetReadWriteSet());
 
-            // Send the result back.
-
-            Transaction signedRWSTransaction = this.tokenlessTransactionFromRWS.Build(result.ReadWriteSet.GetReadWriteSet());
-
-            await this.tokenlessBroadcaster.BroadcastToFirstInOrganisationAsync(
-                new EndorsementSuccessPayload(signedRWSTransaction),
-                null /* TODO: Pass the organization here. */
-                );
+                // Send the result back.
+                await this.tokenlessBroadcaster.BroadcastToFirstInOrganisationAsync(
+                    new EndorsementSuccessPayload(signedRWSTransaction),
+                    null /* TODO: Pass the organization here. */
+                    );
+            }
         }
     }
 }
