@@ -66,8 +66,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             consensusManagerMock.Setup(x => x.Tip)
                 .Returns(new ChainedHeader(new SmartContractBlockHeader(), uint256.One, height));
 
-            var readWriteSet = new ReadWriteSet();
-
             var readWriteSetTransactionSerializerMock = new Mock<IReadWriteSetTransactionSerializer>();
             readWriteSetTransactionSerializerMock.Setup(x => x.Build(It.IsAny<ReadWriteSet>()))
                 .Returns((Transaction)null);
