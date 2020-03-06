@@ -11,7 +11,7 @@ using Stratis.SmartContracts.Core.ReadWrite;
 namespace Stratis.Feature.PoA.Tokenless
 {
     /// <summary>
-    ///  Receives endorsement requests and passes them on to be executed etc.
+    ///  Receives an endorsement request success response.
     /// </summary>
     public class EndorsementSuccessBehavior : NetworkPeerBehavior
     {
