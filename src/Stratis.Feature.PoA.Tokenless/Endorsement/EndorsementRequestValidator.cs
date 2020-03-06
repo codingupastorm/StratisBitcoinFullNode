@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Consensus;
+using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
@@ -40,17 +41,24 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
         public bool ValidateRequest(EndorsementRequest request)
         {
+            var mempoolContext = new MempoolValidationContext(request.ContractTransaction, new MempoolValidationState(false));
+
             try
             {
-                // TODO: Run rules.
+                foreach (IMempoolRule rule in this.mempoolRules)
+                {
+                    rule.CheckTransaction(mempoolContext);
+                }
+
             }
-            catch (ConsensusErrorException e)
+            catch (Exception e) when (e is ConsensusErrorException || e is MempoolErrorException)
             {
+                // TODO: Ideally this would only throw one type of error - MempoolErrorException. Alas, some code is shared with the consensus rules.
                 this.logger.LogWarning("Endorsement request validation failed. Exception={0}", e.ToString());
                 return false;
             }
 
-            throw new NotImplementedException("Check transaction vs consensus rules and rules above.");
+            return true;
         }
 
     }
