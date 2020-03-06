@@ -7,7 +7,6 @@ using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.Miner;
-using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Interfaces;
@@ -26,7 +25,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.Runners
 
         public override void BuildNode()
         {
-            NodeSettings settings = null;
+            NodeSettings settings;
 
             if (string.IsNullOrEmpty(this.Agent))
                 settings = new NodeSettings(this.Network, args: new string[] { "-conf=bitcoin.conf", "-datadir=" + this.DataFolder });
@@ -41,7 +40,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.Runners
                             .AddMining()
                             .UseWallet()
                             .AddSQLiteWalletRepository()
-                            .AddRPC()
                             .UseApi()
                             .UseTestChainedHeaderTree()
                             .MockIBD();

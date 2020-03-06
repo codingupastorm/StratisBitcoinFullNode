@@ -18,7 +18,6 @@ using Stratis.Bitcoin.Features.Api;
 using Stratis.Bitcoin.Features.Miner.Controllers;
 using Stratis.Bitcoin.Features.Miner.Interfaces;
 using Stratis.Bitcoin.Features.Miner.Models;
-using Stratis.Bitcoin.Features.RPC.Models;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Controllers;
 using Stratis.Bitcoin.Features.Wallet.Models;
@@ -66,10 +65,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         private const string GetTxOutUri = "api/node/gettxout";
         private const string StatusUri = "api/node/status";
         private const string ValidateAddressUri = "api/node/validateaddress";
-
-        // RPC
-        private const string RPCCallByNameUri = "api/rpc/callbyname";
-        private const string RPCListmethodsUri = "api/rpc/listmethods";
 
         // Staking
         private const string StartStakingUri = "api/staking/startstaking";
@@ -210,16 +205,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
             this.response.StatusCode.Should().Be(HttpStatusCode.OK);
             this.responseText = this.response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
             this.responseText.Should().BeEmpty();
-        }
-
-        private void calling_rpc_getblockhash_via_callbyname()
-        {
-            this.send_api_post_request(RPCCallByNameUri, new { methodName = "getblockhash", height = 0 });
-        }
-
-        private void calling_rpc_listmethods()
-        {
-            this.send_api_get_request($"{RPCListmethodsUri}");
         }
 
         private void calling_recover_via_extpubkey_for_account_0()
@@ -416,46 +401,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
             this.responseText.Should().Be("\"" + KnownNetworks.RegTest.Consensus.HashGenesisBlock.ToString() + "\"");
         }
 
-        private void the_blockhash_is_returned_from_post()
-        {
-            var responseContent = this.response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            responseContent.Should().Be("\"" + KnownNetworks.RegTest.Consensus.HashGenesisBlock.ToString() + "\"");
-        }
-
-        private void a_full_list_of_available_commands_is_returned()
-        {
-            var commands = JsonDataSerializer.Instance.Deserialize<List<RpcCommandModel>>(this.responseText);
-
-            commands.Count.Should().Be(30);
-            commands.Should().Contain(x => x.Command == "stop");
-            commands.Should().Contain(x => x.Command == "getrawtransaction <txid> [<verbose>] [<blockhash>]");
-            commands.Should().Contain(x => x.Command == "gettxout <txid> <vout> [<includemempool>]");
-            commands.Should().Contain(x => x.Command == "getblockcount");
-            commands.Should().Contain(x => x.Command == "getinfo");
-            commands.Should().Contain(x => x.Command == "getblockheader <hash> [<isjsonformat>]");
-            commands.Should().Contain(x => x.Command == "validateaddress <address>");
-            commands.Should().Contain(x => x.Command == "addnode <endpointstr> <command>");
-            commands.Should().Contain(x => x.Command == "getpeerinfo");
-            commands.Should().Contain(x => x.Command == "getbestblockhash");
-            commands.Should().Contain(x => x.Command == "getblockhash <height>");
-            commands.Should().Contain(x => x.Command == "getrawmempool");
-            commands.Should().Contain(x => x.Command == "generate <blockcount>");
-            commands.Should().Contain(x => x.Command == "startstaking <walletname> <walletpassword>");
-            commands.Should().Contain(x => x.Command == "getstakinginfo [<isjsonformat>]");
-            commands.Should().Contain(x => x.Command == "sendtoaddress <address> <amount> <commenttx> <commentdest>");
-            commands.Should().Contain(x => x.Command == "getnewaddress <account> <addresstype>");
-            commands.Should().Contain(x => x.Command == "sendrawtransaction <hex>");
-            commands.Should().Contain(x => x.Command == "decoderawtransaction <hex>");
-            commands.Should().Contain(x => x.Command == "getblock <blockhash> [<verbosity>]");
-            commands.Should().Contain(x => x.Command == "walletlock");
-            commands.Should().Contain(x => x.Command == "walletpassphrase <passphrase> <timeout>");
-            commands.Should().Contain(x => x.Command == "listunspent [<minconfirmations>] [<maxconfirmations>] [<addressesjson>]");
-            commands.Should().Contain(x => x.Command == "sendmany <fromaccount> <addressesjson> [<minconf>] [<comment>] [<subtractfeefromjson>] [<isreplaceable>] [<conftarget>] [<estimatemode>]");
-            commands.Should().Contain(x => x.Command == "getblockchaininfo");
-            commands.Should().Contain(x => x.Command == "getnetworkinfo");
-            commands.Should().Contain(x => x.Command == "listaddressgroupings");
-        }
-
         private void status_information_is_returned()
         {
             var statusNode = this.firstStratisPowApiNode.FullNode;
@@ -475,7 +420,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
             featuresNamespaces.Should().Contain("Stratis.Bitcoin.Features.Consensus.PowConsensusFeature");
             featuresNamespaces.Should().Contain("Stratis.Bitcoin.Features.MemoryPool.MempoolFeature");
             featuresNamespaces.Should().Contain("Stratis.Bitcoin.Features.Miner.MiningFeature");
-            featuresNamespaces.Should().Contain("Stratis.Bitcoin.Features.RPC.RPCFeature");
             featuresNamespaces.Should().Contain("Stratis.Bitcoin.Features.Wallet.WalletFeature");
 
             statusResponse.FeaturesData.All(f => f.State == "Initialized").Should().BeTrue();

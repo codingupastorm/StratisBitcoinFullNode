@@ -20,7 +20,6 @@ using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.EventBus;
 using Stratis.Bitcoin.EventBus.CoreEvents;
 using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
@@ -237,11 +236,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             });
 
             return this;
-        }
-
-        public RPCClient CreateRPCClient()
-        {
-            return new RPCClient(this.GetRPCAuth(), new Uri("http://127.0.0.1:" + this.RpcPort + "/"), this.FullNode?.Network ?? KnownNetworks.RegTest);
         }
 
         public INetworkPeer CreateNetworkPeerClient()
