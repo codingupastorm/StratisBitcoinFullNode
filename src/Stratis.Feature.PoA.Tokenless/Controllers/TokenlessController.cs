@@ -176,7 +176,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                 Transaction transaction = this.coreComponent.Network.CreateTransaction(model.TransactionHex);
 
                 // Build message to send to other nodes
-                var message = new EndorsementRequestPayload(transaction);
+                var message = new ProposalPayload(transaction);
 
                 // Broadcast message
                 await this.tokenlessBroadcaster.BroadcastToFirstInOrganisationAsync(message, model.Organisation);

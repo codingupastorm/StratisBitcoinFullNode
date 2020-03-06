@@ -36,7 +36,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         private async Task OnMessageReceivedAsync(INetworkPeer peer, IncomingMessage message)
         {
-            if (!(message.Message.Payload is EndorsementRequestPayload payload))
+            if (!(message.Message.Payload is ProposalPayload payload))
                 return;
 
             var endorsementRequest = new EndorsementRequest

@@ -41,7 +41,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         private async Task OnMessageReceivedAsync(INetworkPeer peer, IncomingMessage message)
         {
-            if (!(message.Message.Payload is EndorsementSuccessPayload payload))
+            if (!(message.Message.Payload is EndorsementPayload payload))
                 return;
 
             Transaction signedRWSTransaction = payload.Transaction;

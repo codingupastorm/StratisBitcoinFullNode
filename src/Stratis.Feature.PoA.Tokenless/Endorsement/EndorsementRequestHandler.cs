@@ -84,7 +84,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
                 Transaction signedRWSTransaction = this.readWriteSetTransactionSerializer.Build(result.ReadWriteSet.GetReadWriteSet());
 
-                var payload = new EndorsementSuccessPayload(signedRWSTransaction);
+                var payload = new EndorsementPayload(signedRWSTransaction);
 
                 try
                 {

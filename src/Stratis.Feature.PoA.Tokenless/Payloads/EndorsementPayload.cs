@@ -3,19 +3,19 @@ using Stratis.Bitcoin.P2P.Protocol.Payloads;
 
 namespace Stratis.Feature.PoA.Tokenless.Payloads
 {
-    [Payload("endorsement-success")]
-    public class EndorsementSuccessPayload : Payload
+    [Payload("endorsement")]
+    public class EndorsementPayload : Payload
     {
         private Transaction transaction;
 
         public Transaction Transaction => this.transaction;
 
         /// <remarks>Needed for deserialization.</remarks>
-        public EndorsementSuccessPayload()
+        public EndorsementPayload()
         {
         }
 
-        public EndorsementSuccessPayload(Transaction transaction)
+        public EndorsementPayload(Transaction transaction)
         {
             this.transaction = transaction;
         }
