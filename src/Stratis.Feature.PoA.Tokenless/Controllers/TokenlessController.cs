@@ -163,7 +163,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
         [Route("send-endorsement")]
         [HttpPost]
-        public async Task<IActionResult> SendEndorsementAsync(SendEndorsementModel model)
+        public async Task<IActionResult> SendProposalAsync(SendProposalModel model)
         {
             if (!this.coreComponent.ConnectionManager.ConnectedPeers.Any())
             {
@@ -183,7 +183,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
                 // Just let user know that it has been sent off. The endorsement and sending of the transaction will happen asynchronously.
 
-                return this.Json(new SendEndorsementResponseModel
+                return this.Json(new SendProposalResponseModel
                 {
                     Message = "Transaction has been sent to endorsing node for execution."
                 });
