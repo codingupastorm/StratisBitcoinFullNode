@@ -32,6 +32,7 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly VotingManager votingManager;
         private readonly IFederationManager federationManager;
         private readonly IEndorsementRequestHandler requestHandler;
+        private readonly IEndorsementSuccessHandler successHandler;
         private readonly IPoAMiner miner;
         private readonly IRevocationChecker revocationChecker;
         private readonly NodeSettings nodeSettings;
@@ -47,6 +48,7 @@ namespace Stratis.Feature.PoA.Tokenless
             ICoreComponent coreComponent,
             IFederationManager federationManager,
             IEndorsementRequestHandler requestHandler,
+            IEndorsementSuccessHandler successHandler,
             IPoAMiner miner,
             PayloadProvider payloadProvider,
             IRevocationChecker revocationChecker,
@@ -62,6 +64,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.coreComponent = coreComponent;
             this.federationManager = federationManager;
             this.requestHandler = requestHandler;
+            this.successHandler = successHandler;
             this.miner = miner;
             this.revocationChecker = revocationChecker;
             this.nodeSettings = nodeSettings;
@@ -87,6 +90,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.ReplaceBlockStoreBehavior(connectionParameters);
 
             connectionParameters.TemplateBehaviors.Add(new EndorsementRequestBehavior(this.requestHandler));
+            connectionParameters.TemplateBehaviors.Add(new EndorsementSuccessBehavior(this.successHandler));
 
             this.federationManager.Initialize();
 
