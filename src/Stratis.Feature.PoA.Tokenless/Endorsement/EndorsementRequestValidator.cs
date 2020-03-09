@@ -58,7 +58,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
             // TODO: Check that the submitter (Client A, in the example) is properly authorized to perform the 
             // proposed operation on that channel (namely, each endorsing peer ensures that the submitter 
-            // satisfies the channel’s Writers policy)
+            // satisfies the channel’s Writers policy). Perhaps we could add a method to EndorsementSigner.
 
             return true;
         }
