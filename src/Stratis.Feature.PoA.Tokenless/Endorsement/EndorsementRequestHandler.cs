@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Feature.PoA.Tokenless.Payloads;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Util;
@@ -11,7 +13,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
     public interface IEndorsementRequestHandler
     {
-        bool ExecuteAndSignProposal(EndorsementRequest request);
+        bool ExecuteAndReturnProposal(EndorsementRequest request);
     }
 
     public class EndorsementRequestHandler : IEndorsementRequestHandler
@@ -25,6 +27,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         private readonly ITokenlessSigner senderRetriever;
         private readonly IConsensusManager consensus; // Is this the correct way to get the tip? ChainIndexer not behind interface :(
         private readonly IStateRepositoryRoot stateRoot;
+        private readonly IReadWriteSetTransactionSerializer readWriteSetTransactionSerializer;
         private readonly ILogger logger;
 
         public EndorsementRequestHandler(
@@ -34,6 +37,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             ITokenlessSigner senderRetriever,
             IConsensusManager consensus,
             IStateRepositoryRoot stateRoot,
+            IReadWriteSetTransactionSerializer readWriteSetTransactionSerializer,
             ILoggerFactory loggerFactory)
         {
             this.validator = validator;
@@ -42,10 +46,11 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.senderRetriever = senderRetriever;
             this.consensus = consensus;
             this.stateRoot = stateRoot;
+            this.readWriteSetTransactionSerializer = readWriteSetTransactionSerializer;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
-        public bool ExecuteAndSignProposal(EndorsementRequest request)
+        public bool ExecuteAndReturnProposal(EndorsementRequest request)
         {
             if (!this.validator.ValidateRequest(request))
             {
@@ -73,6 +78,21 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             // TODO: We definitely need to check some properties about the read-write set?
 
             this.signer.Sign(request);
+
+            Transaction signedRWSTransaction = this.readWriteSetTransactionSerializer.Build(result.ReadWriteSet.GetReadWriteSet());
+
+            var payload = new EndorsementPayload(signedRWSTransaction);
+
+            try
+            {
+                // Send the result back.
+                request.Peer.SendMessageAsync(payload).ConfigureAwait(false).GetAwaiter().GetResult();
+            }
+            catch (OperationCanceledException)
+            {
+                // This catch is a bit dirty but is copied from FederatedPegBroadcaster code.
+            }
+
             return true;
         }
     }

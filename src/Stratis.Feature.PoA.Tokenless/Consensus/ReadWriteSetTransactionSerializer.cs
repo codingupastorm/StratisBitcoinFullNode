@@ -5,19 +5,19 @@ using Stratis.SmartContracts.Core.ReadWrite;
 
 namespace Stratis.Feature.PoA.Tokenless.Consensus
 {
-    public interface ITokenlessTransactionFromRWS 
+    public interface IReadWriteSetTransactionSerializer 
     {
         Transaction Build(ReadWriteSet readWriteSet);
         ReadWriteSet GetReadWriteSet(Transaction tx);
     }
 
-    public class TokenlessTransactionFromRWS : ITokenlessTransactionFromRWS
+    public class ReadWriteSetTransactionSerializer : IReadWriteSetTransactionSerializer
     {
         private readonly Network network;
         private readonly ITokenlessWalletManager tokenlessWalletManager;
         private readonly ITokenlessSigner tokenlessSigner;
 
-        public TokenlessTransactionFromRWS(Network network, ITokenlessWalletManager tokenlessWalletManager, ITokenlessSigner tokenlessSigner)
+        public ReadWriteSetTransactionSerializer(Network network, ITokenlessWalletManager tokenlessWalletManager, ITokenlessSigner tokenlessSigner)
         {
             this.network = network;
             this.tokenlessWalletManager = tokenlessWalletManager;

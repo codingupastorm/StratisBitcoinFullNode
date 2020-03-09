@@ -1,22 +1,27 @@
 ﻿using System.Threading.Tasks;
+using NBitcoin;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
+using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.Payloads;
+using Stratis.SmartContracts.Core.ReadWrite;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
     /// <summary>
-    ///  Receives endorsement requests and passes them on to be executed etc.
+    ///  Receives an endorsement request success response.
     /// </summary>
-    public class EndorsementRequestBehavior : NetworkPeerBehavior
+    public class EndorsementSuccessBehavior : NetworkPeerBehavior
     {
         private readonly IEndorsementRequestHandler requestHandler;
+        private readonly IReadWriteSetTransactionSerializer readWriteSetTransactionSerializer;
 
-        public EndorsementRequestBehavior(IEndorsementRequestHandler requestHandler)
+        public EndorsementSuccessBehavior(IEndorsementRequestHandler requestHandler, IReadWriteSetTransactionSerializer readWriteSetTransactionSerializer)
         {
             this.requestHandler = requestHandler;
+            this.readWriteSetTransactionSerializer = readWriteSetTransactionSerializer;
         }
 
         protected override void AttachCore()
@@ -31,21 +36,19 @@ namespace Stratis.Feature.PoA.Tokenless
 
         public override object Clone()
         {
-            return new EndorsementRequestBehavior(this.requestHandler);
+            return new EndorsementSuccessBehavior(this.requestHandler, this.readWriteSetTransactionSerializer);
         }
 
         private async Task OnMessageReceivedAsync(INetworkPeer peer, IncomingMessage message)
         {
-            if (!(message.Message.Payload is ProposalPayload payload))
+            if (!(message.Message.Payload is EndorsementPayload payload))
                 return;
 
-            var endorsementRequest = new EndorsementRequest
-            {
-                ContractTransaction = payload.Transaction,
-                Peer = peer
-            };
+            Transaction signedRWSTransaction = payload.Transaction;
 
-            this.requestHandler.ExecuteAndReturnProposal(endorsementRequest);            
+            ReadWriteSet readWriteSet = this.readWriteSetTransactionSerializer.GetReadWriteSet(signedRWSTransaction);
+
+            // TODO: Act on signed proposal.
         }
     }
 }
