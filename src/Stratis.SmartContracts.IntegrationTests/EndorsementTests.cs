@@ -31,7 +31,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             this.network = TokenlessTestHelper.Network;
         }
 
-        [Fact(Skip = "In Progress")]
+        [Fact]
         public async Task EndorseCallTransaction()
         {
             using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
