@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Models;
@@ -169,8 +170,9 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Node1 should still let it in the mempool as it's from himself.
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
 
-                // Node2 won't be able to get the certificate so will decline the transaction but still work.
-                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                // Node2 won't be able to get the certificate so will decline the transaction.
+                Thread.Sleep(2000);
+                Assert.Empty(node2.FullNode.MempoolManager().GetMempoolAsync().Result);
 
                 // First node mines a block so the transaction is in a block, which the other guy then also trusts.
                 await node1.MineBlocksAsync(1);
