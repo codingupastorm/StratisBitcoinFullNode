@@ -52,7 +52,7 @@ namespace Stratis.TokenlessD
             }
             catch (Exception ex)
             {
-                Console.WriteLine("There was a problem initializing the node: '{0}'", ex.ToString());
+                Console.WriteLine("There was a problem initializing the node : '{0}'", ex.ToString());
             }
         }
     }
