@@ -42,8 +42,10 @@ namespace Stratis.Feature.PoA.Tokenless
         {
             IEnumerable<(INetworkPeer Peer, X509Certificate Certificate)> peersInOrganisation = this.PeersWithCerts.Where(x => GetOrganisation(x.Certificate) == organisation);
 
+            // TODO: Error handling. What if we're not connected to an endorser?
+
             // For now, only take the first in the organisation. As endorsement grows more fully-featured we can adjust.
-            INetworkPeer peer = peersInOrganisation.FirstOrDefault().Peer;
+            INetworkPeer peer = peersInOrganisation.First().Peer;
 
             try
             {
