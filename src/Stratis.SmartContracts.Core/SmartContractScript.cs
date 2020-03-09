@@ -37,6 +37,13 @@ namespace Stratis.SmartContracts.Core
         }
 
         [NoTrace]
+        public static bool IsReadWriteSet(this Script script)
+        {
+            // Is this the correct place for this?
+            return TestFirstByte(script, (byte) OpcodeType.OP_READWRITE);
+        }
+
+        [NoTrace]
         private static bool TestFirstByte(Script script, byte opcode)
         {
             byte[] scriptBytes = script.ToBytes(true);

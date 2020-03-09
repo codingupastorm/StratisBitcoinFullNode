@@ -1,9 +1,14 @@
-﻿using System;
-using Stratis.SmartContracts.Core.State;
+﻿using Stratis.SmartContracts.Core.State;
 
 namespace Stratis.SmartContracts.Core.ReadWrite
 {
-    public class ReadWriteSetValidator
+    public interface IReadWriteSetValidator
+    {
+        bool IsReadWriteSetValid(IStateRepository stateRepository, ReadWriteSet readWriteSet);
+        void ApplyReadWriteSet(IStateRepository stateRepository, ReadWriteSet readWriteSet, string currentVersion);
+    }
+
+    public class ReadWriteSetValidator : IReadWriteSetValidator
     {
         // TODO: If validating whole blocks of read-write sets, include the staterepository once and check RWSs sequentially.
 
@@ -21,9 +26,16 @@ namespace Stratis.SmartContracts.Core.ReadWrite
             return true;
         }
 
-        public void ApplyReadWriteSet(IStateRepository stateRepository, ReadWriteSetBuilder readWriteSet)
+        public void ApplyReadWriteSet(IStateRepository stateRepository, ReadWriteSet readWriteSet, string currentVersion)
         {
-            throw new NotImplementedException("To be used when applying the read write set inside of a block.");
+            // May not be the right place for this method? 
+
+            IStateRepository workingStateRepository = stateRepository.StartTracking();
+
+            foreach (WriteItem write in readWriteSet.Writes)
+            {
+                workingStateRepository.SetStorageValue(write.ContractAddress, write.Key, write.Value, currentVersion);
+            }
         }
     }
 }

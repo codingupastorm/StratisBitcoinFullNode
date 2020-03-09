@@ -79,5 +79,11 @@ namespace Stratis.SmartContracts.Core.Tests
             var validator = new ReadWriteSetValidator();
             Assert.False(validator.IsReadWriteSetValid(stateRepoMock.Object, readWriteSet));
         }
+
+        [Fact]
+        public void AppliesToStateRepo()
+        {
+
+        }
     }
 }
