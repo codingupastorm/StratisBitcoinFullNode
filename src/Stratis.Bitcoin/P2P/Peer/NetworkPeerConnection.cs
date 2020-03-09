@@ -505,7 +505,7 @@ namespace Stratis.Bitcoin.P2P.Peer
                 message = Message.ReadNext(memoryStream, this.network, protocolVersion, cancellation, this.payloadProvider, out PerformanceCounter counter);
             }
 
-            return(message, rawMessage.Length);
+            return (message, rawMessage.Length);
         }
 
         /// <inheritdoc />

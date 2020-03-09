@@ -12,7 +12,6 @@ using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Signals;
@@ -93,7 +92,6 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.Rules.CommonRules
                 rule.Logger = this.logger.Object;
 
                 var loggerFactory = new ExtendedLoggerFactory();
-                loggerFactory.AddConsoleWithFilters();
 
                 var dateTimeProvider = new DateTimeProvider();
 

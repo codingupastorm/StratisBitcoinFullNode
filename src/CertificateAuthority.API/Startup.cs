@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Swashbuckle.AspNetCore.Swagger;
+using Microsoft.OpenApi.Models;
 
 namespace CertificateAuthority.API
 {
@@ -29,7 +29,7 @@ namespace CertificateAuthority.API
                 .AddApplicationPart(typeof(HelpersController).GetTypeInfo().Assembly);
 
             services.AddSwaggerGen(c =>
-                c.SwaggerDoc("v1", new Info { Title = "Stratis Certificate Authority API V1", Version = "v1" }
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Stratis Certificate Authority API V1", Version = "v1" }
                 ));
 
             services.AddSingleton<DataCacheLayer>();
@@ -41,6 +41,8 @@ namespace CertificateAuthority.API
         {
             app.ApplicationServices.GetService<DataCacheLayer>().Initialize();
             app.ApplicationServices.GetService<CaCertificatesManager>().Initialize();
+
+            app.UseRouting();
 
             // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();
@@ -55,7 +57,12 @@ namespace CertificateAuthority.API
                 app.UseHsts();
 
             app.UseHttpsRedirection();
-            app.UseMvc();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+                endpoints.MapDefaultControllerRoute();
+            });
         }
     }
 }

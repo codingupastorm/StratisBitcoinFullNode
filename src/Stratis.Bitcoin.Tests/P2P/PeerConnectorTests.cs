@@ -31,7 +31,6 @@ namespace Stratis.Bitcoin.Tests.P2P
         public PeerConnectorTests()
         {
             this.extendedLoggerFactory = new ExtendedLoggerFactory();
-            this.extendedLoggerFactory.AddConsoleWithFilters();
 
             this.nodeLifetime = new NodeLifetime();
             this.signals = new Mock<ISignals>().Object;

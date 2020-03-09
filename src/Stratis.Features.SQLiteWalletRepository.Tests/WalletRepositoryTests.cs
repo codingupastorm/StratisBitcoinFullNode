@@ -76,7 +76,7 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
 
             using (IKeyValueStoreTransaction transaction = this.BlockRepo.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                foreach ((uint256 hashThis, Block block) in transaction.SelectForward<uint256, Block>("Block"))
+                foreach ((uint256 hashThis, Block block) in transaction.SelectAll<uint256, Block>("Block"))
                 {
                     uint256 hashPrev = block.Header.HashPrevBlock;
                     prevBlock[hashThis] = hashPrev;

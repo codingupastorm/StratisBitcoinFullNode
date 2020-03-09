@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Versioning;
@@ -8,7 +6,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Stratis.Bitcoin.Builder.Feature;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
@@ -16,10 +13,10 @@ namespace Stratis.Bitcoin.Features.Api
 {
     public class Startup
     {
-        public Startup(IHostingEnvironment env, IFullNode fullNode, ApiFeatureOptions apiFeatureOptions)
+        public Startup(IWebHostEnvironment env, IFullNode fullNode)
         {
             this.fullNode = fullNode;
-            this.apiFeatureOptions = apiFeatureOptions;
+
             IConfigurationBuilder builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
@@ -30,13 +27,20 @@ namespace Stratis.Bitcoin.Features.Api
         }
 
         private readonly IFullNode fullNode;
-        private readonly ApiFeatureOptions apiFeatureOptions;
 
         public IConfigurationRoot Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddLogging(
+                loggingBuilder =>
+                {
+                    loggingBuilder.AddConfiguration(this.Configuration.GetSection("Logging"));
+                    loggingBuilder.AddConsole();
+                    loggingBuilder.AddDebug();
+                });
+
             // Add service and create Policy to allow Cross-Origin Requests
             services.AddCors
             (
@@ -59,13 +63,9 @@ namespace Stratis.Bitcoin.Features.Api
                     );
                 });
 
-            // Filters api features based on options provide.
-            IEnumerable<IFullNodeFeature> features = this.apiFeatureOptions.Includes.Any()
-                ? this.fullNode.Services.Features.Where(feature => this.apiFeatureOptions.Includes.Contains(feature.GetType()))
-                : this.fullNode.Services.Features.Where(feature => !this.apiFeatureOptions.Excludes.Contains(feature.GetType()));
-
             // Add framework services.
-            services.AddMvc(options =>
+            services
+                .AddMvc(options =>
                 {
                     options.Filters.Add(typeof(LoggingActionFilter));
 
@@ -76,9 +76,9 @@ namespace Stratis.Bitcoin.Features.Api
                         options.Filters.Add(typeof(KeepaliveActionFilter));
                     }
                 })
-                // Add serializers for NBitcoin objects.
-                .AddJsonOptions(options => Utilities.JsonConverters.Serializer.RegisterFrontConverters(options.SerializerSettings))
-                .AddControllers(features, services);
+                // add serializers for NBitcoin objects
+                .AddNewtonsoftJson(options => Utilities.JsonConverters.Serializer.RegisterFrontConverters(options.SerializerSettings))
+                .AddControllers(this.fullNode.Services.Features, services);
 
             // Enable API versioning.
             // Note much of this is borrowed from https://github.com/microsoft/aspnet-api-versioning/blob/master/samples/aspnetcore/SwaggerSample/Startup.cs
@@ -110,17 +110,20 @@ namespace Stratis.Bitcoin.Features.Api
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IApiVersionDescriptionProvider provider)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory loggerFactory, IApiVersionDescriptionProvider provider)
         {
-            loggerFactory.AddConsole(this.Configuration.GetSection("Logging"));
-            loggerFactory.AddDebug();
+            app.UseStaticFiles();
+            app.UseRouting();
 
             app.UseCors("CorsPolicy");
 
             // Register this before MVC and Swagger.
             app.UseMiddleware<NoCacheMiddleware>();
 
-            app.UseMvc();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
 
             // Enable middleware to serve generated Swagger as a JSON endpoint.
             app.UseSwagger();

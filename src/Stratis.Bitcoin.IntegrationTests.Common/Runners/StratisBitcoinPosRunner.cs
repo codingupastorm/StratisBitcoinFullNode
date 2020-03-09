@@ -8,7 +8,6 @@ using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.Miner;
-using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.P2P;
@@ -42,7 +41,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.Runners
                 .UseWallet()
                 .AddSQLiteWalletRepository()
                 .AddPowPosMining()
-                .AddRPC()
                 .UseApi()
                 .UseTestChainedHeaderTree()
                 .MockIBD();
@@ -78,7 +76,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.Runners
                                 .UseWallet()
                                 .AddSQLiteWalletRepository()
                                 .AddPowPosMining()
-                                .AddRPC()
                                 .MockIBD()
                                 .UseTestChainedHeaderTree()
                                 .Build();

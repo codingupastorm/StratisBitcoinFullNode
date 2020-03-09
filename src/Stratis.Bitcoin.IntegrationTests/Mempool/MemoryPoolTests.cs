@@ -287,8 +287,8 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 TestBase.WaitLoop(() => stratisNodeSync.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 0);
 
                 // wait for block and mempool to change
-                TestBase.WaitLoop(() => stratisNode1.CreateRPCClient().GetBestBlockHash() == stratisNodeSync.CreateRPCClient().GetBestBlockHash());
-                TestBase.WaitLoop(() => stratisNode2.CreateRPCClient().GetBestBlockHash() == stratisNodeSync.CreateRPCClient().GetBestBlockHash());
+                TestBase.WaitLoop(() => stratisNode1.FullNode.ConsensusManager().Tip.HashBlock == stratisNodeSync.FullNode.ConsensusManager().Tip.HashBlock);
+                TestBase.WaitLoop(() => stratisNode2.FullNode.ConsensusManager().Tip.HashBlock == stratisNodeSync.FullNode.ConsensusManager().Tip.HashBlock);
                 TestBase.WaitLoop(() => stratisNode1.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 0);
                 TestBase.WaitLoop(() => stratisNode2.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 0);
             }
