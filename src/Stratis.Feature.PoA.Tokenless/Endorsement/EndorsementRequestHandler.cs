@@ -77,7 +77,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
             // TODO: We definitely need to check some properties about the read-write set?
 
-            this.signer.Sign(request);
+            // TODO: Should the proposal id (request.ContractTransaction.GetHash()) be embedded into the signedRWSTransaction?
 
             Transaction signedRWSTransaction = this.readWriteSetTransactionSerializer.Build(result.ReadWriteSet.GetReadWriteSet());
 
