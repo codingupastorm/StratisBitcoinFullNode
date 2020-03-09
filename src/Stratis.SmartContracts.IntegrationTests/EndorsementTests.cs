@@ -73,13 +73,13 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Transaction callTransaction = TokenlessTestHelper.CreateContractCallTransaction(node1, createReceipt.NewContractAddress, node1.TransactionSigningPrivateKey);
 
                 var tokenlessController = node1.FullNode.NodeController<TokenlessController>();
-                JsonResult result = (JsonResult) await tokenlessController.SendEndorsementAsync(new SendEndorsementModel
+                JsonResult result = (JsonResult) await tokenlessController.SendProposalAsync(new SendProposalModel
                 {
                     TransactionHex = callTransaction.ToHex(),
                     Organisation = OrganisationName
                 });
 
-                var endorsementResponse = (SendEndorsementResponseModel) result.Value;
+                var endorsementResponse = (SendProposalResponseModel) result.Value;
                 Assert.Equal("Transaction has been sent to endorsing node for execution.", endorsementResponse.Message);
 
                 // The test currently gets to here! It will fail at the NotImplementedException in EndorsementValidator
