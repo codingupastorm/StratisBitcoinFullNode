@@ -6,10 +6,10 @@ namespace Stratis.Feature.PoA.Tokenless.Payloads
     [Payload("endorsement")]
     public class EndorsementPayload : Payload
     {
-        private uint256 channelCodeId;
+        private uint256 proposalId;
         private Transaction transaction;
 
-        public uint256 ChannelCodeId => this.channelCodeId;
+        public uint256 ProposalId => this.proposalId;
         public Transaction Transaction => this.transaction;
 
         /// <remarks>Needed for deserialization.</remarks>
@@ -17,21 +17,21 @@ namespace Stratis.Feature.PoA.Tokenless.Payloads
         {
         }
 
-        public EndorsementPayload(Transaction transaction, uint256 channelCodeId)
+        public EndorsementPayload(Transaction transaction, uint256 proposalId)
         {
-            this.channelCodeId = channelCodeId;
+            this.proposalId = proposalId;
             this.transaction = transaction;
         }
 
         public override void ReadWriteCore(BitcoinStream stream)
         {
-            stream.ReadWrite(ref this.channelCodeId);
+            stream.ReadWrite(ref this.proposalId);
             stream.ReadWrite(ref this.transaction);
         }
 
         public override string ToString()
         {
-            return $"{nameof(this.Command)}:'{this.Command}',{nameof(this.ChannelCodeId)}:'{this.channelCodeId}',{nameof(this.Transaction)}:'{this.transaction.GetHash()}'";
+            return $"{nameof(this.Command)}:'{this.Command}',{nameof(this.ProposalId)}:'{this.proposalId}',{nameof(this.Transaction)}:'{this.transaction.GetHash()}'";
         }
     }
 }
