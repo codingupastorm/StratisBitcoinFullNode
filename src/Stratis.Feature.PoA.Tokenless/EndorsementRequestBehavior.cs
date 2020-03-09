@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
@@ -37,17 +36,16 @@ namespace Stratis.Feature.PoA.Tokenless
 
         private async Task OnMessageReceivedAsync(INetworkPeer peer, IncomingMessage message)
         {
-            if (!(message.Message.Payload is EndorsementRequestPayload payload))
+            if (!(message.Message.Payload is ProposalPayload payload))
                 return;
 
             var endorsementRequest = new EndorsementRequest
             {
-                ContractTransaction = payload.Transaction
+                ContractTransaction = payload.Transaction,
+                Peer = peer
             };
 
-            this.requestHandler.ExecuteAndSignProposal(endorsementRequest);
-
-            throw new NotImplementedException("Send something back.");
+            this.requestHandler.ExecuteAndReturnProposal(endorsementRequest);            
         }
     }
 }

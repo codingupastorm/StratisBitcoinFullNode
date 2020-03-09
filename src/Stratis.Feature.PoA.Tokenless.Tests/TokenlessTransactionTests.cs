@@ -25,7 +25,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         private static byte[] Value1 = new byte[] { 0, 1, 2, 3 };
         private static readonly byte[] Value2 = new byte[] { 4, 5, 6, 7 };
 
-        public TokenlessTransactionFromRWS GetBuilder(Network network = null, [System.Runtime.CompilerServices.CallerMemberName] string callingMethod = "")
+        public ReadWriteSetTransactionSerializer GetBuilder(Network network = null, [System.Runtime.CompilerServices.CallerMemberName] string callingMethod = "")
         {
             network = network ?? new TokenlessNetwork();
 
@@ -37,7 +37,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             tokenlessWalletManager.Initialize();
 
             var signer = new TokenlessSigner(network, new SenderRetriever());
-            var builder = new TokenlessTransactionFromRWS(network, tokenlessWalletManager, signer);
+            var builder = new ReadWriteSetTransactionSerializer(network, tokenlessWalletManager, signer);
 
             return builder;
         }
@@ -73,7 +73,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             ReadWriteSet readWriteSet = rws.GetReadWriteSet();
 
             // Create a transaction containing the ReadWriteSet.
-            TokenlessTransactionFromRWS builder = GetBuilder();
+            ReadWriteSetTransactionSerializer builder = GetBuilder();
             Transaction tx = builder.Build(readWriteSet);
 
             // Recover the ReadWriteSet from the transaction.
