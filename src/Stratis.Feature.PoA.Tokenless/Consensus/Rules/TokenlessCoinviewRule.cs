@@ -144,6 +144,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
                 if (transaction.Outputs.First().ScriptPubKey.IsReadWriteSet())
                 {
                     this.ExecuteReadWriteTransaction(context.ValidationContext, transaction);
+                    continue;
                 }
 
                 TxOut smartContractTxOut = transaction.Outputs.FirstOrDefault(txOut => SmartContractScript.IsSmartContractExec(txOut.ScriptPubKey));

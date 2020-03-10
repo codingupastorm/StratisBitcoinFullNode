@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
@@ -16,6 +17,7 @@ using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Util;
@@ -31,6 +33,8 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         private readonly IBlockExecutionResultCache executionCache;
         private readonly ICallDataSerializer callDataSerializer;
         private IStateRepositoryRoot stateSnapshot;
+        private readonly IReadWriteSetTransactionSerializer rwsSerializer;
+        private readonly IReadWriteSetValidator rwsValidator;
         private readonly ITokenlessSigner tokenlessSigner;
 
         public TokenlessBlockDefinition(
@@ -46,6 +50,8 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             ITokenlessSigner tokenlessSigner,
             IStateRepositoryRoot stateRoot,
             IBlockExecutionResultCache executionCache,
+            IReadWriteSetTransactionSerializer readWriteSerializer,
+            IReadWriteSetValidator rwsValidator,
             ICallDataSerializer callDataSerializer)
             : base(consensusManager, dateTimeProvider, loggerFactory, mempool, mempoolLock, minerSettings, network)
         {
@@ -55,6 +61,8 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             this.callDataSerializer = callDataSerializer;
             this.tokenlessSigner = tokenlessSigner;
             this.executionCache = executionCache;
+            this.rwsSerializer = readWriteSerializer;
+            this.rwsValidator = rwsValidator;
             this.receipts = new List<Receipt>();
 
             // When building smart contract blocks, we will be generating and adding both transactions to the block and txouts to the coinbase. 
@@ -175,6 +183,11 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         /// <inheritdoc/>
         public override void AddToBlock(TxMempoolEntry entry)
         {
+            if (entry.Transaction.Outputs.First().ScriptPubKey.IsReadWriteSet())
+            {
+                this.ExecuteReadWriteTransaction(entry.Transaction);
+            }
+
             TxOut smartContractTxOut = entry.Transaction.TryGetSmartContractTxOut();
             if (smartContractTxOut == null)
                 this.logger.LogDebug("Transaction {0} does not contain smart contract information.", entry.Transaction.GetHash());
@@ -226,6 +239,23 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             }
 
             scHeader.LogsBloom = logsBloom;
+        }
+
+        private void ExecuteReadWriteTransaction(Transaction transaction)
+        {
+            // Apply RWS to the state repository.
+            ReadWriteSet rws = this.rwsSerializer.GetReadWriteSet(transaction);
+
+            if (this.rwsValidator.IsReadWriteSetValid(this.stateSnapshot, rws))
+            {
+                throw new NotImplementedException("Do we discard transactions if they are no longer valid by version?");
+            }
+
+            int txIndex = this.block.Transactions.Count;
+
+            string version = $"{this.height}.{txIndex}";
+
+            this.rwsValidator.ApplyReadWriteSet(this.stateSnapshot, rws, version);
         }
 
         /// <summary>

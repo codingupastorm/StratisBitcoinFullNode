@@ -28,6 +28,7 @@ using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.CLR.Loader;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.CLR.Validation;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
 using Stratis.SmartContracts.Tokenless;
@@ -63,6 +64,9 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         private ConsensusManager consensusManager;
         private MempoolSchedulerLock mempoolLock;
         private ConsensusRuleEngine consensusRules;
+
+        private IReadWriteSetTransactionSerializer rwsSerializer;
+        private IReadWriteSetValidator rwsValidator;
 
         public MiningTests()
         {
@@ -121,6 +125,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             // Transaction One
             Transaction transactionOne = this.helper.Network.CreateTransaction();
+            transactionOne.Outputs.Add(new TxOut(Money.Zero, Script.Empty));
             this.helper.TokenlessSigner.InsertSignedTxIn(transactionOne, key.GetBitcoinSecret(this.helper.Network));
             await mempoolValidator.AcceptToMemoryPool(mempoolValidationState, transactionOne);
             TestBase.WaitLoop(() => { return this.helper.Mempool.MapTx.Count == 1; });
@@ -129,6 +134,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             // Transaction Two
             Transaction transactionTwo = this.helper.Network.CreateTransaction();
+            transactionTwo.Outputs.Add(new TxOut(Money.Zero, Script.Empty));
             this.helper.TokenlessSigner.InsertSignedTxIn(transactionTwo, key.GetBitcoinSecret(this.helper.Network));
             await mempoolValidator.AcceptToMemoryPool(mempoolValidationState, transactionTwo);
             TestBase.WaitLoop(() => { return this.helper.Mempool.MapTx.Count == 2; });
@@ -177,6 +183,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 this.helper.TokenlessSigner,
                 this.stateRoot,
                 this.executionCache,
+                this.rwsSerializer,
+                this.rwsValidator,
                 this.helper.CallDataSerializer);
         }
 
@@ -243,6 +251,9 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             this.executorFactory = new TokenlessReflectionExecutorFactory(this.helper.CallDataSerializer, this.stateFactory, this.stateProcessor, this.primitiveSerializer);
 
             this.executionCache = new BlockExecutionResultCache();
+
+            this.rwsValidator = new ReadWriteSetValidator();
+            this.rwsSerializer = new ReadWriteSetTransactionSerializer(this.helper.Network, null, null);
         }
     }
 }
