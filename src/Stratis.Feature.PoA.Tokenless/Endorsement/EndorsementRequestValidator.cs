@@ -1,5 +1,6 @@
 ﻿using NBitcoin;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Util;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
@@ -13,6 +14,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     {
         private readonly IEndorsements endorsements;
         private readonly ITokenlessSigner tokenlessSigner;
+        private readonly IReadWriteSetTransactionSerializer readWriteSetTransactionSerializer;
 
         /*
          * From HL docs:
@@ -24,10 +26,11 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
          *
          */
 
-        public EndorsementRequestValidator(IEndorsements endorsements, ITokenlessSigner tokenlessSigner)
+        public EndorsementRequestValidator(IEndorsements endorsements, ITokenlessSigner tokenlessSigner, IReadWriteSetTransactionSerializer readWriteSetTransactionSerializer)
         {
             this.endorsements = endorsements;
             this.tokenlessSigner = tokenlessSigner;
+            this.readWriteSetTransactionSerializer = readWriteSetTransactionSerializer;
         }
 
         public bool ValidateRequest(EndorsementRequest request)
@@ -43,11 +46,10 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             if (request.ContractTransaction.Inputs.Count != 1)
                 return false;
 
-            if (request.ContractTransaction.Outputs.Count != 1)
+            // Check the RWS.
+            ReadWriteSet readWriteSet = this.readWriteSetTransactionSerializer.GetReadWriteSet(request.ContractTransaction);
+            if (readWriteSet == null)
                 return false;
-
-            // TODO: Check the RWS.
-
 
             // Verify that the signature is valid.
             this.tokenlessSigner.Verify(request.ContractTransaction);
