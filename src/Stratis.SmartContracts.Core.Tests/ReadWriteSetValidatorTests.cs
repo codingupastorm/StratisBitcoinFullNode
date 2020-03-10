@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using Moq;
 using NBitcoin;
+using Stratis.Patricia;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 using Xunit;
@@ -83,7 +84,21 @@ namespace Stratis.SmartContracts.Core.Tests
         [Fact]
         public void AppliesToStateRepo()
         {
+            // Empty repo
+            StateRepositoryRoot repository = new StateRepositoryRoot(new MemoryDictionarySource());
 
+            // Some writes in a read write set
+            var readWriteSetBuilder = new ReadWriteSetBuilder();
+            readWriteSetBuilder.AddWriteItem(new ReadWriteSetKey(TestAddress, Key1Bytes), Value1);
+            readWriteSetBuilder.AddWriteItem(new ReadWriteSetKey(TestAddress, Key2Bytes), Value2);
+            ReadWriteSet readWriteSet = readWriteSetBuilder.GetReadWriteSet();
+
+            var validator = new ReadWriteSetValidator();
+
+            validator.ApplyReadWriteSet(repository, readWriteSet, Version1);
+
+            Assert.Equal(Value1, repository.GetStorageValue(TestAddress, Key1Bytes).Value);
+            Assert.Equal(Value2, repository.GetStorageValue(TestAddress, Key2Bytes).Value);
         }
     }
 }

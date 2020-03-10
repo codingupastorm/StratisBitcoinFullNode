@@ -36,6 +36,8 @@ namespace Stratis.SmartContracts.Core.ReadWrite
             {
                 workingStateRepository.SetStorageValue(write.ContractAddress, write.Key, write.Value, currentVersion);
             }
+
+            workingStateRepository.Commit();
         }
     }
 }
