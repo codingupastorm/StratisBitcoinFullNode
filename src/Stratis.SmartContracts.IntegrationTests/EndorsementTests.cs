@@ -82,8 +82,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var endorsementResponse = (SendProposalResponseModel) result.Value;
                 Assert.Equal("Transaction has been sent to endorsing node for execution.", endorsementResponse.Message);
 
-                // The test currently gets to here! It will fail at the NotImplementedException in EndorsementValidator
-
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().InfoAll().Count > 0);
             }
         }

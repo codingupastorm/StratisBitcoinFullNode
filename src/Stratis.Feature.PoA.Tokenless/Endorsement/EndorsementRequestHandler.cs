@@ -88,7 +88,9 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             try
             {
                 // Send the result back.
-                this.endorsements.GetEndorsement(proposalId).SetState(EndorsementState.Approved);
+                EndorsementInfo info = this.endorsements.RecordEndorsement(proposalId);               
+                info.SetState(EndorsementState.Approved);
+
                 request.Peer.SendMessageAsync(payload).ConfigureAwait(false).GetAwaiter().GetResult();
             }
             catch (OperationCanceledException)

@@ -27,7 +27,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     public interface IEndorsements
     {
         EndorsementInfo GetEndorsement(uint256 proposalId);
-        void RecordEndorsement(uint256 proposalId);
+        EndorsementInfo RecordEndorsement(uint256 proposalId);
     }
 
     public class Endorsements : IEndorsements
@@ -46,9 +46,12 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             return info;
         }
 
-        public void RecordEndorsement(uint256 proposalId)
+        public EndorsementInfo RecordEndorsement(uint256 proposalId)
         {
-            this.endorsements[proposalId] = new EndorsementInfo();
+            var info = new EndorsementInfo();
+            this.endorsements[proposalId] = info;
+
+            return info;
         }
     }
 }

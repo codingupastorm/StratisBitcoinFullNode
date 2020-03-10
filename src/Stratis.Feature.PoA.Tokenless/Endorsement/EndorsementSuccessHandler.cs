@@ -6,7 +6,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
     public interface IEndorsementSuccessHandler
     {
-        Task<bool> ProcessEndorsement(uint256 proposalId, Transaction signedRWSTransaction);
+        Task<bool> ProcessEndorsementAsync(uint256 proposalId, Transaction signedRWSTransaction);
     }
 
     public class EndorsementSuccessHandler : IEndorsementSuccessHandler
@@ -20,7 +20,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.endorsements = endorsements;
         }
 
-        public async Task<bool> ProcessEndorsement(uint256 proposalId, Transaction signedRWSTransaction)
+        public async Task<bool> ProcessEndorsementAsync(uint256 proposalId, Transaction signedRWSTransaction)
         {
             // TODO: Recruit multiple endorsements before broadcasting the transactions.
 
