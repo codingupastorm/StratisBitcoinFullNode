@@ -74,11 +74,11 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
             if (result.Revert)
             {
-                this.logger.LogDebug("Request for endorsement resulted in failed contract execution.");
+                this.logger.LogDebug("Request for endorsement resulted in failed contract execution: {0}", result.ErrorMessage);
                 return false;
             }
 
-            // TODO: We definitely need to check some properties about the read-write set?
+            // If we have multiple endorsements happening here, check the read write set before signing!
 
             Transaction signedRWSTransaction = this.readWriteSetTransactionSerializer.Build(result.ReadWriteSet.GetReadWriteSet());
 
