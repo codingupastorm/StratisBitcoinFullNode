@@ -6,6 +6,7 @@ using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.Wallet;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Util;
@@ -35,9 +36,9 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var certificatesManager = new CertificatesManager(settings.DataFolder, settings, settings.LoggerFactory, revocationChecker, network);
             var tokenlessWalletManager = new TokenlessWalletManager(network, settings.DataFolder, new TokenlessWalletSettings(settings), certificatesManager, settings.LoggerFactory);
             tokenlessWalletManager.Initialize();
-
             var signer = new TokenlessSigner(network, new SenderRetriever());
-            var builder = new ReadWriteSetTransactionSerializer(network, tokenlessWalletManager, signer);
+            var endorsementSigner = new EndorsementSigner(network, signer, tokenlessWalletManager);
+            var builder = new ReadWriteSetTransactionSerializer(network, endorsementSigner);
 
             return builder;
         }
