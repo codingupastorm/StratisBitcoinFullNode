@@ -29,7 +29,6 @@ namespace Stratis.Bitcoin.Tests.P2P
         public PeerAddressManagerBehaviourTests()
         {
             this.extendedLoggerFactory = new ExtendedLoggerFactory();
-            this.extendedLoggerFactory.AddConsoleWithFilters();
             this.connectionManagerSettings = new ConnectionManagerSettings(NodeSettings.Default(this.Network));
             this.signals = new Bitcoin.Signals.Signals(this.extendedLoggerFactory, null);
             this.asyncProvider = new AsyncProvider(this.extendedLoggerFactory, this.signals, new NodeLifetime());
