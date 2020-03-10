@@ -1,6 +1,6 @@
 ﻿using System.Text;
 using NBitcoin;
-using Stratis.Feature.PoA.Tokenless.Wallet;
+using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.SmartContracts.Core.ReadWrite;
 
 namespace Stratis.Feature.PoA.Tokenless.Consensus
@@ -14,14 +14,12 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
     public class ReadWriteSetTransactionSerializer : IReadWriteSetTransactionSerializer
     {
         private readonly Network network;
-        private readonly ITokenlessWalletManager tokenlessWalletManager;
-        private readonly ITokenlessSigner tokenlessSigner;
+        private readonly IEndorsementSigner endorsementSigner;
 
-        public ReadWriteSetTransactionSerializer(Network network, ITokenlessWalletManager tokenlessWalletManager, ITokenlessSigner tokenlessSigner)
+        public ReadWriteSetTransactionSerializer(Network network, IEndorsementSigner endorsementSigner)
         {
             this.network = network;
-            this.tokenlessWalletManager = tokenlessWalletManager;
-            this.tokenlessSigner = tokenlessSigner;
+            this.endorsementSigner = endorsementSigner;
         }
 
         public Transaction Build(ReadWriteSet readWriteSet)
@@ -32,9 +30,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
             Script outputScript = TxReadWriteDataTemplate.Instance.GenerateScriptPubKey(opRWSData);
             transaction.Outputs.Add(new TxOut(Money.Zero, outputScript));
 
-            Key key = this.tokenlessWalletManager.LoadTransactionSigningKey();
-
-            this.tokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
+            this.endorsementSigner.Sign(transaction);
 
             return transaction;
         }

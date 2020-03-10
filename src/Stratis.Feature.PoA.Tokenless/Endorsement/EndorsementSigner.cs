@@ -1,17 +1,32 @@
-﻿using System;
+﻿using NBitcoin;
+using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Feature.PoA.Tokenless.Wallet;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
     public interface IEndorsementSigner
     {
-        void Sign(EndorsementRequest request);
+        void Sign(Transaction transaction);
     }
 
     public class EndorsementSigner : IEndorsementSigner
     {
-        public void Sign(EndorsementRequest request)
+        private readonly Network network;
+        private readonly ITokenlessSigner tokenlessSigner;
+        private readonly ITokenlessWalletManager tokenlessWalletManager;
+
+        public EndorsementSigner(Network network, ITokenlessSigner tokenlessSigner, ITokenlessWalletManager tokenlessWalletManager)
         {
-            throw new NotImplementedException("Work out how signing process is intended to work and then sign using key from this node.");
+            this.network = network;
+            this.tokenlessSigner = tokenlessSigner;
+            this.tokenlessWalletManager = tokenlessWalletManager;
+        }
+
+        public void Sign(Transaction transaction)
+        {
+            Key key = this.tokenlessWalletManager.LoadTransactionSigningKey();
+
+            this.tokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
         }
     }
 }

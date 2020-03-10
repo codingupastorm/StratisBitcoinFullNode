@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
+using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
@@ -32,15 +33,21 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
         private readonly IEnumerable<IMempoolRule> mempoolRules;
         private readonly ILogger logger;
+        private readonly IEndorsements endorsements;
 
-        public EndorsementRequestValidator(IEnumerable<IMempoolRule> mempoolRules, ILoggerFactory loggerFactory)
+        public EndorsementRequestValidator(IEnumerable<IMempoolRule> mempoolRules, ILoggerFactory loggerFactory, IEndorsements endorsements)
         {
             this.mempoolRules = mempoolRules;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
+            this.endorsements = endorsements;
         }
 
         public bool ValidateRequest(EndorsementRequest request)
         {
+            uint256 proposalId = request.ContractTransaction.GetHash();
+            if (this.endorsements.GetEndorsement(proposalId) != null)
+                return false;
+
             var mempoolContext = new MempoolValidationContext(request.ContractTransaction, new MempoolValidationState(false));
 
             try

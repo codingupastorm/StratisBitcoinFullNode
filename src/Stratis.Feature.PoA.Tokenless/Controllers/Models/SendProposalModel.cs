@@ -2,7 +2,7 @@
 
 namespace Stratis.Feature.PoA.Tokenless.Controllers.Models
 {
-    public sealed class SendEndorsementModel
+    public sealed class SendProposalModel
     {
         [Required]
         public string TransactionHex { get; set; }

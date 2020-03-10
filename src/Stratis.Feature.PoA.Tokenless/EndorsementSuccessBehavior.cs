@@ -3,10 +3,8 @@ using NBitcoin;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
-using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.Payloads;
-using Stratis.SmartContracts.Core.ReadWrite;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -15,13 +13,11 @@ namespace Stratis.Feature.PoA.Tokenless
     /// </summary>
     public class EndorsementSuccessBehavior : NetworkPeerBehavior
     {
-        private readonly IEndorsementRequestHandler requestHandler;
-        private readonly IReadWriteSetTransactionSerializer readWriteSetTransactionSerializer;
+        private readonly IEndorsementSuccessHandler requestHandler;
 
-        public EndorsementSuccessBehavior(IEndorsementRequestHandler requestHandler, IReadWriteSetTransactionSerializer readWriteSetTransactionSerializer)
+        public EndorsementSuccessBehavior(IEndorsementSuccessHandler requestHandler)
         {
             this.requestHandler = requestHandler;
-            this.readWriteSetTransactionSerializer = readWriteSetTransactionSerializer;
         }
 
         protected override void AttachCore()
@@ -36,7 +32,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         public override object Clone()
         {
-            return new EndorsementSuccessBehavior(this.requestHandler, this.readWriteSetTransactionSerializer);
+            return new EndorsementSuccessBehavior(this.requestHandler);
         }
 
         private async Task OnMessageReceivedAsync(INetworkPeer peer, IncomingMessage message)
@@ -44,11 +40,7 @@ namespace Stratis.Feature.PoA.Tokenless
             if (!(message.Message.Payload is EndorsementPayload payload))
                 return;
 
-            Transaction signedRWSTransaction = payload.Transaction;
-
-            ReadWriteSet readWriteSet = this.readWriteSetTransactionSerializer.GetReadWriteSet(signedRWSTransaction);
-
-            // TODO: Act on signed proposal.
+            await this.requestHandler.ProcessEndorsementAsync(payload.ProposalId, payload.Transaction);
         }
     }
 }

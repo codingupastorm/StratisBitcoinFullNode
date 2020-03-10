@@ -81,6 +81,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 consensusManagerMock.Object,
                 stateRootMock.Object,
                 readWriteSetTransactionSerializerMock.Object,
+                new Endorsements(),
                 loggerFactoryMock.Object
                 );
 
@@ -137,6 +138,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 consensusManagerMock.Object,
                 stateRootMock.Object,
                 readWriteSetTransactionSerializerMock.Object,
+                new Endorsements(),
                 loggerFactoryMock.Object
                 );
 

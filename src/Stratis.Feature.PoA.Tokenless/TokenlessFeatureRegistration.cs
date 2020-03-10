@@ -52,8 +52,10 @@ namespace Stratis.Feature.PoA.Tokenless
 
                         // Endorsement. For now everyone gets this. May not be the case in the future.
                         services.AddSingleton<IEndorsementRequestHandler, EndorsementRequestHandler>();
+                        services.AddSingleton<IEndorsementSuccessHandler, EndorsementSuccessHandler>();
                         services.AddSingleton<IEndorsementRequestValidator, EndorsementRequestValidator>();
                         services.AddSingleton<IEndorsementSigner, EndorsementSigner>();
+                        services.AddSingleton<IEndorsements, Endorsements>();
 
                         // In place of wallet.
                         services.AddSingleton<IBroadcasterManager, FullNodeBroadcasterManager>();
