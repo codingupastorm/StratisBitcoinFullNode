@@ -46,9 +46,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             if (request.ContractTransaction.Inputs.Count != 1)
                 return false;
 
-            // Check the RWS.
-            ReadWriteSet readWriteSet = this.readWriteSetTransactionSerializer.GetReadWriteSet(request.ContractTransaction);
-            if (readWriteSet == null)
+            if (request.ContractTransaction.Outputs.Count != 1)
                 return false;
 
             // Verify that the signature is valid.
