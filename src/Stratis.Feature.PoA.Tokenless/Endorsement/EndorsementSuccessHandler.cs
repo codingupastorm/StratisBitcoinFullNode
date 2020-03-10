@@ -6,25 +6,36 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
     public interface IEndorsementSuccessHandler
     {
-        Task<bool> ProcessEndorsement(Transaction signedRWSTransaction);
+        Task<bool> ProcessEndorsement(uint256 proposalId, Transaction signedRWSTransaction);
     }
 
     public class EndorsementSuccessHandler : IEndorsementSuccessHandler
     {
         private readonly IBroadcasterManager broadcasterManager;
+        private readonly IEndorsements endorsements;
 
-        public EndorsementSuccessHandler(IBroadcasterManager broadcasterManager)
+        public EndorsementSuccessHandler(IBroadcasterManager broadcasterManager, IEndorsements endorsements)
         {
             this.broadcasterManager = broadcasterManager;
+            this.endorsements = endorsements;
         }
 
-        public async Task<bool> ProcessEndorsement(Transaction signedRWSTransaction)
+        public async Task<bool> ProcessEndorsement(uint256 proposalId, Transaction signedRWSTransaction)
         {
             // TODO: Recruit multiple endorsements before broadcasting the transactions.
 
-            await this.broadcasterManager.BroadcastTransactionAsync(signedRWSTransaction);
+            EndorsementInfo info = this.endorsements.GetEndorsement(proposalId);
 
-            return true;
+            if (info != null)
+            {
+                info.SetState(EndorsementState.Approved);
+
+                await this.broadcasterManager.BroadcastTransactionAsync(signedRWSTransaction);
+
+                return true;
+            }
+
+            return false;
         }
     }
 }

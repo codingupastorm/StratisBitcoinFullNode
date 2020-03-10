@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using NBitcoin;
+﻿using NBitcoin;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.SmartContracts.Core.Util;
 
@@ -12,7 +11,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
     public class EndorsementRequestValidator : IEndorsementRequestValidator
     {
-        private readonly HashSet<uint256> alreadySeen;
+        private readonly IEndorsements endorsements;
         private readonly ITokenlessSigner tokenlessSigner;
 
         /*
@@ -25,14 +24,21 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
          *
          */
 
-        public EndorsementRequestValidator(ITokenlessSigner tokenlessSigner)
+        public EndorsementRequestValidator(IEndorsements endorsements, ITokenlessSigner tokenlessSigner)
         {
-            this.alreadySeen = new HashSet<uint256>();
+            this.endorsements = endorsements;
             this.tokenlessSigner = tokenlessSigner;
         }
 
         public bool ValidateRequest(EndorsementRequest request)
         {
+            // Confirm that the transaction hash has not been encountered before.
+            uint256 proposalId = request.ContractTransaction.GetHash();
+            if (this.endorsements.GetEndorsement(proposalId) != null)
+                return false;
+
+            this.endorsements.RecordEndorsement(proposalId);
+
             // Check that the transaction proposal is well formed.
             if (request.ContractTransaction.Inputs.Count != 1)
                 return false;
@@ -42,11 +48,6 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
             // TODO: Check the RWS.
 
-            // Confirm that the transaction hash has not been encountered before.
-            if (this.alreadySeen.Contains(request.ContractTransaction.GetHash()))
-                return false;
-
-            this.alreadySeen.Add(request.ContractTransaction.GetHash());
 
             // Verify that the signature is valid.
             this.tokenlessSigner.Verify(request.ContractTransaction);

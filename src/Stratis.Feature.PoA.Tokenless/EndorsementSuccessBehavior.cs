@@ -40,9 +40,7 @@ namespace Stratis.Feature.PoA.Tokenless
             if (!(message.Message.Payload is EndorsementPayload payload))
                 return;
 
-            Transaction signedRWSTransaction = payload.Transaction;
-
-            await this.requestHandler.ProcessEndorsement(signedRWSTransaction);
+            await this.requestHandler.ProcessEndorsement(payload.ProposalId, payload.Transaction);
         }
     }
 }

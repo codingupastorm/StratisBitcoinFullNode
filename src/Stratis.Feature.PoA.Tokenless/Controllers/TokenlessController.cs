@@ -18,6 +18,7 @@ using Stratis.Bitcoin.Utilities.ModelStateErrors;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.Feature.PoA.Tokenless.Core;
+using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.Payloads;
 using Stratis.Feature.PoA.Tokenless.Wallet;
 using Stratis.SmartContracts;
@@ -48,6 +49,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         private readonly CSharpContractDecompiler contractDecompiler;
         private readonly IContractPrimitiveSerializer primitiveSerializer;
         private readonly ITokenlessBroadcaster tokenlessBroadcaster;
+        private readonly IEndorsements endorsements;
         private readonly ISerializer serializer;
         private readonly ILogger logger;
 
@@ -64,6 +66,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             CSharpContractDecompiler contractDecompiler,
             IContractPrimitiveSerializer primitiveSerializer,
             ITokenlessBroadcaster tokenlessBroadcaster,
+            IEndorsements endorsements,
             ISerializer serializer)
         {
             this.coreComponent = coreComponent;
@@ -77,6 +80,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             this.receiptRepository = receiptRepository;
             this.contractDecompiler = contractDecompiler;
             this.tokenlessBroadcaster = tokenlessBroadcaster;
+            this.endorsements = endorsements;
             this.primitiveSerializer = primitiveSerializer;
             this.serializer = serializer;
             this.logger = coreComponent.LoggerFactory.CreateLogger(this.GetType());
@@ -177,6 +181,8 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
                 // Build message to send to other nodes
                 var message = new ProposalPayload(transaction);
+
+                this.endorsements.RecordEndorsement(transaction.GetHash());
 
                 // Broadcast message
                 await this.tokenlessBroadcaster.BroadcastToFirstInOrganisationAsync(message, model.Organisation);

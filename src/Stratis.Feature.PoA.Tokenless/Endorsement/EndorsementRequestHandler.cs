@@ -28,6 +28,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         private readonly IConsensusManager consensus; // Is this the correct way to get the tip? ChainIndexer not behind interface :(
         private readonly IStateRepositoryRoot stateRoot;
         private readonly IReadWriteSetTransactionSerializer readWriteSetTransactionSerializer;
+        private readonly IEndorsements endorsements;
         private readonly ILogger logger;
 
         public EndorsementRequestHandler(
@@ -38,6 +39,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             IConsensusManager consensus,
             IStateRepositoryRoot stateRoot,
             IReadWriteSetTransactionSerializer readWriteSetTransactionSerializer,
+            IEndorsements endorsements,
             ILoggerFactory loggerFactory)
         {
             this.validator = validator;
@@ -47,6 +49,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.consensus = consensus;
             this.stateRoot = stateRoot;
             this.readWriteSetTransactionSerializer = readWriteSetTransactionSerializer;
+            this.endorsements = endorsements;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
@@ -77,15 +80,15 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
             // TODO: We definitely need to check some properties about the read-write set?
 
-            // TODO: Should the proposal id (request.ContractTransaction.GetHash()) be embedded into the signedRWSTransaction?
-
             Transaction signedRWSTransaction = this.readWriteSetTransactionSerializer.Build(result.ReadWriteSet.GetReadWriteSet());
 
-            var payload = new EndorsementPayload(signedRWSTransaction, request.ContractTransaction.GetHash());
+            uint256 proposalId = request.ContractTransaction.GetHash();
+            var payload = new EndorsementPayload(signedRWSTransaction, proposalId);
 
             try
             {
                 // Send the result back.
+                this.endorsements.GetEndorsement(proposalId).SetState(EndorsementState.Approved);
                 request.Peer.SendMessageAsync(payload).ConfigureAwait(false).GetAwaiter().GetResult();
             }
             catch (OperationCanceledException)
