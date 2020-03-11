@@ -68,7 +68,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             TransactionBuildContext context = CreateContext(this.Network, testContext.WalletReference, "password", testContext.DestinationKeys.PubKey.ScriptPubKey, new Money(7500), FeeType.Low, 0);
             Transaction transactionResult = testContext.WalletTransactionHandler.BuildTransaction(context);
 
-            Assert.Equal(new Money(this.Network.MinTxFee, MoneyUnit.Satoshi), context.TransactionFee);
+            Assert.Equal(new Money(((FeeNetwork)this.Network).MinTxFee, MoneyUnit.Satoshi), context.TransactionFee);
         }
 
         [Fact]

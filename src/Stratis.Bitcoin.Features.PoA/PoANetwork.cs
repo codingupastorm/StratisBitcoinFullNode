@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.MemoryPool.Rules;
 using Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules;
@@ -21,7 +20,7 @@ namespace Stratis.Bitcoin.Features.PoA
     /// Also feel free to change target spacing, premine height and premine reward.
     /// Don't set target spacing to be less than 10 sec.
     /// </remarks>
-    public class PoANetwork : Network
+    public class PoANetwork : FeeNetwork
     {
         /// <summary> The name of the root folder containing the different PoA blockchains.</summary>
         private const string NetworkRootFolderName = "poa";
