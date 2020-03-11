@@ -19,7 +19,6 @@ namespace Stratis.Bitcoin.Networks
             this.DefaultPort = 18333;
             this.DefaultMaxOutboundConnections = 8;
             this.DefaultMaxInboundConnections = 117;
-            this.DefaultRPCPort = 18332;
             this.DefaultAPIPort = 38220;
             this.CoinTicker = "TBTC";
             this.DefaultBanTimeSeconds = 60 * 60 * 24; // 24 Hours

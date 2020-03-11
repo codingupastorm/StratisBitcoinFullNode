@@ -45,7 +45,6 @@ namespace Stratis.Bitcoin.Networks
             this.DefaultPort = 16178;
             this.DefaultMaxOutboundConnections = 16;
             this.DefaultMaxInboundConnections = 109;
-            this.DefaultRPCPort = 16174;
             this.DefaultAPIPort = 37221;
             this.DefaultSignalRPort = 38824;
             this.MaxTipAge = 2 * 60 * 60;

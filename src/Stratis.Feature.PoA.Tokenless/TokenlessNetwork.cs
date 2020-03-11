@@ -31,7 +31,6 @@ namespace Stratis.Feature.PoA.Tokenless
             new Mnemonic("high neither night category fly wasp inner kitchen phone current skate hair")
         };
 
-
         public Key[] FederationKeys { get; private set; }
 
         public TokenlessNetwork()
@@ -56,7 +55,6 @@ namespace Stratis.Feature.PoA.Tokenless
             this.DefaultMaxOutboundConnections = 16;
             this.DefaultMaxInboundConnections = 109;
             this.DefaultEnableIpRangeFiltering = false;
-            this.DefaultRPCPort = 16474;
             this.DefaultAPIPort = 30000;
             this.MaxTipAge = 2 * 60 * 60;
             this.RootFolderName = NetworkRootFolderName;

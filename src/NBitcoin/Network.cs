@@ -84,11 +84,6 @@ namespace NBitcoin
         public int MaxTipAge { get; protected set; }
 
         /// <summary>
-        /// Port on which to listen for incoming RPC connections.
-        /// </summary>
-        public int DefaultRPCPort { get; protected set; }
-
-        /// <summary>
         /// Port on which to listen for incoming API connections.
         /// </summary>
         public int DefaultAPIPort { get; protected set; }
