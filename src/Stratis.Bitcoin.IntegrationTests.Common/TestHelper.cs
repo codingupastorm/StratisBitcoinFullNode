@@ -473,7 +473,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common
         {
             var receivingAddress = receiver.FullNode.WalletManager().GetUnusedAddress(new WalletAccountReference(Name, AccountName));
 
-            var context = CreateContext(sender.FullNode.Network, new WalletAccountReference(Name, AccountName), Password, receivingAddress.ScriptPubKey, amount, FeeType.Medium, (int)sender.FullNode.Network.Consensus.CoinbaseMaturity);
+            var context = CreateContext(sender.FullNode.Network, new WalletAccountReference(Name, AccountName), Password, receivingAddress.ScriptPubKey, amount, FeeType.Medium, (int)sender.FullNode.Network.Consensus.ConsensusProofOfWork.CoinbaseMaturity);
 
             var transaction = sender.FullNode.WalletTransactionHandler().BuildTransaction(context);
 

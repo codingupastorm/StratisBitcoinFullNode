@@ -52,14 +52,17 @@ namespace Stratis.Bitcoin.Networks
 
             var consensusProofOfWork = new ConsensusProofOfWork()
             {
+                CoinbaseMaturity = 100,
                 LastPOWBlock = default,
+                MaxMoney = 21000000 * Money.COIN,
                 MinerConfirmationWindow = 2016,
                 PowAllowMinDifficultyBlocks = true,
                 PowLimit = new Target(new uint256("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff")),
                 PowNoRetargeting = false,
                 PowTargetSpacing = TimeSpan.FromSeconds(10 * 60),
                 PowTargetTimespan = TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
-                ProofOfWorkReward = Money.Coins(50)
+                ProofOfWorkReward = Money.Coins(50),
+                SubsidyHalvingInterval = 210000,
             };
 
             this.Consensus = new NBitcoin.Consensus(
@@ -67,7 +70,6 @@ namespace Stratis.Bitcoin.Networks
                 consensusOptions: new ConsensusOptions(), // Default - set to Bitcoin params.
                 coinType: 1,
                 hashGenesisBlock: genesisBlock.GetHash(),
-                subsidyHalvingInterval: 210000,
                 majorityEnforceBlockUpgrade: 51,
                 majorityRejectBlockOutdated: 75,
                 majorityWindow: 100,
@@ -76,8 +78,6 @@ namespace Stratis.Bitcoin.Networks
                 bip34Hash: new uint256("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8"),
                 maxReorgLength: 0,
                 defaultAssumeValid: new uint256("0x0000000000000037a8cd3e06cd5edbfe9dd1dbcc5dacab279376ef7cfc2b4c75"), // 1354312
-                maxMoney: 21000000 * Money.COIN,
-                coinbaseMaturity: 100,
                 premineHeight: 0,
                 premineReward: Money.Zero,
                 posNoRetargeting: false,

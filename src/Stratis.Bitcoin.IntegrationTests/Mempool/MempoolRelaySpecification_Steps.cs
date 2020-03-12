@@ -46,7 +46,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
         protected void nodeA_mines_coins_that_are_spendable()
         {
             // add some coins to nodeA
-            TestHelper.MineBlocks(this.nodeA, (int)this.nodeA.FullNode.Network.Consensus.CoinbaseMaturity + 1);
+            TestHelper.MineBlocks(this.nodeA, (int)this.nodeA.FullNode.Network.Consensus.ConsensusProofOfWork.CoinbaseMaturity + 1);
         }
 
         protected void nodeA_connects_to_nodeB()

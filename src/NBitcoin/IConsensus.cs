@@ -6,11 +6,6 @@ namespace NBitcoin
 {
     public interface IConsensus
     {
-        /// <summary>
-        /// How many blocks should be on top of a block that includes a coinbase transaction until its outputs are considered spendable.
-        /// </summary>
-        long CoinbaseMaturity { get; set; }
-
         IConsensusProofOfWork ConsensusProofOfWork { get; set; }
 
         /// <summary>
@@ -35,18 +30,11 @@ namespace NBitcoin
         /// </summary>
         uint MaxReorgLength { get; }
 
-        /// <summary>
-        /// The maximum amount of coins in any transaction.
-        /// </summary>
-        long MaxMoney { get; }
-
         ConsensusOptions Options { get; set; }
 
         BuriedDeploymentsArray BuriedDeployments { get; }
 
         IBIP9DeploymentsArray BIP9Deployments { get; }
-
-        int SubsidyHalvingInterval { get; }
 
         int MajorityEnforceBlockUpgrade { get; }
 
@@ -100,6 +88,12 @@ namespace NBitcoin
 
     public interface IConsensusProofOfWork
     {
+        /// <inheritdoc />
+        long CoinbaseMaturity { get; set; }
+
+        /// <inheritdoc />
+        long MaxMoney { get; set; }
+
         /// <summary>PoW blocks are not accepted after block with height <see cref="Consensus.LastPOWBlock"/>.</summary>
         int LastPOWBlock { get; set; }
 
@@ -123,5 +117,7 @@ namespace NBitcoin
 
         /// <summary> The reward that goes to the miner when a block is mined using proof-of-work.</summary>
         Money ProofOfWorkReward { get; set; }
+
+        int SubsidyHalvingInterval { get; set; }
     }
 }

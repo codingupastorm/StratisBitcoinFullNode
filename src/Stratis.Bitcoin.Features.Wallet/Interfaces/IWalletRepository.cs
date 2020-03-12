@@ -153,9 +153,9 @@ namespace Stratis.Bitcoin.Features.Wallet.Interfaces
         /// <param name="accountReference">The account to get unused addresses for.</param>
         /// <param name="currentChainHeight">The chain height to use in the determination of the number of confirmations of a transaction. </param>
         /// <param name="confirmations">The minimum number of confirmations for a transactions to be regarded spendable.</param>
-        /// <param name="coinBaseMaturity">Can be used to override <see cref="Network.Consensus.CoinbaseMaturity"/>.</param>
+        /// <param name="coinBaseMaturity">Can be used to override <see cref="Network.Consensus.ConsensusProofOfWork.CoinbaseMaturity"/>.</param>
         /// <returns>The list of spendable transactions for the account.</returns>
-        /// <remarks>For coinbase transactions <see cref="Network.Consensus.CoinbaseMaturity" /> will be used in addition to <paramref name="confirmations"/>.</remarks>
+        /// <remarks>For coinbase transactions <see cref="Network.Consensus.ConsensusProofOfWork.CoinbaseMaturity" /> will be used in addition to <paramref name="confirmations"/>.</remarks>
         IEnumerable<UnspentOutputReference> GetSpendableTransactionsInAccount(WalletAccountReference accountReference, int currentChainHeight, int confirmations = 0, int? coinBaseMaturity = null);
 
         /// <summary>
@@ -164,10 +164,10 @@ namespace Stratis.Bitcoin.Features.Wallet.Interfaces
         /// <param name="walletAccountReference">The account to get the balances for.</param>
         /// <param name="currentChainHeight">The current chain height.</param>
         /// <param name="confirmations">The minimum number of confirmations for a transactions to be regarded spendable.</param>
-        /// <param name="coinBaseMaturity">Can be used to override <see cref="Network.Consensus.CoinbaseMaturity"/>.</param>
+        /// <param name="coinBaseMaturity">Can be used to override <see cref="Network.Consensus.ConsensusProofOfWork.CoinbaseMaturity"/>.</param>
         /// <param name="address">Filter the results to only include this address.</param>
         /// <returns>The account's total balance and confirmed balance amounts.</returns>
-        /// <remarks>For coinbase transactions <see cref="Network.Consensus.CoinbaseMaturity" /> will be used in addition to <paramref name="confirmations"/>.</remarks>
+        /// <remarks>For coinbase transactions <see cref="Network.Consensus.ConsensusProofOfWork.CoinbaseMaturity" /> will be used in addition to <paramref name="confirmations"/>.</remarks>
         (Money totalAmount, Money confirmedAmount, Money spendableAmount) GetAccountBalance(WalletAccountReference walletAccountReference, int currentChainHeight, int confirmations = 0, int? coinBaseMaturity = null, (int, int)? address = null);
 
         /// <summary>

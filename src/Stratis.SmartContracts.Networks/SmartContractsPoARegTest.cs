@@ -80,12 +80,17 @@ namespace Stratis.SmartContracts.Networks
 
             var bip9Deployments = new NoBIP9Deployments();
 
+            var consensusProofOfWork = new ConsensusProofOfWork()
+            {
+                CoinbaseMaturity = 1,
+                MaxMoney = long.MaxValue,
+            };
+
             this.Consensus = new Consensus(
                 consensusFactory: consensusFactory,
                 consensusOptions: consensusOptions,
                 coinType: 105,
                 hashGenesisBlock: genesisBlock.GetHash(),
-                subsidyHalvingInterval: 210000,
                 majorityEnforceBlockUpgrade: 750,
                 majorityRejectBlockOutdated: 950,
                 majorityWindow: 1000,
@@ -94,8 +99,6 @@ namespace Stratis.SmartContracts.Networks
                 bip34Hash: new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"),
                 maxReorgLength: 500,
                 defaultAssumeValid: null,
-                maxMoney: long.MaxValue,
-                coinbaseMaturity: 1,
                 premineHeight: 5,
                 premineReward: Money.Coins(100_000_000),
                 posNoRetargeting: true,
@@ -103,7 +106,8 @@ namespace Stratis.SmartContracts.Networks
                 isProofOfStake: false,
                 proofOfStakeLimit: null,
                 proofOfStakeLimitV2: null,
-                proofOfStakeReward: Money.Zero
+                proofOfStakeReward: Money.Zero,
+                consensusProofOfWork: consensusProofOfWork
             );
 
             // Same as current smart contracts test networks to keep tests working

@@ -49,7 +49,7 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 
             TestHelper.Connect(this.sendingStratisBitcoinNode, this.receivingStratisBitcoinNode);
 
-            this.coinbaseMaturity = (int)this.sendingStratisBitcoinNode.FullNode.Network.Consensus.CoinbaseMaturity;
+            this.coinbaseMaturity = (int)this.sendingStratisBitcoinNode.FullNode.Network.Consensus.ConsensusProofOfWork.CoinbaseMaturity;
         }
 
         protected void a_block_is_mined_creating_spendable_coins()

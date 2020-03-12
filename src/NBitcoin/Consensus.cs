@@ -7,9 +7,6 @@ namespace NBitcoin
     public class Consensus : IConsensus
     {
         /// <inheritdoc />
-        public long CoinbaseMaturity { get; set; }
-
-        /// <inheritdoc />
         public Money PremineReward { get; }
 
         /// <inheritdoc />
@@ -21,16 +18,11 @@ namespace NBitcoin
         /// <inheritdoc />
         public uint MaxReorgLength { get; private set; }
 
-        /// <inheritdoc />
-        public long MaxMoney { get; }
-
         public ConsensusOptions Options { get; set; }
 
         public BuriedDeploymentsArray BuriedDeployments { get; }
 
         public IBIP9DeploymentsArray BIP9Deployments { get; }
-
-        public int SubsidyHalvingInterval { get; }
 
         public int MajorityEnforceBlockUpgrade { get; }
 
@@ -77,7 +69,6 @@ namespace NBitcoin
             ConsensusOptions consensusOptions,
             int coinType,
             uint256 hashGenesisBlock,
-            int subsidyHalvingInterval,
             int majorityEnforceBlockUpgrade,
             int majorityRejectBlockOutdated,
             int majorityWindow,
@@ -86,8 +77,6 @@ namespace NBitcoin
             uint256 bip34Hash,
             uint maxReorgLength,
             uint256 defaultAssumeValid,
-            long maxMoney,
-            long coinbaseMaturity,
             long premineHeight,
             Money premineReward,
             bool posNoRetargeting,
@@ -98,16 +87,13 @@ namespace NBitcoin
             Money proofOfStakeReward,
             IConsensusProofOfWork consensusProofOfWork = null)
         {
-            this.CoinbaseMaturity = coinbaseMaturity;
             this.PremineReward = premineReward;
             this.PremineHeight = premineHeight;
             this.ProofOfStakeReward = proofOfStakeReward;
             this.MaxReorgLength = maxReorgLength;
-            this.MaxMoney = maxMoney;
             this.Options = consensusOptions;
             this.BuriedDeployments = buriedDeployments;
             this.BIP9Deployments = bip9Deployments;
-            this.SubsidyHalvingInterval = subsidyHalvingInterval;
             this.MajorityEnforceBlockUpgrade = majorityEnforceBlockUpgrade;
             this.MajorityRejectBlockOutdated = majorityRejectBlockOutdated;
             this.MajorityWindow = majorityWindow;
@@ -130,7 +116,13 @@ namespace NBitcoin
 
     public class ConsensusProofOfWork : IConsensusProofOfWork
     {
+        /// <inheritdoc />
+        public long CoinbaseMaturity { get; set; }
+
         public int LastPOWBlock { get; set; }
+
+        /// <inheritdoc />
+        public long MaxMoney { get; set; }
 
         public int MinerConfirmationWindow { get; set; }
 
@@ -145,5 +137,7 @@ namespace NBitcoin
         public TimeSpan PowTargetTimespan { get; set; }
 
         public Money ProofOfWorkReward { get; set; }
+
+        public int SubsidyHalvingInterval { get; set; }
     }
 }

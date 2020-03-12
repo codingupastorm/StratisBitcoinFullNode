@@ -104,7 +104,6 @@ namespace Stratis.Feature.PoA.Tokenless
                 consensusOptions: consensusOptions,
                 coinType: 500,
                 hashGenesisBlock: genesisBlock.GetHash(),
-                subsidyHalvingInterval: 0,
                 majorityEnforceBlockUpgrade: 0,
                 majorityRejectBlockOutdated: 0,
                 majorityWindow: 0,
@@ -113,8 +112,6 @@ namespace Stratis.Feature.PoA.Tokenless
                 bip34Hash: null,
                 maxReorgLength: 10, // This is really a RegTest class at the moment.
                 defaultAssumeValid: null,
-                maxMoney: long.MinValue,
-                coinbaseMaturity: 2, // TODO-TL: Check
                 premineHeight: 0,
                 premineReward: Money.Coins(0),
                 posNoRetargeting: true,

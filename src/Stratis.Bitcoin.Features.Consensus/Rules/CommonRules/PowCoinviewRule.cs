@@ -41,7 +41,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
             if (this.consensus.ConsensusProofOfWork.ProofOfWorkReward == 0)
                 return 0;
 
-            int halvings = height / this.consensus.SubsidyHalvingInterval;
+            int halvings = height / this.consensus.ConsensusProofOfWork.SubsidyHalvingInterval;
 
             // Force block reward to zero when right shift is undefined.
             if (halvings >= 64)

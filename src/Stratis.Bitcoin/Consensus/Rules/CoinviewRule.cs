@@ -204,9 +204,9 @@ namespace Stratis.Bitcoin.Consensus.Rules
             // If prev is coinbase, check that it's matured
             if (coins.IsCoinbase)
             {
-                if ((spendHeight - coins.Height) < this.Consensus.CoinbaseMaturity)
+                if ((spendHeight - coins.Height) < this.Consensus.ConsensusProofOfWork.CoinbaseMaturity)
                 {
-                    this.Logger.LogDebug("Coinbase transaction height {0} spent at height {1}, but maturity is set to {2}.", coins.Height, spendHeight, this.Consensus.CoinbaseMaturity);
+                    this.Logger.LogDebug("Coinbase transaction height {0} spent at height {1}, but maturity is set to {2}.", coins.Height, spendHeight, this.Consensus.ConsensusProofOfWork.CoinbaseMaturity);
                     this.Logger.LogTrace("(-)[COINBASE_PREMATURE_SPENDING]");
                     ConsensusErrors.BadTransactionPrematureCoinbaseSpending.Throw();
                 }
@@ -396,13 +396,13 @@ namespace Stratis.Bitcoin.Consensus.Rules
         }
 
         /// <summary>
-        /// Checks if value is in range from 0 to <see cref="consensusOptions.MaxMoney"/>.
+        /// Checks if value is in range from 0 to <see cref="consensusOptions.ConsensusProofOfWork.MaxMoney"/>.
         /// </summary>
         /// <param name="value">The value to be checked.</param>
         /// <returns><c>true</c> if the value is in range. Otherwise <c>false</c>.</returns>
         private bool MoneyRange(long value)
         {
-            return ((value >= 0) && (value <= this.Consensus.MaxMoney));
+            return ((value >= 0) && (value <= this.Consensus.ConsensusProofOfWork.MaxMoney));
         }
 
         /// <summary>
