@@ -111,23 +111,15 @@ namespace Stratis.Feature.PoA.Tokenless
                 buriedDeployments: new BuriedDeploymentsArray(),
                 bip9Deployments: new NoBIP9Deployments(),
                 bip34Hash: null,
-                minerConfirmationWindow: 0,
                 maxReorgLength: 10, // This is really a RegTest class at the moment.
                 defaultAssumeValid: null,
                 maxMoney: long.MinValue,
                 coinbaseMaturity: 2, // TODO-TL: Check
                 premineHeight: 0,
                 premineReward: Money.Coins(0),
-                proofOfWorkReward: Money.Coins(0),
-                powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60),
-                powTargetSpacing: TimeSpan.FromSeconds(60),
-                powAllowMinDifficultyBlocks: false,
                 posNoRetargeting: true,
-                powNoRetargeting: true,
-                powLimit: null,
                 minimumChainWork: null,
                 isProofOfStake: false,
-                lastPowBlock: 0,
                 proofOfStakeLimit: null,
                 proofOfStakeLimitV2: null,
                 proofOfStakeReward: Money.Zero

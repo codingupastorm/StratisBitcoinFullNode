@@ -275,7 +275,7 @@ namespace NBitcoin
         /// <inheritdoc />
         public override string ToString()
         {
-            return this.Height + "-" + this.HashBlock + "-" + this.BlockValidationState + (this.Header is ProvenBlockHeader ? " - PH"  : string.Empty);
+            return this.Height + "-" + this.HashBlock + "-" + this.BlockValidationState + (this.Header is ProvenBlockHeader ? " - PH" : string.Empty);
         }
 
         /// <summary>
@@ -357,7 +357,7 @@ namespace NBitcoin
         /// <returns>The target proof of work.</returns>
         public Target GetNextWorkRequired(BlockHeader block, IConsensus consensus)
         {
-            return new ChainedHeader(block, block.GetHash(), this).GetWorkRequired(consensus);
+            return new ChainedHeader(block, block.GetHash(), this).GetWorkRequired((IConsensusProofOfWork)consensus);
         }
 
         /// <summary>
@@ -367,7 +367,7 @@ namespace NBitcoin
         /// <returns>The target proof of work.</returns>
         public Target GetWorkRequired(Network network)
         {
-            return GetWorkRequired(network.Consensus);
+            return GetWorkRequired((IConsensusProofOfWork)network.Consensus);
         }
 
         /// <summary>
@@ -375,7 +375,7 @@ namespace NBitcoin
         /// </summary>
         /// <param name="consensus">Consensus rules to use for this computation.</param>
         /// <returns>The target proof of work.</returns>
-        public Target GetWorkRequired(IConsensus consensus)
+        public Target GetWorkRequired(IConsensusProofOfWork consensus)
         {
             // Genesis block.
             if (this.Height == 0)
@@ -445,7 +445,7 @@ namespace NBitcoin
         /// Calculate the difficulty adjustment interval in blocks based on settings defined in <see cref="IConsensus"/>.
         /// </summary>
         /// <returns>The difficulty adjustment interval in blocks.</returns>
-        private long GetDifficultyAdjustmentInterval(IConsensus consensus)
+        private long GetDifficultyAdjustmentInterval(IConsensusProofOfWork consensus)
         {
             return (long)consensus.PowTargetTimespan.TotalSeconds / (long)consensus.PowTargetSpacing.TotalSeconds;
         }
@@ -482,7 +482,7 @@ namespace NBitcoin
                 return BlockStake.Validate(network, this);
 
             bool genesisCorrect = (this.Height != 0) || this.HashBlock == network.GetGenesis().GetHash();
-            return genesisCorrect && Validate(network.Consensus);
+            return genesisCorrect && Validate((IConsensusProofOfWork)network.Consensus);
         }
 
         /// <summary>
@@ -490,7 +490,7 @@ namespace NBitcoin
         /// </summary>
         /// <param name="consensus">The consensus rules being used.</param>
         /// <returns><c>true</c> if the header is a valid block header, <c>false</c> otherwise.</returns>
-        public bool Validate(IConsensus consensus)
+        public bool Validate(IConsensusProofOfWork consensus)
         {
             if (consensus == null)
                 throw new ArgumentNullException("consensus");
@@ -513,7 +513,7 @@ namespace NBitcoin
         /// <returns>Whether proof of work is valid.</returns>
         public bool CheckProofOfWorkAndTarget(Network network)
         {
-            return CheckProofOfWorkAndTarget(network.Consensus);
+            return CheckProofOfWorkAndTarget((IConsensusProofOfWork)network.Consensus);
         }
 
         /// <summary>
@@ -521,7 +521,7 @@ namespace NBitcoin
         /// </summary>
         /// <param name="consensus">Consensus rules to use for this validation.</param>
         /// <returns>Whether proof of work is valid.</returns>
-        public bool CheckProofOfWorkAndTarget(IConsensus consensus)
+        public bool CheckProofOfWorkAndTarget(IConsensusProofOfWork consensus)
         {
             return (this.Height == 0) || (this.Header.CheckProofOfWork() && (this.Header.Bits == GetWorkRequired(consensus)));
         }

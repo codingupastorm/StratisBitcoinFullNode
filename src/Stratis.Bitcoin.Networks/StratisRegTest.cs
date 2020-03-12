@@ -70,6 +70,18 @@ namespace Stratis.Bitcoin.Networks
                 [StratisBIP9Deployments.ColdStaking] = new BIP9DeploymentsParameters("ColdStaking", 1, BIP9DeploymentsParameters.AlwaysActive, 999999999, BIP9DeploymentsParameters.AlwaysActive)
             };
 
+            var consensusProofOfWork = new ConsensusProofOfWork()
+            {
+                LastPOWBlock = 12500,
+                MinerConfirmationWindow = 2016,
+                PowAllowMinDifficultyBlocks = true,
+                PowLimit = powLimit,
+                PowNoRetargeting = true,
+                PowTargetSpacing = TimeSpan.FromSeconds(10 * 60),
+                PowTargetTimespan = TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
+                ProofOfWorkReward = Money.Coins(4)
+            };
+
             this.Consensus = new NBitcoin.Consensus(
                 consensusFactory: consensusFactory,
                 consensusOptions: consensusOptions,
@@ -82,26 +94,19 @@ namespace Stratis.Bitcoin.Networks
                 buriedDeployments: buriedDeployments,
                 bip9Deployments: bip9Deployments,
                 bip34Hash: new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"),
-                minerConfirmationWindow: 2016, // nPowTargetTimespan / nPowTargetSpacing
                 maxReorgLength: 500,
                 defaultAssumeValid: null, // turn off assumevalid for regtest.
                 maxMoney: long.MaxValue,
                 coinbaseMaturity: 10,
                 premineHeight: 2,
                 premineReward: Money.Coins(98000000),
-                proofOfWorkReward: Money.Coins(4),
-                powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
-                powTargetSpacing: TimeSpan.FromSeconds(10 * 60),
-                powAllowMinDifficultyBlocks: true,
                 posNoRetargeting: true,
-                powNoRetargeting: true,
-                powLimit: powLimit,
                 minimumChainWork: null,
                 isProofOfStake: true,
-                lastPowBlock: 12500,
                 proofOfStakeLimit: new BigInteger(uint256.Parse("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
                 proofOfStakeLimitV2: new BigInteger(uint256.Parse("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
-                proofOfStakeReward: Money.COIN
+                proofOfStakeReward: Money.COIN,
+                consensusProofOfWork: consensusProofOfWork
             );
 
             this.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS] = new byte[] { (65) };

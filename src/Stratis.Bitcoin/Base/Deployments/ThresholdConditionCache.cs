@@ -86,7 +86,7 @@ namespace Stratis.Bitcoin.Base.Deployments
 
                 int votes = 0;
                 int currentHeight = indexPrev.Height + 1;
-                int period = this.consensus.MinerConfirmationWindow;
+                int period = ((IConsensusProofOfWork)this.consensus).MinerConfirmationWindow;
 
                 // First ancestor outside last confirmation window.
                 ChainedHeader periodStartsHeader = indexPrev.GetAncestor(indexPrev.Height - (currentHeight % period));
@@ -142,7 +142,7 @@ namespace Stratis.Bitcoin.Base.Deployments
                     PeriodStartHeight = periodStartsHeader.Height,
                     PeriodEndHeight = periodEndsHeight,
                     StateValue = thresholdStates[deploymentIndex],
-                    ThresholdState = ((ThresholdState) thresholdStates[deploymentIndex]).ToString()
+                    ThresholdState = ((ThresholdState)thresholdStates[deploymentIndex]).ToString()
                 });
             }
 
@@ -160,7 +160,7 @@ namespace Stratis.Bitcoin.Base.Deployments
             if (this.consensus.BIP9Deployments[deployment] == null)
                 return ThresholdState.Failed;
 
-            int period = this.consensus.MinerConfirmationWindow;
+            int period = ((IConsensusProofOfWork)this.consensus).MinerConfirmationWindow;
             long threshold = this.consensus.BIP9Deployments[deployment].Threshold;
             DateTimeOffset? timeStart = this.consensus.BIP9Deployments[deployment]?.StartTime;
             DateTimeOffset? timeTimeout = this.consensus.BIP9Deployments[deployment]?.Timeout;

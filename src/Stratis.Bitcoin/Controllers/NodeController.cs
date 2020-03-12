@@ -26,7 +26,6 @@ using Stratis.Bitcoin.Utilities.JsonErrors;
 using Stratis.Bitcoin.Utilities.ModelStateErrors;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 using LogLevel = NLog.LogLevel;
-using Target = NBitcoin.Target;
 
 namespace Stratis.Bitcoin.Controllers
 {
@@ -57,9 +56,6 @@ namespace Stratis.Bitcoin.Controllers
 
         /// <summary>Thread safe access to the best chain of block headers from genesis.</summary>
         private readonly ChainIndexer chainIndexer;
-
-        /// <summary>An interface implementation used to retrieve the network's difficulty target.</summary>
-        private readonly INetworkDifficulty networkDifficulty;
 
         /// <summary>An interface implementaiton used to retrieve a pooled transaction.</summary>
         private readonly IPooledTransaction pooledTransaction;
@@ -94,7 +90,6 @@ namespace Stratis.Bitcoin.Controllers
             ISelfEndpointTracker selfEndpointTracker,
             IBlockStore blockStore = null,
             IGetUnspentTransaction getUnspentTransaction = null,
-            INetworkDifficulty networkDifficulty = null,
             IPooledGetUnspentTransaction pooledGetUnspentTransaction = null,
             IPooledTransaction pooledTransaction = null)
         {
@@ -122,7 +117,6 @@ namespace Stratis.Bitcoin.Controllers
 
             this.blockStore = blockStore;
             this.getUnspentTransaction = getUnspentTransaction;
-            this.networkDifficulty = networkDifficulty;
             this.pooledGetUnspentTransaction = pooledGetUnspentTransaction;
             this.pooledTransaction = pooledTransaction;
         }
@@ -141,7 +135,6 @@ namespace Stratis.Bitcoin.Controllers
             {
                 Version = this.fullNode.Version?.ToString() ?? "0",
                 ProtocolVersion = (uint)(this.nodeSettings.ProtocolVersion),
-                Difficulty = GetNetworkDifficulty(this.networkDifficulty)?.Difficulty ?? 0,
                 Agent = this.connectionManager.ConnectionSettings.Agent,
                 ExternalAddress = this.selfEndpointTracker.MyExternalAddress.Address.ToString(),
                 ProcessId = Process.GetCurrentProcess().Id,
@@ -604,16 +597,6 @@ namespace Stratis.Bitcoin.Controllers
             }
 
             return block;
-        }
-
-        /// <summary>
-        /// Retrieves the difficulty target of the full node's network.
-        /// </summary>
-        /// <param name="networkDifficulty">The network difficulty interface.</param>
-        /// <returns>A network difficulty <see cref="NBitcoin.Target"/>. Returns <c>null</c> if fails.</returns>
-        internal static Target GetNetworkDifficulty(INetworkDifficulty networkDifficulty = null)
-        {
-            return networkDifficulty?.GetNetworkDifficulty();
         }
     }
 }

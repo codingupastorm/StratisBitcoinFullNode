@@ -63,6 +63,18 @@ namespace Stratis.Bitcoin.Networks
                 [BitcoinBIP9Deployments.Segwit] = new BIP9DeploymentsParameters("Segwit", 1, 1479168000, 1510704000, BIP9DeploymentsParameters.DefaultMainnetThreshold)
             };
 
+            var consensusProofOfWork = new ConsensusProofOfWork()
+            {
+                LastPOWBlock = default,
+                MinerConfirmationWindow = 2016, // nPowTargetTimespan / nPowTargetSpacing,
+                PowAllowMinDifficultyBlocks = false,
+                PowLimit = new Target(new uint256("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff")),
+                PowNoRetargeting = false,
+                PowTargetSpacing = TimeSpan.FromSeconds(10 * 60),
+                PowTargetTimespan = TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
+                ProofOfWorkReward = Money.Coins(50)
+            };
+
             this.Consensus = new NBitcoin.Consensus(
                 consensusFactory: consensusFactory,
                 consensusOptions: new ConsensusOptions(), // Default - set to Bitcoin params.
@@ -75,26 +87,19 @@ namespace Stratis.Bitcoin.Networks
                 buriedDeployments: buriedDeployments,
                 bip9Deployments: bip9Deployments,
                 bip34Hash: new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"),
-                minerConfirmationWindow: 2016, // nPowTargetTimespan / nPowTargetSpacing
                 maxReorgLength: 0,
                 defaultAssumeValid: new uint256("0x0000000000000000000f1c54590ee18d15ec70e68c8cd4cfbadb1b4f11697eee"), // 563378
                 maxMoney: 21000000 * Money.COIN,
                 coinbaseMaturity: 100,
                 premineHeight: 0,
                 premineReward: Money.Zero,
-                proofOfWorkReward: Money.Coins(50),
-                powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
-                powTargetSpacing: TimeSpan.FromSeconds(10 * 60),
-                powAllowMinDifficultyBlocks: false,
                 posNoRetargeting: false,
-                powNoRetargeting: false,
-                powLimit: new Target(new uint256("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff")),
                 minimumChainWork: new uint256("0x0000000000000000000000000000000000000000002cb971dd56d1c583c20f90"),
                 isProofOfStake: false,
-                lastPowBlock: default(int),
                 proofOfStakeLimit: null,
                 proofOfStakeLimitV2: null,
-                proofOfStakeReward: Money.Zero
+                proofOfStakeReward: Money.Zero,
+                consensusProofOfWork
             );
 
             this.Base58Prefixes = new byte[12][];

@@ -61,7 +61,19 @@ namespace Stratis.SmartContracts.Networks
 
             var bip9Deployments = new NoBIP9Deployments();
 
-            this.Consensus = new NBitcoin.Consensus(
+            var consensusProofOfWork = new ConsensusProofOfWork()
+            {
+                LastPOWBlock = default,
+                MinerConfirmationWindow = 144,
+                PowAllowMinDifficultyBlocks = true,
+                PowLimit = new Target(new uint256("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")),
+                PowNoRetargeting = true,
+                PowTargetSpacing = TimeSpan.FromSeconds(10 * 60),
+                PowTargetTimespan = TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
+                ProofOfWorkReward = Money.Coins(50)
+            };
+
+            this.Consensus = new Consensus(
                 consensusFactory: consensusFactory,
                 consensusOptions: consensusOptions,
                 coinType: default(int),
@@ -73,26 +85,19 @@ namespace Stratis.SmartContracts.Networks
                 buriedDeployments: buriedDeployments,
                 bip9Deployments: bip9Deployments,
                 bip34Hash: new uint256(),
-                minerConfirmationWindow: 144, // nPowTargetTimespan / nPowTargetSpacing
                 maxReorgLength: 500,
                 defaultAssumeValid: null, // turn off assumevalid for regtest.
                 maxMoney: long.MaxValue,
                 coinbaseMaturity: 0, // Low to the point of being nonexistent to speed up integration tests.
                 premineHeight: default(long),
                 premineReward: Money.Zero,
-                proofOfWorkReward: Money.Coins(50),
-                powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
-                powTargetSpacing: TimeSpan.FromSeconds(10 * 60),
-                powAllowMinDifficultyBlocks: true,
                 posNoRetargeting: true,
-                powNoRetargeting: true,
-                powLimit: new Target(new uint256("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")),
                 minimumChainWork: uint256.Zero,
                 isProofOfStake: default(bool),
-                lastPowBlock: default(int),
                 proofOfStakeLimit: null,
                 proofOfStakeLimitV2: null,
-                proofOfStakeReward: Money.Zero
+                proofOfStakeReward: Money.Zero,
+                consensusProofOfWork: consensusProofOfWork
             );
 
             this.Base58Prefixes = new byte[12][];
