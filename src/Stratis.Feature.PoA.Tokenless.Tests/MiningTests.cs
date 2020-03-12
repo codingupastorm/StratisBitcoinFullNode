@@ -253,7 +253,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             this.executionCache = new BlockExecutionResultCache();
 
             this.rwsValidator = new ReadWriteSetValidator();
-            this.rwsSerializer = new ReadWriteSetTransactionSerializer(this.helper.Network, null, null);
+            this.rwsSerializer = new ReadWriteSetTransactionSerializer(this.helper.Network, null);
         }
     }
 }
