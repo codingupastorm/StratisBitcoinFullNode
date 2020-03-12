@@ -47,7 +47,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
 
             // Both POW and POW blocks will be checked in the partial validation rule CheckDifficultykHybridRule
             // this rule will have the full block and can determine the algo type.
-            if (chainedHeader.Height > this.Parent.Network.Consensus.LastPOWBlock + 2)
+            if (chainedHeader.Height > this.Parent.Network.Consensus.ConsensusProofOfWork.LastPOWBlock + 2)
             {
                 BlockHeader first = chainedHeader.Previous.Header;
                 BlockHeader second = chainedHeader.Previous.Previous.Header;

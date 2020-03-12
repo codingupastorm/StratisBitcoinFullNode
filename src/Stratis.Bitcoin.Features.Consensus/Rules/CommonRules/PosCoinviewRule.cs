@@ -191,7 +191,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
             if (this.IsPremine(height))
                 return this.consensus.PremineReward;
 
-            return this.consensus.ProofOfWorkReward;
+            return this.consensus.ConsensusProofOfWork.ProofOfWorkReward;
         }
 
         /// <summary>

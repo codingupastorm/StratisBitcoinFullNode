@@ -66,8 +66,8 @@ namespace Stratis.Bitcoin.Features.Miner.Controllers
 
             try
             {
-                if (this.network.Consensus.IsProofOfStake && (this.consensusManager.Tip.Height > this.network.Consensus.LastPOWBlock))
-                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.MethodNotAllowed, "Method not allowed", string.Format(LastPowBlockExceededMessage, this.network.Consensus.LastPOWBlock));
+                if (this.network.Consensus.IsProofOfStake && (this.consensusManager.Tip.Height > this.network.Consensus.ConsensusProofOfWork.LastPOWBlock))
+                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.MethodNotAllowed, "Method not allowed", string.Format(LastPowBlockExceededMessage, this.network.Consensus.ConsensusProofOfWork.LastPOWBlock));
 
                 if (!this.ModelState.IsValid)
                 {
@@ -132,7 +132,7 @@ namespace Stratis.Bitcoin.Features.Miner.Controllers
         {
             const string noWalletMessage = "No wallet found";
             const string noAccountMessage = "No account found on wallet";
-            
+
 
             string walletName = this.walletManager.GetWalletsNames().FirstOrDefault();
             if (walletName == null)

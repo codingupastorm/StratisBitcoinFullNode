@@ -56,7 +56,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.ProvenHeaderRules
             {
                 // If the header represents a POW block we don't do any validation of stake.
                 // We verify the header is not passed the last pow height.
-                if (chainedHeader.Height > this.Parent.Network.Consensus.LastPOWBlock)
+                if (chainedHeader.Height > this.Parent.Network.Consensus.ConsensusProofOfWork.LastPOWBlock)
                 {
                     this.Logger.LogTrace("(-)[POW_TOO_HIGH]");
                     ConsensusErrors.ProofOfWorkTooHigh.Throw();

@@ -11,6 +11,8 @@ namespace NBitcoin
         /// </summary>
         long CoinbaseMaturity { get; set; }
 
+        IConsensusProofOfWork ConsensusProofOfWork { get; set; }
+
         /// <summary>
         /// Amount of coins mined when a new network is bootstrapped.
         /// Set to <see cref="Money.Zero"/> when there is no premine.

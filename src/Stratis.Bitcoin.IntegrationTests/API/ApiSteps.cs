@@ -144,7 +144,7 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         private void the_proof_of_stake_node_has_passed_LastPOWBlock()
         {
             typeof(ChainedHeader).GetProperty("Height").SetValue(this.stratisPosApiNode.FullNode.ConsensusManager().Tip,
-                this.stratisPosApiNode.FullNode.Network.Consensus.LastPOWBlock + 1);
+                this.stratisPosApiNode.FullNode.Network.Consensus.ConsensusProofOfWork.LastPOWBlock + 1);
         }
 
         private void two_connected_proof_of_work_nodes_with_api_enabled()
