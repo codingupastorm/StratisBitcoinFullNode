@@ -48,16 +48,16 @@ namespace NBitcoin.Policy
         /// </summary>
         public bool CheckScriptPubKey { get; set; }
 
-        private readonly Network network;
+        private readonly FeeNetwork network;
 
         public StandardTransactionPolicy(Network network)
         {
-            this.network = network;
+            this.network = (FeeNetwork)network;
             this.ScriptVerify = NBitcoin.ScriptVerify.Standard;
             this.MaxTransactionSize = 100000;
             // TODO: replace fee params with whats in Network.
             this.MaxTxFee = new FeeRate(Money.Coins(0.1m));
-            this.MinRelayTxFee = new FeeRate(Money.Satoshis(network.MinRelayTxFee));
+            this.MinRelayTxFee = new FeeRate(Money.Satoshis(this.network.MinRelayTxFee));
             this.CheckFee = true;
             this.CheckScriptPubKey = true;
         }

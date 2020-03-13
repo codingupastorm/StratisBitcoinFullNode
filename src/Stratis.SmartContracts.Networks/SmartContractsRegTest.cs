@@ -14,7 +14,7 @@ using Stratis.SmartContracts.Networks.Policies;
 
 namespace Stratis.SmartContracts.Networks
 {
-    public sealed class SmartContractsRegTest : Network
+    public sealed class SmartContractsRegTest : FeeNetwork
     {
         /// <summary>
         /// Took the 'InitReg' from above and adjusted it slightly (set a static flag + removed the hash check)
@@ -29,7 +29,6 @@ namespace Stratis.SmartContracts.Networks
             this.DefaultPort = 18444;
             this.DefaultMaxOutboundConnections = 16;
             this.DefaultMaxInboundConnections = 109;
-            this.DefaultRPCPort = 18332;
             this.DefaultAPIPort = 38221;
             this.MaxTipAge = SmartContractNetworkUtils.BitcoinDefaultMaxTipAgeInSeconds;
             this.MinTxFee = 1000;

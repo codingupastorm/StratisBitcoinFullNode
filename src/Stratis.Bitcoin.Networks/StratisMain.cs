@@ -5,7 +5,6 @@ using NBitcoin;
 using NBitcoin.BouncyCastle.Math;
 using NBitcoin.DataEncoders;
 using NBitcoin.Protocol;
-using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.Consensus.Rules.ProvenHeaderRules;
 using Stratis.Bitcoin.Features.MemoryPool.Rules;
@@ -14,7 +13,7 @@ using Stratis.Bitcoin.Networks.Policies;
 
 namespace Stratis.Bitcoin.Networks
 {
-    public class StratisMain : Network
+    public class StratisMain : FeeNetwork
     {
         /// <summary> Stratis maximal value for the calculated time offset. If the value is over this limit, the time syncing feature will be switched off. </summary>
         public const int StratisMaxTimeOffsetSeconds = 25 * 60;
@@ -46,7 +45,6 @@ namespace Stratis.Bitcoin.Networks
             this.DefaultPort = 16178;
             this.DefaultMaxOutboundConnections = 16;
             this.DefaultMaxInboundConnections = 109;
-            this.DefaultRPCPort = 16174;
             this.DefaultAPIPort = 37221;
             this.DefaultSignalRPort = 38824;
             this.MaxTipAge = 2 * 60 * 60;

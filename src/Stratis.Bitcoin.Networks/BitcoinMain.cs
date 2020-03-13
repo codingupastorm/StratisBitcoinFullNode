@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.MemoryPool.Rules;
 using Stratis.Bitcoin.Networks.Deployments;
@@ -11,7 +10,7 @@ using Stratis.Bitcoin.Networks.Policies;
 
 namespace Stratis.Bitcoin.Networks
 {
-    public class BitcoinMain : Network
+    public class BitcoinMain : FeeNetwork
     {
         public BitcoinMain()
         {
@@ -28,7 +27,6 @@ namespace Stratis.Bitcoin.Networks
             this.DefaultPort = 8333;
             this.DefaultMaxOutboundConnections = 8;
             this.DefaultMaxInboundConnections = 117;
-            this.DefaultRPCPort = 8332;
             this.DefaultAPIPort = 37220;
             this.MaxTimeOffsetSeconds = BitcoinMaxTimeOffsetSeconds;
             this.MaxTipAge = BitcoinDefaultMaxTipAgeInSeconds;

@@ -407,7 +407,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
             }
         }
 
-         /// <summary>
+        /// <summary>
         /// Gets the history of a wallet. This includes the transactions held by the entire wallet
         /// or a single account if one is specified.
         /// </summary>
@@ -450,7 +450,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
                                                 .ToList();
 
                     var lookup = items.ToLookup(i => i.Transaction.Id, i => i);
-                    
+
                     // Represents a sublist containing only the transactions that have already been spent.
                     var spendingDetails = items.Where(t => t.Transaction.SpendingDetails != null)
                         .ToLookup(s => s.Transaction.SpendingDetails.TransactionId, s => s);
@@ -482,7 +482,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
                                 ? lookup[transaction.SpendingDetails.TransactionId].Where(h =>
                                     h.Transaction.IsCoinStake != null && h.Transaction.IsCoinStake.Value).ToList()
                                 : null;
-                            
+
                             if (false != relatedOutputs?.Any())
                             {
                                 // Add staking transaction details.
@@ -663,18 +663,18 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
                         AmountConfirmed = balance.AmountConfirmed,
                         AmountUnconfirmed = balance.AmountUnconfirmed,
                         SpendableAmount = balance.SpendableAmount,
-                        Addresses = request.IncludeBalanceByAddress ?  account.GetCombinedAddresses().Select(address =>
-                        {
-                            (Money confirmedAmount, Money unConfirmedAmount) = address.GetBalances();
-                            return new AddressModel
-                            {
-                                Address = address.Address,
-                                IsUsed = address.Transactions.Any(),
-                                IsChange = address.IsChangeAddress(),
-                                AmountConfirmed = confirmedAmount,
-                                AmountUnconfirmed = unConfirmedAmount
-                            };
-                        }) : null
+                        Addresses = request.IncludeBalanceByAddress ? account.GetCombinedAddresses().Select(address =>
+                       {
+                           (Money confirmedAmount, Money unConfirmedAmount) = address.GetBalances();
+                           return new AddressModel
+                           {
+                               Address = address.Address,
+                               IsUsed = address.Transactions.Any(),
+                               IsChange = address.IsChangeAddress(),
+                               AmountConfirmed = confirmedAmount,
+                               AmountUnconfirmed = unConfirmedAmount
+                           };
+                       }) : null
                     });
                 }
 
@@ -1499,221 +1499,6 @@ namespace Stratis.Bitcoin.Features.Wallet.Controllers
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
             }
         }
-
-        /// <summary>Splits and distributes UTXOs across wallet addresses</summary>
-        [HttpPost]
-        [Route("distribute-utxos")]
-        public IActionResult DistributeUtxos([FromBody] DistributeUtxosRequest request)
-        {
-            Guard.NotNull(request, nameof(request));
-
-            if (!this.ModelState.IsValid)
-                return ModelStateErrors.BuildErrorResponse(this.ModelState);
-
-            var model = new DistributeUtxoModel()
-            {
-                WalletName = request.WalletName,
-                UseUniqueAddressPerUtxo = request.UseUniqueAddressPerUtxo,
-                UtxosCount = request.UtxosCount,
-                UtxoPerTransaction = request.UtxoPerTransaction,
-                TimestampDifferenceBetweenTransactions = request.TimestampDifferenceBetweenTransactions,
-                MinConfirmations = request.MinConfirmations,
-                DryRun = request.DryRun
-            };
-
-            try
-            {
-                var walletReference = new WalletAccountReference(request.WalletName, request.AccountName);
-
-                Wallet wallet = this.walletManager.GetWallet(request.WalletName);
-                HdAccount account = wallet.GetAccount(request.AccountName);
-
-                var addresses = new List<HdAddress>();
-
-                if (request.ReuseAddresses)
-                {
-                    addresses = this.walletManager.GetUnusedAddresses(walletReference, request.UseUniqueAddressPerUtxo ? request.UtxosCount : 1, request.UseChangeAddresses).ToList();
-                }
-                else if (request.UseChangeAddresses)
-                {
-                    addresses = account.InternalAddresses.Take(request.UseUniqueAddressPerUtxo ? request.UtxosCount : 1).ToList();
-                }
-                else if (!request.UseChangeAddresses)
-                {
-                    addresses = account.ExternalAddresses.Take(request.UseUniqueAddressPerUtxo ? request.UtxosCount : 1).ToList();
-                }
-
-                IEnumerable<UnspentOutputReference> spendableTransactions = this.walletManager.GetSpendableTransactionsInAccount(new WalletAccountReference(request.WalletName, request.AccountName), request.MinConfirmations);
-
-                if (request.Outpoints != null && request.Outpoints.Any())
-                {
-                    var selectedUnspentOutputReferenceList = new List<UnspentOutputReference>();
-                    foreach (UnspentOutputReference unspentOutputReference in spendableTransactions)
-                    {
-                        if (request.Outpoints.Any(o => o.TransactionId == unspentOutputReference.Transaction.Id.ToString() && o.Index == unspentOutputReference.Transaction.Index))
-                        {
-                            selectedUnspentOutputReferenceList.Add(unspentOutputReference);
-                        }
-                    }
-                    spendableTransactions = selectedUnspentOutputReferenceList;
-                }
-
-                int totalOutpointCount = spendableTransactions.Count();
-                int calculatedTransactionCount = request.UtxosCount / request.UtxoPerTransaction;
-                int inputsPerTransaction = totalOutpointCount / calculatedTransactionCount;
-
-                if (calculatedTransactionCount > totalOutpointCount)
-                {
-                    this.logger.LogError($"You have requested to create {calculatedTransactionCount} transactions but there are only {totalOutpointCount} UTXOs in the wallet. Number of transactions which could be created has to be lower than total number of UTXOs in the wallet. If higher number of transactions is required please first distibute funds to create larget set of UTXO and retry this operation.");
-                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, "Invalid parameters", "Invalid parameters");
-                }
-
-                var recipients = new List<Recipient>(request.UtxosCount);
-                int addressIndex = 0;
-                var transactionList = new List<Transaction>();
-
-                for (int i = 0; i < request.UtxosCount; i++)
-                {
-                    recipients.Add(new Recipient { ScriptPubKey = addresses[addressIndex].ScriptPubKey });
-
-                    if (request.UseUniqueAddressPerUtxo)
-                        addressIndex++;
-
-                    if ((i + 1) % request.UtxoPerTransaction == 0 || i == request.UtxosCount - 1)
-                    {
-                        var transactionTransferAmount = new Money(0);
-                        var inputs = new List<OutPoint>();
-
-                        foreach (UnspentOutputReference unspentOutputReference in spendableTransactions.Skip(transactionList.Count * inputsPerTransaction).Take(inputsPerTransaction))
-                        {
-                            inputs.Add(new OutPoint(unspentOutputReference.Transaction.Id, unspentOutputReference.Transaction.Index));
-                            transactionTransferAmount += unspentOutputReference.Transaction.Amount;
-                        }
-
-                        // Add any remaining UTXOs to the last transaction.
-                        if (i == request.UtxosCount - 1)
-                        {
-                            foreach (UnspentOutputReference unspentOutputReference in spendableTransactions.Skip((transactionList.Count + 1) * inputsPerTransaction))
-                            {
-                                inputs.Add(new OutPoint(unspentOutputReference.Transaction.Id, unspentOutputReference.Transaction.Index));
-                                transactionTransferAmount += unspentOutputReference.Transaction.Amount;
-                            }
-                        }
-
-                        // For the purpose of fee estimation use the transfer amount as if the fee were network.MinTxFee.
-                        Money transferAmount = (transactionTransferAmount) / recipients.Count;
-                        recipients.ForEach(r => r.Amount = transferAmount);
-
-                        var context = new TransactionBuildContext(this.network)
-                        {
-                            AccountReference = walletReference,
-                            Shuffle = false,
-                            WalletPassword = request.WalletPassword,
-                            Recipients = recipients,
-                            Time = (uint)this.dateTimeProvider.GetAdjustedTimeAsUnixTimestamp() + (uint)request.TimestampDifferenceBetweenTransactions,
-                            AllowOtherInputs = false,
-                            SelectedInputs = inputs,
-                            FeeType = FeeType.Low
-                        };
-
-                        // Set the amount once we know how much the transfer will cost.
-                        Money transactionFee;
-                        try
-                        {
-                            Transaction transaction = this.walletTransactionHandler.BuildTransaction(context);
-
-                            // Due to how the code works the line below is probably never used.
-                            var transactionSize = transaction.GetSerializedSize();
-                            transactionFee = new FeeRate(this.network.MinTxFee).GetFee(transactionSize);
-                        }
-                        catch (NotEnoughFundsException ex)
-                        {
-                            // This remains the best approach for estimating transaction fees.
-                            transactionFee = (Money)ex.Missing;
-                        }
-
-                        if (transactionFee < this.network.MinTxFee)
-                            transactionFee = new Money(this.network.MinTxFee);
-
-                        transferAmount = (transactionTransferAmount - transactionFee) / recipients.Count;
-                        recipients.ForEach(r => r.Amount = transferAmount);
-
-                        context = new TransactionBuildContext(this.network)
-                        {
-                            AccountReference = walletReference,
-                            Shuffle = false,
-                            WalletPassword = request.WalletPassword,
-                            Recipients = recipients,
-                            Time = (uint)this.dateTimeProvider.GetAdjustedTimeAsUnixTimestamp() + (uint)request.TimestampDifferenceBetweenTransactions,
-                            AllowOtherInputs = false,
-                            SelectedInputs = inputs,
-                            TransactionFee = transactionFee
-                        };
-
-                        Transaction transactionResult = this.walletTransactionHandler.BuildTransaction(context);
-                        transactionList.Add(transactionResult);
-                        recipients = new List<Recipient>();
-                    }
-                }
-
-                foreach (Transaction transaction in transactionList)
-                {
-                    var modelItem = new SendTransactionModel
-                    {
-                        TransactionId = transaction.GetHash(),
-                        Outputs = new List<TransactionOutputModel>()
-                    };
-
-                    foreach (TxOut output in transaction.Outputs)
-                    {
-                        bool isUnspendable = output.ScriptPubKey.IsUnspendable;
-                        modelItem.Outputs.Add(new TransactionOutputModel
-                        {
-                            Address = isUnspendable ? null : output.ScriptPubKey.GetDestinationAddress(this.network)?.ToString(),
-                            Amount = output.Value,
-                            OpReturnData = isUnspendable ? Encoding.UTF8.GetString(output.ScriptPubKey.ToOps().Last().PushData) : null
-                        });
-                    }
-                    model.WalletSendTransaction.Add(modelItem);
-
-                    if (!request.DryRun)
-                    {
-                        this.broadcasterManager.BroadcastTransactionAsync(transaction).GetAwaiter().GetResult();
-
-                        TransactionBroadcastEntry transactionBroadCastEntry = this.broadcasterManager.GetTransaction(transaction.GetHash());
-
-                        if (transactionBroadCastEntry.State == State.CantBroadcast)
-                        {
-                            this.logger.LogError("Exception occurred: {0}", transactionBroadCastEntry.ErrorMessage);
-                            return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, transactionBroadCastEntry.ErrorMessage, "Transaction Exception");
-                        }
-                    }
-                }
-
-                return this.Json(model);
-            }
-            catch (Exception e)
-            {
-                this.logger.LogError("Exception occurred: {0}", e.ToString());
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
-            }
-        }
-
-        /*
-
-        private void SyncFromBestHeightForRecoveredWallets(DateTime walletCreationDate)
-        {
-            // After recovery the wallet needs to be synced.
-            // We only sync if the syncing process needs to go back.
-            int blockHeightToSyncFrom = this.chainIndexer.GetHeightAtTime(walletCreationDate);
-            int currentSyncingHeight = this.walletSyncManager.WalletTip.Height;
-
-            if (blockHeightToSyncFrom < currentSyncingHeight)
-            {
-                this.walletSyncManager.SyncFromHeight(blockHeightToSyncFrom);
-            }
-        }
-        */
 
         private TransactionItemModel FindSimilarReceivedTransactionOutput(List<TransactionItemModel> items, TransactionData transaction)
         {

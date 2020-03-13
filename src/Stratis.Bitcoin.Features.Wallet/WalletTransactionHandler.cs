@@ -243,7 +243,7 @@ namespace Stratis.Bitcoin.Features.Wallet
             ExtKey seedExtKey = this.walletManager.GetExtKey(context.AccountReference, context.WalletPassword);
 
             var signingKeys = new HashSet<ISecret>();
-            Dictionary<OutPoint,UnspentOutputReference> outpointLookup = context.UnspentOutputs.ToDictionary(o => o.ToOutPoint(), o => o);
+            Dictionary<OutPoint, UnspentOutputReference> outpointLookup = context.UnspentOutputs.ToDictionary(o => o.ToOutPoint(), o => o);
             IEnumerable<string> uniqueHdPaths = coinsSpent.Select(s => s.Outpoint).Select(o => outpointLookup[o].Address.HdPath).Distinct();
 
             foreach (string hdPath in uniqueHdPaths)
@@ -381,7 +381,7 @@ namespace Stratis.Bitcoin.Features.Wallet
         protected void AddFee(TransactionBuildContext context)
         {
             Money fee;
-            Money minTrxFee = new Money(this.network.MinTxFee, MoneyUnit.Satoshi);
+            Money minTrxFee = new Money(((FeeNetwork)this.network).MinTxFee, MoneyUnit.Satoshi);
 
             // If the fee hasn't been set manually, calculate it based on the fee type that was chosen.
             if (context.TransactionFee == null)

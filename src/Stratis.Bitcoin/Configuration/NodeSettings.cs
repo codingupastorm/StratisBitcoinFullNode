@@ -313,9 +313,9 @@ namespace Stratis.Bitcoin.Configuration
         {
             TextFileConfiguration config = this.ConfigReader;
 
-            this.MinTxFeeRate = new FeeRate(config.GetOrDefault("mintxfee", this.Network.MinTxFee, this.Logger));
-            this.FallbackTxFeeRate = new FeeRate(config.GetOrDefault("fallbackfee", this.Network.FallbackFee, this.Logger));
-            this.MinRelayTxFeeRate = new FeeRate(config.GetOrDefault("minrelaytxfee", this.Network.MinRelayTxFee, this.Logger));
+            this.MinTxFeeRate = new FeeRate(config.GetOrDefault("mintxfee", ((FeeNetwork)this.Network).MinTxFee, this.Logger));
+            this.FallbackTxFeeRate = new FeeRate(config.GetOrDefault("fallbackfee", ((FeeNetwork)this.Network).FallbackFee, this.Logger));
+            this.MinRelayTxFeeRate = new FeeRate(config.GetOrDefault("minrelaytxfee", ((FeeNetwork)this.Network).MinRelayTxFee, this.Logger));
         }
 
         /// <summary>
@@ -391,9 +391,9 @@ namespace Stratis.Bitcoin.Configuration
             // Can be overridden in configuration file.
             builder.AppendLine($"-testnet                  Use the testnet chain.");
             builder.AppendLine($"-regtest                  Use the regtestnet chain.");
-            builder.AppendLine($"-mintxfee=<number>        Minimum fee rate. Defaults to {network.MinTxFee}.");
-            builder.AppendLine($"-fallbackfee=<number>     Fallback fee rate. Defaults to {network.FallbackFee}.");
-            builder.AppendLine($"-minrelaytxfee=<number>   Minimum relay fee rate. Defaults to {network.MinRelayTxFee}.");
+            builder.AppendLine($"-mintxfee=<number>        Minimum fee rate. Defaults to {((FeeNetwork)network).MinTxFee}.");
+            builder.AppendLine($"-fallbackfee=<number>     Fallback fee rate. Defaults to {((FeeNetwork)network).FallbackFee}.");
+            builder.AppendLine($"-minrelaytxfee=<number>   Minimum relay fee rate. Defaults to {((FeeNetwork)network).MinRelayTxFee}.");
 
             defaults.Logger.LogInformation(builder.ToString());
 
@@ -407,17 +407,19 @@ namespace Stratis.Bitcoin.Configuration
         /// <param name="network">The network to base the defaults off.</param>
         public static void BuildDefaultConfigurationFile(StringBuilder builder, Network network)
         {
+            var feeNetwork = network as FeeNetwork;
+
             builder.AppendLine("####Node Settings####");
             builder.AppendLine($"#Test network. Defaults to 0.");
             builder.AppendLine($"testnet={((network.IsTest() && !network.IsRegTest()) ? 1 : 0)}");
             builder.AppendLine($"#Regression test network. Defaults to 0.");
             builder.AppendLine($"regtest={(network.IsRegTest() ? 1 : 0)}");
-            builder.AppendLine($"#Minimum fee rate. Defaults to {network.MinTxFee}.");
-            builder.AppendLine($"#mintxfee={network.MinTxFee}");
-            builder.AppendLine($"#Fallback fee rate. Defaults to {network.FallbackFee}.");
-            builder.AppendLine($"#fallbackfee={network.FallbackFee}");
-            builder.AppendLine($"#Minimum relay fee rate. Defaults to {network.MinRelayTxFee}.");
-            builder.AppendLine($"#minrelaytxfee={network.MinRelayTxFee}");
+            builder.AppendLine($"#Minimum fee rate. Defaults to {feeNetwork.MinTxFee}.");
+            builder.AppendLine($"#mintxfee={feeNetwork.MinTxFee}");
+            builder.AppendLine($"#Fallback fee rate. Defaults to {feeNetwork.FallbackFee}.");
+            builder.AppendLine($"#fallbackfee={feeNetwork.FallbackFee}");
+            builder.AppendLine($"#Minimum relay fee rate. Defaults to {feeNetwork.MinRelayTxFee}.");
+            builder.AppendLine($"#minrelaytxfee={feeNetwork.MinRelayTxFee}");
             builder.AppendLine();
 
             ConnectionManagerSettings.BuildDefaultConfigurationFile(builder, network);

@@ -19,7 +19,6 @@ namespace Stratis.Bitcoin.Networks
             this.DefaultPort = 18444;
             this.DefaultMaxOutboundConnections = 8;
             this.DefaultMaxInboundConnections = 117;
-            this.DefaultRPCPort = 18332;
             this.DefaultAPIPort = 38220;
             this.CoinTicker = "TBTC";
             this.DefaultBanTimeSeconds = 60 * 60 * 24; // 24 Hours
@@ -46,7 +45,7 @@ namespace Stratis.Bitcoin.Networks
             var bip9Deployments = new BitcoinBIP9Deployments
             {
                 [BitcoinBIP9Deployments.TestDummy] = new BIP9DeploymentsParameters("TestDummy", 28, 0, 999999999, BIP9DeploymentsParameters.DefaultRegTestThreshold),
-                [BitcoinBIP9Deployments.CSV] = new BIP9DeploymentsParameters("CSV",0, 0, 999999999, BIP9DeploymentsParameters.DefaultRegTestThreshold),
+                [BitcoinBIP9Deployments.CSV] = new BIP9DeploymentsParameters("CSV", 0, 0, 999999999, BIP9DeploymentsParameters.DefaultRegTestThreshold),
                 [BitcoinBIP9Deployments.Segwit] = new BIP9DeploymentsParameters("Segwit", 1, BIP9DeploymentsParameters.AlwaysActive, 999999999, BIP9DeploymentsParameters.AlwaysActive)
             };
 
