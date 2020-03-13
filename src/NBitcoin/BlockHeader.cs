@@ -198,8 +198,8 @@ namespace NBitcoin
                 this.BlockTime = nNewTime;
 
             // Updating time can change work required on testnet.
-            if (consensus is IConsensusProofOfWork consensusProofOfWork && consensusProofOfWork.PowAllowMinDifficultyBlocks)
-                this.Bits = this.GetWorkRequired(consensusProofOfWork, prev);
+            if (consensus.ConsensusProofOfWork != null && consensus.ConsensusProofOfWork.PowAllowMinDifficultyBlocks)
+                this.Bits = this.GetWorkRequired(consensus, prev);
         }
 
         /// <summary>
@@ -215,10 +215,10 @@ namespace NBitcoin
 
         public Target GetWorkRequired(Network network, ChainedHeader prev)
         {
-            return this.GetWorkRequired((IConsensusProofOfWork)network.Consensus, prev);
+            return this.GetWorkRequired(network.Consensus, prev);
         }
 
-        public Target GetWorkRequired(IConsensusProofOfWork consensus, ChainedHeader prev)
+        public Target GetWorkRequired(IConsensus consensus, ChainedHeader prev)
         {
             return new ChainedHeader(this, this.GetHash(), prev).GetWorkRequired(consensus);
         }

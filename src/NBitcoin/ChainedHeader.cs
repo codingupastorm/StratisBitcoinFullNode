@@ -357,7 +357,7 @@ namespace NBitcoin
         /// <returns>The target proof of work.</returns>
         public Target GetNextWorkRequired(BlockHeader block, IConsensus consensus)
         {
-            return new ChainedHeader(block, block.GetHash(), this).GetWorkRequired((IConsensusProofOfWork)consensus);
+            return new ChainedHeader(block, block.GetHash(), this).GetWorkRequired(consensus);
         }
 
         /// <summary>
@@ -367,7 +367,7 @@ namespace NBitcoin
         /// <returns>The target proof of work.</returns>
         public Target GetWorkRequired(Network network)
         {
-            return GetWorkRequired((IConsensusProofOfWork)network.Consensus);
+            return GetWorkRequired(network.Consensus);
         }
 
         /// <summary>
@@ -375,13 +375,13 @@ namespace NBitcoin
         /// </summary>
         /// <param name="consensus">Consensus rules to use for this computation.</param>
         /// <returns>The target proof of work.</returns>
-        public Target GetWorkRequired(IConsensusProofOfWork consensus)
+        public Target GetWorkRequired(IConsensus consensus)
         {
             // Genesis block.
             if (this.Height == 0)
-                return consensus.PowLimit;
+                return consensus.ConsensusProofOfWork.PowLimit;
 
-            Target proofOfWorkLimit = consensus.PowLimit;
+            Target proofOfWorkLimit = consensus.ConsensusProofOfWork.PowLimit;
             ChainedHeader lastBlock = this.Previous;
             int height = this.Height;
 
@@ -393,12 +393,12 @@ namespace NBitcoin
             // Only change once per interval.
             if ((height) % difficultyAdjustmentInterval != 0)
             {
-                if (consensus.PowAllowMinDifficultyBlocks)
+                if (consensus.ConsensusProofOfWork.PowAllowMinDifficultyBlocks)
                 {
                     // Special difficulty rule for testnet:
                     // If the new block's timestamp is more than 2* 10 minutes
                     // then allow mining of a min-difficulty block.
-                    if (this.Header.BlockTime > (lastBlock.Header.BlockTime + TimeSpan.FromTicks(consensus.PowTargetSpacing.Ticks * 2)))
+                    if (this.Header.BlockTime > (lastBlock.Header.BlockTime + TimeSpan.FromTicks(consensus.ConsensusProofOfWork.PowTargetSpacing.Ticks * 2)))
                         return proofOfWorkLimit;
 
                     // Return the last non-special-min-difficulty-rules-block.
@@ -419,20 +419,20 @@ namespace NBitcoin
             if (firstChainedHeader == null)
                 throw new NotSupportedException("Can only calculate work of a full chain");
 
-            if (consensus.PowNoRetargeting)
+            if (consensus.ConsensusProofOfWork.PowNoRetargeting)
                 return lastBlock.Header.Bits;
 
             // Limit adjustment step.
             TimeSpan actualTimespan = lastBlock.Header.BlockTime - firstChainedHeader.Header.BlockTime;
-            if (actualTimespan < TimeSpan.FromTicks(consensus.PowTargetTimespan.Ticks / 4))
-                actualTimespan = TimeSpan.FromTicks(consensus.PowTargetTimespan.Ticks / 4);
-            if (actualTimespan > TimeSpan.FromTicks(consensus.PowTargetTimespan.Ticks * 4))
-                actualTimespan = TimeSpan.FromTicks(consensus.PowTargetTimespan.Ticks * 4);
+            if (actualTimespan < TimeSpan.FromTicks(consensus.ConsensusProofOfWork.PowTargetTimespan.Ticks / 4))
+                actualTimespan = TimeSpan.FromTicks(consensus.ConsensusProofOfWork.PowTargetTimespan.Ticks / 4);
+            if (actualTimespan > TimeSpan.FromTicks(consensus.ConsensusProofOfWork.PowTargetTimespan.Ticks * 4))
+                actualTimespan = TimeSpan.FromTicks(consensus.ConsensusProofOfWork.PowTargetTimespan.Ticks * 4);
 
             // Retarget.
             BigInteger newTarget = lastBlock.Header.Bits.ToBigInteger();
             newTarget = newTarget.Multiply(BigInteger.ValueOf((long)actualTimespan.TotalSeconds));
-            newTarget = newTarget.Divide(BigInteger.ValueOf((long)consensus.PowTargetTimespan.TotalSeconds));
+            newTarget = newTarget.Divide(BigInteger.ValueOf((long)consensus.ConsensusProofOfWork.PowTargetTimespan.TotalSeconds));
 
             var finalTarget = new Target(newTarget);
             if (finalTarget > proofOfWorkLimit)
@@ -445,9 +445,9 @@ namespace NBitcoin
         /// Calculate the difficulty adjustment interval in blocks based on settings defined in <see cref="IConsensus"/>.
         /// </summary>
         /// <returns>The difficulty adjustment interval in blocks.</returns>
-        private long GetDifficultyAdjustmentInterval(IConsensusProofOfWork consensus)
+        private long GetDifficultyAdjustmentInterval(IConsensus consensus)
         {
-            return (long)consensus.PowTargetTimespan.TotalSeconds / (long)consensus.PowTargetSpacing.TotalSeconds;
+            return (long)consensus.ConsensusProofOfWork.PowTargetTimespan.TotalSeconds / (long)consensus.ConsensusProofOfWork.PowTargetSpacing.TotalSeconds;
         }
 
         /// <summary>
@@ -482,7 +482,7 @@ namespace NBitcoin
                 return BlockStake.Validate(network, this);
 
             bool genesisCorrect = (this.Height != 0) || this.HashBlock == network.GetGenesis().GetHash();
-            return genesisCorrect && Validate((IConsensusProofOfWork)network.Consensus);
+            return genesisCorrect && Validate(network.Consensus);
         }
 
         /// <summary>
@@ -490,7 +490,7 @@ namespace NBitcoin
         /// </summary>
         /// <param name="consensus">The consensus rules being used.</param>
         /// <returns><c>true</c> if the header is a valid block header, <c>false</c> otherwise.</returns>
-        public bool Validate(IConsensusProofOfWork consensus)
+        public bool Validate(IConsensus consensus)
         {
             if (consensus == null)
                 throw new ArgumentNullException("consensus");
@@ -513,7 +513,7 @@ namespace NBitcoin
         /// <returns>Whether proof of work is valid.</returns>
         public bool CheckProofOfWorkAndTarget(Network network)
         {
-            return CheckProofOfWorkAndTarget((IConsensusProofOfWork)network.Consensus);
+            return CheckProofOfWorkAndTarget(network.Consensus);
         }
 
         /// <summary>
@@ -521,7 +521,7 @@ namespace NBitcoin
         /// </summary>
         /// <param name="consensus">Consensus rules to use for this validation.</param>
         /// <returns>Whether proof of work is valid.</returns>
-        public bool CheckProofOfWorkAndTarget(IConsensusProofOfWork consensus)
+        public bool CheckProofOfWorkAndTarget(IConsensus consensus)
         {
             return (this.Height == 0) || (this.Header.CheckProofOfWork() && (this.Header.Bits == GetWorkRequired(consensus)));
         }
