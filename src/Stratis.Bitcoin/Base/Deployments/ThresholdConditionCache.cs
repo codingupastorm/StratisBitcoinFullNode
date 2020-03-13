@@ -80,7 +80,7 @@ namespace Stratis.Bitcoin.Base.Deployments
 
                 int votes = 0;
                 int currentHeight = indexPrev.Height + 1;
-                int period = ((IConsensusProofOfWork)this.consensus).MinerConfirmationWindow;
+                int period = this.consensus.ConsensusProofOfWork.MinerConfirmationWindow;
 
                 // First ancestor outside last confirmation window.
                 ChainedHeader periodStartsHeader = indexPrev.GetAncestor(indexPrev.Height - (currentHeight % period));
