@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +11,6 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using NBitcoin.Protocol;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
@@ -434,53 +432,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         public void SetMinerSecret(BitcoinSecret secret)
         {
             this.MinerSecret = secret;
-        }
-
-        /// <summary>
-        /// Get the chain of headers from the peer (thread safe).
-        /// </summary>
-        /// <param name="peer">Peer to get chain from.</param>
-        /// <param name="hashStop">The highest block wanted.</param>
-        /// <param name="cancellationToken"></param>
-        /// <returns>The chain of headers.</returns>
-        private ChainIndexer GetChain(INetworkPeer peer, uint256 hashStop = null, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            var chain = new ChainIndexer(peer.Network);
-            this.SynchronizeChain(peer, chain, hashStop, cancellationToken);
-            return chain;
-        }
-
-        /// <summary>
-        /// Synchronize a given Chain to the tip of the given node if its height is higher. (Thread safe).
-        /// </summary>
-        /// <param name="peer">Node to synchronize the chain for.</param>
-        /// <param name="chain">The chain to synchronize.</param>
-        /// <param name="hashStop">The location until which it synchronize.</param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private IEnumerable<ChainedHeader> SynchronizeChain(INetworkPeer peer, ChainIndexer chain, uint256 hashStop = null, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            ChainedHeader oldTip = chain.Tip;
-            List<ChainedHeader> headers = this.GetHeadersFromFork(peer, oldTip, hashStop, cancellationToken).ToList();
-            if (headers.Count == 0)
-                return new ChainedHeader[0];
-
-            ChainedHeader newTip = headers[headers.Count - 1];
-
-            if (newTip.Height <= oldTip.Height)
-                throw new ProtocolException("No tip should have been recieved older than the local one");
-
-            foreach (ChainedHeader header in headers)
-            {
-                if (!header.Validate(peer.Network))
-                {
-                    throw new ProtocolException("A header which does not pass proof of work verification has been received");
-                }
-            }
-
-            chain.SetTip(newTip);
-
-            return headers;
         }
 
         private async Task AssertStateAsync(INetworkPeer peer, NetworkPeerState peerState, CancellationToken cancellationToken = default(CancellationToken))

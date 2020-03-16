@@ -84,6 +84,9 @@ namespace Stratis.SmartContracts.Networks
             {
                 CoinbaseMaturity = 1,
                 MaxMoney = long.MaxValue,
+                PosNoRetargeting = true,
+                PremineHeight = 5,
+                PremineReward = Money.Coins(100_000_000),
             };
 
             this.Consensus = new Consensus(
@@ -91,22 +94,12 @@ namespace Stratis.SmartContracts.Networks
                 consensusOptions: consensusOptions,
                 coinType: 105,
                 hashGenesisBlock: genesisBlock.GetHash(),
-                majorityEnforceBlockUpgrade: 750,
-                majorityRejectBlockOutdated: 950,
-                majorityWindow: 1000,
                 buriedDeployments: buriedDeployments,
                 bip9Deployments: bip9Deployments,
                 bip34Hash: new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"),
                 maxReorgLength: 500,
                 defaultAssumeValid: null,
-                premineHeight: 5,
-                premineReward: Money.Coins(100_000_000),
-                posNoRetargeting: true,
                 minimumChainWork: null,
-                isProofOfStake: false,
-                proofOfStakeLimit: null,
-                proofOfStakeLimitV2: null,
-                proofOfStakeReward: Money.Zero,
                 consensusProofOfWork: consensusProofOfWork
             );
 

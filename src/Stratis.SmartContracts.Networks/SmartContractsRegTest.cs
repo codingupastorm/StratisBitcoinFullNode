@@ -67,11 +67,15 @@ namespace Stratis.SmartContracts.Networks
                 LastPOWBlock = default,
                 MaxMoney = long.MaxValue,
                 MinerConfirmationWindow = 144,
+                PosNoRetargeting = true,
                 PowAllowMinDifficultyBlocks = true,
                 PowLimit = new Target(new uint256("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")),
                 PowNoRetargeting = true,
                 PowTargetSpacing = TimeSpan.FromSeconds(10 * 60),
                 PowTargetTimespan = TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
+                PremineHeight = default,
+                PremineReward = Money.Zero,
+                ProofOfStakeReward = Money.Zero,
                 ProofOfWorkReward = Money.Coins(50),
                 SubsidyHalvingInterval = 150,
             };
@@ -79,24 +83,14 @@ namespace Stratis.SmartContracts.Networks
             this.Consensus = new Consensus(
                 consensusFactory: consensusFactory,
                 consensusOptions: consensusOptions,
-                coinType: default(int),
+                coinType: default,
                 hashGenesisBlock: genesisBlock.Header.GetHash(),
-                majorityEnforceBlockUpgrade: 750,
-                majorityRejectBlockOutdated: 950,
-                majorityWindow: 1000,
                 buriedDeployments: buriedDeployments,
                 bip9Deployments: bip9Deployments,
                 bip34Hash: new uint256(),
                 maxReorgLength: 500,
                 defaultAssumeValid: null, // turn off assumevalid for regtest.
-                premineHeight: default(long),
-                premineReward: Money.Zero,
-                posNoRetargeting: true,
                 minimumChainWork: uint256.Zero,
-                isProofOfStake: default(bool),
-                proofOfStakeLimit: null,
-                proofOfStakeLimitV2: null,
-                proofOfStakeReward: Money.Zero,
                 consensusProofOfWork: consensusProofOfWork
             );
 

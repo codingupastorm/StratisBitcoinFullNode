@@ -104,22 +104,12 @@ namespace Stratis.Feature.PoA.Tokenless
                 consensusOptions: consensusOptions,
                 coinType: 500,
                 hashGenesisBlock: genesisBlock.GetHash(),
-                majorityEnforceBlockUpgrade: 0,
-                majorityRejectBlockOutdated: 0,
-                majorityWindow: 0,
                 buriedDeployments: new BuriedDeploymentsArray(),
                 bip9Deployments: new NoBIP9Deployments(),
                 bip34Hash: null,
                 maxReorgLength: 10, // This is really a RegTest class at the moment.
                 defaultAssumeValid: null,
-                premineHeight: 0,
-                premineReward: Money.Coins(0),
-                posNoRetargeting: true,
-                minimumChainWork: null,
-                isProofOfStake: false,
-                proofOfStakeLimit: null,
-                proofOfStakeLimitV2: null,
-                proofOfStakeReward: Money.Zero
+                minimumChainWork: null
             );
 
             // https://en.bitcoin.it/wiki/List_of_address_prefixes

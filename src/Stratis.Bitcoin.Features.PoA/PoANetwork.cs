@@ -109,11 +109,14 @@ namespace Stratis.Bitcoin.Features.PoA
                 LastPOWBlock = 0,
                 MaxMoney = long.MaxValue,
                 MinerConfirmationWindow = 2016,
+                PosNoRetargeting = true,
                 PowAllowMinDifficultyBlocks = false,
                 PowLimit = null,
                 PowNoRetargeting = true,
                 PowTargetSpacing = TimeSpan.FromSeconds(10 * 60),
                 PowTargetTimespan = TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
+                PremineHeight = 10,
+                PremineReward = Money.Coins(100_000_000),
                 ProofOfWorkReward = Money.Coins(0),
                 SubsidyHalvingInterval = 210000,
             };
@@ -123,22 +126,12 @@ namespace Stratis.Bitcoin.Features.PoA
                 consensusOptions: consensusOptions,
                 coinType: 105,
                 hashGenesisBlock: genesisBlock.GetHash(),
-                majorityEnforceBlockUpgrade: 750,
-                majorityRejectBlockOutdated: 950,
-                majorityWindow: 1000,
                 buriedDeployments: buriedDeployments,
                 bip9Deployments: bip9Deployments,
                 bip34Hash: new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"),
                 maxReorgLength: 500,
                 defaultAssumeValid: null,
-                premineHeight: 10,
-                premineReward: Money.Coins(100_000_000),
-                posNoRetargeting: true,
                 minimumChainWork: null,
-                isProofOfStake: false,
-                proofOfStakeLimit: null,
-                proofOfStakeLimitV2: null,
-                proofOfStakeReward: Money.Zero,
                 consensusProofOfWork: consensusProofOfWork
             );
 

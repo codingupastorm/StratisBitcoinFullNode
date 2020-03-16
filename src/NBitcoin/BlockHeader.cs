@@ -198,7 +198,7 @@ namespace NBitcoin
                 this.BlockTime = nNewTime;
 
             // Updating time can change work required on testnet.
-            if (consensus.ConsensusProofOfWork != null && consensus.ConsensusProofOfWork.PowAllowMinDifficultyBlocks)
+            if (consensus.ConsensusMiningReward != null && consensus.ConsensusMiningReward.PowAllowMinDifficultyBlocks)
                 this.Bits = this.GetWorkRequired(consensus, prev);
         }
 

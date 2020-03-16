@@ -6,24 +6,7 @@ namespace NBitcoin
 {
     public interface IConsensus
     {
-        IConsensusProofOfWork ConsensusProofOfWork { get; set; }
-
-        /// <summary>
-        /// Amount of coins mined when a new network is bootstrapped.
-        /// Set to <see cref="Money.Zero"/> when there is no premine.
-        /// </summary>
-        Money PremineReward { get; }
-
-        /// <summary>
-        /// The height of the block in which the pre-mined coins should be.
-        /// Set to 0 when there is no premine.
-        /// </summary>
-        long PremineHeight { get; }
-
-        /// <summary>
-        /// The reward that goes to the miner when a block is mined using proof-of-stake.
-        /// </summary>
-        Money ProofOfStakeReward { get; }
+        IConsensusMiningReward ConsensusMiningReward { get; set; }
 
         /// <summary>
         /// Maximal length of reorganization that the node is willing to accept, or 0 to disable long reorganization protection.
@@ -36,21 +19,7 @@ namespace NBitcoin
 
         IBIP9DeploymentsArray BIP9Deployments { get; }
 
-        int MajorityEnforceBlockUpgrade { get; }
-
-        int MajorityRejectBlockOutdated { get; }
-
-        int MajorityWindow { get; }
-
         uint256 BIP34Hash { get; }
-
-        /// <summary>
-        /// If <c>true</c> disables checking the next block's difficulty (work required) target on a Proof-Of-Stake network.
-        /// <para>
-        /// This can be used in tests to enable fast mining of blocks.
-        /// </para>
-        /// </summary>
-        bool PosNoRetargeting { get; }
 
         uint256 HashGenesisBlock { get; }
 
@@ -61,15 +30,6 @@ namespace NBitcoin
         /// Specify the BIP44 coin type for this network.
         /// </summary>
         int CoinType { get; }
-
-        BigInteger ProofOfStakeLimit { get; }
-
-        BigInteger ProofOfStakeLimitV2 { get; }
-
-        /// <summary>
-        /// An indicator whether this is a Proof Of Stake network.
-        /// </summary>
-        bool IsProofOfStake { get; }
 
         /// <summary>The default hash to use for assuming valid blocks.</summary>
         uint256 DefaultAssumeValid { get; }
@@ -86,10 +46,18 @@ namespace NBitcoin
         List<Type> MempoolRules { get; set; }
     }
 
-    public interface IConsensusProofOfWork
+    /// <summary>
+    /// These consensus properties relates to proof-of-stake and proof-of-work algorithm where mining rewards are expected.
+    /// </summary>
+    public interface IConsensusMiningReward
     {
         /// <inheritdoc />
         long CoinbaseMaturity { get; set; }
+
+        /// <summary>
+        /// An indicator whether this is a Proof Of Stake network.
+        /// </summary>
+        bool IsProofOfStake { get; }
 
         /// <inheritdoc />
         long MaxMoney { get; set; }
@@ -98,6 +66,35 @@ namespace NBitcoin
         int LastPOWBlock { get; set; }
 
         int MinerConfirmationWindow { get; set; }
+
+        /// <summary>
+        /// If <c>true</c> disables checking the next block's difficulty (work required) target on a Proof-Of-Stake network.
+        /// <para>
+        /// This can be used in tests to enable fast mining of blocks.
+        /// </para>
+        /// </summary>
+        bool PosNoRetargeting { get; }
+
+        /// <summary>
+        /// Amount of coins mined when a new network is bootstrapped.
+        /// Set to <see cref="Money.Zero"/> when there is no premine.
+        /// </summary>
+        Money PremineReward { get; }
+
+        /// <summary>
+        /// The height of the block in which the pre-mined coins should be.
+        /// Set to 0 when there is no premine.
+        /// </summary>
+        long PremineHeight { get; }
+
+        BigInteger ProofOfStakeLimit { get; }
+
+        BigInteger ProofOfStakeLimitV2 { get; }
+
+        /// <summary>
+        /// The reward that goes to the miner when a block is mined using proof-of-stake.
+        /// </summary>
+        Money ProofOfStakeReward { get; }
 
         bool PowAllowMinDifficultyBlocks { get; }
 

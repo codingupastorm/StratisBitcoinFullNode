@@ -53,14 +53,21 @@ namespace Stratis.Bitcoin.Networks
             var consensusProofOfWork = new ConsensusProofOfWork()
             {
                 CoinbaseMaturity = 100,
+                IsProofOfStake = false,
                 LastPOWBlock = default,
                 MaxMoney = 21000000 * Money.COIN,
                 MinerConfirmationWindow = 2016,
+                PosNoRetargeting = false,
                 PowAllowMinDifficultyBlocks = true,
                 PowLimit = new Target(new uint256("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff")),
                 PowNoRetargeting = false,
                 PowTargetSpacing = TimeSpan.FromSeconds(10 * 60),
-                PowTargetTimespan = TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
+                PowTargetTimespan = TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks,
+                PremineHeight = 0,
+                PremineReward = Money.Zero,
+                ProofOfStakeLimit = null,
+                ProofOfStakeLimitV2 = null,
+                ProofOfStakeReward = Money.Zero,
                 ProofOfWorkReward = Money.Coins(50),
                 SubsidyHalvingInterval = 210000,
             };
@@ -70,22 +77,12 @@ namespace Stratis.Bitcoin.Networks
                 consensusOptions: new ConsensusOptions(), // Default - set to Bitcoin params.
                 coinType: 1,
                 hashGenesisBlock: genesisBlock.GetHash(),
-                majorityEnforceBlockUpgrade: 51,
-                majorityRejectBlockOutdated: 75,
-                majorityWindow: 100,
                 buriedDeployments: buriedDeployments,
                 bip9Deployments: bip9Deployments,
                 bip34Hash: new uint256("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8"),
                 maxReorgLength: 0,
                 defaultAssumeValid: new uint256("0x0000000000000037a8cd3e06cd5edbfe9dd1dbcc5dacab279376ef7cfc2b4c75"), // 1354312
-                premineHeight: 0,
-                premineReward: Money.Zero,
-                posNoRetargeting: false,
                 minimumChainWork: new uint256("0x0000000000000000000000000000000000000000000000198b4def2baa9338d6"),
-                isProofOfStake: false,
-                proofOfStakeLimit: null,
-                proofOfStakeLimitV2: null,
-                proofOfStakeReward: Money.Zero,
                 consensusProofOfWork: consensusProofOfWork
             );
 

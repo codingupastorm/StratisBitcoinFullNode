@@ -379,9 +379,9 @@ namespace NBitcoin
         {
             // Genesis block.
             if (this.Height == 0)
-                return consensus.ConsensusProofOfWork.PowLimit;
+                return consensus.ConsensusMiningReward.PowLimit;
 
-            Target proofOfWorkLimit = consensus.ConsensusProofOfWork.PowLimit;
+            Target proofOfWorkLimit = consensus.ConsensusMiningReward.PowLimit;
             ChainedHeader lastBlock = this.Previous;
             int height = this.Height;
 
@@ -393,12 +393,12 @@ namespace NBitcoin
             // Only change once per interval.
             if ((height) % difficultyAdjustmentInterval != 0)
             {
-                if (consensus.ConsensusProofOfWork.PowAllowMinDifficultyBlocks)
+                if (consensus.ConsensusMiningReward.PowAllowMinDifficultyBlocks)
                 {
                     // Special difficulty rule for testnet:
                     // If the new block's timestamp is more than 2* 10 minutes
                     // then allow mining of a min-difficulty block.
-                    if (this.Header.BlockTime > (lastBlock.Header.BlockTime + TimeSpan.FromTicks(consensus.ConsensusProofOfWork.PowTargetSpacing.Ticks * 2)))
+                    if (this.Header.BlockTime > (lastBlock.Header.BlockTime + TimeSpan.FromTicks(consensus.ConsensusMiningReward.PowTargetSpacing.Ticks * 2)))
                         return proofOfWorkLimit;
 
                     // Return the last non-special-min-difficulty-rules-block.
@@ -419,20 +419,20 @@ namespace NBitcoin
             if (firstChainedHeader == null)
                 throw new NotSupportedException("Can only calculate work of a full chain");
 
-            if (consensus.ConsensusProofOfWork.PowNoRetargeting)
+            if (consensus.ConsensusMiningReward.PowNoRetargeting)
                 return lastBlock.Header.Bits;
 
             // Limit adjustment step.
             TimeSpan actualTimespan = lastBlock.Header.BlockTime - firstChainedHeader.Header.BlockTime;
-            if (actualTimespan < TimeSpan.FromTicks(consensus.ConsensusProofOfWork.PowTargetTimespan.Ticks / 4))
-                actualTimespan = TimeSpan.FromTicks(consensus.ConsensusProofOfWork.PowTargetTimespan.Ticks / 4);
-            if (actualTimespan > TimeSpan.FromTicks(consensus.ConsensusProofOfWork.PowTargetTimespan.Ticks * 4))
-                actualTimespan = TimeSpan.FromTicks(consensus.ConsensusProofOfWork.PowTargetTimespan.Ticks * 4);
+            if (actualTimespan < TimeSpan.FromTicks(consensus.ConsensusMiningReward.PowTargetTimespan.Ticks / 4))
+                actualTimespan = TimeSpan.FromTicks(consensus.ConsensusMiningReward.PowTargetTimespan.Ticks / 4);
+            if (actualTimespan > TimeSpan.FromTicks(consensus.ConsensusMiningReward.PowTargetTimespan.Ticks * 4))
+                actualTimespan = TimeSpan.FromTicks(consensus.ConsensusMiningReward.PowTargetTimespan.Ticks * 4);
 
             // Retarget.
             BigInteger newTarget = lastBlock.Header.Bits.ToBigInteger();
             newTarget = newTarget.Multiply(BigInteger.ValueOf((long)actualTimespan.TotalSeconds));
-            newTarget = newTarget.Divide(BigInteger.ValueOf((long)consensus.ConsensusProofOfWork.PowTargetTimespan.TotalSeconds));
+            newTarget = newTarget.Divide(BigInteger.ValueOf((long)consensus.ConsensusMiningReward.PowTargetTimespan.TotalSeconds));
 
             var finalTarget = new Target(newTarget);
             if (finalTarget > proofOfWorkLimit)
@@ -447,7 +447,7 @@ namespace NBitcoin
         /// <returns>The difficulty adjustment interval in blocks.</returns>
         private long GetDifficultyAdjustmentInterval(IConsensus consensus)
         {
-            return (long)consensus.ConsensusProofOfWork.PowTargetTimespan.TotalSeconds / (long)consensus.ConsensusProofOfWork.PowTargetSpacing.TotalSeconds;
+            return (long)consensus.ConsensusMiningReward.PowTargetTimespan.TotalSeconds / (long)consensus.ConsensusMiningReward.PowTargetSpacing.TotalSeconds;
         }
 
         /// <summary>
@@ -466,23 +466,6 @@ namespace NBitcoin
 
             Array.Sort(median);
             return median[begin + ((end - begin) / 2)];
-        }
-
-        /// <summary>
-        /// Check that the header is a valid block header including the work done for PoW blocks.
-        /// </summary>
-        /// <param name="network">The network to verify against.</param>
-        /// <returns><c>true</c> if the header is a valid block header, <c>false</c> otherwise.</returns>
-        public bool Validate(Network network)
-        {
-            if (network == null)
-                throw new ArgumentNullException("network");
-
-            if (network.Consensus.IsProofOfStake)
-                return BlockStake.Validate(network, this);
-
-            bool genesisCorrect = (this.Height != 0) || this.HashBlock == network.GetGenesis().GetHash();
-            return genesisCorrect && Validate(network.Consensus);
         }
 
         /// <summary>

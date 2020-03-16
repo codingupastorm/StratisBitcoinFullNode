@@ -126,7 +126,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
         public void ComputeBlockVersion_UsingChainTipAndConsensus_Bip9DeploymentActive_UpdatesHeightAndVersion()
         {
             ConsensusOptions options = this.testNet.Consensus.Options;
-            int minerConfirmationWindow = this.testNet.Consensus.ConsensusProofOfWork.MinerConfirmationWindow;
+            int minerConfirmationWindow = this.testNet.Consensus.ConsensusMiningReward.MinerConfirmationWindow;
 
             try
             {
@@ -141,7 +141,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
                 this.testNet.Consensus.BIP9Deployments[BitcoinBIP9Deployments.CSV] = null;
                 this.testNet.Consensus.BIP9Deployments[BitcoinBIP9Deployments.Segwit] = null;
 
-                this.testNet.Consensus.ConsensusProofOfWork.MinerConfirmationWindow = 2;
+                this.testNet.Consensus.ConsensusMiningReward.MinerConfirmationWindow = 2;
 
                 ChainIndexer chainIndexer = GenerateChainWithHeightAndActivatedBip9(5, this.testNet, new Key(), this.testNet.Consensus.BIP9Deployments[0]);
                 this.SetupRulesEngine(chainIndexer);
@@ -160,7 +160,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
                 // This is a static in the global context so be careful updating it. I'm resetting it after being done testing so I don't influence other tests.
                 this.testNet.Consensus.Options = options;
                 this.testNet.Consensus.BIP9Deployments[0] = null;
-                this.testNet.Consensus.ConsensusProofOfWork.MinerConfirmationWindow = minerConfirmationWindow;
+                this.testNet.Consensus.ConsensusMiningReward.MinerConfirmationWindow = minerConfirmationWindow;
             }
         }
 

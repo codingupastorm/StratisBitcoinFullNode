@@ -52,7 +52,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
 
         private void wallets_with_coins()
         {
-            var maturity = (int)this.stratisSender.FullNode.Network.Consensus.ConsensusProofOfWork.CoinbaseMaturity;
+            var maturity = (int)this.stratisSender.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity;
             TestHelper.MineBlocks(this.stratisSender, 5);
 
             var total = this.stratisSender.FullNode.WalletManager().GetSpendableTransactionsInWallet(Name).Sum(s => s.Transaction.Amount);

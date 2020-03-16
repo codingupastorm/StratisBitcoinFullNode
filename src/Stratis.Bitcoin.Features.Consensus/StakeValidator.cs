@@ -139,15 +139,15 @@ namespace Stratis.Bitcoin.Features.Consensus
             // Genesis block.
             if (chainedHeader == null)
             {
-                this.logger.LogTrace("(-)[GENESIS]:'{0}'", consensus.ConsensusProofOfWork.PowLimit);
-                return consensus.ConsensusProofOfWork.PowLimit;
+                this.logger.LogTrace("(-)[GENESIS]:'{0}'", consensus.ConsensusMiningReward.PowLimit);
+                return consensus.ConsensusMiningReward.PowLimit;
             }
 
             // Find the last two blocks that correspond to the mining algo
             // (i.e if this is a POS block we need to find the last two POS blocks).
             BigInteger targetLimit = proofOfStake
-                ? consensus.ProofOfStakeLimitV2
-                : consensus.ConsensusProofOfWork.PowLimit.ToBigInteger();
+                ? consensus.ConsensusMiningReward.ProofOfStakeLimitV2
+                : consensus.ConsensusMiningReward.PowLimit.ToBigInteger();
 
             // First block.
             ChainedHeader lastPowPosBlock = this.GetLastPowPosChainedBlock(stakeChain, chainedHeader, proofOfStake);
@@ -168,13 +168,13 @@ namespace Stratis.Bitcoin.Features.Consensus
             }
 
             // This is used in tests to allow quickly mining blocks.
-            if (!proofOfStake && consensus.ConsensusProofOfWork.PowNoRetargeting)
+            if (!proofOfStake && consensus.ConsensusMiningReward.PowNoRetargeting)
             {
                 this.logger.LogTrace("(-)[NO_POW_RETARGET]:'{0}'", lastPowPosBlock.Header.Bits);
                 return lastPowPosBlock.Header.Bits;
             }
 
-            if (proofOfStake && consensus.PosNoRetargeting)
+            if (proofOfStake && consensus.ConsensusMiningReward.PosNoRetargeting)
             {
                 this.logger.LogTrace("(-)[NO_POS_RETARGET]:'{0}'", lastPowPosBlock.Header.Bits);
                 return lastPowPosBlock.Header.Bits;

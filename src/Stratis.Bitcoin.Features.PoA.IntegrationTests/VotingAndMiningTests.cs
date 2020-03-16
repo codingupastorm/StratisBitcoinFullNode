@@ -296,7 +296,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
                 long balanceOnStart = walletManager.GetBalances(walletName, "account 0").Sum(x => x.AmountConfirmed);
                 Assert.Equal(0, balanceOnStart);
 
-                long toMineCount = network.Consensus.PremineHeight + network.Consensus.ConsensusProofOfWork.CoinbaseMaturity + 1 - node.GetTip().Height;
+                long toMineCount = network.Consensus.ConsensusMiningReward.PremineHeight + network.Consensus.ConsensusMiningReward.CoinbaseMaturity + 1 - node.GetTip().Height;
 
                 await node.MineBlocksAsync((int)toMineCount).ConfigureAwait(false);
 
@@ -304,7 +304,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
                 {
                     long balanceAfterPremine = walletManager.GetBalances(walletName, "account 0").Sum(x => x.AmountConfirmed);
 
-                    return network.Consensus.PremineReward.Satoshi == balanceAfterPremine;
+                    return network.Consensus.ConsensusMiningReward.PremineReward.Satoshi == balanceAfterPremine;
                 });
             }
         }
@@ -328,7 +328,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
 
                 TestHelper.Connect(nodeA, nodeB);
 
-                long toMineCount = network.Consensus.PremineHeight + network.Consensus.ConsensusProofOfWork.CoinbaseMaturity + 1 - nodeA.GetTip().Height;
+                long toMineCount = network.Consensus.ConsensusMiningReward.PremineHeight + network.Consensus.ConsensusMiningReward.CoinbaseMaturity + 1 - nodeA.GetTip().Height;
 
                 // Get coins on nodeA via the premine.
                 await nodeA.MineBlocksAsync((int)toMineCount).ConfigureAwait(false);

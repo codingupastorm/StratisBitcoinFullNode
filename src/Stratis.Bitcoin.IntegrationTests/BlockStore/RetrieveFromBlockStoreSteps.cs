@@ -105,7 +105,7 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
             var transactionBuildContext = new TransactionBuildContext(this.node.FullNode.Network)
             {
                 AccountReference = this.miningWalletAccountReference,
-                MinConfirmations = (int)this.node.FullNode.Network.Consensus.ConsensusProofOfWork.CoinbaseMaturity,
+                MinConfirmations = (int)this.node.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity,
                 WalletPassword = password,
                 Recipients = new List<Recipient>() { new Recipient() { Amount = this.transferAmount, ScriptPubKey = this.receiverAddress.ScriptPubKey } }
             };

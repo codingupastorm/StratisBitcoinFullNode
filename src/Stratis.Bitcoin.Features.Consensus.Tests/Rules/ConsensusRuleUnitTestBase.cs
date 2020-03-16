@@ -12,7 +12,6 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.Consensus.Interfaces;
 using Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders;
 using Stratis.Bitcoin.Signals;
@@ -51,7 +50,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.Rules
             this.consensusSettings = new ConsensusSettings(NodeSettings.Default(this.network));
             this.nodeDeployments = new NodeDeployments(this.network, this.ChainIndexer);
 
-            if (network.Consensus.IsProofOfStake)
+            if (network.Consensus.ConsensusMiningReward.IsProofOfStake)
                 this.ruleContext = new PosRuleContext(new ValidationContext(), this.dateTimeProvider.Object.GetTimeOffset());
             else
                 this.ruleContext = new PowRuleContext(new ValidationContext(), this.dateTimeProvider.Object.GetTimeOffset());
@@ -141,7 +140,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.Rules
             this.dateTimeProvider = new Mock<IDateTimeProvider>();
             this.nodeDeployments = new NodeDeployments(this.network, this.ChainIndexer);
 
-            if (network.Consensus.IsProofOfStake)
+            if (network.Consensus.ConsensusMiningReward.IsProofOfStake)
             {
                 this.ruleContext = new PosRuleContext(new ValidationContext(), this.dateTimeProvider.Object.GetTimeOffset());
             }

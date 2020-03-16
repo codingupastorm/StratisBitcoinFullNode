@@ -991,7 +991,7 @@ namespace Stratis.Bitcoin.Features.Wallet
                         $"Account '{walletAccountReference.AccountName}' in wallet '{walletAccountReference.WalletName}' not found.");
                 }
 
-                res = account.GetSpendableTransactions(this.ChainIndexer.Tip.Height, this.network.Consensus.ConsensusProofOfWork.CoinbaseMaturity, confirmations).ToArray();
+                res = account.GetSpendableTransactions(this.ChainIndexer.Tip.Height, this.network.Consensus.ConsensusMiningReward.CoinbaseMaturity, confirmations).ToArray();
             }
 
             return res;

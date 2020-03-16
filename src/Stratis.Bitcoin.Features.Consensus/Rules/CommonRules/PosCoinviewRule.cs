@@ -102,9 +102,9 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
 
             if (coins.IsCoinstake)
             {
-                if ((spendHeight - coins.Height) < this.consensus.ConsensusProofOfWork.CoinbaseMaturity)
+                if ((spendHeight - coins.Height) < this.consensus.ConsensusMiningReward.CoinbaseMaturity)
                 {
-                    this.Logger.LogDebug("Coinstake transaction height {0} spent at height {1}, but maturity is set to {2}.", coins.Height, spendHeight, this.consensus.ConsensusProofOfWork.CoinbaseMaturity);
+                    this.Logger.LogDebug("Coinstake transaction height {0} spent at height {1}, but maturity is set to {2}.", coins.Height, spendHeight, this.consensus.ConsensusMiningReward.CoinbaseMaturity);
                     this.Logger.LogTrace("(-)[COINSTAKE_PREMATURE_SPENDING]");
                     ConsensusErrors.BadTransactionPrematureCoinstakeSpending.Throw();
                 }
@@ -189,9 +189,9 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
         public override Money GetProofOfWorkReward(int height)
         {
             if (this.IsPremine(height))
-                return this.consensus.PremineReward;
+                return this.consensus.ConsensusMiningReward.PremineReward;
 
-            return this.consensus.ConsensusProofOfWork.ProofOfWorkReward;
+            return this.consensus.ConsensusMiningReward.ProofOfWorkReward;
         }
 
         /// <summary>
@@ -202,9 +202,9 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
         public Money GetProofOfStakeReward(int height)
         {
             if (this.IsPremine(height))
-                return this.consensus.PremineReward;
+                return this.consensus.ConsensusMiningReward.PremineReward;
 
-            return this.consensus.ProofOfStakeReward;
+            return this.consensus.ConsensusMiningReward.ProofOfStakeReward;
         }
     }
 }

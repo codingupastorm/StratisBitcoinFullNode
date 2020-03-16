@@ -1498,7 +1498,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Tests
             var destSecret = new BitcoinSecret(new Key(), network);
             Transaction tx = network.CreateTransaction();
             tx.AddInput(new TxIn(new OutPoint(context.SrcTxs[0].GetHash(), 0), PayToPubkeyHashTemplate.Instance.GenerateScriptPubKey(minerSecret.PubKey)));
-            tx.AddOutput(new TxOut(new Money(network.Consensus.ConsensusProofOfWork.MaxMoney - 1), destSecret.PubKeyHash));
+            tx.AddOutput(new TxOut(new Money(network.Consensus.ConsensusMiningReward.MaxMoney - 1), destSecret.PubKeyHash));
             tx.Sign(network, minerSecret, false);
 
             // Idea: Force transaction with very large output into mempool. Then use it as an ancestor transaction

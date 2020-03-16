@@ -1173,7 +1173,7 @@ namespace Stratis.Features.SQLiteWalletRepository
             Wallet hdWallet = this.GetWallet(walletAccountReference.WalletName);
             HdAccount hdAccount = this.GetAccounts(hdWallet, walletAccountReference.AccountName).FirstOrDefault();
 
-            foreach (HDTransactionData transactionData in conn.GetSpendableOutputs(walletContainer.Wallet.WalletId, hdAccount.Index, currentChainHeight, coinBaseMaturity ?? this.Network.Consensus.ConsensusProofOfWork.CoinbaseMaturity, confirmations))
+            foreach (HDTransactionData transactionData in conn.GetSpendableOutputs(walletContainer.Wallet.WalletId, hdAccount.Index, currentChainHeight, coinBaseMaturity ?? this.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity, confirmations))
             {
                 // TODO: This will take time and is possible not needed.
                 /*
@@ -1249,7 +1249,7 @@ namespace Stratis.Features.SQLiteWalletRepository
             DBConnection conn = walletContainer.Conn;
             HDAccount account = conn.GetAccountByName(walletAccountReference.WalletName, walletAccountReference.AccountName);
 
-            (long total, long confirmed, long spendable) = HDTransactionData.GetBalance(conn, account.WalletId, account.AccountIndex, address, currentChainHeight, coinBaseMaturity ?? (int)this.Network.Consensus.ConsensusProofOfWork.CoinbaseMaturity, confirmations);
+            (long total, long confirmed, long spendable) = HDTransactionData.GetBalance(conn, account.WalletId, account.AccountIndex, address, currentChainHeight, coinBaseMaturity ?? (int)this.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity, confirmations);
 
             return (new Money(total), new Money(confirmed), new Money(spendable));
         }
