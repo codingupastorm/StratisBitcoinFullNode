@@ -2,8 +2,6 @@
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Utilities;
 using TracerAttributes;
 
@@ -27,8 +25,8 @@ namespace Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules
         {
             Money reward = Money.Zero;
 
-            if (height == this.network.Consensus.PremineHeight)
-                reward = this.network.Consensus.PremineReward;
+            if (height == this.network.Consensus.ConsensusMiningReward.PremineHeight)
+                reward = this.network.Consensus.ConsensusMiningReward.PremineReward;
 
             if (block.Transactions[0].TotalOut > fees + reward)
             {
@@ -40,8 +38,8 @@ namespace Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules
         /// <inheritdoc/>
         public override Money GetProofOfWorkReward(int height)
         {
-            if (height == this.network.Consensus.PremineHeight)
-                return this.network.Consensus.PremineReward;
+            if (height == this.network.Consensus.ConsensusMiningReward.PremineHeight)
+                return this.network.Consensus.ConsensusMiningReward.PremineReward;
 
             return 0;
         }

@@ -66,8 +66,8 @@ namespace Stratis.Bitcoin.Features.Miner.Controllers
 
             try
             {
-                if (this.network.Consensus.IsProofOfStake && (this.consensusManager.Tip.Height > this.network.Consensus.ConsensusProofOfWork.LastPOWBlock))
-                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.MethodNotAllowed, "Method not allowed", string.Format(LastPowBlockExceededMessage, this.network.Consensus.ConsensusProofOfWork.LastPOWBlock));
+                if (this.network.Consensus.ConsensusMiningReward.IsProofOfStake && (this.consensusManager.Tip.Height > this.network.Consensus.ConsensusMiningReward.LastPOWBlock))
+                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.MethodNotAllowed, "Method not allowed", string.Format(LastPowBlockExceededMessage, this.network.Consensus.ConsensusMiningReward.LastPOWBlock));
 
                 if (!this.ModelState.IsValid)
                 {

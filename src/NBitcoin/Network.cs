@@ -650,7 +650,7 @@ namespace NBitcoin
         public Money GetReward(int nHeight)
         {
             long nSubsidy = new Money(50 * Money.COIN);
-            int halvings = nHeight / this.Consensus.ConsensusProofOfWork.SubsidyHalvingInterval;
+            int halvings = nHeight / this.Consensus.ConsensusMiningReward.SubsidyHalvingInterval;
 
             // Force block reward to zero when right shift is undefined.
             if (halvings >= 64)

@@ -37,7 +37,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
             var posRuleContext = context as PosRuleContext;
             posRuleContext.BlockStake = BlockStake.Load(context.ValidationContext.BlockToValidate);
 
-            if (posRuleContext.BlockStake.IsProofOfWork() && (chainedHeader.Height > this.Parent.ConsensusParams.ConsensusProofOfWork.LastPOWBlock))
+            if (posRuleContext.BlockStake.IsProofOfWork() && (chainedHeader.Height > this.Parent.ConsensusParams.ConsensusMiningReward.LastPOWBlock))
             {
                 this.Logger.LogTrace("(-)[POW_TOO_HIGH]");
                 ConsensusErrors.ProofOfWorkTooHigh.Throw();

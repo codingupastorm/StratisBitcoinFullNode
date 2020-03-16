@@ -1030,7 +1030,7 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
             // the minimum required depth in the GetUtxoStakeDescriptionsSuitableForStakingAsync method. So this method retains the CoinbaseMaturity
             // constant so that it returns an intuitive result, in case there are alternate network definitions where the coinstake age requirement is
             // less than the maturity.
-            int minConf = (int)this.network.Consensus.ConsensusProofOfWork.CoinbaseMaturity;
+            int minConf = (int)this.network.Consensus.ConsensusMiningReward.CoinbaseMaturity;
 
             // The reason why we subtract 1 here is because any newly staked block will be at (chainTip + 1), effectively giving an extra confirmation over and above the depth calculation.
             return Math.Max(0, minConf - 1 - await this.GetDepthInMainChainAsync(utxoStakeDescription).ConfigureAwait(false));
@@ -1167,7 +1167,7 @@ namespace Stratis.Bitcoin.Features.Miner.Staking
             }
 
             long coinAgeLimit = ((PosConsensusOptions)this.network.Consensus.Options).GetStakeMinConfirmations(chainHeight + 1, this.network);
-            long coinMaturityLimit = this.network.Consensus.ConsensusProofOfWork.CoinbaseMaturity;
+            long coinMaturityLimit = this.network.Consensus.ConsensusMiningReward.CoinbaseMaturity;
             long requiredCoinAgeForStaking = Math.Max(coinMaturityLimit, coinAgeLimit);
             this.logger.LogDebug("Required coin age for staking is {0}.", requiredCoinAgeForStaking);
 

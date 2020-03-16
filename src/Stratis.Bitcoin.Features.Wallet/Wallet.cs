@@ -386,7 +386,7 @@ namespace Stratis.Bitcoin.Features.Wallet
         {
             IEnumerable<HdAccount> accounts = this.GetAccounts(accountFilter);
 
-            return accounts.SelectMany(x => x.GetSpendableTransactions(currentChainHeight, this.Network.Consensus.ConsensusProofOfWork.CoinbaseMaturity, confirmations));
+            return accounts.SelectMany(x => x.GetSpendableTransactions(currentChainHeight, this.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity, confirmations));
         }
 
         /// <summary>

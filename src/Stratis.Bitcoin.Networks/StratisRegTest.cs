@@ -73,14 +73,21 @@ namespace Stratis.Bitcoin.Networks
             var consensusProofOfWork = new ConsensusProofOfWork()
             {
                 CoinbaseMaturity = 10,
+                IsProofOfStake = true,
                 LastPOWBlock = 12500,
                 MaxMoney = long.MaxValue,
                 MinerConfirmationWindow = 2016,
+                PosNoRetargeting = true,
                 PowAllowMinDifficultyBlocks = true,
                 PowLimit = powLimit,
                 PowNoRetargeting = true,
                 PowTargetSpacing = TimeSpan.FromSeconds(10 * 60),
                 PowTargetTimespan = TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
+                PremineHeight = 2,
+                PremineReward = Money.Coins(98000000),
+                ProofOfStakeLimit = new BigInteger(uint256.Parse("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
+                ProofOfStakeLimitV2 = new BigInteger(uint256.Parse("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
+                ProofOfStakeReward = Money.COIN,
                 ProofOfWorkReward = Money.Coins(4),
                 SubsidyHalvingInterval = 210000,
             };
@@ -90,22 +97,12 @@ namespace Stratis.Bitcoin.Networks
                 consensusOptions: consensusOptions,
                 coinType: 105,
                 hashGenesisBlock: genesisBlock.GetHash(),
-                majorityEnforceBlockUpgrade: 750,
-                majorityRejectBlockOutdated: 950,
-                majorityWindow: 1000,
                 buriedDeployments: buriedDeployments,
                 bip9Deployments: bip9Deployments,
                 bip34Hash: new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"),
                 maxReorgLength: 500,
                 defaultAssumeValid: null, // turn off assumevalid for regtest.
-                premineHeight: 2,
-                premineReward: Money.Coins(98000000),
-                posNoRetargeting: true,
                 minimumChainWork: null,
-                isProofOfStake: true,
-                proofOfStakeLimit: new BigInteger(uint256.Parse("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
-                proofOfStakeLimitV2: new BigInteger(uint256.Parse("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
-                proofOfStakeReward: Money.COIN,
                 consensusProofOfWork: consensusProofOfWork
             );
 

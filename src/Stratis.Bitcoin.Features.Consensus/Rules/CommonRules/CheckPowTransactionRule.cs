@@ -67,7 +67,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
                     ConsensusErrors.BadTransactionNegativeOutput.Throw();
                 }
 
-                if (txout.Value.Satoshi > network.Consensus.ConsensusProofOfWork.MaxMoney)
+                if (txout.Value.Satoshi > network.Consensus.ConsensusMiningReward.MaxMoney)
                 {
                     this.Logger.LogTrace("(-)[TX_OUTPUT_TOO_LARGE]");
                     ConsensusErrors.BadTransactionTooLargeOutput.Throw();
@@ -117,7 +117,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
 
         private bool MoneyRange(IConsensus consensus, long nValue)
         {
-            return ((nValue >= 0) && (nValue <= consensus.ConsensusProofOfWork.MaxMoney));
+            return ((nValue >= 0) && (nValue <= consensus.ConsensusMiningReward.MaxMoney));
         }
     }
 }

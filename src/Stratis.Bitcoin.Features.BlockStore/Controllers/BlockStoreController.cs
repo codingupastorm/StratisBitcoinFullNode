@@ -94,15 +94,6 @@ namespace Stratis.Bitcoin.Features.BlockStore.Controllers
                     ? new BlockTransactionDetailsModel(block, chainedHeader, this.chainIndexer.Tip, this.network)
                     : new BlockModel(block, chainedHeader, this.chainIndexer.Tip, this.network);
 
-                if (this.network.Consensus.IsProofOfStake)
-                {
-                    var posBlock = block as PosBlock;
-
-                    blockModel.PosBlockSignature = posBlock.BlockSignature.ToHex(this.network);
-                    blockModel.PosBlockTrust = new Target(chainedHeader.GetBlockProof()).ToUInt256().ToString();
-                    blockModel.PosChainTrust = chainedHeader.ChainWork.ToString(); // this should be similar to ChainWork
-                }
-
                 return this.Json(blockModel);
             }
             catch (Exception e)

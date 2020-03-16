@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
@@ -143,49 +141,6 @@ namespace NBitcoin.Tests
             Assert.Equal(4, chain.Height);
             Assert.Equal(4, b.Height);
             Assert.Equal(b.HashBlock, chain.Tip.HashBlock);
-        }
-
-        [Fact]
-        [Trait("UnitTest", "UnitTest")]
-        public void CanCalculateDifficulty()
-        {
-            var main = new ChainIndexer(this.network).Load(this.LoadMainChain());
-            // The state of the line separators may be affected by copy operations - so do an environment independent line split...
-            string[] histories = File.ReadAllText(TestDataLocations.GetFileFromDataFolder("targethistory.csv")).Split(new string[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-
-            foreach (string history in histories)
-            {
-                int height = int.Parse(history.Split(',')[0]);
-                var expectedTarget = new Target(new BouncyCastle.Math.BigInteger(history.Split(',')[1], 10));
-
-                BlockHeader block = main.GetHeader(height).Header;
-
-                Assert.Equal(expectedTarget, block.Bits);
-                Target target = main.GetHeader(height).GetWorkRequired(this.network);
-                Assert.Equal(expectedTarget, target);
-            }
-        }
-
-        [Fact]
-        [Trait("UnitTest", "UnitTest")]
-        public void CanValidateChain()
-        {
-            var main = new ChainIndexer(this.network).Load(this.LoadMainChain());
-            foreach (ChainedHeader h in main.EnumerateToTip(main.Genesis))
-            {
-                Assert.True(h.Validate(this.network));
-            }
-        }
-
-        private byte[] LoadMainChain()
-        {
-            if (!File.Exists("MainChain1.dat"))
-            {
-                var client = new HttpClient();
-                byte[] bytes = client.GetByteArrayAsync("https://aois.blob.core.windows.net/public/MainChain1.dat").GetAwaiter().GetResult();
-                File.WriteAllBytes("MainChain1.dat", bytes);
-            }
-            return File.ReadAllBytes("MainChain1.dat");
         }
 
         [Fact]

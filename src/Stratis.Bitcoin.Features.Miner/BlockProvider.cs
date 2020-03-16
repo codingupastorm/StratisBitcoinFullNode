@@ -39,7 +39,7 @@ namespace Stratis.Bitcoin.Features.Miner
         /// <inheritdoc/>
         public BlockTemplate BuildPowBlock(ChainedHeader chainTip, Script script)
         {
-            if (this.network.Consensus.IsProofOfStake)
+            if (this.network.Consensus.ConsensusMiningReward.IsProofOfStake)
                 return this.posPowBlockDefinition.Build(chainTip, script);
 
             return this.powBlockDefinition.Build(chainTip, script);

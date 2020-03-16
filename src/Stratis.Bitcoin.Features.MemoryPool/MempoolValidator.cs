@@ -382,13 +382,11 @@ namespace Stratis.Bitcoin.Features.MemoryPool
 
             // Coinstake is only valid in a block, not as a loose transaction
             // TODO: mempool needs to have separate checks for POW/POS as part of the change to rules.
-            if (this.network.Consensus.IsProofOfStake && context.Transaction.IsCoinStake)
+            if (this.network.Consensus.ConsensusMiningReward.IsProofOfStake && context.Transaction.IsCoinStake)
             {
                 this.logger.LogTrace("(-)[FAIL_INVALID_COINSTAKE]");
                 context.State.Fail(MempoolErrors.Coinstake).Throw();
             }
-
-            bool witnessEnabled = false;
 
             // Rather not work on nonstandard transactions (unless -testnet/-regtest)
             if (this.mempoolSettings.RequireStandard)

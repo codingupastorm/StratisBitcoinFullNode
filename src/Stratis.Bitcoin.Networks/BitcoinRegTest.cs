@@ -52,14 +52,21 @@ namespace Stratis.Bitcoin.Networks
             var consensusProofOfWork = new ConsensusProofOfWork()
             {
                 CoinbaseMaturity = 100,
+                IsProofOfStake = false,
                 LastPOWBlock = default,
                 MaxMoney = 21000000 * Money.COIN,
                 MinerConfirmationWindow = 144,
+                PosNoRetargeting = false,
                 PowAllowMinDifficultyBlocks = true,
                 PowLimit = new Target(new uint256("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")),
                 PowNoRetargeting = true,
                 PowTargetSpacing = TimeSpan.FromSeconds(10 * 60),
-                PowTargetTimespan = TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
+                PowTargetTimespan = TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks,
+                PremineHeight = 0,
+                PremineReward = Money.Zero,
+                ProofOfStakeLimit = null,
+                ProofOfStakeLimitV2 = null,
+                ProofOfStakeReward = Money.Zero,
                 ProofOfWorkReward = Money.Coins(50),
                 SubsidyHalvingInterval = 150,
             };
@@ -69,22 +76,12 @@ namespace Stratis.Bitcoin.Networks
                 consensusOptions: new ConsensusOptions(), // Default - set to Bitcoin params.
                 coinType: 0,
                 hashGenesisBlock: genesisBlock.GetHash(),
-                majorityEnforceBlockUpgrade: 750,
-                majorityRejectBlockOutdated: 950,
-                majorityWindow: 1000,
                 buriedDeployments: buriedDeployments,
                 bip9Deployments: bip9Deployments,
                 bip34Hash: new uint256(),
                 maxReorgLength: 0,
                 defaultAssumeValid: null, // turn off assumevalid for regtest.
-                premineHeight: 0,
-                premineReward: Money.Zero,
-                posNoRetargeting: false,
                 minimumChainWork: uint256.Zero,
-                isProofOfStake: false,
-                proofOfStakeLimit: null,
-                proofOfStakeLimitV2: null,
-                proofOfStakeReward: Money.Zero,
                 consensusProofOfWork: consensusProofOfWork
             );
 

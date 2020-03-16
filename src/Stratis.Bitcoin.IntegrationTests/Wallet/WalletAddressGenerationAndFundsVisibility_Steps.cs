@@ -47,7 +47,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
 
         private void MineSpendableCoins()
         {
-            this.sendingStratisBitcoinNode.FullNode.Network.Consensus.ConsensusProofOfWork.CoinbaseMaturity.Should().Be(this.receivingStratisBitcoinNode.FullNode.Network.Consensus.ConsensusProofOfWork.CoinbaseMaturity);
+            this.sendingStratisBitcoinNode.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity.Should().Be(this.receivingStratisBitcoinNode.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity);
 
             TestHelper.MineBlocks(this.sendingStratisBitcoinNode, 2);
         }

@@ -705,7 +705,7 @@ namespace Stratis.Bitcoin.IntegrationTests
             {
                 CoreNode stratisMiner = builder.CreateStratisPosNode(network).WithWallet().Start();
 
-                int maturity = (int)network.Consensus.ConsensusProofOfWork.CoinbaseMaturity;
+                int maturity = (int)network.Consensus.ConsensusMiningReward.CoinbaseMaturity;
                 TestHelper.MineBlocks(stratisMiner, maturity + 5);
 
                 // Send coins to the receiver

@@ -220,7 +220,7 @@ namespace Stratis.Bitcoin.Features.Miner
         {
             context.BlockTemplate = this.blockProvider.BuildPowBlock(context.ChainTip, context.ReserveScript.ReserveFullNodeScript);
 
-            if (this.network.Consensus.IsProofOfStake)
+            if (this.network.Consensus.ConsensusMiningReward.IsProofOfStake)
             {
                 if (context.BlockTemplate.Block.Header.Time <= context.ChainTip.Header.Time)
                     return false;
