@@ -127,7 +127,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
             }
 
             // Use ProvenHeadersBlockStoreBehavior for PoS Networks
-            if (this.network.Consensus.ConsensusMiningReward.IsProofOfStake)
+            if (this.network.Consensus.ConsensusMiningReward != null && this.network.Consensus.ConsensusMiningReward.IsProofOfStake)
             {
                 this.connectionManager.Parameters.TemplateBehaviors.Add(new ProvenHeadersBlockStoreBehavior(this.network, this.chainIndexer, this.chainState, this.loggerFactory, this.consensusManager, this.checkpoints, this.blockStoreQueue));
             }
@@ -143,7 +143,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
             // Temporary measure to support asking witness data on BTC.
             // At some point NetworkPeerServices will move to the Network class,
             // Then this values should be taken from there.
-            if (!this.network.Consensus.ConsensusMiningReward.IsProofOfStake)
+            if (this.network.Consensus.ConsensusMiningReward != null && !this.network.Consensus.ConsensusMiningReward.IsProofOfStake)
                 this.connectionManager.Parameters.Services |= NetworkPeerServices.NODE_WITNESS;
 
             this.blockStoreSignaled.Initialize();
@@ -184,7 +184,7 @@ namespace Stratis.Bitcoin.Features.BlockStore
                         services.AddSingleton<IBlockRepository, BlockRepository>();
                         services.AddSingleton<IPrunedBlockRepository, PrunedBlockRepository>();
 
-                        if (fullNodeBuilder.Network.Consensus.ConsensusMiningReward.IsProofOfStake)
+                        if (fullNodeBuilder.Network.Consensus.ConsensusMiningReward != null && fullNodeBuilder.Network.Consensus.ConsensusMiningReward.IsProofOfStake)
                             services.AddSingleton<BlockStoreSignaled, ProvenHeadersBlockStoreSignaled>();
                         else
                             services.AddSingleton<BlockStoreSignaled>();
