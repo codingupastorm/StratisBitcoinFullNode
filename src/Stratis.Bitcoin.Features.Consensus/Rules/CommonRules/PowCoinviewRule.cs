@@ -38,16 +38,16 @@ namespace Stratis.Bitcoin.Features.Consensus.Rules.CommonRules
             if (this.IsPremine(height))
                 return this.consensus.PremineReward;
 
-            if (this.consensus.ProofOfWorkReward == 0)
+            if (this.consensus.ConsensusProofOfWork.ProofOfWorkReward == 0)
                 return 0;
 
-            int halvings = height / this.consensus.SubsidyHalvingInterval;
+            int halvings = height / this.consensus.ConsensusProofOfWork.SubsidyHalvingInterval;
 
             // Force block reward to zero when right shift is undefined.
             if (halvings >= 64)
                 return 0;
 
-            Money subsidy = this.consensus.ProofOfWorkReward;
+            Money subsidy = this.consensus.ConsensusProofOfWork.ProofOfWorkReward;
             // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
             subsidy >>= halvings;
 

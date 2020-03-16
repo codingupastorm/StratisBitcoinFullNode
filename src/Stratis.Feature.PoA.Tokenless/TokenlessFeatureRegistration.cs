@@ -70,7 +70,6 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<IConsensusRuleEngine, TokenlessConsensusRuleEngine>();
                         services.AddSingleton<IChainState, ChainState>();
                         services.AddSingleton<ConsensusQuery>()
-                            .AddSingleton<INetworkDifficulty, ConsensusQuery>(provider => provider.GetService<ConsensusQuery>())
                             .AddSingleton<IGetUnspentTransaction, ConsensusQuery>(provider => provider.GetService<ConsensusQuery>());
 
                         // PoA Specific

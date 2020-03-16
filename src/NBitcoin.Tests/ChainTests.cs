@@ -161,7 +161,7 @@ namespace NBitcoin.Tests
                 BlockHeader block = main.GetHeader(height).Header;
 
                 Assert.Equal(expectedTarget, block.Bits);
-                Target target = main.GetHeader(height).GetWorkRequired(network);
+                Target target = main.GetHeader(height).GetWorkRequired(this.network);
                 Assert.Equal(expectedTarget, target);
             }
         }

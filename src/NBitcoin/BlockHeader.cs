@@ -169,7 +169,7 @@ namespace NBitcoin
 
         public bool CheckProofOfWork()
         {
-            BigInteger bits = this.Bits.ToBigInteger();
+            var bits = this.Bits.ToBigInteger();
             if ((bits.CompareTo(BigInteger.Zero) <= 0) || (bits.CompareTo(Pow256) >= 0))
                 return false;
 
@@ -198,7 +198,7 @@ namespace NBitcoin
                 this.BlockTime = nNewTime;
 
             // Updating time can change work required on testnet.
-            if (consensus.PowAllowMinDifficultyBlocks)
+            if (consensus.ConsensusProofOfWork != null && consensus.ConsensusProofOfWork.PowAllowMinDifficultyBlocks)
                 this.Bits = this.GetWorkRequired(consensus, prev);
         }
 

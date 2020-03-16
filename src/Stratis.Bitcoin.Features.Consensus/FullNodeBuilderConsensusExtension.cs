@@ -34,7 +34,6 @@ namespace Stratis.Bitcoin.Features.Consensus
                         services.AddSingleton<IConsensusRuleEngine, PowConsensusRuleEngine>();
                         services.AddSingleton<IChainState, ChainState>();
                         services.AddSingleton<ConsensusQuery>()
-                            .AddSingleton<INetworkDifficulty, ConsensusQuery>(provider => provider.GetService<ConsensusQuery>())
                             .AddSingleton<IGetUnspentTransaction, ConsensusQuery>(provider => provider.GetService<ConsensusQuery>());
                     });
             });
@@ -61,7 +60,6 @@ namespace Stratis.Bitcoin.Features.Consensus
                         services.AddSingleton<IConsensusRuleEngine, PosConsensusRuleEngine>();
                         services.AddSingleton<IChainState, ChainState>();
                         services.AddSingleton<ConsensusQuery>()
-                            .AddSingleton<INetworkDifficulty, ConsensusQuery>(provider => provider.GetService<ConsensusQuery>())
                             .AddSingleton<IGetUnspentTransaction, ConsensusQuery>(provider => provider.GetService<ConsensusQuery>());
                         services.AddSingleton<IProvenBlockHeaderStore, ProvenBlockHeaderStore>();
                         services.AddSingleton<IProvenBlockHeaderRepository, ProvenBlockHeaderRepository>();

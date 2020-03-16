@@ -275,7 +275,7 @@ namespace NBitcoin
         /// <inheritdoc />
         public override string ToString()
         {
-            return this.Height + "-" + this.HashBlock + "-" + this.BlockValidationState + (this.Header is ProvenBlockHeader ? " - PH"  : string.Empty);
+            return this.Height + "-" + this.HashBlock + "-" + this.BlockValidationState + (this.Header is ProvenBlockHeader ? " - PH" : string.Empty);
         }
 
         /// <summary>
@@ -379,9 +379,9 @@ namespace NBitcoin
         {
             // Genesis block.
             if (this.Height == 0)
-                return consensus.PowLimit;
+                return consensus.ConsensusProofOfWork.PowLimit;
 
-            Target proofOfWorkLimit = consensus.PowLimit;
+            Target proofOfWorkLimit = consensus.ConsensusProofOfWork.PowLimit;
             ChainedHeader lastBlock = this.Previous;
             int height = this.Height;
 
@@ -393,12 +393,12 @@ namespace NBitcoin
             // Only change once per interval.
             if ((height) % difficultyAdjustmentInterval != 0)
             {
-                if (consensus.PowAllowMinDifficultyBlocks)
+                if (consensus.ConsensusProofOfWork.PowAllowMinDifficultyBlocks)
                 {
                     // Special difficulty rule for testnet:
                     // If the new block's timestamp is more than 2* 10 minutes
                     // then allow mining of a min-difficulty block.
-                    if (this.Header.BlockTime > (lastBlock.Header.BlockTime + TimeSpan.FromTicks(consensus.PowTargetSpacing.Ticks * 2)))
+                    if (this.Header.BlockTime > (lastBlock.Header.BlockTime + TimeSpan.FromTicks(consensus.ConsensusProofOfWork.PowTargetSpacing.Ticks * 2)))
                         return proofOfWorkLimit;
 
                     // Return the last non-special-min-difficulty-rules-block.
@@ -419,20 +419,20 @@ namespace NBitcoin
             if (firstChainedHeader == null)
                 throw new NotSupportedException("Can only calculate work of a full chain");
 
-            if (consensus.PowNoRetargeting)
+            if (consensus.ConsensusProofOfWork.PowNoRetargeting)
                 return lastBlock.Header.Bits;
 
             // Limit adjustment step.
             TimeSpan actualTimespan = lastBlock.Header.BlockTime - firstChainedHeader.Header.BlockTime;
-            if (actualTimespan < TimeSpan.FromTicks(consensus.PowTargetTimespan.Ticks / 4))
-                actualTimespan = TimeSpan.FromTicks(consensus.PowTargetTimespan.Ticks / 4);
-            if (actualTimespan > TimeSpan.FromTicks(consensus.PowTargetTimespan.Ticks * 4))
-                actualTimespan = TimeSpan.FromTicks(consensus.PowTargetTimespan.Ticks * 4);
+            if (actualTimespan < TimeSpan.FromTicks(consensus.ConsensusProofOfWork.PowTargetTimespan.Ticks / 4))
+                actualTimespan = TimeSpan.FromTicks(consensus.ConsensusProofOfWork.PowTargetTimespan.Ticks / 4);
+            if (actualTimespan > TimeSpan.FromTicks(consensus.ConsensusProofOfWork.PowTargetTimespan.Ticks * 4))
+                actualTimespan = TimeSpan.FromTicks(consensus.ConsensusProofOfWork.PowTargetTimespan.Ticks * 4);
 
             // Retarget.
             BigInteger newTarget = lastBlock.Header.Bits.ToBigInteger();
             newTarget = newTarget.Multiply(BigInteger.ValueOf((long)actualTimespan.TotalSeconds));
-            newTarget = newTarget.Divide(BigInteger.ValueOf((long)consensus.PowTargetTimespan.TotalSeconds));
+            newTarget = newTarget.Divide(BigInteger.ValueOf((long)consensus.ConsensusProofOfWork.PowTargetTimespan.TotalSeconds));
 
             var finalTarget = new Target(newTarget);
             if (finalTarget > proofOfWorkLimit)
@@ -447,7 +447,7 @@ namespace NBitcoin
         /// <returns>The difficulty adjustment interval in blocks.</returns>
         private long GetDifficultyAdjustmentInterval(IConsensus consensus)
         {
-            return (long)consensus.PowTargetTimespan.TotalSeconds / (long)consensus.PowTargetSpacing.TotalSeconds;
+            return (long)consensus.ConsensusProofOfWork.PowTargetTimespan.TotalSeconds / (long)consensus.ConsensusProofOfWork.PowTargetSpacing.TotalSeconds;
         }
 
         /// <summary>

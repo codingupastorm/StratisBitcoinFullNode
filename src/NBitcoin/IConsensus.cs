@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using NBitcoin.BouncyCastle.Math;
-using NBitcoin.Rules;
 
 namespace NBitcoin
 {
     public interface IConsensus
     {
-        /// <summary>
-        /// How many blocks should be on top of a block that includes a coinbase transaction until its outputs are considered spendable.
-        /// </summary>
-        long CoinbaseMaturity { get; set; }
+        IConsensusProofOfWork ConsensusProofOfWork { get; set; }
 
         /// <summary>
         /// Amount of coins mined when a new network is bootstrapped.
@@ -25,11 +21,6 @@ namespace NBitcoin
         long PremineHeight { get; }
 
         /// <summary>
-        /// The reward that goes to the miner when a block is mined using proof-of-work.
-        /// </summary>
-        Money ProofOfWorkReward { get; }
-
-        /// <summary>
         /// The reward that goes to the miner when a block is mined using proof-of-stake.
         /// </summary>
         Money ProofOfStakeReward { get; }
@@ -39,18 +30,11 @@ namespace NBitcoin
         /// </summary>
         uint MaxReorgLength { get; }
 
-        /// <summary>
-        /// The maximum amount of coins in any transaction.
-        /// </summary>
-        long MaxMoney { get; }
-
         ConsensusOptions Options { get; set; }
 
         BuriedDeploymentsArray BuriedDeployments { get; }
 
         IBIP9DeploymentsArray BIP9Deployments { get; }
-
-        int SubsidyHalvingInterval { get; }
 
         int MajorityEnforceBlockUpgrade { get; }
 
@@ -60,14 +44,6 @@ namespace NBitcoin
 
         uint256 BIP34Hash { get; }
 
-        Target PowLimit { get; }
-
-        TimeSpan PowTargetTimespan { get; }
-
-        TimeSpan PowTargetSpacing { get; }
-
-        bool PowAllowMinDifficultyBlocks { get; }
-
         /// <summary>
         /// If <c>true</c> disables checking the next block's difficulty (work required) target on a Proof-Of-Stake network.
         /// <para>
@@ -76,20 +52,10 @@ namespace NBitcoin
         /// </summary>
         bool PosNoRetargeting { get; }
 
-        /// <summary>
-        /// If <c>true</c> disables checking the next block's difficulty (work required) target on a Proof-Of-Work network.
-        /// <para>
-        /// This can be used in tests to enable fast mining of blocks.
-        /// </para>
-        /// </summary>
-        bool PowNoRetargeting { get; }
-
         uint256 HashGenesisBlock { get; }
 
         /// <summary> The minimum amount of work the best chain should have. </summary>
         uint256 MinimumChainWork { get; }
-
-        int MinerConfirmationWindow { get; set; }
 
         /// <summary>
         /// Specify the BIP44 coin type for this network.
@@ -99,9 +65,6 @@ namespace NBitcoin
         BigInteger ProofOfStakeLimit { get; }
 
         BigInteger ProofOfStakeLimitV2 { get; }
-
-        /// <summary>PoW blocks are not accepted after block with height <see cref="Consensus.LastPOWBlock"/>.</summary>
-        int LastPOWBlock { get; set; }
 
         /// <summary>
         /// An indicator whether this is a Proof Of Stake network.
@@ -121,5 +84,40 @@ namespace NBitcoin
 
         /// <summary>Group of mempool validation rules used by the given network.</summary>
         List<Type> MempoolRules { get; set; }
+    }
+
+    public interface IConsensusProofOfWork
+    {
+        /// <inheritdoc />
+        long CoinbaseMaturity { get; set; }
+
+        /// <inheritdoc />
+        long MaxMoney { get; set; }
+
+        /// <summary>PoW blocks are not accepted after block with height <see cref="Consensus.LastPOWBlock"/>.</summary>
+        int LastPOWBlock { get; set; }
+
+        int MinerConfirmationWindow { get; set; }
+
+        bool PowAllowMinDifficultyBlocks { get; }
+
+        Target PowLimit { get; set; }
+
+        /// <summary>
+        /// If <c>true</c> disables checking the next block's difficulty (work required) target on a Proof-Of-Work network.
+        /// <para>
+        /// This can be used in tests to enable fast mining of blocks.
+        /// </para>
+        /// </summary>
+        bool PowNoRetargeting { get; set; }
+
+        TimeSpan PowTargetSpacing { get; set; }
+
+        TimeSpan PowTargetTimespan { get; set; }
+
+        /// <summary> The reward that goes to the miner when a block is mined using proof-of-work.</summary>
+        Money ProofOfWorkReward { get; set; }
+
+        int SubsidyHalvingInterval { get; set; }
     }
 }

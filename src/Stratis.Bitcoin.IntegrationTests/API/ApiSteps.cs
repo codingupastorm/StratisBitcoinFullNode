@@ -144,7 +144,7 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         private void the_proof_of_stake_node_has_passed_LastPOWBlock()
         {
             typeof(ChainedHeader).GetProperty("Height").SetValue(this.stratisPosApiNode.FullNode.ConsensusManager().Tip,
-                this.stratisPosApiNode.FullNode.Network.Consensus.LastPOWBlock + 1);
+                this.stratisPosApiNode.FullNode.Network.Consensus.ConsensusProofOfWork.LastPOWBlock + 1);
         }
 
         private void two_connected_proof_of_work_nodes_with_api_enabled()
@@ -162,7 +162,7 @@ namespace Stratis.Bitcoin.IntegrationTests.API
             this.firstStratisPowApiNode = this.powNodeBuilder.CreateStratisPowNode(this.powNetwork).WithWallet().Start();
             this.firstStratisPowApiNode.Mnemonic = this.firstStratisPowApiNode.Mnemonic;
 
-            this.firstStratisPowApiNode.FullNode.Network.Consensus.CoinbaseMaturity = this.maturity;
+            this.firstStratisPowApiNode.FullNode.Network.Consensus.ConsensusProofOfWork.CoinbaseMaturity = this.maturity;
             this.apiUri = this.firstStratisPowApiNode.FullNode.NodeService<ApiSettings>().ApiUri;
         }
 

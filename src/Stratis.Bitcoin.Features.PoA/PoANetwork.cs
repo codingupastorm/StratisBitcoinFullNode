@@ -103,38 +103,43 @@ namespace Stratis.Bitcoin.Features.PoA
 
             var bip9Deployments = new NoBIP9Deployments();
 
+            var consensusProofOfWork = new ConsensusProofOfWork()
+            {
+                CoinbaseMaturity = 2,
+                LastPOWBlock = 0,
+                MaxMoney = long.MaxValue,
+                MinerConfirmationWindow = 2016,
+                PowAllowMinDifficultyBlocks = false,
+                PowLimit = null,
+                PowNoRetargeting = true,
+                PowTargetSpacing = TimeSpan.FromSeconds(10 * 60),
+                PowTargetTimespan = TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
+                ProofOfWorkReward = Money.Coins(0),
+                SubsidyHalvingInterval = 210000,
+            };
+
             this.Consensus = new NBitcoin.Consensus(
                 consensusFactory: consensusFactory,
                 consensusOptions: consensusOptions,
                 coinType: 105,
                 hashGenesisBlock: genesisBlock.GetHash(),
-                subsidyHalvingInterval: 210000,
                 majorityEnforceBlockUpgrade: 750,
                 majorityRejectBlockOutdated: 950,
                 majorityWindow: 1000,
                 buriedDeployments: buriedDeployments,
                 bip9Deployments: bip9Deployments,
                 bip34Hash: new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"),
-                minerConfirmationWindow: 2016, // nPowTargetTimespan / nPowTargetSpacing
                 maxReorgLength: 500,
                 defaultAssumeValid: null,
-                maxMoney: long.MaxValue,
-                coinbaseMaturity: 2,
                 premineHeight: 10,
                 premineReward: Money.Coins(100_000_000),
-                proofOfWorkReward: Money.Coins(0),
-                powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
-                powTargetSpacing: TimeSpan.FromSeconds(60),
-                powAllowMinDifficultyBlocks: false,
                 posNoRetargeting: true,
-                powNoRetargeting: true,
-                powLimit: null,
                 minimumChainWork: null,
                 isProofOfStake: false,
-                lastPowBlock: 0,
                 proofOfStakeLimit: null,
                 proofOfStakeLimitV2: null,
-                proofOfStakeReward: Money.Zero
+                proofOfStakeReward: Money.Zero,
+                consensusProofOfWork: consensusProofOfWork
             );
 
             // https://en.bitcoin.it/wiki/List_of_address_prefixes
