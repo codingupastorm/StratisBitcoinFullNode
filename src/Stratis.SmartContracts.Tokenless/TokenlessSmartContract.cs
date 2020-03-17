@@ -24,6 +24,8 @@ namespace Stratis.SmartContracts.Tokenless
         /// </summary>
         public IPersistentState PersistentState => this.state.PersistentState;
 
+        public IPersistentState PrivateState => ((TokenlessSmartContractState) this.state).PrivateState;
+
         /// <summary>
         /// Provides functionality for the serialization and deserialization of primitives to bytes inside smart contracts.
         /// </summary>

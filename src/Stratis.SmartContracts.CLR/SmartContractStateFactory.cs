@@ -1,7 +1,6 @@
 ﻿using NBitcoin;
 using Stratis.SmartContracts.CLR.ContractLogging;
 using Stratis.SmartContracts.CLR.Serialization;
-using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
@@ -32,9 +31,11 @@ namespace Stratis.SmartContracts.CLR
 
             var persistentState = new PersistentState(persistenceStrategy, this.serializer, address);
 
+            var privateState = new PrivatePersistentState(this.serializer, persistenceStrategy, address);
+
             var contractLogger = new MeteredContractLogger(gasMeter, state.LogHolder, this.primitiveSerializer);
 
-            var contractState = new SmartContractState(
+            var contractState = new TokenlessSmartContractState(
                 state.Block,
                 new Message(
                     address.ToAddress(),
@@ -42,6 +43,7 @@ namespace Stratis.SmartContracts.CLR
                     message.Amount
                 ),
                 persistentState,
+                privateState,
                 this.serializer,
                 contractLogger,
                 this.internalTransactionExecutorFactory.Create(gasMeter, readWriteSet, state),
