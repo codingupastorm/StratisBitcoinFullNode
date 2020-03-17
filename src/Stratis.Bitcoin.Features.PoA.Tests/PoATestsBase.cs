@@ -56,7 +56,7 @@ namespace Stratis.Bitcoin.Features.PoA.Tests
 
             this.chainIndexerMock = new Mock<ChainIndexer>();
             this.chainIndexerMock.Setup(x => x.Tip).Returns(new ChainedHeader(new BlockHeader(), 0, 0));
-            this.slotsManager = new SlotsManager(this.network, this.federationManager, this.chainIndexerMock.Object, this.loggerFactory);
+            this.slotsManager = new SlotsManager(this.network, this.federationManager, this.chainIndexerMock.Object);
 
             this.poaHeaderValidator = new PoABlockHeaderValidator(this.loggerFactory);
             this.asyncProvider = new AsyncProvider(this.loggerFactory, this.signals, new Mock<INodeLifetime>().Object);

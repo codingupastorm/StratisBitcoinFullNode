@@ -36,7 +36,7 @@ namespace Stratis.Bitcoin.Features.PoA
 
         private readonly ChainIndexer chainIndexer;
 
-        public SlotsManager(Network network, IFederationManager federationManager, ChainIndexer chainIndexer, ILoggerFactory loggerFactory)
+        public SlotsManager(Network network, IFederationManager federationManager, ChainIndexer chainIndexer)
         {
             Guard.NotNull(network, nameof(network));
             this.federationManager = Guard.NotNull(federationManager, nameof(federationManager));
