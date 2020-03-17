@@ -7,7 +7,6 @@ using NBitcoin.DataEncoders;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules;
-using Stratis.Bitcoin.Features.PoA.Policies;
 using Stratis.Bitcoin.Features.SmartContracts.PoA;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Consensus.Rules;
@@ -69,11 +68,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.GenesisBits = 402691653;
             this.GenesisVersion = 1;
             this.GenesisReward = Money.Zero;
-
-            // TODO-TL: This creates a block that has a transaction in it. We don't need that, right?
-            Block genesisBlock = CreateGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion);
-
-            this.Genesis = genesisBlock;
+            this.Genesis = CreateGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion);
 
             this.FederationKeys = Mnemonics.Select(m => TokenlessWallet.GetKey(500, m, TokenlessWalletAccount.BlockSigning, 0)).ToArray();
 
@@ -102,7 +97,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 consensusFactory: consensusFactory,
                 consensusOptions: consensusOptions,
                 coinType: 500,
-                hashGenesisBlock: genesisBlock.GetHash(),
+                hashGenesisBlock: this.Genesis.GetHash(),
                 buriedDeployments: new BuriedDeploymentsArray(),
                 bip9Deployments: new NoBIP9Deployments(),
                 bip34Hash: null,
@@ -122,13 +117,9 @@ namespace Stratis.Feature.PoA.Tokenless
             this.DNSSeeds = new List<DNSSeedData> { };
             this.SeedNodes = this.ConvertToNetworkAddresses(new string[] { }, this.DefaultPort).ToList();
 
-            // TODO-TL: Not needed?
-            this.StandardScriptsRegistry = new PoAStandardScriptsRegistry();
-
-            // TODO-TL: Generate new Genesis
             // TODO-TL: This is different now because the consensus factory is different.
             // Assert(this.Consensus.HashGenesisBlock == uint256.Parse("690a702893d30a75739b52d9e707f05e5c7da38df0500aa791468a5e609244ba"));
-            //Assert(this.Genesis.Header.HashMerkleRoot == uint256.Parse("0x9928b372fd9e4cf62a31638607344c03c48731ba06d24576342db9c8591e1432"));
+            // Assert(this.Genesis.Header.HashMerkleRoot == uint256.Parse("0x9928b372fd9e4cf62a31638607344c03c48731ba06d24576342db9c8591e1432"));
 
             // TODO-TL: Add Smart Contract State Root Hash
 
