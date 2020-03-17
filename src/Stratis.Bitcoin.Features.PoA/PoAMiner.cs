@@ -44,7 +44,7 @@ namespace Stratis.Bitcoin.Features.PoA
 
         protected readonly ILogger logger;
 
-        protected readonly PoANetwork network;
+        protected readonly Network network;
 
         /// <summary>
         /// A cancellation token source that can cancel the mining processes and is linked to the <see cref="INodeLifetime.ApplicationStopping"/>.
@@ -100,7 +100,7 @@ namespace Stratis.Bitcoin.Features.PoA
         {
             this.consensusManager = consensusManager;
             this.dateTimeProvider = dateTimeProvider;
-            this.network = network as PoANetwork;
+            this.network = network;
             this.ibdState = ibdState;
             this.blockDefinition = blockDefinition;
             this.slotsManager = slotsManager;
@@ -299,7 +299,7 @@ namespace Stratis.Bitcoin.Features.PoA
         /// <summary>Fills block template with custom non-standard data.</summary>
         protected virtual void FillBlockTemplate(BlockTemplate blockTemplate, out bool dropTemplate)
         {
-            if (this.network.ConsensusOptions.VotingEnabled)
+            if (((PoAConsensusOptions)this.network.Consensus.Options).VotingEnabled)
                 this.AddVotingData(blockTemplate);
 
             dropTemplate = false;
@@ -362,7 +362,7 @@ namespace Stratis.Bitcoin.Features.PoA
                 hitCount++;
 
                 currentHeader = currentHeader.Previous;
-                currentTime -= this.network.ConsensusOptions.TargetSpacingSeconds;
+                currentTime -= ((PoAConsensusOptions)this.network.Consensus.Options).TargetSpacingSeconds;
 
                 if (currentHeader.Height == 0)
                     break;
@@ -370,7 +370,7 @@ namespace Stratis.Bitcoin.Features.PoA
                 while ((currentHeader.Header.Time != currentTime) && (depthReached <= maxDepth))
                 {
                     log.Append("MISS-");
-                    currentTime -= this.network.ConsensusOptions.TargetSpacingSeconds;
+                    currentTime -= ((PoAConsensusOptions)this.network.Consensus.Options).TargetSpacingSeconds;
                     depthReached++;
                 }
 
@@ -381,7 +381,7 @@ namespace Stratis.Bitcoin.Features.PoA
             log.Append("...");
             log.AppendLine();
             log.AppendLine($"Block producers hits      : {hitCount} of {maxDepth}({(((float)hitCount / (float)maxDepth)).ToString("P2")})");
-            log.AppendLine($"Block producers idle time : {TimeSpan.FromSeconds(this.network.ConsensusOptions.TargetSpacingSeconds * (maxDepth - hitCount)).ToString(@"hh\:mm\:ss")}");
+            log.AppendLine($"Block producers idle time : {TimeSpan.FromSeconds(((PoAConsensusOptions)this.network.Consensus.Options).TargetSpacingSeconds * (maxDepth - hitCount)).ToString(@"hh\:mm\:ss")}");
             log.AppendLine();
         }
 

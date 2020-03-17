@@ -313,9 +313,10 @@ namespace Stratis.Bitcoin.Configuration
         {
             TextFileConfiguration config = this.ConfigReader;
 
-            this.MinTxFeeRate = new FeeRate(config.GetOrDefault("mintxfee", ((FeeNetwork)this.Network).MinTxFee, this.Logger));
-            this.FallbackTxFeeRate = new FeeRate(config.GetOrDefault("fallbackfee", ((FeeNetwork)this.Network).FallbackFee, this.Logger));
-            this.MinRelayTxFeeRate = new FeeRate(config.GetOrDefault("minrelaytxfee", ((FeeNetwork)this.Network).MinRelayTxFee, this.Logger));
+            var feeNetwork = this.Network as FeeNetwork;
+            this.MinTxFeeRate = new FeeRate(config.GetOrDefault("mintxfee", feeNetwork != null ? feeNetwork.MinTxFee : 0, this.Logger));
+            this.FallbackTxFeeRate = new FeeRate(config.GetOrDefault("fallbackfee", feeNetwork != null ? feeNetwork.FallbackFee : 0, this.Logger));
+            this.MinRelayTxFeeRate = new FeeRate(config.GetOrDefault("minrelaytxfee", feeNetwork != null ? feeNetwork.MinRelayTxFee : 0, this.Logger));
         }
 
         /// <summary>
