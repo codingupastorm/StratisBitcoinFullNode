@@ -47,7 +47,6 @@ namespace Stratis.Feature.PoA.Tokenless
             messageStart[3] = 0x06;
             uint magic = BitConverter.ToUInt32(messageStart, 0);
 
-            // TODO-TL: Check All
             this.Name = "TokenlessMain";
             this.NetworkType = NetworkType.Mainnet;
             this.Magic = magic;
@@ -107,32 +106,18 @@ namespace Stratis.Feature.PoA.Tokenless
                 buriedDeployments: new BuriedDeploymentsArray(),
                 bip9Deployments: new NoBIP9Deployments(),
                 bip34Hash: null,
-                maxReorgLength: 10, // This is really a RegTest class at the moment.
+                maxReorgLength: 10,
                 defaultAssumeValid: null,
                 minimumChainWork: null
             );
 
-            // https://en.bitcoin.it/wiki/List_of_address_prefixes
             this.Base58Prefixes = new byte[12][];
             this.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS] = new byte[] { (55) }; // 'P' prefix
-            this.Base58Prefixes[(int)Base58Type.SCRIPT_ADDRESS] = new byte[] { (117) }; // 'p' prefix
             this.Base58Prefixes[(int)Base58Type.SECRET_KEY] = new byte[] { (63 + 128) };
             this.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_NO_EC] = new byte[] { 0x01, 0x42 };
-            this.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_EC] = new byte[] { 0x01, 0x43 };
             this.Base58Prefixes[(int)Base58Type.EXT_PUBLIC_KEY] = new byte[] { (0x04), (0x88), (0xB2), (0x1E) };
-            this.Base58Prefixes[(int)Base58Type.EXT_SECRET_KEY] = new byte[] { (0x04), (0x88), (0xAD), (0xE4) };
-            this.Base58Prefixes[(int)Base58Type.PASSPHRASE_CODE] = new byte[] { 0x2C, 0xE9, 0xB3, 0xE1, 0xFF, 0x39, 0xE2 };
-            this.Base58Prefixes[(int)Base58Type.CONFIRMATION_CODE] = new byte[] { 0x64, 0x3B, 0xF6, 0xA8, 0x9A };
-            this.Base58Prefixes[(int)Base58Type.STEALTH_ADDRESS] = new byte[] { 0x2a };
-            this.Base58Prefixes[(int)Base58Type.ASSET_ID] = new byte[] { 23 };
-            this.Base58Prefixes[(int)Base58Type.COLORED_ADDRESS] = new byte[] { 0x13 };
 
             this.Checkpoints = new Dictionary<int, CheckpointInfo>();
-
-            var encoder = new Bech32Encoder("bc");
-            this.Bech32Encoders = new Bech32Encoder[2];
-            this.Bech32Encoders[(int)Bech32Type.WITNESS_PUBKEY_ADDRESS] = encoder;
-            this.Bech32Encoders[(int)Bech32Type.WITNESS_SCRIPT_ADDRESS] = encoder;
 
             this.DNSSeeds = new List<DNSSeedData> { };
             this.SeedNodes = this.ConvertToNetworkAddresses(new string[] { }, this.DefaultPort).ToList();
@@ -192,8 +177,7 @@ namespace Stratis.Feature.PoA.Tokenless
             };
         }
 
-        // TODO-TL: Check no output?
-        private Block CreateGenesisBlock(SmartContractPoAConsensusFactory consensusFactory, uint time, uint nonce, uint bits, int versio)
+        private Block CreateGenesisBlock(SmartContractPoAConsensusFactory consensusFactory, uint time, uint nonce, uint bits, int version)
         {
             string data = "GenesisBlockForTheNewTokenlessNetwork";
 
@@ -213,7 +197,7 @@ namespace Stratis.Feature.PoA.Tokenless
             genesis.Header.BlockTime = Utils.UnixTimeToDateTime(time);
             genesis.Header.Bits = bits;
             genesis.Header.Nonce = nonce;
-            genesis.Header.Version = versio;
+            genesis.Header.Version = version;
             genesis.Transactions.Add(transaction);
             genesis.Header.HashPrevBlock = uint256.Zero;
             genesis.UpdateMerkleRoot();
