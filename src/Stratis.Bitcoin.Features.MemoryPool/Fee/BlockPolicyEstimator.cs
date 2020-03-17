@@ -116,12 +116,6 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Fee
         /// <summary>Logger for logging on this object.</summary>
         private readonly ILogger logger;
 
-        /// <summary>Count of tracked transactions.</summary>
-        private int trackedTxs;
-
-        /// <summary>Count of untracked transactions.</summary>
-        private int untrackedTxs;
-
         /// <summary>
         /// Constructs an instance of the block policy estimator object.
         /// </summary>
@@ -133,19 +127,21 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Fee
             this.mapMemPoolTxs = new Dictionary<uint256, TxStatsInfo>();
             this.mempoolSettings = mempoolSettings;
             this.nBestSeenHeight = 0;
-            this.trackedTxs = 0;
-            this.untrackedTxs = 0;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
 
             this.minTrackedFee = nodeSettings.MinRelayTxFeeRate < new FeeRate(new Money(MinFeeRate))
                 ? new FeeRate(new Money(MinFeeRate))
                 : nodeSettings.MinRelayTxFeeRate;
+
             var vfeelist = new List<double>();
+
             for (double bucketBoundary = this.minTrackedFee.FeePerK.Satoshi;
                 bucketBoundary <= MaxFeeRate;
                 bucketBoundary *= FeeSpacing)
                 vfeelist.Add(bucketBoundary);
+
             vfeelist.Add(InfFeeRate);
+
             this.feeStats = new TxConfirmStats(this.logger);
             this.feeStats.Initialize(vfeelist, MaxBlockConfirms, DefaultDecay);
         }
@@ -182,9 +178,6 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Fee
             // TODO: this makes too  much noise right now, put it back when logging is can be switched on by categories (and also consider disabling during IBD)
             // Logging.Logs.EstimateFee.LogInformation(
             // $"Blockpolicy after updating estimates for {countedTxs} of {entries.Count} txs in block, since last block {trackedTxs} of {trackedTxs + untrackedTxs} tracked, new mempool map size {mapMemPoolTxs.Count}");
-
-            this.trackedTxs = 0;
-            this.untrackedTxs = 0;
         }
 
         /// <summary>
@@ -234,15 +227,6 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Fee
 
             if (txHeight != this.nBestSeenHeight)
                 return;
-
-            // Only want to be updating estimates when our blockchain is synced,
-            // otherwise we'll miscalculate how many blocks its taking to get included.
-            if (!validFeeEstimate)
-            {
-                this.untrackedTxs++;
-                return;
-            }
-            this.trackedTxs++;
 
             // Feerates are stored and reported as BTC-per-kb:
             var feeRate = new FeeRate(entry.Fee, (int)entry.GetTxSize());

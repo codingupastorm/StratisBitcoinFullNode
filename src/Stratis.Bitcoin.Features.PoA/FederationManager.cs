@@ -49,7 +49,7 @@ namespace Stratis.Bitcoin.Features.PoA
 
         private readonly NodeSettings settings;
 
-        private readonly PoANetwork network;
+        private readonly Network network;
 
         private readonly ISignals signals;
 
@@ -66,7 +66,7 @@ namespace Stratis.Bitcoin.Features.PoA
         public FederationManagerBase(NodeSettings nodeSettings, Network network, ILoggerFactory loggerFactory, IKeyValueRepository keyValueRepo, ISignals signals)
         {
             this.settings = Guard.NotNull(nodeSettings, nameof(nodeSettings));
-            this.network = Guard.NotNull(network as PoANetwork, nameof(network));
+            this.network = Guard.NotNull(network, nameof(network));
             this.keyValueRepo = Guard.NotNull(keyValueRepo, nameof(keyValueRepo));
             this.signals = Guard.NotNull(signals, nameof(signals));
 
@@ -83,7 +83,7 @@ namespace Stratis.Bitcoin.Features.PoA
             {
                 this.logger.LogDebug("Federation members are not stored in the db. Loading genesis federation members.");
 
-                this.federationMembers = new List<IFederationMember>(this.network.ConsensusOptions.GenesisFederationMembers);
+                this.federationMembers = new List<IFederationMember>(((PoAConsensusOptions)this.network.Consensus.Options).GenesisFederationMembers);
 
                 this.SaveFederation(this.federationMembers);
             }

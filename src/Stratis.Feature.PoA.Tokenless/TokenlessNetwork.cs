@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
@@ -15,7 +14,7 @@ using Stratis.Feature.PoA.Tokenless.Wallet;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
-    public sealed class TokenlessNetwork : PoANetwork
+    public sealed class TokenlessNetwork : Network
     {
         /// <summary> The name of the root folder containing the different PoA blockchains.</summary>
         private const string NetworkRootFolderName = "tokenless";
@@ -105,7 +104,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 minimumChainWork: null
             );
 
-            this.Base58Prefixes = new byte[4][];
+            this.Base58Prefixes = new byte[12][];
             this.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS] = new byte[] { (55) }; // 'P' prefix
             this.Base58Prefixes[(int)Base58Type.SECRET_KEY] = new byte[] { (63 + 128) };
             this.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_NO_EC] = new byte[] { 0x01, 0x42 };
@@ -155,7 +154,7 @@ namespace Stratis.Feature.PoA.Tokenless
             return channelNetwork;
         }
 
-        protected override void RegisterRules(IConsensus consensus)
+        private void RegisterRules(IConsensus consensus)
         {
             // IHeaderValidationConsensusRules
             consensus.ConsensusRules
@@ -181,7 +180,7 @@ namespace Stratis.Feature.PoA.Tokenless
             // ------------------------------------------------------
         }
 
-        protected override void RegisterMempoolRules(IConsensus consensus)
+        private void RegisterMempoolRules(IConsensus consensus)
         {
             consensus.MempoolRules = new List<Type>()
             {

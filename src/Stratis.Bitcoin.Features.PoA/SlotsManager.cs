@@ -41,7 +41,7 @@ namespace Stratis.Bitcoin.Features.PoA
             Guard.NotNull(network, nameof(network));
             this.federationManager = Guard.NotNull(federationManager, nameof(federationManager));
             this.chainIndexer = chainIndexer;
-            this.consensusOptions = (network as PoANetwork).ConsensusOptions;
+            this.consensusOptions = (PoAConsensusOptions)network.Consensus.Options;
         }
 
         /// <inheritdoc />
