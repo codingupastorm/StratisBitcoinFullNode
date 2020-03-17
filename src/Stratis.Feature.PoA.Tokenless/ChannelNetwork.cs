@@ -7,5 +7,9 @@ namespace Stratis.Feature.PoA.Tokenless
     /// </summary>
     public sealed class ChannelNetwork : Network
     {
+        public ChannelNetwork(Block genesisBlock)
+        {
+            this.Genesis = genesisBlock;
+        }
     }
 }

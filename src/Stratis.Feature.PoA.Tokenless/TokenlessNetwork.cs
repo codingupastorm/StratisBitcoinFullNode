@@ -105,7 +105,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 minimumChainWork: null
             );
 
-            this.Base58Prefixes = new byte[12][];
+            this.Base58Prefixes = new byte[4][];
             this.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS] = new byte[] { (55) }; // 'P' prefix
             this.Base58Prefixes[(int)Base58Type.SECRET_KEY] = new byte[] { (63 + 128) };
             this.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_NO_EC] = new byte[] { 0x01, 0x42 };
@@ -127,6 +127,32 @@ namespace Stratis.Feature.PoA.Tokenless
 
             this.RegisterRules(this.Consensus);
             this.RegisterMempoolRules(this.Consensus);
+        }
+
+        public static ChannelNetwork CreateChannelNetwork(IConsensus consensus, Block genesisBlock, string name, string rootFolderName)
+        {
+            var tokenlessNetwork = new TokenlessNetwork();
+            var channelNetwork = new ChannelNetwork(genesisBlock)
+            {
+                Base58Prefixes = tokenlessNetwork.Base58Prefixes,
+                Consensus = consensus,
+                DefaultAPIPort = tokenlessNetwork.DefaultAPIPort,
+                DefaultBanTimeSeconds = tokenlessNetwork.DefaultBanTimeSeconds,
+                DefaultConfigFilename = tokenlessNetwork.DefaultConfigFilename,
+                DefaultEnableIpRangeFiltering = tokenlessNetwork.DefaultEnableIpRangeFiltering,
+                DefaultMaxInboundConnections = tokenlessNetwork.DefaultMaxInboundConnections,
+                DefaultMaxOutboundConnections = tokenlessNetwork.DefaultMaxOutboundConnections,
+                DefaultPort = tokenlessNetwork.DefaultPort,
+                DefaultSignalRPort = tokenlessNetwork.DefaultSignalRPort,
+                Magic = tokenlessNetwork.Magic,
+                MaxTimeOffsetSeconds = tokenlessNetwork.MaxTimeOffsetSeconds,
+                MaxTipAge = tokenlessNetwork.MaxTipAge,
+                Name = name,
+                NetworkType = NetworkType.Mainnet,
+                RootFolderName = rootFolderName
+            };
+
+            return channelNetwork;
         }
 
         protected override void RegisterRules(IConsensus consensus)

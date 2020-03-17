@@ -70,60 +70,60 @@ namespace NBitcoin
         /// This value should be calculated as (TargetSpacingSeconds * maxReorgLength) / 2.
         /// </para>
         /// </summary>
-        public int DefaultBanTimeSeconds { get; protected set; }
+        public int DefaultBanTimeSeconds { get; set; }
 
         /// <summary>
         /// Maximal value for the calculated time offset.
         /// If the value is over this limit, the time syncing feature will be switched off.
         /// </summary>
-        public int MaxTimeOffsetSeconds { get; protected set; }
+        public int MaxTimeOffsetSeconds { get; set; }
 
         /// <summary>
         /// Maximum tip age in seconds to consider node in initial block download.
         /// </summary>
-        public int MaxTipAge { get; protected set; }
+        public int MaxTipAge { get; set; }
 
         /// <summary>
         /// Port on which to listen for incoming API connections.
         /// </summary>
-        public int DefaultAPIPort { get; protected set; }
+        public int DefaultAPIPort { get; set; }
 
         /// <summary>
         /// The default port on which nodes of this network communicate with external clients.
         /// </summary>
-        public int DefaultPort { get; protected set; }
+        public int DefaultPort { get; set; }
 
         /// <summary>
         /// The default port on which SignalR broadcasts for this network.
         /// </summary>
-        public int DefaultSignalRPort { get; protected set; }
+        public int DefaultSignalRPort { get; set; }
 
         /// <summary>
         /// The default maximum number of outbound connections a node on this network will form.
         /// </summary>
-        public int DefaultMaxOutboundConnections { get; protected set; }
+        public int DefaultMaxOutboundConnections { get; set; }
 
         /// <summary>
         /// The default maximum number of inbound connections a node on this network will accept.
         /// </summary>
-        public int DefaultMaxInboundConnections { get; protected set; }
+        public int DefaultMaxInboundConnections { get; set; }
 
         /// <summary>
         /// Whether to enable IP range filtering by default on this network. If true, will filter out IPs within the same range.
         /// </summary>
-        public bool DefaultEnableIpRangeFiltering { get; protected set; }
+        public bool DefaultEnableIpRangeFiltering { get; set; }
 
         /// <summary>
         /// The consensus for this network.
         /// </summary>
-        public IConsensus Consensus { get; protected set; }
+        public IConsensus Consensus { get; set; }
 
         /// <summary>
         /// The name of the network.
         /// </summary>
-        public string Name { get; protected set; }
+        public string Name { get; set; }
 
-        public NetworkType NetworkType { get; protected set; }
+        public NetworkType NetworkType { get; set; }
 
         /// <summary>
         /// A list of additional names the network can be referred as.
@@ -139,12 +139,12 @@ namespace NBitcoin
         /// <summary>
         /// The name of the root folder containing blockchains operating with the same consensus rules (for now, this will be bitcoin or stratis).
         /// </summary>
-        public string RootFolderName { get; protected set; }
+        public string RootFolderName { get; set; }
 
         /// <summary>
         /// The default name used for the network configuration file.
         /// </summary>
-        public string DefaultConfigFilename { get; protected set; }
+        public string DefaultConfigFilename { get; set; }
 
         /// <summary>
         /// The list of nodes on the network that our current node tries to connect to.
@@ -165,7 +165,7 @@ namespace NBitcoin
         /// <summary>
         /// List of prefixes used in Base58 addresses.
         /// </summary>
-        public byte[][] Base58Prefixes { get; protected set; }
+        public byte[][] Base58Prefixes { get; set; }
 
         /// <summary>
         /// A list of Bech32 encoders.
@@ -178,7 +178,7 @@ namespace NBitcoin
         /// The characters are rarely used upper ascii, not valid as UTF-8, and produce
         /// a large 4-byte int at any alignment.
         /// </summary>
-        public uint Magic { get; protected set; }
+        public uint Magic { get; set; }
 
         /// <summary>
         /// Byte array representation of a magic number.
