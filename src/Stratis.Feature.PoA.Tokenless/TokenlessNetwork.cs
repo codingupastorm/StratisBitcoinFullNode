@@ -44,11 +44,10 @@ namespace Stratis.Feature.PoA.Tokenless
             messageStart[1] = 0x36;
             messageStart[2] = 0x23;
             messageStart[3] = 0x06;
-            uint magic = BitConverter.ToUInt32(messageStart, 0);
 
             this.Name = "TokenlessMain";
             this.NetworkType = NetworkType.Mainnet;
-            this.Magic = magic;
+            this.Magic = BitConverter.ToUInt32(messageStart, 0);
             this.DefaultPort = 16438;
             this.DefaultMaxOutboundConnections = 16;
             this.DefaultMaxInboundConnections = 109;
