@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Microsoft.OpenApi.Models;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.SmartContracts.CLR.Loader;
 using Swashbuckle.AspNetCore.Swagger;
@@ -30,43 +31,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             this.options = options;
         }
 
-        /// <summary>
-        /// Generates a swagger document for an assembly. Adds a path per public method, with a request body
-        /// that contains the parameters of the method. Transaction-related metadata is added to header fields
-        /// which are pre-filled with sensible defaults.
-        /// </summary>
-        /// <param name="documentName">The name of the swagger document to use.</param>
-        /// <param name="host"></param>
-        /// <param name="basePath"></param>
-        /// <param name="schemes"></param>
-        /// <returns></returns>
-        /// <exception cref="UnknownSwaggerDocument"></exception>
-        public SwaggerDocument GetSwagger(string documentName, string host = null, string basePath = null, string[] schemes = null)
-        {
-            if (!this.options.SwaggerDocs.TryGetValue(documentName, out Info info))
-                throw new UnknownSwaggerDocument(documentName);
-
-            IDictionary<string, Schema> definitions = this.CreateDefinitions();
-
-            info.Title = $"{this.assembly.GetDeployedType().Name} Contract API";
-            info.Description = $"{this.address}";
-
-            var swaggerDoc = new SwaggerDocument
-            {
-                Info = info,
-                Host = host,
-                BasePath = basePath,
-                Schemes = schemes,
-                Paths = this.CreatePathItems(definitions),
-                Definitions = definitions,
-                SecurityDefinitions = this.options.SecurityDefinitions.Any() ? this.options.SecurityDefinitions : null,
-                Security = this.options.SecurityRequirements.Any() ? this.options.SecurityRequirements : null
-            };
-
-            return swaggerDoc;
-        }
-
-        private IDictionary<string, Schema> CreateDefinitions()
+        private IDictionary<string, OpenApiSchema> CreateDefinitions()
         {
             // Creates schema for each of the methods in the contract.
             var schemaFactory = new ContractSchemaFactory();
@@ -74,9 +39,9 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             return schemaFactory.Map(this.assembly);
         }
 
-        private IDictionary<string, PathItem> CreatePathItems(IDictionary<string, Schema> schema)
+        private IDictionary<string, OpenApiPathItem> CreatePathItems(IDictionary<string, OpenApiSchema> schema)
         {
-            // Creates path items for each of the methods & properties in the contract + their schema.
+            // Creates path items for each of the methods & properties in the contract + their schema.O
 
             IEnumerable<MethodInfo> methods = this.assembly.GetPublicMethods();
 
@@ -88,7 +53,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             var propertyPaths = properties
                 .ToDictionary(k => $"/api/contract/{this.address}/property/{k.Name}", v => this.CreatePathItem(v));
             
-            foreach (KeyValuePair<string, PathItem> item in propertyPaths)
+            foreach (KeyValuePair<string, OpenApiPathItem> item in propertyPaths)
             {
                 methodPaths[item.Key] = item.Value;
             }
@@ -96,20 +61,28 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             return methodPaths;
         }
 
-        private PathItem CreatePathItem(PropertyInfo propertyInfo)
+        private OpenApiPathItem CreatePathItem(PropertyInfo propertyInfo)
         {
-            var pathItem = new PathItem();
+            var pathItem = new OpenApiPathItem();
 
-            var operation = new Operation();
+            var operation = new OpenApiOperation();
+
+            operation.Tags = new List<OpenApiTag>
+            {
+                new OpenApiTag
+                {
+                    Name = propertyInfo.Name
+                }
+            };
 
             operation.Tags = new[] { propertyInfo.Name };
             operation.OperationId = propertyInfo.Name;
             operation.Consumes = new[] { "application/json", "text/json", "application/*+json" };
             operation.Parameters = this.GetLocalCallMetadataHeaderParams();
 
-            operation.Responses = new Dictionary<string, Response>
+            operation.Responses = new Dictionary<string, OpenApiResponse>
             {
-                {"200", new Response {Description = "Success"}}
+                {"200", new OpenApiResponse {Description = "Success"}}
             };
 
             pathItem.Get = operation;
@@ -117,9 +90,9 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             return pathItem;
         }
 
-        private PathItem CreatePathItem(MethodInfo methodInfo, IDictionary<string, Schema> schema)
+        private OpenApiPathItem CreatePathItem(MethodInfo methodInfo, IDictionary<string, OpenApiSchema> schema)
         {
-            var pathItem = new PathItem();
+            var pathItem = new OpenApiPathItem();
 
             var operation = new Operation();
 
@@ -127,6 +100,8 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             operation.OperationId = methodInfo.Name;
             operation.Consumes = new[] { "application/json", "text/json", "application/*+json" };
 
+
+            Openapib
             var bodyParam = new BodyParameter
             {
                 Name = methodInfo.Name,
@@ -150,7 +125,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
 
             operation.Parameters = parameters;
 
-            operation.Responses = new Dictionary<string, Response>
+            operation.Responses = new Dictionary<string, OpenApiResponse>
             {
                 {"200", new Response {Description = "Success"}}
             };
@@ -160,15 +135,20 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             return pathItem;
         }
 
-        private List<IParameter> GetLocalCallMetadataHeaderParams()
+        private List<OpenApiParameter> GetLocalCallMetadataHeaderParams()
         {
-            return new List<IParameter>
+            return new List<OpenApiParameter>
             {
-                new NonBodyParameter
+                new OpenApiParameter
                 {
                     Name = "GasPrice",
                     In = "header",
                     Required = true,
+                    Content = new Dictionary<string, OpenApiMediaType>
+                    {
+                        { "number", new OpenApiMediaType(). }
+                    },
+                    
                     Type = "number",
                     Format = "int64",
                     Minimum = SmartContractMempoolValidator.MinGasPrice,
@@ -271,6 +251,34 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
                     Default = this.defaultSenderAddress
                 }
             };
+        }
+
+        public OpenApiDocument GetSwagger(string documentName, string host = null, string basePath = null)
+        {
+            if (!this.options.SwaggerDocs.TryGetValue(documentName, out OpenApiInfo info))
+                throw new UnknownSwaggerDocument(documentName, null); // TODO: what goes in this last param?
+
+            IDictionary<string, OpenApiSchema> definitions = this.CreateDefinitions();
+
+            info.Title = $"{this.assembly.DeployedType.Name} Contract API";
+            info.Description = $"{this.address}";
+
+            new OpenApiMediaType().
+
+            var swaggerDoc = new OpenApiDocument
+            {
+                Info = info,
+                
+                Host = host,
+                BasePath = basePath,
+                Schemes = schemes,
+                Paths = this.CreatePathItems(definitions),
+                Definitions = definitions,
+                SecurityDefinitions = this.options.SecurityDefinitions.Any() ? this.options.SecurityDefinitions : null,
+                Security = this.options.SecurityRequirements.Any() ? this.options.SecurityRequirements : null
+            };
+
+            return swaggerDoc;
         }
     }
 }

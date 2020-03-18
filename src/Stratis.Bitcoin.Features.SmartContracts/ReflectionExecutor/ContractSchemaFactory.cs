@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Microsoft.OpenApi.Models;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR.Loader;
-using Swashbuckle.AspNetCore.Swagger;
 
 namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor
 {
@@ -13,25 +13,25 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor
     /// </summary>
     public class ContractSchemaFactory
     {
-        public static readonly Dictionary<Type, Func<Schema>> PrimitiveTypeMap = new Dictionary<Type, Func<Schema>>
+        public static readonly Dictionary<Type, Func<OpenApiSchema>> PrimitiveTypeMap = new Dictionary<Type, Func<OpenApiSchema>>
         {
-            { typeof(short), () => new Schema { Type = "integer", Format = "int32" } },
-            { typeof(ushort), () => new Schema { Type = "integer", Format = "int32" } },
-            { typeof(int), () => new Schema { Type = "integer", Format = "int32" } },
-            { typeof(uint), () => new Schema { Type = "integer", Format = "int32" } },
-            { typeof(long), () => new Schema { Type = "integer", Format = "int64" } },
-            { typeof(ulong), () => new Schema { Type = "integer", Format = "int64" } },
-            { typeof(float), () => new Schema { Type = "number", Format = "float" } },
-            { typeof(double), () => new Schema { Type = "number", Format = "double" } },
-            { typeof(decimal), () => new Schema { Type = "number", Format = "double" } },
-            { typeof(byte), () => new Schema { Type = "integer", Format = "int32" } },
-            { typeof(sbyte), () => new Schema { Type = "integer", Format = "int32" } },
-            { typeof(byte[]), () => new Schema { Type = "string", Format = "byte" } },
-            { typeof(sbyte[]), () => new Schema { Type = "string", Format = "byte" } },
-            { typeof(char), () => new Schema { Type = "string", Format = "char" } },
-            { typeof(string), () => new Schema { Type = "string" } },
-            { typeof(bool), () => new Schema { Type = "boolean" } },
-            { typeof(Address), () => new Schema { Type = "string" } }
+            { typeof(short), () => new OpenApiSchema { Type = "integer", Format = "int32" } },
+            { typeof(ushort), () => new OpenApiSchema { Type = "integer", Format = "int32" } },
+            { typeof(int), () => new OpenApiSchema { Type = "integer", Format = "int32" } },
+            { typeof(uint), () => new OpenApiSchema { Type = "integer", Format = "int32" } },
+            { typeof(long), () => new OpenApiSchema { Type = "integer", Format = "int64" } },
+            { typeof(ulong), () => new OpenApiSchema { Type = "integer", Format = "int64" } },
+            { typeof(float), () => new OpenApiSchema { Type = "number", Format = "float" } },
+            { typeof(double), () => new OpenApiSchema { Type = "number", Format = "double" } },
+            { typeof(decimal), () => new OpenApiSchema { Type = "number", Format = "double" } },
+            { typeof(byte), () => new OpenApiSchema { Type = "integer", Format = "int32" } },
+            { typeof(sbyte), () => new OpenApiSchema { Type = "integer", Format = "int32" } },
+            { typeof(byte[]), () => new OpenApiSchema { Type = "string", Format = "byte" } },
+            { typeof(sbyte[]), () => new OpenApiSchema { Type = "string", Format = "byte" } },
+            { typeof(char), () => new OpenApiSchema { Type = "string", Format = "char" } },
+            { typeof(string), () => new OpenApiSchema { Type = "string" } },
+            { typeof(bool), () => new OpenApiSchema { Type = "boolean" } },
+            { typeof(Address), () => new OpenApiSchema { Type = "string" } }
         };
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor
         /// </summary>
         /// <param name="assembly"></param>
         /// <returns></returns>
-        public IDictionary<string, Schema> Map(IContractAssembly assembly)
+        public IDictionary<string, OpenApiSchema> Map(IContractAssembly assembly)
         {
             return this.Map(assembly.GetPublicMethods());
         }
@@ -49,7 +49,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor
         /// </summary>
         /// <param name="type"></param>
         /// <returns></returns>
-        public IDictionary<string, Schema> Map(IEnumerable<MethodInfo> methods)
+        public IDictionary<string, OpenApiSchema> Map(IEnumerable<MethodInfo> methods)
         {
             return methods.Select(this.Map).ToDictionary(k => k.Title, v => v);
         }
@@ -59,16 +59,16 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor
         /// </summary>
         /// <param name="method"></param>
         /// <returns></returns>
-        public Schema Map(MethodInfo method)
+        public OpenApiSchema Map(MethodInfo method)
         {
-            var schema = new Schema();
-            schema.Properties = new Dictionary<string, Schema>();
+            var schema = new OpenApiSchema();
+            schema.Properties = new Dictionary<string, OpenApiSchema>();
             schema.Title = method.Name;
 
             foreach (var parameter in method.GetParameters())
             {
                 // Default to string.
-                Schema paramSchema = PrimitiveTypeMap.ContainsKey(parameter.ParameterType)
+                OpenApiSchema paramSchema = PrimitiveTypeMap.ContainsKey(parameter.ParameterType)
                     ? PrimitiveTypeMap[parameter.ParameterType]()
                     : PrimitiveTypeMap[typeof(string)]();
 
