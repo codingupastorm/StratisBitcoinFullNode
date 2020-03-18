@@ -1,8 +1,6 @@
 ﻿using System.IO;
-using System.Security.Cryptography.X509Certificates;
 using CertificateAuthority;
 using NBitcoin;
-using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Tests.Common;
@@ -33,7 +31,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             X509Certificate returnCert = this.certificateCache.GetCertificate(testAddress);
 
             Assert.NotNull(returnCert);
-            
+
             // It's a different reference so the objects are different, but the values are identical.
             Assert.Equal(cert.SerialNumber, returnCert.SerialNumber);
             Assert.Equal(CaCertificatesManager.GetThumbprint(cert), CaCertificatesManager.GetThumbprint(returnCert));

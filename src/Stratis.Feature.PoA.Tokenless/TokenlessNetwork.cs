@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
@@ -29,7 +30,8 @@ namespace Stratis.Feature.PoA.Tokenless
             new Mnemonic("high neither night category fly wasp inner kitchen phone current skate hair")
         };
 
-        public Key[] FederationKeys { get; private set; }
+        [JsonPropertyName("federationkeys")]
+        public Key[] FederationKeys { get; set; }
 
         public TokenlessNetwork()
         {
@@ -128,13 +130,15 @@ namespace Stratis.Feature.PoA.Tokenless
             this.RegisterMempoolRules(this.Consensus);
         }
 
-        public static ChannelNetwork CreateChannelNetwork(IConsensus consensus, Block genesisBlock, string name, string rootFolderName)
+        public static ChannelNetwork CreateChannelNetwork(string name, string rootFolderName)
         {
             var tokenlessNetwork = new TokenlessNetwork();
+            Block genesisBlock = tokenlessNetwork.CreateGenesisBlock((TokenlessConsensusFactory)tokenlessNetwork.Consensus.ConsensusFactory, (uint)DateTime.UtcNow.Ticks, 0, 0, 0, name);
+
             var channelNetwork = new ChannelNetwork(genesisBlock)
             {
                 Base58Prefixes = tokenlessNetwork.Base58Prefixes,
-                Consensus = consensus,
+                Consensus = tokenlessNetwork.Consensus,
                 DefaultAPIPort = tokenlessNetwork.DefaultAPIPort,
                 DefaultBanTimeSeconds = tokenlessNetwork.DefaultBanTimeSeconds,
                 DefaultConfigFilename = tokenlessNetwork.DefaultConfigFilename,
@@ -192,9 +196,9 @@ namespace Stratis.Feature.PoA.Tokenless
             };
         }
 
-        private Block CreateGenesisBlock(SmartContractPoAConsensusFactory consensusFactory, uint time, uint nonce, uint bits, int version)
+        private Block CreateGenesisBlock(SmartContractPoAConsensusFactory consensusFactory, uint time, uint nonce, uint bits, int version, string data = "")
         {
-            string data = "GenesisBlockForTheNewTokenlessNetwork";
+            data = "GenesisBlockForTheNewTokenlessNetwork";
 
             Transaction transaction = consensusFactory.CreateTransaction();
             transaction.Version = 1;
