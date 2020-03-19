@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Microsoft.OpenApi.Models;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor;
+using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.CLR.Loader;
-using Swashbuckle.AspNetCore.Swagger;
 using Xunit;
 
 namespace Stratis.Bitcoin.Features.SmartContracts.Tests
@@ -77,7 +77,7 @@ public class DontDeploy : SmartContract
             var mapper = new ContractSchemaFactory();
 
             // Maps the methods in a type to schemas.
-            IDictionary<string, Schema> mapped = mapper.Map(new ContractAssembly(assembly).GetPublicMethods());
+            IDictionary<string, OpenApiSchema> mapped = mapper.Map(new ContractAssembly(assembly, typeof(SmartContract)).GetPublicMethods());
             
             Assert.Equal("AcceptsBool", mapped["AcceptsBool"].Title);
             Assert.Equal("AcceptsByte", mapped["AcceptsByte"].Title);
@@ -102,7 +102,7 @@ public class DontDeploy : SmartContract
 
             var mapper = new ContractSchemaFactory();
 
-            IDictionary<string, Schema> mapped = mapper.Map(new ContractAssembly(assembly));
+            IDictionary<string, OpenApiSchema> mapped = mapper.Map(new ContractAssembly(assembly, typeof(SmartContract)));
             
             Assert.Equal(11, mapped.Count);
             Assert.False(mapped.ContainsKey("SomeMethod"));
@@ -124,11 +124,11 @@ public class PrimitiveParams : SmartContract
 
             var assembly = Assembly.Load(compilationResult.Compilation);
 
-            var contractAssembly = new ContractAssembly(assembly);
+            var contractAssembly = new ContractAssembly(assembly, typeof(SmartContract));
 
             var mapper = new ContractSchemaFactory();
 
-            IDictionary<string, Schema> mapped = mapper.Map(contractAssembly);
+            IDictionary<string, OpenApiSchema> mapped = mapper.Map(contractAssembly);
 
             Assert.Equal(1, mapped.Count);
             Assert.True(mapped.ContainsKey("SomeMethod"));

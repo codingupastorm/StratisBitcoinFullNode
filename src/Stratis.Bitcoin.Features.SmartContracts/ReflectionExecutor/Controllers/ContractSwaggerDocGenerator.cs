@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Reflection;
 using Microsoft.OpenApi.Models;
-using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.SmartContracts.CLR.Loader;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -63,74 +62,36 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
 
         private OpenApiPathItem CreatePathItem(PropertyInfo propertyInfo)
         {
-            var pathItem = new OpenApiPathItem();
-
-            var operation = new OpenApiOperation();
-
-            operation.Tags = new List<OpenApiTag>
+            var operation = new OpenApiOperation
             {
-                new OpenApiTag
-                {
-                    Name = propertyInfo.Name
-                }
+                Tags = new List<OpenApiTag> {new OpenApiTag {Name = propertyInfo.Name}},
+                OperationId = propertyInfo.Name,
+                Parameters = this.GetLocalCallMetadataHeaderParams(),
+                Responses = new OpenApiResponses {{"200", new OpenApiResponse {Description = "Success"}}}
             };
 
-            operation.Tags = new[] { propertyInfo.Name };
-            operation.OperationId = propertyInfo.Name;
-            operation.Consumes = new[] { "application/json", "text/json", "application/*+json" };
-            operation.Parameters = this.GetLocalCallMetadataHeaderParams();
-
-            operation.Responses = new Dictionary<string, OpenApiResponse>
+            var pathItem = new OpenApiPathItem
             {
-                {"200", new OpenApiResponse {Description = "Success"}}
+                Operations = new Dictionary<OperationType, OpenApiOperation> {{OperationType.Get, operation}}
             };
-
-            pathItem.Get = operation;
 
             return pathItem;
         }
 
         private OpenApiPathItem CreatePathItem(MethodInfo methodInfo, IDictionary<string, OpenApiSchema> schema)
         {
-            var pathItem = new OpenApiPathItem();
-
-            var operation = new Operation();
-
-            operation.Tags = new[] { methodInfo.Name };
-            operation.OperationId = methodInfo.Name;
-            operation.Consumes = new[] { "application/json", "text/json", "application/*+json" };
-
-
-            Openapib
-            var bodyParam = new BodyParameter
+            var operation = new OpenApiOperation
             {
-                Name = methodInfo.Name,
-                In = "body",
-                Required = true,
-                Schema = schema[methodInfo.Name]
+                Tags = new List<OpenApiTag> { new OpenApiTag { Name = methodInfo.Name } },
+                OperationId = methodInfo.Name,
+                Parameters = this.GetCallMetadataHeaderParams(),
+                Responses = new OpenApiResponses { { "200", new OpenApiResponse { Description = "Success" } } },
             };
 
-            var parameters = new List<IParameter>
+            var pathItem = new OpenApiPathItem
             {
-                bodyParam
+                Operations = new Dictionary<OperationType, OpenApiOperation> { { OperationType.Post, operation } }
             };
-
-            // Get the extra metadata fields required for a contract transaction and add this as header data.
-            // We use headers few reasons:
-            // - Compatibility with Swagger, which doesn't support setting multiple body objects.
-            // - Preventing collisions with contract method parameter names if we were add them to method invocation body object.
-            // - Still somewhat REST-ful vs. adding query params.
-            // We add header params after adding the body param so they appear in the correct order.
-            parameters.AddRange(this.GetCallMetadataHeaderParams());
-
-            operation.Parameters = parameters;
-
-            operation.Responses = new Dictionary<string, OpenApiResponse>
-            {
-                {"200", new Response {Description = "Success"}}
-            };
-
-            pathItem.Post = operation;
 
             return pathItem;
         }
@@ -139,117 +100,117 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
         {
             return new List<OpenApiParameter>
             {
-                new OpenApiParameter
-                {
-                    Name = "GasPrice",
-                    In = "header",
-                    Required = true,
-                    Content = new Dictionary<string, OpenApiMediaType>
-                    {
-                        { "number", new OpenApiMediaType(). }
-                    },
+                //new OpenApiParameter
+                //{
+                //    Name = "GasPrice",
+                //    In = "header",
+                //    Required = true,
+                //    Content = new Dictionary<string, OpenApiMediaType>
+                //    {
+                //        { "number", new OpenApiMediaType(). }
+                //    },
                     
-                    Type = "number",
-                    Format = "int64",
-                    Minimum = SmartContractMempoolValidator.MinGasPrice,
-                    Maximum = SmartContractFormatLogic.GasPriceMaximum,
-                    Default = SmartContractMempoolValidator.MinGasPrice
-                },
-                new NonBodyParameter
-                {
-                    Name = "GasLimit",
-                    In = "header",
-                    Required = true,
-                    Type = "number",
-                    Format = "int64",
-                    Minimum = SmartContractFormatLogic.GasLimitCallMinimum,
-                    Maximum = SmartContractFormatLogic.GasLimitMaximum,
-                    Default = SmartContractFormatLogic.GasLimitMaximum
-                },
-                new NonBodyParameter
-                {
-                    Name = "Amount",
-                    In = "header",
-                    Required = true,
-                    Type = "string",
-                    Default = "0"
-                },
-                new NonBodyParameter
-                {
-                    Name = "Sender",
-                    In = "header",
-                    Required = false,
-                    Type = "string",
-                    Default = this.defaultSenderAddress
-                }
+                //    Type = "number",
+                //    Format = "int64",
+                //    Minimum = SmartContractMempoolValidator.MinGasPrice,
+                //    Maximum = SmartContractFormatLogic.GasPriceMaximum,
+                //    Default = SmartContractMempoolValidator.MinGasPrice
+                //},
+                //new NonBodyParameter
+                //{
+                //    Name = "GasLimit",
+                //    In = "header",
+                //    Required = true,
+                //    Type = "number",
+                //    Format = "int64",
+                //    Minimum = SmartContractFormatLogic.GasLimitCallMinimum,
+                //    Maximum = SmartContractFormatLogic.GasLimitMaximum,
+                //    Default = SmartContractFormatLogic.GasLimitMaximum
+                //},
+                //new NonBodyParameter
+                //{
+                //    Name = "Amount",
+                //    In = "header",
+                //    Required = true,
+                //    Type = "string",
+                //    Default = "0"
+                //},
+                //new NonBodyParameter
+                //{
+                //    Name = "Sender",
+                //    In = "header",
+                //    Required = false,
+                //    Type = "string",
+                //    Default = this.defaultSenderAddress
+                //}
             };
         }
 
-        private List<IParameter> GetCallMetadataHeaderParams()
+        private List<OpenApiParameter> GetCallMetadataHeaderParams()
         {
-            return new List<IParameter>
+            return new List<OpenApiParameter>
             {
-                new NonBodyParameter
-                {
-                    Name = "GasPrice",
-                    In = "header",
-                    Required = true,
-                    Type = "number",
-                    Format = "int64",
-                    Minimum = SmartContractMempoolValidator.MinGasPrice,
-                    Maximum = SmartContractFormatLogic.GasPriceMaximum,
-                    Default = SmartContractMempoolValidator.MinGasPrice
-                },
-                new NonBodyParameter
-                {
-                    Name = "GasLimit",
-                    In = "header",
-                    Required = true,
-                    Type = "number",
-                    Format = "int64",
-                    Minimum = SmartContractFormatLogic.GasLimitCallMinimum,
-                    Maximum = SmartContractFormatLogic.GasLimitMaximum,
-                    Default = SmartContractFormatLogic.GasLimitMaximum
-                },
-                new NonBodyParameter
-                {
-                    Name = "Amount",
-                    In = "header",
-                    Required = true,
-                    Type = "string",
-                    Default = "0"
-                },
-                new NonBodyParameter
-                {
-                    Name = "FeeAmount",
-                    In = "header",
-                    Required = true,
-                    Type = "string",
-                    Default = "0.01"
-                },
-                new NonBodyParameter
-                {
-                    Name = "WalletName",
-                    In = "header",
-                    Required = true,
-                    Type = "string",
-                    Default = this.defaultWalletName
-                },
-                new NonBodyParameter
-                {
-                    Name = "WalletPassword",
-                    In = "header",
-                    Required = true,
-                    Type = "string"
-                },
-                new NonBodyParameter
-                {
-                    Name = "Sender",
-                    In = "header",
-                    Required = true,
-                    Type = "string",
-                    Default = this.defaultSenderAddress
-                }
+                //new NonBodyParameter
+                //{
+                //    Name = "GasPrice",
+                //    In = "header",
+                //    Required = true,
+                //    Type = "number",
+                //    Format = "int64",
+                //    Minimum = SmartContractMempoolValidator.MinGasPrice,
+                //    Maximum = SmartContractFormatLogic.GasPriceMaximum,
+                //    Default = SmartContractMempoolValidator.MinGasPrice
+                //},
+                //new NonBodyParameter
+                //{
+                //    Name = "GasLimit",
+                //    In = "header",
+                //    Required = true,
+                //    Type = "number",
+                //    Format = "int64",
+                //    Minimum = SmartContractFormatLogic.GasLimitCallMinimum,
+                //    Maximum = SmartContractFormatLogic.GasLimitMaximum,
+                //    Default = SmartContractFormatLogic.GasLimitMaximum
+                //},
+                //new NonBodyParameter
+                //{
+                //    Name = "Amount",
+                //    In = "header",
+                //    Required = true,
+                //    Type = "string",
+                //    Default = "0"
+                //},
+                //new NonBodyParameter
+                //{
+                //    Name = "FeeAmount",
+                //    In = "header",
+                //    Required = true,
+                //    Type = "string",
+                //    Default = "0.01"
+                //},
+                //new NonBodyParameter
+                //{
+                //    Name = "WalletName",
+                //    In = "header",
+                //    Required = true,
+                //    Type = "string",
+                //    Default = this.defaultWalletName
+                //},
+                //new NonBodyParameter
+                //{
+                //    Name = "WalletPassword",
+                //    In = "header",
+                //    Required = true,
+                //    Type = "string"
+                //},
+                //new NonBodyParameter
+                //{
+                //    Name = "Sender",
+                //    In = "header",
+                //    Required = true,
+                //    Type = "string",
+                //    Default = this.defaultSenderAddress
+                //}
             };
         }
 
@@ -263,19 +224,31 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             info.Title = $"{this.assembly.DeployedType.Name} Contract API";
             info.Description = $"{this.address}";
 
-            new OpenApiMediaType().
+            IDictionary<string, OpenApiPathItem> paths = this.CreatePathItems(definitions);
+
+            OpenApiPaths pathsObject = new OpenApiPaths();
+
+            foreach (KeyValuePair<string, OpenApiPathItem> path in paths)
+            {
+                pathsObject.Add(path.Key, path.Value);
+            }
 
             var swaggerDoc = new OpenApiDocument
             {
                 Info = info,
-                
-                Host = host,
-                BasePath = basePath,
-                Schemes = schemes,
-                Paths = this.CreatePathItems(definitions),
-                Definitions = definitions,
-                SecurityDefinitions = this.options.SecurityDefinitions.Any() ? this.options.SecurityDefinitions : null,
-                Security = this.options.SecurityRequirements.Any() ? this.options.SecurityRequirements : null
+                Servers = new List<OpenApiServer>
+                {
+                    new OpenApiServer
+                    {
+                        Url = basePath,
+                        Description = host
+                    }
+                },
+                Components = new OpenApiComponents
+                {
+                    Schemas = definitions
+                },
+                Paths = pathsObject
             };
 
             return swaggerDoc;

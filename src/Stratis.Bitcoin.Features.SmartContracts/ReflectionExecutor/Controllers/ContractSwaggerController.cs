@@ -1,12 +1,11 @@
 ﻿using System;
-using System.IO;
-using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
 using NBitcoin;
-using Newtonsoft.Json;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Loader;
 using Stratis.SmartContracts.Core.State;
@@ -24,11 +23,10 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
         private readonly IStateRepositoryRoot stateRepository;
         private readonly Network network;
         private readonly SwaggerGeneratorOptions options;
-        private readonly JsonSerializer swaggerSerializer;
+        // private readonly JsonSerializer swaggerSerializer;
 
         public ContractSwaggerController(
             ILoader loader,
-            IOptions<MvcJsonOptions> mvcJsonOptions,
             IOptions<SwaggerGeneratorOptions> options,
             IStateRepositoryRoot stateRepository,
             Network network)
@@ -37,7 +35,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             this.stateRepository = stateRepository;
             this.network = network;
             this.options = options.Value;
-            this.swaggerSerializer = SwaggerSerializerFactory.Create(mvcJsonOptions);
         }
 
         /// <summary>
@@ -73,16 +70,10 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             
             var swaggerGen = new ContractSwaggerDocGenerator(this.options, address, assembly, defaultWalletName, defaultAddress);
 
-            SwaggerDocument doc = swaggerGen.GetSwagger("contracts");
+            OpenApiDocument doc = swaggerGen.GetSwagger("contracts");
 
-            var jsonBuilder = new StringBuilder();
-
-            using (var writer = new StringWriter(jsonBuilder))
-            {
-                this.swaggerSerializer.Serialize(writer, doc);
-                var j = writer.ToString();
-                return Ok(j);
-            }
+            string json = JsonSerializer.Serialize(doc);
+            return Ok(json);
         }
     }
 }

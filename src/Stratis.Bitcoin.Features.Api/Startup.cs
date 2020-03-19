@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers;
 using Stratis.SmartContracts.Core.Receipts;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -111,7 +112,7 @@ namespace Stratis.Bitcoin.Features.Api
             // Register the Swagger generator. This will use the options we injected just above.
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("contracts", new Info { Title = "Contract API", Version = "1" });
+                c.SwaggerDoc("contracts", new OpenApiInfo { Title = "Contract API", Version = "1" });
             });
 
             // Hack to be able to access and modify the options object configured here in SwaggerUIContractListMiddleware.
