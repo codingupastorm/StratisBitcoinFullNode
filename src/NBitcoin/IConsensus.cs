@@ -32,7 +32,7 @@ namespace NBitcoin
         uint256 HashGenesisBlock { get; }
 
         /// <summary> The minimum amount of work the best chain should have. </summary>
-        [JsonIgnore]
+        [JsonPropertyName("minimumchainwork")]
         uint256 MinimumChainWork { get; }
 
         /// <summary>

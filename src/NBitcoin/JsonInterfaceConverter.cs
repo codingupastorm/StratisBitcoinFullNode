@@ -8,8 +8,7 @@ namespace NBitcoin
     {
         public override TInterface Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            var res = reader.GetString();
-            return JsonSerializer.Deserialize<TConcrete>(res);
+            return JsonSerializer.Deserialize<TConcrete>(reader.GetString());
         }
 
         public override void Write(Utf8JsonWriter writer, TInterface value, JsonSerializerOptions options)
