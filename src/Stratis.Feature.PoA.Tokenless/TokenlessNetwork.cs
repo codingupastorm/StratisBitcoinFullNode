@@ -155,7 +155,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 RootFolderName = rootFolderName
             };
 
-            channelNetwork.GenesisHex = genesisBlock.ToHex(channelNetwork);
+            channelNetwork.Genesis = genesisBlock;
 
             return channelNetwork;
         }
@@ -198,7 +198,7 @@ namespace Stratis.Feature.PoA.Tokenless
             };
         }
 
-        private Block CreateGenesisBlock(SmartContractPoAConsensusFactory consensusFactory, uint time, uint nonce, uint bits, int version, string data = "")
+        private Block CreateGenesisBlock(TokenlessConsensusFactory consensusFactory, uint time, uint nonce, uint bits, int version, string data = "")
         {
             data = "GenesisBlockForTheNewTokenlessNetwork";
 

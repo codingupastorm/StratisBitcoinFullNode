@@ -13,6 +13,9 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var serialized = JsonSerializer.Serialize(channelNetwork);
             ChannelNetwork deserialized = JsonSerializer.Deserialize<ChannelNetwork>(serialized);
 
+            Assert.NotNull(deserialized.Genesis);
+            Assert.Equal(channelNetwork.Genesis.GetHash(), deserialized.Genesis.GetHash());
+
             Assert.NotNull(deserialized.Consensus);
 
             Assert.Equal(channelNetwork.Consensus.CoinType, deserialized.Consensus.CoinType);

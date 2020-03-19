@@ -7,6 +7,7 @@ using System.Threading;
 using NBitcoin.DataEncoders;
 using NBitcoin.Networks;
 using NBitcoin.Protocol;
+using NBitcoin.Serialization;
 using NBitcoin.Stealth;
 
 namespace NBitcoin
@@ -63,7 +64,7 @@ namespace NBitcoin
 
     public abstract class Network
     {
-        protected Block Genesis;
+        public virtual Block Genesis { get; set; }
 
         /// <summary>
         /// The default amount of seconds to keep misbehaving peers from reconnecting.

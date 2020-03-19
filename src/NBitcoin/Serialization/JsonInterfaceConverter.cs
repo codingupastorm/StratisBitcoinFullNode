@@ -2,7 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace NBitcoin
+namespace NBitcoin.Serialization
 {
     public sealed class JsonInterfaceConverter<TConcrete, TInterface> : JsonConverter<TInterface> where TConcrete : class, TInterface
     {

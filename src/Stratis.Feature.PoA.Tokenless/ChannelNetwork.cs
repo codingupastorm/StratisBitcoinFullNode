@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using NBitcoin;
+using Stratis.Feature.PoA.Tokenless.Consensus;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -8,7 +9,8 @@ namespace Stratis.Feature.PoA.Tokenless
     /// </summary>
     public sealed class ChannelNetwork : Network
     {
-        [JsonPropertyName("genesishex")]
-        public string GenesisHex { get; set; }
+        [JsonPropertyName("genesisblock")]
+        [JsonConverter(typeof(TokenlessGenesisBlockConverter))]
+        public override Block Genesis { get; set; }
     }
 }
