@@ -106,7 +106,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             this.client = new CaClient(new Uri(caUrl), new HttpClient(), caAccountId, caPassword);
 
-            this.revokedCertsCache = this.kvRepo.LoadValueJson<Dictionary<string, RevocationRecord>>(kvRepoKey);
+            this.revokedCertsCache = (this.kvRepo == null) ? null : this.kvRepo.LoadValueJson<Dictionary<string, RevocationRecord>>(kvRepoKey);
 
             if (this.revokedCertsCache == null)
             {

@@ -37,6 +37,7 @@ namespace Stratis.TokenlessD
                     .UseBlockStore()
                     .UseTokenlessPoaConsenus(network)
                     .UseMempool()
+                    .AsTokenlessNetwork()
                     .UseTokenlessWallet()
                     .UseApi(o => o.Exclude<SmartContractFeature>())
                     .AddRPC()
@@ -44,8 +45,7 @@ namespace Stratis.TokenlessD
                     {
                         options.UseTokenlessReflectionExecutor();
                         options.UseSmartContractType<TokenlessSmartContract>();
-                    })
-                    .AsTokenlessNetwork();
+                    });
 
                 IFullNode node = nodeBuilder.Build();
 

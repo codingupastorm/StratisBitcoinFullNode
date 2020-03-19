@@ -73,6 +73,7 @@ namespace Stratis.SmartContracts.Tests.Common
                 var certificatesManager = new CertificatesManager(settings.DataFolder, settings, loggerFactory, revocationChecker, network);
                 var walletManager = new TokenlessWalletManager(network, settings.DataFolder, new TokenlessWalletSettings(settings), certificatesManager, loggerFactory);
 
+                revocationChecker.Initialize();
                 walletManager.Initialize();
 
                 node.ClientCertificatePrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.P2PCertificates);
