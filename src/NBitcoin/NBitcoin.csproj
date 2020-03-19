@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Company>Stratis Group Ltd.</Company>
-    <Copyright>Copyright © Stratis Platform SA 2017</Copyright>
+    <Copyright>Copyright © Stratis Platform SA 2020</Copyright>
     <Description>The C# Bitcoin Library based on NBitcoin</Description>
   </PropertyGroup>
   
@@ -13,9 +13,9 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>NBitcoin</RootNamespace>
-    <PackageId>NStratis</PackageId>
-    <Authors>NStratis</Authors>
-    <Product>NStratis</Product>
+    <PackageId>Stratis</PackageId>
+    <Authors>Stratis Group Ltd.</Authors>
+    <Product>Stratis</Product>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

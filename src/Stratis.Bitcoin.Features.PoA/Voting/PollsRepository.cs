@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using DBreeze.Utils;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Bitcoin.Features.PoA.Voting
 {
@@ -15,8 +13,6 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
         IKeyValueStore KeyValueStore { get; }
 
         private readonly ILogger logger;
-
-        private readonly RepositorySerializer repositorySerializer;
 
         internal const string TableName = "DataTable";
 
