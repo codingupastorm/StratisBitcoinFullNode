@@ -1,10 +1,11 @@
 ﻿using System;
-using System.Text.Json;
+using System.IO;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi.Writers;
 using NBitcoin;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Loader;
@@ -59,8 +60,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
 
             IContractAssembly assembly = assemblyLoadResult.Value;
 
-            throw new NotImplementedException("Make calls with correct wallets");
-
+            // TODO: Put something valid in these
             // Default wallet is the first wallet as ordered by name.
             string defaultWalletName = null; // this.walletmanager.GetWalletsNames().OrderBy(n => n).First();
 
@@ -70,10 +70,20 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             
             var swaggerGen = new ContractSwaggerDocGenerator(this.options, address, assembly, defaultWalletName, defaultAddress);
 
-            OpenApiDocument doc = swaggerGen.GetSwagger("contracts");
+            // Things to do:
+            // Serialize this
+            // Get correct wallet parameters
+            // Get the parameters in there loading
+            // Get localexecutor to work
 
-            string json = JsonSerializer.Serialize(doc);
-            return Ok(json);
+            using (var stringWriter = new StringWriter())
+            {
+                var jsonWriter = new OpenApiJsonWriter(stringWriter);
+                OpenApiDocument doc = swaggerGen.GetSwagger("contracts");
+                doc.SerializeAsV3(jsonWriter);
+
+                return Ok(stringWriter.ToString());
+            }
         }
     }
 }
