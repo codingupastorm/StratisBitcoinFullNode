@@ -135,7 +135,7 @@ namespace Stratis.Feature.PoA.Tokenless
             var tokenlessNetwork = new TokenlessNetwork();
             Block genesisBlock = tokenlessNetwork.CreateGenesisBlock((TokenlessConsensusFactory)tokenlessNetwork.Consensus.ConsensusFactory, (uint)DateTime.UtcNow.Ticks, 0, 0, 0, name);
 
-            var channelNetwork = new ChannelNetwork(genesisBlock)
+            var channelNetwork = new ChannelNetwork()
             {
                 Base58Prefixes = tokenlessNetwork.Base58Prefixes,
                 Consensus = tokenlessNetwork.Consensus,
@@ -154,6 +154,8 @@ namespace Stratis.Feature.PoA.Tokenless
                 NetworkType = NetworkType.Mainnet,
                 RootFolderName = rootFolderName
             };
+
+            channelNetwork.GenesisHex = genesisBlock.ToHex(channelNetwork);
 
             return channelNetwork;
         }

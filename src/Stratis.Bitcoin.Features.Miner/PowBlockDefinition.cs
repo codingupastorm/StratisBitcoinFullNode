@@ -10,9 +10,6 @@ namespace Stratis.Bitcoin.Features.Miner
 {
     public class PowBlockDefinition : BlockDefinition
     {
-        private readonly IConsensusRuleEngine consensusRules;
-        private readonly ILogger logger;
-
         public PowBlockDefinition(
             IConsensusManager consensusManager,
             IDateTimeProvider dateTimeProvider,
@@ -20,13 +17,9 @@ namespace Stratis.Bitcoin.Features.Miner
             ITxMempool mempool,
             MempoolSchedulerLock mempoolLock,
             IMinerSettings minerSettings,
-            Network network,
-            IConsensusRuleEngine consensusRules,
-            BlockDefinitionOptions options = null)
+            Network network)
             : base(consensusManager, dateTimeProvider, loggerFactory, mempool, mempoolLock, minerSettings, network)
         {
-            this.consensusRules = consensusRules;
-            this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
         public override void AddToBlock(TxMempoolEntry mempoolEntry)

@@ -63,8 +63,7 @@ namespace NBitcoin
 
     public abstract class Network
     {
-        [JsonPropertyName("genesis")]
-        protected Block Genesis { get; set; }
+        protected Block Genesis;
 
         /// <summary>
         /// The default amount of seconds to keep misbehaving peers from reconnecting.
@@ -128,6 +127,7 @@ namespace NBitcoin
         /// The consensus for this network.
         /// </summary>
         [JsonPropertyName("consensus")]
+        [JsonConverter(typeof(JsonInterfaceConverter<Consensus, IConsensus>))]
         public IConsensus Consensus { get; set; }
 
         /// <summary>
@@ -207,7 +207,7 @@ namespace NBitcoin
         /// <summary>
         /// Byte array representation of a magic number.
         /// </summary>
-        [JsonPropertyName("magicbytesarray")]
+        [JsonIgnore]
         public byte[] MagicBytesArray { get; private set; }
 
         public Network()
@@ -245,31 +245,31 @@ namespace NBitcoin
         /// <summary>
         /// The UNIX time at inception of the genesis block for this network.
         /// </summary>
-        [JsonPropertyName("genesistime")]
+        [JsonIgnore]
         public uint GenesisTime { get; protected set; }
 
         /// <summary>
         /// A hash which proves that a sufficient amount of computation has been carried out to create the genesis block.
         /// </summary>
-        [JsonPropertyName("genesisnonce")]
+        [JsonIgnore]
         public uint GenesisNonce { get; protected set; }
 
         /// <summary>
         /// Represents the encoded form of the target threshold as it appears in the block header.
         /// </summary>
-        [JsonPropertyName("genesisbits")]
+        [JsonIgnore]
         public uint GenesisBits { get; protected set; }
 
         /// <summary>
         /// The version of the genesis block.
         /// </summary>
-        [JsonPropertyName("genesisversion")]
+        [JsonIgnore]
         public int GenesisVersion { get; protected set; }
 
         /// <summary>
         /// The reward for the genesis block, which is unspendable.
         /// </summary>
-        [JsonPropertyName("genesisreward")]
+        [JsonIgnore]
         public Money GenesisReward { get; protected set; }
 
         /// <summary>
@@ -574,6 +574,7 @@ namespace NBitcoin
             return Block.Load(this.Genesis.ToBytes(this.Consensus.ConsensusFactory), this.Consensus.ConsensusFactory);
         }
 
+        [JsonIgnore]
         public uint256 GenesisHash => this.Consensus.HashGenesisBlock;
 
         public Money GetReward(int nHeight)

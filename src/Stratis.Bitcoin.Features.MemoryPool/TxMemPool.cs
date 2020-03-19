@@ -292,11 +292,9 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         /// <inheritdoc />
         public bool AddUnchecked(uint256 hash, TxMempoolEntry entry, bool validFeeEstimate = true)
         {
-            //LOCK(cs);
             var setAncestors = new SetEntries();
             long nNoLimit = long.MaxValue;
-            string dummy;
-            this.CalculateMemPoolAncestors(entry, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, out dummy);
+            this.CalculateMemPoolAncestors(entry, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, out _);
             bool returnVal = this.AddUnchecked(hash, entry, setAncestors, validFeeEstimate);
 
             return returnVal;
@@ -305,7 +303,6 @@ namespace Stratis.Bitcoin.Features.MemoryPool
         /// <inheritdoc />
         public bool AddUnchecked(uint256 hash, TxMempoolEntry entry, SetEntries setAncestors, bool validFeeEstimate = true)
         {
-            //LOCK(cs);
             this.MapTx.Add(entry);
             this.mapLinks.Add(entry, new TxLinks { Parents = new SetEntries(), Children = new SetEntries() });
 
