@@ -77,13 +77,12 @@ namespace Stratis.SmartContracts.Core.Tests.Store
                 It.Is<uint>(d => d == blockHeight)
             ));
 
-            var purgeKey = new CompositePurgeIndexKey(blockHeight);
-
             // Verify the purge key was inserted.
+            // This is characterised by a composite key which we are not testing for as we cannot know the guid, but the value will be an empty byte array.
             transaction.Verify(t => t.Insert(
                 TransientStore.Table,
-                It.Is<byte[]>(d => purgeKey.ToBytes().SequenceEqual(d)),
-                It.IsAny<byte[]>()
+                It.IsAny<byte[]>(),
+                It.Is<byte[]>(d=> d.Length == 0)
             ));
 
             transaction.Verify(t => t.Commit(), Times.Once);
