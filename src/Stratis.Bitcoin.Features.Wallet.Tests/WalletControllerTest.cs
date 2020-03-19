@@ -44,7 +44,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             string[] resultingWords = (viewResult.Value as string).Split(' ');
 
             Assert.Equal(12, resultingWords.Length);
-            
+
             foreach (string word in resultingWords)
             {
                 int index = -1;
@@ -1339,7 +1339,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             var viewResult = Assert.IsType<OkResult>(result);
             mockWalletSyncManager.Verify();
             Assert.NotNull(viewResult);
-            Assert.NotNull(viewResult.StatusCode == (int)HttpStatusCode.OK);
+            Assert.True(viewResult.StatusCode == (int)HttpStatusCode.OK);
         }
 
         [Fact]
@@ -1365,7 +1365,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             var viewResult = Assert.IsType<OkResult>(result);
             mockWalletSyncManager.Verify();
             Assert.NotNull(viewResult);
-            Assert.NotNull(viewResult.StatusCode == (int)HttpStatusCode.OK);
+            Assert.True(viewResult.StatusCode == (int)HttpStatusCode.OK);
         }
 
         [Fact]
@@ -1441,7 +1441,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             HdAddress accountAddress = WalletTestsHelpers.CreateAddress(true);
             account.InternalAddresses.Add(accountAddress);
 
-            var addressBalance = new AddressBalance { Address = accountAddress.Address, AmountConfirmed = new Money(75000), AmountUnconfirmed = new Money(500000), SpendableAmount = new Money(75000)};
+            var addressBalance = new AddressBalance { Address = accountAddress.Address, AmountConfirmed = new Money(75000), AmountUnconfirmed = new Money(500000), SpendableAmount = new Money(75000) };
 
             var mockWalletManager = new Mock<IWalletManager>();
             mockWalletManager.Setup(w => w.GetAddressBalance(accountAddress.Address)).Returns(addressBalance);
@@ -1863,10 +1863,9 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
         [Fact]
         public void ListWalletFilesWithExistingWalletFilesReturnsWalletFileModel()
         {
-            string walletPath = "walletPath";
             var walletManager = new Mock<IWalletManager>();
             walletManager.Setup(m => m.GetWalletsNames())
-                .Returns( new[] { "wallet1.wallet.json", "wallet2.wallet.json" });
+                .Returns(new[] { "wallet1.wallet.json", "wallet2.wallet.json" });
 
             walletManager.Setup(m => m.GetWalletFileExtension()).Returns("wallet.json");
 
@@ -1886,7 +1885,6 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
         [Fact]
         public void ListWalletFilesWithoutExistingWalletFilesReturnsWalletFileModel()
         {
-            string walletPath = "walletPath";
             var walletManager = new Mock<IWalletManager>();
             walletManager.Setup(m => m.GetWalletsNames())
                 .Returns(Enumerable.Empty<string>());
