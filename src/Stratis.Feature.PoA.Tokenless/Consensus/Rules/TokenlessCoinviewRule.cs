@@ -14,6 +14,7 @@ using Stratis.Bitcoin.Features.SmartContracts.Caching;
 using Stratis.Bitcoin.Utilities;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Util;
@@ -32,6 +33,8 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
         private readonly IReceiptRepository receiptRepository;
         private readonly IStateRepositoryRoot stateRepositoryRoot;
         private readonly ITokenlessSigner tokenlessSigner;
+        private readonly IReadWriteSetTransactionSerializer rwsSerializer;
+        private readonly IReadWriteSetValidator rwsValidator;
 
         public TokenlessCoinviewRule(
             ICallDataSerializer callDataSerializer,
@@ -40,7 +43,9 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             ILoggerFactory loggerFactory,
             IReceiptRepository receiptRepository,
             IStateRepositoryRoot stateRepositoryRoot,
-            ITokenlessSigner tokenlessSigner)
+            ITokenlessSigner tokenlessSigner, 
+            IReadWriteSetTransactionSerializer rwsSerializer,
+            IReadWriteSetValidator rwsValidator)
         {
             this.callDataSerializer = callDataSerializer;
             this.executorFactory = executorFactory;
@@ -49,7 +54,8 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             this.receiptRepository = receiptRepository;
             this.stateRepositoryRoot = stateRepositoryRoot;
             this.tokenlessSigner = tokenlessSigner;
-
+            this.rwsSerializer = rwsSerializer;
+            this.rwsValidator = rwsValidator;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
@@ -135,6 +141,12 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 
                 this.ValidateSubmittedTransaction(transaction);
 
+                if (transaction.Outputs.First().ScriptPubKey.IsReadWriteSet())
+                {
+                    this.ExecuteReadWriteTransaction(context.ValidationContext, transaction);
+                    continue;
+                }
+
                 TxOut smartContractTxOut = transaction.Outputs.FirstOrDefault(txOut => SmartContractScript.IsSmartContractExec(txOut.ScriptPubKey));
                 if (smartContractTxOut == null)
                 {
@@ -144,6 +156,24 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 
                 this.ExecuteContractTransaction(context.ValidationContext, transaction);
             }
+        }
+
+        private void ExecuteReadWriteTransaction(ValidationContext validationContext, Transaction transaction)
+        {
+            // Apply RWS to the state repository.
+            ReadWriteSet rws = this.rwsSerializer.GetReadWriteSet(transaction);
+
+            if (this.rwsValidator.IsReadWriteSetValid(this.mutableStateRepository, rws))
+            {
+                throw new NotImplementedException("Do we discard transactions if they are no longer valid by version?");
+            }
+
+            int blockHeight = validationContext.ChainedHeaderToValidate.Height;
+            int txIndex = validationContext.BlockToValidate.Transactions.IndexOf(transaction);
+
+            string version = $"{blockHeight}.{txIndex}"; // TODO: Componentise retrieving version?
+
+            this.rwsValidator.ApplyReadWriteSet(this.mutableStateRepository, rws, version);
         }
 
         /// <summary>

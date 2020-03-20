@@ -24,6 +24,7 @@ using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mining;
 using Stratis.Feature.PoA.Tokenless.Wallet;
+using Stratis.SmartContracts.Core.ReadWrite;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -47,6 +48,7 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<ICoreComponent, CoreComponent>();
                         services.AddSingleton<ITokenlessBroadcaster, TokenlessBroadcaster>();
                         services.AddSingleton<IReadWriteSetTransactionSerializer, ReadWriteSetTransactionSerializer>();
+                        services.AddSingleton<IReadWriteSetValidator, ReadWriteSetValidator>();
 
                         // Endorsement. For now everyone gets this. May not be the case in the future.
                         services.AddSingleton<IEndorsementRequestHandler, EndorsementRequestHandler>();
