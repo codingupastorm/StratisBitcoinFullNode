@@ -134,9 +134,12 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             }
         }
 
-        [Route("build/callcontract")]
-        [HttpPost]
-        public IActionResult BuildCallContractTransaction([FromBody] BuildCallContractTransactionModel model)
+        /// <summary>
+        /// Builds a <see cref="BuildCallContractTransactionResponse"/>. TODO consider moving to its own class.
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        public BuildCallContractTransactionResponse BuildCallContractTransactionCore(BuildCallContractTransactionModel model)
         {
             try
             {
@@ -145,11 +148,21 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
                 Transaction transaction = CreateAndSignTransaction(contractTxData);
 
-                return Json(BuildCallContractTransactionResponse.Succeeded(model.MethodName, transaction, 0));
+                return BuildCallContractTransactionResponse.Succeeded(model.MethodName, transaction, 0);
             }
             catch (MethodParameterStringSerializerException exception)
             {
-                return Json(BuildCallContractTransactionResponse.Failed(exception.Message));
+                return BuildCallContractTransactionResponse.Failed(exception.Message);
+            }
+        }
+
+        [Route("build/callcontract")]
+        [HttpPost]
+        public IActionResult BuildCallContractTransaction([FromBody] BuildCallContractTransactionModel model)
+        {
+            try
+            {
+                return Json(BuildCallContractTransactionCore(model));
             }
             catch (Exception ex)
             {
