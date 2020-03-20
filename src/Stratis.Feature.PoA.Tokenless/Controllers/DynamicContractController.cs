@@ -1,16 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
+using System.Net;
 using System.Reflection;
-using System.Text;
+using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
-using Stratis.Bitcoin.Models;
+using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Loader;
 using Stratis.SmartContracts.CLR.Serialization;
@@ -22,6 +21,8 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
     /// Controller for receiving dynamically generated contract calls.
     /// Maps calls from a json object to a request model and proxies this to the correct controller method.
     /// </summary>
+    [ApiVersion("1")]
+    [Route("api/contract")]
     public class DynamicContractController : Controller
     {
         private readonly TokenlessController tokenlessController;
@@ -55,30 +56,15 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         /// <param name="method">The name of the method on the contract being called.</param>
         /// <returns>A model of the transaction data, if created and broadcast successfully.</returns>
         /// <exception cref="Exception"></exception>
-        [Route("api/contract/{address}/method/{method}")]
+        [Route("{address}/method/{method}")]
         [HttpPost]
-        public IActionResult CallMethod([FromRoute] string address, [FromRoute] string method)
+        public async Task<IActionResult> CallMethod([FromRoute] string address, [FromRoute] string method, [FromBody] JObject requestData)
         {
-            string requestBody;
-            using (StreamReader reader = new StreamReader(this.Request.Body, Encoding.UTF8))
-            {
-                requestBody = reader.ReadToEnd();
-            }
-
-            JObject requestData;
-            
-            try
-            {
-                requestData = JObject.Parse(requestBody);
-
-            }
-            catch (JsonReaderException e)
-            {
-                return this.BadRequest(e.Message);
-            }
-
             var contractCode = this.stateRoot.GetCode(address.ToUint160(this.network));
 
+            if(contractCode == null)
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, "Contract does not exist", $"No contract code found at address {address}");
+            
             Result<IContractAssembly> loadResult = this.loader.Load((ContractByteCode) contractCode);
 
             IContractAssembly assembly = loadResult.Value;
@@ -98,10 +84,20 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             // Map the JObject to the parameter + types expected by the call.
             string[] methodParams = parameters.Map(requestData);
 
-            BuildCallContractTransactionRequest request = this.MapCallRequest(address, method, methodParams, this.Request.Headers);
+            BuildCallContractTransactionModel request = this.MapCallRequest(address, method, methodParams, this.Request.Headers);
 
-            // Proxy to the actual SC controller.
-            throw new NotImplementedException("Make call to SC controllers.");
+            // Build the transaction
+            try
+            {
+                BuildCallContractTransactionResponse transaction = this.tokenlessController.BuildCallContractTransactionCore(request);
+
+                // Proxy to the actual SC controller for broadcasting
+                return await this.tokenlessController.SendTransactionAsync(new SendTransactionModel { TransactionHex = transaction.Hex });
+            }
+            catch (Exception ex)
+            {
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, ex.Message, ex.ToString());
+            }
         }
 
         /// <summary>
@@ -110,7 +106,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         /// <param name="address">The address of the contract to query.</param>
         /// <param name="property">The name of the property to query.</param>
         /// <returns>A model of the query result.</returns>
-        [Route("api/contract/{address}/property/{property}")]
+        [Route("{address}/property/{property}")]
         [HttpGet]
         public IActionResult LocalCallProperty([FromRoute] string address, [FromRoute] string property)
         {
@@ -132,22 +128,13 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             return true;
         }
 
-        private BuildCallContractTransactionRequest MapCallRequest(string address, string method, string[] parameters, IHeaderDictionary headers)
+        private BuildCallContractTransactionModel MapCallRequest(string address, string method, string[] parameters, IHeaderDictionary headers)
         {
-            var call = new BuildCallContractTransactionRequest
+            var call = new BuildCallContractTransactionModel
             {
-                GasPrice = ulong.Parse(headers["GasPrice"]),
-                GasLimit = ulong.Parse(headers["GasLimit"]),
-                Amount = headers["Amount"],
-                FeeAmount = headers["FeeAmount"],
-                WalletName = headers["WalletName"],
-                Password = headers["WalletPassword"],
-                Sender = headers["Sender"],
-                AccountName = "account 0",
-                ContractAddress = address,
+                Address = address,
                 MethodName = method,
-                Parameters = parameters,
-                Outpoints = new List<OutpointRequest>()
+                Parameters = parameters
             };
 
             return call;
