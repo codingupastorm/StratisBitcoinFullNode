@@ -84,7 +84,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             // Map the JObject to the parameter + types expected by the call.
             string[] methodParams = parameters.Map(requestData);
 
-            BuildCallContractTransactionModel request = this.MapCallRequest(address, method, methodParams, this.Request.Headers);
+            BuildCallContractTransactionModel request = this.MapCallRequest(address, method, methodParams);
 
             // Build the transaction
             try
@@ -110,7 +110,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         [HttpGet]
         public IActionResult LocalCallProperty([FromRoute] string address, [FromRoute] string property)
         {
-            TokenlessLocalCallModel request = this.MapLocalCallRequest(address, property, this.Request.Headers);
+            TokenlessLocalCallModel request = this.MapLocalCallRequest(address, property);
 
             // Proxy to the tokenless controller
             return this.tokenlessController.LocalCallSmartContractTransaction(request);
@@ -127,7 +127,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             return true;
         }
 
-        private BuildCallContractTransactionModel MapCallRequest(string address, string method, string[] parameters, IHeaderDictionary headers)
+        private BuildCallContractTransactionModel MapCallRequest(string address, string method, string[] parameters)
         {
             var call = new BuildCallContractTransactionModel
             {
@@ -139,11 +139,10 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             return call;
         }
 
-        private TokenlessLocalCallModel MapLocalCallRequest(string address, string property, IHeaderDictionary headers)
+        private TokenlessLocalCallModel MapLocalCallRequest(string address, string property)
         {
             return new TokenlessLocalCallModel
             {
-                Sender = headers["Sender"],
                 Address = address,
                 MethodName = property
             };

@@ -110,13 +110,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
         {
             return new List<OpenApiParameter>
             {
-                new OpenApiParameter
-                {
-                    Name = "Sender",
-                    In = ParameterLocation.Header,
-                    Required = false,
-                    Schema = new OpenApiSchema { Type = "string" },
-                }
             };
         }
 

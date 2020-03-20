@@ -435,6 +435,8 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             // Rewrite the method name to a property name
             this.RewritePropertyGetterName(model);
 
+            PubKey transactionSigningKey = this.tokenlessWalletManager.GetPubKey(TokenlessWalletAccount.TransactionSigning);
+
             try
             {
                 var methodParameters = ExtractMethodParameters(model.Parameters);
@@ -442,7 +444,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
                 ILocalExecutionResult result = this.localExecutor.Execute(
                     (ulong)this.coreComponent.ChainIndexer.Height,
-                    model.Sender?.ToUint160(this.coreComponent.Network) ?? new uint160(),
+                    new uint160(transactionSigningKey.Hash.ToBytes()),
                     0,
                     txData);
 
