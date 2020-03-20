@@ -63,7 +63,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
                 Tags = new List<OpenApiTag> {new OpenApiTag {Name = propertyInfo.Name}},
                 OperationId = propertyInfo.Name,
                 Parameters = this.GetLocalCallMetadataHeaderParams(),
-                Responses = new OpenApiResponses {{"200", new OpenApiResponse {Description = "Success"}}}
+                Responses = new OpenApiResponses { { "200", new OpenApiResponse { Description = "Success" } } }
             };
 
             var pathItem = new OpenApiPathItem
@@ -81,7 +81,21 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
                 Tags = new List<OpenApiTag> { new OpenApiTag { Name = methodInfo.Name } },
                 OperationId = methodInfo.Name,
                 Parameters = this.GetCallMetadataHeaderParams(),
-                Responses = new OpenApiResponses { { "200", new OpenApiResponse { Description = "Success" } } },
+                Responses = new OpenApiResponses { { "200", new OpenApiResponse { Description = "Success" } } }
+            };
+
+            operation.RequestBody = new OpenApiRequestBody
+            {
+                Description = $"{methodInfo.Name}",
+                Required = true,
+                Content = new Dictionary<string, OpenApiMediaType>
+                {
+                    { "application/json", new OpenApiMediaType
+                        {
+                            Schema = schema[methodInfo.Name]
+                        }
+                    }
+                },
             };
 
             var pathItem = new OpenApiPathItem
