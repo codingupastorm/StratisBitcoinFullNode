@@ -114,20 +114,8 @@ namespace Stratis.Feature.PoA.Tokenless
                             services.Remove(descriptor);
                             services.AddSingleton<INetworkPeerFactory, TlsEnabledNetworkPeerFactory>();
                         }
-                    });
-            });
 
-            return fullNodeBuilder;
-        }
-
-        public static IFullNodeBuilder UseTokenlessWallet(this IFullNodeBuilder fullNodeBuilder)
-        {
-            fullNodeBuilder.ConfigureFeature(features =>
-            {
-                features
-                    .AddFeature<TokenlessWalletFeature>()
-                    .FeatureServices(services =>
-                    {
+                        // The wallet. Holds keys etc.
                         services.AddSingleton<TokenlessWalletSettings>();
                         services.AddSingleton<ITokenlessWalletManager, TokenlessWalletManager>();
                         services.AddSingleton<IMiningKeyProvider, TokenlessMiningKeyProvider>();

@@ -37,7 +37,6 @@ namespace Stratis.TokenlessD
                     .UseTokenlessPoaConsenus(network)
                     .UseMempool()
                     .AsTokenlessNetwork()
-                    .UseTokenlessWallet()
                     .UseApi(o => o.Exclude<SmartContractFeature>())
                     .AddSmartContracts(options =>
                     {

@@ -34,14 +34,12 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
 
         public override void ConsensusSpecificTxChecks(Transaction tx)
         {
-            // TODO
-            // throw new NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public override void ConsensusSpecificRequiredTxChecks(Transaction tx)
         {
-            // TODO
-            // throw new NotImplementedException();
+            throw new NotImplementedException();
         }
 
         public override RuleContext CreateRuleContext(ValidationContext validationContext)

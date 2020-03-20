@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using Microsoft.Extensions.Logging;
@@ -20,6 +21,7 @@ using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
+using Stratis.Feature.PoA.Tokenless.Wallet;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -38,6 +40,7 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly NodeSettings nodeSettings;
         private readonly IAsyncProvider asyncProvider;
         private readonly INodeLifetime nodeLifetime;
+        private readonly ITokenlessWalletManager walletManager;
         private readonly ILogger logger;
         private IAsyncLoop caPubKeysLoop;
 
@@ -56,6 +59,7 @@ namespace Stratis.Feature.PoA.Tokenless
             NodeSettings nodeSettings,
             IAsyncProvider asyncProvider,
             INodeLifetime nodeLifetime,
+            ITokenlessWalletManager walletManager,
             ILoggerFactory loggerFactory)
         {
             this.certificatesManager = certificatesManager;
@@ -70,6 +74,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.nodeSettings = nodeSettings;
             this.asyncProvider = asyncProvider;
             this.nodeLifetime = nodeLifetime;
+            this.walletManager = walletManager;
             this.caPubKeysLoop = null;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
 
@@ -96,11 +101,13 @@ namespace Stratis.Feature.PoA.Tokenless
 
             // TODO-TL: Check if we need a new ConsensusOptions.
             var options = (PoAConsensusOptions)this.coreComponent.Network.Consensus.Options;
-            if (options.EnablePermissionedMembership)
+            if (options.EnablePermissionedMembership) // Do we need this check?
             {
                 this.revocationChecker.Initialize();
                 // We do not need to initialize the CertificatesManager here like it would have been in the regular PoA feature, because the TokenlessWalletManager is now responsible for ensuring a client certificate is created instead.
             }
+
+            this.walletManager.Initialize();
 
             if (options.VotingEnabled)
             {
@@ -213,6 +220,25 @@ namespace Stratis.Feature.PoA.Tokenless
             {
                 this.revocationChecker.Dispose();
             }
+        }
+
+        /// <summary>
+        /// Prints command-line help.
+        /// </summary>
+        /// <param name="network">The network to extract values from.</param>
+        public static void PrintHelp(Network network)
+        {
+            TokenlessWalletSettings.PrintHelp(network);
+        }
+
+        /// <summary>
+        /// Get the default configuration.
+        /// </summary>
+        /// <param name="builder">The string builder to add the settings to.</param>
+        /// <param name="network">The network to base the defaults off.</param>
+        public static void BuildDefaultConfigurationFile(StringBuilder builder, Network network)
+        {
+            TokenlessWalletSettings.BuildDefaultConfigurationFile(builder, network);
         }
     }
 }
