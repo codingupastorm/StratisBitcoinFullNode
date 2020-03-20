@@ -19,6 +19,7 @@ using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Feature.PoA.Tokenless.Controllers;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mining;
@@ -101,6 +102,9 @@ namespace Stratis.Feature.PoA.Tokenless
                             services.Remove(descriptor);
                             services.AddSingleton<INetworkPeerFactory, TlsEnabledNetworkPeerFactory>();
                         }
+
+                        // Necessary for the dynamic contract controller
+                        services.AddTransient<TokenlessController>();
                     });
             });
 
