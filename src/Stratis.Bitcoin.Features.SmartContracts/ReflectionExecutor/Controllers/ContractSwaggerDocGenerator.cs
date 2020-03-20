@@ -98,6 +98,8 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
 
         private List<OpenApiParameter> GetLocalCallMetadataHeaderParams()
         {
+            // TODO: Readd these in.
+
             return new List<OpenApiParameter>
             {
                 //new OpenApiParameter
@@ -148,6 +150,8 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
 
         private List<OpenApiParameter> GetCallMetadataHeaderParams()
         {
+            // TODO: Readd these in.
+
             return new List<OpenApiParameter>
             {
                 //new NonBodyParameter

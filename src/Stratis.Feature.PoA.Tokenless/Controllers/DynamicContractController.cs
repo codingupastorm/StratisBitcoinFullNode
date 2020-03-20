@@ -16,7 +16,7 @@ using Stratis.SmartContracts.CLR.Loader;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core.State;
 
-namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
+namespace Stratis.Feature.PoA.Tokenless.Controllers
 {
     /// <summary>
     /// Controller for receiving dynamically generated contract calls.
@@ -24,7 +24,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
     /// </summary>
     public class DynamicContractController : Controller
     {
-        private readonly SmartContractsController localCallController;
+        private readonly TokenlessController tokenlessController;
         private readonly IStateRepositoryRoot stateRoot;
         private readonly ILoader loader;
         private readonly Network network;
@@ -37,12 +37,12 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
         /// <param name="loader"></param>
         /// <param name="network"></param>
         public DynamicContractController(
-            SmartContractsController localCallController,
+            TokenlessController tokenlessController,
             IStateRepositoryRoot stateRoot,
             ILoader loader,
             Network network)
         {
-            this.localCallController = localCallController;
+            this.tokenlessController = tokenlessController;
             this.stateRoot = stateRoot;
             this.loader = loader;
             this.network = network;
@@ -116,8 +116,9 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
         {
             LocalCallContractRequest request = this.MapLocalCallRequest(address, property, this.Request.Headers);
 
-            // Proxy to the actual SC controller.
-            return this.localCallController.LocalCallSmartContractTransaction(request);
+            // Proxy to the tokenless controller - TODO: LocalCalls aren't implemented on DLT yet
+            throw new NotImplementedException();
+            // return this.localCallController.LocalCallSmartContractTransaction(request);
         }
 
         private bool ValidateParams(JObject requestData, ParameterInfo[] parameters)

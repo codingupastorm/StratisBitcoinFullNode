@@ -71,10 +71,10 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             var swaggerGen = new ContractSwaggerDocGenerator(this.options, address, assembly, defaultWalletName, defaultAddress);
 
             // Things to do:
-            // Serialize this
             // Get correct wallet parameters
-            // Get the parameters in there loading
-            // Get localexecutor to work
+            // Get the parameters in the Generator loading
+            // Forward calls from Dynamic...Controller to TokenlessController
+            // Get LocalExecutor to work inside TokenlessController
 
             using (var stringWriter = new StringWriter())
             {
