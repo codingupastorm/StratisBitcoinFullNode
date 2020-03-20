@@ -149,14 +149,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             var swaggerDoc = new OpenApiDocument
             {
                 Info = info,
-                Servers = new List<OpenApiServer>
-                {
-                    new OpenApiServer
-                    {
-                        Url = basePath,
-                        Description = host
-                    }
-                },
                 Components = new OpenApiComponents
                 {
                     Schemas = definitions
