@@ -5,12 +5,13 @@ namespace Stratis.SmartContracts.CLR
     /// <summary>
     /// Smart contract state that gets injected into the smart contract by the <see cref="ReflectionVirtualMachine"/>.
     /// </summary>
-    public sealed class SmartContractState : ISmartContractState
+    public sealed class TokenlessSmartContractState : ISmartContractState
     {
-        public SmartContractState(
+        public TokenlessSmartContractState(
             IBlock block,
             IMessage message,
             IPersistentState persistentState,
+            IPersistentState privateState,
             ISerializer serializer,
             IContractLogger contractLogger,
             IInternalTransactionExecutor internalTransactionExecutor,
@@ -20,6 +21,7 @@ namespace Stratis.SmartContracts.CLR
             this.Block = block;
             this.Message = message;
             this.PersistentState = persistentState;
+            this.PrivateState = privateState;
             this.Serializer = serializer;
             this.ContractLogger = contractLogger;
             this.InternalTransactionExecutor = internalTransactionExecutor;
@@ -32,6 +34,8 @@ namespace Stratis.SmartContracts.CLR
         public IMessage Message { get; }
 
         public IPersistentState PersistentState { get; }
+
+        public IPersistentState PrivateState { get; }
 
         public ISerializer Serializer { get; }
 

@@ -52,7 +52,6 @@ namespace Stratis.Bitcoin.Tests.Base
         public ConsensusManagerBehaviorTestsHelper()
         {
             this.loggerFactory = new ExtendedLoggerFactory();
-            this.loggerFactory.AddConsoleWithFilters();
         }
 
         private readonly ExtendedLoggerFactory loggerFactory;

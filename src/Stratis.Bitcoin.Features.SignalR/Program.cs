@@ -18,6 +18,7 @@ namespace Stratis.Bitcoin.Features.SignalR
             Uri uri = settings.SignalRUri;
 
             webHostBuilder
+                .UseKestrel(o => o.AllowSynchronousIO = true)
                 .UseKestrel()
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()

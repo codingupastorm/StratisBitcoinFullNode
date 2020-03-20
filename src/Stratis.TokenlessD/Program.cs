@@ -8,7 +8,6 @@ using Stratis.Bitcoin.Features.Api;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
-using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless;
@@ -40,7 +39,6 @@ namespace Stratis.TokenlessD
                     .AsTokenlessNetwork()
                     .UseTokenlessWallet()
                     .UseApi(o => o.Exclude<SmartContractFeature>())
-                    .AddRPC()
                     .AddSmartContracts(options =>
                     {
                         options.UseTokenlessReflectionExecutor();
@@ -54,7 +52,7 @@ namespace Stratis.TokenlessD
             }
             catch (Exception ex)
             {
-                Console.WriteLine("There was a problem initializing the node. Details: '{0}'", ex.ToString());
+                Console.WriteLine("There was a problem initializing the node : '{0}'", ex.ToString());
             }
         }
     }

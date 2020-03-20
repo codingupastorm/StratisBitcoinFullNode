@@ -11,7 +11,6 @@ using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.Consensus.Rules;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
@@ -38,7 +37,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Consensus.Rules
         public CanGetSenderRuleTest()
         {
             var loggerFactory = new ExtendedLoggerFactory();
-            loggerFactory.AddConsoleWithFilters();
 
             this.network = new SmartContractsRegTest();
             this.senderRetriever = new Mock<ISenderRetriever>();

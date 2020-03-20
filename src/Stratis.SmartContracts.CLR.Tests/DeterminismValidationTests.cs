@@ -135,13 +135,18 @@ namespace Stratis.SmartContracts.CLR.Tests
         [Fact]
         public void Validate_Determinism_AppDomain()
         {
-            // AppDomain should not be available
-            // We do not compile contracts with a reference to System.Runtime.Extensions
+            // AppDomain is available in the public namespace
             string adjustedSource = TestString.Replace(ReplaceCodeString, @"var test = AppDomain.CurrentDomain; var test2 = test.Id;").Replace(ReplaceReferencesString, "");
-
             ContractCompilationResult compilationResult = ContractCompiler.Compile(adjustedSource);
-            Assert.False(compilationResult.Success);
+            Assert.True(compilationResult.Success);
+
+            // But it shouldn't make it through determinism validation.
+            byte[] assemblyBytes = compilationResult.Compilation;
+            IContractModuleDefinition moduleDefinition = ContractDecompiler.GetModuleDefinition(assemblyBytes).Value;
+            SmartContractValidationResult result = this.validator.Validate(moduleDefinition.ModuleDefinition);
+            Assert.False(result.IsValid);
         }
+
 
         #endregion
 
@@ -404,12 +409,17 @@ namespace Stratis.SmartContracts.CLR.Tests
         [Fact]
         public void Validate_Determinism_Environment()
         {
-            // Environment should not be available
-            // We do not compile contracts with a reference to System.Runtime.Extensions
+            // Environment is available
             string adjustedSource = TestString.Replace(ReplaceCodeString, "int test = Environment.TickCount;").Replace(ReplaceReferencesString, "");
-
             ContractCompilationResult compilationResult = ContractCompiler.Compile(adjustedSource);
-            Assert.False(compilationResult.Success);
+            Assert.True(compilationResult.Success);
+
+            // But will not pass determinism validation.
+            byte[] assemblyBytes = compilationResult.Compilation;
+            IContractModuleDefinition moduleDefinition = ContractDecompiler.GetModuleDefinition(assemblyBytes).Value;
+            SmartContractValidationResult result = this.validator.Validate(moduleDefinition.ModuleDefinition);
+
+            Assert.False(result.IsValid);
         }
 
         #endregion

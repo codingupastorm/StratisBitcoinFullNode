@@ -25,7 +25,7 @@ namespace Stratis.SmartContracts.CLR.Tests
 
         private readonly Address TestAddress;
         private IStateRepository state;
-        private SmartContractState contractState;
+        private TokenlessSmartContractState contractState;
         private ContractExecutorTestContext context;
         private readonly GasMeter gasMeter;
 
@@ -37,12 +37,13 @@ namespace Stratis.SmartContracts.CLR.Tests
             this.TestAddress = "0x0000000000000000000000000000000000000001".HexToAddress();
             this.vm = this.context.Vm;
             this.state = this.context.State;
-            this.contractState = new SmartContractState(
+            this.contractState = new TokenlessSmartContractState(
                 new Block(1, this.TestAddress),
                 new Message(this.TestAddress, this.TestAddress, 0),
                 new PersistentState(
                     new TestPersistenceStrategy(this.state),
                     this.context.Serializer, this.TestAddress.ToUint160()),
+                new PrivatePersistentState(this.context.Serializer, new TestPersistenceStrategy(this.state), this.TestAddress.ToUint160()), 
                 this.context.Serializer,
                 new ContractLogHolder(),
                 Mock.Of<IInternalTransactionExecutor>(),

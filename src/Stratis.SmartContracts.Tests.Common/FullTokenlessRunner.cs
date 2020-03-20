@@ -9,7 +9,6 @@ using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
-using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
@@ -47,7 +46,6 @@ namespace Stratis.SmartContracts.Tests.Common
                 .UseMempool()
                 .AsTokenlessNetwork()
                 .UseTokenlessWallet()
-                .AddRPC()
                 .AddSmartContracts(options =>
                 {
                     options.UseTokenlessReflectionExecutor();

@@ -57,14 +57,14 @@ namespace Stratis.Bitcoin.NodeStorage
                             }
 
                             // Insert height:hash and value to target.
-                            foreach ((byte[] key, V value) in tranFrom.SelectForward<byte[], V>(tableName))
+                            foreach ((byte[] key, V value) in tranFrom.SelectAll<byte[], V>(tableName))
                             {
                                 tranTo.Insert(tableName, BitConverter.GetBytes(blockHeight[key]).Reverse().Concat(key).ToArray(), value);
                             }
                         }
                         else
                         {
-                            foreach ((K key, V value) in tranFrom.SelectForward<K, V>(tableName))
+                            foreach ((K key, V value) in tranFrom.SelectAll<K, V>(tableName))
                             {
                                 tranTo.Insert(tableName, key, value);
                             }

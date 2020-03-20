@@ -23,7 +23,7 @@ namespace Stratis.SmartContracts.CLR.Tests
         public ILoggerFactory LoggerFactory { get; }
         public StateRepositoryRoot State { get; }
         public SmartContractValidator Validator { get; }
-        public IAddressGenerator AddressGenerator {get;}
+        public IAddressGenerator AddressGenerator { get; }
         public ContractAssemblyLoader<SmartContract> AssemblyLoader { get; }
         public IContractModuleDefinitionReader ModuleDefinitionReader { get; }
         public IContractPrimitiveSerializer ContractPrimitiveSerializer { get; }
@@ -39,7 +39,6 @@ namespace Stratis.SmartContracts.CLR.Tests
             this.Network = new SmartContractsRegTest();
             this.KeyEncodingStrategy = BasicKeyEncodingStrategy.Default;
             this.LoggerFactory = new ExtendedLoggerFactory();
-            this.LoggerFactory.AddConsoleWithFilters();
             this.State = new StateRepositoryRoot(new NoDeleteSource<byte[], byte[]>(new MemoryDictionarySource()));
             this.ContractPrimitiveSerializer = new ContractPrimitiveSerializer(this.Network);
             this.Serializer = new Serializer(this.ContractPrimitiveSerializer);
