@@ -200,7 +200,8 @@ namespace Stratis.Feature.PoA.Tokenless
 
         private Block CreateGenesisBlock(TokenlessConsensusFactory consensusFactory, uint time, uint nonce, uint bits, int version, string data = "")
         {
-            data = "GenesisBlockForTheNewTokenlessNetwork";
+            if (string.IsNullOrEmpty(data))
+                data = "GenesisBlockForTheNewTokenlessNetwork";
 
             Transaction transaction = consensusFactory.CreateTransaction();
             transaction.Version = 1;
