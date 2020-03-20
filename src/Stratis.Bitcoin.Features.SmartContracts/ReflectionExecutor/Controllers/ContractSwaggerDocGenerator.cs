@@ -94,123 +94,22 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
 
         private List<OpenApiParameter> GetLocalCallMetadataHeaderParams()
         {
-            // TODO: Readd these in.
-
             return new List<OpenApiParameter>
             {
-                //new OpenApiParameter
-                //{
-                //    Name = "GasPrice",
-                //    In = "header",
-                //    Required = true,
-                //    Content = new Dictionary<string, OpenApiMediaType>
-                //    {
-                //        { "number", new OpenApiMediaType(). }
-                //    },
-                    
-                //    Type = "number",
-                //    Format = "int64",
-                //    Minimum = SmartContractMempoolValidator.MinGasPrice,
-                //    Maximum = SmartContractFormatLogic.GasPriceMaximum,
-                //    Default = SmartContractMempoolValidator.MinGasPrice
-                //},
-                //new NonBodyParameter
-                //{
-                //    Name = "GasLimit",
-                //    In = "header",
-                //    Required = true,
-                //    Type = "number",
-                //    Format = "int64",
-                //    Minimum = SmartContractFormatLogic.GasLimitCallMinimum,
-                //    Maximum = SmartContractFormatLogic.GasLimitMaximum,
-                //    Default = SmartContractFormatLogic.GasLimitMaximum
-                //},
-                //new NonBodyParameter
-                //{
-                //    Name = "Amount",
-                //    In = "header",
-                //    Required = true,
-                //    Type = "string",
-                //    Default = "0"
-                //},
-                //new NonBodyParameter
-                //{
-                //    Name = "Sender",
-                //    In = "header",
-                //    Required = false,
-                //    Type = "string",
-                //    Default = this.defaultSenderAddress
-                //}
+                new OpenApiParameter
+                {
+                    Name = "Sender",
+                    In = ParameterLocation.Header,
+                    Required = false,
+                    Schema = new OpenApiSchema { Type = "string" },
+                }
             };
         }
 
         private List<OpenApiParameter> GetCallMetadataHeaderParams()
         {
-            // TODO: Readd these in.
-
             return new List<OpenApiParameter>
             {
-                //new NonBodyParameter
-                //{
-                //    Name = "GasPrice",
-                //    In = "header",
-                //    Required = true,
-                //    Type = "number",
-                //    Format = "int64",
-                //    Minimum = SmartContractMempoolValidator.MinGasPrice,
-                //    Maximum = SmartContractFormatLogic.GasPriceMaximum,
-                //    Default = SmartContractMempoolValidator.MinGasPrice
-                //},
-                //new NonBodyParameter
-                //{
-                //    Name = "GasLimit",
-                //    In = "header",
-                //    Required = true,
-                //    Type = "number",
-                //    Format = "int64",
-                //    Minimum = SmartContractFormatLogic.GasLimitCallMinimum,
-                //    Maximum = SmartContractFormatLogic.GasLimitMaximum,
-                //    Default = SmartContractFormatLogic.GasLimitMaximum
-                //},
-                //new NonBodyParameter
-                //{
-                //    Name = "Amount",
-                //    In = "header",
-                //    Required = true,
-                //    Type = "string",
-                //    Default = "0"
-                //},
-                //new NonBodyParameter
-                //{
-                //    Name = "FeeAmount",
-                //    In = "header",
-                //    Required = true,
-                //    Type = "string",
-                //    Default = "0.01"
-                //},
-                //new NonBodyParameter
-                //{
-                //    Name = "WalletName",
-                //    In = "header",
-                //    Required = true,
-                //    Type = "string",
-                //    Default = this.defaultWalletName
-                //},
-                //new NonBodyParameter
-                //{
-                //    Name = "WalletPassword",
-                //    In = "header",
-                //    Required = true,
-                //    Type = "string"
-                //},
-                //new NonBodyParameter
-                //{
-                //    Name = "Sender",
-                //    In = "header",
-                //    Required = true,
-                //    Type = "string",
-                //    Default = this.defaultSenderAddress
-                //}
             };
         }
 
