@@ -37,7 +37,7 @@ namespace Stratis.Bitcoin.Tests.Base
             using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(Interfaces.KeyValueStoreTransactionMode.Read))
             {
                 ChainedHeader tip = null;
-                foreach ((int key, BlockHeader blockHeader) in transaction.SelectForward<int, BlockHeader>("Chain"))
+                foreach ((int key, BlockHeader blockHeader) in transaction.SelectAll<int, BlockHeader>("Chain"))
                 {
                     if (tip != null && blockHeader.HashPrevBlock != tip.HashBlock)
                         break;

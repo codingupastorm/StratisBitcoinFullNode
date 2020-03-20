@@ -20,8 +20,8 @@ namespace Stratis.Bitcoin.Features.Api
 
             Uri apiUri = apiSettings.ApiUri;
 
-            X509Certificate2 certificate = apiSettings.UseHttps 
-                ? GetHttpsCertificate(apiSettings.HttpsCertificateFilePath, store) 
+            X509Certificate2 certificate = apiSettings.UseHttps
+                ? GetHttpsCertificate(apiSettings.HttpsCertificateFilePath, store)
                 : null;
 
             webHostBuilder
@@ -30,9 +30,10 @@ namespace Stratis.Bitcoin.Features.Api
                         if (!apiSettings.UseHttps)
                             return;
 
-                        Action<ListenOptions> configureListener = listenOptions => { listenOptions.UseHttps(certificate); };
-                        var ipAddresses = Dns.GetHostAddresses(apiSettings.ApiUri.DnsSafeHost);
-                        foreach (var ipAddress in ipAddresses)
+                        options.AllowSynchronousIO = true;
+                        void configureListener(ListenOptions listenOptions) { listenOptions.UseHttps(certificate); }
+                        IPAddress[] ipAddresses = Dns.GetHostAddresses(apiSettings.ApiUri.DnsSafeHost);
+                        foreach (IPAddress ipAddress in ipAddresses)
                         {
                             options.Listen(ipAddress, apiSettings.ApiPort, configureListener);
                         }
@@ -72,7 +73,7 @@ namespace Stratis.Bitcoin.Features.Api
                 .UseStartup<Startup>();
 
             IWebHost host = webHostBuilder.Build();
-                
+
             host.Start();
 
             return host;

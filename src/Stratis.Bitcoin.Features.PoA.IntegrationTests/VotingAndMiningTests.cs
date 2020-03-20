@@ -261,7 +261,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
                 CoreNode node2 = builder.CreatePoANode(network).Start();
 
                 Assert.False(node2.FullNode.NodeService<IFederationManager>().IsFederationMember);
-                Assert.Equal(node2.FullNode.NodeService<IFederationManager>().CurrentFederationKey, null);
+                Assert.Null(node2.FullNode.NodeService<IFederationManager>().CurrentFederationKey);
             }
         }
 

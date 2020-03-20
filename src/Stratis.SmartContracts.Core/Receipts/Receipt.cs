@@ -124,8 +124,8 @@ namespace Stratis.SmartContracts.Core.Receipts
             ulong gasPrice,
             ulong amount,
             string readWriteSet,
-            string methodName = null,
-            ulong? blockNumber = null) 
+            string methodName,
+            ulong? blockNumber) 
             : this(postState, gasUsed, logs, BuildBloom(logs), transactionHash, null, @from, to, newContractAddress, success, result, errorMessage, gasPrice, amount, readWriteSet, methodName, blockNumber)
         { }
 
@@ -260,12 +260,6 @@ namespace Stratis.SmartContracts.Core.Receipts
             RLPCollection innerLogList = (RLPCollection)logList[0];
             Log[] logs = innerLogList.Select(x => Log.FromBytesRlp(x.RLPData)).ToArray();
 
-            // Method name is the 15th item to be added. Existing receipts without this data will throw exceptions without this check.
-            var hasMethodName = innerList.Count > 14;
-
-            // Block number is the 16th item to be added.
-            var hasBlockNumber = innerList.Count > 15;
-
             var receipt = new Receipt(
                 new uint256(innerList[0].RLPData),
                 BitConverter.ToUInt64(innerList[1].RLPData),
@@ -282,8 +276,8 @@ namespace Stratis.SmartContracts.Core.Receipts
                 BitConverter.ToUInt64(innerList[12].RLPData),
                 BitConverter.ToUInt64(innerList[13].RLPData),
                 innerList[14].RLPData != null ? Encoding.UTF8.GetString(innerList[14].RLPData) : null,
-                hasMethodName && innerList[15].RLPData != null ? Encoding.UTF8.GetString(innerList[15].RLPData) : null,
-                hasBlockNumber && innerList[16].RLPData != null ? BitConverter.ToUInt64(innerList[16].RLPData) : (ulong?) null);
+                innerList[15].RLPData != null ? Encoding.UTF8.GetString(innerList[15].RLPData) : null,
+                innerList[16].RLPData != null ? BitConverter.ToUInt64(innerList[16].RLPData) : (ulong?) null);
 
             return receipt;
         }

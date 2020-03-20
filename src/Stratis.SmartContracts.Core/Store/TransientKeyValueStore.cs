@@ -97,8 +97,9 @@ namespace Stratis.SmartContracts.Core.Store
                 var purgeKeyStart = TransientStoreQueryParams.CreatePurgeIndexByHeightRangeStartKey(0);
                 var purgeKeyEnd = TransientStoreQueryParams.CreatePurgeIndexByHeightRangeEndKey(height - 1);
 
-                // TODO use a range query here (awaiting implementation)
-                var values = tx.SelectForward<byte[], byte[]>(Table, true);
+                // TODO: We may be able to remove some of the complexity here given that the query is now ranged.
+
+                var values = tx.SelectForward<byte[], byte[]>(Table, purgeKeyStart, purgeKeyEnd, true);
 
                 foreach (var record in values)
                 {

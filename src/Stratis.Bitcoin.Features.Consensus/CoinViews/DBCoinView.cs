@@ -227,7 +227,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
         /// the order number of the first rewind data is 0 + 1 = 1.</remarks>
         private int GetRewindIndex(IKeyValueStoreTransaction transaction)
         {
-            (int Key, byte[] Value) firstRow = transaction.SelectBackward<int, byte[]>("Rewind", keysOnly: true).FirstOrDefault();
+            (int Key, byte[] Value) firstRow = transaction.SelectAll<int, byte[]>("Rewind", keysOnly: true, SortOrder.Descending).FirstOrDefault();
 
             return firstRow != default ? firstRow.Key : 0;
         }
@@ -257,7 +257,7 @@ namespace Stratis.Bitcoin.Features.Consensus.CoinViews
                 }
                 else
                 {
-                    (int Key, byte[] Value) firstRow = transaction.SelectBackward<int, byte[]>("Rewind").FirstOrDefault();
+                    (int Key, byte[] Value) firstRow = transaction.SelectAll<int, byte[]>("Rewind", sortOrder: SortOrder.Descending).FirstOrDefault();
                     transaction.RemoveKey("Rewind", firstRow.Key, firstRow.Value);
                     var rewindData = this.repositorySerializer.Deserialize<RewindData>(firstRow.Value);
                     this.SetBlockHash(transaction, rewindData.PreviousBlockHash);
