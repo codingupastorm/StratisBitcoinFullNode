@@ -110,11 +110,10 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         [HttpGet]
         public IActionResult LocalCallProperty([FromRoute] string address, [FromRoute] string property)
         {
-            LocalCallContractRequest request = this.MapLocalCallRequest(address, property, this.Request.Headers);
+            TokenlessLocalCallModel request = this.MapLocalCallRequest(address, property, this.Request.Headers);
 
-            // Proxy to the tokenless controller - TODO: LocalCalls aren't implemented on DLT yet
-            throw new NotImplementedException();
-            // return this.localCallController.LocalCallSmartContractTransaction(request);
+            // Proxy to the tokenless controller
+            return this.tokenlessController.LocalCallSmartContractTransaction(request);
         }
 
         private bool ValidateParams(JObject requestData, ParameterInfo[] parameters)
@@ -140,13 +139,12 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             return call;
         }
 
-        private LocalCallContractRequest MapLocalCallRequest(string address, string property, IHeaderDictionary headers)
+        private TokenlessLocalCallModel MapLocalCallRequest(string address, string property, IHeaderDictionary headers)
         {
-            return new LocalCallContractRequest
+            return new TokenlessLocalCallModel
             {
-                Amount = headers["Amount"],
                 Sender = headers["Sender"],
-                ContractAddress = address,
+                Address = address,
                 MethodName = property
             };
         }
