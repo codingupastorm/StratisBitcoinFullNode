@@ -14,6 +14,7 @@ using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor;
+using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Utilities.JsonErrors;
 using Stratis.Bitcoin.Utilities.ModelStateErrors;
@@ -437,7 +438,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             try
             {
                 var methodParameters = ExtractMethodParameters(model.Parameters);
-                var txData = new ContractTxData(0, 0, (Gas)100_000, model.Address.ToUint160(this.coreComponent.Network), model.MethodName, methodParameters);
+                var txData = new ContractTxData(0, 0, (Gas)SmartContractFormatLogic.GasLimitMaximum, model.Address.ToUint160(this.coreComponent.Network), model.MethodName, methodParameters);
 
                 ILocalExecutionResult result = this.localExecutor.Execute(
                     (ulong)this.coreComponent.ChainIndexer.Height,
