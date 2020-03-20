@@ -17,16 +17,12 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
     {
         private readonly string address;
         private readonly IContractAssembly assembly;
-        private readonly string defaultWalletName;
-        private readonly string defaultSenderAddress;
         private readonly SwaggerGeneratorOptions options;
 
-        public ContractSwaggerDocGenerator(SwaggerGeneratorOptions options, string address, IContractAssembly assembly, string defaultWalletName = "", string defaultSenderAddress = "")
+        public ContractSwaggerDocGenerator(SwaggerGeneratorOptions options, string address, IContractAssembly assembly)
         {
             this.address = address;
             this.assembly = assembly;
-            this.defaultWalletName = defaultWalletName;
-            this.defaultSenderAddress = defaultSenderAddress;
             this.options = options;
         }
 

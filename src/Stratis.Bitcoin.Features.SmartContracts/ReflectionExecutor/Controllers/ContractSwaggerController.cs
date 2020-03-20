@@ -60,15 +60,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
 
             IContractAssembly assembly = assemblyLoadResult.Value;
 
-            // TODO: Put something valid in these
-            // Default wallet is the first wallet as ordered by name.
-            string defaultWalletName = null; // this.walletmanager.GetWalletsNames().OrderBy(n => n).First();
-
-            // Default address is the first address with a balance, or string.Empty if no addresses have been created.
-            // Ordering this way is consistent with the wallet UI, ie. whatever appears first in the wallet will appear first here.
-            string defaultAddress = null;  // this.walletmanager.GetAccountAddressesWithBalance(defaultWalletName).FirstOrDefault()?.Address ?? string.Empty;
-            
-            var swaggerGen = new ContractSwaggerDocGenerator(this.options, address, assembly, defaultWalletName, defaultAddress);
+            var swaggerGen = new ContractSwaggerDocGenerator(this.options, address, assembly);
 
             // Things to do:
             // Get correct wallet parameters
