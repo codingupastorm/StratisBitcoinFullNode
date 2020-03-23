@@ -246,7 +246,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             // Apply RWS to the state repository.
             ReadWriteSet rws = this.rwsSerializer.GetReadWriteSet(transaction);
 
-            if (this.rwsValidator.IsReadWriteSetValid(this.stateSnapshot, rws))
+            if (!this.rwsValidator.IsReadWriteSetValid(this.stateSnapshot, rws))
             {
                 throw new NotImplementedException("Do we discard transactions if they are no longer valid by version?");
             }
