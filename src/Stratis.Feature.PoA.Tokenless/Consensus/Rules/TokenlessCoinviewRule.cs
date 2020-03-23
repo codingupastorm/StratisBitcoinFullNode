@@ -165,6 +165,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 
             if (!this.rwsValidator.IsReadWriteSetValid(this.mutableStateRepository, rws))
             {
+                // TODO: Discard block if this happens
                 throw new NotImplementedException("Do we discard transactions if they are no longer valid by version?");
             }
 

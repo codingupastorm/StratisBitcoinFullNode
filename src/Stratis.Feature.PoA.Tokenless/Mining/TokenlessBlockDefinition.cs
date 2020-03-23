@@ -248,6 +248,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
 
             if (!this.rwsValidator.IsReadWriteSetValid(this.stateSnapshot, rws))
             {
+                // TODO: Remove the transaction from the mempool and don't include in a block
                 throw new NotImplementedException("Do we discard transactions if they are no longer valid by version?");
             }
 
