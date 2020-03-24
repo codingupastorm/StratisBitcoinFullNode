@@ -178,14 +178,7 @@ namespace MembershipServices
 
             foreach (string fileName in Directory.GetFiles(Path.Combine(this.baseDir, Crls)))
             {
-                try
-                {
-                    this.revokedCertificateThumbprints.Add(Path.GetFileName(fileName));
-                }
-                catch (Exception e)
-                {
-                    // TODO: Log potentially corrupted certificate files in the signcerts folder
-                }
+                this.revokedCertificateThumbprints.Add(Path.GetFileName(fileName));
             }
 
             Directory.CreateDirectory(Path.Combine(this.baseDir, Keystore));

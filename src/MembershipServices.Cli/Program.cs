@@ -118,16 +118,26 @@ namespace MembershipServices.Cli
                 return -1;
             }
 
-            // The certificate manager is responsible for creation and storage of the client certificate, the wallet manager is primarily responsible for providing the requisite private key.
             Key privateKey = walletManager.GetKey(walletSettings.Password, TokenlessWalletAccount.P2PCertificates);
+
+            File.WriteAllText(Path.Combine(nodeSettings.DataFolder.RootPath, LocalMembershipServicesConfiguration.Keystore, "key.dat"), privateKey.GetBitcoinSecret(network).ToWif());
+
             PubKey transactionSigningPubKey = walletManager.GetKey(walletSettings.Password, TokenlessWalletAccount.TransactionSigning).PubKey;
             PubKey blockSigningPubKey = walletManager.GetKey(walletSettings.Password, TokenlessWalletAccount.BlockSigning).PubKey;
 
             X509Certificate clientCert = certificatesManager.RequestNewCertificate(privateKey, transactionSigningPubKey, blockSigningPubKey);
 
-            File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCert, privateKey, walletSettings.Password));
-            
-            return 0;
+            if (clientCert != null)
+            {
+                membershipServices.AddLocalMember(clientCert, MemberType.Self);
+
+                // TODO: Temporary workaround until CertificatesManager is completely removed and merged into MSD
+                File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCert, privateKey, walletSettings.Password));
+
+                return 0;
+            }
+
+            return -1;
         }
 
         static int RunShowTemplate(ShowTemplateOptions options)
@@ -147,6 +157,7 @@ namespace MembershipServices.Cli
 
         public static void Main(string[] args)
         {
+            // https://hyperledger-fabric.readthedocs.io/en/release-2.0/commands/cryptogen.html
             Parser.Default.ParseArguments<HelpOptions, GenerateOptions, ShowTemplateOptions, VersionOptions, ExtendOptions>(args)
                 .MapResult(
                     (HelpOptions opts) => RunHelp(opts),
@@ -155,47 +166,6 @@ namespace MembershipServices.Cli
                     (VersionOptions opts) => RunVersion(opts),
                     (ExtendOptions opts) => RunExtend(opts),
                     errs => 1);
-
-            try
-            {
-                // The cryptogen command has five subcommands, as follows:
-                // help
-                // generate
-                // showtemplate
-                // extend
-                // version
-
-                /*
-                usage: cryptogen [<flags>] <command> [<args> ...]
-
-                Utility for generating Hyperledger Fabric key material
-
-                Flags:
-                  --help  Show context-sensitive help (also try --help-long and --help-man).
-
-                Commands:
-                  help [<command>...]
-                    Show help.
-
-                  generate [<flags>]
-                    Generate key material
-
-                  showtemplate
-                    Show the default configuration template
-
-                  version
-                    Show version information
-
-                  extend [<flags>]
-                    Extend existing network
-                 */
-
-                // https://hyperledger-fabric.readthedocs.io/en/release-2.0/commands/cryptogen.html
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("There was a problem initializing the node : '{0}'", ex.ToString());
-            }
         }
     }
 }
