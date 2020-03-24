@@ -1,48 +1,62 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using NBitcoin.BouncyCastle.Math;
 
 namespace NBitcoin
 {
     public interface IConsensus
     {
+        [JsonIgnore]
         IConsensusMiningReward ConsensusMiningReward { get; set; }
 
         /// <summary>
         /// Maximal length of reorganization that the node is willing to accept, or 0 to disable long reorganization protection.
         /// </summary>
-        uint MaxReorgLength { get; }
+        [JsonPropertyName("maxreorglength")]
+        uint MaxReorgLength { get; set; }
 
+        [JsonPropertyName("options")]
         ConsensusOptions Options { get; set; }
 
+        [JsonIgnore]
         BuriedDeploymentsArray BuriedDeployments { get; }
 
+        [JsonIgnore]
         IBIP9DeploymentsArray BIP9Deployments { get; }
 
+        [JsonIgnore]
         uint256 BIP34Hash { get; }
 
+        [JsonIgnore]
         uint256 HashGenesisBlock { get; }
 
         /// <summary> The minimum amount of work the best chain should have. </summary>
+        [JsonPropertyName("minimumchainwork")]
         uint256 MinimumChainWork { get; }
 
         /// <summary>
         /// Specify the BIP44 coin type for this network.
         /// </summary>
-        int CoinType { get; }
+        [JsonPropertyName("cointype")]
+        int CoinType { get; set; }
 
         /// <summary>The default hash to use for assuming valid blocks.</summary>
-        uint256 DefaultAssumeValid { get; }
+        [JsonPropertyName("defaultassumevalid")]
+        uint256 DefaultAssumeValid { get; set; }
 
         /// <summary>
         /// A factory that enables overloading base types.
         /// </summary>
+        [JsonIgnore]
         ConsensusFactory ConsensusFactory { get; }
 
         /// <summary>Group of rules that define a given network.</summary>
+        [JsonIgnore]
         ConsensusRules ConsensusRules { get; }
 
         /// <summary>Group of mempool validation rules used by the given network.</summary>
+        [JsonIgnore]
         List<Type> MempoolRules { get; set; }
     }
 

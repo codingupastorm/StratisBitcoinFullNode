@@ -1,4 +1,5 @@
-﻿using NBitcoin.Protocol;
+﻿using System.Text.Json.Serialization;
+using NBitcoin.Protocol;
 
 namespace NBitcoin
 {
@@ -14,15 +15,19 @@ namespace NBitcoin
         public const int SerializeTransactionNoWitness = 0x40000000;
 
         /// <summary>Maximum size for a block in bytes. </summary>
+        [JsonPropertyName("maxblockbasesize")]
         public uint MaxBlockBaseSize { get; set; }
 
         /// <summary>The maximum allowed weight for a block, see BIP 141 (network rule)</summary>
+        [JsonPropertyName("maxblockweight")]
         public uint MaxBlockWeight { get; set; }
 
         /// <summary>The maximum allowed size for a serialized block, in bytes (only for buffer size limits). </summary>
+        [JsonPropertyName("maxblockserializedsize")]
         public uint MaxBlockSerializedSize { get; set; }
 
         /// <summary>Scale of witness vs other transaction data. e.g. if set to 4, then witnesses have 1/4 the weight per byte of other transaction data. </summary>
+        [JsonIgnore]
         public int WitnessScaleFactor { get; set; }
 
         /// <summary>
@@ -33,22 +38,28 @@ namespace NBitcoin
         /// <see cref="MaxStandardVersion"/> will be equal.</item>
         /// </list>
         /// </summary>
+        [JsonPropertyName("maxstandardversion")]
         public int MaxStandardVersion { get; set; }
 
         /// <summary>The maximum weight for transactions we're willing to relay/mine.</summary>
+        [JsonPropertyName("maxstandardtxweight")]
         public int MaxStandardTxWeight { get; set; }
 
         /// <summary>The maximum allowed number of signature check operations in a block (network rule).</summary>
+        [JsonIgnore]
         public int MaxBlockSigopsCost { get; set; }
 
         /// <summary>The maximum number of sigops we're willing to relay/mine in a single tx.</summary>
+        [JsonIgnore]
         public int MaxStandardTxSigopsCost { get; set; }
 
         /// <summary>Block Height at which the node should enforce the use of <see cref="EnforcedMinProtocolVersion"/>.
         /// Can be set to zero to indicate that the minimum supported protocol version will not change depending on the block height.</summary>
+        [JsonPropertyName("enforceminprotocolversionatblockheight")]
         public int EnforceMinProtocolVersionAtBlockHeight { get; set; }
 
         /// <summary>The minimum protocol version which should be used from block height defined in <see cref="EnforceMinProtocolVersionAtBlockHeight"/></summary>
+        [JsonPropertyName("enforcedminprotocolversion")]
         public ProtocolVersion? EnforcedMinProtocolVersion { get; set; }
 
         /// <summary>

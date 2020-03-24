@@ -1,10 +1,9 @@
 ﻿using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Feature.PoA.Tokenless.Tests;
 using Xunit;
 
-namespace Stratis.Bitcoin.IntegrationTests.Tokenless
+namespace Stratis.Feature.PoA.Tokenless.Tests
 {
     public sealed class MempoolTests
     {

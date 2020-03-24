@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using NBitcoin.BouncyCastle.Math;
 
 namespace NBitcoin
@@ -7,8 +8,10 @@ namespace NBitcoin
     public class Consensus : IConsensus
     {
         /// <inheritdoc />
-        public uint MaxReorgLength { get; private set; }
+        [JsonPropertyName("maxreorglength")]
+        public uint MaxReorgLength { get; set; }
 
+        [JsonPropertyName("options")]
         public ConsensusOptions Options { get; set; }
 
         public BuriedDeploymentsArray BuriedDeployments { get; }
@@ -23,10 +26,12 @@ namespace NBitcoin
         public uint256 MinimumChainWork { get; }
 
         /// <inheritdoc />
-        public int CoinType { get; }
+        [JsonPropertyName("cointype")]
+        public int CoinType { get; set; }
 
         /// <inheritdoc />
-        public uint256 DefaultAssumeValid { get; }
+        [JsonPropertyName("defaultassumevalid")]
+        public uint256 DefaultAssumeValid { get; set; }
 
         /// <inheritdoc />
         public ConsensusFactory ConsensusFactory { get; }
@@ -38,6 +43,10 @@ namespace NBitcoin
         public List<Type> MempoolRules { get; set; }
 
         public IConsensusMiningReward ConsensusMiningReward { get; set; }
+
+        public Consensus()
+        {
+        }
 
         public Consensus(
             ConsensusFactory consensusFactory,
