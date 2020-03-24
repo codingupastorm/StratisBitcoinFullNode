@@ -32,6 +32,7 @@ using State = Stratis.Bitcoin.Features.MemoryPool.Broadcasting.State;
 namespace Stratis.Feature.PoA.Tokenless.Controllers
 {
     [ApiVersion("1")]
+    [ApiController]
     [Route("api/[controller]")]
     public class TokenlessController : Controller
     {
@@ -57,7 +58,6 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             IAddressGenerator addressGenerator,
             IBroadcasterManager broadcasterManager,
             IMethodParameterStringSerializer methodParameterSerializer,
-            ChainIndexer chainIndexer,
             IStateRepositoryRoot stateRoot,
             IReceiptRepository receiptRepository,
             CSharpContractDecompiler contractDecompiler,
