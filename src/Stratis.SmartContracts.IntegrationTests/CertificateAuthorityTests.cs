@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.Common;
+using MembershipServices;
 using Microsoft.AspNetCore.Hosting;
 using NBitcoin;
 using Org.BouncyCastle.X509;
@@ -49,6 +51,10 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Create a node so we have 1 available public key.
                 CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+
+                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate() };
+
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
 
                 // Get the date again in case it has changed. The idea is that the certificate date will be one of the two dates. 
                 // Either the initial one or the second one if a date change occurred while the certificates were being generated.
@@ -99,6 +105,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
                 CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
+                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
+
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+
                 node1.Start();
                 node2.Start();
                 TestHelper.Connect(node1, node2);
@@ -117,12 +128,12 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.Equal(2, block.Transactions.Count);
 
                 // On the original node, the certificate shouldn't be stored in the cache as it is from "itself"
-                Assert.Null(node1.FullNode.NodeService<ICertificateCache>().GetCertificate(node1.TransactionSigningPrivateKey.PubKey
-                    .GetAddress(this.network).ToString().ToUint160(this.network)));
+                Assert.Null(node1.FullNode.NodeService<IMembershipServicesDirectory>().GetCertificateForTransactionSigningPubKeyHash(node1.TransactionSigningPrivateKey.PubKey
+                    .GetAddress(this.network).ToString().ToUint160(this.network).ToBytes()));
 
                 // Check that the certificate is now stored on the node.
-                Assert.NotNull(node2.FullNode.NodeService<ICertificateCache>().GetCertificate(node1.TransactionSigningPrivateKey.PubKey
-                    .GetAddress(this.network).ToString().ToUint160(this.network)));
+                Assert.NotNull(node2.FullNode.NodeService<IMembershipServicesDirectory>().GetCertificateForTransactionSigningPubKeyHash(node1.TransactionSigningPrivateKey.PubKey
+                    .GetAddress(this.network).ToString().ToUint160(this.network).ToBytes()));
 
                 // Send another transaction from the same address.
                 transaction = TokenlessTestHelper.CreateBasicOpReturnTransaction(node1);
@@ -155,6 +166,11 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
                 CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+
+                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
+
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
 
                 node1.Start();
                 node2.Start();
@@ -251,6 +267,10 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                     // Create 1 tokenless node.
                     CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+
+                    var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate() };
+
+                    TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
 
                     // Revoke a certificate.
                     TokenlessTestHelper.RevokeCertificateFromInitializedCAServer(server);

@@ -4,6 +4,7 @@ using System.Runtime.CompilerServices;
 using CertificateAuthority;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.Common;
+using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Org.BouncyCastle.X509;
@@ -69,7 +70,7 @@ namespace Stratis.SmartContracts.Tests.Common
             using (var settings = new NodeSettings(network, args: args))
             {
                 var loggerFactory = new LoggerFactory();
-                var revocationChecker = new RevocationChecker(settings, null, loggerFactory, DateTimeProvider.Default);
+                var revocationChecker = new RevocationChecker(new MembershipServicesDirectory(settings));
                 var certificatesManager = new CertificatesManager(settings.DataFolder, settings, loggerFactory, revocationChecker, network);
                 var walletManager = new TokenlessWalletManager(network, settings.DataFolder, new TokenlessWalletSettings(settings), certificatesManager, loggerFactory);
 
@@ -93,6 +94,11 @@ namespace Stratis.SmartContracts.Tests.Common
                 {
                     File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.AuthorityCertificateName), authorityCertificate.GetEncoded());
                     File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(issueResult.x509, node.ClientCertificatePrivateKey, "test"));
+
+                    // Put certificate into applicable local MSD folder
+                    Directory.CreateDirectory(Path.Combine(settings.DataDir, LocalMembershipServicesConfiguration.SignCerts));
+                    var ownCertificatePath = Path.Combine(settings.DataDir, LocalMembershipServicesConfiguration.SignCerts, MembershipServicesDirectory.GetCertificateThumbprint(issueResult.x509));
+                    File.WriteAllBytes(ownCertificatePath, issueResult.x509.GetEncoded());
                 }
 
                 return node;
@@ -110,9 +116,7 @@ namespace Stratis.SmartContracts.Tests.Common
             Assert.NotNull(certificateInfo);
             Assert.Equal(address.ToString(), certificateInfo.Address);
 
-            var certParser = new X509CertificateParser();
-
-            return (certParser.ReadCertificate(certificateInfo.CertificateContentDer), certificateInfo);
+            return (certificateInfo.ToCertificate(), certificateInfo);
         }
 
         public static SmartContractNodeBuilder Create(object caller, [CallerMemberName] string callingMethod = null)
