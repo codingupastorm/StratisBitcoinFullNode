@@ -278,6 +278,12 @@ namespace Stratis.SmartContracts.IntegrationTests
                     // Get the thumbprint of the revoked certificate.
                     string revokedThumbprint = client.GetRevokedCertificates().First();
 
+                    // Flag the certificate as revoked in node1's MSD
+                    Directory.CreateDirectory(Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name, LocalMembershipServicesConfiguration.Crls));
+                    FileStream file = File.Create(Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name, LocalMembershipServicesConfiguration.Crls, revokedThumbprint));
+                    file.Flush();
+                    file.Dispose();
+
                     // Start the node.
                     node1.Start();
 

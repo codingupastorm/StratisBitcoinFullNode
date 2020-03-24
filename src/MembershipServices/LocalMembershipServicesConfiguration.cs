@@ -19,17 +19,17 @@ namespace MembershipServices
         public const string ConfigurationFilename = "config.yaml";
 
         /// <summary>
-        /// Subfolder holding PEM files each corresponding to an administrator certificate.
+        /// Subfolder holding certificate files each corresponding to an administrator certificate.
         /// </summary>
         public const string AdminCerts = "admincerts";
 
         /// <summary>
-        /// Subfolder holding PEM files each corresponding to a root CA's certificate.
+        /// Subfolder holding certificate files each corresponding to a root CA's certificate.
         /// </summary>
         public const string CaCerts = "cacerts";
 
         /// <summary>
-        /// Subfolder holding PEM files each corresponding to an intermediate CA's certificate.
+        /// Subfolder holding certificate files each corresponding to an intermediate CA's certificate.
         /// </summary>
         /// <remarks>Optional.</remarks>
         public const string IntermediateCerts = "intermediatecerts";
@@ -153,6 +153,11 @@ namespace MembershipServices
         public void RevokeCertificate(string thumbprint)
         {
             this.revokedCertificateThumbprints.Add(thumbprint);
+            
+            // We don't actually need to store the certificate, only a record of its thumbprint.
+            FileStream file = File.Create(Path.Combine(this.baseDir, Crls, thumbprint));
+            file.Flush();
+            file.Dispose();
 
             // TODO: Delete from the local MSD folders and mappings too?
         }
@@ -168,7 +173,21 @@ namespace MembershipServices
             Directory.CreateDirectory(Path.Combine(this.baseDir, AdminCerts));
             Directory.CreateDirectory(Path.Combine(this.baseDir, CaCerts));
             Directory.CreateDirectory(Path.Combine(this.baseDir, IntermediateCerts));
+            
             Directory.CreateDirectory(Path.Combine(this.baseDir, Crls));
+
+            foreach (string fileName in Directory.GetFiles(Path.Combine(this.baseDir, Crls)))
+            {
+                try
+                {
+                    this.revokedCertificateThumbprints.Add(Path.GetFileName(fileName));
+                }
+                catch (Exception e)
+                {
+                    // TODO: Log potentially corrupted certificate files in the signcerts folder
+                }
+            }
+
             Directory.CreateDirectory(Path.Combine(this.baseDir, Keystore));
             Directory.CreateDirectory(Path.Combine(this.baseDir, SignCerts));
             
@@ -241,7 +260,7 @@ namespace MembershipServices
                     throw new ArgumentOutOfRangeException(nameof(memberType), memberType, null);
             }
 
-            return Path.Combine(this.baseDir, subFolder, $"{MembershipServicesDirectory.GetCertificateThumbprint(certificate)}.crt");
+            return Path.Combine(this.baseDir, subFolder, $"{MembershipServicesDirectory.GetCertificateThumbprint(certificate)}");
         }
     }
 }

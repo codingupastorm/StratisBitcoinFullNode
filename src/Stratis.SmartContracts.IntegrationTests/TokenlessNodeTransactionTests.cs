@@ -157,11 +157,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                 node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1, false);
                 node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2, false);
 
-                certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
-
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
-
                 node1.Start();
                 node2.Start();
 

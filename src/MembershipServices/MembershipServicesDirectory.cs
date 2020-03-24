@@ -61,13 +61,13 @@ namespace MembershipServices
             // There is only one local provider on any given node.
             // Need all certificates to be signed by the CA so that each node can independently verify the veracity of the certificates it has been provided with.
 
-            // Channel - defines administrative and participatory rights at the channel level. Defined in a channel configuration JSON (in the HL design).
-            // Instantiated on the file system of every node in the channel (similar to local version, but there can be multiple providers for a channel) and kept synchronized via consensus.
-
             // https://github.com/hyperledger/fabric/blob/master/docs/source/msp.rst
             // https://github.com/hyperledger/fabric-sdk-go/blob/master/internal/github.com/hyperledger/fabric/msp/msp.go
 
             this.localMembershipServices = new LocalMembershipServicesConfiguration(this.nodeSettings.DataDir);
+
+            // Channel - defines administrative and participatory rights at the channel level. Defined in a channel configuration JSON (in the HL design).
+            // Instantiated on the file system of every node in the channel (similar to local version, but there can be multiple providers for a channel) and kept synchronized via consensus.
 
             this.channelMembershipServices = new Dictionary<string, ChannelMembershipServicesConfiguration>();
         }
