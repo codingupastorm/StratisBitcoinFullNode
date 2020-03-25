@@ -155,7 +155,10 @@ namespace Stratis.SmartContracts.IntegrationTests
                 await node1.MineBlocksAsync(1);
                 TokenlessTestHelper.WaitForNodeToSync(node1, node2);
 
-                // Check what was stored.
+                // Check that the transient data was stored in the non-private store.
+                Assert.Equal(transientDataToStore, stateRepo.GetStorageValue(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("Transient")).Value);
+
+                // TODO: Check that the private data was stored 
             }
         }
     }
