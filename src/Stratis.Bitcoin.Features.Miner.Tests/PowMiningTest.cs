@@ -360,9 +360,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests
                     this.mempool.Object,
                     this.mempoolLock,
                     this.minerSettings,
-                    this.network,
-                    this.consensusRules.Object,
-                    null);
+                    this.network);
         }
 
         private PowMining CreateProofOfWorkMiner(PowBlockDefinition blockDefinition)

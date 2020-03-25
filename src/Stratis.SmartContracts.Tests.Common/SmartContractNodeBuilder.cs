@@ -123,7 +123,6 @@ namespace Stratis.SmartContracts.Tests.Common
         {
             string testFolderPath = TestBase.CreateTestDir(caller, callingMethod);
             var builder = new SmartContractNodeBuilder(testFolderPath);
-            builder.WithLogsDisabled();
             return builder;
         }
     }

@@ -38,14 +38,12 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         private readonly object lockObject = new object();
         private readonly ILoggerFactory loggerFactory;
         internal readonly NodeRunner runner;
-        private List<Transaction> transactions = new List<Transaction>();
 
         public int ApiPort => int.Parse(this.ConfigParameters["apiport"]);
 
         public BitcoinSecret MinerSecret { get; private set; }
         public HdAddress MinerHDAddress { get; internal set; }
         public int ProtocolPort => int.Parse(this.ConfigParameters["port"]);
-        public int RpcPort => int.Parse(this.ConfigParameters["rpcport"]);
 
         /// <summary>Location of the data directory for the node.</summary>
         public string DataFolder => this.runner.DataFolder;
@@ -59,9 +57,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         public bool CookieAuth { get; set; }
 
         public Mnemonic Mnemonic { get; set; }
-
-        public string WalletName => this.builderWalletName;
-        public string WalletPassword => this.builderWalletPassword;
 
         private bool builderAlwaysFlushBlocks;
         private bool builderEnablePeerDiscovery;
@@ -110,14 +105,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         public FullNode FullNode => this.runner.FullNode;
 
         public CoreNodeState State { get; private set; }
-
-        private string GetRPCAuth()
-        {
-            if (!this.CookieAuth)
-                return this.creds.UserName + ":" + this.creds.Password;
-            else
-                return "cookiefile=" + Path.Combine(this.runner.DataFolder, "regtest", ".cookie");
-        }
 
         public CoreNode NoValidation()
         {
