@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using CertificateAuthority.Models;
@@ -29,6 +30,7 @@ using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Feature.PoA.Tokenless;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 {
@@ -44,6 +46,15 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         public BitcoinSecret MinerSecret { get; private set; }
         public HdAddress MinerHDAddress { get; internal set; }
         public int ProtocolPort => int.Parse(this.ConfigParameters["port"]);
+
+        public string CreateChannel(string channelName)
+        {
+            var channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, $"{this.DataFolder}\\channels\\{channelName.ToLowerInvariant()}\\");
+            var serializedJson = JsonSerializer.Serialize(channelNetwork);
+            Directory.CreateDirectory(channelNetwork.RootFolderName);
+            File.WriteAllText($"{channelNetwork.RootFolderName}\\network.json", serializedJson);
+            return channelNetwork.RootFolderName;
+        }
 
         /// <summary>Location of the data directory for the node.</summary>
         public string DataFolder => this.runner.DataFolder;

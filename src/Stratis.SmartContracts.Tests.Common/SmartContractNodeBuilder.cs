@@ -39,7 +39,7 @@ namespace Stratis.SmartContracts.Tests.Common
                 { "caurl" , "http://localhost:5050" }
             };
 
-            CoreNode node = this.CreateNode(new FullTokenlessRunner(dataFolder, network, this.TimeProvider), "poa.conf", configParameters: configParameters);
+            CoreNode node = this.CreateNode(new TokenlessNodeRunner(dataFolder, network, this.TimeProvider), "poa.conf", configParameters: configParameters);
 
             Mnemonic mnemonic = nodeIndex < 3
                 ? TokenlessNetwork.Mnemonics[nodeIndex]
@@ -97,6 +97,12 @@ namespace Stratis.SmartContracts.Tests.Common
 
                 return node;
             }
+        }
+
+        public CoreNode CreateChannelNode(string networkFolder)
+        {
+            CoreNode node = this.CreateNode(new ChannelNodeRunner(networkFolder, this.TimeProvider), "poa.conf");
+            return node;
         }
 
         private (X509Certificate, CertificateInfoModel) IssueCertificate(CaClient client, Key privKey, PubKey transactionSigningPubKey, BitcoinPubKeyAddress address, PubKey blockSigningPubKey)

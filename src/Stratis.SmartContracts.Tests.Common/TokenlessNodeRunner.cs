@@ -21,11 +21,11 @@ using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.SmartContracts.Tests.Common
 {
-    public sealed class FullTokenlessRunner : NodeRunner
+    public sealed class TokenlessNodeRunner : NodeRunner
     {
         private readonly IDateTimeProvider timeProvider;
 
-        public FullTokenlessRunner(string dataDir, Network network, EditableTimeProvider timeProvider)
+        public TokenlessNodeRunner(string dataDir, Network network, EditableTimeProvider timeProvider)
             : base(dataDir, null)
         {
             this.Network = network;

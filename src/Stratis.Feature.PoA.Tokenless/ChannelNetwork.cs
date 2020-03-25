@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using NBitcoin;
-using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Feature.PoA.Tokenless.Core.Serialization;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
