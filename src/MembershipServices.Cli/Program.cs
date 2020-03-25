@@ -76,6 +76,11 @@ namespace MembershipServices.Cli
         [Verb("extend", HelpText = "Extend existing network.")]
         class ExtendOptions
         {
+            [Option("certificatepath", Required = true, HelpText = "The path to the certificate file that needs to be added to the network.")]
+            public string CertificatePath { get; set; }
+
+            [Option("type", Required = true, HelpText = "The type of certificate being added, e.g. NetworkPeer.")]
+            public string Type { get; set; }
         }
 
         static int RunHelp(HelpOptions options)
@@ -152,7 +157,49 @@ namespace MembershipServices.Cli
 
         static int RunExtend(ExtendOptions options)
         {
-            throw new NotImplementedException();
+            var network = new TokenlessNetwork();
+            var nodeSettings = new NodeSettings(network);
+
+            var membershipServices = new MembershipServicesDirectory(nodeSettings);
+            membershipServices.Initialize();
+
+            MemberType memberType;
+            switch (options.Type)
+            {
+                case "Admin":
+                    memberType = MemberType.Admin;
+                    break;
+                case "IntermediateCA":
+                    memberType = MemberType.IntermediateCA;
+                    break;
+                case "RootCA":
+                    memberType = MemberType.RootCA;
+                    break;
+                case "NetworkPeer":
+                    memberType = MemberType.NetworkPeer;
+                    break;
+                case "Self":
+                    // This should normally not be needed, as the generate verb makes the node's own certificate and adds it to its MSD
+                    memberType = MemberType.Self;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            var parser = new X509CertificateParser();
+
+            try
+            {
+                X509Certificate certificate = parser.ReadCertificate(File.ReadAllBytes(options.CertificatePath));
+
+                membershipServices.AddLocalMember(certificate, memberType);
+            }
+            catch (Exception e)
+            {
+                return -1;
+            }
+
+            return 0;
         }
 
         public static void Main(string[] args)
