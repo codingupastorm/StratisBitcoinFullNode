@@ -17,6 +17,11 @@ namespace Stratis.SmartContracts.Core.Store
 
     public class PrivateDataStore : IPrivateDataStore
     {
+        public PrivateDataStore(IPrivateDataKeyValueStore privateDataKeyValueStore)
+        {
+            throw new System.NotImplementedException();
+        }
+
         public void StoreBytes(uint160 contractAddress, byte[] key, byte[] value)
         {
             throw new System.NotImplementedException();
