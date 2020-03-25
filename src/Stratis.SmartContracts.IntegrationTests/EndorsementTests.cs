@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Text;
+using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
 using Microsoft.AspNetCore.Hosting;
@@ -83,6 +85,12 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.Equal("Transaction has been sent to endorsing node for execution.", endorsementResponse.Message);
 
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().InfoAll().Count > 0);
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().InfoAll().Count > 0);
+
+                await node1.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+
+                Assert.Equal(BitConverter.GetBytes(101), stateRepo.GetStorageValue(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("Increment")).Value);
             }
         }
     }
