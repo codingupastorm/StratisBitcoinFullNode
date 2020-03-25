@@ -2,7 +2,6 @@
 using NBitcoin;
 using Stratis.SmartContracts.CLR.ContractLogging;
 using Stratis.SmartContracts.CLR.Serialization;
-using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
@@ -28,5 +27,10 @@ namespace Stratis.SmartContracts.CLR
         uint160 GenerateAddress(IAddressGenerator addressGenerator);
         ISmartContractState CreateSmartContractState(IState state, ReadWriteSetBuilder readWriteSet, IGasMeter gasMeter, uint160 address, BaseMessage message, IStateRepository repository);
         void AddInitialTransfer(TransferInfo initialTransfer);
+
+        /// <summary>
+        /// Data that will optionally be sent with a private data transaction.
+        /// </summary>
+        byte[] TransientData { get; }
     }
 }

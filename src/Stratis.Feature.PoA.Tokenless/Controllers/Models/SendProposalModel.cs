@@ -9,5 +9,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers.Models
 
         [Required]
         public string Organisation { get; set; }
+
+        public string TransientDataHex { get; set; }
     }
 }

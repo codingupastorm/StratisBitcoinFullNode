@@ -179,8 +179,10 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             {
                 Transaction transaction = this.coreComponent.Network.CreateTransaction(model.TransactionHex);
 
+                byte[] transientData = model.TransientDataHex.HexToByteArray();
+
                 // Build message to send to other nodes
-                var message = new ProposalPayload(transaction);
+                var message = new ProposalPayload(transaction, transientData);
 
                 this.endorsements.RecordEndorsement(transaction.GetHash());
 

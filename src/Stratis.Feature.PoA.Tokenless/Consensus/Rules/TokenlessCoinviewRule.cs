@@ -204,7 +204,13 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
                 throw new ConsensusErrorException(new ConsensusError("sc-consensusvalidator-executecontracttransaction-sender", getSenderResult.Error));
 
             ulong txIndex = (ulong) validationContext.BlockToValidate.Transactions.IndexOf(transaction);
-            IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)validationContext.ChainedHeaderToValidate.Height, txIndex, new uint160(0),  getSenderResult.Sender, transaction);
+            IContractTransactionContext transactionContext = new ContractTransactionContext(
+                (ulong)validationContext.ChainedHeaderToValidate.Height,
+                txIndex,
+                new uint160(0),
+                getSenderResult.Sender,
+                transaction,
+                null); // Contracts executed inside blocks will never have transient data. 
 
             IContractExecutor executor = this.executorFactory.CreateExecutor(this.mutableStateRepository);
             Result<ContractTxData> deserializedCallData = this.callDataSerializer.Deserialize(transactionContext.Data);

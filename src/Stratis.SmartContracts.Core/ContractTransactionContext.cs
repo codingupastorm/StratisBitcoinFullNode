@@ -18,6 +18,8 @@ namespace Stratis.SmartContracts.Core
 
         private readonly uint160 sender;
 
+        private readonly byte[] transientData;
+
         /// <inheritdoc />
         public uint256 TransactionHash
         {
@@ -74,12 +76,21 @@ namespace Stratis.SmartContracts.Core
             }
         }
 
+        public byte[] TransientData
+        {
+            get
+            {
+                return this.transientData;
+            }
+        }
+
         public ContractTransactionContext(
             ulong blockHeight,
             ulong txIndex,
             uint160 coinbaseAddress,
             uint160 sender,
-            Transaction transaction)
+            Transaction transaction,
+            byte[] transientData)
         {
             this.blockHeight = blockHeight;
             this.txIndex = txIndex;
@@ -89,6 +100,7 @@ namespace Stratis.SmartContracts.Core
             Guard.NotNull(this.contractTxOut, nameof(this.contractTxOut));
 
             this.sender = sender;
+            this.transientData = transientData;
         }
     }
 }

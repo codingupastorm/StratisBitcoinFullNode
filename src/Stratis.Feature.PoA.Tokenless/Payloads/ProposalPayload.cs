@@ -10,19 +10,25 @@ namespace Stratis.Feature.PoA.Tokenless.Payloads
 
         public Transaction Transaction => this.transaction;
 
+        private byte[] transientData;
+
+        public byte[] TransientData => this.transientData;
+
         /// <remarks>Needed for deserialization.</remarks>
         public ProposalPayload()
         {
         }
 
-        public ProposalPayload(Transaction transaction)
+        public ProposalPayload(Transaction transaction, byte[] transientData)
         {
             this.transaction = transaction;
+            this.transientData = transientData;
         }
 
         public override void ReadWriteCore(BitcoinStream stream)
         {
             stream.ReadWrite(ref this.transaction);
+            stream.ReadWrite(ref this.transientData);
         }
 
         public override string ToString()

@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Moq;
 using NBitcoin;
 using Stratis.SmartContracts.CLR.Local;
-using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
@@ -53,7 +52,8 @@ namespace Stratis.SmartContracts.CLR.Tests
                     It.IsAny<IBlock>(),
                     fixture.ContractTransactionContext.TxOutValue,
                     It.IsAny<uint256>(),
-                    It.IsAny<string>()),
+                    It.IsAny<string>(),
+                    It.IsAny<byte[]>()),
                 Times.Once);
 
             // We only apply the message to the snapshot.
@@ -115,7 +115,8 @@ namespace Stratis.SmartContracts.CLR.Tests
                         It.IsAny<IBlock>(),
                         fixture.ContractTransactionContext.TxOutValue,
                         It.IsAny<uint256>(),
-                        It.IsAny<string>()),
+                        It.IsAny<string>(),
+                        It.IsAny<byte[]>()),
                 Times.Once);
 
             // We only apply the message to the snapshot.

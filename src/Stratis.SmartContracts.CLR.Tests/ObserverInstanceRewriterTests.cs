@@ -14,6 +14,7 @@ using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Networks;
 using Stratis.SmartContracts.RuntimeObserver;
+using Stratis.SmartContracts.Tokenless;
 using Xunit;
 
 namespace Stratis.SmartContracts.CLR.Tests
@@ -132,7 +133,8 @@ namespace Stratis.SmartContracts.CLR.Tests
                 new ContractLogHolder(),
                 Mock.Of<IInternalTransactionExecutor>(),
                 new InternalHashHelper(),
-                () => 1000);
+                () => 1000,
+                null);
 
             this.contractInitializer = new ContractInitializer<SmartContract>();
 

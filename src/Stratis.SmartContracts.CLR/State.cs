@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using NBitcoin;
 using Stratis.SmartContracts.CLR.ContractLogging;
 using Stratis.SmartContracts.CLR.Serialization;
-using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
@@ -59,7 +58,8 @@ namespace Stratis.SmartContracts.CLR
             List<TransferInfo> internalTransfers,
             IBlock block,
             uint256 transactionHash,
-            string version)
+            string version,
+            byte[] transientData)
         {
             this.ContractState = repository;
             this.LogHolder = contractLogHolder;
@@ -87,6 +87,8 @@ namespace Stratis.SmartContracts.CLR
         public IReadOnlyList<TransferInfo> InternalTransfers => this.internalTransfers;
 
         public IStateRepository ContractState { get; }
+
+        public byte[] TransientData { get; }
 
         /// <summary>
         /// Sets up a new <see cref="ISmartContractState"/> based on the current state.

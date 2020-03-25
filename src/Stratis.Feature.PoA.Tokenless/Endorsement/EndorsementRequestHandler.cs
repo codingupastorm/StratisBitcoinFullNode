@@ -68,7 +68,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
             GetSenderResult getSenderResult = this.senderRetriever.GetSender(request.ContractTransaction); // Because of rule checks in the validator, we assume this is always correct.
 
-            var executionContext = new ContractTransactionContext((ulong) tip.Height,TxIndexToUse,CoinbaseToUse, getSenderResult.Sender, request.ContractTransaction);
+            var executionContext = new ContractTransactionContext((ulong) tip.Height,TxIndexToUse,CoinbaseToUse, getSenderResult.Sender, request.ContractTransaction, request.TransientData);
 
             IContractExecutionResult result = executor.Execute(executionContext);
 

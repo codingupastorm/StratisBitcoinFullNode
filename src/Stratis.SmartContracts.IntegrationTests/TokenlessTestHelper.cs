@@ -162,10 +162,10 @@ namespace Stratis.SmartContracts.IntegrationTests
             return builder;
         }
 
-        public static Transaction CreateContractCreateTransaction(CoreNode node, Key key)
+        public static Transaction CreateContractCreateTransaction(CoreNode node, Key key, string contractFilename)
         {
             Transaction transaction = Network.CreateTransaction();
-            ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/TokenlessSimpleContract.cs");
+            ContractCompilationResult compilationResult = ContractCompiler.CompileFile(contractFilename);
             Assert.True(compilationResult.Success);
 
             var contractTxData = new ContractTxData(0, 0, (Gas)0, compilationResult.Compilation);
@@ -178,11 +178,11 @@ namespace Stratis.SmartContracts.IntegrationTests
             return transaction;
         }
 
-        public static Transaction CreateContractCallTransaction(CoreNode node, uint160 address, Key key)
+        public static Transaction CreateContractCallTransaction(CoreNode node, uint160 address, Key key, string methodName)
         {
             Transaction transaction = Network.CreateTransaction();
 
-            var contractTxData = new ContractTxData(0, 0, (Gas)0, address, "CallMe");
+            var contractTxData = new ContractTxData(0, 0, (Gas)0, address, methodName);
             byte[] outputScript = node.FullNode.NodeService<ICallDataSerializer>().Serialize(contractTxData);
             transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
 
