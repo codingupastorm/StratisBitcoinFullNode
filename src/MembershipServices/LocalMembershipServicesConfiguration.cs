@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Utilities;
 
@@ -12,6 +13,8 @@ namespace MembershipServices
         // TODO: Share pieces of local and channel config from a base class? Are they going to be similar enough?
 
         public string baseDir { get; set; }
+
+        private readonly Network network;
 
         /// <summary>
         /// Configures the supported Organizational Units and identity classifications.
@@ -73,16 +76,20 @@ namespace MembershipServices
 
         private readonly ConcurrentDictionary<string, X509Certificate> mapThumbprints;
         private readonly ConcurrentDictionary<string, X509Certificate> mapCommonNames;
+        private readonly ConcurrentDictionary<string, X509Certificate> mapAddresses;
         private readonly ConcurrentDictionary<byte[], X509Certificate> mapTransactionSigningPubKeyHash;
         private readonly HashSet<string> revokedCertificateThumbprints;
 
-        public LocalMembershipServicesConfiguration(string baseDir)
+        public LocalMembershipServicesConfiguration(string baseDir, Network network)
         {
             // TODO: Use the identifier in the base path. Specify the local MSD ID on first startup?
             this.baseDir = baseDir;
 
+            this.network = network;
+
             this.mapThumbprints = new ConcurrentDictionary<string, X509Certificate>();
             this.mapCommonNames = new ConcurrentDictionary<string, X509Certificate>();
+            this.mapAddresses = new ConcurrentDictionary<string, X509Certificate>();
             this.mapTransactionSigningPubKeyHash = new ConcurrentDictionary<byte[], X509Certificate>(new ByteArrayComparer());
             this.revokedCertificateThumbprints = new HashSet<string>();
         }
@@ -119,6 +126,7 @@ namespace MembershipServices
 
                 this.mapThumbprints.TryRemove(MembershipServicesDirectory.GetCertificateThumbprint(certificate), out _);
                 this.mapCommonNames.TryRemove(MembershipServicesDirectory.GetCertificateCommonName(certificate), out _);
+                this.mapAddresses.TryRemove(MembershipServicesDirectory.GetCertificateTransactionSigningAddress(certificate, this.network), out _);
                 this.mapTransactionSigningPubKeyHash.TryRemove(MembershipServicesDirectory.GetTransactionSigningPubKeyHash(certificate), out _);
             }
             catch (Exception e)
@@ -139,6 +147,13 @@ namespace MembershipServices
         public X509Certificate GetCertificateByCommonName(string commonName)
         {
             this.mapCommonNames.TryGetValue(commonName, out X509Certificate certificate);
+
+            return certificate;
+        }
+
+        public X509Certificate GetCertificateByAddress(string address)
+        {
+            this.mapAddresses.TryGetValue(address, out X509Certificate certificate);
 
             return certificate;
         }
@@ -225,6 +240,7 @@ namespace MembershipServices
             // TODO: Should the mappings also include the particular role of the certificate holder?
             this.mapThumbprints.TryAdd(MembershipServicesDirectory.GetCertificateThumbprint(certificate), certificate);
             this.mapCommonNames.TryAdd(MembershipServicesDirectory.GetCertificateCommonName(certificate), certificate);
+            this.mapAddresses.TryAdd(MembershipServicesDirectory.GetCertificateTransactionSigningAddress(certificate, this.network), certificate);
             this.mapTransactionSigningPubKeyHash.TryAdd(MembershipServicesDirectory.GetTransactionSigningPubKeyHash(certificate), certificate);
         }
 

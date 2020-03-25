@@ -2,7 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using CertificateAuthority;
 using NBitcoin;
 using Org.BouncyCastle.Asn1.X509;
@@ -64,7 +66,7 @@ namespace MembershipServices
             // https://github.com/hyperledger/fabric/blob/master/docs/source/msp.rst
             // https://github.com/hyperledger/fabric-sdk-go/blob/master/internal/github.com/hyperledger/fabric/msp/msp.go
 
-            this.localMembershipServices = new LocalMembershipServicesConfiguration(this.nodeSettings.DataDir);
+            this.localMembershipServices = new LocalMembershipServicesConfiguration(this.nodeSettings.DataDir, this.nodeSettings.Network);
 
             // Channel - defines administrative and participatory rights at the channel level. Defined in a channel configuration JSON (in the HL design).
             // Instantiated on the file system of every node in the channel (similar to local version, but there can be multiple providers for a channel) and kept synchronized via consensus.
@@ -101,7 +103,9 @@ namespace MembershipServices
 
         public X509Certificate GetCertificateForAddress(uint160 address)
         {
-            return this.localMembershipServices.GetCertificateByCommonName(address.ToString());
+            var p2pkh = new BitcoinPubKeyAddress(new KeyId(address), this.nodeSettings.Network);
+
+            return this.localMembershipServices.GetCertificateByAddress(p2pkh.ToString());
         }
 
         public X509Certificate GetCertificateForTransactionSigningPubKeyHash(byte[] transactionSigningPubKeyHash)
@@ -131,6 +135,32 @@ namespace MembershipServices
             IList commonNames = subject.GetValueList(X509Name.CN);
 
             return commonNames.Count > 0 ? commonNames[0].ToString() : null;
+        }
+
+        /// <summary>
+        /// This is NOT the address of the P2P private key, stored in the P2PKH extension.
+        /// It is instead the address corresponding to the transaction signing pubkey hash.
+        /// </summary>
+        public static string GetCertificateTransactionSigningAddress(X509Certificate certificate, Network network)
+        {
+            // TODO: This implementation is directly from CertificatesManager. Need to avoid the duplication.
+
+            // TODO: Find a way of extracting this extension cleanly without a trip through X509Certificate2.
+            X509Certificate2 cert = CaCertificatesManager.ConvertCertificate(certificate, new SecureRandom());
+
+            foreach (X509Extension extension in cert.Extensions)
+            {
+                if (extension.Oid.Value == CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid)
+                {
+                    var temp = extension.RawData.Skip(2).ToArray();
+
+                    var address = new BitcoinPubKeyAddress(new KeyId(temp), network);
+
+                    return address.ToString();
+                }
+            }
+
+            return null;
         }
 
         public static byte[] GetTransactionSigningPubKeyHash(X509Certificate certificate)
