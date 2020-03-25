@@ -84,68 +84,6 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task NodeStoresSendersCertificateFromApiAsync()
-        {
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
-            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
-            {
-                server.Start();
-
-                // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
-                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
-
-                // Get Authority Certificate.
-                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
-
-                // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CaClient client1 = TokenlessTestHelper.GetClient(server);
-                CaClient client2 = TokenlessTestHelper.GetClient(server);
-
-                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
-
-                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
-
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
-
-                node1.Start();
-                node2.Start();
-                TestHelper.Connect(node1, node2);
-
-                // Build and send a transaction from one node.
-                Transaction transaction = TokenlessTestHelper.CreateBasicOpReturnTransaction(node1);
-                await node1.BroadcastTransactionAsync(transaction);
-
-                TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
-                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
-
-                // Other node receives and mines transaction, validating it came from a permitted sender.
-                await node2.MineBlocksAsync(1);
-                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
-                var block = node1.FullNode.ChainIndexer.GetHeader(1).Block;
-                Assert.Equal(2, block.Transactions.Count);
-
-                // On the original node, the certificate shouldn't be stored in the cache as it is from "itself"
-                Assert.Null(node1.FullNode.NodeService<IMembershipServicesDirectory>().GetCertificateForTransactionSigningPubKeyHash(node1.TransactionSigningPrivateKey.PubKey
-                    .GetAddress(this.network).ToString().ToUint160(this.network).ToBytes()));
-
-                // Check that the certificate is now stored on the node.
-                Assert.NotNull(node2.FullNode.NodeService<IMembershipServicesDirectory>().GetCertificateForTransactionSigningPubKeyHash(node1.TransactionSigningPrivateKey.PubKey
-                    .GetAddress(this.network).ToString().ToUint160(this.network).ToBytes()));
-
-                // Send another transaction from the same address.
-                transaction = TokenlessTestHelper.CreateBasicOpReturnTransaction(node1);
-                await node1.BroadcastTransactionAsync(transaction);
-
-                // Other node receives and mines transaction, validating it came from a permitted sender, having got the certificate locally this time.
-                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
-                await node2.MineBlocksAsync(1);
-            }
-        }
-
-        [Fact]
         public async Task TokenlessNodesFunctionIfCATurnsOffAsync()
         {
             using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
