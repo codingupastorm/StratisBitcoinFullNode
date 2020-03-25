@@ -70,6 +70,7 @@ namespace Stratis.SmartContracts.CLR
             this.TransactionHash = transactionHash;
             this.smartContractStateFactory = smartContractStateFactory;
             this.Version = version;
+            this.TransientData = transientData;
         }
 
         public string Version { get; }
