@@ -42,7 +42,8 @@ namespace Stratis.Feature.PoA.Tokenless.Payloads
                 if (stream.Inner.Position < stream.Inner.Length)
                 {
                     byte[] data = new byte[stream.Inner.Length - stream.Inner.Position];
-                    stream.ReadWrite(ref this.transientData);
+                    stream.ReadWrite(ref data);
+                    this.transientData = data;
                 }
             }
         }
