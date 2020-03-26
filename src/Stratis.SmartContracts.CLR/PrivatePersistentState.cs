@@ -2,21 +2,16 @@
 using NBitcoin;
 using Stratis.SmartContracts.Core.Hashing;
 using Stratis.SmartContracts.Core.ReadWrite;
+using Stratis.SmartContracts.Core.Store;
 
 namespace Stratis.SmartContracts.CLR
 {
-    // TODO: Replace with the actual private data db
-    public interface IPrivateDataDbMock
-    {
-        void StoreBytes(uint160 contractAddress, byte[] key, byte[] value);
-        void GetBytes(uint160 contractAddress, byte[] key);
-    }
-
     public class PrivatePersistentState : IPersistentState
     {
         private ReadWriteSetBuilder rwsBuilder;
 
         private readonly ISerializer serializer;
+        private readonly IPrivateDataStore privateDataDb;
         private readonly IPersistenceStrategy persistenceStrategy;
         private readonly uint160 contractAddress;
         private readonly uint256 txHash;
