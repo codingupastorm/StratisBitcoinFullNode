@@ -45,6 +45,7 @@ namespace Stratis.SmartContracts.Core.Tests.Store
             var data2 = this.store.GetBytes(contractAddress, key);
 
             Assert.False(value.SequenceEqual(data2));
+            Assert.True(newValue.SequenceEqual(data2));
         }
 
         public void Dispose()
