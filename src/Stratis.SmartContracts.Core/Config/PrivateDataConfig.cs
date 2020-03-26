@@ -6,6 +6,12 @@ namespace Stratis.SmartContracts.Core.Config
 {
     /// <summary>
     /// The configuration to apply to private data dissemination and access.
+    ///
+    /// TODO - Define serialization protocol for this + policies
+    /// TODO - Implement policy validation methods
+    /// TODO - Distribute policy with contract deployment transaction
+    /// TODO - Add a way to query policies to avoid trawling through all blocks (policy cache/store?)
+    /// TODO - Disseminate private data and enforce policy
     /// </summary>
     public class PrivateDataConfig
     {
@@ -17,7 +23,7 @@ namespace Stratis.SmartContracts.Core.Config
         /// <summary>
         /// The policy defining who can access the private data.
         /// </summary>
-        public PolicyContainer PolicyContainer { get; set; }
+        public PolicyInfo PolicyInfo { get; set; }
 
         /// <summary>
         /// The minimum number of peers the private data will be sent to upon endorsement.
