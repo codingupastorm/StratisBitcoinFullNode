@@ -38,6 +38,7 @@ namespace Stratis.Bitcoin.Configuration
             this.SmartContractStatePath = Path.Combine(path, "contracts");
             this.ProvenBlockHeaderPath = Path.Combine(path, "provenheaders");
             this.TransientStorePath = Path.Combine(path, "transient");
+            this.PrivateDataStorePath = Path.Combine(path, "private");
             this.RootPath = path;
         }
 
@@ -99,5 +100,8 @@ namespace Stratis.Bitcoin.Configuration
 
         /// <summary>Path to the transient store.</summary>
         public string TransientStorePath { get; }
+
+        /// <summary>Path to the private data store.</summary>
+        public string PrivateDataStorePath { get; }
     }
 }
