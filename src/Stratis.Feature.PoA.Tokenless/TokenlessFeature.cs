@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using Microsoft.Extensions.Logging;
@@ -116,6 +120,46 @@ namespace Stratis.Feature.PoA.Tokenless
             this.nodeLifetime.ApplicationStopping,
             repeatEvery: TimeSpans.Minute,
             startAfter: TimeSpans.Minute);
+
+            // If this node is a infra node, then start another daemon with the serialized version of the network.
+            var isInfraNode = this.nodeSettings.ConfigReader.GetOrDefault<int>("isinfranode", 0, this.logger);
+            if (isInfraNode == 1)
+                StartSystemChannelNode();
+        }
+
+        private void StartSystemChannelNode()
+        {
+            // Write the serialized network to disk.
+            var channelName = "system";
+            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, $"{this.nodeSettings.DataFolder.RootPath}\\channels\\{channelName.ToLowerInvariant()}");
+            var serializedJson = JsonSerializer.Serialize(channelNetwork);
+            Directory.CreateDirectory(channelNetwork.RootFolderName);
+
+            var filePath = $"{channelNetwork.RootFolderName}\\network.json";
+            File.WriteAllText(filePath, serializedJson);
+
+            // Pass the path to the serialized network to the system channel node and start it.
+            var assembly = Assembly.GetExecutingAssembly();
+            var path = assembly.Location;
+
+            var process = new Process();
+            process.StartInfo.WorkingDirectory = @"..\..\..\..\Stratis.TokenlessD\";
+            process.StartInfo.FileName = "dotnet.exe";
+            process.StartInfo.Arguments = $"run -datadir={channelNetwork.RootFolderName}";
+            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.CreateNoWindow = true;
+            process.StartInfo.RedirectStandardOutput = true;
+            process.OutputDataReceived += (sender, data) =>
+            {
+                Console.WriteLine(data.Data);
+            };
+            process.StartInfo.RedirectStandardError = true;
+            process.ErrorDataReceived += (sender, data) =>
+            {
+                Console.WriteLine(data.Data);
+            };
+
+            process.Start();
         }
 
         private void SynchronizeMembers()
@@ -146,7 +190,7 @@ namespace Stratis.Feature.PoA.Tokenless
             // Schedule the votes.
             foreach ((VoteKey voteKey, IFederationMember federationMember) in requiredKickVotes.Concat(requiredAddVotes))
             {
-                byte[] fedMemberBytes = (this.nodeSettings.Network.Consensus.ConsensusFactory as PoAConsensusFactory).SerializeFederationMember(federationMember);
+                byte[] fedMemberBytes = (this.coreComponent.Network.Consensus.ConsensusFactory as PoAConsensusFactory).SerializeFederationMember(federationMember);
 
                 // Don't schedule votes that are already scheduled.
                 if (existingVotes.Any(e => e.Key == voteKey && comparer.Equals(e.Data, fedMemberBytes)))
@@ -186,7 +230,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
             connectionParameters.TemplateBehaviors.Remove(defaultBlockStoreBehavior);
             connectionParameters.TemplateBehaviors.Add(new PoABlockStoreBehavior(this.coreComponent.ChainIndexer, this.coreComponent.ChainState, this.coreComponent.LoggerFactory, this.coreComponent.ConsensusManager, this.coreComponent.BlockStoreQueue));
-            connectionParameters.TemplateBehaviors.Add(new RevocationBehavior(this.nodeSettings, this.coreComponent.Network, this.coreComponent.LoggerFactory, this.revocationChecker));
+            connectionParameters.TemplateBehaviors.Add(new RevocationBehavior(this.coreComponent.Network, this.coreComponent.LoggerFactory, this.revocationChecker));
         }
 
         /// <inheritdoc />

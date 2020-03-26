@@ -3,7 +3,6 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
@@ -14,21 +13,18 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 {
     public class RevocationBehavior : NetworkPeerBehavior
     {
-        private readonly NodeSettings NodeSettings;
-
-        private readonly Network Network;
+        private readonly Network network;
 
         private readonly ILoggerFactory LoggerFactory;
 
         private readonly IRevocationChecker RevocationChecker;
 
-        public RevocationBehavior(NodeSettings nodeSettings,
+        public RevocationBehavior(
             Network network,
             ILoggerFactory loggerFactory,
             IRevocationChecker revocationChecker)
         {
-            this.NodeSettings = nodeSettings;
-            this.Network = network;
+            this.network = network;
             this.LoggerFactory = loggerFactory;
             this.RevocationChecker = revocationChecker;
         }
@@ -58,7 +54,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             try
             {
-                address = BitcoinAddress.Create(certificateP2pkh, this.Network);
+                address = BitcoinAddress.Create(certificateP2pkh, this.network);
             }
             catch (Exception)
             {
@@ -72,7 +68,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
                 return;
             }
 
-            if (address.ScriptPubKey.FindTemplate(this.Network) != PayToPubkeyHashTemplate.Instance)
+            if (address.ScriptPubKey.FindTemplate(this.network) != PayToPubkeyHashTemplate.Instance)
             {
                 peer.Disconnect("Peer certificate does not contain a P2PKH address.");
 
@@ -101,7 +97,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         [NoTrace]
         public override object Clone()
         {
-            return new RevocationBehavior(this.NodeSettings, this.Network, this.LoggerFactory, this.RevocationChecker);
+            return new RevocationBehavior(this.network, this.LoggerFactory, this.RevocationChecker);
         }
     }
 }

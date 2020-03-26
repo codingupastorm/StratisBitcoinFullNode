@@ -45,7 +45,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
                 CaClient client1 = TokenlessTestHelper.GetClient(server, new List<string>() { CaCertificatesManager.SendPermission });
 
-                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
 
                 node1.Start();
 
@@ -76,8 +76,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client1 = TokenlessTestHelper.GetClient(server);
                 CaClient client2 = TokenlessTestHelper.GetClient(server);
 
-                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -120,9 +120,9 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client2 = TokenlessTestHelper.GetClient(server);
                 CaClient client3 = TokenlessTestHelper.GetClient(server);
 
-                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
-                CoreNode node3 = nodeBuilder.CreateFullTokenlessNode(this.network, 2, ac, client3);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node3 = nodeBuilder.CreateTokenlessNode(this.network, 2, ac, client3);
 
                 // Get them connected and mining
                 node1.Start();
@@ -138,7 +138,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Now add a 4th
                 CaClient client4 = TokenlessTestHelper.GetClient(server);
 
-                CoreNode node4 = nodeBuilder.CreateFullTokenlessNode(this.network, 3, ac, client4);
+                CoreNode node4 = nodeBuilder.CreateTokenlessNode(this.network, 3, ac, client4);
                 node4.Start();
 
                 VotingManager node1VotingManager = node1.FullNode.NodeService<VotingManager>();
@@ -189,7 +189,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
                 CaClient client1 = TokenlessTestHelper.GetClient(server);
 
-                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
 
                 node1.Start();
 
@@ -222,8 +222,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client1 = TokenlessTestHelper.GetClient(server);
                 CaClient client2 = TokenlessTestHelper.GetClient(server);
 
-                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -264,7 +264,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Last of all, create a 3rd node and check that nobody gets banned.
                 CaClient client3 = TokenlessTestHelper.GetClient(server);
-                CoreNode node3 = nodeBuilder.CreateFullTokenlessNode(this.network, 2, ac, client3);
+                CoreNode node3 = nodeBuilder.CreateTokenlessNode(this.network, 2, ac, client3);
                 node3.Start();
 
                 TestHelper.ConnectNoCheck(node3, node2);

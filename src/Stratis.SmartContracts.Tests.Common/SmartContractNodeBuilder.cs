@@ -28,7 +28,7 @@ namespace Stratis.SmartContracts.Tests.Common
             this.TimeProvider = new EditableTimeProvider();
         }
 
-        public CoreNode CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client, bool initialRun = true)
+        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client, string isInfraNode = "0", bool initialRun = true)
         {
             string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
 
@@ -36,7 +36,8 @@ namespace Stratis.SmartContracts.Tests.Common
 
             var configParameters = new NodeConfigParameters()
             {
-                { "caurl" , "http://localhost:5050" }
+                { "caurl" , "http://localhost:5050" },
+                { "isinfranode", isInfraNode }
             };
 
             CoreNode node = this.CreateNode(new TokenlessNodeRunner(dataFolder, network, this.TimeProvider), "poa.conf", configParameters: configParameters);
@@ -99,10 +100,9 @@ namespace Stratis.SmartContracts.Tests.Common
             }
         }
 
-        public CoreNode CreateChannelNode(string networkFolder)
+        public CoreNode CreateInfraNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client)
         {
-            CoreNode node = this.CreateNode(new ChannelNodeRunner(networkFolder, this.TimeProvider), "poa.conf");
-            return node;
+            return CreateTokenlessNode(network, nodeIndex, authorityCertificate, client, "1");
         }
 
         private (X509Certificate, CertificateInfoModel) IssueCertificate(CaClient client, Key privKey, PubKey transactionSigningPubKey, BitcoinPubKeyAddress address, PubKey blockSigningPubKey)

@@ -29,15 +29,15 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
                 CaClient client1 = TokenlessTestHelper.GetClient(server);
 
-                // Create and start the infra node.
-                CoreNode tokenlessNode = nodeBuilder.CreateFullTokenlessNode(network, 0, ac, client1);
-                tokenlessNode.Start();
+                // Create and start the main "infra" tokenless node which will internal start the "sytem channel node".
+                CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, ac, client1);
+                infraNode.Start();
 
                 // Ask the infra node to create the "Sales" channel.
                 // This effectively serializes the channel network and returns the path where the json is located at.
-                var networkFolderPath = tokenlessNode.CreateChannel("Sales");
-                var channelNode = nodeBuilder.CreateChannelNode(networkFolderPath);
-                channelNode.Start();
+                //var networkFolderPath = tokenlessNode.CreateChannel("Sales");
+                //var channelNode = nodeBuilder.CreateInfrastructureNode(networkFolderPath);
+                //channelNode.Start();
             }
         }
     }

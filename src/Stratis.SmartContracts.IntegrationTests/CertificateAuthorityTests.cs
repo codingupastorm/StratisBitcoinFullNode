@@ -48,7 +48,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
 
                 // Create a node so we have 1 available public key.
-                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client);
 
                 // Get the date again in case it has changed. The idea is that the certificate date will be one of the two dates. 
                 // Either the initial one or the second one if a date change occurred while the certificates were being generated.
@@ -96,8 +96,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client1 = TokenlessTestHelper.GetClient(server);
                 CaClient client2 = TokenlessTestHelper.GetClient(server);
 
-                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -153,8 +153,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client1 = TokenlessTestHelper.GetClient(server);
                 CaClient client2 = TokenlessTestHelper.GetClient(server);
 
-                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -206,7 +206,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     // Create 1 tokenless node.
                     CaClient client1 = TokenlessTestHelper.GetClient(server);
 
-                    CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                    CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
                 }
 
                 // Server has been killed. Restart it.
@@ -218,7 +218,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     // Check that we can still create nodes and make API calls.
                     CaClient client1 = TokenlessTestHelper.GetClient(server);
 
-                    CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client1);
+                    CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client1);
 
                     List<CertificateInfoModel> nodeCerts = client.GetAllCertificates();
                     Assert.Equal(2, nodeCerts.Count);
@@ -250,7 +250,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
 
                     // Create 1 tokenless node.
-                    CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                    CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client);
 
                     // Revoke a certificate.
                     TokenlessTestHelper.RevokeCertificateFromInitializedCAServer(server);
@@ -272,7 +272,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     server.Dispose();
 
                     // Restart the node.
-                    node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client, false);
+                    node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client, initialRun: false);
                     node1.Start();
 
                     // Is the certificate stil revoked even though we are running without a CA?
