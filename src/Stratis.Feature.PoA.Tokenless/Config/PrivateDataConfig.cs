@@ -6,7 +6,7 @@
     /// TODO - Define serialization protocol for this + policies
     /// TODO - Implement policy validation methods
     /// TODO - Distribute policy with contract deployment transaction
-    /// TODO - Add a way to query policies to avoid trawling through all blocks (policy cache/store?)
+    /// TODO - Add a way to query policies to avoid trawling through all blocks (policy cache/store?) with a way to update existing configs
     /// TODO - Disseminate private data and enforce policy
     /// </summary>
     public class PrivateDataConfig
