@@ -48,5 +48,10 @@ namespace Stratis.SmartContracts.Core
         /// Time as set on transaction.
         /// </summary>
         uint Time { get; }
+
+        /// <summary>
+        /// Transient data that may be sent as part of a private data transaction. Will be null for normal transactions.
+        /// </summary>
+        byte[] TransientData { get; }
     }
 }

@@ -4,6 +4,7 @@ using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
+using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.SmartContracts.CLR
 {
@@ -48,7 +49,8 @@ namespace Stratis.SmartContracts.CLR
                 contractLogger,
                 this.internalTransactionExecutorFactory.Create(gasMeter, readWriteSet, state),
                 new InternalHashHelper(),
-                () => state.GetBalance(address));
+                () => state.GetBalance(address), 
+                state.TransientData);
 
             return contractState;
         }

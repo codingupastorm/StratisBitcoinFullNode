@@ -16,7 +16,8 @@ namespace Stratis.SmartContracts.Tokenless
             IContractLogger contractLogger,
             IInternalTransactionExecutor internalTransactionExecutor,
             IInternalHashHelper internalHashHelper,
-            Func<ulong> getBalance)
+            Func<ulong> getBalance,
+            byte[] transientData)
         {
             this.Block = block;
             this.Message = message;
@@ -27,6 +28,7 @@ namespace Stratis.SmartContracts.Tokenless
             this.InternalTransactionExecutor = internalTransactionExecutor;
             this.InternalHashHelper = internalHashHelper;
             this.GetBalance = getBalance;
+            this.TransientData = transientData;
         }
 
         public IBlock Block { get; }
@@ -46,5 +48,7 @@ namespace Stratis.SmartContracts.Tokenless
         public IInternalHashHelper InternalHashHelper { get; }
 
         public Func<ulong> GetBalance { get; }
+
+        public byte[] TransientData { get; }
     }
 }

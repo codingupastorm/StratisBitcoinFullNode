@@ -80,7 +80,8 @@ namespace Stratis.SmartContracts.CLR.Tests
                     It.IsAny<IBlock>(),
                     It.IsAny<ulong>(),
                     It.IsAny<uint256>(),
-                    It.IsAny<string>()))
+                    It.IsAny<string>(),
+                    It.IsAny<byte[]>()))
                 .Returns(this.State.Object);
             this.StateFactory = stateFactory;
         }

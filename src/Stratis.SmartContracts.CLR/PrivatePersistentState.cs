@@ -1,6 +1,7 @@
 ﻿using System;
 using NBitcoin;
 using Stratis.SmartContracts.Core.Hashing;
+using Stratis.SmartContracts.Core.ReadWrite;
 
 namespace Stratis.SmartContracts.CLR
 {
@@ -13,22 +14,34 @@ namespace Stratis.SmartContracts.CLR
 
     public class PrivatePersistentState : IPersistentState
     {
+        private ReadWriteSetBuilder rwsBuilder;
+
         private readonly ISerializer serializer;
-        private readonly IPrivateDataDbMock privateDataDb;
         private readonly IPersistenceStrategy persistenceStrategy;
         private readonly uint160 contractAddress;
+        private readonly uint256 txHash;
+        private readonly uint blockHeight;
 
-        public PrivatePersistentState(ISerializer serializer, IPersistenceStrategy persistenceStrategy, uint160 contractAddress)
+        public PrivatePersistentState(
+            ISerializer serializer,
+            IPersistenceStrategy persistenceStrategy,
+            uint160 contractAddress)
         {
             this.serializer = serializer;
             this.persistenceStrategy = persistenceStrategy;
             this.contractAddress = contractAddress;
+            this.rwsBuilder = new ReadWriteSetBuilder();
+        }
+
+        public ReadWriteSet GetReadWriteSet()
+        {
+            return this.rwsBuilder.GetReadWriteSet();
         }
 
         public void SetBytes(byte[] key, byte[] value)
         {
-            // Store the bytes in the private data store. Obviously this will throw an exception right now, we'll replace it with the actual db later.
-            this.privateDataDb.StoreBytes(this.contractAddress, key, value);
+            // Keep the bytes in a readwrite set for now. 
+            this.rwsBuilder.AddWriteItem(new ReadWriteSetKey(this.contractAddress, key), value);
 
             // Store a hash of the bytes in the normal data store.
             byte[] hash = HashHelper.Keccak256(value);

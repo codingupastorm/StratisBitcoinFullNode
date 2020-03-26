@@ -51,8 +51,9 @@ namespace Stratis.Feature.PoA.Tokenless
             {
                 await peer.SendMessageAsync(payload).ConfigureAwait(false);
             }
-            catch (OperationCanceledException)
+            catch (OperationCanceledException e)
             {
+                Console.WriteLine(e);
                 // This catch is a bit dirty but is copied from FederatedPegBroadcaster code.
             }
         }

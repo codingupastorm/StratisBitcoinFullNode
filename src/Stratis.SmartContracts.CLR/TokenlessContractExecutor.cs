@@ -50,7 +50,9 @@ namespace Stratis.SmartContracts.CLR
                 block,
                 transactionContext.TxOutValue,
                 transactionContext.TransactionHash,
-                version);
+                version,
+                transactionContext.TransientData
+                );
 
             StateTransitionResult result;
             IState newState = state.Snapshot();
@@ -84,6 +86,8 @@ namespace Stratis.SmartContracts.CLR
                 state.TransitionTo(newState);
 
             bool revert = !result.IsSuccess;
+
+            // TODO: We need to get the private data RWS somewhere here and include them in the result back.
 
             var executionResult = new SmartContractExecutionResult
             {

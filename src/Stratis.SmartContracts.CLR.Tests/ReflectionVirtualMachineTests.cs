@@ -12,6 +12,7 @@ using Stratis.SmartContracts.CLR.Metering;
 using Stratis.SmartContracts.Core.Hashing;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
+using Stratis.SmartContracts.Tokenless;
 using Xunit;
 
 namespace Stratis.SmartContracts.CLR.Tests
@@ -48,7 +49,8 @@ namespace Stratis.SmartContracts.CLR.Tests
                 new ContractLogHolder(),
                 Mock.Of<IInternalTransactionExecutor>(),
                 new InternalHashHelper(),
-                () => 1000);
+                () => 1000,
+                null);
             this.gasMeter = new GasMeter((RuntimeObserver.Gas)50_000);
         }
 

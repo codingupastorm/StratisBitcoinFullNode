@@ -42,7 +42,8 @@ namespace Stratis.Feature.PoA.Tokenless
             var endorsementRequest = new EndorsementRequest
             {
                 ContractTransaction = payload.Transaction,
-                Peer = peer
+                Peer = peer,
+                TransientData = payload.TransientData
             };
 
             this.requestHandler.ExecuteAndReturnProposal(endorsementRequest);            

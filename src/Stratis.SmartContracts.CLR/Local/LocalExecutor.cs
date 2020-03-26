@@ -49,7 +49,8 @@ namespace Stratis.SmartContracts.CLR.Local
                 block,
                 txOutValue,
                 new uint256(),
-                version);
+                version, 
+                null); // Assume no transient data in local calls
 
             StateTransitionResult result;
             IState newState = state.Snapshot();
