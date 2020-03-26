@@ -1,4 +1,4 @@
-﻿namespace Stratis.SmartContracts.Core.Config
+﻿namespace Stratis.Feature.PoA.Tokenless.Config
 {
     public enum PolicyType
     {
