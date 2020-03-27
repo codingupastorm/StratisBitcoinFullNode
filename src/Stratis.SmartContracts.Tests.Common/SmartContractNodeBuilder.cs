@@ -71,16 +71,16 @@ namespace Stratis.SmartContracts.Tests.Common
                 var loggerFactory = new LoggerFactory();
                 var revocationChecker = new RevocationChecker(settings, null, loggerFactory, DateTimeProvider.Default);
                 var certificatesManager = new CertificatesManager(settings.DataFolder, settings, loggerFactory, revocationChecker, network);
-                var walletManager = new TokenlessWalletManager(network, settings.DataFolder, new TokenlessWalletSettings(settings), certificatesManager, loggerFactory);
+                var keyStoreManager = new TokenlessKeyStoreManager(network, settings.DataFolder, settings, new TokenlessWalletSettings(settings), certificatesManager, loggerFactory);
 
-                walletManager.Initialize();
+                keyStoreManager.Initialize();
 
-                node.ClientCertificatePrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.P2PCertificates);
-                node.TransactionSigningPrivateKey = walletManager.GetKey("test", TokenlessWalletAccount.TransactionSigning);
+                node.ClientCertificatePrivateKey = keyStoreManager.GetKey("test", TokenlessWalletAccount.P2PCertificates);
+                node.TransactionSigningPrivateKey = keyStoreManager.GetKey("test", TokenlessWalletAccount.TransactionSigning);
 
                 BitcoinPubKeyAddress address = node.ClientCertificatePrivateKey.PubKey.GetAddress(network);
 
-                Key miningKey = walletManager.GetKey("test", TokenlessWalletAccount.BlockSigning);
+                Key miningKey = keyStoreManager.GetKey("test", TokenlessWalletAccount.BlockSigning);
 
                 if (!initialRun)
                     return node;

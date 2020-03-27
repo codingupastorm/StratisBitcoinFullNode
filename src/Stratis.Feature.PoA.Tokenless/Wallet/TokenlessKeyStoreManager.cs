@@ -11,7 +11,7 @@ using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Feature.PoA.Tokenless.Wallet
 {
-    public interface ITokenlessWalletManager
+    public interface ITokenlessKeyStoreManager
     {
         bool Initialize();
 
@@ -38,24 +38,26 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         P2PCertificates = 2
     }
 
-    public class TokenlessWalletManager : ITokenlessWalletManager
+    public class TokenlessKeyStoreManager : ITokenlessKeyStoreManager
     {
-        public const string WalletFileName = "nodeid.json";
+        public const string KeyStoreFileName = "nodeid.json";
 
-        public TokenlessWallet Wallet { get; private set; }
+        public TokenlessKeyStore Wallet { get; private set; }
 
         private readonly Network network;
+        private readonly NodeSettings nodeSettings;
         private readonly DataFolder dataFolder;
-        private readonly FileStorage<TokenlessWallet> fileStorage;
+        private readonly FileStorage<TokenlessKeyStore> fileStorage;
         private readonly TokenlessWalletSettings walletSettings;
         private readonly ICertificatesManager certificatesManager;
         private readonly ILogger logger;
 
-        public TokenlessWalletManager(Network network, DataFolder dataFolder, TokenlessWalletSettings walletSettings, ICertificatesManager certificatesManager, ILoggerFactory loggerFactory)
+        public TokenlessKeyStoreManager(Network network, DataFolder dataFolder, NodeSettings nodeSettings, TokenlessWalletSettings walletSettings, ICertificatesManager certificatesManager, ILoggerFactory loggerFactory)
         {
             this.network = network;
             this.dataFolder = dataFolder;
-            this.fileStorage = new FileStorage<TokenlessWallet>(this.dataFolder.RootPath);
+            this.fileStorage = new FileStorage<TokenlessKeyStore>(this.dataFolder.RootPath);
+            this.nodeSettings = nodeSettings;
             this.walletSettings = walletSettings;
             this.certificatesManager = certificatesManager;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
@@ -75,9 +77,9 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return false;
         }
 
-        public TokenlessWallet LoadWallet()
+        public TokenlessKeyStore LoadWallet()
         {
-            string fileName = WalletFileName;
+            string fileName = KeyStoreFileName;
 
             if (!this.fileStorage.Exists(fileName))
                 return null;
@@ -123,11 +125,11 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return keyTool.LoadPrivateKey(KeyType.TransactionSigningKey);
         }
 
-        public (TokenlessWallet, Mnemonic) CreateWallet(string password, Mnemonic mnemonic = null)
+        public (TokenlessKeyStore, Mnemonic) CreateWallet(string password, Mnemonic mnemonic = null)
         {
-            var wallet = new TokenlessWallet(this.network, password, ref mnemonic);
+            var wallet = new TokenlessKeyStore(this.network, password, ref mnemonic);
 
-            this.fileStorage.SaveToFile(wallet, WalletFileName);
+            this.fileStorage.SaveToFile(wallet, KeyStoreFileName);
 
             return (wallet, mnemonic);
         }
@@ -136,31 +138,36 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         {
             bool canStart = true;
 
-            if (!File.Exists(Path.Combine(this.walletSettings.RootPath, WalletFileName)))
+            if (!File.Exists(Path.Combine(this.walletSettings.RootPath, KeyStoreFileName)))
             {
                 var strMnemonic = this.walletSettings.Mnemonic;
                 var password = this.walletSettings.Password;
 
                 if (password == null)
                 {
-                    this.logger.LogError($"Run this daemon with a -password=<password> argument so that the wallet file ({WalletFileName}) can be created.");
+                    this.logger.LogError($"Run this daemon with a -password=<password> argument so that the wallet file ({KeyStoreFileName}) can be created.");
                     this.logger.LogError($"If you are re-creating a wallet then also pass a -mnemonic=\"<mnemonic words>\" argument.");
                     return false;
                 }
 
-                TokenlessWallet wallet;
+                TokenlessKeyStore wallet;
                 Mnemonic mnemonic = (strMnemonic == null) ? null : new Mnemonic(strMnemonic);
 
                 (wallet, mnemonic) = this.CreateWallet(password, mnemonic);
 
                 this.Wallet = wallet;
 
-                this.logger.LogError($"The wallet file ({WalletFileName}) has been created.");
+                this.logger.LogError($"The wallet file ({KeyStoreFileName}) has been created.");
                 this.logger.LogError($"Record the mnemonic ({mnemonic}) in a safe place.");
                 this.logger.LogError($"IMPORTANT: You will need the mnemonic to recover the wallet.");
 
-                // Stop the node so that the user can record the mnemonic.
-                canStart = false;
+                // Only stop the node if this node is not a channel node.
+                var isChannel = this.nodeSettings.ConfigReader.GetOrDefault("ischannel", 0);
+                if (isChannel == 0)
+                {
+                    // Stop the node so that the user can record the mnemonic.
+                    canStart = false;
+                }
             }
             else
             {
@@ -185,7 +192,10 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
                 this.logger.LogError($"The key file '{KeyTool.FederationKeyFileName}' has been created.");
 
-                return false;
+                // Only stop the node if this node is not a channel node.
+                var isChannel = this.nodeSettings.ConfigReader.GetOrDefault("ischannel", 0);
+                if (isChannel == 0)
+                    return false;
             }
 
             return true;
@@ -206,7 +216,10 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
                 this.logger.LogError($"The key file '{KeyTool.TransactionSigningKeyFileName}' has been created.");
 
-                return false;
+                // Only stop the node if this node is not a channel node.
+                var isChannel = this.nodeSettings.ConfigReader.GetOrDefault("ischannel", 0);
+                if (isChannel == 0)
+                    return false;
             }
 
             return true;

@@ -70,7 +70,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.GenesisReward = Money.Zero;
             this.Genesis = CreateGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion);
 
-            this.FederationKeys = Mnemonics.Select(m => TokenlessWallet.GetKey(500, m, TokenlessWalletAccount.BlockSigning, 0)).ToArray();
+            this.FederationKeys = Mnemonics.Select(m => TokenlessKeyStore.GetKey(500, m, TokenlessWalletAccount.BlockSigning, 0)).ToArray();
 
             var genesisFederationMembers = new List<IFederationMember>
             {

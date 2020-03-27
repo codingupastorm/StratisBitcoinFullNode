@@ -27,7 +27,7 @@ namespace Stratis.TokenlessD
                 var loggerFactory = new LoggerFactory();
                 var revocationChecker = new RevocationChecker(nodeSettings, null, loggerFactory, DateTimeProvider.Default);
                 var certificatesManager = new CertificatesManager(nodeSettings.DataFolder, nodeSettings, loggerFactory, revocationChecker, network);
-                var walletManager = new TokenlessWalletManager(network, nodeSettings.DataFolder, new TokenlessWalletSettings(nodeSettings), certificatesManager, loggerFactory);
+                var walletManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, new TokenlessWalletSettings(nodeSettings), certificatesManager, loggerFactory);
                 if (!walletManager.Initialize())
                     return;
 

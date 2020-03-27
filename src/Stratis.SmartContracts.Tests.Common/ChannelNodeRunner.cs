@@ -50,6 +50,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
             var settings = new NodeSettings(channelNetwork, args: new string[]
             {
+                "-password=test",
                 "-conf=poa.conf",
                 "-datadir=" + this.DataFolder,
                 "-ischannel=1",

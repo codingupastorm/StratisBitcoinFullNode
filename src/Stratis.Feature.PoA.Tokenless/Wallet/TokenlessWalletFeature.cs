@@ -13,9 +13,9 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
     public class TokenlessWalletFeature : FullNodeFeature
     {
         /// <summary>The wallet manager.</summary>
-        private readonly ITokenlessWalletManager walletManager;
+        private readonly ITokenlessKeyStoreManager walletManager;
 
-        public TokenlessWalletFeature(ITokenlessWalletManager walletManager, INodeStats nodeStats)
+        public TokenlessWalletFeature(ITokenlessKeyStoreManager walletManager, INodeStats nodeStats)
         {
             this.walletManager = walletManager;
 
