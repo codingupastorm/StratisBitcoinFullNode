@@ -22,20 +22,24 @@ namespace Stratis.SmartContracts.IntegrationTests
             using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                var network = new TokenlessNetwork();
+                var tokenlessNetwork = new TokenlessNetwork();
 
                 server.Start();
 
                 // Start + Initialize CA.
                 var client = TokenlessTestHelper.GetAdminClient();
-                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
 
                 // Get Authority Certificate.
                 X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
                 CaClient client1 = TokenlessTestHelper.GetClient(server);
 
+                // Create the main tokenless node.
+                CoreNode tokenlessNode = nodeBuilder.CreateTokenlessNode(tokenlessNetwork, 0, ac, client1);
+                tokenlessNode.Start();
+
                 // Create and start the channel node.
-                CoreNode channelNode = nodeBuilder.CreateChannelNode("system");
+                CoreNode channelNode = nodeBuilder.CreateChannelNode(tokenlessNode, "system", client);
                 channelNode.Start();
             }
         }

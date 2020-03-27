@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using CertificateAuthority;
+using CertificateAuthority.Tests.Common;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
@@ -11,6 +13,7 @@ using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
+using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
@@ -50,9 +53,13 @@ namespace Stratis.SmartContracts.Tests.Common
 
             var settings = new NodeSettings(channelNetwork, args: new string[]
             {
+                "-certificatepassword=test",
                 "-password=test",
                 "-conf=poa.conf",
                 "-datadir=" + this.DataFolder,
+                $"-{CertificatesManager.CaAccountIdKey}={Settings.AdminAccountId}",
+                $"-{CertificatesManager.CaPasswordKey}={CaTestHelper.AdminPassword}",
+                $"-{CertificatesManager.ClientCertificateConfigurationKey}=test",
                 "-ischannelnode=true",
             });
 
