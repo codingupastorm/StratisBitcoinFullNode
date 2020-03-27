@@ -25,6 +25,7 @@ using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mining;
 using Stratis.Feature.PoA.Tokenless.Wallet;
 using Stratis.SmartContracts.Core.ReadWrite;
+using Stratis.SmartContracts.Core.Store;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -56,6 +57,10 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<IEndorsementRequestValidator, EndorsementRequestValidator>();
                         services.AddSingleton<IEndorsementSigner, EndorsementSigner>();
                         services.AddSingleton<IEndorsements, Endorsements>();
+
+                        // Private data.
+                        services.AddSingleton<ITransientKeyValueStore, TransientKeyValueStore>();
+                        services.AddSingleton<ITransientStore, TransientStore>();
 
                         // In place of wallet.
                         services.AddSingleton<IBroadcasterManager, FullNodeBroadcasterManager>();
