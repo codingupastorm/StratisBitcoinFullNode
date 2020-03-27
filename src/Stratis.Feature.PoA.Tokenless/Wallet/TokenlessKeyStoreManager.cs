@@ -45,19 +45,17 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         public TokenlessKeyStore Wallet { get; private set; }
 
         private readonly Network network;
-        private readonly NodeSettings nodeSettings;
         private readonly DataFolder dataFolder;
         private readonly FileStorage<TokenlessKeyStore> fileStorage;
         private readonly TokenlessWalletSettings walletSettings;
         private readonly ICertificatesManager certificatesManager;
         private readonly ILogger logger;
 
-        public TokenlessKeyStoreManager(Network network, DataFolder dataFolder, NodeSettings nodeSettings, TokenlessWalletSettings walletSettings, ICertificatesManager certificatesManager, ILoggerFactory loggerFactory)
+        public TokenlessKeyStoreManager(Network network, DataFolder dataFolder, TokenlessWalletSettings walletSettings, ICertificatesManager certificatesManager, ILoggerFactory loggerFactory)
         {
             this.network = network;
             this.dataFolder = dataFolder;
             this.fileStorage = new FileStorage<TokenlessKeyStore>(this.dataFolder.RootPath);
-            this.nodeSettings = nodeSettings;
             this.walletSettings = walletSettings;
             this.certificatesManager = certificatesManager;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
@@ -162,12 +160,8 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                 this.logger.LogError($"IMPORTANT: You will need the mnemonic to recover the wallet.");
 
                 // Only stop the node if this node is not a channel node.
-                var isChannel = this.nodeSettings.ConfigReader.GetOrDefault("ischannel", 0);
-                if (isChannel == 0)
-                {
-                    // Stop the node so that the user can record the mnemonic.
-                    canStart = false;
-                }
+                if (!this.walletSettings.IsChannelNode)
+                    canStart = false; // Stop the node so that the user can record the mnemonic.
             }
             else
             {
@@ -193,8 +187,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                 this.logger.LogError($"The key file '{KeyTool.FederationKeyFileName}' has been created.");
 
                 // Only stop the node if this node is not a channel node.
-                var isChannel = this.nodeSettings.ConfigReader.GetOrDefault("ischannel", 0);
-                if (isChannel == 0)
+                if (!this.walletSettings.IsChannelNode)
                     return false;
             }
 
@@ -217,8 +210,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                 this.logger.LogError($"The key file '{KeyTool.TransactionSigningKeyFileName}' has been created.");
 
                 // Only stop the node if this node is not a channel node.
-                var isChannel = this.nodeSettings.ConfigReader.GetOrDefault("ischannel", 0);
-                if (isChannel == 0)
+                if (!this.walletSettings.IsChannelNode)
                     return false;
             }
 

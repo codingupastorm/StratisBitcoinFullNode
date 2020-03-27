@@ -53,7 +53,7 @@ namespace Stratis.SmartContracts.Tests.Common
                 "-password=test",
                 "-conf=poa.conf",
                 "-datadir=" + this.DataFolder,
-                "-ischannel=1",
+                "-ischannelnode=true",
             });
 
             IFullNodeBuilder builder = new FullNodeBuilder()

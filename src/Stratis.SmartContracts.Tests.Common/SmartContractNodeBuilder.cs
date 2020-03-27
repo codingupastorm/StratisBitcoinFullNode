@@ -66,12 +66,12 @@ namespace Stratis.SmartContracts.Tests.Common
                     "-certificatepassword=test"
                 };
 
-            using (var settings = new NodeSettings(network, args: args))
+            using (var nodeSettings = new NodeSettings(network, args: args))
             {
                 var loggerFactory = new LoggerFactory();
-                var revocationChecker = new RevocationChecker(settings, null, loggerFactory, DateTimeProvider.Default);
-                var certificatesManager = new CertificatesManager(settings.DataFolder, settings, loggerFactory, revocationChecker, network);
-                var keyStoreManager = new TokenlessKeyStoreManager(network, settings.DataFolder, settings, new TokenlessWalletSettings(settings), certificatesManager, loggerFactory);
+                var revocationChecker = new RevocationChecker(nodeSettings, null, loggerFactory, DateTimeProvider.Default);
+                var certificatesManager = new CertificatesManager(nodeSettings.DataFolder, nodeSettings, loggerFactory, revocationChecker, network);
+                var keyStoreManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, new TokenlessWalletSettings(nodeSettings), certificatesManager, loggerFactory);
 
                 keyStoreManager.Initialize();
 
@@ -91,8 +91,8 @@ namespace Stratis.SmartContracts.Tests.Common
 
                 if (authorityCertificate != null && node.ClientCertificate != null)
                 {
-                    File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.AuthorityCertificateName), authorityCertificate.GetEncoded());
-                    File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(issueResult.x509, node.ClientCertificatePrivateKey, "test"));
+                    File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.AuthorityCertificateName), authorityCertificate.GetEncoded());
+                    File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(issueResult.x509, node.ClientCertificatePrivateKey, "test"));
                 }
 
                 return node;
