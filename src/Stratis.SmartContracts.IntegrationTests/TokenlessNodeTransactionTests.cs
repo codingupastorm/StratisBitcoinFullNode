@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CertificateAuthority;
@@ -58,6 +59,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
                 CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
+                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
+
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+
                 node1.Start();
                 node2.Start();
                 TestHelper.Connect(node1, node2);
@@ -88,6 +94,11 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
                 CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+
+                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
+
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
 
                 node1.Start();
                 node2.Start();
@@ -129,6 +140,11 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
                 CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+
+                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
+
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
 
                 node1.Start();
                 node2.Start();
@@ -182,6 +198,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
                 CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
+                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
+
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+
                 node1.Start();
                 node2.Start();
 
@@ -232,6 +253,11 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
                 CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+
+                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
+
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
 
                 node1.Start();
                 node2.Start();
@@ -325,6 +351,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
                 CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
+                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
+
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+
                 node1.Start();
                 node2.Start();
 
@@ -365,6 +396,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Last of all, create a 3rd node and check that nobody gets banned.
                 CaClient client3 = TokenlessTestHelper.GetClient(server);
                 CoreNode node3 = nodeBuilder.CreateFullTokenlessNode(this.network, 2, ac, client3);
+
+                certificates.Add(node3.ClientCertificate.ToCertificate());
+
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node3.DataFolder, this.network.RootFolderName, this.network.Name));
+                
                 node3.Start();
 
                 TestHelper.ConnectNoCheck(node3, node2);
@@ -434,6 +470,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
                 CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
 
+                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
+
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+                
                 node1.Start();
                 node2.Start();
 

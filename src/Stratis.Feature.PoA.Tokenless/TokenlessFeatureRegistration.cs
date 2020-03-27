@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using MembershipServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NBitcoin;
@@ -89,10 +90,10 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<IBlockBufferGenerator, BlockBufferGenerator>();
 
                         // Permissioned membership.
+                        services.AddSingleton<IMembershipServicesDirectory, MembershipServicesDirectory>();
                         services.AddSingleton<ICertificatesManager, CertificatesManager>();
                         services.AddSingleton<IRevocationChecker, RevocationChecker>();
                         services.AddSingleton<ICertificatePermissionsChecker, CertificatePermissionsChecker>();
-                        services.AddSingleton<ICertificateCache, CertificateCache>();
 
                         var options = (PoAConsensusOptions)network.Consensus.Options;
                         if (options.EnablePermissionedMembership)
