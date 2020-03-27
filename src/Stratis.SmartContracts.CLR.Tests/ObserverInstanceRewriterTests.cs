@@ -128,7 +128,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 new Block(1, this.TestAddress),
                 new Message(this.TestAddress, this.TestAddress, 0),
                 new PersistentState(meteredPersistenceStrategy, context.Serializer, this.TestAddress.ToUint160()),
-                new PrivatePersistentState(context.Serializer, meteredPersistenceStrategy, this.TestAddress.ToUint160()), 
+                new PrivatePersistentState(context.Serializer, meteredPersistenceStrategy, this.TestAddress.ToUint160(), new ReadWriteSetBuilder()), 
                 context.Serializer,
                 new ContractLogHolder(),
                 Mock.Of<IInternalTransactionExecutor>(),

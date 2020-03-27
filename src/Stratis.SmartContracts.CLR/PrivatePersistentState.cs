@@ -2,30 +2,26 @@
 using NBitcoin;
 using Stratis.SmartContracts.Core.Hashing;
 using Stratis.SmartContracts.Core.ReadWrite;
-using Stratis.SmartContracts.Core.Store;
 
 namespace Stratis.SmartContracts.CLR
 {
     public class PrivatePersistentState : IPersistentState
     {
-        private ReadWriteSetBuilder rwsBuilder;
-
+        private readonly ReadWriteSetBuilder rwsBuilder;
         private readonly ISerializer serializer;
-        private readonly IPrivateDataStore privateDataDb;
         private readonly IPersistenceStrategy persistenceStrategy;
         private readonly uint160 contractAddress;
-        private readonly uint256 txHash;
-        private readonly uint blockHeight;
 
         public PrivatePersistentState(
             ISerializer serializer,
             IPersistenceStrategy persistenceStrategy,
-            uint160 contractAddress)
+            uint160 contractAddress,
+            ReadWriteSetBuilder readWriteSetBuilder)
         {
             this.serializer = serializer;
             this.persistenceStrategy = persistenceStrategy;
             this.contractAddress = contractAddress;
-            this.rwsBuilder = new ReadWriteSetBuilder();
+            this.rwsBuilder = readWriteSetBuilder;
         }
 
         public ReadWriteSet GetReadWriteSet()

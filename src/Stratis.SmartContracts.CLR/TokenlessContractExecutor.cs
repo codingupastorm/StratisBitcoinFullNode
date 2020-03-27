@@ -98,7 +98,8 @@ namespace Stratis.SmartContracts.CLR
                 GasConsumed = result.GasConsumed,
                 Return = result.Success?.ExecutionResult,
                 Logs = state.GetLogs(this.contractPrimitiveSerializer),
-                ReadWriteSet = result.Success?.ReadWriteSet
+                ReadWriteSet = result.Success?.ReadWriteSet,
+                PrivateReadWriteSet = result.Success?.PrivateReadWriteSet
             };
 
             return executionResult;

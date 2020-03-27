@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
@@ -7,6 +8,7 @@ using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Payloads;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.State;
+using Stratis.SmartContracts.Core.Store;
 using Stratis.SmartContracts.Core.Util;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
@@ -29,6 +31,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         private readonly IStateRepositoryRoot stateRoot;
         private readonly IReadWriteSetTransactionSerializer readWriteSetTransactionSerializer;
         private readonly IEndorsements endorsements;
+        private readonly ITransientStore transientStore;
         private readonly ILogger logger;
 
         public EndorsementRequestHandler(
@@ -40,6 +43,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             IStateRepositoryRoot stateRoot,
             IReadWriteSetTransactionSerializer readWriteSetTransactionSerializer,
             IEndorsements endorsements,
+            ITransientStore transientStore,
             ILoggerFactory loggerFactory)
         {
             this.validator = validator;
@@ -50,6 +54,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.stateRoot = stateRoot;
             this.readWriteSetTransactionSerializer = readWriteSetTransactionSerializer;
             this.endorsements = endorsements;
+            this.transientStore = transientStore;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
@@ -62,13 +67,14 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             }
 
             ChainedHeader tip = this.consensus.Tip;
+            uint blockHeight = (uint) tip.Height + 1;
 
             IStateRepositoryRoot stateSnapshot = this.stateRoot.GetSnapshotTo(((ISmartContractBlockHeader)tip.Header).HashStateRoot.ToBytes());
             IContractExecutor executor = this.executorFactory.CreateExecutor(stateSnapshot);
 
             GetSenderResult getSenderResult = this.senderRetriever.GetSender(request.ContractTransaction); // Because of rule checks in the validator, we assume this is always correct.
 
-            var executionContext = new ContractTransactionContext((ulong) tip.Height,TxIndexToUse,CoinbaseToUse, getSenderResult.Sender, request.ContractTransaction, request.TransientData);
+            var executionContext = new ContractTransactionContext((ulong) blockHeight,TxIndexToUse,CoinbaseToUse, getSenderResult.Sender, request.ContractTransaction, request.TransientData);
 
             IContractExecutionResult result = executor.Execute(executionContext);
 
@@ -78,7 +84,11 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 return false;
             }
 
-            // If we have multiple endorsements happening here, check the read write set before signing!
+            // Store any changes that were made to the transient store
+            byte[] privateReadWriteSetData = Encoding.UTF8.GetBytes(result.PrivateReadWriteSet.GetReadWriteSet().ToJson()); // ew
+            this.transientStore.Persist(request.ContractTransaction.GetHash(), blockHeight, new TransientStorePrivateData(privateReadWriteSetData));
+
+            // TODO: If we have multiple endorsements happening here, check the read write set before signing!
 
             Transaction signedRWSTransaction = this.readWriteSetTransactionSerializer.Build(result.ReadWriteSet.GetReadWriteSet());
 

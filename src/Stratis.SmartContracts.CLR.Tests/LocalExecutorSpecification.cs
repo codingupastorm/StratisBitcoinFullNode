@@ -20,7 +20,7 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             VmExecutionResult vmExecutionResult = VmExecutionResult.Ok(new object(), null);
 
-            StateTransitionResult stateTransitionResult = StateTransitionResult.Ok((RuntimeObserver.Gas)100, uint160.One, new ReadWriteSetBuilder(), vmExecutionResult.Success.Result);
+            StateTransitionResult stateTransitionResult = StateTransitionResult.Ok((RuntimeObserver.Gas)100, uint160.One, new ReadWriteSetBuilder(), new ReadWriteSetBuilder(), vmExecutionResult.Success.Result);
 
             var fixture = new ExecutorFixture(contractTxData);
             IState snapshot = fixture.State.Object.Snapshot();

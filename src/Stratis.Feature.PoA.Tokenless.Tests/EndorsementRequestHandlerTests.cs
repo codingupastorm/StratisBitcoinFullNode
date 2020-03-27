@@ -13,6 +13,7 @@ using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
+using Stratis.SmartContracts.Core.Store;
 using Stratis.SmartContracts.Core.Util;
 using Stratis.SmartContracts.RuntimeObserver;
 using Xunit;
@@ -74,6 +75,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             loggerFactoryMock.Setup(x => x.CreateLogger(It.IsAny<string>()))
                 .Returns(Mock.Of<ILogger>());
 
+            var transientStore = new Mock<ITransientStore>();
+
             var endorsementRequestHandler = new EndorsementRequestHandler(validatorMock.Object,
                 signerMock.Object,
                 executorFactoryMock.Object,
@@ -82,6 +85,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 stateRootMock.Object,
                 readWriteSetTransactionSerializerMock.Object,
                 new Endorsements(),
+                transientStore.Object,
                 loggerFactoryMock.Object
                 );
 
@@ -131,6 +135,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             loggerFactoryMock.Setup(x => x.CreateLogger(It.IsAny<string>()))
                 .Returns(Mock.Of<ILogger>());
 
+            var transientStore = new Mock<ITransientStore>();
+
             var endorsementRequestHandler = new EndorsementRequestHandler(validatorMock.Object,
                 signerMock.Object,
                 executorFactoryMock.Object,
@@ -139,6 +145,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 stateRootMock.Object,
                 readWriteSetTransactionSerializerMock.Object,
                 new Endorsements(),
+                transientStore.Object,
                 loggerFactoryMock.Object
                 );
 

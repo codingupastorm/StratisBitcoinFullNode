@@ -28,10 +28,15 @@ namespace Stratis.SmartContracts.Core.Store
         }
     }
 
+    public interface ITransientStore
+    {
+        void Persist(uint256 txId, uint blockHeight, TransientStorePrivateData data);
+    }
+
     /// <summary>
     /// Implements the transient store operations on top of the ITransientKeyValueStore database
     /// </summary>
-    public class TransientStore
+    public class TransientStore : ITransientStore
     {
         public const string Table = "transient";
         public byte[] MinBlockHeightKey = Encoding.ASCII.GetBytes("MinBlockHeight");

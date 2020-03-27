@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.RuntimeObserver;
 
@@ -14,14 +13,17 @@ namespace Stratis.SmartContracts.CLR
         private readonly IStateProcessor stateProcessor;
         private readonly IGasMeter gasMeter;
         private readonly ReadWriteSetBuilder readWriteSet;
+        private readonly ReadWriteSetBuilder privateReadWriteSet;
 
         public InternalExecutor(IGasMeter gasMeter,
             ReadWriteSetBuilder readWriteSet,
+            ReadWriteSetBuilder privateReadWriteSet,
             IState state,
             IStateProcessor stateProcessor)
         {
             this.gasMeter = gasMeter;
             this.readWriteSet = readWriteSet;
+            this.privateReadWriteSet = privateReadWriteSet;
             this.state = state;
             this.stateProcessor = stateProcessor;
         }
@@ -106,6 +108,7 @@ namespace Stratis.SmartContracts.CLR
             {
                 this.state.TransitionTo(newState);
                 this.readWriteSet.Merge(result.Success.ReadWriteSet);
+                this.privateReadWriteSet.Merge(result.Success.PrivateReadWriteSet);
             }
 
             this.gasMeter.Spend(result.GasConsumed);

@@ -15,9 +15,10 @@ namespace Stratis.SmartContracts.CLR
         {
             this.stateProcessor = stateProcessor;
         }
-        public IInternalTransactionExecutor Create(IGasMeter gasMeter, ReadWriteSetBuilder readWriteSet, IState state)
+
+        public IInternalTransactionExecutor Create(IGasMeter gasMeter, ReadWriteSetBuilder readWriteSet, ReadWriteSetBuilder privateReadWriteSet, IState state)
         {
-            return new InternalExecutor(gasMeter, readWriteSet, state, this.stateProcessor);
+            return new InternalExecutor(gasMeter, readWriteSet, privateReadWriteSet,  state, this.stateProcessor);
         }
     }
 }
