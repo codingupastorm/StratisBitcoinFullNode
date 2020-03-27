@@ -138,7 +138,6 @@ namespace Stratis.Feature.PoA.Tokenless
             var channelNetwork = new ChannelNetwork()
             {
                 Base58Prefixes = tokenlessNetwork.Base58Prefixes,
-                Consensus = tokenlessNetwork.Consensus,
                 DefaultAPIPort = tokenlessNetwork.DefaultAPIPort,
                 DefaultBanTimeSeconds = tokenlessNetwork.DefaultBanTimeSeconds,
                 DefaultConfigFilename = tokenlessNetwork.DefaultConfigFilename,
@@ -154,6 +153,24 @@ namespace Stratis.Feature.PoA.Tokenless
                 NetworkType = NetworkType.Mainnet,
                 RootFolderName = rootFolderName
             };
+
+            channelNetwork.Consensus = tokenlessNetwork.Consensus;
+
+            // TODO:TL Override the consensus options for now so that don't
+            // start any of the CA functionality on the system channel (for now).
+            channelNetwork.Consensus.Options = new PoAConsensusOptions
+                (
+                channelNetwork.Consensus.Options.MaxBlockBaseSize,
+                channelNetwork.Consensus.Options.MaxStandardVersion,
+                channelNetwork.Consensus.Options.MaxStandardTxWeight,
+                0,
+                0,
+                new List<IFederationMember>(),
+                ((PoAConsensusOptions)channelNetwork.Consensus.Options).TargetSpacingSeconds,
+                false,
+                false,
+                false
+                );
 
             channelNetwork.Genesis = genesisBlock;
 

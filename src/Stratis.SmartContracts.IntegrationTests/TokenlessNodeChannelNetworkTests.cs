@@ -11,11 +11,42 @@ namespace Stratis.SmartContracts.IntegrationTests
 {
     public sealed class TokenlessNodeChannelNetworkTests
     {
+        /// <summary>
+        /// Proves that TokenlessD can start with a serialized version of the network.
+        /// </summary>
+        [Fact]
+        public void CanStartSystemChannelNode()
+        {
+            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                var network = new TokenlessNetwork();
+
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient();
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
+                CaClient client1 = TokenlessTestHelper.GetClient(server);
+
+                // Create and start the channel node.
+                CoreNode channelNode = nodeBuilder.CreateChannelNode("system");
+                channelNode.Start();
+            }
+        }
+
         [Fact]
         public void TokenlessNodeCanCreateAndStartChannelNodes()
         {
+            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+
             using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
-            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 var network = new TokenlessNetwork();
 

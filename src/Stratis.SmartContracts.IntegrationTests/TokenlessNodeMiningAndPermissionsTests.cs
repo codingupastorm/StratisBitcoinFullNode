@@ -20,7 +20,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 {
     public class TokenlessNodeMiningAndPermissionsTests
     {
-        private TokenlessNetwork network;
+        private readonly TokenlessNetwork network;
 
         public TokenlessNodeMiningAndPermissionsTests()
         {
@@ -30,8 +30,10 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodeDoesNotHaveMiningPermissionDoesNotMineAsync()
         {
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
-            using (var nodeBuilder = SmartContractNodeBuilder.Create(this))
+            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
@@ -60,8 +62,10 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task NodeGetsCertificateRevokedCannotPropagateTransactionsAsync()
         {
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
-            using (var nodeBuilder = SmartContractNodeBuilder.Create(this))
+            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
@@ -103,8 +107,10 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task AddedNodeCanMineWithoutBreakingAsync()
         {
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
-            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
@@ -174,8 +180,10 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task RestartTokenlessNodeAfterBlocksMinedAndContinuesAsync()
         {
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
-            using (var nodeBuilder = SmartContractNodeBuilder.Create(this))
+            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
@@ -206,8 +214,10 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesKickAMinerBasedOnCAAsync()
         {
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
-            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 

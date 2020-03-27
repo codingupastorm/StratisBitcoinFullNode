@@ -25,17 +25,19 @@ namespace Stratis.SmartContracts.Tests.Common
 {
     public sealed class ChannelNodeRunner : NodeRunner
     {
+        private readonly string channelName;
         private readonly IDateTimeProvider dateTimeProvider;
 
-        public ChannelNodeRunner(string dataFolder, EditableTimeProvider timeProvider)
+        public ChannelNodeRunner(string channelName, string dataFolder, EditableTimeProvider timeProvider)
             : base(dataFolder, null)
         {
+            this.channelName = channelName;
             this.dateTimeProvider = timeProvider;
         }
 
         public override void BuildNode()
         {
-            var loadedJson = File.ReadAllText($"{this.DataFolder}\\network.json");
+            var loadedJson = File.ReadAllText($"{this.DataFolder}\\channels\\{this.channelName}_network.json");
 
             ChannelNetwork channelNetwork = JsonSerializer.Deserialize<ChannelNetwork>(loadedJson);
 
@@ -43,12 +45,14 @@ namespace Stratis.SmartContracts.Tests.Common
             channelNetwork.Consensus.ConsensusFactory = new TokenlessConsensusFactory();
             channelNetwork.Consensus.ConsensusRules = new NBitcoin.ConsensusRules();
             channelNetwork.Consensus.HashGenesisBlock = channelNetwork.Genesis.GetHash();
-            channelNetwork.Consensus.Options = new PoAConsensusOptions(0, 0, 0, 0, 0, new System.Collections.Generic.List<IFederationMember>(), 16, true, true, true);
+            channelNetwork.Consensus.Options = new PoAConsensusOptions(0, 0, 0, 0, 0, new List<IFederationMember>(), 16, false, false, false);
             channelNetwork.Consensus.MempoolRules = new List<Type>();
 
             var settings = new NodeSettings(channelNetwork, args: new string[]
             {
-                "-conf=poa.conf", "-datadir=" + this.DataFolder
+                "-conf=poa.conf",
+                "-datadir=" + this.DataFolder,
+                "-ischannel=1",
             });
 
             IFullNodeBuilder builder = new FullNodeBuilder()
@@ -72,7 +76,6 @@ namespace Stratis.SmartContracts.Tests.Common
             builder.ReplaceService<IPeerDiscovery, BaseFeature>(new PeerDiscoveryDisabled());
 
             this.FullNode = (FullNode)builder.Build();
-
         }
     }
 }

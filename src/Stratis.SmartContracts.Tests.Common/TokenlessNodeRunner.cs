@@ -57,11 +57,8 @@ namespace Stratis.SmartContracts.Tests.Common
                 .MockIBD()
                 .AddTokenlessFastMiningCapability();
 
-            if (!this.EnablePeerDiscovery)
-            {
-                builder.RemoveImplementation<PeerConnectorDiscovery>();
-                builder.ReplaceService<IPeerDiscovery, BaseFeature>(new PeerDiscoveryDisabled());
-            }
+            builder.RemoveImplementation<PeerConnectorDiscovery>();
+            builder.ReplaceService<IPeerDiscovery, BaseFeature>(new PeerDiscoveryDisabled());
 
             this.FullNode = (FullNode)builder.Build();
         }

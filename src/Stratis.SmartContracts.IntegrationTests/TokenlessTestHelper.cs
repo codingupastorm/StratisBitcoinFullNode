@@ -139,6 +139,13 @@ namespace Stratis.SmartContracts.IntegrationTests
             caCertificatesManager.RevokeCertificate(model);
         }
 
+        internal static void GetTestRootFolder(out string testRootFolder, [CallerMemberName] string callingMethod = "")
+        {
+            string hash = Guid.NewGuid().ToString("N").Substring(0, 7);
+            string numberedFolderName = string.Join(".", new[] { hash }.Where(s => s != null));
+            testRootFolder = Path.Combine("..", "..", "..", "..", "TestCase", callingMethod, numberedFolderName);
+        }
+
         public static string GetDataFolderName([CallerMemberName] string callingMethod = null)
         {
             // Create a datafolder path for the CA settings to use
@@ -146,7 +153,11 @@ namespace Stratis.SmartContracts.IntegrationTests
             string numberedFolderName = string.Join(
                 ".",
                 new[] { hash }.Where(s => s != null));
-            return Path.Combine(Path.GetTempPath(), callingMethod, numberedFolderName);
+
+
+            return TestBase.CreateTestDir(callingMethod, numberedFolderName);
+
+            //return Path.Combine(Path.GetTempPath(), callingMethod, numberedFolderName);
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string dataFolderName)

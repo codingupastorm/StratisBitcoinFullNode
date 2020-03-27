@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using FluentAssertions;
 using NBitcoin;
@@ -39,7 +40,7 @@ namespace Stratis.Bitcoin.Tests.Common
         /// <param name="caller">The calling object, from which we derive the namespace in which the test is contained.</param>
         /// <param name="callingMethod">The name of the test being executed. A directory with the same name will be created.</param>
         /// <returns>The <see cref="DataFolder"/> that was initialized.</returns>
-        public static DataFolder CreateDataFolder(object caller, [System.Runtime.CompilerServices.CallerMemberName] string callingMethod = "", Network network = null)
+        public static DataFolder CreateDataFolder(object caller, [CallerMemberName] string callingMethod = "", Network network = null)
         {
             string directoryPath = GetTestDirectoryPath(caller, callingMethod);
             var dataFolder = new DataFolder(new NodeSettings(network, networksSelector: Networks.Networks.Bitcoin, args: new string[] { $"-datadir={AssureEmptyDir(directoryPath)}" }).DataDir);
@@ -52,10 +53,11 @@ namespace Stratis.Bitcoin.Tests.Common
         /// <param name="caller">The calling object, from which we derive the namespace in which the test is contained.</param>
         /// <param name="callingMethod">The name of the test being executed. A directory with the same name will be created.</param>
         /// <returns>The path of the directory that was created.</returns>
-        public static string CreateTestDir(object caller, [System.Runtime.CompilerServices.CallerMemberName] string callingMethod = "")
+        public static string CreateTestDir(object caller, [CallerMemberName] string callingMethod = "")
         {
-            string directoryPath = GetTestDirectoryPath(caller, callingMethod);
-            return AssureEmptyDir(directoryPath);
+            var rootPath = Path.Combine("..", "..", "..", "..", "TestCase", caller.GetType().Name, callingMethod);
+            //string directoryPath = GetTestDirectoryPath(caller, callingMethod);
+            return AssureEmptyDir(rootPath);
         }
 
         /// <summary>
@@ -76,7 +78,7 @@ namespace Stratis.Bitcoin.Tests.Common
         /// <param name="caller">The calling object, from which we derive the namespace in which the test is contained.</param>
         /// <param name="callingMethod">The name of the test being executed. A directory with the same name will be created.</param>
         /// <returns>The path of the directory.</returns>
-        public static string GetTestDirectoryPath(object caller, [System.Runtime.CompilerServices.CallerMemberName] string callingMethod = "")
+        public static string GetTestDirectoryPath(object caller, [CallerMemberName] string callingMethod = "")
         {
             return GetTestDirectoryPath(Path.Combine(Path.GetTempPath(), caller.GetType().Name, callingMethod));
         }

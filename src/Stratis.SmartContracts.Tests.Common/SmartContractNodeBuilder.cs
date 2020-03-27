@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.CompilerServices;
+using System.Text.Json;
 using CertificateAuthority;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.Common;
@@ -11,7 +11,6 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Wallet;
@@ -100,6 +99,21 @@ namespace Stratis.SmartContracts.Tests.Common
             }
         }
 
+        public CoreNode CreateChannelNode(string channelName, int nodeIndex = 0)
+        {
+            var nodeRootFolder = Path.Combine(this.rootFolder, nodeIndex.ToString());
+            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, "channels");
+            var serializedJson = JsonSerializer.Serialize(channelNetwork);
+
+            var channelRootFolder = Path.Combine(nodeRootFolder, channelNetwork.RootFolderName);
+            Directory.CreateDirectory(channelRootFolder);
+
+            var serializedNetworkFileName = $"{channelRootFolder}\\{channelName}_network.json";
+            File.WriteAllText(serializedNetworkFileName, serializedJson);
+
+            return this.CreateNode(new ChannelNodeRunner(channelName, nodeRootFolder, this.TimeProvider), "poa.conf");
+        }
+
         public CoreNode CreateInfraNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client)
         {
             return CreateTokenlessNode(network, nodeIndex, authorityCertificate, client, "1");
@@ -121,9 +135,9 @@ namespace Stratis.SmartContracts.Tests.Common
             return (certParser.ReadCertificate(certificateInfo.CertificateContentDer), certificateInfo);
         }
 
-        public static SmartContractNodeBuilder Create(object caller, [CallerMemberName] string callingMethod = null)
+        public static SmartContractNodeBuilder Create(string testRootFolder)
         {
-            string testFolderPath = TestBase.CreateTestDir(caller, callingMethod);
+            string testFolderPath = Path.Combine(testRootFolder, "node");
             var builder = new SmartContractNodeBuilder(testFolderPath);
             return builder;
         }
