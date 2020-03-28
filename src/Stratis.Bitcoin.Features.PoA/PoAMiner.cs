@@ -154,8 +154,6 @@ namespace Stratis.Bitcoin.Features.PoA
                         continue;
                     }
 
-                    // Wait for a mining slot BEFORE deciding whether to mine. This lessens the likelihood
-                    // that we mine when there are no connected peers.
                     uint miningTimestamp = await this.WaitUntilMiningSlotAsync().ConfigureAwait(false);
 
                     ChainedHeader chainedHeader = await this.MineBlockAtTimestampAsync(miningTimestamp).ConfigureAwait(false);
