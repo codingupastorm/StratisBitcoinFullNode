@@ -107,12 +107,14 @@ namespace Stratis.SmartContracts.Tests.Common
             // Create the channel node runner.
             CoreNode channelNode = this.CreateNode(new ChannelNodeRunner(channelName, nodeRootFolder, this.TimeProvider), "poa.conf");
 
+            // Initialize the channel nodes's data folder etc.
+            string[] args = new string[] { "-password=test", "-datadir=" + nodeRootFolder, };
+            var nodeSettings = new NodeSettings(channelNetwork, args: args);
+
             // Copy the parent node's authority certificate to the channel node's root.
-            File.Copy(Path.Combine(infraNode.FullNode.Settings.DataDir, CertificatesManager.AuthorityCertificateName), Path.Combine(channelRootFolder, CertificatesManager.AuthorityCertificateName));
+            File.Copy(Path.Combine(infraNode.FullNode.Settings.DataDir, CertificatesManager.AuthorityCertificateName), Path.Combine(nodeSettings.DataDir, CertificatesManager.AuthorityCertificateName));
 
             // Initialize the channel node's keystore to get the client certificate private and transaction signing key etc.
-            string[] args = new string[] { "-password=test", };
-            var nodeSettings = new NodeSettings(channelNetwork, args: args);
             TokenlessKeyStoreManager keyStoreManager = InitializeNodeKeyStore(channelNode, channelNetwork, nodeSettings);
 
             BitcoinPubKeyAddress address = channelNode.ClientCertificatePrivateKey.PubKey.GetAddress(channelNetwork);
@@ -122,7 +124,7 @@ namespace Stratis.SmartContracts.Tests.Common
             (X509Certificate x509, CertificateInfoModel CertificateInfo) = IssueCertificate(client, channelNode.ClientCertificatePrivateKey, channelNode.TransactionSigningPrivateKey.PubKey, address, miningKey.PubKey);
             channelNode.ClientCertificate = CertificateInfo;
             Assert.NotNull(infraNode.ClientCertificate);
-            File.WriteAllBytes(Path.Combine(channelRootFolder, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(x509, channelNode.ClientCertificatePrivateKey, "test"));
+            File.WriteAllBytes(Path.Combine(nodeSettings.DataDir, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(x509, channelNode.ClientCertificatePrivateKey, "test"));
 
             NetworkRegistration.Clear();
 
