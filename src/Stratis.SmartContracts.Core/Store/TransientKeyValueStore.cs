@@ -28,10 +28,17 @@ namespace Stratis.SmartContracts.Core.Store
         }
     }
 
+    public interface ITransientStore
+    {
+        void Persist(uint256 txId, uint blockHeight, TransientStorePrivateData data);
+
+        TransientStorePrivateData Get(uint256 txId);
+    }
+
     /// <summary>
     /// Implements the transient store operations on top of the ITransientKeyValueStore database
     /// </summary>
-    public class TransientStore
+    public class TransientStore : ITransientStore
     {
         public const string Table = "transient";
         public byte[] MinBlockHeightKey = Encoding.ASCII.GetBytes("MinBlockHeight");
@@ -62,6 +69,34 @@ namespace Stratis.SmartContracts.Core.Store
                 tx.Insert(Table, key, data.ToBytes());
                 tx.Insert(Table, compositePurgeIndexKey, new byte[] {});
                 tx.Commit();
+            }
+        }
+
+        /// <summary>
+        /// Returns the private data changes a particular transaction made. 
+        /// </summary>
+        public TransientStorePrivateData Get(uint256 txId)
+        {
+            // This could surely be more efficient.
+
+            using (IKeyValueStoreTransaction tx = this.repository.CreateTransaction(KeyValueStoreTransactionMode.Read, Table))
+            {
+                var keyStart = TransientStoreQueryParams.CreateTxIdRangeStartKey(txId);
+                var keyEnd = TransientStoreQueryParams.CreateTxIdRangeEndKey(txId);
+
+                IEnumerable<(byte[], byte[])> values = tx.SelectForward<byte[], byte[]>(Table, keyStart, keyEnd);
+
+                foreach ((byte[] Key, byte[] Value) record in values)
+                {
+                    (uint256 recordTxId, Guid _, uint _) = TransientStoreQueryParams.SplitCompositeKeyForPvtRWSet(record.Key);
+
+                    if (recordTxId == txId)
+                    {
+                        return new TransientStorePrivateData(record.Value);
+                    }
+                }
+
+                return null;
             }
         }
 
@@ -222,6 +257,13 @@ namespace Stratis.SmartContracts.Core.Store
             return compositeKey;
         }
 
+        public static (uint256 txId, Guid uuid, uint blockHeight) SplitCompositeKeyForPvtRWSet(byte[] key)
+        {
+            var withoutPrefix = key.Skip(PrivateReadWriteSetPrefix.Length + CompositeKeySeparator.Length).ToArray();
+
+            return SplitCompositeKeyWithoutPrefixForTxid(withoutPrefix);
+        }
+
         private static byte[] CreateCompositeKeyWithoutPrefixForTxid(uint height, uint256 txId, Guid guid)
         {
             var compositeKey = new byte[0];
@@ -233,6 +275,16 @@ namespace Stratis.SmartContracts.Core.Store
 
             return compositeKey;
         }
+
+        private static (uint256 txId, Guid uuid, uint blockHeight) SplitCompositeKeyWithoutPrefixForTxid(byte[] key)
+        {
+            var txIdBytes = key.Take(32).ToArray();
+            var guidBytes = key.Skip(32 + CompositeKeySeparator.Length).Take(16).Reverse().ToArray();
+            var heightBytes = key.Skip(32 + 16 + 2*CompositeKeySeparator.Length).Take(sizeof(uint)).Reverse().ToArray();
+
+            return (new uint256(txIdBytes), new Guid(guidBytes), BitConverter.ToUInt32(heightBytes));
+        }
+
 
         public static byte[] CreateCompositeKeyForPurgeIndexByHeight(uint height, uint256 txId, Guid guid)
         {
@@ -278,7 +330,26 @@ namespace Stratis.SmartContracts.Core.Store
             endKey = endKey.Combine(TransientStoreQueryParams.CompositeKeySeparator);
             endKey = endKey.Combine(BitConverter.GetBytes(height).Reverse().ToArray());
             endKey = endKey.Combine(new byte[] { 0xFF });
+            return endKey;
+        }
 
+        public static byte[] CreateTxIdRangeStartKey(uint256 txId)
+        {
+            var startKey = new byte[0];
+            startKey = startKey.Combine(TransientStoreQueryParams.PrivateReadWriteSetPrefix);
+            startKey = startKey.Combine(TransientStoreQueryParams.CompositeKeySeparator);
+            startKey = startKey.Combine(txId.ToBytes(true));
+            startKey = startKey.Combine(TransientStoreQueryParams.CompositeKeySeparator);
+            return startKey;
+        }
+
+        public static byte[] CreateTxIdRangeEndKey(uint256 txId)
+        {
+            var endKey = new byte[0];
+            endKey = endKey.Combine(TransientStoreQueryParams.PrivateReadWriteSetPrefix);
+            endKey = endKey.Combine(TransientStoreQueryParams.CompositeKeySeparator);
+            endKey = endKey.Combine(txId.ToBytes(true));
+            endKey = endKey.Combine(new byte[] { 0xFF });
             return endKey;
         }
     }

@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.SmartContracts.Core.Store;
 using Xunit;
@@ -78,6 +77,19 @@ namespace Stratis.SmartContracts.Core.Tests.Store
             }
 
             Assert.Equal(blockHeightToPurge, this.store.GetMinBlockHeight());
+        }
+
+        [Fact]
+        public void GetAndSetPrivateData()
+        {
+            uint256 txId = new uint256(123456);
+            uint blockHeight = 6789;
+            TransientStorePrivateData data = new TransientStorePrivateData(new byte[] {0, 1, 2, 3});
+
+            this.store.Persist(txId, blockHeight, data);
+
+            TransientStorePrivateData result = this.store.Get(txId);
+            Assert.NotNull(result);
         }
     }
 }

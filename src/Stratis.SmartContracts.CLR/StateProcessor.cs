@@ -1,6 +1,5 @@
 ﻿using NBitcoin;
 using Stratis.SmartContracts.CLR.Metering;
-using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State.AccountAbstractionLayer;
 using Stratis.SmartContracts.RuntimeObserver;
@@ -30,7 +29,7 @@ namespace Stratis.SmartContracts.CLR
         {
             state.ContractState.CreateAccount(address);
 
-            ISmartContractState smartContractState = state.CreateSmartContractState(state, executionContext.ReadWriteSet, executionContext.GasMeter, address, message, state.ContractState);
+            ISmartContractState smartContractState = state.CreateSmartContractState(state, executionContext.ReadWriteSet, executionContext.PrivateReadWriteSet, executionContext.GasMeter, address, message, state.ContractState);
 
             VmExecutionResult result = this.Vm.Create(state.ContractState, smartContractState, executionContext, code, parameters, type);
 
@@ -47,6 +46,7 @@ namespace Stratis.SmartContracts.CLR
                 executionContext.GasMeter.GasConsumed,
                 address,
                 executionContext.ReadWriteSet,
+                executionContext.PrivateReadWriteSet,
                 result.Success.Result
             );
         }
@@ -111,7 +111,7 @@ namespace Stratis.SmartContracts.CLR
 
             string type = state.ContractState.GetContractType(message.To);
 
-            ISmartContractState smartContractState = state.CreateSmartContractState(state, executionContext.ReadWriteSet, executionContext.GasMeter, message.To, message, state.ContractState);
+            ISmartContractState smartContractState = state.CreateSmartContractState(state, executionContext.ReadWriteSet, executionContext.PrivateReadWriteSet, executionContext.GasMeter, message.To, message, state.ContractState);
 
             VmExecutionResult result = this.Vm.ExecuteMethod(smartContractState, executionContext, message.Method, contractCode, type);
 
@@ -128,6 +128,7 @@ namespace Stratis.SmartContracts.CLR
                 executionContext.GasMeter.GasConsumed,
                 message.To,
                 executionContext.ReadWriteSet,
+                executionContext.PrivateReadWriteSet,
                 result.Success.Result
             );
         }
@@ -212,7 +213,7 @@ namespace Stratis.SmartContracts.CLR
                 // No contract at this address, create a regular P2PKH xfer
                 state.AddInternalTransfer(new TransferInfo(message.From, message.To, message.Amount));
 
-                return StateTransitionResult.Ok(gasMeter.GasConsumed, message.To, new ReadWriteSetBuilder());
+                return StateTransitionResult.Ok(gasMeter.GasConsumed, message.To, new ReadWriteSetBuilder(), new ReadWriteSetBuilder());
             }
 
             var observer = new Observer(gasMeter, new MemoryMeter(ReflectionVirtualMachine.MemoryUnitLimit));

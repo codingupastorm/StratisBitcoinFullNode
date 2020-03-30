@@ -90,14 +90,15 @@ namespace Stratis.SmartContracts.CLR
 
         public IStateRepository ContractState { get; }
 
+        // TODO: Because of the way the state snapshots, this is going to be available in nested transactions!! Fix.
         public byte[] TransientData { get; }
 
         /// <summary>
         /// Sets up a new <see cref="ISmartContractState"/> based on the current state.
         /// </summary>
-        public ISmartContractState CreateSmartContractState(IState state, ReadWriteSetBuilder readWriteSet, IGasMeter gasMeter, uint160 address, BaseMessage message, IStateRepository repository) 
+        public ISmartContractState CreateSmartContractState(IState state, ReadWriteSetBuilder readWriteSet, ReadWriteSetBuilder privateReadWriteSet, IGasMeter gasMeter, uint160 address, BaseMessage message, IStateRepository repository) 
         {
-            return this.smartContractStateFactory.Create(state, readWriteSet, gasMeter, address, message, repository);
+            return this.smartContractStateFactory.Create(state, readWriteSet, privateReadWriteSet, gasMeter, address, message, repository);
         }
 
         /// <summary>

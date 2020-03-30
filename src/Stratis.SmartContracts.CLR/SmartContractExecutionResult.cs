@@ -44,6 +44,9 @@ namespace Stratis.SmartContracts.CLR
         /// <inheritdoc />
         public ReadWriteSetBuilder ReadWriteSet { get; set; }
 
+        /// <inheritdoc />
+        public ReadWriteSetBuilder PrivateReadWriteSet { get; set; }
+
         public SmartContractExecutionResult()
         {
             this.Logs = new List<Log>();

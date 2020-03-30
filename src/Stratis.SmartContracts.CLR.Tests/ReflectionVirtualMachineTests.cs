@@ -10,6 +10,7 @@ using Stratis.SmartContracts.CLR.ILRewrite;
 using Stratis.SmartContracts.CLR.Loader;
 using Stratis.SmartContracts.CLR.Metering;
 using Stratis.SmartContracts.Core.Hashing;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
 using Stratis.SmartContracts.Tokenless;
@@ -44,7 +45,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 new PersistentState(
                     new TestPersistenceStrategy(this.state),
                     this.context.Serializer, this.TestAddress.ToUint160()),
-                new PrivatePersistentState(this.context.Serializer, new TestPersistenceStrategy(this.state), this.TestAddress.ToUint160()), 
+                new PrivatePersistentState(this.context.Serializer, new TestPersistenceStrategy(this.state), this.TestAddress.ToUint160(), new ReadWriteSetBuilder()), 
                 this.context.Serializer,
                 new ContractLogHolder(),
                 Mock.Of<IInternalTransactionExecutor>(),

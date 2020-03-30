@@ -17,6 +17,7 @@ using Stratis.Feature.PoA.Tokenless.Controllers;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
+using Stratis.SmartContracts.Core.Store;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;
 
@@ -158,7 +159,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Check that the transient data was stored in the non-private store.
                 Assert.Equal(transientDataToStore, stateRepo.GetStorageValue(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("Transient")).Value);
 
-                // TODO: Check that the private data was stored 
+                // And that it was stored in the transient store!
+                Assert.NotNull(node2.FullNode.NodeService<ITransientStore>().Get(callTransaction.GetHash()));
             }
         }
     }
