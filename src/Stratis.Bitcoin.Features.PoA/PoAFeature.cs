@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using MembershipServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -204,6 +205,8 @@ namespace Stratis.Bitcoin.Features.PoA
                         services.AddSingleton<IdleFederationMembersKicker>();
 
                         // Permissioned membership.
+                        // TODO: PoA shouldn't actually require the MSD. Perhaps remove TLS support from PoA entirely?
+                        services.AddSingleton<IMembershipServicesDirectory, MembershipServicesDirectory>();
                         services.AddSingleton<ICertificatesManager, CertificatesManager>();
                         services.AddSingleton<IRevocationChecker, RevocationChecker>();
 

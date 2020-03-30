@@ -4,6 +4,7 @@ using System.Text.Json;
 using CertificateAuthority;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.Common;
+using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Networks;
@@ -69,7 +70,12 @@ namespace Stratis.SmartContracts.Tests.Common
 
             using (var nodeSettings = new NodeSettings(network, args: args))
             {
-                var dataFolderRootPath = Path.Combine(dataFolder, network.RootFolderName, network.Name);
+                var loggerFactory = new LoggerFactory();
+                var revocationChecker = new RevocationChecker(new MembershipServicesDirectory(settings));
+                var certificatesManager = new CertificatesManager(settings.DataFolder, settings, loggerFactory, revocationChecker, network);
+                var walletManager = new TokenlessWalletManager(network, settings.DataFolder, new TokenlessWalletSettings(settings), certificatesManager, loggerFactory);
+
+                walletManager.Initialize();
 
                 TokenlessWalletManager keyStoreManager = InitializeNodeKeyStore(node, network, nodeSettings);
 
@@ -85,6 +91,13 @@ namespace Stratis.SmartContracts.Tests.Common
 
                 if (authorityCertificate != null && node.ClientCertificate != null)
                 {
+                    File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificatesManager.AuthorityCertificateName), authorityCertificate.GetEncoded());
+                    File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(x509, node.ClientCertificatePrivateKey, "test"));
+
+                    // Put certificate into applicable local MSD folder
+                    Directory.CreateDirectory(Path.Combine(settings.DataDir, LocalMembershipServicesConfiguration.SignCerts));
+                    var ownCertificatePath = Path.Combine(settings.DataDir, LocalMembershipServicesConfiguration.SignCerts, MembershipServicesDirectory.GetCertificateThumbprint(issueResult.x509));
+                    File.WriteAllBytes(ownCertificatePath, issueResult.x509.GetEncoded());
                     File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificatesManager.AuthorityCertificateName), authorityCertificate.GetEncoded());
                     File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(x509, node.ClientCertificatePrivateKey, "test"));
                 }
@@ -154,9 +167,7 @@ namespace Stratis.SmartContracts.Tests.Common
             Assert.NotNull(certificateInfo);
             Assert.Equal(address.ToString(), certificateInfo.Address);
 
-            var certParser = new X509CertificateParser();
-
-            return (certParser.ReadCertificate(certificateInfo.CertificateContentDer), certificateInfo);
+            return (certificateInfo.ToCertificate(), certificateInfo);
         }
 
         public static SmartContractNodeBuilder Create(string testRootFolder)

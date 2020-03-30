@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using CertificateAuthority;
+using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.AsyncWork;
@@ -41,6 +42,7 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly IAsyncProvider asyncProvider;
         private readonly INodeLifetime nodeLifetime;
         private readonly ILogger logger;
+        private readonly IMembershipServicesDirectory membershipServices;
         private IAsyncLoop caPubKeysLoop;
         private readonly TokenlessWalletSettings tokenlessWalletSettings;
 
@@ -61,7 +63,8 @@ namespace Stratis.Feature.PoA.Tokenless
             TokenlessWalletSettings tokenlessWalletSettings,
             IAsyncProvider asyncProvider,
             INodeLifetime nodeLifetime,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            IMembershipServicesDirectory membershipServices)
         {
             this.certificatesManager = certificatesManager;
             this.certificatePermissionsChecker = certificatePermissionsChecker;
@@ -76,6 +79,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.nodeLifetime = nodeLifetime;
             this.caPubKeysLoop = null;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
+            this.membershipServices = membershipServices;
 
             // TODO-TL: Is there a better place to do this?
             storeSettings.TxIndex = true;
@@ -98,6 +102,7 @@ namespace Stratis.Feature.PoA.Tokenless
             var options = (PoAConsensusOptions)this.coreComponent.Network.Consensus.Options;
             if (options.EnablePermissionedMembership)
             {
+                this.membershipServices.Initialize();
                 this.revocationChecker.Initialize();
                 // We do not need to initialize the CertificatesManager here like it would have been in the regular PoA feature, because the TokenlessWalletManager is now responsible for ensuring a client certificate is created instead.
             }

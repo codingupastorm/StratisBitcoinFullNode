@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.Common;
+using MembershipServices;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -137,6 +138,19 @@ namespace Stratis.SmartContracts.IntegrationTests
             }, AccountAccessFlags.RevokeCertificates);
 
             caCertificatesManager.RevokeCertificate(model);
+        }
+
+        public static void AddCertificatesToMembershipServices(ICollection<X509Certificate> certificates, string dataDir)
+        {
+            // TODO: A more elegant way to do this would be some kind of certificate registry in the test environment. But this approach does at least let us easily control which certificates are known to each node.
+
+            Directory.CreateDirectory(Path.Combine(dataDir, LocalMembershipServicesConfiguration.PeerCerts));
+
+            foreach (X509Certificate certificate in certificates)
+            {
+                string certificatePath = Path.Combine(dataDir, LocalMembershipServicesConfiguration.PeerCerts, MembershipServicesDirectory.GetCertificateThumbprint(certificate));
+                File.WriteAllBytes(certificatePath, certificate.GetEncoded());
+            }
         }
 
         internal static void GetTestRootFolder(out string testRootFolder, [CallerMemberName] string callingMethod = "")

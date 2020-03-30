@@ -270,29 +270,17 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             // First check if we have created an account on the CA already.
             if (!this.certificatesManager.HaveAccount())
             {
-                int accountId = this.certificatesManager.CreateAccount(this.walletSettings.Name,
-                    this.walletSettings.OrganizationUnit,
-                    this.walletSettings.Organization,
-                    this.walletSettings.Locality,
-                    this.walletSettings.StateOrProvince,
-                    this.walletSettings.EmailAddress,
-                    this.walletSettings.Country,
-                    this.walletSettings.RequestedPermissions);
-
-                // The CA admin will need to approve the account, so advise the user.
-                this.logger.LogError($"Account created with ID {accountId}. After account approval, please update the node configuration and restart to proceed.");
+                this.logger.LogError($"Please create an account on the certificate authority and generate the node's certificate with the MembershipServices.Cli utility.");
 
                 return false;
             }
 
-            // The certificate manager is responsible for creation and storage of the client certificate, the wallet manager is primarily responsible for providing the requisite private key.
-            Key privateKey = this.GetKey(this.walletSettings.Password, TokenlessWalletAccount.P2PCertificates);
-            PubKey transactionSigningPubKey = this.GetKey(this.walletSettings.Password, TokenlessWalletAccount.TransactionSigning).PubKey;
-            PubKey blockSigningPubKey = this.GetKey(this.walletSettings.Password, TokenlessWalletAccount.BlockSigning).PubKey;
+            if (this.certificatesManager.ClientCertificate == null)
+            {
+                this.logger.LogError($"Please generate the node's certificate with the MembershipServices.Cli utility.");
 
-            X509Certificate clientCert = this.certificatesManager.RequestNewCertificate(privateKey, transactionSigningPubKey, blockSigningPubKey);
-
-            File.WriteAllBytes(Path.Combine(this.dataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCert, privateKey, this.walletSettings.Password));
+                return false;
+            }
 
             return true;
         }

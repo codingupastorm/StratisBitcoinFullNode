@@ -1,4 +1,5 @@
 using CertificateAuthority;
+using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Org.BouncyCastle.X509;
@@ -30,16 +31,16 @@ namespace Stratis.Feature.PoA.Tokenless
 
     public sealed class CertificatePermissionsChecker : ICertificatePermissionsChecker
     {
-        private readonly ICertificateCache certificateCache;
+        private readonly IMembershipServicesDirectory membershipServices;
         private readonly ICertificatesManager certificatesManager;
         private readonly ILogger logger;
 
         public CertificatePermissionsChecker(
-            ICertificateCache certificateCache,
+            IMembershipServicesDirectory membershipServices,
             ICertificatesManager certificatesManager,
             ILoggerFactory loggerFactory)
         {
-            this.certificateCache = certificateCache;
+            this.membershipServices = membershipServices;
             this.certificatesManager = certificatesManager;
             this.logger = loggerFactory.CreateLogger(this.GetType());
         }
@@ -77,27 +78,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 }
             }
 
-            X509Certificate certificate = this.certificateCache.GetCertificate(address) ?? GetCertificateFromCA(address);
-            return certificate;
-        }
-
-        private X509Certificate GetCertificateFromCA(uint160 address)
-        {
-            try
-            {
-                X509Certificate certificate = this.certificatesManager.GetCertificateForAddress(address);
-                if (certificate != null)
-                {
-                    this.certificateCache.SetCertificate(address, certificate);
-                }
-                return certificate;
-            }
-            catch (CaClientException)
-            {
-                // If there is an error when contacting the CA, don't explode. Just deny the transaction for now.
-                this.logger.LogWarning("Error when asking the CA for a sender certificate. Denying transaction.");
-                return null;
-            }
+            return this.membershipServices.GetCertificateForAddress(address);
         }
 
         public static bool ValidateCertificateHasPermission(X509Certificate certificate, TransactionSendingPermission permission)
