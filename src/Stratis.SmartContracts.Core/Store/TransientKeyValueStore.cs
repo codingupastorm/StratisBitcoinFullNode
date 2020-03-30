@@ -88,7 +88,7 @@ namespace Stratis.SmartContracts.Core.Store
 
                 foreach ((byte[] Key, byte[] Value) record in values)
                 {
-                    (uint256 recordTxId, Guid _, uint _) = TransientStoreQueryParams.SplitCompositeKeyOfPurgeIndexByHeight(record.Key);
+                    (uint256 recordTxId, Guid _, uint _) = TransientStoreQueryParams.SplitCompositeKeyForPvtRWSet(record.Key);
 
                     if (recordTxId == txId)
                     {
