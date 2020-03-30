@@ -4,7 +4,6 @@ using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;

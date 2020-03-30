@@ -13,7 +13,6 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Wallet;
 using Xunit;
@@ -68,16 +67,11 @@ namespace Stratis.SmartContracts.Tests.Common
                     "-certificatepassword=test"
                 };
 
-            using (var nodeSettings = new NodeSettings(network, args: args))
+            using (var settings = new NodeSettings(network, args: args))
             {
-                var loggerFactory = new LoggerFactory();
-                var revocationChecker = new RevocationChecker(new MembershipServicesDirectory(settings));
-                var certificatesManager = new CertificatesManager(settings.DataFolder, settings, loggerFactory, revocationChecker, network);
-                var walletManager = new TokenlessWalletManager(network, settings.DataFolder, new TokenlessWalletSettings(settings), certificatesManager, loggerFactory);
+                var dataFolderRootPath = Path.Combine(dataFolder, network.RootFolderName, network.Name);
 
-                walletManager.Initialize();
-
-                TokenlessWalletManager keyStoreManager = InitializeNodeKeyStore(node, network, nodeSettings);
+                TokenlessWalletManager keyStoreManager = InitializeNodeKeyStore(node, network, settings);
 
                 BitcoinPubKeyAddress address = node.ClientCertificatePrivateKey.PubKey.GetAddress(network);
                 Key miningKey = keyStoreManager.GetKey("test", TokenlessWalletAccount.BlockSigning);
@@ -96,10 +90,8 @@ namespace Stratis.SmartContracts.Tests.Common
 
                     // Put certificate into applicable local MSD folder
                     Directory.CreateDirectory(Path.Combine(settings.DataDir, LocalMembershipServicesConfiguration.SignCerts));
-                    var ownCertificatePath = Path.Combine(settings.DataDir, LocalMembershipServicesConfiguration.SignCerts, MembershipServicesDirectory.GetCertificateThumbprint(issueResult.x509));
-                    File.WriteAllBytes(ownCertificatePath, issueResult.x509.GetEncoded());
-                    File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificatesManager.AuthorityCertificateName), authorityCertificate.GetEncoded());
-                    File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(x509, node.ClientCertificatePrivateKey, "test"));
+                    var ownCertificatePath = Path.Combine(settings.DataDir, LocalMembershipServicesConfiguration.SignCerts, MembershipServicesDirectory.GetCertificateThumbprint(x509));
+                    File.WriteAllBytes(ownCertificatePath, x509.GetEncoded());
                 }
 
                 return node;
@@ -141,12 +133,12 @@ namespace Stratis.SmartContracts.Tests.Common
             return CreateTokenlessNode(network, nodeIndex, authorityCertificate, client, true);
         }
 
-        private TokenlessWalletManager InitializeNodeKeyStore(CoreNode node, Network network, NodeSettings nodeSettings)
+        private TokenlessWalletManager InitializeNodeKeyStore(CoreNode node, Network network, NodeSettings settings)
         {
             var loggerFactory = new LoggerFactory();
-            var revocationChecker = new RevocationChecker(nodeSettings, null, loggerFactory, DateTimeProvider.Default);
-            var certificatesManager = new CertificatesManager(nodeSettings.DataFolder, nodeSettings, loggerFactory, revocationChecker, network);
-            var keyStoreManager = new TokenlessWalletManager(network, nodeSettings.DataFolder, new TokenlessWalletSettings(nodeSettings), certificatesManager, loggerFactory);
+            var revocationChecker = new RevocationChecker(new MembershipServicesDirectory(settings));
+            var certificatesManager = new CertificatesManager(settings.DataFolder, settings, loggerFactory, revocationChecker, network);
+            var keyStoreManager = new TokenlessWalletManager(network, settings.DataFolder, new TokenlessWalletSettings(settings), certificatesManager, loggerFactory);
 
             keyStoreManager.Initialize();
 
