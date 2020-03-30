@@ -71,7 +71,7 @@ namespace Stratis.SmartContracts.Tests.Common
             {
                 var dataFolderRootPath = Path.Combine(dataFolder, network.RootFolderName, network.Name);
 
-                TokenlessKeyStoreManager keyStoreManager = InitializeNodeKeyStore(node, network, nodeSettings);
+                TokenlessWalletManager keyStoreManager = InitializeNodeKeyStore(node, network, nodeSettings);
 
                 BitcoinPubKeyAddress address = node.ClientCertificatePrivateKey.PubKey.GetAddress(network);
                 Key miningKey = keyStoreManager.GetKey("test", TokenlessWalletAccount.BlockSigning);
@@ -128,12 +128,12 @@ namespace Stratis.SmartContracts.Tests.Common
             return CreateTokenlessNode(network, nodeIndex, authorityCertificate, client, true);
         }
 
-        private TokenlessKeyStoreManager InitializeNodeKeyStore(CoreNode node, Network network, NodeSettings nodeSettings)
+        private TokenlessWalletManager InitializeNodeKeyStore(CoreNode node, Network network, NodeSettings nodeSettings)
         {
             var loggerFactory = new LoggerFactory();
             var revocationChecker = new RevocationChecker(nodeSettings, null, loggerFactory, DateTimeProvider.Default);
             var certificatesManager = new CertificatesManager(nodeSettings.DataFolder, nodeSettings, loggerFactory, revocationChecker, network);
-            var keyStoreManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, new TokenlessWalletSettings(nodeSettings), certificatesManager, loggerFactory);
+            var keyStoreManager = new TokenlessWalletManager(network, nodeSettings.DataFolder, new TokenlessWalletSettings(nodeSettings), certificatesManager, loggerFactory);
 
             keyStoreManager.Initialize();
 

@@ -116,7 +116,7 @@ namespace Stratis.Feature.PoA.Tokenless
                     .FeatureServices(services =>
                     {
                         services.AddSingleton<TokenlessWalletSettings>();
-                        services.AddSingleton<ITokenlessKeyStoreManager, TokenlessKeyStoreManager>();
+                        services.AddSingleton<ITokenlessKeyStoreManager, TokenlessWalletManager>();
                         services.AddSingleton<IMiningKeyProvider, TokenlessMiningKeyProvider>();
                     });
             });

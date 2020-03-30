@@ -5,7 +5,7 @@ using TracerAttributes;
 
 namespace Stratis.Feature.PoA.Tokenless.Wallet
 {
-    public class TokenlessKeyStore
+    public class TokenlessWallet
     {
         public string EncryptedSeed { get; set; }
 
@@ -17,11 +17,11 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         public string ExtPubKey2 { get; set; }
 
-        public TokenlessKeyStore()
+        public TokenlessWallet()
         {
         }
 
-        public TokenlessKeyStore(Network network, string password, ref Mnemonic mnemonic)
+        public TokenlessWallet(Network network, string password, ref Mnemonic mnemonic)
         {
             Guard.NotEmpty(password, nameof(password));
 

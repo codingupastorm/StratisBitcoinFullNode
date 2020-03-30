@@ -38,24 +38,24 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         P2PCertificates = 2
     }
 
-    public class TokenlessKeyStoreManager : ITokenlessKeyStoreManager
+    public class TokenlessWalletManager : ITokenlessKeyStoreManager
     {
         public const string KeyStoreFileName = "nodeid.json";
 
-        public TokenlessKeyStore Wallet { get; private set; }
+        public TokenlessWallet Wallet { get; private set; }
 
         private readonly Network network;
         private readonly DataFolder dataFolder;
-        private readonly FileStorage<TokenlessKeyStore> fileStorage;
+        private readonly FileStorage<TokenlessWallet> fileStorage;
         private readonly TokenlessWalletSettings walletSettings;
         private readonly ICertificatesManager certificatesManager;
         private readonly ILogger logger;
 
-        public TokenlessKeyStoreManager(Network network, DataFolder dataFolder, TokenlessWalletSettings walletSettings, ICertificatesManager certificatesManager, ILoggerFactory loggerFactory)
+        public TokenlessWalletManager(Network network, DataFolder dataFolder, TokenlessWalletSettings walletSettings, ICertificatesManager certificatesManager, ILoggerFactory loggerFactory)
         {
             this.network = network;
             this.dataFolder = dataFolder;
-            this.fileStorage = new FileStorage<TokenlessKeyStore>(this.dataFolder.RootPath);
+            this.fileStorage = new FileStorage<TokenlessWallet>(this.dataFolder.RootPath);
             this.walletSettings = walletSettings;
             this.certificatesManager = certificatesManager;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
@@ -78,7 +78,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return false;
         }
 
-        public TokenlessKeyStore LoadWallet()
+        public TokenlessWallet LoadWallet()
         {
             string fileName = KeyStoreFileName;
 
@@ -126,9 +126,9 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return keyTool.LoadPrivateKey(KeyType.TransactionSigningKey);
         }
 
-        public (TokenlessKeyStore, Mnemonic) CreateWallet(string password, Mnemonic mnemonic = null)
+        public (TokenlessWallet, Mnemonic) CreateWallet(string password, Mnemonic mnemonic = null)
         {
-            var wallet = new TokenlessKeyStore(this.network, password, ref mnemonic);
+            var wallet = new TokenlessWallet(this.network, password, ref mnemonic);
 
             this.fileStorage.SaveToFile(wallet, KeyStoreFileName);
 
@@ -157,7 +157,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                     return false;
                 }
 
-                TokenlessKeyStore wallet;
+                TokenlessWallet wallet;
                 Mnemonic mnemonic = (strMnemonic == null) ? null : new Mnemonic(strMnemonic);
 
                 (wallet, mnemonic) = this.CreateWallet(password, mnemonic);
