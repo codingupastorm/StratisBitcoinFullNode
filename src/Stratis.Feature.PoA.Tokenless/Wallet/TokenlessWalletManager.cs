@@ -1,9 +1,7 @@
 ﻿using System;
 using System.IO;
-using CertificateAuthority;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
