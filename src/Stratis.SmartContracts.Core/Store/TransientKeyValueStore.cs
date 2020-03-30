@@ -257,6 +257,13 @@ namespace Stratis.SmartContracts.Core.Store
             return compositeKey;
         }
 
+        public static (uint256 txId, Guid uuid, uint blockHeight) SplitCompositeKeyForPvtRWSet(byte[] key)
+        {
+            var withoutPrefix = key.Skip(PrivateReadWriteSetPrefix.Length + CompositeKeySeparator.Length).ToArray();
+
+            return SplitCompositeKeyWithoutPrefixForTxid(withoutPrefix);
+        }
+
         private static byte[] CreateCompositeKeyWithoutPrefixForTxid(uint height, uint256 txId, Guid guid)
         {
             var compositeKey = new byte[0];
@@ -268,6 +275,16 @@ namespace Stratis.SmartContracts.Core.Store
 
             return compositeKey;
         }
+
+        private static (uint256 txId, Guid uuid, uint blockHeight) SplitCompositeKeyWithoutPrefixForTxid(byte[] key)
+        {
+            var txIdBytes = key.Take(32).ToArray();
+            var guidBytes = key.Skip(32 + CompositeKeySeparator.Length).Take(16).Reverse().ToArray();
+            var heightBytes = key.Skip(32 + 16 + 2*CompositeKeySeparator.Length).Take(sizeof(uint)).Reverse().ToArray();
+
+            return (new uint256(txIdBytes), new Guid(guidBytes), BitConverter.ToUInt32(heightBytes));
+        }
+
 
         public static byte[] CreateCompositeKeyForPurgeIndexByHeight(uint height, uint256 txId, Guid guid)
         {
