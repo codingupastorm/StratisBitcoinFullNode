@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -84,12 +85,14 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 return false;
             }
 
-            // Store any changes that were made to the transient store
-            byte[] privateReadWriteSetData = Encoding.UTF8.GetBytes(result.PrivateReadWriteSet.GetReadWriteSet().ToJson()); // ew
-            this.transientStore.Persist(request.ContractTransaction.GetHash(), blockHeight, new TransientStorePrivateData(privateReadWriteSetData));
+            if (result.PrivateReadWriteSet.WriteSet.Any())
+            {
+                // Store any changes that were made to the transient store
+                byte[] privateReadWriteSetData = Encoding.UTF8.GetBytes(result.PrivateReadWriteSet.GetReadWriteSet().ToJson()); // ew
+                this.transientStore.Persist(request.ContractTransaction.GetHash(), blockHeight, new TransientStorePrivateData(privateReadWriteSetData));
+            }
 
             // TODO: If we have multiple endorsements happening here, check the read write set before signing!
-
             Transaction signedRWSTransaction = this.readWriteSetTransactionSerializer.Build(result.ReadWriteSet.GetReadWriteSet());
 
             uint256 proposalId = request.ContractTransaction.GetHash();
