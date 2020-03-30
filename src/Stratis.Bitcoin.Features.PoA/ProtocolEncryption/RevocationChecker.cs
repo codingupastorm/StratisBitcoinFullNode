@@ -100,9 +100,9 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         public void Initialize()
         {
             // TODO: Create a common settings class that can be injected
-            var caUrl = this.configuration.GetOrDefault<string>("caurl", "https://localhost:5001");
-            var caPassword = this.configuration.GetOrDefault<string>(CertificatesManager.CaPasswordKey, null);
-            var caAccountId = this.configuration.GetOrDefault<int>(CertificatesManager.CaAccountIdKey, 0);
+            var caUrl = this.configuration.GetOrDefault("caurl", "https://localhost:5001");
+            var caPassword = this.configuration.GetOrDefault(CertificatesManager.CaPasswordKey, "");
+            var caAccountId = this.configuration.GetOrDefault(CertificatesManager.CaAccountIdKey, 0);
 
             this.client = new CaClient(new Uri(caUrl), new HttpClient(), caAccountId, caPassword);
 
@@ -188,8 +188,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             }
             catch (Exception e)
             {
-                this.logger.LogWarning("Failed to reach certificate authority server.");
-                this.logger.LogDebug(e.ToString());
+                this.logger.LogWarning($"Failed to reach certificate authority server: {e.Message}");
             }
         }
 

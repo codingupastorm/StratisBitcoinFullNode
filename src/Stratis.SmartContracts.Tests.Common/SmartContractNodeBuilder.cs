@@ -28,7 +28,7 @@ namespace Stratis.SmartContracts.Tests.Common
             this.TimeProvider = new EditableTimeProvider();
         }
 
-        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client, string isInfraNode = "0", bool initialRun = true)
+        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client, bool isInfraNode = false, bool initialRun = true)
         {
             string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
 
@@ -37,7 +37,7 @@ namespace Stratis.SmartContracts.Tests.Common
             var configParameters = new NodeConfigParameters()
             {
                 { "caurl" , "http://localhost:5050" },
-                { "isinfranode", isInfraNode }
+                { "isinfranode", isInfraNode.ToString() }
             };
 
             CoreNode node = this.CreateNode(new TokenlessNodeRunner(dataFolder, network, this.TimeProvider), "poa.conf", configParameters: configParameters);
@@ -69,6 +69,8 @@ namespace Stratis.SmartContracts.Tests.Common
 
             using (var nodeSettings = new NodeSettings(network, args: args))
             {
+                var dataFolderRootPath = Path.Combine(dataFolder, network.RootFolderName, network.Name);
+
                 TokenlessKeyStoreManager keyStoreManager = InitializeNodeKeyStore(node, network, nodeSettings);
 
                 BitcoinPubKeyAddress address = node.ClientCertificatePrivateKey.PubKey.GetAddress(network);
@@ -83,8 +85,8 @@ namespace Stratis.SmartContracts.Tests.Common
 
                 if (authorityCertificate != null && node.ClientCertificate != null)
                 {
-                    File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.AuthorityCertificateName), authorityCertificate.GetEncoded());
-                    File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(x509, node.ClientCertificatePrivateKey, "test"));
+                    File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificatesManager.AuthorityCertificateName), authorityCertificate.GetEncoded());
+                    File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(x509, node.ClientCertificatePrivateKey, "test"));
                 }
 
                 return node;
@@ -108,7 +110,7 @@ namespace Stratis.SmartContracts.Tests.Common
             CoreNode channelNode = this.CreateNode(new ChannelNodeRunner(channelName, nodeRootFolder, this.TimeProvider), "poa.conf");
 
             // Initialize the channel nodes's data folder etc.
-            string[] args = new string[] { "-password=test", "-datadir=" + nodeRootFolder, };
+            string[] args = new string[] { "-datadir=" + nodeRootFolder, };
             using (var nodeSettings = new NodeSettings(channelNetwork, args: args))
             {
                 // Copy the parent node's authority and client certificate to the channel node's root.
@@ -123,7 +125,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
         public CoreNode CreateInfraNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client)
         {
-            return CreateTokenlessNode(network, nodeIndex, authorityCertificate, client, "1");
+            return CreateTokenlessNode(network, nodeIndex, authorityCertificate, client, true);
         }
 
         private TokenlessKeyStoreManager InitializeNodeKeyStore(CoreNode node, Network network, NodeSettings nodeSettings)

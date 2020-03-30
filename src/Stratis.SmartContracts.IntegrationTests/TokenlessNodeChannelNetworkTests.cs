@@ -1,4 +1,6 @@
-﻿using CertificateAuthority;
+﻿using System.Diagnostics;
+using System.Linq;
+using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
 using Microsoft.AspNetCore.Hosting;
 using Org.BouncyCastle.X509;
@@ -45,11 +47,13 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public void TokenlessNodeCanCreateAndStartChannelNodes()
+        public void InfraNodeCanCreateAndStartSystemChannelNode()
         {
             TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
+            Process channelNodeProcess = null;
+
+            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 var network = new TokenlessNetwork();
@@ -64,16 +68,18 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
                 CaClient client1 = TokenlessTestHelper.GetClient(server);
 
-                // Create and start the main "infra" tokenless node which will internal start the "sytem channel node".
+                // Create and start the main "infra" tokenless node which will internally start the "system channel node".
                 CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, ac, client1);
                 infraNode.Start();
 
-                // Ask the infra node to create the "Sales" channel.
-                // This effectively serializes the channel network and returns the path where the json is located at.
-                //var networkFolderPath = tokenlessNode.CreateChannel("Sales");
-                //var channelNode = nodeBuilder.CreateInfrastructureNode(networkFolderPath);
-                //channelNode.Start();
+                var tokenlessFeature = infraNode.FullNode.NodeFeature<TokenlessFeature>();
+                Assert.True(tokenlessFeature.StartedChannelNodes.Count == 1);
+
+                channelNodeProcess = Process.GetProcessById(tokenlessFeature.StartedChannelNodes.First());
+                Assert.False(channelNodeProcess.HasExited);
             }
+
+            Assert.True(channelNodeProcess.HasExited);
         }
     }
 }

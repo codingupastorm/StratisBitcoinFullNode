@@ -63,7 +63,10 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         public bool Initialize()
         {
-            bool walletOk = this.CheckWallet();
+            this.logger.LogInformation($"Initializing the keystore; channel node is {this.walletSettings.IsChannelNode}");
+            this.logger.LogInformation($"Initializing the keystore; infra node node is {this.walletSettings.IsInfraNode}");
+
+            bool walletOk = this.CheckKeyStore();
             bool blockSigningKeyFileOk = this.CheckBlockSigningKeyFile();
             bool transactionKeyFileOk = this.CheckTransactionSigningKeyFile();
             bool certificateOk = this.CheckCertificate();
@@ -132,12 +135,18 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return (wallet, mnemonic);
         }
 
-        private bool CheckWallet()
+        private bool CheckKeyStore()
         {
             bool canStart = true;
 
-            if (!File.Exists(Path.Combine(this.walletSettings.RootPath, KeyStoreFileName)))
+            var keyStorePath = Path.Combine(this.walletSettings.RootPath, KeyStoreFileName);
+
+            this.logger.LogInformation($"Checking if the keystore exists at: {keyStorePath}");
+
+            if (!File.Exists(keyStorePath))
             {
+                this.logger.LogInformation($"Key store does not exist, creating...");
+
                 var strMnemonic = this.walletSettings.Mnemonic;
                 var password = this.walletSettings.Password;
 
@@ -173,8 +182,14 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         private bool CheckBlockSigningKeyFile()
         {
-            if (!File.Exists(Path.Combine(this.walletSettings.RootPath, KeyTool.FederationKeyFileName)))
+            var path = Path.Combine(this.walletSettings.RootPath, KeyTool.FederationKeyFileName);
+
+            this.logger.LogInformation($"Checking if the block signing key file exists at: {path}");
+
+            if (!File.Exists(path))
             {
+                this.logger.LogInformation($"Block signing key file does not exist, creating...");
+
                 if (!CheckPassword(KeyTool.FederationKeyFileName))
                     return false;
 
@@ -196,8 +211,14 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         private bool CheckTransactionSigningKeyFile()
         {
-            if (!File.Exists(Path.Combine(this.walletSettings.RootPath, KeyTool.TransactionSigningKeyFileName)))
+            var path = Path.Combine(this.walletSettings.RootPath, KeyTool.TransactionSigningKeyFileName);
+
+            this.logger.LogInformation($"Checking if the transaction signing key file exists at: {path}");
+
+            if (!File.Exists(path))
             {
+                this.logger.LogInformation($"Transaction signing key file does not exist, creating...");
+
                 if (!CheckPassword(KeyTool.TransactionSigningKeyFileName))
                     return false;
 
@@ -225,7 +246,10 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             try
             {
                 caOk = this.certificatesManager.LoadAuthorityCertificate(false);
+                this.logger.LogInformation($"Authority certificate loaded.");
+
                 clientOk = this.certificatesManager.LoadClientCertificate();
+                this.logger.LogInformation($"Client certificate loaded.");
             }
             catch (CertificateConfigurationException certEx)
             {
