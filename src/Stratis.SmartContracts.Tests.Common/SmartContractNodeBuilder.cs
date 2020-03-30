@@ -91,7 +91,7 @@ namespace Stratis.SmartContracts.Tests.Common
             }
         }
 
-        public CoreNode CreateChannelNode(CoreNode infraNode, string channelName, CaClient client, int nodeIndex = 0)
+        public CoreNode CreateChannelNode(CoreNode infraNode, string channelName, int nodeIndex = 0)
         {
             // Serialize the channel network and write the json to disk.
             var nodeRootFolder = Path.Combine(this.rootFolder, nodeIndex.ToString());
@@ -109,24 +109,14 @@ namespace Stratis.SmartContracts.Tests.Common
 
             // Initialize the channel nodes's data folder etc.
             string[] args = new string[] { "-password=test", "-datadir=" + nodeRootFolder, };
-            var nodeSettings = new NodeSettings(channelNetwork, args: args);
+            using (var nodeSettings = new NodeSettings(channelNetwork, args: args))
+            {
+                // Copy the parent node's authority and client certificate to the channel node's root.
+                File.Copy(Path.Combine(infraNode.FullNode.Settings.DataDir, CertificatesManager.AuthorityCertificateName), Path.Combine(nodeSettings.DataDir, CertificatesManager.AuthorityCertificateName));
+                File.Copy(Path.Combine(infraNode.FullNode.Settings.DataDir, CertificatesManager.ClientCertificateName), Path.Combine(nodeSettings.DataDir, CertificatesManager.ClientCertificateName));
 
-            // Copy the parent node's authority certificate to the channel node's root.
-            File.Copy(Path.Combine(infraNode.FullNode.Settings.DataDir, CertificatesManager.AuthorityCertificateName), Path.Combine(nodeSettings.DataDir, CertificatesManager.AuthorityCertificateName));
-
-            // Initialize the channel node's keystore to get the client certificate private and transaction signing key etc.
-            TokenlessKeyStoreManager keyStoreManager = InitializeNodeKeyStore(channelNode, channelNetwork, nodeSettings);
-
-            BitcoinPubKeyAddress address = channelNode.ClientCertificatePrivateKey.PubKey.GetAddress(channelNetwork);
-            Key miningKey = keyStoreManager.GetKey("test", TokenlessWalletAccount.BlockSigning);
-
-            // Issue a certificate for the channel node and write it to the root folder of the node.
-            (X509Certificate x509, CertificateInfoModel CertificateInfo) = IssueCertificate(client, channelNode.ClientCertificatePrivateKey, channelNode.TransactionSigningPrivateKey.PubKey, address, miningKey.PubKey);
-            channelNode.ClientCertificate = CertificateInfo;
-            Assert.NotNull(infraNode.ClientCertificate);
-            File.WriteAllBytes(Path.Combine(nodeSettings.DataDir, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(x509, channelNode.ClientCertificatePrivateKey, "test"));
-
-            NetworkRegistration.Clear();
+                NetworkRegistration.Clear();
+            }
 
             return channelNode;
         }

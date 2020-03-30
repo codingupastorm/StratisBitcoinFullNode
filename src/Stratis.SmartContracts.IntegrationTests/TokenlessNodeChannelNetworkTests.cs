@@ -39,7 +39,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 tokenlessNode.Start();
 
                 // Create and start the channel node.
-                CoreNode channelNode = nodeBuilder.CreateChannelNode(tokenlessNode, "system", client);
+                CoreNode channelNode = nodeBuilder.CreateChannelNode(tokenlessNode, "system");
                 channelNode.Start();
             }
         }
