@@ -170,8 +170,6 @@ namespace Stratis.SmartContracts.IntegrationTests
 
 
             return TestBase.CreateTestDir(callingMethod, numberedFolderName);
-
-            //return Path.Combine(Path.GetTempPath(), callingMethod, numberedFolderName);
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string dataFolderName)
