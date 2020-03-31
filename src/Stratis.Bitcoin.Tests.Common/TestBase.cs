@@ -27,11 +27,10 @@ namespace Stratis.Bitcoin.Tests.Common
             this.RepositorySerializer = new RepositorySerializer(network.Consensus.ConsensusFactory);
         }
 
-        public static string AssureEmptyDir(string dir)
+        public static DirectoryInfo AssureEmptyDir(string dir)
         {
-            string uniqueDirName = $"{dir}-{DateTime.UtcNow:ddMMyyyyTHH.mm.ss.fff}";
-            Directory.CreateDirectory(uniqueDirName);
-            return uniqueDirName;
+            string uniqueDirectoryName = $"{dir}-{DateTime.UtcNow:ddMMyyyyTHH.mm.ss.fff}";
+            return Directory.CreateDirectory(uniqueDirectoryName);
         }
 
         /// <summary>
@@ -56,8 +55,7 @@ namespace Stratis.Bitcoin.Tests.Common
         public static string CreateTestDir(object caller, [CallerMemberName] string callingMethod = "")
         {
             var rootPath = Path.Combine("..", "..", "..", "..", "TestCase", caller.GetType().Name, callingMethod);
-            //string directoryPath = GetTestDirectoryPath(caller, callingMethod);
-            return AssureEmptyDir(rootPath);
+            return AssureEmptyDir(rootPath).FullName;
         }
 
         /// <summary>
@@ -68,7 +66,7 @@ namespace Stratis.Bitcoin.Tests.Common
         public static string CreateTestDir(string testDirectory)
         {
             string directoryPath = GetTestDirectoryPath(testDirectory);
-            return AssureEmptyDir(directoryPath);
+            return AssureEmptyDir(directoryPath).FullName;
         }
 
         /// <summary>
