@@ -31,7 +31,7 @@ namespace Stratis.Bitcoin.IntegrationTests
         }
 
         [Fact]
-        public void Pos_Given_NodesAreSynced_When_ABigReorgHappens_Then_TheReorgIsIgnored()
+        public void PosNodesAreSyncedBigReorgHappensReorgIsIgnored()
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {
