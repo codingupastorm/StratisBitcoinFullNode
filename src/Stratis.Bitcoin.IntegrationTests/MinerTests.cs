@@ -696,8 +696,11 @@ namespace Stratis.Bitcoin.IntegrationTests
             Assert.True(tx.IsFinal(context.ChainIndexer.Tip.GetMedianTimePast().AddMinutes(2), context.ChainIndexer.Tip.Height + 2)); // Locktime passes 2 min later
         }
 
+        /// <summary>
+        /// Miner_PosNetwork_CreatePowTransaction_AheadOfFutureDrift_ShouldNotBeIncludedInBlock
+        /// </summary>
         [Fact]
-        public void Miner_PosNetwork_CreatePowTransaction_AheadOfFutureDrift_ShouldNotBeIncludedInBlock()
+        public void MinerTests_Scenario10()
         {
             var network = KnownNetworks.StratisRegTest;
 
