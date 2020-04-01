@@ -14,7 +14,6 @@ using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
-using Xunit.Sdk;
 
 namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
 {
