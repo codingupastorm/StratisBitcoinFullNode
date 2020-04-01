@@ -29,6 +29,10 @@ namespace Stratis.Bitcoin.Features.PoA
             this.BlockDefinitionOptions = new BlockDefinitionOptions(blockMaxWeight, blockMaxSize).RestrictForNetwork(nodeSettings.Network);
         }
 
+        public void DisableBootstrap()
+        {
+            this.BootstrappingMode = false;
+        }
 
         /// <summary>
         /// Displays mining help information on the console.
