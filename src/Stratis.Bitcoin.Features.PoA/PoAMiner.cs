@@ -143,11 +143,8 @@ namespace Stratis.Bitcoin.Features.PoA
                     this.logger.LogDebug("IsInitialBlockDownload={0}, AnyConnectedPeers={1}, BootstrappingMode={2}, IsFederationMember={3}",
                         this.ibdState.IsInitialBlockDownload(), this.connectionManager.ConnectedPeers.Any(), this.settings.BootstrappingMode, this.federationManager.IsFederationMember);
 
-                    // Wait for a mining slot BEFORE deciding whether to mine. This lessens the likelihood
-                    // that we mine when there are no connected peers.
-                    uint miningTimestamp = await this.WaitUntilMiningSlotAsync().ConfigureAwait(false);
-
-                    // Don't mine in IBD in case we are connected to any node unless bootstrapping mode is enabled.
+                    // Don't mine in IBD or if we aren't connected to any node (unless bootstrapping mode is enabled).
+                    // Don't try to mine if we aren't a federation member.
                     if (((this.ibdState.IsInitialBlockDownload() || !this.connectionManager.ConnectedPeers.Any()) && !this.settings.BootstrappingMode)
                         || !this.federationManager.IsFederationMember)
                     {
@@ -156,6 +153,8 @@ namespace Stratis.Bitcoin.Features.PoA
 
                         continue;
                     }
+
+                    uint miningTimestamp = await this.WaitUntilMiningSlotAsync().ConfigureAwait(false);
 
                     ChainedHeader chainedHeader = await this.MineBlockAtTimestampAsync(miningTimestamp).ConfigureAwait(false);
 
@@ -169,6 +168,16 @@ namespace Stratis.Bitcoin.Features.PoA
                     builder.AppendLine($"Block was mined {chainedHeader}.");
                     builder.AppendLine("<<==============================================================>>");
                     this.logger.LogInformation(builder.ToString());
+
+                    // The purpose of bootstrap mode is to kickstart the network when the last mined block is very old, which would normally put the node in IBD and inhibit mining.
+                    // There is therefore no point keeping this mode enabled once this node has mined successfully.
+                    // Additionally, keeping it enabled may result in network splits if this node becomes disconnected from its peers for a prolonged period.
+                    if (this.settings.BootstrappingMode)
+                    {
+                        this.logger.LogDebug("Disabling bootstrap mode as a block has been successfully mined.");
+
+                        this.settings.DisableBootstrap();
+                    }
                 }
                 catch (OperationCanceledException)
                 {

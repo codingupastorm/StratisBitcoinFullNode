@@ -153,10 +153,5 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
                 this.logger.LogInformation(builder.ToString());
             }
         }
-
-        public override void Dispose()
-        {
-            base.Dispose();
-        }
     }
 }
