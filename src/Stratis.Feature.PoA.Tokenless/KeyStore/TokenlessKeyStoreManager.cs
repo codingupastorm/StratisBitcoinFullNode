@@ -7,15 +7,15 @@ using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Utilities;
 
-namespace Stratis.Feature.PoA.Tokenless.Wallet
+namespace Stratis.Feature.PoA.Tokenless.KeyStore
 {
     public interface ITokenlessKeyStoreManager
     {
         bool Initialize();
 
-        PubKey GetPubKey(TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0);
+        PubKey GetPubKey(TokenlessKeyStoreAccount account, int addressType = 0);
 
-        Key GetKey(string password, TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0);
+        Key GetKey(string password, TokenlessKeyStoreAccount account, int addressType = 0);
 
         /// <summary>
         /// Loads the private key for signing transactions from disk.
@@ -29,54 +29,54 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
     /// - block signing(m/44'/105'/1'/0/N) where N is a zero based key ID
     /// - P2P certificates (m/44'/105'/2'/K/N) where N is a zero based key ID
     /// </summary>
-    public enum TokenlessWalletAccount
+    public enum TokenlessKeyStoreAccount
     {
         TransactionSigning = 0,
         BlockSigning = 1,
         P2PCertificates = 2
     }
 
-    public class TokenlessWalletManager : ITokenlessKeyStoreManager
+    public class TokenlessKeyStoreManager : ITokenlessKeyStoreManager
     {
         public const string KeyStoreFileName = "nodeid.json";
 
-        public TokenlessWallet Wallet { get; private set; }
+        public TokenlessKeyStore KeyStore { get; private set; }
 
         private readonly Network network;
         private readonly DataFolder dataFolder;
-        private readonly FileStorage<TokenlessWallet> fileStorage;
-        private readonly TokenlessWalletSettings walletSettings;
+        private readonly FileStorage<TokenlessKeyStore> fileStorage;
+        private readonly TokenlessKeyStoreSettings keyStoreSettings;
         private readonly ICertificatesManager certificatesManager;
         private readonly ILogger logger;
 
-        public TokenlessWalletManager(Network network, DataFolder dataFolder, TokenlessWalletSettings walletSettings, ICertificatesManager certificatesManager, ILoggerFactory loggerFactory)
+        public TokenlessKeyStoreManager(Network network, DataFolder dataFolder, TokenlessKeyStoreSettings keyStoreSettings, ICertificatesManager certificatesManager, ILoggerFactory loggerFactory)
         {
             this.network = network;
             this.dataFolder = dataFolder;
-            this.fileStorage = new FileStorage<TokenlessWallet>(this.dataFolder.RootPath);
-            this.walletSettings = walletSettings;
+            this.fileStorage = new FileStorage<TokenlessKeyStore>(this.dataFolder.RootPath);
+            this.keyStoreSettings = keyStoreSettings;
             this.certificatesManager = certificatesManager;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
         public bool Initialize()
         {
-            this.logger.LogInformation($"Initializing the keystore; channel node is {this.walletSettings.IsChannelNode}");
-            this.logger.LogInformation($"Initializing the keystore; infra node node is {this.walletSettings.IsInfraNode}");
+            this.logger.LogInformation($"Initializing the keystore; channel node is {this.keyStoreSettings.IsChannelNode}");
+            this.logger.LogInformation($"Initializing the keystore; infra node node is {this.keyStoreSettings.IsInfraNode}");
 
-            bool walletOk = this.CheckKeyStore();
+            bool keyStoreOk = this.CheckKeyStore();
             bool blockSigningKeyFileOk = this.CheckBlockSigningKeyFile();
             bool transactionKeyFileOk = this.CheckTransactionSigningKeyFile();
             bool certificateOk = this.CheckCertificate();
 
-            if (walletOk && blockSigningKeyFileOk && transactionKeyFileOk && certificateOk)
+            if (keyStoreOk && blockSigningKeyFileOk && transactionKeyFileOk && certificateOk)
                 return true;
 
             this.logger.LogError($"Restart the daemon.");
             return false;
         }
 
-        public TokenlessWallet LoadWallet()
+        public TokenlessKeyStore LoadKeyStore()
         {
             string fileName = KeyStoreFileName;
 
@@ -86,58 +86,58 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return this.fileStorage.LoadByFileName(fileName);
         }
 
-        private int GetAddressIndex(TokenlessWalletAccount tokenlessWalletAccount)
+        private int GetAddressIndex(TokenlessKeyStoreAccount account)
         {
-            switch (tokenlessWalletAccount)
+            switch (account)
             {
-                case TokenlessWalletAccount.TransactionSigning:
-                    return this.walletSettings.AccountAddressIndex;
+                case TokenlessKeyStoreAccount.TransactionSigning:
+                    return this.keyStoreSettings.AccountAddressIndex;
 
-                case TokenlessWalletAccount.BlockSigning:
-                    return this.walletSettings.MiningAddressIndex;
+                case TokenlessKeyStoreAccount.BlockSigning:
+                    return this.keyStoreSettings.MiningAddressIndex;
 
-                case TokenlessWalletAccount.P2PCertificates:
-                    return this.walletSettings.CertificateAddressIndex;
+                case TokenlessKeyStoreAccount.P2PCertificates:
+                    return this.keyStoreSettings.CertificateAddressIndex;
             }
 
             throw new InvalidOperationException("Undefined operation.");
         }
 
-        public PubKey GetPubKey(TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0)
+        public PubKey GetPubKey(TokenlessKeyStoreAccount account, int addressType = 0)
         {
-            return this.Wallet.GetPubKey(this.network, tokenlessWalletAccount, GetAddressIndex(tokenlessWalletAccount), addressType);
+            return this.KeyStore.GetPubKey(this.network, account, GetAddressIndex(account), addressType);
         }
 
-        public Key GetKey(string password, TokenlessWalletAccount tokenlessWalletAccount, int addressType = 0)
+        public Key GetKey(string password, TokenlessKeyStoreAccount account, int addressType = 0)
         {
-            return this.Wallet.GetKey(this.network, password, tokenlessWalletAccount, addressType);
+            return this.KeyStore.GetKey(this.network, password, account, addressType);
         }
 
         /// <inheritdoc/>
         public Key LoadTransactionSigningKey()
         {
-            var transactionKeyFilePath = Path.Combine(this.walletSettings.RootPath, KeyTool.TransactionSigningKeyFileName);
+            var transactionKeyFilePath = Path.Combine(this.keyStoreSettings.RootPath, KeyTool.TransactionSigningKeyFileName);
             if (!File.Exists(transactionKeyFilePath))
-                throw new TokenlessWalletException($"{transactionKeyFilePath} does not exist.");
+                throw new TokenlessKeyStoreException($"{transactionKeyFilePath} does not exist.");
 
-            var keyTool = new KeyTool(this.walletSettings.RootPath);
+            var keyTool = new KeyTool(this.keyStoreSettings.RootPath);
             return keyTool.LoadPrivateKey(KeyType.TransactionSigningKey);
         }
 
-        public (TokenlessWallet, Mnemonic) CreateWallet(string password, Mnemonic mnemonic = null)
+        public (TokenlessKeyStore, Mnemonic) CreateKeyStore(string password, Mnemonic mnemonic = null)
         {
-            var wallet = new TokenlessWallet(this.network, password, ref mnemonic);
+            var keyStore = new TokenlessKeyStore(this.network, password, ref mnemonic);
 
-            this.fileStorage.SaveToFile(wallet, KeyStoreFileName);
+            this.fileStorage.SaveToFile(keyStore, KeyStoreFileName);
 
-            return (wallet, mnemonic);
+            return (keyStore, mnemonic);
         }
 
         private bool CheckKeyStore()
         {
             bool canStart = true;
 
-            var keyStorePath = Path.Combine(this.walletSettings.RootPath, KeyStoreFileName);
+            var keyStorePath = Path.Combine(this.keyStoreSettings.RootPath, KeyStoreFileName);
 
             this.logger.LogInformation($"Checking if the keystore exists at: {keyStorePath}");
 
@@ -145,8 +145,8 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             {
                 this.logger.LogInformation($"Key store does not exist, creating...");
 
-                var strMnemonic = this.walletSettings.Mnemonic;
-                var password = this.walletSettings.Password;
+                var strMnemonic = this.keyStoreSettings.Mnemonic;
+                var password = this.keyStoreSettings.Password;
 
                 if (password == null)
                 {
@@ -155,24 +155,24 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                     return false;
                 }
 
-                TokenlessWallet wallet;
+                TokenlessKeyStore wallet;
                 Mnemonic mnemonic = (strMnemonic == null) ? null : new Mnemonic(strMnemonic);
 
-                (wallet, mnemonic) = this.CreateWallet(password, mnemonic);
+                (wallet, mnemonic) = this.CreateKeyStore(password, mnemonic);
 
-                this.Wallet = wallet;
+                this.KeyStore = wallet;
 
                 this.logger.LogError($"The wallet file ({KeyStoreFileName}) has been created.");
                 this.logger.LogError($"Record the mnemonic ({mnemonic}) in a safe place.");
                 this.logger.LogError($"IMPORTANT: You will need the mnemonic to recover the wallet.");
 
                 // Only stop the node if this node is not a channel node.
-                if (!this.walletSettings.IsChannelNode)
+                if (!this.keyStoreSettings.IsChannelNode)
                     canStart = false; // Stop the node so that the user can record the mnemonic.
             }
             else
             {
-                this.Wallet = this.LoadWallet();
+                this.KeyStore = this.LoadKeyStore();
             }
 
             return canStart;
@@ -180,7 +180,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         private bool CheckBlockSigningKeyFile()
         {
-            var path = Path.Combine(this.walletSettings.RootPath, KeyTool.FederationKeyFileName);
+            var path = Path.Combine(this.keyStoreSettings.RootPath, KeyTool.FederationKeyFileName);
 
             this.logger.LogInformation($"Checking if the block signing key file exists at: {path}");
 
@@ -191,16 +191,16 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                 if (!CheckPassword(KeyTool.FederationKeyFileName))
                     return false;
 
-                Guard.Assert(this.Wallet != null);
+                Guard.Assert(this.KeyStore != null);
 
-                Key key = this.GetKey(this.walletSettings.Password, TokenlessWalletAccount.BlockSigning);
-                var keyTool = new KeyTool(this.walletSettings.RootPath);
+                Key key = this.GetKey(this.keyStoreSettings.Password, TokenlessKeyStoreAccount.BlockSigning);
+                var keyTool = new KeyTool(this.keyStoreSettings.RootPath);
                 keyTool.SavePrivateKey(key, KeyType.FederationKey);
 
                 this.logger.LogError($"The key file '{KeyTool.FederationKeyFileName}' has been created.");
 
                 // Only stop the node if this node is not a channel node.
-                if (!this.walletSettings.IsChannelNode)
+                if (!this.keyStoreSettings.IsChannelNode)
                     return false;
             }
 
@@ -209,7 +209,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         private bool CheckTransactionSigningKeyFile()
         {
-            var path = Path.Combine(this.walletSettings.RootPath, KeyTool.TransactionSigningKeyFileName);
+            var path = Path.Combine(this.keyStoreSettings.RootPath, KeyTool.TransactionSigningKeyFileName);
 
             this.logger.LogInformation($"Checking if the transaction signing key file exists at: {path}");
 
@@ -220,16 +220,16 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                 if (!CheckPassword(KeyTool.TransactionSigningKeyFileName))
                     return false;
 
-                Guard.Assert(this.Wallet != null);
+                Guard.Assert(this.KeyStore != null);
 
-                Key key = this.GetKey(this.walletSettings.Password, TokenlessWalletAccount.TransactionSigning);
-                var keyTool = new KeyTool(this.walletSettings.RootPath);
+                Key key = this.GetKey(this.keyStoreSettings.Password, TokenlessKeyStoreAccount.TransactionSigning);
+                var keyTool = new KeyTool(this.keyStoreSettings.RootPath);
                 keyTool.SavePrivateKey(key, KeyType.TransactionSigningKey);
 
                 this.logger.LogError($"The key file '{KeyTool.TransactionSigningKeyFileName}' has been created.");
 
                 // Only stop the node if this node is not a channel node.
-                if (!this.walletSettings.IsChannelNode)
+                if (!this.keyStoreSettings.IsChannelNode)
                     return false;
             }
 
@@ -259,7 +259,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
                 }
             }
 
-            if (clientOk && !this.walletSettings.GenerateCertificate)
+            if (clientOk && !this.keyStoreSettings.GenerateCertificate)
                 return true;
 
             if (!CheckPassword(CertificatesManager.ClientCertificateName))
@@ -285,7 +285,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         private bool CheckPassword(string fileName)
         {
-            if (string.IsNullOrEmpty(this.walletSettings.Password))
+            if (string.IsNullOrEmpty(this.keyStoreSettings.Password))
             {
                 this.logger.LogError($"Run this daemon with a -password=<password> argument so that the '{fileName}' file can be created.");
 

@@ -24,7 +24,7 @@ using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Core;
-using Stratis.Feature.PoA.Tokenless.Wallet;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -44,7 +44,7 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly ILogger logger;
         private readonly IMembershipServicesDirectory membershipServices;
         private IAsyncLoop caPubKeysLoop;
-        private readonly TokenlessWalletSettings tokenlessWalletSettings;
+        private readonly TokenlessKeyStoreSettings tokenlessKeyStoreSettings;
 
         // TODO-TL: Will move to channel start service or something.
         public List<int> StartedChannelNodes = new List<int>();
@@ -60,7 +60,7 @@ namespace Stratis.Feature.PoA.Tokenless
             IRevocationChecker revocationChecker,
             StoreSettings storeSettings,
             NodeSettings nodeSettings,
-            TokenlessWalletSettings tokenlessWalletSettings,
+            TokenlessKeyStoreSettings tokenlessKeyStoreSettings,
             IAsyncProvider asyncProvider,
             INodeLifetime nodeLifetime,
             ILoggerFactory loggerFactory,
@@ -74,7 +74,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.miner = miner;
             this.revocationChecker = revocationChecker;
             this.nodeSettings = nodeSettings;
-            this.tokenlessWalletSettings = tokenlessWalletSettings;
+            this.tokenlessKeyStoreSettings = tokenlessKeyStoreSettings;
             this.asyncProvider = asyncProvider;
             this.nodeLifetime = nodeLifetime;
             this.caPubKeysLoop = null;
@@ -134,7 +134,7 @@ namespace Stratis.Feature.PoA.Tokenless
             startAfter: TimeSpans.Minute);
 
             // If this node is a infra node, then start another daemon with the serialized version of the network.
-            if (this.tokenlessWalletSettings.IsInfraNode)
+            if (this.tokenlessKeyStoreSettings.IsInfraNode)
             {
                 this.logger.LogInformation("InfraNode will attempt to start a system channel node.");
                 this.StartedChannelNodes.Add(StartSystemChannelNode());

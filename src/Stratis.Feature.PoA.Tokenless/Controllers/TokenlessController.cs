@@ -21,7 +21,7 @@ using Stratis.Bitcoin.Utilities.ModelStateErrors;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.Feature.PoA.Tokenless.Core;
-using Stratis.Feature.PoA.Tokenless.Wallet;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Compilation;
@@ -404,7 +404,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         {
             try
             {
-                PubKey transactionSigningKey = this.tokenlessWalletManager.GetPubKey(TokenlessWalletAccount.TransactionSigning);
+                PubKey transactionSigningKey = this.tokenlessWalletManager.GetPubKey(TokenlessKeyStoreAccount.TransactionSigning);
                 return this.Json(transactionSigningKey.GetAddress(this.coreComponent.Network).ToString());
             }
             catch (Exception e)
