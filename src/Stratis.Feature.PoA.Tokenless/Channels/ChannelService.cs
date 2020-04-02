@@ -73,7 +73,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             process.StartInfo.FileName = "dotnet.exe";
 
             var args = new StringBuilder();
-            args.Append($"-apiport={this.channelSettings.ChannelApiPort} "); //20000
+            args.Append($"-apiport={this.channelSettings.ChannelApiPort} ");
             args.Append("-certificatepassword=test ");
             args.Append("-password=test ");
             args.Append("-conf=poa.conf ");
