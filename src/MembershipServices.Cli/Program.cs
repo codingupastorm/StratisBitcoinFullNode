@@ -10,7 +10,6 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Wallet;
-using MembershipServices;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 
@@ -26,6 +25,9 @@ namespace MembershipServices.Cli
         [Verb("generate", HelpText = "Generate node certificate and any requisite key material.")]
         class GenerateOptions
         {
+            [Option("datadir", Required = true, HelpText = "The location of the underlying node's root folder.")]
+            public string DataDir { get; set; }
+
             [Option("commonname", Required = true, HelpText = "The unique identifier for this node within its organization.")]
             public string CommonName { get; set; }
 
@@ -92,7 +94,7 @@ namespace MembershipServices.Cli
         {
             // TODO: Move this logic into a reusable method
             var network = new TokenlessNetwork();
-            var nodeSettings = new NodeSettings(network);
+            var nodeSettings = new NodeSettings(network, args: new [] { $"-datadir={options.DataDir}" });
             var loggerFactory = new LoggerFactory();
 
             var membershipServices = new MembershipServicesDirectory(nodeSettings);
@@ -123,6 +125,7 @@ namespace MembershipServices.Cli
                 return -1;
             }
 
+            walletManager.LoadWallet();
             Key privateKey = walletManager.GetKey(walletSettings.Password, TokenlessWalletAccount.P2PCertificates);
 
             File.WriteAllText(Path.Combine(nodeSettings.DataFolder.RootPath, LocalMembershipServicesConfiguration.Keystore, "key.dat"), privateKey.GetBitcoinSecret(network).ToWif());
@@ -194,7 +197,7 @@ namespace MembershipServices.Cli
 
                 membershipServices.AddLocalMember(certificate, memberType);
             }
-            catch (Exception e)
+            catch
             {
                 return -1;
             }
