@@ -337,8 +337,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                 });
 
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
-
-                Thread.Sleep(60 * 60 * 1000); // 1 hr to play
             }
         }
 
