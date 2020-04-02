@@ -115,7 +115,7 @@ namespace Stratis.Bitcoin.Features.Api
                 c.SwaggerDoc("contracts", new OpenApiInfo { Title = "Contract API", Version = "1" });
             });
 
-            // Hack to be able to access and modify the options object configured here in SwaggerUIContractListMiddleware.
+            // Hack to be able to access and modify the options object configured here in the dynamic swagger controller.
             services.AddSingleton(_ => this.uiOptions);
         }
 
@@ -149,7 +149,7 @@ namespace Stratis.Bitcoin.Features.Api
                     c.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
                 }
 
-                // Hack to be able to access and modify the options object configured here in SwaggerUIContractListMiddleware.
+                // Hack to be able to access and modify the options object configured here in the dynamic swagger controller.
                 this.uiOptions = c;
             });
         }
