@@ -7,7 +7,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
     /// Transaction type used on tokenless networks.
     /// Serialization skips version and segwit checks but includes time.
     /// </summary>
-    public class TokenlessTransaction : Transaction
+    public sealed class TokenlessTransaction : Transaction
     {
         public TokenlessTransaction() { }
 

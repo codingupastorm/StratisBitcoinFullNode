@@ -59,7 +59,6 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
         public override object Clone()
         {
             var res = new TestBehavior();
-
             return res;
         }
     }
@@ -121,8 +120,11 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
             }
         }
 
+        /// <summary>
+        /// CheckBlocksAnnounced_AndQueueEmptiesOverTime_ForMultiplePeers_WhenOneIsDisconnected
+        /// </summary>
         [Fact]
-        public void CheckBlocksAnnounced_AndQueueEmptiesOverTime_ForMultiplePeers_WhenOneIsDisconnected()
+        public void BlockStoreSignaledTests_Scenario2()
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Utilities;
@@ -36,15 +35,12 @@ namespace Stratis.Bitcoin.Features.PoA
 
         private readonly ChainIndexer chainIndexer;
 
-        private readonly ILogger logger;
-
-        public SlotsManager(Network network, IFederationManager federationManager, ChainIndexer chainIndexer, ILoggerFactory loggerFactory)
+        public SlotsManager(Network network, IFederationManager federationManager, ChainIndexer chainIndexer)
         {
             Guard.NotNull(network, nameof(network));
             this.federationManager = Guard.NotNull(federationManager, nameof(federationManager));
             this.chainIndexer = chainIndexer;
-            this.consensusOptions = (network as PoANetwork).ConsensusOptions;
-            this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
+            this.consensusOptions = (PoAConsensusOptions)network.Consensus.Options;
         }
 
         /// <inheritdoc />

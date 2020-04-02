@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using NBitcoin.BouncyCastle.Math;
 
 namespace NBitcoin
@@ -7,8 +8,10 @@ namespace NBitcoin
     public class Consensus : IConsensus
     {
         /// <inheritdoc />
-        public uint MaxReorgLength { get; private set; }
+        [JsonPropertyName("maxreorglength")]
+        public uint MaxReorgLength { get; set; }
 
+        [JsonPropertyName("options")]
         public ConsensusOptions Options { get; set; }
 
         public BuriedDeploymentsArray BuriedDeployments { get; }
@@ -17,27 +20,35 @@ namespace NBitcoin
 
         public uint256 BIP34Hash { get; }
 
-        public uint256 HashGenesisBlock { get; }
+        public uint256 HashGenesisBlock { get; set; }
 
         /// <inheritdoc />
-        public uint256 MinimumChainWork { get; }
+        public uint256 MinimumChainWork { get; set; }
 
         /// <inheritdoc />
-        public int CoinType { get; }
+        [JsonPropertyName("cointype")]
+        public int CoinType { get; set; }
 
         /// <inheritdoc />
-        public uint256 DefaultAssumeValid { get; }
+        [JsonPropertyName("defaultassumevalid")]
+        public uint256 DefaultAssumeValid { get; set; }
 
         /// <inheritdoc />
-        public ConsensusFactory ConsensusFactory { get; }
+        public ConsensusFactory ConsensusFactory { get; set; }
 
         /// <inheritdoc />
-        public ConsensusRules ConsensusRules { get; }
+        public ConsensusRules ConsensusRules { get; set; }
 
         /// <inheritdoc />
         public List<Type> MempoolRules { get; set; }
 
         public IConsensusMiningReward ConsensusMiningReward { get; set; }
+
+        public Consensus()
+        {
+            this.BIP9Deployments = new NoBIP9Deployments();
+            this.BuriedDeployments = new BuriedDeploymentsArray();
+        }
 
         public Consensus(
             ConsensusFactory consensusFactory,

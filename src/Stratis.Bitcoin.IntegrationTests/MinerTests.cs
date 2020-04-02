@@ -52,7 +52,7 @@ namespace Stratis.Bitcoin.IntegrationTests
 
         public static PowBlockDefinition AssemblerForTest(TestContext testContext)
         {
-            return new PowBlockDefinition(testContext.consensus, testContext.DateTimeProvider, new LoggerFactory(), testContext.mempool, testContext.mempoolLock, new MinerSettings(NodeSettings.Default(testContext.network)), testContext.network, testContext.ConsensusRules);
+            return new PowBlockDefinition(testContext.consensus, testContext.DateTimeProvider, new LoggerFactory(), testContext.mempool, testContext.mempoolLock, new MinerSettings(NodeSettings.Default(testContext.network)), testContext.network);
         }
 
         public class Blockinfo
@@ -696,8 +696,11 @@ namespace Stratis.Bitcoin.IntegrationTests
             Assert.True(tx.IsFinal(context.ChainIndexer.Tip.GetMedianTimePast().AddMinutes(2), context.ChainIndexer.Tip.Height + 2)); // Locktime passes 2 min later
         }
 
+        /// <summary>
+        /// Miner_PosNetwork_CreatePowTransaction_AheadOfFutureDrift_ShouldNotBeIncludedInBlock
+        /// </summary>
         [Fact]
-        public void Miner_PosNetwork_CreatePowTransaction_AheadOfFutureDrift_ShouldNotBeIncludedInBlock()
+        public void MinerTests_Scenario10()
         {
             var network = KnownNetworks.StratisRegTest;
 

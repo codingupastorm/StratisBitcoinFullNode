@@ -25,7 +25,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         public NodeConfigParameters ConfigParameters { get; }
 
-        private readonly string rootFolder;
+        protected readonly string rootFolder;
 
         public NodeBuilder(string rootFolder)
         {
@@ -147,8 +147,8 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             string numberedFolderName = string.Join(
                 ".",
                 new[] { hash, folderName }.Where(s => s != null));
-            string dataFolderName = Path.Combine(this.rootFolder, numberedFolderName);
 
+            string dataFolderName = Path.Combine(this.rootFolder, numberedFolderName);
             return dataFolderName;
         }
 

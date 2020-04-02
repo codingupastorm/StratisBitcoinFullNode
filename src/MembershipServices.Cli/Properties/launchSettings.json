@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MembershipServices.Cli Generate": {
+      "commandName": "Project",
+      "commandLineArgs": "generate --commonname=TestName --organization=TestOrganization --organizationunit=TestOrganizationUnit --locality=London --stateorprovince=London --emailaddress=test@example.com --country=UK --password=test --requestedpermissions Send Mine"
+    }
+  }
+}

@@ -21,11 +21,11 @@ using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.SmartContracts.Tests.Common
 {
-    public sealed class FullTokenlessRunner : NodeRunner
+    public sealed class TokenlessNodeRunner : NodeRunner
     {
         private readonly IDateTimeProvider timeProvider;
 
-        public FullTokenlessRunner(string dataDir, Network network, EditableTimeProvider timeProvider)
+        public TokenlessNodeRunner(string dataDir, Network network, EditableTimeProvider timeProvider)
             : base(dataDir, null)
         {
             this.Network = network;
@@ -34,7 +34,9 @@ namespace Stratis.SmartContracts.Tests.Common
 
         public override void BuildNode()
         {
-            var settings = new NodeSettings(this.Network, args: new string[] { "-conf=poa.conf", "-datadir=" + this.DataFolder,
+            var settings = new NodeSettings(this.Network, args: new string[] {
+                "-conf=poa.conf",
+                "-datadir=" + this.DataFolder,
                 $"-{CertificatesManager.CaAccountIdKey}={Settings.AdminAccountId}",
                 $"-{CertificatesManager.CaPasswordKey}={CaTestHelper.AdminPassword}",
                 $"-{CertificatesManager.ClientCertificateConfigurationKey}=test"
@@ -45,6 +47,7 @@ namespace Stratis.SmartContracts.Tests.Common
                 .UseBlockStore()
                 .UseTokenlessPoaConsenus(this.Network)
                 .UseMempool()
+                .UseApi()
                 .UseTokenlessWallet()
                 .AddSmartContracts(options =>
                 {
@@ -57,11 +60,8 @@ namespace Stratis.SmartContracts.Tests.Common
                 .AddTokenlessFastMiningCapability()
                 .UseApi();
 
-            if (!this.EnablePeerDiscovery)
-            {
-                builder.RemoveImplementation<PeerConnectorDiscovery>();
-                builder.ReplaceService<IPeerDiscovery, BaseFeature>(new PeerDiscoveryDisabled());
-            }
+            builder.RemoveImplementation<PeerConnectorDiscovery>();
+            builder.ReplaceService<IPeerDiscovery, BaseFeature>(new PeerDiscoveryDisabled());
 
             this.FullNode = (FullNode)builder.Build();
         }

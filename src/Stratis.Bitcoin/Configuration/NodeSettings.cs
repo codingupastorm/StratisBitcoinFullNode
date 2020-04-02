@@ -206,10 +206,19 @@ namespace Stratis.Bitcoin.Configuration
             }
             else
             {
-                // Combine the data directory with the network's root folder and name.
-                string directoryPath = Path.Combine(this.DataDir, this.Network.RootFolderName, this.Network.Name);
-                this.DataDir = Directory.CreateDirectory(directoryPath).FullName;
-                this.Logger.LogDebug("Data directory initialized with path {0}.", this.DataDir);
+                // If this is a channel node, just use the data directory provided.
+                if (this.ConfigReader.GetOrDefault("ischannelnode", false, this.Logger))
+                {
+                    this.DataDir = Directory.CreateDirectory(this.DataDir).FullName;
+                    this.Logger.LogDebug("Data directory initialized with path {0}.", this.DataDir);
+                }
+                else
+                {
+                    // Else combine the data directory with the network's root folder and name.
+                    string directoryPath = Path.Combine(this.DataDir, this.Network.RootFolderName, this.Network.Name);
+                    this.DataDir = Directory.CreateDirectory(directoryPath).FullName;
+                    this.Logger.LogDebug("Data directory initialized with path {0}.", this.DataDir);
+                }
             }
 
             // Set the data folder.
@@ -313,9 +322,10 @@ namespace Stratis.Bitcoin.Configuration
         {
             TextFileConfiguration config = this.ConfigReader;
 
-            this.MinTxFeeRate = new FeeRate(config.GetOrDefault("mintxfee", ((FeeNetwork)this.Network).MinTxFee, this.Logger));
-            this.FallbackTxFeeRate = new FeeRate(config.GetOrDefault("fallbackfee", ((FeeNetwork)this.Network).FallbackFee, this.Logger));
-            this.MinRelayTxFeeRate = new FeeRate(config.GetOrDefault("minrelaytxfee", ((FeeNetwork)this.Network).MinRelayTxFee, this.Logger));
+            var feeNetwork = this.Network as FeeNetwork;
+            this.MinTxFeeRate = new FeeRate(config.GetOrDefault("mintxfee", feeNetwork != null ? feeNetwork.MinTxFee : 0, this.Logger));
+            this.FallbackTxFeeRate = new FeeRate(config.GetOrDefault("fallbackfee", feeNetwork != null ? feeNetwork.FallbackFee : 0, this.Logger));
+            this.MinRelayTxFeeRate = new FeeRate(config.GetOrDefault("minrelaytxfee", feeNetwork != null ? feeNetwork.MinRelayTxFee : 0, this.Logger));
         }
 
         /// <summary>

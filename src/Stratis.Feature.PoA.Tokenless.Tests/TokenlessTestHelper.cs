@@ -61,7 +61,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             // TODO: Ostensibly need to be able to test the revoked case too
             this.RevocationChecker = new Mock<IRevocationChecker>();
-            this.RevocationChecker.Setup(c => c.IsCertificateRevoked(It.IsAny<string>(), It.IsAny<bool>())).Returns(false);
+            this.RevocationChecker.Setup(c => c.IsCertificateRevoked(It.IsAny<string>())).Returns(false);
 
             // TODO: Ostensibly need to be able to test the revoked case too
             this.CertificatesManager = new Mock<ICertificatesManager>();

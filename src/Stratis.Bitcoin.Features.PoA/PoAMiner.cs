@@ -44,7 +44,7 @@ namespace Stratis.Bitcoin.Features.PoA
 
         protected readonly ILogger logger;
 
-        protected readonly PoANetwork network;
+        protected readonly Network network;
 
         /// <summary>
         /// A cancellation token source that can cancel the mining processes and is linked to the <see cref="INodeLifetime.ApplicationStopping"/>.
@@ -100,7 +100,7 @@ namespace Stratis.Bitcoin.Features.PoA
         {
             this.consensusManager = consensusManager;
             this.dateTimeProvider = dateTimeProvider;
-            this.network = network as PoANetwork;
+            this.network = network;
             this.ibdState = ibdState;
             this.blockDefinition = blockDefinition;
             this.slotsManager = slotsManager;
@@ -143,11 +143,8 @@ namespace Stratis.Bitcoin.Features.PoA
                     this.logger.LogDebug("IsInitialBlockDownload={0}, AnyConnectedPeers={1}, BootstrappingMode={2}, IsFederationMember={3}",
                         this.ibdState.IsInitialBlockDownload(), this.connectionManager.ConnectedPeers.Any(), this.settings.BootstrappingMode, this.federationManager.IsFederationMember);
 
-                    // Wait for a mining slot BEFORE deciding whether to mine. This lessens the likelihood
-                    // that we mine when there are no connected peers.
-                    uint miningTimestamp = await this.WaitUntilMiningSlotAsync().ConfigureAwait(false);
-
-                    // Don't mine in IBD in case we are connected to any node unless bootstrapping mode is enabled.
+                    // Don't mine in IBD or if we aren't connected to any node (unless bootstrapping mode is enabled).
+                    // Don't try to mine if we aren't a federation member.
                     if (((this.ibdState.IsInitialBlockDownload() || !this.connectionManager.ConnectedPeers.Any()) && !this.settings.BootstrappingMode)
                         || !this.federationManager.IsFederationMember)
                     {
@@ -156,6 +153,8 @@ namespace Stratis.Bitcoin.Features.PoA
 
                         continue;
                     }
+
+                    uint miningTimestamp = await this.WaitUntilMiningSlotAsync().ConfigureAwait(false);
 
                     ChainedHeader chainedHeader = await this.MineBlockAtTimestampAsync(miningTimestamp).ConfigureAwait(false);
 
@@ -169,6 +168,16 @@ namespace Stratis.Bitcoin.Features.PoA
                     builder.AppendLine($"Block was mined {chainedHeader}.");
                     builder.AppendLine("<<==============================================================>>");
                     this.logger.LogInformation(builder.ToString());
+
+                    // The purpose of bootstrap mode is to kickstart the network when the last mined block is very old, which would normally put the node in IBD and inhibit mining.
+                    // There is therefore no point keeping this mode enabled once this node has mined successfully.
+                    // Additionally, keeping it enabled may result in network splits if this node becomes disconnected from its peers for a prolonged period.
+                    if (this.settings.BootstrappingMode)
+                    {
+                        this.logger.LogDebug("Disabling bootstrap mode as a block has been successfully mined.");
+
+                        this.settings.DisableBootstrap();
+                    }
                 }
                 catch (OperationCanceledException)
                 {
@@ -299,7 +308,7 @@ namespace Stratis.Bitcoin.Features.PoA
         /// <summary>Fills block template with custom non-standard data.</summary>
         protected virtual void FillBlockTemplate(BlockTemplate blockTemplate, out bool dropTemplate)
         {
-            if (this.network.ConsensusOptions.VotingEnabled)
+            if (((PoAConsensusOptions)this.network.Consensus.Options).VotingEnabled)
                 this.AddVotingData(blockTemplate);
 
             dropTemplate = false;
@@ -362,7 +371,7 @@ namespace Stratis.Bitcoin.Features.PoA
                 hitCount++;
 
                 currentHeader = currentHeader.Previous;
-                currentTime -= this.network.ConsensusOptions.TargetSpacingSeconds;
+                currentTime -= ((PoAConsensusOptions)this.network.Consensus.Options).TargetSpacingSeconds;
 
                 if (currentHeader.Height == 0)
                     break;
@@ -370,7 +379,7 @@ namespace Stratis.Bitcoin.Features.PoA
                 while ((currentHeader.Header.Time != currentTime) && (depthReached <= maxDepth))
                 {
                     log.Append("MISS-");
-                    currentTime -= this.network.ConsensusOptions.TargetSpacingSeconds;
+                    currentTime -= ((PoAConsensusOptions)this.network.Consensus.Options).TargetSpacingSeconds;
                     depthReached++;
                 }
 
@@ -381,7 +390,7 @@ namespace Stratis.Bitcoin.Features.PoA
             log.Append("...");
             log.AppendLine();
             log.AppendLine($"Block producers hits      : {hitCount} of {maxDepth}({(((float)hitCount / (float)maxDepth)).ToString("P2")})");
-            log.AppendLine($"Block producers idle time : {TimeSpan.FromSeconds(this.network.ConsensusOptions.TargetSpacingSeconds * (maxDepth - hitCount)).ToString(@"hh\:mm\:ss")}");
+            log.AppendLine($"Block producers idle time : {TimeSpan.FromSeconds(((PoAConsensusOptions)this.network.Consensus.Options).TargetSpacingSeconds * (maxDepth - hitCount)).ToString(@"hh\:mm\:ss")}");
             log.AppendLine();
         }
 

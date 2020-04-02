@@ -1,34 +1,30 @@
 ﻿using System;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
+using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using TracerAttributes;
-using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 
 namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 {
     public class RevocationBehavior : NetworkPeerBehavior
     {
-        private readonly NodeSettings NodeSettings;
-
-        private readonly Network Network;
+        private readonly Network network;
 
         private readonly ILoggerFactory LoggerFactory;
 
         private readonly IRevocationChecker RevocationChecker;
 
-        public RevocationBehavior(NodeSettings nodeSettings,
+        public RevocationBehavior(
             Network network,
             ILoggerFactory loggerFactory,
             IRevocationChecker revocationChecker)
         {
-            this.NodeSettings = nodeSettings;
-            this.Network = network;
+            this.network = network;
             this.LoggerFactory = loggerFactory;
             this.RevocationChecker = revocationChecker;
         }
@@ -50,15 +46,13 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
                 return;
             }
 
-            var peerCertificate = new X509Certificate2(rawCert.GetEncoded());
-
             string certificateP2pkh = CertificatesManager.ExtractCertificateExtensionString(rawCert, "1.4.1");
 
             BitcoinAddress address;
 
             try
             {
-                address = BitcoinAddress.Create(certificateP2pkh, this.Network);
+                address = BitcoinAddress.Create(certificateP2pkh, this.network);
             }
             catch (Exception)
             {
@@ -72,7 +66,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
                 return;
             }
 
-            if (address.ScriptPubKey.FindTemplate(this.Network) != PayToPubkeyHashTemplate.Instance)
+            if (address.ScriptPubKey.FindTemplate(this.network) != PayToPubkeyHashTemplate.Instance)
             {
                 peer.Disconnect("Peer certificate does not contain a P2PKH address.");
 
@@ -80,7 +74,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             }
 
             // TODO: Apart from the existence of the P2PKH address in the certificate, do we need to verify it against anything?
-            bool revoked = this.RevocationChecker.IsCertificateRevoked(peerCertificate.Thumbprint, true);
+            bool revoked = this.RevocationChecker.IsCertificateRevoked(MembershipServicesDirectory.GetCertificateThumbprint(rawCert));
 
             if (revoked)
                 peer.Disconnect("Peer certificate is revoked.");
@@ -101,7 +95,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         [NoTrace]
         public override object Clone()
         {
-            return new RevocationBehavior(this.NodeSettings, this.Network, this.LoggerFactory, this.RevocationChecker);
+            return new RevocationBehavior(this.network, this.LoggerFactory, this.RevocationChecker);
         }
     }
 }

@@ -19,43 +19,6 @@ using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 
 namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 {
-    public interface ICertificatesManager
-    {
-        /// <summary>Root certificate of the certificate authority for the current network.</summary>
-        X509Certificate AuthorityCertificate { get; }
-
-        /// <summary>Client certificate that is used to establish connections with other peers.</summary>
-        X509Certificate ClientCertificate { get; }
-
-        /// <summary>The private key associated with the loaded client certificate. Intended to be used for TLS communication only.</summary>
-        AsymmetricKeyParameter ClientCertificatePrivateKey { get; }
-
-        /// <summary>Retrieves a certificate by address.</summary>
-        /// <returns>The <see cref="X509Certificate"/> for the given address.</returns>
-        X509Certificate GetCertificateForAddress(uint160 address);
-
-        /// <summary>Loads client and authority certificates and validates them.</summary>
-        /// <exception cref="CertificateConfigurationException">Thrown in case required certificates are not found or are not valid.</exception>
-        void Initialize();
-
-        bool HaveAccount();
-
-        bool LoadAuthorityCertificate(bool requireAccountId = true);
-
-        bool LoadClientCertificate();
-
-        /// <summary>Creates an account on the Certificate Authority server.</summary>
-        /// <para>If no permissions are specified, then create the account with all.</para>
-        /// <returns>The id of the newly created account.</returns>
-        int CreateAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country, string[] requestedPermissions = null);
-
-        X509Certificate RequestNewCertificate(Key privateKey, PubKey transactionSigningPubKey, PubKey blockSigningPubKey);
-
-        bool IsCertificateRevokedByAddress(uint160 address);
-
-        List<PubKey> GetCertificatePublicKeys();
-    }
-
     public sealed class CertificatesManager : ICertificatesManager
     {
         /// <summary>Name of authority .crt certificate that is supposed to be found in application folder.</summary>
@@ -195,7 +158,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
             if (!clientCertValid)
                 throw new CertificateConfigurationException("Provided client certificate isn't valid or isn't signed by the authority certificate!");
             
-            bool revoked = this.revocationChecker.IsCertificateRevoked(CaCertificatesManager.GetThumbprint(this.ClientCertificate), false);
+            bool revoked = this.revocationChecker.IsCertificateRevoked(CaCertificatesManager.GetThumbprint(this.ClientCertificate));
 
             if (revoked)
                 throw new CertificateConfigurationException("Provided client certificate was revoked!");
@@ -239,24 +202,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
 
             CertificateInfoModel issuedCertificate = caClient.IssueCertificate(signedCsr);
 
-            var certParser = new X509CertificateParser();
-            X509Certificate certificate = certParser.ReadCertificate(issuedCertificate.CertificateContentDer);
-
-            return certificate;
-        }
-
-        /// <inheritdoc/>
-        public X509Certificate GetCertificateForAddress(uint160 address)
-        {
-            CaClient caClient = this.GetClient();
-
-            string base64PubKeyHash = Convert.ToBase64String(address.ToBytes());
-            CertificateInfoModel retrievedCertModel = caClient.GetCertificateForTransactionSigningPubKeyHash(base64PubKeyHash);
-
-            var certParser = new X509CertificateParser();
-            X509Certificate certificate = certParser.ReadCertificate(retrievedCertModel.CertificateContentDer);
-
-            return certificate;
+            return issuedCertificate.ToCertificate();
         }
 
         public List<PubKey> GetCertificatePublicKeys()
@@ -272,8 +218,7 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
         /// <returns><c>true</c> if the given certificate has been revoked.</returns>
         public bool IsCertificateRevokedByAddress(uint160 address)
         {
-            string base64PubKeyHash = Convert.ToBase64String(address.ToBytes());
-            return this.revocationChecker.IsCertificateRevokedByTransactionSigningKeyHash(base64PubKeyHash);
+            return this.revocationChecker.IsCertificateRevokedByTransactionSigningKeyHash(address.ToBytes());
         }
 
         public static byte[] ExtractCertificateExtension(X509Certificate certificate, string oid)
@@ -316,10 +261,6 @@ namespace Stratis.Bitcoin.Features.PoA.ProtocolEncryption
     /// <summary>Exception that is thrown when certificates configuration is incorrect.</summary>
     public class CertificateConfigurationException : Exception
     {
-        public CertificateConfigurationException()
-        {
-        }
-
         public CertificateConfigurationException(string message) : base(message)
         {
         }

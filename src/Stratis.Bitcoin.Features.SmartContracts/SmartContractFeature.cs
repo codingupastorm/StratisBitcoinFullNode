@@ -51,9 +51,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts
 
         public override Task InitializeAsync()
         {
-            Guard.Assert(this.network.Consensus.ConsensusFactory is SmartContractPowConsensusFactory
-                         || this.network.Consensus.ConsensusFactory is SmartContractPoAConsensusFactory
-                         || this.network.Consensus.ConsensusFactory is SmartContractCollateralPoAConsensusFactory);
+            Guard.Assert(this.network.Consensus.ConsensusFactory is SmartContractPowConsensusFactory || this.network.Consensus.ConsensusFactory is SmartContractPoAConsensusFactory);
 
             this.stateRoot.SyncToRoot(((ISmartContractBlockHeader)this.consensusManager.Tip.Header).HashStateRoot.ToBytes());
 

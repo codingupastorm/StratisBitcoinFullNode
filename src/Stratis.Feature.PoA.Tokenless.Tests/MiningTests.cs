@@ -217,7 +217,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
         private void InitializeSmartContractComponents([CallerMemberName] string callingMethod = "")
         {
-            this.folder = TestBase.AssureEmptyDir(Path.Combine(AppContext.BaseDirectory, "TestCase", callingMethod));
+            this.folder = TestBase.AssureEmptyDir(Path.Combine(AppContext.BaseDirectory, "TestCase", callingMethod)).FullName;
+
             var engine = new ContractStateTableStore(Path.Combine(this.folder, "contracts"), this.helper.LoggerFactory, this.helper.DateTimeProvider, new RepositorySerializer(this.helper.Network.Consensus.ConsensusFactory));
             var byteStore = new KeyValueByteStore(engine, "ContractState1");
             byteStore.Empty();
