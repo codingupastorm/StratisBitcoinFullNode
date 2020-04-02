@@ -3,9 +3,9 @@ using NBitcoin;
 using Stratis.Bitcoin.Utilities;
 using TracerAttributes;
 
-namespace Stratis.Feature.PoA.Tokenless.Wallet
+namespace Stratis.Feature.PoA.Tokenless.KeyStore
 {
-    public class TokenlessWallet
+    public class TokenlessKeyStore
     {
         public string EncryptedSeed { get; set; }
 
@@ -17,11 +17,11 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         public string ExtPubKey2 { get; set; }
 
-        public TokenlessWallet()
+        public TokenlessKeyStore()
         {
         }
 
-        public TokenlessWallet(Network network, string password, ref Mnemonic mnemonic)
+        public TokenlessKeyStore(Network network, string password, ref Mnemonic mnemonic)
         {
             Guard.NotEmpty(password, nameof(password));
 
@@ -31,9 +31,9 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
             ExtKey seedExtKey = GetSeedExtKey(mnemonic);
 
-            this.ExtPubKey0 = GetAccountExtPubKey(network.Consensus.CoinType, seedExtKey, TokenlessWalletAccount.TransactionSigning).ToString(network);
-            this.ExtPubKey1 = GetAccountExtPubKey(network.Consensus.CoinType, seedExtKey, TokenlessWalletAccount.BlockSigning).ToString(network);
-            this.ExtPubKey2 = GetAccountExtPubKey(network.Consensus.CoinType, seedExtKey, TokenlessWalletAccount.P2PCertificates).ToString(network);
+            this.ExtPubKey0 = GetAccountExtPubKey(network.Consensus.CoinType, seedExtKey, TokenlessKeyStoreAccount.TransactionSigning).ToString(network);
+            this.ExtPubKey1 = GetAccountExtPubKey(network.Consensus.CoinType, seedExtKey, TokenlessKeyStoreAccount.BlockSigning).ToString(network);
+            this.ExtPubKey2 = GetAccountExtPubKey(network.Consensus.CoinType, seedExtKey, TokenlessKeyStoreAccount.P2PCertificates).ToString(network);
 
             this.ChainCode = Convert.ToBase64String(seedExtKey.ChainCode);
 
@@ -45,7 +45,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return mnemonic.DeriveExtKey();
         }
 
-        public static ExtPubKey GetAccountExtPubKey(int coinType, ExtKey seedExtKey, TokenlessWalletAccount tokenlessWalletAccount)
+        public static ExtPubKey GetAccountExtPubKey(int coinType, ExtKey seedExtKey, TokenlessKeyStoreAccount tokenlessWalletAccount)
         {
             /*
             - transaction signing (m/44'/105'/0'/0/N) where N is a zero based key ID
@@ -62,7 +62,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return extPubKey.PubKey;
         }
 
-        public PubKey GetPubKey(Network network, TokenlessWalletAccount tokenlessWalletAccount, int addressIndex, int addressType = 0)
+        public PubKey GetPubKey(Network network, TokenlessKeyStoreAccount tokenlessWalletAccount, int addressIndex, int addressType = 0)
         {
             return GetPubKey(ExtPubKey.Parse(new[] { this.ExtPubKey0, this.ExtPubKey1, this.ExtPubKey2 }[(int)tokenlessWalletAccount], network), addressIndex, addressType);
         }
@@ -73,7 +73,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return new ExtKey(Key.Parse(this.EncryptedSeed, password, network), Convert.FromBase64String(this.ChainCode));
         }
 
-        public static Key GetKey(int coinType, ExtKey seedExtKey, TokenlessWalletAccount tokenlessWalletAccount, int addressIndex, int addressType = 0)
+        public static Key GetKey(int coinType, ExtKey seedExtKey, TokenlessKeyStoreAccount tokenlessWalletAccount, int addressIndex, int addressType = 0)
         {
             string hdPath = $"m/44'/{coinType}'/{(int)tokenlessWalletAccount}'/{addressType}/{addressIndex}";
             ExtKey pathExtKey = seedExtKey.Derive(new KeyPath(hdPath));
@@ -81,12 +81,12 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             return pathExtKey.PrivateKey;
         }
 
-        public Key GetKey(Network network, string password, TokenlessWalletAccount tokenlessWalletAccount, int addressIndex, int addressType = 0)
+        public Key GetKey(Network network, string password, TokenlessKeyStoreAccount tokenlessWalletAccount, int addressIndex, int addressType = 0)
         {
             return GetKey(network.Consensus.CoinType, this.GetSeedExtKey(network, password), tokenlessWalletAccount, addressIndex, addressType);
         }
 
-        public static Key GetKey(int coinType, Mnemonic mnemonic, TokenlessWalletAccount tokenlessWalletAccount, int addressIndex, int addressType = 0)
+        public static Key GetKey(int coinType, Mnemonic mnemonic, TokenlessKeyStoreAccount tokenlessWalletAccount, int addressIndex, int addressType = 0)
         {
             return GetKey(coinType, mnemonic.DeriveExtKey(), tokenlessWalletAccount, addressIndex, addressType);
         }

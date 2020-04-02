@@ -1,7 +1,7 @@
 ﻿using NBitcoin;
 using Stratis.Bitcoin.Interfaces;
 
-namespace Stratis.Feature.PoA.Tokenless.Wallet
+namespace Stratis.Feature.PoA.Tokenless.KeyStore
 {
     public class TokenlessMiningKeyProvider : IMiningKeyProvider
     {

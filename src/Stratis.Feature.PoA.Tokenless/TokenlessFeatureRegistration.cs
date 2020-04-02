@@ -23,7 +23,7 @@ using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mining;
-using Stratis.Feature.PoA.Tokenless.Wallet;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -113,11 +113,11 @@ namespace Stratis.Feature.PoA.Tokenless
             fullNodeBuilder.ConfigureFeature(features =>
             {
                 features
-                    .AddFeature<TokenlessWalletFeature>()
+                    .AddFeature<TokenlessKeyStoreFeature>()
                     .FeatureServices(services =>
                     {
-                        services.AddSingleton<TokenlessWalletSettings>();
-                        services.AddSingleton<ITokenlessKeyStoreManager, TokenlessWalletManager>();
+                        services.AddSingleton<TokenlessKeyStoreSettings>();
+                        services.AddSingleton<ITokenlessKeyStoreManager, TokenlessKeyStoreManager>();
                         services.AddSingleton<IMiningKeyProvider, TokenlessMiningKeyProvider>();
                     });
             });

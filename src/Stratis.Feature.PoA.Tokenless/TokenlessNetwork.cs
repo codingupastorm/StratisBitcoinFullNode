@@ -11,7 +11,7 @@ using Stratis.Bitcoin.Features.SmartContracts.PoA;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Consensus.Rules;
 using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
-using Stratis.Feature.PoA.Tokenless.Wallet;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -70,7 +70,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.GenesisReward = Money.Zero;
             this.Genesis = CreateGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion);
 
-            this.FederationKeys = Mnemonics.Select(m => TokenlessWallet.GetKey(500, m, TokenlessWalletAccount.BlockSigning, 0)).ToArray();
+            this.FederationKeys = Mnemonics.Select(m => TokenlessKeyStore.GetKey(500, m, TokenlessKeyStoreAccount.BlockSigning, 0)).ToArray();
 
             var genesisFederationMembers = new List<IFederationMember>
             {

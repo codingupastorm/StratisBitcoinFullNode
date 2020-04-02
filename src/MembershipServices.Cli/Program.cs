@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Feature.PoA.Tokenless;
-using Stratis.Feature.PoA.Tokenless.Wallet;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
 using MembershipServices;
 using NBitcoin;
 using Org.BouncyCastle.X509;
@@ -100,8 +100,8 @@ namespace MembershipServices.Cli
 
             var revocationChecker = new RevocationChecker(membershipServices);
             var certificatesManager = new CertificatesManager(nodeSettings.DataFolder, nodeSettings, loggerFactory, revocationChecker, network);
-            var walletSettings = new TokenlessWalletSettings(nodeSettings);
-            var walletManager = new TokenlessWalletManager(network, nodeSettings.DataFolder, walletSettings, certificatesManager, loggerFactory);
+            var walletSettings = new TokenlessKeyStoreSettings(nodeSettings);
+            var walletManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, walletSettings, certificatesManager, loggerFactory);
 
             // First check if we have created an account on the CA already.
             if (string.IsNullOrWhiteSpace(options.CaAccountId))
@@ -123,12 +123,12 @@ namespace MembershipServices.Cli
                 return -1;
             }
 
-            Key privateKey = walletManager.GetKey(walletSettings.Password, TokenlessWalletAccount.P2PCertificates);
+            Key privateKey = walletManager.GetKey(walletSettings.Password, TokenlessKeyStoreAccount.P2PCertificates);
 
             File.WriteAllText(Path.Combine(nodeSettings.DataFolder.RootPath, LocalMembershipServicesConfiguration.Keystore, "key.dat"), privateKey.GetBitcoinSecret(network).ToWif());
 
-            PubKey transactionSigningPubKey = walletManager.GetKey(walletSettings.Password, TokenlessWalletAccount.TransactionSigning).PubKey;
-            PubKey blockSigningPubKey = walletManager.GetKey(walletSettings.Password, TokenlessWalletAccount.BlockSigning).PubKey;
+            PubKey transactionSigningPubKey = walletManager.GetKey(walletSettings.Password, TokenlessKeyStoreAccount.TransactionSigning).PubKey;
+            PubKey blockSigningPubKey = walletManager.GetKey(walletSettings.Password, TokenlessKeyStoreAccount.BlockSigning).PubKey;
 
             X509Certificate clientCert = certificatesManager.RequestNewCertificate(privateKey, transactionSigningPubKey, blockSigningPubKey);
 

@@ -6,9 +6,9 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Utilities;
 
-namespace Stratis.Feature.PoA.Tokenless.Wallet
+namespace Stratis.Feature.PoA.Tokenless.KeyStore
 {
-    public sealed class TokenlessWalletSettings
+    public sealed class TokenlessKeyStoreSettings
     {
         private readonly ILogger logger;
 
@@ -57,11 +57,11 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         /// Initializes an instance of the object from the node configuration.
         /// </summary>
         /// <param name="nodeSettings">The node configuration.</param>
-        public TokenlessWalletSettings(NodeSettings nodeSettings)
+        public TokenlessKeyStoreSettings(NodeSettings nodeSettings)
         {
             Guard.NotNull(nodeSettings, nameof(nodeSettings));
 
-            this.logger = nodeSettings.LoggerFactory.CreateLogger(typeof(TokenlessWalletSettings).FullName);
+            this.logger = nodeSettings.LoggerFactory.CreateLogger(typeof(TokenlessKeyStoreSettings).FullName);
 
             TextFileConfiguration config = nodeSettings.ConfigReader;
 
