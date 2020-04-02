@@ -4,20 +4,19 @@ using NBitcoin;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Utilities;
 
-namespace Stratis.Feature.PoA.Tokenless.Wallet
+namespace Stratis.Feature.PoA.Tokenless.KeyStore
 {
     /// <summary>
     /// Feature for HD Wallet functionality.
     /// </summary>
     /// <seealso cref="FullNodeFeature" />
-    public class TokenlessWalletFeature : FullNodeFeature
+    public class TokenlessKeyStoreFeature : FullNodeFeature
     {
-        /// <summary>The wallet manager.</summary>
-        private readonly ITokenlessKeyStoreManager walletManager;
+        private readonly ITokenlessKeyStoreManager keyStoreManager;
 
-        public TokenlessWalletFeature(ITokenlessKeyStoreManager walletManager, INodeStats nodeStats)
+        public TokenlessKeyStoreFeature(ITokenlessKeyStoreManager keyStoreManager, INodeStats nodeStats)
         {
-            this.walletManager = walletManager;
+            this.keyStoreManager = keyStoreManager;
 
             nodeStats.RegisterStats(this.AddInlineStats, StatsType.Inline, this.GetType().Name);
             nodeStats.RegisterStats(this.AddComponentStats, StatsType.Component, this.GetType().Name);
@@ -29,7 +28,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         /// <param name="network">The network to extract values from.</param>
         public static void PrintHelp(Network network)
         {
-            TokenlessWalletSettings.PrintHelp(network);
+            TokenlessKeyStoreSettings.PrintHelp(network);
         }
 
         /// <summary>
@@ -39,13 +38,13 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         /// <param name="network">The network to base the defaults off.</param>
         public static void BuildDefaultConfigurationFile(StringBuilder builder, Network network)
         {
-            TokenlessWalletSettings.BuildDefaultConfigurationFile(builder, network);
+            TokenlessKeyStoreSettings.BuildDefaultConfigurationFile(builder, network);
         }
 
         /// <inheritdoc />
         public override Task InitializeAsync()
         {
-            this.walletManager.Initialize();
+            this.keyStoreManager.Initialize();
 
             return Task.CompletedTask;
         }
