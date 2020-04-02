@@ -6,13 +6,12 @@ using System.Net.Http;
 using CertificateAuthority;
 using CommandLine;
 using Microsoft.Extensions.Logging;
+using NBitcoin;
+using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
-using MembershipServices;
-using NBitcoin;
-using Org.BouncyCastle.X509;
 
 namespace MembershipServices.Cli
 {
@@ -49,7 +48,7 @@ namespace MembershipServices.Cli
 
             [Option("caurl", Required = false, Default = "https://localhost:5001", HelpText = "The URL of the certificate authority.")]
             public string CaUrl { get; set; }
-            
+
             [Option("caaccountid", Required = false, HelpText = "The account ID of the user requesting a certificate from the certificate authority.")]
             public string CaAccountId { get; set; }
 
@@ -100,8 +99,8 @@ namespace MembershipServices.Cli
 
             var revocationChecker = new RevocationChecker(membershipServices);
             var certificatesManager = new CertificatesManager(nodeSettings.DataFolder, nodeSettings, loggerFactory, revocationChecker, network);
-            var walletSettings = new TokenlessKeyStoreSettings(nodeSettings);
-            var walletManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, walletSettings, certificatesManager, loggerFactory);
+            var keyStoreSettings = new TokenlessKeyStoreSettings(nodeSettings);
+            var keyStoreManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, keyStoreSettings, certificatesManager, loggerFactory);
 
             // First check if we have created an account on the CA already.
             if (string.IsNullOrWhiteSpace(options.CaAccountId))
@@ -123,12 +122,12 @@ namespace MembershipServices.Cli
                 return -1;
             }
 
-            Key privateKey = walletManager.GetKey(walletSettings.Password, TokenlessKeyStoreAccount.P2PCertificates);
+            Key privateKey = keyStoreManager.GetKey(keyStoreSettings.Password, TokenlessKeyStoreAccount.P2PCertificates);
 
             File.WriteAllText(Path.Combine(nodeSettings.DataFolder.RootPath, LocalMembershipServicesConfiguration.Keystore, "key.dat"), privateKey.GetBitcoinSecret(network).ToWif());
 
-            PubKey transactionSigningPubKey = walletManager.GetKey(walletSettings.Password, TokenlessKeyStoreAccount.TransactionSigning).PubKey;
-            PubKey blockSigningPubKey = walletManager.GetKey(walletSettings.Password, TokenlessKeyStoreAccount.BlockSigning).PubKey;
+            PubKey transactionSigningPubKey = keyStoreManager.GetKey(keyStoreSettings.Password, TokenlessKeyStoreAccount.TransactionSigning).PubKey;
+            PubKey blockSigningPubKey = keyStoreManager.GetKey(keyStoreSettings.Password, TokenlessKeyStoreAccount.BlockSigning).PubKey;
 
             X509Certificate clientCert = certificatesManager.RequestNewCertificate(privateKey, transactionSigningPubKey, blockSigningPubKey);
 
@@ -137,7 +136,7 @@ namespace MembershipServices.Cli
                 membershipServices.AddLocalMember(clientCert, MemberType.Self);
 
                 // TODO: Temporary workaround until CertificatesManager is completely removed and merged into MSD
-                File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCert, privateKey, walletSettings.Password));
+                File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCert, privateKey, keyStoreSettings.Password));
 
                 return 0;
             }
