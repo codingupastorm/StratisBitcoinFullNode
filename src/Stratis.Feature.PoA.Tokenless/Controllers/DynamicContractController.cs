@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -14,6 +15,7 @@ using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Loader;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core.State;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace Stratis.Feature.PoA.Tokenless.Controllers
 {
@@ -29,6 +31,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         private readonly IStateRepositoryRoot stateRoot;
         private readonly ILoader loader;
         private readonly Network network;
+        private SwaggerUIOptions config;
 
         /// <summary>
         /// Creates a new DynamicContractController instance.
@@ -41,12 +44,52 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             TokenlessController tokenlessController,
             IStateRepositoryRoot stateRoot,
             ILoader loader,
+            SwaggerUIOptions options,
             Network network)
         {
             this.tokenlessController = tokenlessController;
             this.stateRoot = stateRoot;
             this.loader = loader;
             this.network = network;
+            this.config = options;
+        }
+
+        /// <summary>
+        /// Redirects a request to the swagger page for that contract.
+        /// </summary>
+        /// <param name="address">The contract address</param>
+        /// <returns></returns>
+        [Route("{address}/swagger")]
+        [HttpGet]
+        public IActionResult ContractSwaggerUI([FromRoute] string address)
+        {
+            var builder = new UriBuilder
+            {
+                Scheme = this.Request.Scheme,
+                Host = this.Request.Host.Host
+            };
+
+            if (this.Request.Host.Port.HasValue)
+                builder.Port = this.Request.Host.Port.Value;
+
+            builder.Path = "/swagger/index.html";
+
+            // This is empirically derived. Seems to be what Swagger UI uses to render the URL where the name matches primaryName.
+            builder.Query = $"urls.primaryName={address}";
+
+            var redirectUrl = builder.Uri.ToString();
+
+            // Add the URL to the swagger UI config
+            this.config.ConfigObject.Urls = new List<UrlDescriptor>(this.config.ConfigObject.Urls)
+            {
+                new UrlDescriptor
+                {
+                    Name = $"{address}", 
+                    Url = $"/swagger/contracts/{address}"
+                }
+            };
+
+            return RedirectPermanent(redirectUrl);
         }
 
         /// <summary>
