@@ -1,4 +1,6 @@
-﻿namespace Stratis.Feature.PoA.Tokenless.Config
+﻿using CSharpFunctionalExtensions;
+
+namespace Stratis.Feature.PoA.Tokenless.Config
 {
     /// <summary>
     /// Container which allows the various policy types defined in <see cref="PolicyType"/> to be stored.
@@ -14,5 +16,11 @@
         public PolicyType PolicyType { get; }
 
         public string Policy { get; }
+
+        public Result Validate()
+        {
+            // TODO define policy serialization.
+            return Result.Success();
+        }
     }
 }
