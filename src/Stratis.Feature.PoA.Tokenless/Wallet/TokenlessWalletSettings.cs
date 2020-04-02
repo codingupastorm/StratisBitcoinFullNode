@@ -10,7 +10,6 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 {
     public sealed class TokenlessWalletSettings
     {
-        /// <summary>Instance logger.</summary>
         private readonly ILogger logger;
 
         public int AccountAddressIndex { get; set; }
@@ -29,6 +28,7 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 
         // CA certificate related settings.
 
+        public bool CaAdminPassword { get; set; }
         public bool GenerateCertificate { get; set; }
 
         public string CertPath { get; set; }
@@ -48,6 +48,10 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         public string Country { get; set; }
 
         public string[] RequestedPermissions { get; set; }
+
+        // TODO-TL: Perhaps split up this setttings class?
+        public bool IsChannelNode { get; set; }
+        public bool IsInfraNode { get; set; }
 
         /// <summary>
         /// Initializes an instance of the object from the node configuration.
@@ -79,6 +83,8 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
             this.EmailAddress = config.GetOrDefault<string>("certificateemailaddress", null, this.logger);
             this.Country = config.GetOrDefault<string>("certificatecountry", "", this.logger);
             this.RequestedPermissions = config.GetOrDefault<string>("requestedpermissions", "", this.logger).Split('|');
+            this.IsChannelNode = config.GetOrDefault<bool>("ischannelnode", false, this.logger);
+            this.IsInfraNode = config.GetOrDefault<bool>("isinfranode", false, this.logger);
 
             if (this.GenerateCertificate)
             {

@@ -2,8 +2,9 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using NBitcoin;
+using Stratis.Feature.PoA.Tokenless.Consensus;
 
-namespace Stratis.Feature.PoA.Tokenless.Consensus
+namespace Stratis.Feature.PoA.Tokenless.Core.Serialization
 {
     public sealed class TokenlessGenesisBlockConverter : JsonConverter<Block>
     {

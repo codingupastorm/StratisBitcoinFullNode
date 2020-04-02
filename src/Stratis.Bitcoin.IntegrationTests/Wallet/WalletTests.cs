@@ -182,8 +182,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
             }
         }
 
+        /// <summary>
+        /// Given_TheNodeHadAReorg_And_WalletTipIsBehindConsensusTip_When_ANewBlockArrives_Then_WalletCanRecover
+        /// </summary>
         [Fact]
-        public void Given_TheNodeHadAReorg_And_WalletTipIsBehindConsensusTip_When_ANewBlockArrives_Then_WalletCanRecover()
+        public void WalletTestsScenario3()
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {
@@ -221,8 +224,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
             }
         }
 
+        /// <summary>
+        /// Given_TheNodeHadAReorg_And_ConsensusTipIsdifferentFromWalletTip_When_ANewBlockArrives_Then_WalletCanRecover
+        /// </summary>
         [Fact]
-        public void Given_TheNodeHadAReorg_And_ConsensusTipIsdifferentFromWalletTip_When_ANewBlockArrives_Then_WalletCanRecover()
+        public void WalletTestsScenario4()
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {

@@ -38,7 +38,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
     {
         private readonly ICoreComponent coreComponent;
         private readonly ITokenlessSigner tokenlessSigner;
-        private readonly ITokenlessWalletManager tokenlessWalletManager;
+        private readonly ITokenlessKeyStoreManager tokenlessWalletManager;
         private readonly ICallDataSerializer callDataSerializer;
         private readonly IAddressGenerator addressGenerator;
         private readonly IBroadcasterManager broadcasterManager;
@@ -53,7 +53,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         public TokenlessController(
             ICoreComponent coreComponent,
             ITokenlessSigner tokenlessSigner,
-            ITokenlessWalletManager tokenlessWalletManager,
+            ITokenlessKeyStoreManager tokenlessWalletManager,
             ICallDataSerializer callDataSerializer,
             IAddressGenerator addressGenerator,
             IBroadcasterManager broadcasterManager,

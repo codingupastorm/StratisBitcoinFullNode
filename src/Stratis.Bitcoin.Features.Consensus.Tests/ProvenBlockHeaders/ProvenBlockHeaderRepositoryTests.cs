@@ -171,8 +171,11 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
             }
         }
 
+        /// <summary>
+        /// PutAsync_Add_Ten_ProvenBlockHeaders_Dispose_On_Initialise_Repo_TipHeight_Should_Be_At_Last_Saved_TipAsync
+        /// </summary>
         [Fact]
-        public async Task PutAsync_Add_Ten_ProvenBlockHeaders_Dispose_On_Initialise_Repo_TipHeight_Should_Be_At_Last_Saved_TipAsync()
+        public async Task ProvenBlockHeaderRepositoryTest_Scenario6_Async()
         {
             string folder = CreateTestDir(this);
 

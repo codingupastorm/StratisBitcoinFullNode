@@ -5,13 +5,6 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
 {
     public class TokenlessMiningKeyProvider : IMiningKeyProvider
     {
-        private readonly ITokenlessWalletManager walletManager;
-
-        public TokenlessMiningKeyProvider(ITokenlessWalletManager walletManager)
-        {
-            this.walletManager = walletManager;
-        }
-
         /// <summary>
         /// Returns an empty script to be used when building blocks.
         /// <para>

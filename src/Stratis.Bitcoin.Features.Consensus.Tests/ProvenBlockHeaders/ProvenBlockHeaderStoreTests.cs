@@ -20,8 +20,8 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
 {
     public class ProvenBlockHeaderStoreTests : LogsTestBase
     {
-        private readonly ProvenBlockHeaderStore provenBlockHeaderStore;
-        private readonly IProvenBlockHeaderRepository provenBlockHeaderRepository;
+        private ProvenBlockHeaderStore provenBlockHeaderStore;
+        private IProvenBlockHeaderRepository provenBlockHeaderRepository;
 
         private SortedDictionary<int, ProvenBlockHeader> PendingBatch
         {
@@ -30,23 +30,26 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
 
         public ProvenBlockHeaderStoreTests() : base(new StratisTest())
         {
-            var nodeStats = new NodeStats(DateTimeProvider.Default, this.LoggerFactory.Object);
+        }
 
+        private void InitializeProvenHeaderRepository(string dataFolder)
+        {
+            var nodeStats = new NodeStats(DateTimeProvider.Default, this.LoggerFactory.Object);
             var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
 
             var ibdMock = new Mock<IInitialBlockDownloadState>();
             ibdMock.Setup(s => s.IsInitialBlockDownload()).Returns(false);
 
-            var folder = CreateTestDir(this);
-            var store = new ProvenBlockHeaderKeyValueStore(this.Network, new DataFolder(folder), this.LoggerFactory.Object, new DateTimeProvider(), repositorySerializer);
-            this.provenBlockHeaderRepository = new ProvenBlockHeaderRepository(store, this.Network, folder, this.LoggerFactory.Object, repositorySerializer);
-
+            var store = new ProvenBlockHeaderKeyValueStore(this.Network, new DataFolder(dataFolder), this.LoggerFactory.Object, new DateTimeProvider(), repositorySerializer);
+            this.provenBlockHeaderRepository = new ProvenBlockHeaderRepository(store, this.Network, dataFolder, this.LoggerFactory.Object, repositorySerializer);
             this.provenBlockHeaderStore = new ProvenBlockHeaderStore(DateTimeProvider.Default, this.LoggerFactory.Object, this.provenBlockHeaderRepository, nodeStats, ibdMock.Object);
         }
 
         [Fact]
         public async Task InitialiseStoreToGenesisChainHeaderAsync()
         {
+            InitializeProvenHeaderRepository(CreateTestDir(this));
+
             var genesis = this.BuildProvenHeaderChain(1);
 
             await this.provenBlockHeaderStore.InitializeAsync(genesis).ConfigureAwait(false);
@@ -57,6 +60,8 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
         [Fact]
         public async Task AddToPending_Adds_To_CacheAsync()
         {
+            InitializeProvenHeaderRepository(CreateTestDir(this));
+
             // Initialise store.
             await this.provenBlockHeaderStore.InitializeAsync(this.BuildProvenHeaderChain(1)).ConfigureAwait(false);
 
@@ -81,6 +86,8 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
         [Fact]
         public async Task AddToPending_Adds_To_Cache_Then_Save_To_DiskAsync()
         {
+            InitializeProvenHeaderRepository(CreateTestDir(this));
+
             // Initialise store.
             await this.provenBlockHeaderStore.InitializeAsync(BuildProvenHeaderChain(1)).ConfigureAwait(false);
 
@@ -112,6 +119,8 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
         [Fact]
         public async Task Add_2k_ProvenHeaders_ToPending_CacheAsync()
         {
+            InitializeProvenHeaderRepository(CreateTestDir(this));
+
             // Initialise store.
             await this.provenBlockHeaderStore.InitializeAsync(this.BuildProvenHeaderChain(1)).ConfigureAwait(false);
 
@@ -139,6 +148,8 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
         [Fact]
         public async Task Add_2k_ProvenHeaders_To_PendingBatch_Then_Save_Then_PendingBatch_Should_Be_EmptyAsync()
         {
+            InitializeProvenHeaderRepository(CreateTestDir(this));
+
             // Initialise store.
             await this.provenBlockHeaderStore.InitializeAsync(this.BuildProvenHeaderChain(1)).ConfigureAwait(false);
 
@@ -272,6 +283,8 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
         [Fact]
         public void AddToPending_Then_Reorg_New_Items_Consecutive_Not_Tip_Then_Save()
         {
+            InitializeProvenHeaderRepository(CreateTestDir(this));
+
             var chainWithHeaders = this.BuildProvenHeaderChain(21);
 
             var chainedHeaders = chainWithHeaders.EnumerateToGenesis().Reverse().ToList();
@@ -309,6 +322,8 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
         [Fact]
         public void AddToPending_Then_Reorg_New_Items_Consecutive_Is_Tip_Then_Save()
         {
+            InitializeProvenHeaderRepository(CreateTestDir(this));
+
             var chainWithHeaders = this.BuildProvenHeaderChain(21);
 
             var chainedHeaders = chainWithHeaders.EnumerateToGenesis().Reverse().ToList();
@@ -346,6 +361,8 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
         [Fact]
         public void AddToPending_Then_Reorg_New_Items_Not_Consecutive_Is_Not_Tip_Then_Save()
         {
+            InitializeProvenHeaderRepository(CreateTestDir(this));
+
             var chainWithHeaders = this.BuildProvenHeaderChain(21);
 
             var chainedHeaders = chainWithHeaders.EnumerateToGenesis().Reverse().ToList();
@@ -398,6 +415,8 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
         [Fact]
         public void AddToPending_Then_Save_Incorrect_Sequence_Push_To_Store()
         {
+            InitializeProvenHeaderRepository(CreateTestDir(this));
+
             var inHeader = this.CreateNewProvenBlockHeaderMock();
 
             // Add headers to pending batch in the wrong height order.
@@ -415,7 +434,10 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
         [Fact]
         public async Task AddToPending_Store_TipHash_Is_The_Same_As_ChainHeaderTipAsync()
         {
+            InitializeProvenHeaderRepository(CreateTestDir(this));
+
             var chainWithHeaders = this.BuildProvenHeaderChain(3);
+
             SortedDictionary<int, ProvenBlockHeader> provenBlockheaders = this.ConvertToDictionaryOfProvenHeaders(chainWithHeaders);
 
             // Persist current chain.

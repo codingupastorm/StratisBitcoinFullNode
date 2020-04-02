@@ -42,6 +42,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         public int ApiPort => int.Parse(this.ConfigParameters["apiport"]);
 
         public BitcoinSecret MinerSecret { get; private set; }
+
         public HdAddress MinerHDAddress { get; internal set; }
         public int ProtocolPort => int.Parse(this.ConfigParameters["port"]);
 
