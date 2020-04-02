@@ -187,7 +187,7 @@ namespace NBitcoin
         /// <summary>
         /// List of prefixes used in Base58 addresses.
         /// </summary>
-        [JsonPropertyName("base58prefixes")]
+        [JsonIgnore]
         public byte[][] Base58Prefixes { get; set; }
 
         /// <summary>

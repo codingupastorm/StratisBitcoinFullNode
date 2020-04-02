@@ -206,10 +206,19 @@ namespace Stratis.Bitcoin.Configuration
             }
             else
             {
-                // Combine the data directory with the network's root folder and name.
-                string directoryPath = Path.Combine(this.DataDir, this.Network.RootFolderName, this.Network.Name);
-                this.DataDir = Directory.CreateDirectory(directoryPath).FullName;
-                this.Logger.LogDebug("Data directory initialized with path {0}.", this.DataDir);
+                // If this is a channel node, just use the data directory provided.
+                if (this.ConfigReader.GetOrDefault("ischannelnode", false, this.Logger))
+                {
+                    this.DataDir = Directory.CreateDirectory(this.DataDir).FullName;
+                    this.Logger.LogDebug("Data directory initialized with path {0}.", this.DataDir);
+                }
+                else
+                {
+                    // Else combine the data directory with the network's root folder and name.
+                    string directoryPath = Path.Combine(this.DataDir, this.Network.RootFolderName, this.Network.Name);
+                    this.DataDir = Directory.CreateDirectory(directoryPath).FullName;
+                    this.Logger.LogDebug("Data directory initialized with path {0}.", this.DataDir);
+                }
             }
 
             // Set the data folder.

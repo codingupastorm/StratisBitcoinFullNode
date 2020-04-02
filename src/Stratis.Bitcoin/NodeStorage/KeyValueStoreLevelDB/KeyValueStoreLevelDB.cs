@@ -49,8 +49,8 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
         internal DB Storage { get; private set; }
 
         private int nextTablePrefix;
-        private SingleThreadResource transactionLock;
-        private ByteArrayComparer byteArrayComparer;
+        private readonly SingleThreadResource transactionLock;
+        private readonly ByteArrayComparer byteArrayComparer;
 
         public KeyValueStoreLevelDB(string rootPath, ILoggerFactory loggerFactory,
             IRepositorySerializer repositorySerializer)

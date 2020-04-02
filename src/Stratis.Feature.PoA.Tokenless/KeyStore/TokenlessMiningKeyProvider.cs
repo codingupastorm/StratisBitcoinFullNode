@@ -1,17 +1,10 @@
 ﻿using NBitcoin;
 using Stratis.Bitcoin.Interfaces;
 
-namespace Stratis.Feature.PoA.Tokenless.Wallet
+namespace Stratis.Feature.PoA.Tokenless.KeyStore
 {
     public class TokenlessMiningKeyProvider : IMiningKeyProvider
     {
-        private readonly ITokenlessWalletManager walletManager;
-
-        public TokenlessMiningKeyProvider(ITokenlessWalletManager walletManager)
-        {
-            this.walletManager = walletManager;
-        }
-
         /// <summary>
         /// Returns an empty script to be used when building blocks.
         /// <para>

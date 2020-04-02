@@ -20,10 +20,10 @@ namespace NBitcoin
 
         public uint256 BIP34Hash { get; }
 
-        public uint256 HashGenesisBlock { get; }
+        public uint256 HashGenesisBlock { get; set; }
 
         /// <inheritdoc />
-        public uint256 MinimumChainWork { get; }
+        public uint256 MinimumChainWork { get; set; }
 
         /// <inheritdoc />
         [JsonPropertyName("cointype")]
@@ -34,10 +34,10 @@ namespace NBitcoin
         public uint256 DefaultAssumeValid { get; set; }
 
         /// <inheritdoc />
-        public ConsensusFactory ConsensusFactory { get; }
+        public ConsensusFactory ConsensusFactory { get; set; }
 
         /// <inheritdoc />
-        public ConsensusRules ConsensusRules { get; }
+        public ConsensusRules ConsensusRules { get; set; }
 
         /// <inheritdoc />
         public List<Type> MempoolRules { get; set; }
@@ -46,6 +46,8 @@ namespace NBitcoin
 
         public Consensus()
         {
+            this.BIP9Deployments = new NoBIP9Deployments();
+            this.BuriedDeployments = new BuriedDeploymentsArray();
         }
 
         public Consensus(

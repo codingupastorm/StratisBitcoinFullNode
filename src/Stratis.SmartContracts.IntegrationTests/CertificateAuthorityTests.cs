@@ -23,11 +23,11 @@ using Xunit;
 
 namespace Stratis.SmartContracts.IntegrationTests
 {
-    public class CATests
+    public sealed class CertificateAuthorityTests
     {
-        private TokenlessNetwork network;
+        private readonly TokenlessNetwork network;
 
-        public CATests()
+        public CertificateAuthorityTests()
         {
             this.network = TokenlessTestHelper.Network;
         }
@@ -35,8 +35,10 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public void StartCACorrectlyAndTestApi()
         {
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
-            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
@@ -50,7 +52,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
 
                 // Create a node so we have 1 available public key.
-                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client);
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate() };
 
@@ -86,8 +88,10 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesFunctionIfCATurnsOffAsync()
         {
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
-            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
@@ -102,8 +106,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client1 = TokenlessTestHelper.GetClient(server);
                 CaClient client2 = TokenlessTestHelper.GetClient(server);
 
-                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
 
@@ -139,13 +143,15 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public void RestartCAAndEverythingStillWorks()
         {
-            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                string dataFolderName = TokenlessTestHelper.GetDataFolderName();
+                //string dataFolderName = TokenlessTestHelper.GetDataFolderName();
                 X509Certificate ac = null;
                 CaClient client = null;
 
-                using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(dataFolderName).Build())
+                using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
                 {
                     server.Start();
 
@@ -159,19 +165,19 @@ namespace Stratis.SmartContracts.IntegrationTests
                     // Create 1 tokenless node.
                     CaClient client1 = TokenlessTestHelper.GetClient(server);
 
-                    CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
+                    CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
                 }
 
                 // Server has been killed. Restart it.
 
-                using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(dataFolderName).Build())
+                using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
                 {
                     server.Start();
 
                     // Check that we can still create nodes and make API calls.
                     CaClient client1 = TokenlessTestHelper.GetClient(server);
 
-                    CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client1);
+                    CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client1);
 
                     List<CertificateInfoModel> nodeCerts = client.GetAllCertificates();
                     Assert.Equal(2, nodeCerts.Count);
@@ -185,13 +191,14 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public void RestartNodeWithoutCARemembersWhichCertificatesRevoked()
         {
-            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                string dataFolderName = TokenlessTestHelper.GetDataFolderName();
                 X509Certificate ac = null;
                 CaClient client = null;
 
-                using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(dataFolderName).Build())
+                using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
                 {
                     server.Start();
 
@@ -203,7 +210,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
 
                     // Create 1 tokenless node.
-                    CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client);
+                    CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client);
 
                     var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate() };
 
@@ -235,7 +242,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     server.Dispose();
 
                     // Restart the node.
-                    node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client, false);
+                    node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client, initialRun: false);
                     node1.Start();
 
                     // Is the certificate stil revoked even though we are running without a CA?
@@ -247,7 +254,9 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public void CantInitializeCATwice()
         {
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
+            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             {
                 server.Start();
 

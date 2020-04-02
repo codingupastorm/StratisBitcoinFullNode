@@ -11,7 +11,7 @@ using Stratis.Bitcoin.Features.SmartContracts.PoA;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Consensus.Rules;
 using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
-using Stratis.Feature.PoA.Tokenless.Wallet;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -70,7 +70,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.GenesisReward = Money.Zero;
             this.Genesis = CreateGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion);
 
-            this.FederationKeys = Mnemonics.Select(m => TokenlessWallet.GetKey(500, m, TokenlessWalletAccount.BlockSigning, 0)).ToArray();
+            this.FederationKeys = Mnemonics.Select(m => TokenlessKeyStore.GetKey(500, m, TokenlessKeyStoreAccount.BlockSigning, 0)).ToArray();
 
             var genesisFederationMembers = new List<IFederationMember>
             {
@@ -138,7 +138,6 @@ namespace Stratis.Feature.PoA.Tokenless
             var channelNetwork = new ChannelNetwork()
             {
                 Base58Prefixes = tokenlessNetwork.Base58Prefixes,
-                Consensus = tokenlessNetwork.Consensus,
                 DefaultAPIPort = tokenlessNetwork.DefaultAPIPort,
                 DefaultBanTimeSeconds = tokenlessNetwork.DefaultBanTimeSeconds,
                 DefaultConfigFilename = tokenlessNetwork.DefaultConfigFilename,
@@ -154,6 +153,24 @@ namespace Stratis.Feature.PoA.Tokenless
                 NetworkType = NetworkType.Mainnet,
                 RootFolderName = rootFolderName
             };
+
+            channelNetwork.Consensus = tokenlessNetwork.Consensus;
+
+            // TODO:TL Override the consensus options for now so that don't
+            // start any of the CA functionality on the system channel (for now).
+            channelNetwork.Consensus.Options = new PoAConsensusOptions
+                (
+                channelNetwork.Consensus.Options.MaxBlockBaseSize,
+                channelNetwork.Consensus.Options.MaxStandardVersion,
+                channelNetwork.Consensus.Options.MaxStandardTxWeight,
+                0,
+                0,
+                new List<IFederationMember>(),
+                ((PoAConsensusOptions)channelNetwork.Consensus.Options).TargetSpacingSeconds,
+                false,
+                false,
+                false
+                );
 
             channelNetwork.Genesis = genesisBlock;
 

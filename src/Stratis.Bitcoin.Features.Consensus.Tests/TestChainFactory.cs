@@ -109,7 +109,6 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             testChainContext.AsyncProvider = new AsyncProvider(testChainContext.NodeSettings.LoggerFactory, testChainContext.Signals, new Mock<INodeLifetime>().Object);
 
             network.Consensus.Options = new ConsensusOptions();
-            //new FullNodeBuilderConsensusExtension.PowConsensusRulesRegistration().RegisterRules(network.Consensus);
 
             var consensusSettings = new ConsensusSettings(testChainContext.NodeSettings);
             testChainContext.Checkpoints = new Checkpoints();
@@ -120,7 +119,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             var inMemoryCoinView = new InMemoryCoinView(testChainContext.ChainIndexer.Tip.HashBlock);
             var cachedCoinView = new CachedCoinView(inMemoryCoinView, DateTimeProvider.Default, testChainContext.LoggerFactory, new NodeStats(testChainContext.DateTimeProvider, testChainContext.LoggerFactory), new ConsensusSettings(testChainContext.NodeSettings));
 
-            var dataFolder = new DataFolder(TestBase.AssureEmptyDir(dataDir));
+            var dataFolder = new DataFolder(TestBase.AssureEmptyDir(dataDir).FullName);
             testChainContext.PeerAddressManager =
                 mockPeerAddressManager == null ?
                     new PeerAddressManager(DateTimeProvider.Default, dataFolder, testChainContext.LoggerFactory, new SelfEndpointTracker(testChainContext.LoggerFactory, testChainContext.ConnectionSettings))
@@ -145,7 +144,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             testChainContext.IntegrityValidator = new IntegrityValidator(testChainContext.ConsensusRules, testChainContext.LoggerFactory);
             testChainContext.PartialValidator = new PartialValidator(testChainContext.AsyncProvider, testChainContext.ConsensusRules, testChainContext.LoggerFactory);
             testChainContext.FullValidator = new FullValidator(testChainContext.ConsensusRules, testChainContext.LoggerFactory);
-            
+
             var repositorySerializer = new RepositorySerializer(testChainContext.Network.Consensus.ConsensusFactory);
             var keyValueStore = new BlockKeyValueStore(repositorySerializer, dataFolder, testChainContext.LoggerFactory, DateTimeProvider.Default);
 

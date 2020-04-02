@@ -29,7 +29,7 @@ namespace NBitcoin
         uint256 BIP34Hash { get; }
 
         [JsonIgnore]
-        uint256 HashGenesisBlock { get; }
+        uint256 HashGenesisBlock { get; set; }
 
         /// <summary> The minimum amount of work the best chain should have. </summary>
         [JsonPropertyName("minimumchainwork")]
@@ -49,11 +49,11 @@ namespace NBitcoin
         /// A factory that enables overloading base types.
         /// </summary>
         [JsonIgnore]
-        ConsensusFactory ConsensusFactory { get; }
+        ConsensusFactory ConsensusFactory { get; set; }
 
         /// <summary>Group of rules that define a given network.</summary>
         [JsonIgnore]
-        ConsensusRules ConsensusRules { get; }
+        ConsensusRules ConsensusRules { get; set; }
 
         /// <summary>Group of mempool validation rules used by the given network.</summary>
         [JsonIgnore]

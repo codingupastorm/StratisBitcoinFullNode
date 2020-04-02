@@ -1,36 +1,22 @@
 ﻿using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Utilities;
 
-namespace Stratis.Feature.PoA.Tokenless.Wallet
+namespace Stratis.Feature.PoA.Tokenless.KeyStore
 {
     /// <summary>
     /// Feature for HD Wallet functionality.
     /// </summary>
-    /// <seealso cref="Stratis.Bitcoin.Builder.Feature.FullNodeFeature" />
-    public class TokenlessWalletFeature : FullNodeFeature
+    /// <seealso cref="FullNodeFeature" />
+    public class TokenlessKeyStoreFeature : FullNodeFeature
     {
-        /// <summary>Instance logger.</summary>
-        private readonly ILogger logger;
+        private readonly ITokenlessKeyStoreManager keyStoreManager;
 
-        /// <summary>The wallet manager.</summary>
-        private readonly ITokenlessWalletManager walletManager;
-
-        /// <summary>The wallet settings.</summary>
-        private readonly TokenlessWalletSettings walletSettings;
-
-        public TokenlessWalletFeature(
-            ILoggerFactory loggerFactory,
-            ITokenlessWalletManager walletManager,
-            TokenlessWalletSettings walletSettings,
-            INodeStats nodeStats)
+        public TokenlessKeyStoreFeature(ITokenlessKeyStoreManager keyStoreManager, INodeStats nodeStats)
         {
-            this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
-            this.walletSettings = walletSettings;
-            this.walletManager = walletManager;
+            this.keyStoreManager = keyStoreManager;
 
             nodeStats.RegisterStats(this.AddInlineStats, StatsType.Inline, this.GetType().Name);
             nodeStats.RegisterStats(this.AddComponentStats, StatsType.Component, this.GetType().Name);
@@ -42,9 +28,9 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         /// <param name="network">The network to extract values from.</param>
         public static void PrintHelp(Network network)
         {
-            TokenlessWalletSettings.PrintHelp(network);
+            TokenlessKeyStoreSettings.PrintHelp(network);
         }
-        
+
         /// <summary>
         /// Get the default configuration.
         /// </summary>
@@ -52,13 +38,13 @@ namespace Stratis.Feature.PoA.Tokenless.Wallet
         /// <param name="network">The network to base the defaults off.</param>
         public static void BuildDefaultConfigurationFile(StringBuilder builder, Network network)
         {
-            TokenlessWalletSettings.BuildDefaultConfigurationFile(builder, network);
+            TokenlessKeyStoreSettings.BuildDefaultConfigurationFile(builder, network);
         }
 
         /// <inheritdoc />
         public override Task InitializeAsync()
         {
-            this.walletManager.Initialize();
+            this.keyStoreManager.Initialize();
 
             return Task.CompletedTask;
         }
