@@ -3,7 +3,6 @@
     /// <summary>
     /// The configuration to apply to private data dissemination and access.
     ///
-    /// TODO - Define serialization protocol for this + policies
     /// TODO - Implement policy validation methods
     /// TODO - Distribute policy with contract deployment transaction
     /// TODO - Add a way to query policies to avoid trawling through all blocks (policy cache/store?) with a way to update existing configs
