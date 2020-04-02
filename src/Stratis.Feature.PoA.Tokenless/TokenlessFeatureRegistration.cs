@@ -19,11 +19,12 @@ using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Core;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mining;
-using Stratis.Feature.PoA.Tokenless.KeyStore;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -40,6 +41,8 @@ namespace Stratis.Feature.PoA.Tokenless
                     .AddFeature<TokenlessFeature>()
                     .FeatureServices(services =>
                     {
+                        services.AddSingleton<IChannelService, ChannelService>();
+                        services.AddSingleton<ChannelSettings>();
                         services.Replace(ServiceDescriptor.Singleton<ITxMempool, TokenlessMempool>());
                         services.Replace(ServiceDescriptor.Singleton<IMempoolValidator, TokenlessMempoolValidator>());
                         services.AddSingleton<BlockDefinition, TokenlessBlockDefinition>();
@@ -108,7 +111,7 @@ namespace Stratis.Feature.PoA.Tokenless
             return fullNodeBuilder;
         }
 
-        public static IFullNodeBuilder UseTokenlessWallet(this IFullNodeBuilder fullNodeBuilder)
+        public static IFullNodeBuilder UseTokenlessKeyStore(this IFullNodeBuilder fullNodeBuilder)
         {
             fullNodeBuilder.ConfigureFeature(features =>
             {

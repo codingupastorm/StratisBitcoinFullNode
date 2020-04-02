@@ -37,6 +37,8 @@ namespace Stratis.SmartContracts.Tests.Common
             var configParameters = new NodeConfigParameters()
             {
                 { "caurl" , "http://localhost:5050" },
+                { "channelapiport" , "20000" },
+                { "channelprocesspath" , "..\\..\\..\\..\\Stratis.TokenlessD\\" },
                 { "isinfranode", isInfraNode.ToString() }
             };
 

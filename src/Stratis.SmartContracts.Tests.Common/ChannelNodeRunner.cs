@@ -69,7 +69,7 @@ namespace Stratis.SmartContracts.Tests.Common
                 .UseTokenlessPoaConsenus(channelNetwork)
                 .UseMempool()
                 .UseApi()
-                .UseTokenlessWallet()
+                .UseTokenlessKeyStore()
                 .AddSmartContracts(options =>
                 {
                     options.UseTokenlessReflectionExecutor();

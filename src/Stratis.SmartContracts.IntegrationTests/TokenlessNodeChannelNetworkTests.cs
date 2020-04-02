@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Hosting;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Feature.PoA.Tokenless;
+using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;
 
@@ -72,10 +73,10 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, ac, client1);
                 infraNode.Start();
 
-                var tokenlessFeature = infraNode.FullNode.NodeFeature<TokenlessFeature>();
-                Assert.True(tokenlessFeature.StartedChannelNodes.Count == 1);
+                var channelService = infraNode.FullNode.NodeService<IChannelService>();
+                Assert.True(channelService.StartedChannelNodes.Count == 1);
 
-                channelNodeProcess = Process.GetProcessById(tokenlessFeature.StartedChannelNodes.First());
+                channelNodeProcess = Process.GetProcessById(channelService.StartedChannelNodes.First());
                 Assert.False(channelNodeProcess.HasExited);
             }
 
