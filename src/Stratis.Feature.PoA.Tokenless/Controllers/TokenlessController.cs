@@ -436,7 +436,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             // Rewrite the method name to a property name
             this.RewritePropertyGetterName(model);
 
-            PubKey transactionSigningKey = this.tokenlessWalletManager.GetPubKey(TokenlessWalletAccount.TransactionSigning);
+            PubKey transactionSigningKey = this.tokenlessWalletManager.GetPubKey(TokenlessKeyStoreAccount.TransactionSigning);
 
             try
             {
