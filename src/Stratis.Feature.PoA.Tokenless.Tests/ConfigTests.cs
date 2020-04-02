@@ -13,24 +13,17 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             var serializer = new PrivateDataConfigSerializer();
 
-            var privateDataConfig = new PrivateDataConfig
-            {
-                BlockToLive = 1234,
-                MaximumPeerCount = 5678,
-                MemberOnlyRead = true,
-                MemberOnlyWrite = true,
-                MinimumPeerCount = 9123,
-                Name = "TEST",
-                PolicyInfo = new PolicyInfo
-                {
-                    Policy = "TEST POLICY",
-                    PolicyType = PolicyType.Signature
-                }
-            };
+            var privateDataConfig = new PrivateDataConfig("TEST",
+                new PolicyInfo(PolicyType.Signature, "TEST POLICY"),
+                1234,
+                5678,
+                9123,
+                true,
+                true);
 
             var result = serializer.Serialize(privateDataConfig);
 
-            var deserialized = serializer.Deserialize(result);
+            PrivateDataConfig deserialized = serializer.Deserialize(result);
 
             Assert.Equal(privateDataConfig.Name, deserialized.Name);
             Assert.Equal(privateDataConfig.MemberOnlyRead, deserialized.MemberOnlyRead);

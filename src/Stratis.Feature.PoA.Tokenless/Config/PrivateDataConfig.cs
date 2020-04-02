@@ -10,40 +10,52 @@
     /// </summary>
     public class PrivateDataConfig
     {
+        public PrivateDataConfig(string name, PolicyInfo policyInfo, int blockToLive, int minimumPeerCount,
+            int maximumPeerCount, bool memberOnlyRead, bool memberOnlyWrite)
+        {
+            this.Name = name;
+            this.PolicyInfo = policyInfo;
+            this.BlockToLive = blockToLive;
+            this.MinimumPeerCount = minimumPeerCount;
+            this.MaximumPeerCount = maximumPeerCount;
+            this.MemberOnlyRead = memberOnlyRead;
+            this.MemberOnlyWrite = memberOnlyWrite;
+
+        }
         /// <summary>
         /// The name of the private data field in the contract.
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get; }
 
         /// <summary>
         /// The policy defining who can access the private data.
         /// </summary>
-        public PolicyInfo PolicyInfo { get; set; }
+        public PolicyInfo PolicyInfo { get; }
 
         /// <summary>
         /// The minimum number of peers the private data will be sent to upon endorsement.
         /// The endorsement will fail if dissemination to this number of peers is not achieved.
         /// </summary>
-        public int MinimumPeerCount { get; set; }
+        public int MinimumPeerCount { get; }
 
         /// <summary>
         /// The maximum number of peers the private data will be sent to upon endorsement.
         /// </summary>
-        public int MaximumPeerCount { get; set; }
+        public int MaximumPeerCount { get; }
 
         /// <summary>
         /// The number of blocks after which the collection expires and the data is purged.
         /// </summary>
-        public int BlockToLive { get; set; }
+        public int BlockToLive { get; }
 
         /// <summary>
         /// Specifies whether only members can read the private data.
         /// </summary>
-        public bool MemberOnlyRead { get; set; }
+        public bool MemberOnlyRead { get; }
 
         /// <summary>
         /// Specifies whether only members can write the private data.
         /// </summary>
-        public bool MemberOnlyWrite { get; set; }
+        public bool MemberOnlyWrite { get; }
     }
 }
