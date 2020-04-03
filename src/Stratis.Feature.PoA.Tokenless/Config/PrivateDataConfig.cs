@@ -12,7 +12,7 @@ namespace Stratis.Feature.PoA.Tokenless.Config
     /// </summary>
     public class PrivateDataConfig
     {
-        public const string EmptyFieldNameError = "Field name is not a valid identifier.";
+        public const string EmptyFieldNameError = "Field name must not be empty.";
         public const string FieldNameError = "Field name is not a valid identifier.";
         public const string PeerCountError = "Maximum peer count cannot be less than minimum peer count.";
         public const string MinimumPeerCountLessThanZeroError = "Minimum peer count cannot be less than zero.";
