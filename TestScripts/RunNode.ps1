@@ -58,12 +58,22 @@ if ($create_account -eq 1)
 
   # Get the accountId (effectively the username) from the response
   $ca_account = $result|ConvertFrom-Json
+  $ca_account = [convert]::ToInt32($ca_account)
+  $admin_account_id = [convert]::ToInt32($admin_account_id)
 
   # Approve the created account, using the admin's credentials
   $params = @{ "accountId" = "$admin_account_id"; "password" = "$admin_password"; "targetAccountId" = "$ca_account" }
   Write-Host ($params|ConvertTo-Json)
   Invoke-WebRequest -Uri https://localhost:5001/api/accounts/approve -Method post -Body ($params|ConvertTo-Json) -ContentType "application/json"
 }
+
+# Create own certificate via the MSD CLI tool
+cd $path_to_msd
+Write-Host "Running MerbershipServices.Cli..." -foregroundcolor "magenta"
+start-process cmd -ArgumentList "/k color 0E && dotnet run generate --datadir=""$msd_root"" --caaccountid=$ca_account --commonname=node$node --organization=$organization --organizationunit=$organizationUnit --locality=$locality --stateorprovince=$state --emailaddress=test@example.com --country=UK --capassword=test --password=test --requestedpermissions Send CallContract CreateContract"
+timeout $long_interval_time
+
+cd $node_root
 
 # On first run, the node will request their account's certificate
 if (!(Test-Path $client_certificate) -or !(Test-Path $federation_key_file) -or !(Test-Path $transaction_key_file) -or !(Test-Path $wallet_file))
