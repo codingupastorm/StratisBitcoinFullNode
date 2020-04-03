@@ -20,7 +20,7 @@ using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Features.MemoryPool.Fee;
 using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Features.MemoryPool.Rules;
-using Stratis.Bitcoin.Features.PoA;
+using Stratis.Features.PoA;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;

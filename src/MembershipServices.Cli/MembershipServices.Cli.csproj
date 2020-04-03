@@ -22,7 +22,8 @@
     <ProjectReference Include="..\MembershipServices\MembershipServices.csproj" />
     <ProjectReference Include="..\NBitcoin\NBitcoin.csproj" />
     <ProjectReference Include="..\Stratis.Bitcoin\Stratis.Bitcoin.csproj" />
-    <ProjectReference Include="..\Stratis.Feature.PoA.Tokenless\Stratis.Feature.PoA.Tokenless.csproj" />    
+    <ProjectReference Include="..\Stratis.Feature.PoA.Tokenless\Stratis.Feature.PoA.Tokenless.csproj" />
+    <ProjectReference Include="..\Stratis.Features.PoA\Stratis.Features.PoA.csproj" />    
   </ItemGroup>
 
   <ItemGroup>

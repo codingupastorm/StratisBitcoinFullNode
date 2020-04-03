@@ -3,7 +3,7 @@ using FluentAssertions;
 using NBitcoin;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.Api;
+using Stratis.Features.Api;
 using Stratis.Features.Consensus;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;

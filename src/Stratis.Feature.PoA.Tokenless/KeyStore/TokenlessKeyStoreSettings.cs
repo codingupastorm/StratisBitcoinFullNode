@@ -3,7 +3,7 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
+using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Feature.PoA.Tokenless.KeyStore

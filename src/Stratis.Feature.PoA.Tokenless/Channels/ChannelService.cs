@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using CertificateAuthority;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
+using Stratis.Features.PoA.ProtocolEncryption;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels
 {

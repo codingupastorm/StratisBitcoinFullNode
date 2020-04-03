@@ -2,7 +2,7 @@
 using NBitcoin;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
+using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.SmartContracts.Core.Util;
 

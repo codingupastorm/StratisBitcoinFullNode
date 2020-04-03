@@ -2,12 +2,12 @@
 using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.EventBus.CoreEvents;
-using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Features.PoA.Voting;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.PoA.Tests
+namespace Stratis.Features.PoA.Tests
 {
     public class VotingManagerTests : PoATestsBase
     {
