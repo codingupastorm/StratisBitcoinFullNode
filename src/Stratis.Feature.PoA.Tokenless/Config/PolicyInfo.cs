@@ -19,7 +19,9 @@ namespace Stratis.Feature.PoA.Tokenless.Config
 
         public Result Validate()
         {
-            // TODO define policy serialization.
+            if (string.IsNullOrWhiteSpace(Policy))
+                return Result.Failure("Policy must not be empty.");
+
             return Result.Success();
         }
     }
