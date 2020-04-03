@@ -10,6 +10,11 @@ $mnemonics =
 $admin_account_id = "1"
 $admin_password = "4815162342"
 
+$organization = "Stratis"
+$organizationUnit = "TestScripts"
+$locality = "London"
+$state = "London"
+
 #############################
 
 $script_dir = Split-Path $script:MyInvocation.MyCommand.Path
@@ -25,6 +30,9 @@ $node_root = "$root_datadir\node$node"
 $port = 36200 + $node
 $api_port = 30000 + $node
 $long_interval_time = 10
+
+$path_to_msd = "$repo_folder\src\MembershipServices.Cli"
+$msd_root = "$root_datadir\node$node"
 
 # Create the folder in case it doesn't exist.
 New-Item -ItemType directory -Force -Path $node_root
@@ -62,7 +70,7 @@ if ($create_account -eq 1)
   $admin_account_id = [convert]::ToInt32($admin_account_id)
 
   # Approve the created account, using the admin's credentials
-  $params = @{ "accountId" = "$admin_account_id"; "password" = "$admin_password"; "targetAccountId" = "$ca_account" }
+  $params = @{ "accountId" = $admin_account_id; "password" = "$admin_password"; "targetAccountId" = $ca_account }
   Write-Host ($params|ConvertTo-Json)
   Invoke-WebRequest -Uri https://localhost:5001/api/accounts/approve -Method post -Body ($params|ConvertTo-Json) -ContentType "application/json"
 }
@@ -72,6 +80,8 @@ cd $path_to_msd
 Write-Host "Running MerbershipServices.Cli..." -foregroundcolor "magenta"
 start-process cmd -ArgumentList "/k color 0E && dotnet run generate --datadir=""$msd_root"" --caaccountid=$ca_account --commonname=node$node --organization=$organization --organizationunit=$organizationUnit --locality=$locality --stateorprovince=$state --emailaddress=test@example.com --country=UK --capassword=test --password=test --requestedpermissions Send CallContract CreateContract"
 timeout $long_interval_time
+
+Copy-Item $root_datadir\ca\CaMain\CaCertificate.crt -Destination $node_root\tokenless\TokenlessMain\CaCertificate.crt
 
 cd $node_root
 
