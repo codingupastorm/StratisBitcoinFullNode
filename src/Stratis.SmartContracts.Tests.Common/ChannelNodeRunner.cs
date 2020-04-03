@@ -9,8 +9,6 @@ using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.Api;
-using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
@@ -22,6 +20,8 @@ using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Features.BlockStore;
+using Stratis.Features.MemoryPool;
 using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.SmartContracts.Tests.Common

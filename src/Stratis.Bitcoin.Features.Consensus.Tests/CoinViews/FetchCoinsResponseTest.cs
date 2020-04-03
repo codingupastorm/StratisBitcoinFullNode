@@ -3,7 +3,7 @@ using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Utilities;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests.CoinViews
+namespace Stratis.Features.Consensus.Tests.CoinViews
 {
     public class FetchCoinsResponseTest
     {

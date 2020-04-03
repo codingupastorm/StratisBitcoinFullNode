@@ -10,10 +10,10 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus;
-using Stratis.Bitcoin.Features.Consensus.Rules;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
+using Stratis.Features.Consensus;
+using Stratis.Features.Consensus.Rules;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Networks.Deployments;
 using Stratis.Bitcoin.Signals;
@@ -23,7 +23,7 @@ using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Utilities.Extensions;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Miner.Tests
+namespace Stratis.Features.Miner.Tests
 {
     public class PowBlockAssemblerTest : LogsTestBase
     {

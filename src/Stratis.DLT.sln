@@ -22,25 +22,25 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "External", "External", "{1B
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Bitcoin.Api.Tests", "Stratis.Bitcoin.Api.Tests\Stratis.Bitcoin.Api.Tests.csproj", "{E538B76A-513F-46D5-9F14-E35E79B484CA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Bitcoin.Features.Miner", "Stratis.Bitcoin.Features.Miner\Stratis.Bitcoin.Features.Miner.csproj", "{22B296FE-26B4-4B84-8CF5-614F9D3716A6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Features.Miner", "Stratis.Features.Miner\Stratis.Features.Miner.csproj", "{22B296FE-26B4-4B84-8CF5-614F9D3716A6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Bitcoin.Features.Wallet", "Stratis.Bitcoin.Features.Wallet\Stratis.Bitcoin.Features.Wallet.csproj", "{6650A6CC-3B56-4D86-8DAA-FD0C8830113A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Features.Wallet", "Stratis.Features.Wallet\Stratis.Features.Wallet.csproj", "{6650A6CC-3B56-4D86-8DAA-FD0C8830113A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Bitcoin.Features.Wallet.Tests", "Stratis.Bitcoin.Features.Wallet.Tests\Stratis.Bitcoin.Features.Wallet.Tests.csproj", "{42F81858-3CE9-4C9B-BA36-378FE36600E1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Bitcoin.Features.BlockStore", "Stratis.Bitcoin.Features.BlockStore\Stratis.Bitcoin.Features.BlockStore.csproj", "{528DB00C-F8AE-4703-80E5-ECC37AC56A9E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Features.BlockStore", "Stratis.Features.BlockStore\Stratis.Features.BlockStore.csproj", "{528DB00C-F8AE-4703-80E5-ECC37AC56A9E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Bitcoin.Features.BlockStore.Tests", "Stratis.Bitcoin.Features.BlockStore.Tests\Stratis.Bitcoin.Features.BlockStore.Tests.csproj", "{8B3DE868-8062-42C6-8D8A-A905A0D25DE4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Bitcoin.Features.MemoryPool", "Stratis.Bitcoin.Features.MemoryPool\Stratis.Bitcoin.Features.MemoryPool.csproj", "{AFDF6339-EE03-4F76-BFB5-024713230D91}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Features.MemoryPool", "Stratis.Features.MemoryPool\Stratis.Features.MemoryPool.csproj", "{AFDF6339-EE03-4F76-BFB5-024713230D91}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Bitcoin.Features.MemoryPool.Tests", "Stratis.Bitcoin.Features.MemoryPool.Tests\Stratis.Bitcoin.Features.MemoryPool.Tests.csproj", "{0735CA29-50F0-4D29-9CDD-8121437D8170}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Bitcoin.Features.Notifications", "Stratis.Bitcoin.Features.Notifications\Stratis.Bitcoin.Features.Notifications.csproj", "{5D10A9EE-C328-43EC-B9EF-A6B683AD44C3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Features.Notifications", "Stratis.Features.Notifications\Stratis.Features.Notifications.csproj", "{5D10A9EE-C328-43EC-B9EF-A6B683AD44C3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Bitcoin.Features.Notifications.Tests", "Stratis.Bitcoin.Features.Notifications.Tests\Stratis.Bitcoin.Features.Notifications.Tests.csproj", "{4EB83447-271F-458D-8899-F2FB2C087CBE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Bitcoin.Features.Consensus", "Stratis.Bitcoin.Features.Consensus\Stratis.Bitcoin.Features.Consensus.csproj", "{75C364C1-0785-4EDD-9DB8-B0B21F27573C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Features.Consensus", "Stratis.Features.Consensus\Stratis.Features.Consensus.csproj", "{75C364C1-0785-4EDD-9DB8-B0B21F27573C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Bitcoin.Features.Consensus.Tests", "Stratis.Bitcoin.Features.Consensus.Tests\Stratis.Bitcoin.Features.Consensus.Tests.csproj", "{84433C94-9CB7-4D6F-B2C1-C16B6F7F277C}"
 EndProject
@@ -112,7 +112,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.SmartContracts.CLR.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.SmartContracts.Core.Tests", "Stratis.SmartContracts.Core.Tests\Stratis.SmartContracts.Core.Tests.csproj", "{A1CF9560-A6A0-4270-9569-0D117AFA799C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Bitcoin.Features.SignalR", "Stratis.Bitcoin.Features.SignalR\Stratis.Bitcoin.Features.SignalR.csproj", "{6BBFFE59-0597-4ADA-A592-CED25C05C01A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.Features.SignalR", "Stratis.Features.SignalR\Stratis.Features.SignalR.csproj", "{6BBFFE59-0597-4ADA-A592-CED25C05C01A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FodyNlogAdapter", "FodyNlogAdapter\FodyNlogAdapter.csproj", "{2576847F-BFFC-4F0A-B883-28F2E38FEC7F}"
 EndProject

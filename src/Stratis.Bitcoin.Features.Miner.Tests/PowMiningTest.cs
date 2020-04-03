@@ -8,8 +8,8 @@ using NBitcoin;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Tests.Common;
@@ -17,7 +17,7 @@ using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Utilities;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Miner.Tests
+namespace Stratis.Features.Miner.Tests
 {
     // ========================
     // TODO fix this tests

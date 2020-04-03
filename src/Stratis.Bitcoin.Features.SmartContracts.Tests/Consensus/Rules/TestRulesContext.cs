@@ -10,7 +10,7 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.Rules;
+using Stratis.Features.Consensus.Rules;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Bitcoin.Features.SmartContracts.Rules;
 using Stratis.Bitcoin.Signals;
@@ -21,7 +21,7 @@ using Xunit.Sdk;
 
 namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Consensus.Rules
 {
-    // Borrowed from Stratis.Bitcoin.Features.Consensus.Tests
+    // Borrowed from Stratis.Features.Consensus.Tests
 
     /// <summary>
     /// Concrete instance of the test chain.

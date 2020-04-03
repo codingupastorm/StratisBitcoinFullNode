@@ -11,7 +11,7 @@ using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
+using Stratis.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;

@@ -1,7 +1,7 @@
 ﻿using System;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using Stratis.Bitcoin.Features.Wallet;
+using Stratis.Features.Wallet;
 using Stratis.Features.SQLiteWalletRepository.Tables;
 
 namespace Stratis.Features.SQLiteWalletRepository

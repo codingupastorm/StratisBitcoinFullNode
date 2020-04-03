@@ -12,11 +12,6 @@ using NBitcoin;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
 using Stratis.Bitcoin.Controllers.Models;
-using Stratis.Bitcoin.Features.BlockStore.Models;
-using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
@@ -25,6 +20,11 @@ using Stratis.Bitcoin.Models;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Features.BlockStore.Models;
+using Stratis.Features.MemoryPool.Broadcasting;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Interfaces;
+using Stratis.Features.Wallet.Models;
 using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests.Wallet

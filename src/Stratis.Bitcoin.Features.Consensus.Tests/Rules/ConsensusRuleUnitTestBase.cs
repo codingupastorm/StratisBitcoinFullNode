@@ -12,13 +12,13 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.Interfaces;
-using Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders;
+using Stratis.Features.Consensus.Interfaces;
+using Stratis.Features.Consensus.ProvenBlockHeaders;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests.Rules
+namespace Stratis.Features.Consensus.Tests.Rules
 {
     public class ConsensusRuleUnitTestBase
     {

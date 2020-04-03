@@ -2,10 +2,10 @@
 using System.Linq;
 using FluentAssertions;
 using NBitcoin;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Controllers;
-using Stratis.Bitcoin.Features.Wallet.Models;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Controllers;
+using Stratis.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;

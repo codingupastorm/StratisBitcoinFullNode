@@ -529,7 +529,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 });
 
                 var sendTransactionResult = (JsonResult)result;
-                var sendTransactionResponse = (Bitcoin.Features.MemoryPool.Broadcasting.SendTransactionModel)sendTransactionResult.Value;
+                var sendTransactionResponse = (Features.MemoryPool.Broadcasting.SendTransactionModel)sendTransactionResult.Value;
 
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);

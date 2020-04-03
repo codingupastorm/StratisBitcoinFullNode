@@ -2,10 +2,10 @@
 using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
+using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.SmartContracts.Interfaces;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Tests.Wallet.Common;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Serialization;
