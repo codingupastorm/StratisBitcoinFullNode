@@ -55,7 +55,10 @@ namespace MembershipServices.Cli
             [Option("caaccountid", Required = false, HelpText = "The account ID of the user requesting a certificate from the certificate authority.")]
             public string CaAccountId { get; set; }
 
-            [Option("password", Required = true, HelpText = "The account password of the user requesting a certificate from the certificate authority.")]
+            [Option("capassword", Required = true, HelpText = "The account password of the user requesting a certificate from the certificate authority.")]
+            public string CaPassword { get; set; }
+
+            [Option("password", Required = true, HelpText = "The password for the node's keystore.")]
             public string Password { get; set; }
 
             /// <summary>
@@ -94,7 +97,7 @@ namespace MembershipServices.Cli
         {
             // TODO: Move this logic into a reusable method
             var network = new TokenlessNetwork();
-            var nodeSettings = new NodeSettings(network, args: new [] { $"-datadir={options.DataDir}" });
+            var nodeSettings = new NodeSettings(network, args: new [] { $"-datadir={options.DataDir}", $"-password={options.Password}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" });
             var loggerFactory = new LoggerFactory();
 
             var membershipServices = new MembershipServicesDirectory(nodeSettings);
@@ -104,11 +107,12 @@ namespace MembershipServices.Cli
             var certificatesManager = new CertificatesManager(nodeSettings.DataFolder, nodeSettings, loggerFactory, revocationChecker, network);
             var keyStoreSettings = new TokenlessKeyStoreSettings(nodeSettings);
             var keyStoreManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, keyStoreSettings, certificatesManager, loggerFactory);
+            keyStoreManager.Initialize();
 
             // First check if we have created an account on the CA already.
             if (string.IsNullOrWhiteSpace(options.CaAccountId))
             {
-                var caClient = new CaClient(new Uri(options.CaUrl), new HttpClient(), 0, options.Password);
+                var caClient = new CaClient(new Uri(options.CaUrl), new HttpClient(), 0, options.CaPassword);
 
                 int accountId = caClient.CreateAccount(options.CommonName,
                     options.OrganizationUnit,
@@ -125,7 +129,6 @@ namespace MembershipServices.Cli
                 return -1;
             }
 
-            keyStoreManager.LoadKeyStore();
             Key privateKey = keyStoreManager.GetKey(keyStoreSettings.Password, TokenlessKeyStoreAccount.P2PCertificates);
 
             File.WriteAllText(Path.Combine(nodeSettings.DataFolder.RootPath, LocalMembershipServicesConfiguration.Keystore, "key.dat"), privateKey.GetBitcoinSecret(network).ToWif());
@@ -138,6 +141,9 @@ namespace MembershipServices.Cli
             if (clientCert != null)
             {
                 membershipServices.AddLocalMember(clientCert, MemberType.Self);
+
+                // We need the certificate to be available here as well for now.
+                membershipServices.AddLocalMember(clientCert, MemberType.NetworkPeer);
 
                 // TODO: Temporary workaround until CertificatesManager is completely removed and merged into MSD
                 File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCert, privateKey, keyStoreSettings.Password));
