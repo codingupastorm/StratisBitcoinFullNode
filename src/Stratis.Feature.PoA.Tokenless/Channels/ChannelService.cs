@@ -9,7 +9,6 @@ using CertificateAuthority;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
-using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels
 {
@@ -19,6 +18,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         /// <summary>This is a list of PIds of channel processes that are running.</summary>
         List<int> StartedChannelNodes { get; }
 
+        Task StartChannelNodeAsync(string channelName);
         Task StartSystemChannelNodeAsync();
         void StopChannelNodes();
     }
@@ -26,6 +26,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     /// <inheritdoc />
     public sealed class ChannelService : IChannelService
     {
+        private const string SystemChannelName = "system";
+
         private readonly ChannelSettings channelSettings;
         private readonly ILogger logger;
         private readonly NodeSettings nodeSettings;
@@ -41,16 +43,47 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.StartedChannelNodes = new List<int>();
         }
 
-        public async Task StartSystemChannelNodeAsync()
+        public async Task StartChannelNodeAsync(string channelName)
         {
-            this.logger.LogInformation("InfraNode will attempt to start a system channel node.");
+            try
+            {
+                this.logger.LogInformation($"Starting a node on channel '{channelName}'.");
 
-            await StartChannelNodeAsync("system");
+                Process process = await StartNodeAsync(SystemChannelName);
+                if (process.HasExited)
+                    this.logger.LogWarning($"Failed to start node on channel '{channelName}' as the process exited early.");
 
-            this.logger.LogInformation("System channel node started.");
+                this.StartedChannelNodes.Add(process.Id);
+
+                this.logger.LogInformation($"Node started on channel '{channelName}'.");
+            }
+            catch (Exception ex)
+            {
+                throw new ChannelServiceException($"Failed to start node on channel '{channelName}': {ex.Message}");
+            }
         }
 
-        private async Task StartChannelNodeAsync(string channelName)
+        public async Task StartSystemChannelNodeAsync()
+        {
+            try
+            {
+                this.logger.LogInformation("Starting a system channel node.");
+
+                Process process = await StartNodeAsync(SystemChannelName);
+                if (process.HasExited)
+                    throw new ChannelServiceException($"Failed to start system channel node as the processs exited early.");
+
+                this.StartedChannelNodes.Add(process.Id);
+
+                this.logger.LogInformation("System channel node started.");
+            }
+            catch (Exception ex)
+            {
+                throw new ChannelServiceException($"Failed to start system channel node: {ex.Message}");
+            }
+        }
+
+        private async Task<Process> StartNodeAsync(string channelName)
         {
             // Write the serialized network to disk.
             ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, $"{this.nodeSettings.DataFolder.RootPath}\\channels\\{channelName.ToLowerInvariant()}");
@@ -70,7 +103,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             // Pass the path to the serialized network to the system channel node and start it.
             var process = new Process();
             process.StartInfo.WorkingDirectory = this.channelSettings.ProcessPath;
-            process.StartInfo.FileName = "dotnet.exe";
+            process.StartInfo.FileName = "dotnet";
 
             var args = new StringBuilder();
             args.Append($"-apiport={this.channelSettings.ChannelApiPort} ");
@@ -92,9 +125,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.logger.LogInformation("Executing delay to wait for node to start.");
             await Task.Delay(TimeSpan.FromSeconds(5));
 
-            Guard.Assert(!process.HasExited);
-
-            this.StartedChannelNodes.Add(process.Id);
+            return process;
         }
 
         public void StopChannelNodes()
