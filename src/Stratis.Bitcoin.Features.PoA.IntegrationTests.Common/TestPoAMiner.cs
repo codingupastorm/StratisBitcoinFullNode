@@ -9,13 +9,13 @@ using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Validators;
 using Stratis.Features.MemoryPool;
-using Stratis.Bitcoin.Features.PoA.Voting;
+using Stratis.Features.PoA.Voting;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Core;
 
-namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
+namespace Stratis.Features.PoA.IntegrationTests.Common
 {
     public class TestPoAMiner : PoAMiner
     {

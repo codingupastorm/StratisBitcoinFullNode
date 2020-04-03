@@ -1,13 +1,13 @@
 ﻿using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
+using Stratis.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Utilities;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
+namespace Stratis.Features.PoA.IntegrationTests
 {
     public class HeaderTimeTests
     {

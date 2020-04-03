@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Stratis.Bitcoin.Controllers.Models;
-using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
-using Stratis.Bitcoin.Features.PoA.Voting;
+using Stratis.Features.PoA.IntegrationTests.Common;
+using Stratis.Features.PoA.Voting;
 using Stratis.Features.Wallet;
 using Stratis.Features.Wallet.Controllers;
 using Stratis.Features.Wallet.Interfaces;
@@ -15,7 +15,7 @@ using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
+namespace Stratis.Features.PoA.IntegrationTests
 {
     public class VotingAndMiningTests : IDisposable
     {

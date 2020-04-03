@@ -3,6 +3,7 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
+using Stratis.Bitcoin;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Base.Deployments;
@@ -11,13 +12,12 @@ using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.PoA.Voting;
 
-namespace Stratis.Bitcoin.Features.PoA.Tests
+namespace Stratis.Features.PoA.Tests
 {
     public class PoATestsBase
     {
@@ -43,7 +43,7 @@ namespace Stratis.Bitcoin.Features.PoA.Tests
         public PoATestsBase(TestPoANetwork network = null)
         {
             this.loggerFactory = new LoggerFactory();
-            this.signals = new Signals.Signals(this.loggerFactory, null);
+            this.signals = new Signals(this.loggerFactory, null);
             this.network = network == null ? new TestPoANetwork() : network;
             this.consensusOptions = this.network.ConsensusOptions;
             this.repositorySerializer = new RepositorySerializer(this.network.Consensus.ConsensusFactory);
@@ -103,7 +103,7 @@ namespace Stratis.Bitcoin.Features.PoA.Tests
 
         public static IFederationManager CreateFederationManager(object caller)
         {
-            return CreateFederationManager(caller, new TestPoANetwork(), new ExtendedLoggerFactory(), new Signals.Signals(new LoggerFactory(), null));
+            return CreateFederationManager(caller, new TestPoANetwork(), new ExtendedLoggerFactory(), new Signals(new LoggerFactory(), null));
         }
 
         public void InitRule(ConsensusRuleBase rule)

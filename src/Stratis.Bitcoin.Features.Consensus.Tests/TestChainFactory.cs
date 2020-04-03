@@ -15,7 +15,6 @@ using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Consensus.Validators;
-using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.P2P;
@@ -29,6 +28,7 @@ using Stratis.Features.Consensus.Rules;
 using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Fee;
+using Stratis.Features.PoA;
 using Xunit;
 using Xunit.Sdk;
 

@@ -4,11 +4,11 @@ using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.PoA.Tests
+namespace Stratis.Features.PoA.Tests
 {
     public class SlotsManagerTests
     {
@@ -64,7 +64,7 @@ namespace Stratis.Bitcoin.Features.PoA.Tests
             Key key = tool.GeneratePrivateKey();
             this.network = new TestPoANetwork(new List<PubKey>() { tool.GeneratePrivateKey().PubKey, key.PubKey, tool.GeneratePrivateKey().PubKey });
 
-            IFederationManager fedManager = PoATestsBase.CreateFederationManager(this, this.network, new ExtendedLoggerFactory(), new Signals.Signals(new LoggerFactory(), null));
+            IFederationManager fedManager = PoATestsBase.CreateFederationManager(this, this.network, new ExtendedLoggerFactory(), new Signals(new LoggerFactory(), null));
             this.chainIndexer.Setup(x => x.Tip).Returns(new ChainedHeader(new BlockHeader(), 0, 0));
             this.slotsManager = new SlotsManager(this.network, fedManager, this.chainIndexer.Object);
 

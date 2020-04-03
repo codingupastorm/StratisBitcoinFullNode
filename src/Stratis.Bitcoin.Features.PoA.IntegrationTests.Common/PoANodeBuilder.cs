@@ -5,7 +5,7 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 
-namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
+namespace Stratis.Features.PoA.IntegrationTests.Common
 {
     public class PoANodeBuilder : NodeBuilder
     {

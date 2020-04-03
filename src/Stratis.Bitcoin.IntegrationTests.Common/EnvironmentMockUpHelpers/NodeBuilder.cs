@@ -7,7 +7,7 @@ using NBitcoin;
 using NBitcoin.Protocol;
 using NLog;
 using Stratis.Bitcoin.Builder;
-using Stratis.Bitcoin.Features.Api;
+using Stratis.Features.Api;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Features.BlockStore;

@@ -2,8 +2,8 @@
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.PoA;
-using Stratis.Bitcoin.Features.PoA.Voting;
+using Stratis.Features.PoA;
+using Stratis.Features.PoA.Voting;
 
 namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 {

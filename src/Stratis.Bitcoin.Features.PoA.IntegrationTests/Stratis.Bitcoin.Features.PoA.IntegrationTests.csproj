@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Stratis.Bitcoin.Features.PoA.IntegrationTests.Common\Stratis.Bitcoin.Features.PoA.IntegrationTests.Common.csproj" />
+    <ProjectReference Include="..\Stratis.Features.PoA.IntegrationTests.Common\Stratis.Features.PoA.IntegrationTests.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -3,7 +3,7 @@ using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
+using Stratis.Features.PoA.ProtocolEncryption;
 
 namespace Stratis.Feature.PoA.Tokenless
 {

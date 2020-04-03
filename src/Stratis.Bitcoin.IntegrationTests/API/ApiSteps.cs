@@ -14,7 +14,7 @@ using NBitcoin;
 using Newtonsoft.Json.Linq;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Controllers.Models;
-using Stratis.Bitcoin.Features.Api;
+using Stratis.Features.Api;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.TestNetworks;
@@ -415,7 +415,7 @@ namespace Stratis.Bitcoin.IntegrationTests.API
 
             List<string> featuresNamespaces = statusResponse.FeaturesData.Select(f => f.Namespace).ToList();
             featuresNamespaces.Should().Contain("Stratis.Bitcoin.Base.BaseFeature");
-            featuresNamespaces.Should().Contain("Stratis.Bitcoin.Features.Api.ApiFeature");
+            featuresNamespaces.Should().Contain("Stratis.Features.Api.ApiFeature");
             featuresNamespaces.Should().Contain("Stratis.Features.BlockStore.BlockStoreFeature");
             featuresNamespaces.Should().Contain("Stratis.Features.Consensus.PowConsensusFeature");
             featuresNamespaces.Should().Contain("Stratis.Features.MemoryPool.MempoolFeature");
