@@ -89,7 +89,11 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             {
                 // Store any changes that were made to the transient store
                 byte[] privateReadWriteSetData = Encoding.UTF8.GetBytes(result.PrivateReadWriteSet.GetReadWriteSet().ToJson()); // ew
+
                 this.transientStore.Persist(request.ContractTransaction.GetHash(), blockHeight, new TransientStorePrivateData(privateReadWriteSetData));
+
+                // TODO: Only do this on the final endorsement, depending on the policy.
+                this.BroadcastPrivateDataToOrganisation();
             }
 
             // TODO: If we have multiple endorsements happening here, check the read write set before signing!
@@ -111,7 +115,14 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 // This catch is a bit dirty but is copied from FederatedPegBroadcaster code.
             }
 
+
+
             return true;
+        }
+
+        private void BroadcastPrivateDataToOrganisation()
+        {
+            throw new NotImplementedException();
         }
     }
 }
