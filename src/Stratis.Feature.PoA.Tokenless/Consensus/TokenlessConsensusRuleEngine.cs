@@ -7,7 +7,7 @@ using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus;
+using Stratis.Features.Consensus;
 using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Feature.PoA.Tokenless.Consensus

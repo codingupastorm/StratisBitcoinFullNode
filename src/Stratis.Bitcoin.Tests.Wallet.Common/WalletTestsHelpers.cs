@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
 using Newtonsoft.Json;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 
 namespace Stratis.Bitcoin.Tests.Wallet.Common

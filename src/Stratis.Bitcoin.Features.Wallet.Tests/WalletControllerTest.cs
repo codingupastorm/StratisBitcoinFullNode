@@ -8,10 +8,10 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
-using Stratis.Bitcoin.Features.Wallet.Controllers;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Features.Wallet.Models;
+using Stratis.Features.MemoryPool.Broadcasting;
+using Stratis.Features.Wallet.Controllers;
+using Stratis.Features.Wallet.Interfaces;
+using Stratis.Features.Wallet.Models;
 using Stratis.Bitcoin.Models;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Tests.Common;
@@ -21,7 +21,7 @@ using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Utilities.JsonErrors;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Wallet.Tests
+namespace Stratis.Features.Wallet.Tests
 {
     public class WalletControllerTest : LogsTestBase
     {

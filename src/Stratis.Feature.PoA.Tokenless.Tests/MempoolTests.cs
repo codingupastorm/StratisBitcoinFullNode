@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Bitcoin.Features.MemoryPool;
+using Stratis.Features.MemoryPool;
 using Xunit;
 
 namespace Stratis.Feature.PoA.Tokenless.Tests

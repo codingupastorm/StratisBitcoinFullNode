@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
+using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules;
 using Stratis.Bitcoin.Features.SmartContracts.PoA;

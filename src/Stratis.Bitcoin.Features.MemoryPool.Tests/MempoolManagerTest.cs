@@ -5,13 +5,13 @@ using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.MemoryPool.Fee;
-using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
+using Stratis.Features.MemoryPool.Fee;
+using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.MemoryPool.Tests
+namespace Stratis.Features.MemoryPool.Tests
 {
     /// <summary>
     /// Unit tests for memory pool manager.

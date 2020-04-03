@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Utilities;

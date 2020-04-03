@@ -4,10 +4,10 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.PoA.Payloads;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Features.BlockStore;
 
 namespace Stratis.Bitcoin.Features.PoA.Behaviors
 {

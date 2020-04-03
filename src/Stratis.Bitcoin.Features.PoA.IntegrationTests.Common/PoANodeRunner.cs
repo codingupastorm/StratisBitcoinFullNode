@@ -1,13 +1,13 @@
 ﻿using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Features.Api;
-using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.BlockStore;
+using Stratis.Features.MemoryPool;
 using Stratis.Features.SQLiteWalletRepository;
+using Stratis.Features.Wallet;
 
 namespace Stratis.Bitcoin.Features.PoA.IntegrationTests.Common
 {
