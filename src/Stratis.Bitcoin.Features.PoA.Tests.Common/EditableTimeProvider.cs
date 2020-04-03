@@ -1,7 +1,7 @@
 ﻿using System;
 using Stratis.Bitcoin.Utilities;
 
-namespace Stratis.Features.PoA.IntegrationTests.Common
+namespace Stratis.Features.PoA.Tests.Common
 {
     public class EditableTimeProvider : DateTimeProvider
     {

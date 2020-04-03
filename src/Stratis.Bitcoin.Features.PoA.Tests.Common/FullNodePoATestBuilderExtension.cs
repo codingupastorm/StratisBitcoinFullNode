@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Builder.Feature;
 
-namespace Stratis.Features.PoA.IntegrationTests.Common
+namespace Stratis.Features.PoA.Tests.Common
 {
     public static class FullNodePoATestBuilderExtension
     {

@@ -5,7 +5,7 @@ using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
 using Microsoft.AspNetCore.Hosting;
 using Org.BouncyCastle.X509;
-using Stratis.Features.PoA.IntegrationTests.Common;
+using Stratis.Features.PoA.Tests.Common;
 using Stratis.Features.PoA.Voting;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;

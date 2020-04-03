@@ -10,7 +10,7 @@ using NBitcoin;
 using NBitcoin.Networks;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Features.PoA.IntegrationTests.Common;
+using Stratis.Features.PoA.Tests.Common;
 using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Feature.PoA.Tokenless;

@@ -5,6 +5,7 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
+using Stratis.Features.PoA.Tests.Common;
 using Xunit;
 
 namespace Stratis.Features.PoA.Tests.Rules
@@ -13,9 +14,9 @@ namespace Stratis.Features.PoA.Tests.Rules
     {
         private readonly PoAHeaderSignatureRule signatureRule;
 
-        private static Key key = new KeyTool(new DataFolder(string.Empty)).GeneratePrivateKey();
+        private static readonly Key key = new KeyTool(new DataFolder(string.Empty)).GeneratePrivateKey();
 
-        public PoAHeaderSignatureRuleTests() : base(new TestPoANetwork(new List<PubKey>() { key.PubKey }))
+        public PoAHeaderSignatureRuleTests() : base(new TestPoANetwork2(new List<PubKey>() { key.PubKey }))
         {
             this.signatureRule = new PoAHeaderSignatureRule();
             this.InitRule(this.signatureRule);

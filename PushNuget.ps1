@@ -82,9 +82,9 @@ rm "src\Stratis.Bitcoin.Tests.Wallet.Common\bin\debug\" -Recurse -Force
 dotnet pack src\Stratis.Bitcoin.Tests.Wallet.Common --configuration Debug --include-source --include-symbols 
 dotnet nuget push "src\Stratis.Bitcoin.Tests.Wallet.Common\bin\debug\*.symbols.nupkg" --source "https://api.nuget.org/v3/index.json"
 
-rm "src\Stratis.Features.PoA.IntegrationTests.Common\bin\debug\" -Recurse -Force
-dotnet pack src\Stratis.Features.PoA.IntegrationTests.Common --configuration Debug --include-source --include-symbols 
-dotnet nuget push "src\Stratis.Features.PoA.IntegrationTests.Common\bin\debug\*.symbols.nupkg" --source "https://api.nuget.org/v3/index.json"
+rm "src\Stratis.Features.PoA.Tests.Common\bin\debug\" -Recurse -Force
+dotnet pack src\Stratis.Features.PoA.Tests.Common --configuration Debug --include-source --include-symbols 
+dotnet nuget push "src\Stratis.Features.PoA.Tests.Common\bin\debug\*.symbols.nupkg" --source "https://api.nuget.org/v3/index.json"
 
 # TOOLS PROJECTS
 

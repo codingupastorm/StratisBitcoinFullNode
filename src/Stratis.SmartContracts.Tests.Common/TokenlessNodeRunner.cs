@@ -6,7 +6,7 @@ using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Features.Api;
-using Stratis.Features.PoA.IntegrationTests.Common;
+using Stratis.Features.PoA.Tests.Common;
 using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.IntegrationTests.Common;

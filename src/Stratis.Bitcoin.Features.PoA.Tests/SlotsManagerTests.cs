@@ -6,6 +6,7 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Features.PoA.Tests.Common;
 using Xunit;
 
 namespace Stratis.Features.PoA.Tests
@@ -13,14 +14,14 @@ namespace Stratis.Features.PoA.Tests
     public class SlotsManagerTests
     {
         private ISlotsManager slotsManager;
-        private TestPoANetwork network;
+        private TestPoANetwork2 network;
         private readonly PoAConsensusOptions consensusOptions;
         private readonly IFederationManager federationManager;
-        private Mock<ChainIndexer> chainIndexer;
+        private readonly Mock<ChainIndexer> chainIndexer;
 
         public SlotsManagerTests()
         {
-            this.network = new TestPoANetwork();
+            this.network = new TestPoANetwork2();
             this.consensusOptions = this.network.ConsensusOptions;
 
             this.federationManager = PoATestsBase.CreateFederationManager(this);
@@ -62,7 +63,7 @@ namespace Stratis.Features.PoA.Tests
         {
             var tool = new KeyTool(new DataFolder(string.Empty));
             Key key = tool.GeneratePrivateKey();
-            this.network = new TestPoANetwork(new List<PubKey>() { tool.GeneratePrivateKey().PubKey, key.PubKey, tool.GeneratePrivateKey().PubKey });
+            this.network = new TestPoANetwork2(new List<PubKey>() { tool.GeneratePrivateKey().PubKey, key.PubKey, tool.GeneratePrivateKey().PubKey });
 
             IFederationManager fedManager = PoATestsBase.CreateFederationManager(this, this.network, new ExtendedLoggerFactory(), new Signals(new LoggerFactory(), null));
             this.chainIndexer.Setup(x => x.Tip).Returns(new ChainedHeader(new BlockHeader(), 0, 0));

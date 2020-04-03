@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Features.PoA;
-using Stratis.Features.PoA.IntegrationTests.Common;
+using Stratis.Features.PoA.Tests.Common;
 using Stratis.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;

@@ -4,15 +4,15 @@ using System.Threading.Tasks;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Stratis.Bitcoin.Controllers.Models;
-using Stratis.Features.PoA.IntegrationTests.Common;
+using Stratis.Bitcoin.IntegrationTests.Common;
+using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Bitcoin.Tests.Common;
+using Stratis.Features.PoA.Tests.Common;
 using Stratis.Features.PoA.Voting;
 using Stratis.Features.Wallet;
 using Stratis.Features.Wallet.Controllers;
 using Stratis.Features.Wallet.Interfaces;
 using Stratis.Features.Wallet.Models;
-using Stratis.Bitcoin.IntegrationTests.Common;
-using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
 namespace Stratis.Features.PoA.IntegrationTests

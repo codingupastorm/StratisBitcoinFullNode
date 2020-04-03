@@ -1,15 +1,16 @@
-﻿using Stratis.Bitcoin.Builder;
+﻿using Stratis.Bitcoin;
+using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Features.Api;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.Api;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.SQLiteWalletRepository;
 using Stratis.Features.Wallet;
 
-namespace Stratis.Features.PoA.IntegrationTests.Common
+namespace Stratis.Features.PoA.Tests.Common
 {
     public class PoANodeRunner : NodeRunner
     {
