@@ -108,7 +108,8 @@ namespace Stratis.Feature.PoA.Tokenless
                         }
 
                         // Necessary for the dynamic contract controller
-                        services.AddTransient<TokenlessController>();
+                        // Use AddScoped for instance-per-request lifecycle, ref. https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-2.2#scoped
+                        services.AddScoped<TokenlessController>();
                     });
             });
 
