@@ -5,6 +5,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
+using Stratis.Bitcoin;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Base.Deployments;
@@ -14,13 +15,6 @@ using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Consensus.Validators;
-using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.MemoryPool.Fee;
-using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.P2P;
@@ -28,10 +22,17 @@ using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.BlockStore;
+using Stratis.Features.Consensus.CoinViews;
+using Stratis.Features.Consensus.Rules;
+using Stratis.Features.Consensus.Rules.CommonRules;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Fee;
+using Stratis.Features.PoA;
 using Xunit;
 using Xunit.Sdk;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests
+namespace Stratis.Features.Consensus.Tests
 {
     /// <summary>
     /// Concrete instance of the test chain.
@@ -105,7 +106,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             testChainContext.LoggerFactory = testChainContext.NodeSettings.LoggerFactory;
             testChainContext.DateTimeProvider = DateTimeProvider.Default;
 
-            testChainContext.Signals = new Signals.Signals(testChainContext.NodeSettings.LoggerFactory, null);
+            testChainContext.Signals = new Signals(testChainContext.NodeSettings.LoggerFactory, null);
             testChainContext.AsyncProvider = new AsyncProvider(testChainContext.NodeSettings.LoggerFactory, testChainContext.Signals, new Mock<INodeLifetime>().Object);
 
             network.Consensus.Options = new ConsensusOptions();

@@ -7,24 +7,25 @@ using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.Consensus;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
-using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Features.PoA;
-using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
-using Stratis.Bitcoin.Features.PoA.Voting;
+using Stratis.Features.Consensus;
+using Stratis.Features.Consensus.CoinViews;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Broadcasting;
+using Stratis.Features.MemoryPool.Interfaces;
+using Stratis.Features.PoA;
+using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Controllers;
 using Stratis.Feature.PoA.Tokenless.Core;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mining;
-using Stratis.Feature.PoA.Tokenless.KeyStore;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -41,6 +42,8 @@ namespace Stratis.Feature.PoA.Tokenless
                     .AddFeature<TokenlessFeature>()
                     .FeatureServices(services =>
                     {
+                        services.AddSingleton<IChannelService, ChannelService>();
+                        services.AddSingleton<ChannelSettings>();
                         services.Replace(ServiceDescriptor.Singleton<ITxMempool, TokenlessMempool>());
                         services.Replace(ServiceDescriptor.Singleton<IMempoolValidator, TokenlessMempoolValidator>());
                         services.AddSingleton<BlockDefinition, TokenlessBlockDefinition>();
@@ -112,7 +115,7 @@ namespace Stratis.Feature.PoA.Tokenless
             return fullNodeBuilder;
         }
 
-        public static IFullNodeBuilder UseTokenlessWallet(this IFullNodeBuilder fullNodeBuilder)
+        public static IFullNodeBuilder UseTokenlessKeyStore(this IFullNodeBuilder fullNodeBuilder)
         {
             fullNodeBuilder.ConfigureFeature(features =>
             {

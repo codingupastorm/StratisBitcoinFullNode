@@ -3,7 +3,7 @@ using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.PoA.Tests
+namespace Stratis.Features.PoA.Tests
 {
     public class KeyToolTests
     {

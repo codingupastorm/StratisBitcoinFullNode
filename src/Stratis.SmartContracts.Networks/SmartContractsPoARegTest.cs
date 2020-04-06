@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Protocol;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
-using Stratis.Bitcoin.Features.MemoryPool.Rules;
-using Stratis.Bitcoin.Features.PoA;
-using Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules;
-using Stratis.Bitcoin.Features.PoA.Voting.ConsensusRules;
 using Stratis.Bitcoin.Features.SmartContracts.MempoolRules;
 using Stratis.Bitcoin.Features.SmartContracts.PoA;
 using Stratis.Bitcoin.Features.SmartContracts.PoA.MempoolRules;
 using Stratis.Bitcoin.Features.SmartContracts.Rules;
+using Stratis.Features.Consensus.Rules.CommonRules;
+using Stratis.Features.MemoryPool.Rules;
+using Stratis.Features.PoA;
+using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
+using Stratis.Features.PoA.Voting.ConsensusRules;
 using Stratis.SmartContracts.Networks.Policies;
 
 namespace Stratis.SmartContracts.Networks

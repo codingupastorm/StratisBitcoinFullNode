@@ -5,15 +5,15 @@ using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
-using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.MemoryPool.Fee;
-using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
+using Stratis.Features.BlockStore;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Fee;
+using Stratis.Features.MemoryPool.Interfaces;
+using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core.Util;
@@ -53,7 +53,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             this.ChainIndexer = new ChainIndexer(this.Network);
             this.DateTimeProvider = Bitcoin.Utilities.DateTimeProvider.Default;
-            this.MempoolSettings = new MempoolSettings(this.NodeSettings) { MempoolExpiry = Bitcoin.Features.MemoryPool.MempoolValidator.DefaultMempoolExpiry };
+            this.MempoolSettings = new MempoolSettings(this.NodeSettings) { MempoolExpiry = Features.MemoryPool.MempoolValidator.DefaultMempoolExpiry };
             this.TokenlessSigner = new TokenlessSigner(this.Network, new SenderRetriever());
 
             this.BlockPolicyEstimator = new BlockPolicyEstimator(this.MempoolSettings, this.LoggerFactory, this.NodeSettings);

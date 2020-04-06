@@ -3,11 +3,11 @@ using System.Linq;
 using FluentAssertions;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.Consensus.Rules.ProvenHeaderRules;
+using Stratis.Features.Consensus.Rules.ProvenHeaderRules;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests.Rules.ProvenHeaderRules
+namespace Stratis.Features.Consensus.Tests.Rules.ProvenHeaderRules
 {
     public class ProvenBlockHeaderSizeRuleTest : TestPosConsensusRulesUnitTestBase
     {

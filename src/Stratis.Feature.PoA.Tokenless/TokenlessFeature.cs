@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using MembershipServices;
@@ -14,17 +10,18 @@ using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.PoA;
-using Stratis.Bitcoin.Features.PoA.Behaviors;
-using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
-using Stratis.Bitcoin.Features.PoA.Voting;
+using Stratis.Features.PoA;
+using Stratis.Features.PoA.Behaviors;
+using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.Features.PoA.Voting;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Features.BlockStore;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -45,9 +42,7 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly IMembershipServicesDirectory membershipServices;
         private IAsyncLoop caPubKeysLoop;
         private readonly TokenlessKeyStoreSettings tokenlessKeyStoreSettings;
-
-        // TODO-TL: Will move to channel start service or something.
-        public List<int> StartedChannelNodes = new List<int>();
+        private readonly IChannelService channelService;
 
         public TokenlessFeature(
             ICertificatesManager certificatesManager,
@@ -64,7 +59,8 @@ namespace Stratis.Feature.PoA.Tokenless
             IAsyncProvider asyncProvider,
             INodeLifetime nodeLifetime,
             ILoggerFactory loggerFactory,
-            IMembershipServicesDirectory membershipServices)
+            IMembershipServicesDirectory membershipServices,
+            IChannelService channelService)
         {
             this.certificatesManager = certificatesManager;
             this.certificatePermissionsChecker = certificatePermissionsChecker;
@@ -80,6 +76,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.caPubKeysLoop = null;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.membershipServices = membershipServices;
+            this.channelService = channelService;
 
             // TODO-TL: Is there a better place to do this?
             storeSettings.TxIndex = true;
@@ -135,58 +132,9 @@ namespace Stratis.Feature.PoA.Tokenless
 
             // If this node is a infra node, then start another daemon with the serialized version of the network.
             if (this.tokenlessKeyStoreSettings.IsInfraNode)
-            {
-                this.logger.LogInformation("InfraNode will attempt to start a system channel node.");
-                this.StartedChannelNodes.Add(StartSystemChannelNode());
-            }
+                await this.channelService.StartSystemChannelNodeAsync();
         }
 
-        private int StartSystemChannelNode()
-        {
-            // Write the serialized network to disk.
-            var channelName = "system";
-            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, $"{this.nodeSettings.DataFolder.RootPath}\\channels\\{channelName.ToLowerInvariant()}");
-            var serializedJson = JsonSerializer.Serialize(channelNetwork);
-            Directory.CreateDirectory(channelNetwork.RootFolderName);
-
-            var filePath = $"{channelNetwork.RootFolderName}\\{channelName}_network.json";
-            File.WriteAllText(filePath, serializedJson);
-
-            // Copy the parent node's configuration file (.conf) to the channel node's root.
-            File.Copy(Path.Combine(this.nodeSettings.ConfigurationFile), Path.Combine(channelNetwork.RootFolderName, "poa.conf"));
-
-            // Copy the parent node's authority and client certificate to the channel node's root.
-            File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificatesManager.AuthorityCertificateName), Path.Combine(channelNetwork.RootFolderName, CertificatesManager.AuthorityCertificateName));
-            File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificatesManager.ClientCertificateName), Path.Combine(channelNetwork.RootFolderName, CertificatesManager.ClientCertificateName));
-
-            // Pass the path to the serialized network to the system channel node and start it.
-            var process = new Process();
-            process.StartInfo.WorkingDirectory = @"..\..\..\..\Stratis.TokenlessD\";
-            process.StartInfo.FileName = "dotnet.exe";
-
-            var args = new StringBuilder();
-            args.Append("-apiport=20000 ");
-            args.Append("-certificatepassword=test ");
-            args.Append("-password=test ");
-            args.Append("-conf=poa.conf ");
-            args.Append($"-datadir={channelNetwork.RootFolderName} ");
-            args.Append($"-{CertificatesManager.CaAccountIdKey}={Settings.AdminAccountId} ");
-            args.Append($"-{CertificatesManager.CaPasswordKey}={this.nodeSettings.ConfigReader.GetOrDefault(CertificatesManager.CaPasswordKey, "")} ");
-            args.Append($"-{CertificatesManager.ClientCertificateConfigurationKey}=test ");
-            args.Append("-ischannelnode=true ");
-            args.Append("-isinfranode=false");
-
-            process.StartInfo.Arguments = $"run --no-build {args.ToString()}";
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.CreateNoWindow = false;
-            process.Start();
-
-            Task.Delay(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
-
-            Guard.Assert(!process.HasExited);
-
-            return process.Id;
-        }
 
         private void SynchronizeMembers()
         {
@@ -269,19 +217,9 @@ namespace Stratis.Feature.PoA.Tokenless
             this.votingManager.Dispose();
 
             if (((PoAConsensusOptions)this.coreComponent.Network.Consensus.Options).EnablePermissionedMembership)
-            {
                 this.revocationChecker.Dispose();
-            }
 
-            foreach (var channelNodePId in this.StartedChannelNodes)
-            {
-                var process = Process.GetProcessById(channelNodePId);
-
-                // TODO-TL: Need to gracefully shutdown
-                process.Kill();
-                //process.CloseMainWindow();
-                //process.WaitForExit();
-            }
+            this.channelService.StopChannelNodes();
         }
     }
 }

@@ -10,8 +10,8 @@ using NBitcoin;
 using NBitcoin.Networks;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
-using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
+using Stratis.Features.PoA.Tests.Common;
+using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
@@ -37,6 +37,8 @@ namespace Stratis.SmartContracts.Tests.Common
             var configParameters = new NodeConfigParameters()
             {
                 { "caurl" , "http://localhost:5050" },
+                { "channelapiport" , "20000" },
+                { "channelprocesspath" , "..\\..\\..\\..\\Stratis.TokenlessD\\" },
                 { "isinfranode", isInfraNode.ToString() }
             };
 

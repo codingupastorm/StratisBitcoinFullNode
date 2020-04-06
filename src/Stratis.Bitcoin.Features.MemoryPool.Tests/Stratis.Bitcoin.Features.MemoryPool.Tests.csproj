@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <AssemblyName>Stratis.Bitcoin.Features.MemoryPool.Tests</AssemblyName>
-    <PackageId>Stratis.Bitcoin.Features.MemoryPool.Tests</PackageId>
+    <AssemblyName>Stratis.Features.MemoryPool.Tests</AssemblyName>
+    <PackageId>Stratis.Features.MemoryPool.Tests</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
@@ -20,9 +20,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Stratis.Bitcoin.Features.MemoryPool.Tests\**" />
-    <EmbeddedResource Remove="Stratis.Bitcoin.Features.MemoryPool.Tests\**" />
-    <None Remove="Stratis.Bitcoin.Features.MemoryPool.Tests\**" />
+    <Compile Remove="Stratis.Features.MemoryPool.Tests\**" />
+    <EmbeddedResource Remove="Stratis.Features.MemoryPool.Tests\**" />
+    <None Remove="Stratis.Features.MemoryPool.Tests\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,11 +36,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NBitcoin\NBitcoin.csproj" />
-    <ProjectReference Include="..\Stratis.Bitcoin.Features.BlockStore\Stratis.Bitcoin.Features.BlockStore.csproj" />
-    <ProjectReference Include="..\Stratis.Bitcoin.Features.MemoryPool\Stratis.Bitcoin.Features.MemoryPool.csproj" />
-    <ProjectReference Include="..\Stratis.Bitcoin.Features.PoA\Stratis.Bitcoin.Features.PoA.csproj" />
+    <ProjectReference Include="..\Stratis.Features.BlockStore\Stratis.Features.BlockStore.csproj" />
+    <ProjectReference Include="..\Stratis.Features.MemoryPool\Stratis.Features.MemoryPool.csproj" />
+    <ProjectReference Include="..\Stratis.Features.PoA\Stratis.Features.PoA.csproj" />
     <ProjectReference Include="..\Stratis.Bitcoin.Tests.Common\Stratis.Bitcoin.Tests.Common.csproj" />
     <ProjectReference Include="..\Stratis.Bitcoin\Stratis.Bitcoin.csproj" />
+    <ProjectReference Include="..\Stratis.Features.PoA\Stratis.Features.PoA.csproj" />
   </ItemGroup>
 
   <ItemGroup>

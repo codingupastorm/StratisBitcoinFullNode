@@ -8,12 +8,6 @@ using Stratis.Bitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.Api;
-using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.PoA;
-using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
-using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
@@ -22,6 +16,12 @@ using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Features.Api;
+using Stratis.Features.BlockStore;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.PoA;
+using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.Features.PoA.Tests.Common;
 using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.SmartContracts.Tests.Common
@@ -69,7 +69,7 @@ namespace Stratis.SmartContracts.Tests.Common
                 .UseTokenlessPoaConsenus(channelNetwork)
                 .UseMempool()
                 .UseApi()
-                .UseTokenlessWallet()
+                .UseTokenlessKeyStore()
                 .AddSmartContracts(options =>
                 {
                     options.UseTokenlessReflectionExecutor();

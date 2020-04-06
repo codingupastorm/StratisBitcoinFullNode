@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Newtonsoft.Json;
-using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor;
@@ -22,6 +21,7 @@ using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Compilation;
@@ -32,7 +32,7 @@ using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
-using State = Stratis.Bitcoin.Features.MemoryPool.Broadcasting.State;
+using State = Stratis.Features.MemoryPool.Broadcasting.State;
 
 namespace Stratis.Feature.PoA.Tokenless.Controllers
 {
@@ -205,7 +205,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                     return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, transactionBroadCastEntry.ErrorMessage, "Transaction Exception");
                 }
 
-                return this.Json(new Bitcoin.Features.MemoryPool.Broadcasting.SendTransactionModel
+                return this.Json(new Features.MemoryPool.Broadcasting.SendTransactionModel
                 {
                     TransactionId = transaction.GetHash()
                 });

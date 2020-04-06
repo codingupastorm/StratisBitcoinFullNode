@@ -17,7 +17,7 @@ using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Utilities;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Notifications.Tests
+namespace Stratis.Features.Notifications.Tests
 {
     public class BlockNotificationTest : LogsTestBase
     {

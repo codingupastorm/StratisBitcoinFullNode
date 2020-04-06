@@ -8,7 +8,7 @@ using FluentAssertions;
 using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders;
+using Stratis.Features.Consensus.ProvenBlockHeaders;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
@@ -16,7 +16,7 @@ using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Utilities;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
+namespace Stratis.Features.Consensus.Tests.ProvenBlockHeaders
 {
     public class ProvenBlockHeaderStoreTests : LogsTestBase
     {

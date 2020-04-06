@@ -7,12 +7,12 @@ using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Controllers.Models;
-using Stratis.Bitcoin.Features.BlockStore.Controllers;
-using Stratis.Bitcoin.Features.BlockStore.Models;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Wallet.Common;
 using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Features.BlockStore.Controllers;
+using Stratis.Features.BlockStore.Models;
 using Xunit;
 
 namespace Stratis.Bitcoin.Features.BlockStore.Tests

@@ -9,9 +9,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.Features.PoA;
-using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
-using Stratis.Bitcoin.Features.PoA.Voting;
+using Stratis.Features.PoA;
+using Stratis.Features.PoA.Tests.Common;
+using Stratis.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
@@ -530,7 +530,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 });
 
                 var sendTransactionResult = (JsonResult)result;
-                var sendTransactionResponse = (Bitcoin.Features.MemoryPool.Broadcasting.SendTransactionModel)sendTransactionResult.Value;
+                var sendTransactionResponse = (Features.MemoryPool.Broadcasting.SendTransactionModel)sendTransactionResult.Value;
 
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);

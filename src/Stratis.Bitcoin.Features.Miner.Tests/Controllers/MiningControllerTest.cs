@@ -4,22 +4,23 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
+using Stratis.Bitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.Miner.Controllers;
-using Stratis.Bitcoin.Features.Miner.Interfaces;
-using Stratis.Bitcoin.Features.Miner.Models;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Wallet.Common;
 using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Features.Miner.Controllers;
+using Stratis.Features.Miner.Interfaces;
+using Stratis.Features.Miner.Models;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Interfaces;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Miner.Tests.Controllers
+namespace Stratis.Features.Miner.Tests.Controllers
 {
     public class MiningControllerTest
     {
