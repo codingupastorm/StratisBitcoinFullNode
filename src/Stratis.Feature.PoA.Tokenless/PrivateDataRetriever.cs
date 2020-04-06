@@ -27,6 +27,8 @@ namespace Stratis.Feature.PoA.Tokenless
         /// <inheritdoc />
         public void RegisterNewPrivateData(uint256 txHash)
         {
+            // TODO: Check if this node is allowed to get the data.
+
             if (this.transientStore.Get(txHash) != null)
             {
                 // We have the data!
