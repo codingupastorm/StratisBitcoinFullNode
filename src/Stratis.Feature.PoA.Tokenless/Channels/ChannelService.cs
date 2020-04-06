@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using CertificateAuthority;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Features.PoA.ProtocolEncryption;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels
@@ -18,7 +19,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         /// <summary>This is a list of PIds of channel processes that are running.</summary>
         List<int> StartedChannelNodes { get; }
 
-        Task StartChannelNodeAsync(string channelName);
+        Task StartChannelNodeAsync(ChannelCreationRequest request);
         Task StartSystemChannelNodeAsync();
         void StopChannelNodes();
     }
@@ -43,23 +44,23 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.StartedChannelNodes = new List<int>();
         }
 
-        public async Task StartChannelNodeAsync(string channelName)
+        public async Task StartChannelNodeAsync(ChannelCreationRequest request)
         {
             try
             {
-                this.logger.LogInformation($"Starting a node on channel '{channelName}'.");
+                this.logger.LogInformation($"Starting a node on channel '{request.Name}'.");
 
-                Process process = await StartNodeAsync(SystemChannelName);
+                Process process = await StartNodeAsync(request.Name);
                 if (process.HasExited)
-                    this.logger.LogWarning($"Failed to start node on channel '{channelName}' as the process exited early.");
+                    this.logger.LogWarning($"Failed to start node on channel '{request.Name}' as the process exited early.");
 
                 this.StartedChannelNodes.Add(process.Id);
 
-                this.logger.LogInformation($"Node started on channel '{channelName}'.");
+                this.logger.LogInformation($"Node started on channel '{request.Name}'.");
             }
             catch (Exception ex)
             {
-                throw new ChannelServiceException($"Failed to start node on channel '{channelName}': {ex.Message}");
+                throw new ChannelServiceException($"Failed to start node on channel '{request.Name}': {ex.Message}");
             }
         }
 
