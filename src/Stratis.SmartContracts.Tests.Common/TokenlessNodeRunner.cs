@@ -57,8 +57,7 @@ namespace Stratis.SmartContracts.Tests.Common
                 .AsTokenlessNetwork()
                 .ReplaceTimeProvider(this.timeProvider)
                 .MockIBD()
-                .AddTokenlessFastMiningCapability()
-                .UseApi();
+                .AddTokenlessFastMiningCapability();
 
             builder.RemoveImplementation<PeerConnectorDiscovery>();
             builder.ReplaceService<IPeerDiscovery, BaseFeature>(new PeerDiscoveryDisabled());
