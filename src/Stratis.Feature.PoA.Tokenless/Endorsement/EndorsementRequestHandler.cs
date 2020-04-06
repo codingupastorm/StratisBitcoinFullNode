@@ -99,7 +99,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 // Store any changes that were made to the transient store
                 byte[] privateReadWriteSetData = Encoding.UTF8.GetBytes(result.PrivateReadWriteSet.GetReadWriteSet().ToJson()); // ew
 
-                this.transientStore.Persist(request.ContractTransaction.GetHash(), blockHeight, new TransientStorePrivateData(privateReadWriteSetData));
+                this.transientStore.Persist(signedRWSTransaction.GetHash(), blockHeight, new TransientStorePrivateData(privateReadWriteSetData));
 
                 await this.BroadcastPrivateDataToOrganisation(signedRWSTransaction.GetHash(), blockHeight, privateReadWriteSetData);
             }

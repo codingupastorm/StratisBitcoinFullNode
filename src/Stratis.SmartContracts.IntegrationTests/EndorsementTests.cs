@@ -163,8 +163,10 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.Equal(transientDataToStore, stateRepo.GetStorageValue(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("Transient")).Value);
 
                 // And that it was stored in the transient store on both nodes!
-                Assert.NotNull(node1.FullNode.NodeService<ITransientStore>().Get(callTransaction.GetHash()));
-                Assert.NotNull(node2.FullNode.NodeService<ITransientStore>().Get(callTransaction.GetHash()));
+                var lastBlock = node1.FullNode.BlockStore().GetBlock(node1.FullNode.ChainIndexer.Tip.HashBlock);
+                var rwsTransaction = lastBlock.Transactions[1];
+                Assert.NotNull(node1.FullNode.NodeService<ITransientStore>().Get(rwsTransaction.GetHash()));
+                Assert.NotNull(node2.FullNode.NodeService<ITransientStore>().Get(rwsTransaction.GetHash()));
             }
         }
     }
