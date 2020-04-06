@@ -33,6 +33,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         private readonly IReadWriteSetTransactionSerializer readWriteSetTransactionSerializer;
         private readonly IEndorsements endorsements;
         private readonly ITransientStore transientStore;
+        private readonly ITokenlessBroadcaster tokenlessBroadcaster;
         private readonly ILogger logger;
 
         public EndorsementRequestHandler(
@@ -45,6 +46,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             IReadWriteSetTransactionSerializer readWriteSetTransactionSerializer,
             IEndorsements endorsements,
             ITransientStore transientStore,
+            ITokenlessBroadcaster tokenlessBroadcaster,
             ILoggerFactory loggerFactory)
         {
             this.validator = validator;
@@ -56,6 +58,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.readWriteSetTransactionSerializer = readWriteSetTransactionSerializer;
             this.endorsements = endorsements;
             this.transientStore = transientStore;
+            this.tokenlessBroadcaster = tokenlessBroadcaster;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
@@ -93,7 +96,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 this.transientStore.Persist(request.ContractTransaction.GetHash(), blockHeight, new TransientStorePrivateData(privateReadWriteSetData));
 
                 // TODO: Only do this on the final endorsement, depending on the policy.
-                this.BroadcastPrivateDataToOrganisation();
+                this.BroadcastPrivateDataToOrganisation(request.ContractTransaction.GetHash(), blockHeight, privateReadWriteSetData);
             }
 
             // TODO: If we have multiple endorsements happening here, check the read write set before signing!
@@ -120,9 +123,9 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             return true;
         }
 
-        private void BroadcastPrivateDataToOrganisation()
+        private void BroadcastPrivateDataToOrganisation(uint256 txHash, uint blockHeight, byte[] privateData)
         {
-            throw new NotImplementedException();
+            this.tokenlessBroadcaster.BroadcastToWholeOrganisationAsync(new PrivateDataPayload(txHash, blockHeight, privateData));
         }
     }
 }

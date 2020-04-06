@@ -17,6 +17,11 @@ namespace Stratis.Feature.PoA.Tokenless
         /// Broadcasts a message to the first peer in a specific organisation.
         /// </summary>
         Task BroadcastToFirstInOrganisationAsync(Payload payload, string organisation);
+
+        /// <summary>
+        /// Broadcasts a message to every peer in a specific organisation. If no organisation is passed in then this node's organisation will be used.
+        /// </summary>
+        Task BroadcastToWholeOrganisationAsync(Payload payload, string organisation = null);
     }
 
     /// <summary>
@@ -25,6 +30,8 @@ namespace Stratis.Feature.PoA.Tokenless
     public class TokenlessBroadcaster : ITokenlessBroadcaster
     {
         private readonly IConnectionManager connectionManager;
+
+        private readonly ICertificatesManager certificatesManager;
 
         /// <summary>
         /// A list of all peers and their client certificate.
@@ -40,22 +47,45 @@ namespace Stratis.Feature.PoA.Tokenless
         /// <inheritdoc />
         public async Task BroadcastToFirstInOrganisationAsync(Payload payload, string organisation)
         {
-            IEnumerable<(INetworkPeer Peer, X509Certificate Certificate)> peersInOrganisation = this.PeersWithCerts.Where(x => GetOrganisation(x.Certificate) == organisation);
+            IEnumerable<(INetworkPeer Peer, X509Certificate Certificate)> peersInOrganisation = this.GetPeersForOrganisation(organisation);
 
             // TODO: Error handling. What if we're not connected to an endorser?
 
-            // For now, only take the first in the organisation. As endorsement grows more fully-featured we can adjust.
             INetworkPeer peer = peersInOrganisation.First().Peer;
 
+            await SendMessageToPeerAsync(peer, payload);
+        }
+
+        /// <inheritdoc />
+        public async Task BroadcastToWholeOrganisationAsync(Payload payload, string organisation = null)
+        {
+            if (organisation == null)
+            {
+                string thisNodesOrganisation = GetOrganisation(this.certificatesManager.ClientCertificate);
+            }
+
+            IEnumerable<(INetworkPeer Peer, X509Certificate Certificate)> peers = this.GetPeersForOrganisation(organisation);
+
+            // TODO: Error handling. What if we don't have any peers in the same organisation?
+
+            Parallel.ForEach<INetworkPeer>(peers.Select(x=>x.Peer), async (INetworkPeer peer) => await SendMessageToPeerAsync(peer, payload));
+        }
+
+        private async Task SendMessageToPeerAsync(INetworkPeer peer, Payload payload)
+        {
             try
             {
                 await peer.SendMessageAsync(payload).ConfigureAwait(false);
             }
             catch (OperationCanceledException e)
             {
-                Console.WriteLine(e);
                 // This catch is a bit dirty but is copied from FederatedPegBroadcaster code.
             }
+        }
+
+        private IEnumerable<(INetworkPeer Peer, X509Certificate Certificate)> GetPeersForOrganisation(string organisation)
+        {
+            return this.PeersWithCerts.Where(x => GetOrganisation(x.Certificate) == organisation);
         }
 
         private static string GetOrganisation(X509Certificate certificate)

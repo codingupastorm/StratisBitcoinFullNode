@@ -1,5 +1,6 @@
 ﻿using System;
 using NBitcoin;
+using Stratis.SmartContracts.Core.Store;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -14,9 +15,20 @@ namespace Stratis.Feature.PoA.Tokenless
 
     public class PrivateDataRetriever : IPrivateDataRetriever
     {
+        private readonly ITransientStore transientStore;
+
+        public PrivateDataRetriever(ITransientStore transientStore)
+        {
+            this.transientStore = transientStore;
+        }
+
         /// <inheritdoc />
         public void RegisterNewPrivateData(uint256 txHash)
         {
+            // TODO: 
+
+            if (this.transientStore.Get(txHash) != null)
+
             // Check if we have the data
 
             // If we do, exit do nothing.
