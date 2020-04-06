@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
@@ -16,7 +17,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
     public interface IEndorsementRequestHandler
     {
-        bool ExecuteAndReturnProposal(EndorsementRequest request);
+        Task<bool> ExecuteAndReturnProposalAsync(EndorsementRequest request);
     }
 
     public class EndorsementRequestHandler : IEndorsementRequestHandler
@@ -62,7 +63,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
-        public bool ExecuteAndReturnProposal(EndorsementRequest request)
+        public async Task<bool> ExecuteAndReturnProposalAsync(EndorsementRequest request)
         {
             if (!this.validator.ValidateRequest(request))
             {
@@ -88,19 +89,20 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 return false;
             }
 
+            // TODO: If we have multiple endorsements happening here, check the read write set before signing!
+            Transaction signedRWSTransaction = this.readWriteSetTransactionSerializer.Build(result.ReadWriteSet.GetReadWriteSet());
+
             if (result.PrivateReadWriteSet.WriteSet.Any())
             {
+                // TODO: Only do this on the final endorsement, depending on the policy.
+
                 // Store any changes that were made to the transient store
                 byte[] privateReadWriteSetData = Encoding.UTF8.GetBytes(result.PrivateReadWriteSet.GetReadWriteSet().ToJson()); // ew
 
                 this.transientStore.Persist(request.ContractTransaction.GetHash(), blockHeight, new TransientStorePrivateData(privateReadWriteSetData));
 
-                // TODO: Only do this on the final endorsement, depending on the policy.
-                this.BroadcastPrivateDataToOrganisation(request.ContractTransaction.GetHash(), blockHeight, privateReadWriteSetData);
+                await this.BroadcastPrivateDataToOrganisation(signedRWSTransaction.GetHash(), blockHeight, privateReadWriteSetData);
             }
-
-            // TODO: If we have multiple endorsements happening here, check the read write set before signing!
-            Transaction signedRWSTransaction = this.readWriteSetTransactionSerializer.Build(result.ReadWriteSet.GetReadWriteSet());
 
             uint256 proposalId = request.ContractTransaction.GetHash();
             var payload = new EndorsementPayload(signedRWSTransaction, proposalId);
@@ -118,14 +120,12 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 // This catch is a bit dirty but is copied from FederatedPegBroadcaster code.
             }
 
-
-
             return true;
         }
 
-        private void BroadcastPrivateDataToOrganisation(uint256 txHash, uint blockHeight, byte[] privateData)
+        private async Task BroadcastPrivateDataToOrganisation(uint256 txHash, uint blockHeight, byte[] privateData)
         {
-            this.tokenlessBroadcaster.BroadcastToWholeOrganisationAsync(new PrivateDataPayload(txHash, blockHeight, privateData));
+            await this.tokenlessBroadcaster.BroadcastToWholeOrganisationAsync(new PrivateDataPayload(txHash, blockHeight, privateData));
         }
     }
 }

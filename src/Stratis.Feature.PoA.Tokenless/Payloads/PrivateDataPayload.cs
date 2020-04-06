@@ -3,6 +3,7 @@ using Stratis.Bitcoin.P2P.Protocol.Payloads;
 
 namespace Stratis.Feature.PoA.Tokenless.Payloads
 {
+    [Payload("privdata")]
     public class PrivateDataPayload : Payload
     {
         private uint256 transactionId;

@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
@@ -32,7 +33,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         }
 
         [Fact]
-        public void ExecutionSucceedsAndTransactionIsSigned()
+        public async Task ExecutionSucceedsAndTransactionIsSigned()
         {
             const int height = 16;
             uint160 sender = uint160.One;
@@ -71,6 +72,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             readWriteSetTransactionSerializerMock.Setup(x => x.Build(It.IsAny<ReadWriteSet>()))
                 .Returns((Transaction)null);
 
+            var tokenlessBroadcasterMock = new Mock<ITokenlessBroadcaster>();
+
             var loggerFactoryMock = new Mock<ILoggerFactory>();
             loggerFactoryMock.Setup(x => x.CreateLogger(It.IsAny<string>()))
                 .Returns(Mock.Of<ILogger>());
@@ -86,6 +89,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 readWriteSetTransactionSerializerMock.Object,
                 new Endorsements(),
                 transientStore.Object,
+                tokenlessBroadcasterMock.Object,
                 loggerFactoryMock.Object
                 );
 
@@ -102,7 +106,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 ContractTransaction = transaction
             };
 
-            Assert.NotNull(endorsementRequestHandler.ExecuteAndReturnProposal(request));
+            Assert.NotNull(await endorsementRequestHandler.ExecuteAndReturnProposalAsync(request));
 
             executorMock.Verify(x=>x.Execute(It.Is<ContractTransactionContext>(y =>
                 y.TxIndex == 0 && y.BlockHeight == height && y.CoinbaseAddress == uint160.Zero && y.Sender == sender && y.TransactionHash == transaction.GetHash())));
@@ -111,7 +115,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         }
 
         [Fact]
-        public void ValidationFailsReturnsFalse()
+        public async Task ValidationFailsReturnsFalse()
         {
             var validatorMock = new Mock<IEndorsementRequestValidator>();
             validatorMock.Setup(x => x.ValidateRequest(It.IsAny<EndorsementRequest>()))
@@ -135,6 +139,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             loggerFactoryMock.Setup(x => x.CreateLogger(It.IsAny<string>()))
                 .Returns(Mock.Of<ILogger>());
 
+            var tokenlessBroadcasterMock = new Mock<ITokenlessBroadcaster>();
+
             var transientStore = new Mock<ITransientStore>();
 
             var endorsementRequestHandler = new EndorsementRequestHandler(validatorMock.Object,
@@ -146,6 +152,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 readWriteSetTransactionSerializerMock.Object,
                 new Endorsements(),
                 transientStore.Object,
+                tokenlessBroadcasterMock.Object,
                 loggerFactoryMock.Object
                 );
 
@@ -159,7 +166,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 ContractTransaction = transaction
             };
 
-            Assert.False(endorsementRequestHandler.ExecuteAndReturnProposal(request));
+            Assert.False(await endorsementRequestHandler.ExecuteAndReturnProposalAsync(request));
         }
     }
 }

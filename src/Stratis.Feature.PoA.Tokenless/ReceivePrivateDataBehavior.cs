@@ -39,6 +39,7 @@ namespace Stratis.Feature.PoA.Tokenless
             if (!(message.Message.Payload is PrivateDataPayload payload))
                 return;
 
+            // TODO: If block is committed, put the data in the private data store.
             this.transientStore.Persist(payload.TransactionId, payload.BlockHeight, new TransientStorePrivateData(payload.ReadWriteSetData));
         }
     }

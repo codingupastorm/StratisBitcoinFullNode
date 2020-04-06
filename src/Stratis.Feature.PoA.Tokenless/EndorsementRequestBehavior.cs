@@ -46,7 +46,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 TransientData = payload.TransientData
             };
 
-            this.requestHandler.ExecuteAndReturnProposal(endorsementRequest);            
+            await this.requestHandler.ExecuteAndReturnProposalAsync(endorsementRequest);            
         }
     }
 }

@@ -39,9 +39,10 @@ namespace Stratis.Feature.PoA.Tokenless
         private List<(INetworkPeer Peer, X509Certificate Certificate)> PeersWithCerts => 
             this.connectionManager.ConnectedPeers.Select(x => (x, (x.Connection as TlsEnabledNetworkPeerConnection).GetPeerCertificate())).ToList();
 
-        public TokenlessBroadcaster(IConnectionManager connectionManager)
+        public TokenlessBroadcaster(IConnectionManager connectionManager, ICertificatesManager certificatesManager)
         {
             this.connectionManager = connectionManager;
+            this.certificatesManager = certificatesManager;
         }
 
         /// <inheritdoc />
@@ -61,7 +62,7 @@ namespace Stratis.Feature.PoA.Tokenless
         {
             if (organisation == null)
             {
-                string thisNodesOrganisation = GetOrganisation(this.certificatesManager.ClientCertificate);
+                organisation = GetOrganisation(this.certificatesManager.ClientCertificate);
             }
 
             IEnumerable<(INetworkPeer Peer, X509Certificate Certificate)> peers = this.GetPeersForOrganisation(organisation);
