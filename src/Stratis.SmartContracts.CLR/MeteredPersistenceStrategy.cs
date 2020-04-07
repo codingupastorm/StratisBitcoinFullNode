@@ -1,35 +1,10 @@
 using NBitcoin;
 using Stratis.Bitcoin.Utilities;
-using Stratis.SmartContracts.Core.Hashing;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 
 namespace Stratis.SmartContracts.CLR
 {
-    public class PrivateReadWriteSetOperations : IReadWriteSetOperations
-    {
-        private readonly IReadWriteSetOperations publicReadWriteSet;
-        private readonly IReadWriteSetOperations privateReadWriteSet;
-
-        public PrivateReadWriteSetOperations(IReadWriteSetOperations publicReadWriteSet, IReadWriteSetOperations privateReadWriteSet)
-        {
-            this.publicReadWriteSet = publicReadWriteSet;
-            this.privateReadWriteSet = privateReadWriteSet;
-        }
-
-        public void AddReadItem(ReadWriteSetKey key, string version)
-        {
-            this.publicReadWriteSet.AddReadItem(key, version);
-            this.privateReadWriteSet.AddReadItem(key, version);
-        }
-
-        public void AddWriteItem(ReadWriteSetKey key, byte[] value)
-        {
-            this.publicReadWriteSet.AddWriteItem(key, HashHelper.Keccak256(value));
-            this.privateReadWriteSet.AddWriteItem(key, value);
-        }
-    }
-
     /// <summary>
     /// Defines a data persistence strategy for a byte[] key value pair belonging to an address.
     /// Uses a GasMeter to perform accounting
