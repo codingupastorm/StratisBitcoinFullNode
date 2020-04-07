@@ -147,6 +147,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
+        [ApiExplorerSettings(IgnoreApi = true)]
         public BuildCallContractTransactionResponse BuildCallContractTransactionCore(BuildCallContractTransactionModel model)
         {
             try
