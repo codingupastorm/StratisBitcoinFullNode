@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Mvc.Versioning;
 using NBitcoin;
 using Stratis.Bitcoin.Utilities;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.Hashing;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
@@ -18,15 +20,16 @@ namespace Stratis.SmartContracts.CLR
             this.privateReadWriteSet = privateReadWriteSet;
         }
 
-        // TODO private store data. Public store hash.
         public void AddReadItem(ReadWriteSetKey key, string version)
         {
-            throw new System.NotImplementedException();
+            this.publicReadWriteSet.AddReadItem(key, version);
+            this.privateReadWriteSet.AddReadItem(key, version);
         }
 
         public void AddWriteItem(ReadWriteSetKey key, byte[] value)
         {
-            throw new System.NotImplementedException();
+            this.publicReadWriteSet.AddWriteItem(key, HashHelper.Keccak256(value));
+            this.privateReadWriteSet.AddWriteItem(key, value);
         }
     }
 
