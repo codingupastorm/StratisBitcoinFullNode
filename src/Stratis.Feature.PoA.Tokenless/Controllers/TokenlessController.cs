@@ -9,8 +9,11 @@ using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Newtonsoft.Json;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
+using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor;
+using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Utilities.JsonErrors;
 using Stratis.Bitcoin.Utilities.ModelStateErrors;
@@ -21,7 +24,9 @@ using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR;
+using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.CLR.Decompilation;
+using Stratis.SmartContracts.CLR.Local;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.Receipts;
@@ -48,6 +53,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         private readonly CSharpContractDecompiler contractDecompiler;
         private readonly IContractPrimitiveSerializer primitiveSerializer;
         private readonly ISerializer serializer;
+        private readonly ILocalExecutor localExecutor;
         private readonly ILogger logger;
 
         public TokenlessController(
@@ -62,7 +68,8 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             IReceiptRepository receiptRepository,
             CSharpContractDecompiler contractDecompiler,
             IContractPrimitiveSerializer primitiveSerializer,
-            ISerializer serializer)
+            ISerializer serializer,
+            ILocalExecutor localExecutor)
         {
             this.coreComponent = coreComponent;
             this.tokenlessSigner = tokenlessSigner;
@@ -76,6 +83,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             this.contractDecompiler = contractDecompiler;
             this.primitiveSerializer = primitiveSerializer;
             this.serializer = serializer;
+            this.localExecutor = localExecutor;
             this.logger = coreComponent.LoggerFactory.CreateLogger(this.GetType());
         }
 
@@ -134,9 +142,13 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             }
         }
 
-        [Route("build/callcontract")]
-        [HttpPost]
-        public IActionResult BuildCallContractTransaction([FromBody] BuildCallContractTransactionModel model)
+        /// <summary>
+        /// Builds a <see cref="BuildCallContractTransactionResponse"/>. TODO consider moving to its own class.
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [ApiExplorerSettings(IgnoreApi = true)]
+        public BuildCallContractTransactionResponse BuildCallContractTransactionCore(BuildCallContractTransactionModel model)
         {
             try
             {
@@ -145,11 +157,21 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
                 Transaction transaction = CreateAndSignTransaction(contractTxData);
 
-                return Json(BuildCallContractTransactionResponse.Succeeded(model.MethodName, transaction, 0));
+                return BuildCallContractTransactionResponse.Succeeded(model.MethodName, transaction, 0);
             }
             catch (MethodParameterStringSerializerException exception)
             {
-                return Json(BuildCallContractTransactionResponse.Failed(exception.Message));
+                return BuildCallContractTransactionResponse.Failed(exception.Message);
+            }
+        }
+
+        [Route("build/callcontract")]
+        [HttpPost]
+        public IActionResult BuildCallContractTransaction([FromBody] BuildCallContractTransactionModel model)
+        {
+            try
+            {
+                return Json(BuildCallContractTransactionCore(model));
             }
             catch (Exception ex)
             {
@@ -390,6 +412,80 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             {
                 this.logger.LogError("Exception occurred: {0}", e.ToString());
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Makes a local call to a method on a smart contract that has been successfully deployed. A transaction 
+        /// is not created as the call is never propagated across the network. All persistent data held by the   
+        /// smart contract is copied before the call is made. Only this copy is altered by the call
+        /// and the actual data is unaffected. Even if an amount of funds are specified to send with the call,
+        /// no funds are in fact sent.
+        /// The purpose of this function is to query and test methods. 
+        /// </summary>
+        /// 
+        /// <param name="model">An object containing the necessary parameters to build the transaction.</param>
+        /// 
+        /// <results>The result of the local call to the smart contract method.</results>
+        [Route("local-call")]
+        [HttpPost]
+        public IActionResult LocalCallSmartContractTransaction([FromBody] TokenlessLocalCallModel model)
+        {
+            if (!this.ModelState.IsValid)
+                return ModelStateErrors.BuildErrorResponse(this.ModelState);
+
+            // Rewrite the method name to a property name
+            this.RewritePropertyGetterName(model);
+
+            PubKey transactionSigningKey = this.tokenlessWalletManager.GetPubKey(TokenlessKeyStoreAccount.TransactionSigning);
+
+            try
+            {
+                var methodParameters = ExtractMethodParameters(model.Parameters);
+                var txData = new ContractTxData(0, 0, (Gas)SmartContractFormatLogic.GasLimitMaximum, model.Address.ToUint160(this.coreComponent.Network), model.MethodName, methodParameters);
+
+                ILocalExecutionResult result = this.localExecutor.Execute(
+                    (ulong)this.coreComponent.ChainIndexer.Height,
+                    new uint160(transactionSigningKey.Hash.ToBytes()),
+                    0,
+                    txData);
+
+                return this.Json(result, new JsonSerializerSettings
+                {
+                    ContractResolver = new ContractParametersContractResolver(this.coreComponent.Network)
+                });
+            }
+            catch (MethodParameterStringSerializerException e)
+            {
+                return this.Json(ErrorHelpers.BuildErrorResponse(HttpStatusCode.InternalServerError, e.Message,
+                    "Error deserializing method parameters"));
+            }
+        }
+
+        /// <summary>
+        /// If the call is to a property, rewrites the method name to the getter method's name.
+        /// </summary>
+        private void RewritePropertyGetterName(BuildCallContractTransactionModel request)
+        {
+            // Don't rewrite if there are params
+            if (request.Parameters != null && request.Parameters.Any())
+                return;
+
+            byte[] contractCode = this.stateRoot.GetCode(request.Address.ToUint160(this.coreComponent.Network));
+
+            string contractType = this.stateRoot.GetContractType(request.Address.ToUint160(this.coreComponent.Network));
+
+            Result<IContractModuleDefinition> readResult = ContractDecompiler.GetModuleDefinition(contractCode);
+
+            if (readResult.IsSuccess)
+            {
+                IContractModuleDefinition contractModule = readResult.Value;
+                string propertyGetterName = contractModule.GetPropertyGetterMethodName(contractType, request.MethodName);
+
+                if (propertyGetterName != null)
+                {
+                    request.MethodName = propertyGetterName;
+                }
             }
         }
 

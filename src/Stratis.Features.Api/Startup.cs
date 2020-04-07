@@ -6,6 +6,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
+using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers;
+using Stratis.SmartContracts.Core.Receipts;
 using Stratis.Bitcoin;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
@@ -28,6 +31,7 @@ namespace Stratis.Features.Api
         }
 
         private readonly IFullNode fullNode;
+        private SwaggerUIOptions uiOptions;
 
         public IConfigurationRoot Configuration { get; }
 
@@ -107,7 +111,13 @@ namespace Stratis.Features.Api
             services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 
             // Register the Swagger generator. This will use the options we injected just above.
-            services.AddSwaggerGen();
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("contracts", new OpenApiInfo { Title = "Contract API", Version = "1" });
+            });
+
+            // Hack to be able to access and modify the options object configured here in the dynamic swagger controller.
+            services.AddSingleton(_ => this.uiOptions);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -139,6 +149,9 @@ namespace Stratis.Features.Api
                 {
                     c.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
                 }
+
+                // Hack to be able to access and modify the options object configured here in the dynamic swagger controller.
+                this.uiOptions = c;
             });
         }
     }

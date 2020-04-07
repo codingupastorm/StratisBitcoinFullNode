@@ -38,7 +38,7 @@
     <ProjectReference Include="..\NBitcoin\NBitcoin.csproj" />
     <ProjectReference Include="..\Stratis.Features.BlockStore\Stratis.Features.BlockStore.csproj" />
     <ProjectReference Include="..\Stratis.Features.MemoryPool\Stratis.Features.MemoryPool.csproj" />
-    <ProjectReference Include="..\Stratis.Bitcoin.Features.PoA\Stratis.Bitcoin.Features.PoA.csproj" />
+    <ProjectReference Include="..\Stratis.Features.PoA\Stratis.Features.PoA.csproj" />
     <ProjectReference Include="..\Stratis.Bitcoin.Tests.Common\Stratis.Bitcoin.Tests.Common.csproj" />
     <ProjectReference Include="..\Stratis.Bitcoin\Stratis.Bitcoin.csproj" />
     <ProjectReference Include="..\Stratis.Features.PoA\Stratis.Features.PoA.csproj" />

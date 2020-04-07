@@ -11,7 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.OpenApi" Version="1.1.4" />
     <PackageReference Include="NLog" Version="4.6.8" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="5.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="5.1.0" />
   </ItemGroup>
 
   <ItemGroup>

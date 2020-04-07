@@ -21,6 +21,7 @@ using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Feature.PoA.Tokenless.Controllers;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Mempool;
@@ -105,6 +106,10 @@ namespace Stratis.Feature.PoA.Tokenless
                             services.Remove(descriptor);
                             services.AddSingleton<INetworkPeerFactory, TlsEnabledNetworkPeerFactory>();
                         }
+
+                        // Necessary for the dynamic contract controller
+                        // Use AddScoped for instance-per-request lifecycle, ref. https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-2.2#scoped
+                        services.AddScoped<TokenlessController>();
                     });
             });
 
