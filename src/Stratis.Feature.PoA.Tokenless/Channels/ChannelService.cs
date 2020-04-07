@@ -50,7 +50,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             {
                 this.logger.LogInformation($"Starting a node on channel '{request.Name}'.");
 
-                Process process = await StartNodeAsync(request.Name);
+                Process process = await StartNodeAsync(request.Name, "-ischannelnode=true");
                 if (process.HasExited)
                     this.logger.LogWarning($"Failed to start node on channel '{request.Name}' as the process exited early.");
 
@@ -70,7 +70,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             {
                 this.logger.LogInformation("Starting a system channel node.");
 
-                Process process = await StartNodeAsync(SystemChannelName);
+                Process process = await StartNodeAsync(SystemChannelName, "-issystemchannelnode=true -ischannelnode=true");
                 if (process.HasExited)
                     throw new ChannelServiceException($"Failed to start system channel node as the processs exited early.");
 
@@ -84,7 +84,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             }
         }
 
-        private async Task<Process> StartNodeAsync(string channelName)
+        private async Task<Process> StartNodeAsync(string channelName, string channelArgs)
         {
             // Write the serialized network to disk.
             ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, $"{this.nodeSettings.DataFolder.RootPath}\\channels\\{channelName.ToLowerInvariant()}");
@@ -115,8 +115,9 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             args.Append($"-{CertificatesManager.CaAccountIdKey}={Settings.AdminAccountId} ");
             args.Append($"-{CertificatesManager.CaPasswordKey}={this.nodeSettings.ConfigReader.GetOrDefault(CertificatesManager.CaPasswordKey, "")} ");
             args.Append($"-{CertificatesManager.ClientCertificateConfigurationKey}=test ");
-            args.Append("-ischannelnode=true ");
-            args.Append("-isinfranode=false");
+
+            // Apend any channel specific arguments.
+            args.Append(channelArgs);
 
             process.StartInfo.Arguments = $"run --no-build {args.ToString()}";
             process.StartInfo.UseShellExecute = false;
