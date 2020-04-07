@@ -8,9 +8,9 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     public static class ChannelScript
     {
         /// <summary>
-        /// Whether the transaction has any outputs with ScriptPubKeys that are smart contract executions.
+        /// If the transaction contains a channel creation request <see cref="TxOut"/> then return it.
         /// </summary>
-        public static TxOut TryGetChannelUpdateTxOut(this Transaction tx)
+        public static TxOut TryGetChannelCreationRequestTxOut(this Transaction tx)
         {
             TxOut channelUpdateTxOut = tx.Outputs.FirstOrDefault(txOut => txOut.ScriptPubKey.IsChannelCreationRequest());
             return channelUpdateTxOut;

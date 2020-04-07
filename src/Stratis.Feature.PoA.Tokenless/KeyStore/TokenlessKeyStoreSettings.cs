@@ -3,8 +3,8 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.PoA.ProtocolEncryption;
 
 namespace Stratis.Feature.PoA.Tokenless.KeyStore
 {
@@ -49,10 +49,6 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
 
         public string[] RequestedPermissions { get; set; }
 
-        // TODO-TL: Perhaps split up this setttings class?
-        public bool IsChannelNode { get; set; }
-        public bool IsInfraNode { get; set; }
-
         /// <summary>
         /// Initializes an instance of the object from the node configuration.
         /// </summary>
@@ -83,8 +79,6 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
             this.EmailAddress = config.GetOrDefault<string>("certificateemailaddress", null, this.logger);
             this.Country = config.GetOrDefault<string>("certificatecountry", "", this.logger);
             this.RequestedPermissions = config.GetOrDefault<string>("requestedpermissions", "", this.logger).Split('|');
-            this.IsChannelNode = config.GetOrDefault<bool>("ischannelnode", false, this.logger);
-            this.IsInfraNode = config.GetOrDefault<bool>("isinfranode", false, this.logger);
 
             if (this.GenerateCertificate)
             {

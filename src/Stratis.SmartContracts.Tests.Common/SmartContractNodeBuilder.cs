@@ -10,11 +10,12 @@ using NBitcoin;
 using NBitcoin.Networks;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Features.PoA.Tests.Common;
-using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Feature.PoA.Tokenless;
+using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.Features.PoA.Tests.Common;
 using Xunit;
 
 namespace Stratis.SmartContracts.Tests.Common
@@ -140,7 +141,7 @@ namespace Stratis.SmartContracts.Tests.Common
             var loggerFactory = new LoggerFactory();
             var revocationChecker = new RevocationChecker(new MembershipServicesDirectory(settings));
             var certificatesManager = new CertificatesManager(settings.DataFolder, settings, loggerFactory, revocationChecker, network);
-            var keyStoreManager = new TokenlessKeyStoreManager(network, settings.DataFolder, new TokenlessKeyStoreSettings(settings), certificatesManager, loggerFactory);
+            var keyStoreManager = new TokenlessKeyStoreManager(network, settings.DataFolder, new ChannelSettings(settings), new TokenlessKeyStoreSettings(settings), certificatesManager, loggerFactory);
 
             keyStoreManager.Initialize();
 
