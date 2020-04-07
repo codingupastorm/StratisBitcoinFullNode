@@ -41,7 +41,7 @@ namespace Stratis.SmartContracts.CLR
 
             var persistentState = new PersistentState(persistenceStrategy, this.serializer, address);
 
-            var privateState = new PrivatePersistentState(this.serializer, privatePersistenceStrategy, address, privateReadWriteSet);
+            var privateState = new PrivatePersistentState(this.serializer, privatePersistenceStrategy, address);
 
             var contractLogger = new MeteredContractLogger(gasMeter, state.LogHolder, this.primitiveSerializer);
 
