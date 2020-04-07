@@ -66,9 +66,9 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var writeSet = rws.WriteSet.ToList();
             Assert.Equal(Key3, writeSet[0].Key);
-            Assert.Equal(Value1, writeSet[0].Value);
+            Assert.Equal(Value1, writeSet[0].Value.Bytes);
             Assert.Equal(Key4, writeSet[1].Key);
-            Assert.Equal(Value2, writeSet[1].Value);
+            Assert.Equal(Value2, writeSet[1].Value.Bytes);
 
             // Record the ReadWriteSet.
             ReadWriteSet readWriteSet = rws.GetReadWriteSet();

@@ -1,6 +1,5 @@
 using NBitcoin;
 using Stratis.Bitcoin.Utilities;
-using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 
@@ -56,7 +55,7 @@ namespace Stratis.SmartContracts.CLR
             return storageValue.Value;
         }
 
-        public void StoreBytes(uint160 address, byte[] key, byte[] value)
+        public void StoreBytes(uint160 address, byte[] key, byte[] value, bool isPrivateData = false)
         {
             byte[] encodedKey = this.keyEncodingStrategy.GetBytes(key);
             RuntimeObserver.Gas operationCost = GasPriceList.StorageSaveOperationCost(
@@ -66,7 +65,7 @@ namespace Stratis.SmartContracts.CLR
             this.gasMeter.Spend(operationCost);
             this.stateDb.SetStorageValue(address, encodedKey, value, this.version);
 
-            this.readWriteSet.AddWriteItem(new ReadWriteSetKey(address, key), value);
+            this.readWriteSet.AddWriteItem(new ReadWriteSetKey(address, key), value, isPrivateData);
         }
     }
 }

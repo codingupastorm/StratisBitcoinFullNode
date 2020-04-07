@@ -317,7 +317,7 @@ public class Contract : SmartContract
             return this.stateDb.GetStorageValue(address, key).Value;
         }
 
-        public void StoreBytes(uint160 address, byte[] key, byte[] value)
+        public void StoreBytes(uint160 address, byte[] key, byte[] value, bool isPrivateData = false)
         {
             this.stateDb.SetStorageValue(address, key, value, ReflectionVirtualMachineTests.ContractStateVersion);
         }

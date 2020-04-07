@@ -36,7 +36,8 @@ namespace Stratis.SmartContracts.Core.ReadWrite
                 {
                     ContractAddress = x.Key.ContractAddress,
                     Key = x.Key.Key,
-                    Value = x.Value
+                    Value = x.Value.Bytes,
+                    IsPrivateData = x.Value.IsPrivateData
                 }).ToList()
             };
         }
@@ -75,5 +76,7 @@ namespace Stratis.SmartContracts.Core.ReadWrite
 
         [JsonConverter(typeof(ByteArrayHexConverter))]
         public byte[] Value { get; set; }
+
+        public bool IsPrivateData { get; set; }
     }
 }

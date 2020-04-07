@@ -20,6 +20,7 @@ using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
+using Stratis.SmartContracts.Core.Store;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -38,6 +39,7 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly NodeSettings nodeSettings;
         private readonly IAsyncProvider asyncProvider;
         private readonly INodeLifetime nodeLifetime;
+        private readonly ITransientStore transientStore;
         private readonly ILogger logger;
         private IAsyncLoop caPubKeysLoop;
 
@@ -56,6 +58,7 @@ namespace Stratis.Feature.PoA.Tokenless
             NodeSettings nodeSettings,
             IAsyncProvider asyncProvider,
             INodeLifetime nodeLifetime,
+            ITransientStore transientStore,
             ILoggerFactory loggerFactory)
         {
             this.certificatesManager = certificatesManager;
@@ -70,6 +73,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.nodeSettings = nodeSettings;
             this.asyncProvider = asyncProvider;
             this.nodeLifetime = nodeLifetime;
+            this.transientStore = transientStore;
             this.caPubKeysLoop = null;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
 
@@ -91,6 +95,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
             connectionParameters.TemplateBehaviors.Add(new EndorsementRequestBehavior(this.requestHandler));
             connectionParameters.TemplateBehaviors.Add(new EndorsementSuccessBehavior(this.successHandler));
+            connectionParameters.TemplateBehaviors.Add(new ReceivePrivateDataBehavior(this.transientStore));
 
             this.federationManager.Initialize();
 

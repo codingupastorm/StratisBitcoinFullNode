@@ -35,6 +35,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
         private readonly ITokenlessSigner tokenlessSigner;
         private readonly IReadWriteSetTransactionSerializer rwsSerializer;
         private readonly IReadWriteSetValidator rwsValidator;
+        private readonly IPrivateDataRetriever privateDataRetriever;
 
         public TokenlessCoinviewRule(
             ICallDataSerializer callDataSerializer,
@@ -45,7 +46,8 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             IStateRepositoryRoot stateRepositoryRoot,
             ITokenlessSigner tokenlessSigner, 
             IReadWriteSetTransactionSerializer rwsSerializer,
-            IReadWriteSetValidator rwsValidator)
+            IReadWriteSetValidator rwsValidator,
+            IPrivateDataRetriever privateDataRetriever)
         {
             this.callDataSerializer = callDataSerializer;
             this.executorFactory = executorFactory;
@@ -56,6 +58,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             this.tokenlessSigner = tokenlessSigner;
             this.rwsSerializer = rwsSerializer;
             this.rwsValidator = rwsValidator;
+            this.privateDataRetriever = privateDataRetriever;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
@@ -80,6 +83,8 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 
             // Push to underlying database
             this.mutableStateRepository.Commit();
+
+            // TODO: Move all of the private data to the private state.
 
             // Update the globally injected state so all services receive the updates.
             this.stateRepositoryRoot.SyncToRoot(this.mutableStateRepository.Root);
@@ -173,6 +178,11 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             int txIndex = validationContext.BlockToValidate.Transactions.IndexOf(transaction);
 
             string version = $"{blockHeight}.{txIndex}"; // TODO: Componentise retrieving version?
+
+            if (rws.Writes.Any(x => x.IsPrivateData))
+            {
+                this.privateDataRetriever.RegisterNewPrivateData(transaction.GetHash());
+            }
 
             this.rwsValidator.ApplyReadWriteSet(this.mutableStateRepository, rws, version);
         }

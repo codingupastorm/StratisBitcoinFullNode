@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
@@ -153,14 +154,19 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().InfoAll().Count > 0);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().InfoAll().Count > 0);
 
+                Thread.Sleep(3000); // TODO: Remove this in future PRs. This will ensure that the private data gets to the node before he mines.
+
                 await node1.MineBlocksAsync(1);
                 TokenlessTestHelper.WaitForNodeToSync(node1, node2);
 
                 // Check that the transient data was stored in the non-private store.
                 Assert.Equal(transientDataToStore, stateRepo.GetStorageValue(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("Transient")).Value);
 
-                // And that it was stored in the transient store!
-                Assert.NotNull(node2.FullNode.NodeService<ITransientStore>().Get(callTransaction.GetHash()));
+                // And that it was stored in the transient store on both nodes!
+                var lastBlock = node1.FullNode.BlockStore().GetBlock(node1.FullNode.ChainIndexer.Tip.HashBlock);
+                var rwsTransaction = lastBlock.Transactions[1];
+                Assert.NotNull(node1.FullNode.NodeService<ITransientStore>().Get(rwsTransaction.GetHash()));
+                Assert.NotNull(node2.FullNode.NodeService<ITransientStore>().Get(rwsTransaction.GetHash()));
             }
         }
     }

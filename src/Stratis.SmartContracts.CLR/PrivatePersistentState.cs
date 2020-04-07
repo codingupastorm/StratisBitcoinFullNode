@@ -36,7 +36,7 @@ namespace Stratis.SmartContracts.CLR
 
             // Store a hash of the bytes in the normal data store.
             byte[] hash = HashHelper.Keccak256(value);
-            this.persistenceStrategy.StoreBytes(this.contractAddress, key, hash);
+            this.persistenceStrategy.StoreBytes(this.contractAddress, key, hash, true);
         }
 
         public bool IsContract(Address address)
@@ -55,6 +55,7 @@ namespace Stratis.SmartContracts.CLR
 
         public byte[] GetBytes(byte[] key)
         {
+            throw new NotImplementedException("This is not getting private data from the correct place.");
             byte[] bytes = this.persistenceStrategy.FetchBytes(this.contractAddress, key);
 
             if (bytes == null)
