@@ -4,10 +4,16 @@ using System.Linq;
 
 namespace Stratis.SmartContracts.Core.ReadWrite
 {
+    public interface IReadWriteSetOperations
+    {
+        void AddReadItem(ReadWriteSetKey key, string version);
+        void AddWriteItem(ReadWriteSetKey key, byte[] value);
+    }
+
     /// <summary>
     /// Constructs a ReadWriteSet with the logic for when to record reads and writes.
     /// </summary>
-    public class ReadWriteSetBuilder
+    public class ReadWriteSetBuilder : IReadWriteSetOperations
     {
         /// <summary>
         /// Key: {storageKey}, Value: {version}.

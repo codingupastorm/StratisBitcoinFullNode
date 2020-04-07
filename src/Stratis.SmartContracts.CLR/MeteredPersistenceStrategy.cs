@@ -3,9 +3,54 @@ using Stratis.Bitcoin.Utilities;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
+using Stratis.SmartContracts.RuntimeObserver;
 
 namespace Stratis.SmartContracts.CLR
 {
+    public class PrivateReadWriteSetOperations : IReadWriteSetOperations
+    {
+        private readonly IReadWriteSetOperations publicReadWriteSet;
+        private readonly IReadWriteSetOperations privateReadWriteSet;
+
+        public PrivateReadWriteSetOperations(IReadWriteSetOperations publicReadWriteSet, IReadWriteSetOperations privateReadWriteSet)
+        {
+            this.publicReadWriteSet = publicReadWriteSet;
+            this.privateReadWriteSet = privateReadWriteSet;
+        }
+
+        // TODO private store data. Public store hash.
+        public void AddReadItem(ReadWriteSetKey key, string version)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public void AddWriteItem(ReadWriteSetKey key, byte[] value)
+        {
+            throw new System.NotImplementedException();
+        }
+    }
+
+    public class PublicReadWriteSetOperations : IReadWriteSetOperations
+    {
+        private readonly ReadWriteSetBuilder publicReadWriteSet;
+
+        public PublicReadWriteSetOperations(ReadWriteSetBuilder publicReadWriteSet)
+        {
+            this.publicReadWriteSet = publicReadWriteSet;
+        }
+
+        // TODO private store data. Public store hash.
+        public void AddReadItem(ReadWriteSetKey key, string version)
+        {
+            this.publicReadWriteSet.AddReadItem(key, version);
+        }
+
+        public void AddWriteItem(ReadWriteSetKey key, byte[] value)
+        {
+            this.publicReadWriteSet.AddWriteItem(key, value);
+        }
+    }
+
     /// <summary>
     /// Defines a data persistence strategy for a byte[] key value pair belonging to an address.
     /// Uses a GasMeter to perform accounting
