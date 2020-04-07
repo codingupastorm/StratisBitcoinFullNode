@@ -37,9 +37,11 @@ namespace Stratis.SmartContracts.CLR
         {
             IPersistenceStrategy persistenceStrategy = new MeteredPersistenceStrategy(repository, gasMeter, new BasicKeyEncodingStrategy(), readWriteSet, state.Version);
 
+            var privatePersistenceStrategy = new MeteredPersistenceStrategy(repository, gasMeter, new BasicKeyEncodingStrategy(), new PrivateReadWriteSetOperations(readWriteSet, privateReadWriteSet), state.Version);
+
             var persistentState = new PersistentState(persistenceStrategy, this.serializer, address);
 
-            var privateState = new PrivatePersistentState(this.serializer, persistenceStrategy, address, privateReadWriteSet);
+            var privateState = new PrivatePersistentState(this.serializer, privatePersistenceStrategy, address, privateReadWriteSet);
 
             var contractLogger = new MeteredContractLogger(gasMeter, state.LogHolder, this.primitiveSerializer);
 
