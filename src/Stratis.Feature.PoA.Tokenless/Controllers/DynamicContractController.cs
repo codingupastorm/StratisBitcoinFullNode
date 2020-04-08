@@ -4,7 +4,6 @@ using System.Net;
 using System.Reflection;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using Newtonsoft.Json.Linq;
@@ -159,6 +158,46 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             return this.tokenlessController.LocalCallSmartContractTransaction(request);
         }
 
+        /// <summary>
+        /// Query the return value of a pure method.
+        /// </summary>
+        /// <param name="address">The address of the contract to query.</param>
+        /// <param name="method">The name of the method to query.</param>
+        /// <returns>A model of the query result.</returns>
+        [Route("{address}/local-method/{method}")]
+        [HttpPost]
+        public IActionResult LocalCallProperty([FromRoute] string address, [FromRoute] string method, [FromBody] JObject requestData)
+        {
+            var contractCode = this.stateRoot.GetCode(address.ToUint160(this.network));
+
+            if (contractCode == null)
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, "Contract does not exist", $"No contract code found at address {address}");
+
+            Result<IContractAssembly> loadResult = this.loader.Load((ContractByteCode)contractCode);
+
+            IContractAssembly assembly = loadResult.Value;
+
+            Type type = assembly.DeployedType;
+
+            MethodInfo methodInfo = type.GetMethod(method);
+
+            if (methodInfo == null)
+                throw new Exception("Method does not exist on contract.");
+
+            ParameterInfo[] parameters = methodInfo.GetParameters();
+
+            if (!this.ValidateParams(requestData, parameters))
+                throw new Exception("Parameters don't match method signature.");
+
+            // Map the JObject to the parameter + types expected by the call.
+            string[] methodParams = parameters.Map(requestData);
+
+            TokenlessLocalCallModel request = this.MapLocalCallRequest(address, method, methodParams);
+
+            // Proxy to the tokenless controller
+            return this.tokenlessController.LocalCallSmartContractTransaction(request);
+        }
+
         private bool ValidateParams(JObject requestData, ParameterInfo[] parameters)
         {
             foreach (ParameterInfo param in parameters)
@@ -182,12 +221,13 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             return call;
         }
 
-        private TokenlessLocalCallModel MapLocalCallRequest(string address, string property)
+        private TokenlessLocalCallModel MapLocalCallRequest(string address, string property, string[] parameters = null)
         {
             return new TokenlessLocalCallModel
             {
                 Address = address,
-                MethodName = property
+                MethodName = property,
+                Parameters = parameters
             };
         }
     }

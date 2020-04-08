@@ -9,9 +9,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using Org.BouncyCastle.X509;
-using Stratis.Features.PoA;
-using Stratis.Features.PoA.Tests.Common;
-using Stratis.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
@@ -20,6 +17,9 @@ using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Controllers;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
+using Stratis.Features.PoA;
+using Stratis.Features.PoA.Tests.Common;
+using Stratis.Features.PoA.Voting;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.Core.Receipts;
@@ -540,6 +540,69 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.Contains(node1.GetTip().Block.Transactions, t => t.GetHash() == transactionId2);
                 Assert.NotEqual(transactionId1, transactionId2);
                 Assert.NotEqual(tx1.Time, tx2.Time);
+            }
+        }
+
+        [Fact]
+        public async Task SwaggerRendersPureMethods()
+        {
+            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient();
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
+
+                CaClient client1 = TokenlessTestHelper.GetClient(server);
+                CaClient client2 = TokenlessTestHelper.GetClient(server);
+
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
+
+                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
+
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+
+                node1.Start();
+                node2.Start();
+
+                TestHelper.Connect(node1, node2);
+
+                // Broadcast from node1, check state of node2.
+                var node1Controller = node1.FullNode.NodeController<TokenlessController>();
+                var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
+
+                ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/TokenlessPureContract.cs");
+
+                var createModel = new BuildCreateContractTransactionModel()
+                {
+                    ContractCode = compilationResult.Compilation
+                };
+
+                var createResult = (JsonResult)node1Controller.BuildCreateContractTransaction(createModel);
+                var createResponse = (BuildCreateContractTransactionResponse)createResult.Value;
+
+                await node1Controller.SendTransactionAsync(new SendTransactionModel()
+                {
+                    TransactionHex = createResponse.Hex
+                });
+
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                await node1.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+
+                Receipt createReceipt = receiptRepository.Retrieve(createResponse.TransactionId);
+                Assert.True(createReceipt.Success);
+
+                Thread.Sleep(100_000_000);
             }
         }
     }
