@@ -1,7 +1,10 @@
-﻿using System.IO;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Text.Json;
 using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
+using NBitcoin;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
@@ -13,9 +16,11 @@ using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless;
+using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Features.Api;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
+using Stratis.Features.PoA;
 using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Features.PoA.Tests.Common;
 using Stratis.SmartContracts.Tokenless;
@@ -39,6 +44,16 @@ namespace Stratis.SmartContracts.Tests.Common
             var loadedJson = File.ReadAllText($"{this.DataFolder}\\channels\\{this.channelName}_network.json");
 
             ChannelNetwork channelNetwork = JsonSerializer.Deserialize<ChannelNetwork>(loadedJson);
+            channelNetwork.Consensus.ConsensusFactory = new TokenlessConsensusFactory();
+
+            // TODO-TL: Add specific consensus rules here.
+            channelNetwork.Consensus.ConsensusRules = new ConsensusRules();
+
+            channelNetwork.Consensus.HashGenesisBlock = channelNetwork.Genesis.GetHash();
+            channelNetwork.Consensus.Options = new PoAConsensusOptions(0, 0, 0, 0, 0, new List<IFederationMember>(), 16, false, false, false);
+
+            // TODO-TL: Add specific mempool rules here.
+            channelNetwork.Consensus.MempoolRules = new List<Type>();
 
             var settings = new NodeSettings(channelNetwork, args: new string[]
             {
