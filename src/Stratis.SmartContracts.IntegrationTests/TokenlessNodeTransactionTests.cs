@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
@@ -543,7 +542,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             }
         }
 
-        [Fact]
+        [Fact(Skip = "This is useful locally to test the Swagger UI for Pure methods.")]
         public async Task SwaggerRendersPureMethods()
         {
             TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
@@ -580,7 +579,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var node1Controller = node1.FullNode.NodeController<TokenlessController>();
                 var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
 
-                ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/TokenlessPureContract.cs");
+                ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/TokenlessPureExample.cs");
 
                 var createModel = new BuildCreateContractTransactionModel()
                 {
@@ -601,8 +600,6 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 Receipt createReceipt = receiptRepository.Retrieve(createResponse.TransactionId);
                 Assert.True(createReceipt.Success);
-
-                Thread.Sleep(100_000_000);
             }
         }
     }
