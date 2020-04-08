@@ -17,9 +17,6 @@ using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.EventBus;
 using Stratis.Bitcoin.EventBus.CoreEvents;
-using Stratis.Features.MemoryPool;
-using Stratis.Features.Wallet;
-using Stratis.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P;
@@ -29,6 +26,9 @@ using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Interfaces;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 {
@@ -55,8 +55,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         public NodeConfigParameters ConfigParameters { get; set; }
 
-        public bool CookieAuth { get; set; }
-
         public Mnemonic Mnemonic { get; set; }
 
         private bool builderAlwaysFlushBlocks;
@@ -76,7 +74,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         public Key ClientCertificatePrivateKey { get; set; }
         public Key TransactionSigningPrivateKey { get; set; }
 
-        public CoreNode(NodeRunner runner, NodeConfigParameters configParameters, string configfile, bool useCookieAuth = false)
+        public CoreNode(NodeRunner runner, NodeConfigParameters configParameters, string configfile)
         {
             this.runner = runner;
 
@@ -85,7 +83,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             string pass = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20));
             this.creds = new NetworkCredential(user, pass);
             this.Config = Path.Combine(this.runner.DataFolder, configfile);
-            this.CookieAuth = useCookieAuth;
 
             this.ConfigParameters = new NodeConfigParameters();
             if (configParameters != null)
@@ -94,7 +91,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             var randomFoundPorts = new int[3];
             IpHelper.FindPorts(randomFoundPorts);
             this.ConfigParameters.SetDefaultValueIfUndefined("port", randomFoundPorts[0].ToString());
-            this.ConfigParameters.SetDefaultValueIfUndefined("rpcport", randomFoundPorts[1].ToString());
             this.ConfigParameters.SetDefaultValueIfUndefined("apiport", randomFoundPorts[2].ToString());
 
             this.loggerFactory = new ExtendedLoggerFactory();
@@ -298,19 +294,9 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
             configParameters = configParameters ?? new NodeConfigParameters();
             configParameters.SetDefaultValueIfUndefined("regtest", "1");
-            configParameters.SetDefaultValueIfUndefined("rest", "1");
             configParameters.SetDefaultValueIfUndefined("server", "1");
             configParameters.SetDefaultValueIfUndefined("txindex", "1");
-
-            if (!this.CookieAuth)
-            {
-                configParameters.SetDefaultValueIfUndefined("rpcuser", this.creds.UserName);
-                configParameters.SetDefaultValueIfUndefined("rpcpassword", this.creds.Password);
-            }
-
             configParameters.SetDefaultValueIfUndefined("printtoconsole", "1");
-
-            configParameters.SetDefaultValueIfUndefined("keypool", "10");
             configParameters.SetDefaultValueIfUndefined("agentprefix", "node" + this.ProtocolPort);
             configParameters.Import(this.ConfigParameters);
 

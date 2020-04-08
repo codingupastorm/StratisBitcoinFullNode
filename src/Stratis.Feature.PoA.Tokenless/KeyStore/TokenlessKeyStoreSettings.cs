@@ -143,7 +143,7 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
         /// <param name="network">The network to base the defaults off.</param>
         public static void BuildDefaultConfigurationFile(StringBuilder builder, Network network)
         {
-            builder.AppendLine("####Wallet Settings####");
+            builder.AppendLine("####Key Store Settings####");
             builder.AppendLine("#The account address index.");
             builder.AppendLine("#accountaddressindex=0");
             builder.AppendLine("#The mining address index.");
