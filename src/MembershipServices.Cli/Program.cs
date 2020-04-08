@@ -10,6 +10,7 @@ using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Feature.PoA.Tokenless;
+using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Features.PoA.ProtocolEncryption;
 
@@ -97,7 +98,7 @@ namespace MembershipServices.Cli
         {
             // TODO: Move this logic into a reusable method
             var network = new TokenlessNetwork();
-            var nodeSettings = new NodeSettings(network, args: new [] { $"-datadir={options.DataDir}", $"-password={options.Password}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" });
+            var nodeSettings = new NodeSettings(network, args: new[] { $"-datadir={options.DataDir}", $"-password={options.Password}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" });
             var loggerFactory = new LoggerFactory();
 
             var membershipServices = new MembershipServicesDirectory(nodeSettings);
@@ -106,7 +107,7 @@ namespace MembershipServices.Cli
             var revocationChecker = new RevocationChecker(membershipServices);
             var certificatesManager = new CertificatesManager(nodeSettings.DataFolder, nodeSettings, loggerFactory, revocationChecker, network);
             var keyStoreSettings = new TokenlessKeyStoreSettings(nodeSettings);
-            var keyStoreManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, keyStoreSettings, certificatesManager, loggerFactory);
+            var keyStoreManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, new ChannelSettings(nodeSettings), keyStoreSettings, certificatesManager, loggerFactory);
             keyStoreManager.Initialize();
 
             // First check if we have created an account on the CA already.

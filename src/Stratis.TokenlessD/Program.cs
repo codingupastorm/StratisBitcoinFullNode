@@ -5,14 +5,15 @@ using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Features.Api;
-using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless;
+using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Features.Api;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
+using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.TokenlessD
@@ -28,7 +29,7 @@ namespace Stratis.TokenlessD
                 var loggerFactory = new LoggerFactory();
                 var revocationChecker = new RevocationChecker(new MembershipServicesDirectory(nodeSettings));
                 var certificatesManager = new CertificatesManager(nodeSettings.DataFolder, nodeSettings, loggerFactory, revocationChecker, network);
-                var walletManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, new TokenlessKeyStoreSettings(nodeSettings), certificatesManager, loggerFactory);
+                var walletManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, new ChannelSettings(nodeSettings), new TokenlessKeyStoreSettings(nodeSettings), certificatesManager, loggerFactory);
                 if (!walletManager.Initialize())
                     return;
 

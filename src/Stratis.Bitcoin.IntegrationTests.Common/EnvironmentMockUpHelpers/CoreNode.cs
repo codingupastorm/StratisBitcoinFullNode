@@ -10,16 +10,12 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
-using NBitcoin.DataEncoders;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.EventBus;
 using Stratis.Bitcoin.EventBus.CoreEvents;
-using Stratis.Features.MemoryPool;
-using Stratis.Features.Wallet;
-using Stratis.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P;
@@ -29,12 +25,13 @@ using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Interfaces;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 {
     public class CoreNode
     {
-        private readonly NetworkCredential creds;
         private readonly object lockObject = new object();
         private readonly ILoggerFactory loggerFactory;
         internal readonly NodeRunner runner;
@@ -51,13 +48,19 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         public IPEndPoint Endpoint => new IPEndPoint(IPAddress.Parse("127.0.0.1"), this.ProtocolPort);
 
-        public string Config { get; }
+        public string ConfigFilePath { get; }
 
         public NodeConfigParameters ConfigParameters { get; set; }
 
-        public bool CookieAuth { get; set; }
-
         public Mnemonic Mnemonic { get; set; }
+
+        public DateTimeOffset? MockTime { get; set; }
+
+        public CertificateInfoModel ClientCertificate { get; set; }
+
+        public FullNode FullNode => this.runner.FullNode;
+
+        public CoreNodeState State { get; private set; }
 
         private bool builderAlwaysFlushBlocks;
         private bool builderEnablePeerDiscovery;
@@ -73,39 +76,37 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         private SubscriptionToken blockConnectedSubscription;
         private SubscriptionToken blockDisconnectedSubscription;
 
+        List<Action> startActions = new List<Action>();
+        List<Action> runActions = new List<Action>();
+
         public Key ClientCertificatePrivateKey { get; set; }
         public Key TransactionSigningPrivateKey { get; set; }
 
-        public CoreNode(NodeRunner runner, NodeConfigParameters configParameters, string configfile, bool useCookieAuth = false)
+        public CoreNode(NodeRunner runner, NodeConfigParameters configParameters, string configfile)
         {
             this.runner = runner;
 
             this.State = CoreNodeState.Stopped;
-            string user = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20));
-            string pass = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20));
-            this.creds = new NetworkCredential(user, pass);
-            this.Config = Path.Combine(this.runner.DataFolder, configfile);
-            this.CookieAuth = useCookieAuth;
+            this.ConfigFilePath = Path.Combine(this.runner.DataFolder, configfile);
 
             this.ConfigParameters = new NodeConfigParameters();
             if (configParameters != null)
                 this.ConfigParameters.Import(configParameters);
 
+            // Set the various ports.
             var randomFoundPorts = new int[3];
             IpHelper.FindPorts(randomFoundPorts);
             this.ConfigParameters.SetDefaultValueIfUndefined("port", randomFoundPorts[0].ToString());
-            this.ConfigParameters.SetDefaultValueIfUndefined("rpcport", randomFoundPorts[1].ToString());
-            this.ConfigParameters.SetDefaultValueIfUndefined("apiport", randomFoundPorts[2].ToString());
+            this.ConfigParameters.SetDefaultValueIfUndefined("apiport", randomFoundPorts[1].ToString());
+
+            // If this node is an infra node then also define the channel api port it will start up.
+            if (runner.IsInfraNode)
+                this.ConfigParameters.SetDefaultValueIfUndefined("channelapiport", randomFoundPorts[2].ToString());
 
             this.loggerFactory = new ExtendedLoggerFactory();
 
             CreateConfigFile(this.ConfigParameters);
         }
-
-        /// <summary>Get stratis full node if possible.</summary>
-        public FullNode FullNode => this.runner.FullNode;
-
-        public CoreNodeState State { get; private set; }
 
         public CoreNode NoValidation()
         {
@@ -258,9 +259,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
                 return this.runner.FullNode.NodeService<IAsyncProvider>();
         }
 
-        List<Action> startActions = new List<Action>();
-        List<Action> runActions = new List<Action>();
-
         public CoreNode Start(Action startAction = null)
         {
             lock (this.lockObject)
@@ -298,23 +296,13 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
             configParameters = configParameters ?? new NodeConfigParameters();
             configParameters.SetDefaultValueIfUndefined("regtest", "1");
-            configParameters.SetDefaultValueIfUndefined("rest", "1");
             configParameters.SetDefaultValueIfUndefined("server", "1");
             configParameters.SetDefaultValueIfUndefined("txindex", "1");
-
-            if (!this.CookieAuth)
-            {
-                configParameters.SetDefaultValueIfUndefined("rpcuser", this.creds.UserName);
-                configParameters.SetDefaultValueIfUndefined("rpcpassword", this.creds.Password);
-            }
-
             configParameters.SetDefaultValueIfUndefined("printtoconsole", "1");
-
-            configParameters.SetDefaultValueIfUndefined("keypool", "10");
             configParameters.SetDefaultValueIfUndefined("agentprefix", "node" + this.ProtocolPort);
             configParameters.Import(this.ConfigParameters);
 
-            File.WriteAllText(this.Config, configParameters.ToString());
+            File.WriteAllText(this.ConfigFilePath, configParameters.ToString());
         }
 
         public void Restart()
@@ -414,125 +402,9 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             }
         }
 
-        public DateTimeOffset? MockTime { get; set; }
-        public CertificateInfoModel ClientCertificate { get; set; }
-
         public void SetMinerSecret(BitcoinSecret secret)
         {
             this.MinerSecret = secret;
-        }
-
-        private async Task AssertStateAsync(INetworkPeer peer, NetworkPeerState peerState, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            if ((peerState == NetworkPeerState.HandShaked) && (peer.State == NetworkPeerState.Connected))
-                await peer.VersionHandshakeAsync(cancellationToken);
-
-            if (peerState != peer.State)
-                throw new InvalidOperationException("Invalid Node state, needed=" + peerState + ", current= " + this.State);
-        }
-
-        public IEnumerable<ChainedHeader> GetHeadersFromFork(INetworkPeer peer, ChainedHeader currentTip, uint256 hashStop = null, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            this.AssertStateAsync(peer, NetworkPeerState.HandShaked, cancellationToken).GetAwaiter().GetResult();
-
-            using (var listener = new NetworkPeerListener(peer, this.GetOrCreateAsyncProvider()))
-            {
-                int acceptMaxReorgDepth = 0;
-                while (true)
-                {
-                    // Get before last so, at the end, we should only receive 1 header equals to this one (so we will not have race problems with concurrent GetChains).
-                    BlockLocator awaited = currentTip.Previous == null ? currentTip.GetLocator() : currentTip.Previous.GetLocator();
-                    peer.SendMessageAsync(new GetHeadersPayload()
-                    {
-                        BlockLocator = awaited,
-                        HashStop = hashStop
-                    }, cancellationToken).GetAwaiter().GetResult();
-
-                    while (true)
-                    {
-                        bool isOurs = false;
-                        HeadersPayload headers = null;
-
-                        using (CancellationTokenSource headersCancel = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
-                        {
-                            headersCancel.CancelAfter(TimeSpan.FromMinutes(1.0));
-                            try
-                            {
-                                headers = listener.ReceivePayloadAsync<HeadersPayload>(headersCancel.Token).GetAwaiter().GetResult();
-                            }
-                            catch (OperationCanceledException)
-                            {
-                                acceptMaxReorgDepth += 6;
-                                if (cancellationToken.IsCancellationRequested)
-                                    throw;
-
-                                // Send a new GetHeaders.
-                                break;
-                            }
-                        }
-
-                        // In the special case where the remote node is at height 0 as well as us, then the headers count will be 0.
-                        if ((headers.Headers.Count == 0) && (peer.PeerVersion.StartHeight == 0) && (currentTip.HashBlock == peer.Network.GenesisHash))
-                            yield break;
-
-                        if ((headers.Headers.Count == 1) && (headers.Headers[0].GetHash() == currentTip.HashBlock))
-                            yield break;
-
-                        foreach (BlockHeader header in headers.Headers)
-                        {
-                            uint256 hash = header.GetHash();
-                            if (hash == currentTip.HashBlock)
-                                continue;
-
-                            // The previous headers request timeout, this can arrive in case of big reorg.
-                            if (header.HashPrevBlock != currentTip.HashBlock)
-                            {
-                                int reorgDepth = 0;
-                                ChainedHeader tempCurrentTip = currentTip;
-                                while (reorgDepth != acceptMaxReorgDepth && tempCurrentTip != null && header.HashPrevBlock != tempCurrentTip.HashBlock)
-                                {
-                                    reorgDepth++;
-                                    tempCurrentTip = tempCurrentTip.Previous;
-                                }
-
-                                if (reorgDepth != acceptMaxReorgDepth && tempCurrentTip != null)
-                                    currentTip = tempCurrentTip;
-                            }
-
-                            if (header.HashPrevBlock == currentTip.HashBlock)
-                            {
-                                isOurs = true;
-                                currentTip = new ChainedHeader(header, hash, currentTip);
-
-                                yield return currentTip;
-
-                                if (currentTip.HashBlock == hashStop)
-                                    yield break;
-                            }
-                            else break; // Not our headers, continue receive.
-                        }
-
-                        if (isOurs)
-                            break;  //Go ask for next header.
-                    }
-                }
-            }
-        }
-
-        public bool AddToStratisMempool(Transaction trx)
-        {
-            var state = new MempoolValidationState(true);
-            return this.runner.FullNode.MempoolManager().Validator.AcceptToMemoryPool(state, trx).Result;
-        }
-
-        public async Task BroadcastBlocksAsync(Block[] blocks, INetworkPeer peer)
-        {
-            foreach (Block block in blocks)
-            {
-                await peer.SendMessageAsync(new InvPayload(block));
-                await peer.SendMessageAsync(new BlockPayload(block));
-            }
-            await this.PingPongAsync(peer);
         }
 
         public ChainedHeader GetTip()

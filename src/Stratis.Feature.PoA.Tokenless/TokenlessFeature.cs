@@ -10,10 +10,6 @@ using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Features.PoA;
-using Stratis.Features.PoA.Behaviors;
-using Stratis.Features.PoA.ProtocolEncryption;
-using Stratis.Features.PoA.Voting;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
@@ -22,6 +18,10 @@ using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Features.BlockStore;
+using Stratis.Features.PoA;
+using Stratis.Features.PoA.Behaviors;
+using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.Features.PoA.Voting;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -29,6 +29,7 @@ namespace Stratis.Feature.PoA.Tokenless
     {
         private readonly ICoreComponent coreComponent;
 
+        private readonly ChannelSettings channelSettings;
         private readonly ICertificatesManager certificatesManager;
         private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
         private readonly VotingManager votingManager;
@@ -45,6 +46,7 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly IChannelService channelService;
 
         public TokenlessFeature(
+            ChannelSettings channelSettings,
             ICertificatesManager certificatesManager,
             ICertificatePermissionsChecker certificatePermissionsChecker,
             VotingManager votingManager,
@@ -62,6 +64,7 @@ namespace Stratis.Feature.PoA.Tokenless
             IMembershipServicesDirectory membershipServices,
             IChannelService channelService)
         {
+            this.channelSettings = channelSettings;
             this.certificatesManager = certificatesManager;
             this.certificatePermissionsChecker = certificatePermissionsChecker;
             this.votingManager = votingManager;
@@ -131,7 +134,7 @@ namespace Stratis.Feature.PoA.Tokenless
             startAfter: TimeSpans.Minute);
 
             // If this node is a infra node, then start another daemon with the serialized version of the network.
-            if (this.tokenlessKeyStoreSettings.IsInfraNode)
+            if (this.channelSettings.IsInfraNode)
                 await this.channelService.StartSystemChannelNodeAsync();
         }
 

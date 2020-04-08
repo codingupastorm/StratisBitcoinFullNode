@@ -50,7 +50,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             {
                 this.logger.LogInformation($"Starting a node on channel '{request.Name}'.");
 
-                Process process = await StartNodeAsync(request.Name);
+                Process process = await StartNodeAsync(request.Name, "-ischannelnode=true");
                 if (process.HasExited)
                     this.logger.LogWarning($"Failed to start node on channel '{request.Name}' as the process exited early.");
 
@@ -70,7 +70,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             {
                 this.logger.LogInformation("Starting a system channel node.");
 
-                Process process = await StartNodeAsync(SystemChannelName);
+                Process process = await StartNodeAsync(SystemChannelName, "-issystemchannelnode=true", "-ischannelnode=true");
                 if (process.HasExited)
                     throw new ChannelServiceException($"Failed to start system channel node as the processs exited early.");
 
@@ -84,7 +84,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             }
         }
 
-        private async Task<Process> StartNodeAsync(string channelName)
+        private async Task<Process> StartNodeAsync(string channelName, params string[] channelArgs)
         {
             // Write the serialized network to disk.
             ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, $"{this.nodeSettings.DataFolder.RootPath}\\channels\\{channelName.ToLowerInvariant()}");
@@ -93,9 +93,6 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
             var filePath = $"{channelNetwork.RootFolderName}\\{channelName}_network.json";
             File.WriteAllText(filePath, serializedJson);
-
-            // Copy the parent node's configuration file (.conf) to the channel node's root.
-            File.Copy(Path.Combine(this.nodeSettings.ConfigurationFile), Path.Combine(channelNetwork.RootFolderName, "poa.conf"));
 
             // Copy the parent node's authority and client certificate to the channel node's root.
             File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificatesManager.AuthorityCertificateName), Path.Combine(channelNetwork.RootFolderName, CertificatesManager.AuthorityCertificateName));
@@ -110,21 +107,21 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             args.Append($"-apiport={this.channelSettings.ChannelApiPort} ");
             args.Append("-certificatepassword=test ");
             args.Append("-password=test ");
-            args.Append("-conf=poa.conf ");
             args.Append($"-datadir={channelNetwork.RootFolderName} ");
             args.Append($"-{CertificatesManager.CaAccountIdKey}={Settings.AdminAccountId} ");
             args.Append($"-{CertificatesManager.CaPasswordKey}={this.nodeSettings.ConfigReader.GetOrDefault(CertificatesManager.CaPasswordKey, "")} ");
             args.Append($"-{CertificatesManager.ClientCertificateConfigurationKey}=test ");
-            args.Append("-ischannelnode=true ");
-            args.Append("-isinfranode=false");
+
+            // Append any channel specific arguments.
+            args.Append(string.Join(" ", channelArgs));
 
             process.StartInfo.Arguments = $"run --no-build {args.ToString()}";
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.CreateNoWindow = false;
             process.Start();
 
-            this.logger.LogInformation("Executing delay to wait for node to start.");
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            this.logger.LogInformation("Executing a delay to wait for the node to start.");
+            await Task.Delay(TimeSpan.FromSeconds(10));
 
             return process;
         }

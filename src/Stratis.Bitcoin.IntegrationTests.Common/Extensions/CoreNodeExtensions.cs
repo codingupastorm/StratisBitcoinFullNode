@@ -11,7 +11,7 @@ namespace Stratis.Bitcoin.IntegrationTests
     {
         public static void AppendToConfig(this CoreNode node, string configKeyValueItem)
         {
-            using (StreamWriter sw = File.AppendText(node.Config))
+            using (StreamWriter sw = File.AppendText(node.ConfigFilePath))
             {
                 sw.WriteLine(configKeyValueItem);
             }
