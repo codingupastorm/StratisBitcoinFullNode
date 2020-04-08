@@ -27,6 +27,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     /// <inheritdoc />
     public sealed class ChannelService : IChannelService
     {
+        private const string ChannelConfigurationFileName = "channel.conf";
         private const string SystemChannelName = "system";
 
         private readonly ChannelSettings channelSettings;
@@ -86,36 +87,63 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
         private async Task<Process> StartNodeAsync(string channelName, params string[] channelArgs)
         {
-            // Write the serialized network to disk.
+            // Write teh serialized version of the network to disk.
+            ChannelNetwork channelNetwork = WriteChannelNetworkJson(channelName);
+
+            // Copy the parent node's authority and client certificate to the channel node's root.
+            CopyCertificatesToChannelRoot(channelNetwork);
+
+            // Create channel configuration file.
+            CreateChannelConfigurationFile(channelNetwork, channelArgs);
+
+            // Pass the path to the serialized network to the system channel node and start it.
+            return await StartTheProcessAsync(channelNetwork);
+        }
+
+        /// <summary> Write the serialized network to disk. </summary>
+        /// <param name="channelName">The name of the channel.</param>
+        /// <returns>An instance of the <see cref="ChannelNetwork"/>.</returns>
+        private ChannelNetwork WriteChannelNetworkJson(string channelName)
+        {
             ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, $"{this.nodeSettings.DataFolder.RootPath}\\channels\\{channelName.ToLowerInvariant()}");
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
             Directory.CreateDirectory(channelNetwork.RootFolderName);
-
             var filePath = $"{channelNetwork.RootFolderName}\\{channelName}_network.json";
             File.WriteAllText(filePath, serializedJson);
+            return channelNetwork;
+        }
 
-            // Copy the parent node's authority and client certificate to the channel node's root.
+        private void CopyCertificatesToChannelRoot(ChannelNetwork channelNetwork)
+        {
             File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificatesManager.AuthorityCertificateName), Path.Combine(channelNetwork.RootFolderName, CertificatesManager.AuthorityCertificateName));
             File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificatesManager.ClientCertificateName), Path.Combine(channelNetwork.RootFolderName, CertificatesManager.ClientCertificateName));
+        }
 
-            // Pass the path to the serialized network to the system channel node and start it.
+        private void CreateChannelConfigurationFile(ChannelNetwork channelNetwork, params string[] channelArgs)
+        {
+            var args = new StringBuilder();
+            args.AppendLine($"-apiport={this.channelSettings.ChannelApiPort}");
+            args.AppendLine($"-certificatepassword=test");
+            args.AppendLine($"-password=test");
+            args.AppendLine($"-{CertificatesManager.CaAccountIdKey}={Settings.AdminAccountId}");
+            args.AppendLine($"-{CertificatesManager.CaPasswordKey}={this.nodeSettings.ConfigReader.GetOrDefault(CertificatesManager.CaPasswordKey, "")} ");
+            args.AppendLine($"-{CertificatesManager.ClientCertificateConfigurationKey}=test");
+
+            // Append any channel specific arguments.
+            foreach (var channelArg in channelArgs)
+            {
+                args.AppendLine(channelArg);
+            }
+
+            File.WriteAllText(Path.Combine(channelNetwork.RootFolderName, ChannelConfigurationFileName), args.ToString());
+        }
+
+        private async Task<Process> StartTheProcessAsync(ChannelNetwork channelNetwork)
+        {
             var process = new Process();
             process.StartInfo.WorkingDirectory = this.channelSettings.ProcessPath;
             process.StartInfo.FileName = "dotnet";
-
-            var args = new StringBuilder();
-            args.Append($"-apiport={this.channelSettings.ChannelApiPort} ");
-            args.Append("-certificatepassword=test ");
-            args.Append("-password=test ");
-            args.Append($"-datadir={channelNetwork.RootFolderName} ");
-            args.Append($"-{CertificatesManager.CaAccountIdKey}={Settings.AdminAccountId} ");
-            args.Append($"-{CertificatesManager.CaPasswordKey}={this.nodeSettings.ConfigReader.GetOrDefault(CertificatesManager.CaPasswordKey, "")} ");
-            args.Append($"-{CertificatesManager.ClientCertificateConfigurationKey}=test ");
-
-            // Append any channel specific arguments.
-            args.Append(string.Join(" ", channelArgs));
-
-            process.StartInfo.Arguments = $"run --no-build {args.ToString()}";
+            process.StartInfo.Arguments = $"run --no-build -conf={ChannelConfigurationFileName} -datadir={channelNetwork.RootFolderName}";
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.CreateNoWindow = false;
             process.Start();
