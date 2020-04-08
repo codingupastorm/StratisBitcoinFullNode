@@ -38,12 +38,20 @@ namespace Stratis.SmartContracts.Tests.Common
             var configParameters = new NodeConfigParameters()
             {
                 { "caurl" , "http://localhost:5050" },
-                { "channelapiport" , "20000" },
-                { "channelprocesspath" , "..\\..\\..\\..\\Stratis.TokenlessD\\" },
-                { "isinfranode", isInfraNode.ToString() }
             };
 
-            CoreNode node = this.CreateNode(new TokenlessNodeRunner(dataFolder, network, this.TimeProvider), "poa.conf", configParameters: configParameters);
+            if (isInfraNode)
+            {
+                configParameters.Add("channelprocesspath", "..\\..\\..\\..\\Stratis.TokenlessD\\");
+                configParameters.Add("isinfranode", "True");
+            }
+
+            var runner = new TokenlessNodeRunner(dataFolder, network, this.TimeProvider)
+            {
+                IsInfraNode = isInfraNode
+            };
+
+            CoreNode node = this.CreateNode(runner, "poa.conf", configParameters: configParameters);
 
             Mnemonic mnemonic = nodeIndex < 3
                 ? TokenlessNetwork.Mnemonics[nodeIndex]
