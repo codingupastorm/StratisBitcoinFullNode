@@ -18,6 +18,7 @@ using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.Mempool;
@@ -94,6 +95,9 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<IRevocationChecker, RevocationChecker>();
                         services.AddSingleton<ICertificatePermissionsChecker, CertificatePermissionsChecker>();
                         services.AddSingleton<ICertificateCache, CertificateCache>();
+
+                        // Channels
+                        services.AddSingleton<IChannelKeyValueStore, ChannelKeyValueStore>();
 
                         var options = (PoAConsensusOptions)network.Consensus.Options;
                         if (options.EnablePermissionedMembership)
