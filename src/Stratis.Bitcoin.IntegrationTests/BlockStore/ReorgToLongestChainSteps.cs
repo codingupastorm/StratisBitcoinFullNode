@@ -2,9 +2,9 @@
 using System.Linq;
 using FluentAssertions;
 using NBitcoin;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Controllers;
-using Stratis.Bitcoin.Features.Wallet.Models;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Controllers;
+using Stratis.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Networks;
@@ -160,7 +160,7 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 
         private void mining_continues_to_maturity_to_allow_spend()
         {
-            int coinbaseMaturity = (int)this.bobNode.FullNode.Network.Consensus.CoinbaseMaturity;
+            int coinbaseMaturity = (int)this.bobNode.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity;
 
             TestHelper.MineBlocks(this.bobNode, coinbaseMaturity + 1);
 
@@ -170,10 +170,10 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
             TestBase.WaitLoop(() => TestHelper.IsNodeSynced(this.jingNode));
 
             // Ensure that all the nodes are synced to at least coinbase maturity.
-            TestBase.WaitLoop(() => this.bobNode.FullNode.ConsensusManager().Tip.Height >= this.charlieNode.FullNode.Network.Consensus.CoinbaseMaturity);
-            TestBase.WaitLoopMessage(() => (this.charlieNode.FullNode.ConsensusManager().Tip.Height >= this.charlieNode.FullNode.Network.Consensus.CoinbaseMaturity, $"CHARLIENODE_TIP_{this.charlieNode.FullNode.ConsensusManager().Tip}"));
-            TestBase.WaitLoop(() => this.daveNode.FullNode.ConsensusManager().Tip.Height >= this.charlieNode.FullNode.Network.Consensus.CoinbaseMaturity);
-            TestBase.WaitLoop(() => this.jingNode.FullNode.ConsensusManager().Tip.Height >= this.charlieNode.FullNode.Network.Consensus.CoinbaseMaturity);
+            TestBase.WaitLoop(() => this.bobNode.FullNode.ConsensusManager().Tip.Height >= this.charlieNode.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity);
+            TestBase.WaitLoopMessage(() => (this.charlieNode.FullNode.ConsensusManager().Tip.Height >= this.charlieNode.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity, $"CHARLIENODE_TIP_{this.charlieNode.FullNode.ConsensusManager().Tip}"));
+            TestBase.WaitLoop(() => this.daveNode.FullNode.ConsensusManager().Tip.Height >= this.charlieNode.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity);
+            TestBase.WaitLoop(() => this.jingNode.FullNode.ConsensusManager().Tip.Height >= this.charlieNode.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity);
         }
     }
 }

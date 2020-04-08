@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Protocol;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
-using Stratis.Bitcoin.Features.MemoryPool.Rules;
-using Stratis.Bitcoin.Features.PoA;
-using Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules;
-using Stratis.Bitcoin.Features.PoA.Voting.ConsensusRules;
 using Stratis.Bitcoin.Features.SmartContracts.MempoolRules;
 using Stratis.Bitcoin.Features.SmartContracts.PoA;
 using Stratis.Bitcoin.Features.SmartContracts.PoA.MempoolRules;
 using Stratis.Bitcoin.Features.SmartContracts.Rules;
+using Stratis.Features.Consensus.Rules.CommonRules;
+using Stratis.Features.MemoryPool.Rules;
+using Stratis.Features.PoA;
+using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
+using Stratis.Features.PoA.Voting.ConsensusRules;
 using Stratis.SmartContracts.Networks.Policies;
 
 namespace Stratis.SmartContracts.Networks
@@ -80,38 +80,27 @@ namespace Stratis.SmartContracts.Networks
 
             var bip9Deployments = new NoBIP9Deployments();
 
+            var consensusProofOfWork = new ConsensusProofOfWork()
+            {
+                CoinbaseMaturity = 1,
+                MaxMoney = long.MaxValue,
+                PosNoRetargeting = true,
+                PremineHeight = 5,
+                PremineReward = Money.Coins(100_000_000),
+            };
+
             this.Consensus = new Consensus(
                 consensusFactory: consensusFactory,
                 consensusOptions: consensusOptions,
                 coinType: 105,
                 hashGenesisBlock: genesisBlock.GetHash(),
-                subsidyHalvingInterval: 210000,
-                majorityEnforceBlockUpgrade: 750,
-                majorityRejectBlockOutdated: 950,
-                majorityWindow: 1000,
                 buriedDeployments: buriedDeployments,
                 bip9Deployments: bip9Deployments,
                 bip34Hash: new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"),
-                minerConfirmationWindow: 2016, // nPowTargetTimespan / nPowTargetSpacing
                 maxReorgLength: 500,
                 defaultAssumeValid: null,
-                maxMoney: long.MaxValue,
-                coinbaseMaturity: 1,
-                premineHeight: 5,
-                premineReward: Money.Coins(100_000_000),
-                proofOfWorkReward: Money.Coins(0),
-                powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
-                powTargetSpacing: TimeSpan.FromSeconds(60),
-                powAllowMinDifficultyBlocks: false,
-                posNoRetargeting: true,
-                powNoRetargeting: true,
-                powLimit: null,
                 minimumChainWork: null,
-                isProofOfStake: false,
-                lastPowBlock: 0,
-                proofOfStakeLimit: null,
-                proofOfStakeLimitV2: null,
-                proofOfStakeReward: Money.Zero
+                consensusProofOfWork: consensusProofOfWork
             );
 
             // Same as current smart contracts test networks to keep tests working

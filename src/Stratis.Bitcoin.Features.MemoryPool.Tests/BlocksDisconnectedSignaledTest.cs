@@ -3,12 +3,13 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.EventBus.CoreEvents;
-using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Primitives;
+using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Features.MemoryPool.Interfaces;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.MemoryPool.Tests
+namespace Stratis.Features.MemoryPool.Tests
 {
     public class BlocksDisconnectedSignaledTest
     {
@@ -20,7 +21,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Tests
             var loggerFactoryMock = new Mock<ILoggerFactory>();
             loggerFactoryMock.Setup(i => i.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
 
-            Signals.Signals signals = new Signals.Signals(loggerFactoryMock.Object, null);
+            Signals signals = new Signals(loggerFactoryMock.Object, null);
             var subject = new BlocksDisconnectedSignaled(mempoolMock.Object, mempoolValidatorMock.Object, new MempoolSchedulerLock(), loggerFactoryMock.Object, signals);
             subject.Initialize();
 

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using NBitcoin;
-using Stratis.Bitcoin.Features.PoA.Voting;
+using Stratis.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts.PoA;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.SmartContracts.Tests.Common.MockChain;

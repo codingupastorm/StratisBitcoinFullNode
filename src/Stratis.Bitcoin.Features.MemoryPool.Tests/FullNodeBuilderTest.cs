@@ -1,22 +1,23 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
+using Stratis.Bitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Features.BlockStore;
+using Stratis.Features.Consensus;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.MemoryPool.Tests
+namespace Stratis.Features.MemoryPool.Tests
 {
     public class FullNodeBuilderTest : TestBase
     {
-        public FullNodeBuilderTest() : base(KnownNetworks.TestNet) 
-        { 
+        public FullNodeBuilderTest() : base(KnownNetworks.TestNet)
+        {
         }
 
         [Fact]
@@ -27,7 +28,7 @@ namespace Stratis.Bitcoin.Features.MemoryPool.Tests
 
             string dataDir = GetTestDirectoryPath(this);
 
-            var nodeSettings = new NodeSettings(this.Network, args: new string[] {$"-datadir={dataDir}" });
+            var nodeSettings = new NodeSettings(this.Network, args: new string[] { $"-datadir={dataDir}" });
 
             var fullNodeBuilder = new FullNodeBuilder(nodeSettings);
             IFullNode fullNode = fullNodeBuilder

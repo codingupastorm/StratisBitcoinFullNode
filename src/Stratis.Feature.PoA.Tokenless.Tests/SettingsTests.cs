@@ -1,13 +1,11 @@
 ﻿using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Feature.PoA.Tokenless;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.PoA.Tokenless.Tests
+namespace Stratis.Feature.PoA.Tokenless.Tests
 {
     public class SettingsTests
     {
-
         [Fact]
         public void IpRangeDefaultFalse()
         {

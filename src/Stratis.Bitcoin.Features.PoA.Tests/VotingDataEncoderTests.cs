@@ -3,10 +3,10 @@ using System.Linq;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.PoA.Voting;
+using Stratis.Features.PoA.Voting;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.PoA.Tests
+namespace Stratis.Features.PoA.Tests
 {
     public class VotingDataEncoderTests
     {

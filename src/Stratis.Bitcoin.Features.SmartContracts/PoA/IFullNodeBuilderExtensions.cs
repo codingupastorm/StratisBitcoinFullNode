@@ -2,11 +2,11 @@
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.Consensus;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.PoA;
-using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
-using Stratis.Bitcoin.Features.PoA.Voting;
+using Stratis.Features.Consensus;
+using Stratis.Features.Consensus.CoinViews;
+using Stratis.Features.PoA;
+using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Bitcoin.Features.SmartContracts.Rules;
 

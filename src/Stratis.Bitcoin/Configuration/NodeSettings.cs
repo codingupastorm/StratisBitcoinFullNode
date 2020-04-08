@@ -206,10 +206,19 @@ namespace Stratis.Bitcoin.Configuration
             }
             else
             {
-                // Combine the data directory with the network's root folder and name.
-                string directoryPath = Path.Combine(this.DataDir, this.Network.RootFolderName, this.Network.Name);
-                this.DataDir = Directory.CreateDirectory(directoryPath).FullName;
-                this.Logger.LogDebug("Data directory initialized with path {0}.", this.DataDir);
+                // If this is a channel node, just use the data directory provided.
+                if (this.ConfigReader.GetOrDefault("ischannelnode", false, this.Logger))
+                {
+                    this.DataDir = Directory.CreateDirectory(this.DataDir).FullName;
+                    this.Logger.LogDebug("Data directory initialized with path {0}.", this.DataDir);
+                }
+                else
+                {
+                    // Else combine the data directory with the network's root folder and name.
+                    string directoryPath = Path.Combine(this.DataDir, this.Network.RootFolderName, this.Network.Name);
+                    this.DataDir = Directory.CreateDirectory(directoryPath).FullName;
+                    this.Logger.LogDebug("Data directory initialized with path {0}.", this.DataDir);
+                }
             }
 
             // Set the data folder.
@@ -313,9 +322,10 @@ namespace Stratis.Bitcoin.Configuration
         {
             TextFileConfiguration config = this.ConfigReader;
 
-            this.MinTxFeeRate = new FeeRate(config.GetOrDefault("mintxfee", this.Network.MinTxFee, this.Logger));
-            this.FallbackTxFeeRate = new FeeRate(config.GetOrDefault("fallbackfee", this.Network.FallbackFee, this.Logger));
-            this.MinRelayTxFeeRate = new FeeRate(config.GetOrDefault("minrelaytxfee", this.Network.MinRelayTxFee, this.Logger));
+            var feeNetwork = this.Network as FeeNetwork;
+            this.MinTxFeeRate = new FeeRate(config.GetOrDefault("mintxfee", feeNetwork != null ? feeNetwork.MinTxFee : 0, this.Logger));
+            this.FallbackTxFeeRate = new FeeRate(config.GetOrDefault("fallbackfee", feeNetwork != null ? feeNetwork.FallbackFee : 0, this.Logger));
+            this.MinRelayTxFeeRate = new FeeRate(config.GetOrDefault("minrelaytxfee", feeNetwork != null ? feeNetwork.MinRelayTxFee : 0, this.Logger));
         }
 
         /// <summary>
@@ -391,9 +401,13 @@ namespace Stratis.Bitcoin.Configuration
             // Can be overridden in configuration file.
             builder.AppendLine($"-testnet                  Use the testnet chain.");
             builder.AppendLine($"-regtest                  Use the regtestnet chain.");
-            builder.AppendLine($"-mintxfee=<number>        Minimum fee rate. Defaults to {network.MinTxFee}.");
-            builder.AppendLine($"-fallbackfee=<number>     Fallback fee rate. Defaults to {network.FallbackFee}.");
-            builder.AppendLine($"-minrelaytxfee=<number>   Minimum relay fee rate. Defaults to {network.MinRelayTxFee}.");
+
+            if (network is FeeNetwork feeNetwork)
+            {
+                builder.AppendLine($"-mintxfee=<number>        Minimum fee rate. Defaults to {feeNetwork.MinTxFee}.");
+                builder.AppendLine($"-fallbackfee=<number>     Fallback fee rate. Defaults to {feeNetwork.FallbackFee}.");
+                builder.AppendLine($"-minrelaytxfee=<number>   Minimum relay fee rate. Defaults to {feeNetwork.MinRelayTxFee}.");
+            }
 
             defaults.Logger.LogInformation(builder.ToString());
 
@@ -412,12 +426,17 @@ namespace Stratis.Bitcoin.Configuration
             builder.AppendLine($"testnet={((network.IsTest() && !network.IsRegTest()) ? 1 : 0)}");
             builder.AppendLine($"#Regression test network. Defaults to 0.");
             builder.AppendLine($"regtest={(network.IsRegTest() ? 1 : 0)}");
-            builder.AppendLine($"#Minimum fee rate. Defaults to {network.MinTxFee}.");
-            builder.AppendLine($"#mintxfee={network.MinTxFee}");
-            builder.AppendLine($"#Fallback fee rate. Defaults to {network.FallbackFee}.");
-            builder.AppendLine($"#fallbackfee={network.FallbackFee}");
-            builder.AppendLine($"#Minimum relay fee rate. Defaults to {network.MinRelayTxFee}.");
-            builder.AppendLine($"#minrelaytxfee={network.MinRelayTxFee}");
+
+            if (network is FeeNetwork feeNetwork)
+            {
+                builder.AppendLine($"#Minimum fee rate. Defaults to {feeNetwork.MinTxFee}.");
+                builder.AppendLine($"#mintxfee={feeNetwork.MinTxFee}");
+                builder.AppendLine($"#Fallback fee rate. Defaults to {feeNetwork.FallbackFee}.");
+                builder.AppendLine($"#fallbackfee={feeNetwork.FallbackFee}");
+                builder.AppendLine($"#Minimum relay fee rate. Defaults to {feeNetwork.MinRelayTxFee}.");
+                builder.AppendLine($"#minrelaytxfee={feeNetwork.MinRelayTxFee}");
+            }
+
             builder.AppendLine();
 
             ConnectionManagerSettings.BuildDefaultConfigurationFile(builder, network);

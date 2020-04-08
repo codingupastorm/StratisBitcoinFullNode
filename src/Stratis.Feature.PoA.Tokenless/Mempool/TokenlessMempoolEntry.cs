@@ -1,5 +1,5 @@
 ﻿using NBitcoin;
-using Stratis.Bitcoin.Features.MemoryPool;
+using Stratis.Features.MemoryPool;
 
 namespace Stratis.Feature.PoA.Tokenless.Mempool
 {

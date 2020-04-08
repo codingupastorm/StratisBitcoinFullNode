@@ -10,7 +10,7 @@ using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests
+namespace Stratis.Features.Consensus.Tests
 {
     public class InitialBlockDownloadTest
     {
