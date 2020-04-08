@@ -98,6 +98,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
                         // Channels
                         services.AddSingleton<IChannelKeyValueStore, ChannelKeyValueStore>();
+                        services.AddSingleton<IChannelRepository, ChannelRepository>();
 
                         var options = (PoAConsensusOptions)network.Consensus.Options;
                         if (options.EnablePermissionedMembership)
