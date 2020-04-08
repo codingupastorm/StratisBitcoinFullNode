@@ -3,19 +3,20 @@ using Stratis.Bitcoin.Utilities;
 using Stratis.SmartContracts.CLR.Metering;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
+using Stratis.SmartContracts.Core.Store;
 
 namespace Stratis.SmartContracts.CLR
 {
     public class PrivateMeteredPersistenceStrategy : IPersistenceStrategy
     {
-        private readonly IStateRepository stateDb;
+        private readonly IPrivateDataStore stateDb;
         private readonly RuntimeObserver.IGasMeter gasMeter;
         private readonly IKeyEncodingStrategy keyEncodingStrategy;
         private readonly IReadWriteSetOperations readWriteSet;
 
         private readonly string version;
 
-        public PrivateMeteredPersistenceStrategy(IStateRepository stateDb,
+        public PrivateMeteredPersistenceStrategy(IPrivateDataStore stateDb,
             RuntimeObserver.IGasMeter gasMeter,
             IKeyEncodingStrategy keyEncodingStrategy,
             IReadWriteSetOperations readWriteSet,

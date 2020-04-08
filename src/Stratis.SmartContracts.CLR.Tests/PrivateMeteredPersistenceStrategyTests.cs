@@ -4,6 +4,7 @@ using NBitcoin;
 using Stratis.SmartContracts.CLR.Metering;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
+using Stratis.SmartContracts.Core.Store;
 using Xunit;
 
 namespace Stratis.SmartContracts.CLR.Tests
@@ -12,6 +13,17 @@ namespace Stratis.SmartContracts.CLR.Tests
     {
         private readonly IKeyEncodingStrategy keyEncodingStrategy = BasicKeyEncodingStrategy.Default;
 
+        [Fact]
+        public void Fetches_Bytes_From_Private_State()
+        {
+
+        }
+
+        [Fact]
+        public void Sets_Bytes_In_Private_State()
+        {
+
+        }
 
         [Fact]
         public void GasConsumed_Success()
@@ -19,14 +31,14 @@ namespace Stratis.SmartContracts.CLR.Tests
             byte[] testKey = new byte[] { 1 };
             byte[] testValue = new byte[] { 2 };
             uint160 testAddress = uint160.One;
-            const string testVersion = "1.1";
 
-            var sr = new Mock<IStateRepository>();
+            var sr = new Mock<IPrivateDataStore>();
+            var rws = Mock.Of<IReadWriteSetOperations>();
 
-            sr.Setup(m => m.SetStorageValue(
+            sr.Setup(m => m.StoreBytes(
                 It.IsAny<uint160>(),
                 It.IsAny<byte[]>(),
-                It.IsAny<byte[]>(), "1.1"));
+                It.IsAny<byte[]>()));
 
             var availableGas = (RuntimeObserver.Gas)100000;
             GasMeter gasMeter = new GasMeter(availableGas);
@@ -35,7 +47,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 sr.Object,
                 gasMeter,
                 this.keyEncodingStrategy,
-                new ReadWriteSetBuilder(),
+                rws,
                 "1.1"
             );
 
@@ -44,7 +56,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 testKey,
                 testValue);
 
-            sr.Verify(s => s.SetStorageValue(testAddress, testKey, testValue, testVersion));
+            sr.Verify(s => s.StoreBytes(testAddress, testKey, testValue));
 
             // Test that gas is used
             Assert.True(gasMeter.GasConsumed < availableGas);
