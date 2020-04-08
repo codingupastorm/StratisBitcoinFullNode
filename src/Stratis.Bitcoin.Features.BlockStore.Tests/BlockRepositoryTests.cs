@@ -5,6 +5,7 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.BlockStore;
 using Xunit;
 
 namespace Stratis.Bitcoin.Features.BlockStore.Tests

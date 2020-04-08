@@ -217,7 +217,6 @@ namespace CertificateAuthority
                 throw new CaClientException("Failed to connect to the CA.", exception);
             }
 
-
             if (!response.IsSuccessStatusCode)
             {
                 string errorMessage = $"Failed to connect to the CA. Response Code: {response.StatusCode}.";

@@ -2,7 +2,7 @@
 using NBitcoin;
 using Stratis.Bitcoin.Tests.Common;
 
-namespace Stratis.Bitcoin.Features.Wallet.Tests
+namespace Stratis.Features.Wallet.Tests
 {
     public class WalletTestBase
     {

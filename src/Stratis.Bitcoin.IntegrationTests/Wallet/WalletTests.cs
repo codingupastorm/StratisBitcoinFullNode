@@ -5,11 +5,11 @@ using System.Security;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
-using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Controllers;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Features.Wallet.Models;
+using Stratis.Features.MemoryPool.Broadcasting;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Controllers;
+using Stratis.Features.Wallet.Interfaces;
+using Stratis.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
@@ -42,7 +42,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                 CoreNode stratisSender = builder.CreateStratisPowNode(this.network).WithWallet().Start();
                 CoreNode stratisReceiver = builder.CreateStratisPowNode(this.network).WithWallet().Start();
 
-                int maturity = (int)stratisSender.FullNode.Network.Consensus.CoinbaseMaturity;
+                int maturity = (int)stratisSender.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity;
                 TestHelper.MineBlocks(stratisSender, maturity + 1 + 5);
 
                 // The mining should add coins to the wallet
@@ -94,7 +94,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                 CoreNode stratisSender = builder.CreateStratisPowNode(this.network).WithWallet().Start();
                 CoreNode stratisReceiver = builder.CreateStratisPowNode(this.network).WithWallet().Start();
 
-                int maturity = (int)stratisSender.FullNode.Network.Consensus.CoinbaseMaturity;
+                int maturity = (int)stratisSender.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity;
                 TestHelper.MineBlocks(stratisSender, maturity + 1 + 5);
 
                 // The mining should add coins to the wallet
@@ -130,7 +130,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                 CoreNode node1 = builder.CreateStratisPowNode(this.network).WithWallet().Start();
                 CoreNode node2 = builder.CreateStratisPowNode(this.network).WithWallet().Start();
 
-                int maturity = (int)node1.FullNode.Network.Consensus.CoinbaseMaturity;
+                int maturity = (int)node1.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity;
                 TestHelper.MineBlocks(node1, maturity + 1 + 15);
 
                 int currentBestHeight = maturity + 1 + 15;
@@ -182,8 +182,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
             }
         }
 
+        /// <summary>
+        /// Given_TheNodeHadAReorg_And_WalletTipIsBehindConsensusTip_When_ANewBlockArrives_Then_WalletCanRecover
+        /// </summary>
         [Fact]
-        public void Given_TheNodeHadAReorg_And_WalletTipIsBehindConsensusTip_When_ANewBlockArrives_Then_WalletCanRecover()
+        public void WalletTestsScenario3()
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {
@@ -221,8 +224,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
             }
         }
 
+        /// <summary>
+        /// Given_TheNodeHadAReorg_And_ConsensusTipIsdifferentFromWalletTip_When_ANewBlockArrives_Then_WalletCanRecover
+        /// </summary>
         [Fact]
-        public void Given_TheNodeHadAReorg_And_ConsensusTipIsdifferentFromWalletTip_When_ANewBlockArrives_Then_WalletCanRecover()
+        public void WalletTestsScenario4()
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {

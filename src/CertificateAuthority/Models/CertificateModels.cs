@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Pkcs;
+using Org.BouncyCastle.X509;
 
 namespace CertificateAuthority.Models
 {
@@ -112,6 +113,16 @@ namespace CertificateAuthority.Models
             return $"{nameof(this.Id)}:{this.Id},{nameof(this.Thumbprint)}:{this.Thumbprint},{nameof(this.Address)}:{this.Address},{nameof(this.TransactionSigningPubKeyHash)}:{this.TransactionSigningPubKeyHash}," +
                    $"{nameof(this.BlockSigningPubKey)}:{this.BlockSigningPubKey},{nameof(this.Status)}:{this.Status},{nameof(this.AccountId)}:{this.AccountId}," +
                    $"{nameof(this.RevokerAccountId)}:{this.RevokerAccountId}";
+        }
+
+        /// <summary>
+        /// Helper method to reconstitute an X509Certificate instance from the DER-formatted byte array in the model.
+        /// </summary>
+        /// <returns>An X509Certificate.</returns>
+        public X509Certificate ToCertificate()
+        {
+            var certParser = new X509CertificateParser();
+            return certParser.ReadCertificate(this.CertificateContentDer);
         }
     }
 

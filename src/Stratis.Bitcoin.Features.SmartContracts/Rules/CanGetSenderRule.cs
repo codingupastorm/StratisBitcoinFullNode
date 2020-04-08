@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.Consensus.Rules;
+using Stratis.Features.Consensus.CoinViews;
+using Stratis.Features.Consensus.Rules;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.Util;
 

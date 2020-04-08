@@ -8,12 +8,13 @@ using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.Common;
+using MembershipServices;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
+using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
@@ -139,6 +140,26 @@ namespace Stratis.SmartContracts.IntegrationTests
             caCertificatesManager.RevokeCertificate(model);
         }
 
+        public static void AddCertificatesToMembershipServices(ICollection<X509Certificate> certificates, string dataDir)
+        {
+            // TODO: A more elegant way to do this would be some kind of certificate registry in the test environment. But this approach does at least let us easily control which certificates are known to each node.
+
+            Directory.CreateDirectory(Path.Combine(dataDir, LocalMembershipServicesConfiguration.PeerCerts));
+
+            foreach (X509Certificate certificate in certificates)
+            {
+                string certificatePath = Path.Combine(dataDir, LocalMembershipServicesConfiguration.PeerCerts, MembershipServicesDirectory.GetCertificateThumbprint(certificate));
+                File.WriteAllBytes(certificatePath, certificate.GetEncoded());
+            }
+        }
+
+        internal static void GetTestRootFolder(out string testRootFolder, [CallerMemberName] string callingMethod = "")
+        {
+            string hash = Guid.NewGuid().ToString("N").Substring(0, 7);
+            string numberedFolderName = string.Join(".", new[] { hash }.Where(s => s != null));
+            testRootFolder = Path.Combine("..", "..", "..", "..", "TestCase", callingMethod, numberedFolderName);
+        }
+
         public static string GetDataFolderName([CallerMemberName] string callingMethod = null)
         {
             // Create a datafolder path for the CA settings to use
@@ -146,7 +167,9 @@ namespace Stratis.SmartContracts.IntegrationTests
             string numberedFolderName = string.Join(
                 ".",
                 new[] { hash }.Where(s => s != null));
-            return Path.Combine(Path.GetTempPath(), callingMethod, numberedFolderName);
+
+
+            return TestBase.CreateTestDir(callingMethod, numberedFolderName);
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string dataFolderName)

@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <AssemblyName>Stratis.Bitcoin.Features.Notifications.Tests</AssemblyName>
-    <PackageId>Stratis.Bitcoin.Features.Notifications.Tests</PackageId>
+    <AssemblyName>Stratis.Features.Notifications.Tests</AssemblyName>
+    <PackageId>Stratis.Features.Notifications.Tests</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
@@ -20,9 +20,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Stratis.Bitcoin.Features.Notifications.Tests\**" />
-    <EmbeddedResource Remove="Stratis.Bitcoin.Features.Notifications.Tests\**" />
-    <None Remove="Stratis.Bitcoin.Features.Notifications.Tests\**" />
+    <Compile Remove="Stratis.Features.Notifications.Tests\**" />
+    <EmbeddedResource Remove="Stratis.Features.Notifications.Tests\**" />
+    <None Remove="Stratis.Features.Notifications.Tests\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,7 +36,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NBitcoin\NBitcoin.csproj" />
-    <ProjectReference Include="..\Stratis.Bitcoin.Features.Notifications\Stratis.Bitcoin.Features.Notifications.csproj" />
+    <ProjectReference Include="..\Stratis.Features.Notifications\Stratis.Features.Notifications.csproj" />
     <ProjectReference Include="..\Stratis.Bitcoin.Tests.Common\Stratis.Bitcoin.Tests.Common.csproj" />
     <ProjectReference Include="..\Stratis.Bitcoin\Stratis.Bitcoin.csproj" />
   </ItemGroup>

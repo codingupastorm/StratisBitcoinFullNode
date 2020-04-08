@@ -9,13 +9,13 @@ using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using Nethereum.Hex.HexConvertors.Extensions;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Controllers;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
+using Stratis.Features.PoA.Tests.Common;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Store;
@@ -39,8 +39,10 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task EndorseCallTransaction()
         {
+            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+
             using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
-            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
@@ -54,8 +56,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client1 = TokenlessTestHelper.GetClient(server);
                 CaClient client2 = TokenlessTestHelper.GetClient(server);
 
-                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();
@@ -100,8 +102,10 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task PrivateDataTransaction()
         {
+            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+
             using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
-            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(this))
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
@@ -115,8 +119,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client1 = TokenlessTestHelper.GetClient(server);
                 CaClient client2 = TokenlessTestHelper.GetClient(server);
 
-                CoreNode node1 = nodeBuilder.CreateFullTokenlessNode(this.network, 0, ac, client1);
-                CoreNode node2 = nodeBuilder.CreateFullTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
 
                 node1.Start();
                 node2.Start();

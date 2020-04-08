@@ -2,11 +2,11 @@
 using NBitcoin;
 using NBitcoin.Crypto;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
+using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests.Rules.CommonRules
+namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
 {
     public class PosBlockSignatureRuleTest : TestPosConsensusRulesUnitTestBase
     {

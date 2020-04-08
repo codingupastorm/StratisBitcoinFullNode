@@ -12,14 +12,14 @@ using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
+using Stratis.Features.Consensus.Rules;
+using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests.Rules.CommonRules
+namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
 {
     /// <summary>
     /// These tests only cover the first part of BIP68 and not the MaxSigOps, coinview update or scripts verify or calculate block rewards

@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading;
 using NBitcoin.DataEncoders;
 using NBitcoin.Networks;
 using NBitcoin.Protocol;
+using NBitcoin.Serialization;
 using NBitcoin.Stealth;
 
 namespace NBitcoin
@@ -62,7 +64,7 @@ namespace NBitcoin
 
     public abstract class Network
     {
-        protected Block Genesis;
+        public virtual Block Genesis { get; set; }
 
         /// <summary>
         /// The default amount of seconds to keep misbehaving peers from reconnecting.
@@ -70,139 +72,128 @@ namespace NBitcoin
         /// This value should be calculated as (TargetSpacingSeconds * maxReorgLength) / 2.
         /// </para>
         /// </summary>
-        public int DefaultBanTimeSeconds { get; protected set; }
+        [JsonPropertyName("defaultbantimesecs")]
+        public int DefaultBanTimeSeconds { get; set; }
 
         /// <summary>
         /// Maximal value for the calculated time offset.
         /// If the value is over this limit, the time syncing feature will be switched off.
         /// </summary>
-        public int MaxTimeOffsetSeconds { get; protected set; }
+        [JsonPropertyName("maxtimeoffsetsecs")]
+        public int MaxTimeOffsetSeconds { get; set; }
 
         /// <summary>
         /// Maximum tip age in seconds to consider node in initial block download.
         /// </summary>
-        public int MaxTipAge { get; protected set; }
-
-        /// <summary>
-        /// Mininum fee rate for all transactions.
-        /// Fees smaller than this are considered zero fee for transaction creation.
-        /// Be careful setting this: if you set it to zero then a transaction spammer can cheaply fill blocks using
-        /// 1-satoshi-fee transactions. It should be set above the real cost to you of processing a transaction.
-        /// </summary>
-        /// <remarks>
-        /// The <see cref="MinRelayTxFee"/> and <see cref="MinTxFee"/> are typically the same value to prevent dos attacks on the network.
-        /// If <see cref="MinRelayTxFee"/> is less than <see cref="MinTxFee"/>, an attacker can broadcast a lot of transactions with fees between these two values,
-        /// which will lead to transactions filling the mempool without ever being mined.
-        /// </remarks>
-        public long MinTxFee { get; protected set; }
-
-        /// <summary>
-        /// A fee rate that will be used when fee estimation has insufficient data.
-        /// </summary>
-        public long FallbackFee { get; protected set; }
-
-        /// <summary>
-        /// The minimum fee under which transactions may be rejected from being relayed.
-        /// </summary>
-        /// <remarks>
-        /// The <see cref="MinRelayTxFee"/> and <see cref="MinTxFee"/> are typically the same value to prevent dos attacks on the network.
-        /// If <see cref="MinRelayTxFee"/> is less than <see cref="MinTxFee"/>, an attacker can broadcast a lot of transactions with fees between these two values,
-        /// which will lead to transactions filling the mempool without ever being mined.
-        /// </remarks>
-        public long MinRelayTxFee { get; protected set; }
-
-        /// <summary>
-        /// Port on which to listen for incoming RPC connections.
-        /// </summary>
-        public int DefaultRPCPort { get; protected set; }
+        [JsonPropertyName("maxtipage")]
+        public int MaxTipAge { get; set; }
 
         /// <summary>
         /// Port on which to listen for incoming API connections.
         /// </summary>
-        public int DefaultAPIPort { get; protected set; }
+        [JsonPropertyName("defaultapiport")]
+        public int DefaultAPIPort { get; set; }
 
         /// <summary>
         /// The default port on which nodes of this network communicate with external clients.
         /// </summary>
-        public int DefaultPort { get; protected set; }
-        
+        [JsonPropertyName("defaultport")]
+        public int DefaultPort { get; set; }
+
         /// <summary>
         /// The default port on which SignalR broadcasts for this network.
         /// </summary>
-        public int DefaultSignalRPort { get; protected set; }
+        [JsonPropertyName("defaultsignalrport")]
+        public int DefaultSignalRPort { get; set; }
 
         /// <summary>
         /// The default maximum number of outbound connections a node on this network will form.
         /// </summary>
-        public int DefaultMaxOutboundConnections { get; protected set; }
+        [JsonPropertyName("defaultmaxoutboundconns")]
+        public int DefaultMaxOutboundConnections { get; set; }
 
         /// <summary>
         /// The default maximum number of inbound connections a node on this network will accept.
         /// </summary>
-        public int DefaultMaxInboundConnections { get; protected set; }
+        [JsonPropertyName("defaultmaxinboundconns")]
+        public int DefaultMaxInboundConnections { get; set; }
 
         /// <summary>
         /// Whether to enable IP range filtering by default on this network. If true, will filter out IPs within the same range.
         /// </summary>
-        public bool DefaultEnableIpRangeFiltering { get; protected set; }
+        [JsonPropertyName("defaultenableiprangefiltering")]
+        public bool DefaultEnableIpRangeFiltering { get; set; }
 
         /// <summary>
         /// The consensus for this network.
         /// </summary>
-        public IConsensus Consensus { get; protected set; }
+        [JsonPropertyName("consensus")]
+        [JsonConverter(typeof(JsonInterfaceConverter<Consensus, IConsensus>))]
+        public IConsensus Consensus { get; set; }
 
         /// <summary>
         /// The name of the network.
         /// </summary>
-        public string Name { get; protected set; }
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
 
-        public NetworkType NetworkType { get; protected set; }
+        [JsonPropertyName("networktype")]
+        public NetworkType NetworkType { get; set; }
 
         /// <summary>
         /// A list of additional names the network can be referred as.
         /// For example, Bitcoin Main can have "Mainnet" as an additional name.
         /// </summary>
+        [JsonIgnore]
         public List<string> AdditionalNames { get; protected set; }
 
         /// <summary>
         /// An indicative coin ticker for use with external applications.
         /// </summary>
+        [JsonIgnore]
         public string CoinTicker { get; set; }
 
         /// <summary>
         /// The name of the root folder containing blockchains operating with the same consensus rules (for now, this will be bitcoin or stratis).
         /// </summary>
-        public string RootFolderName { get; protected set; }
+        [JsonPropertyName("rootfoldername")]
+        public string RootFolderName { get; set; }
 
         /// <summary>
         /// The default name used for the network configuration file.
         /// </summary>
-        public string DefaultConfigFilename { get; protected set; }
+        [JsonPropertyName("defaultconfigfilename")]
+        public string DefaultConfigFilename { get; set; }
 
         /// <summary>
         /// The list of nodes on the network that our current node tries to connect to.
         /// </summary>
+        [JsonIgnore]
         public List<NetworkAddress> SeedNodes { get; protected set; }
 
         /// <summary>
         /// The list of DNS seeds from which to get IP addresses when bootstrapping a node.
         /// </summary>
+        [JsonIgnore]
         public List<DNSSeedData> DNSSeeds { get; protected set; }
 
         /// <summary>
         /// A list of well-known block hashes.
         /// The node considers all transactions and blocks up to these checkpoints as valid and irreversible.
         /// </summary>
+        [JsonIgnore]
         public Dictionary<int, CheckpointInfo> Checkpoints { get; protected set; }
 
         /// <summary>
         /// List of prefixes used in Base58 addresses.
         /// </summary>
-        public byte[][] Base58Prefixes { get; protected set; }
+        [JsonIgnore]
+        public byte[][] Base58Prefixes { get; set; }
 
         /// <summary>
         /// A list of Bech32 encoders.
         /// </summary>
+        [JsonIgnore]
         public Bech32Encoder[] Bech32Encoders { get; protected set; }
 
         /// <summary>
@@ -211,13 +202,14 @@ namespace NBitcoin
         /// The characters are rarely used upper ascii, not valid as UTF-8, and produce
         /// a large 4-byte int at any alignment.
         /// </summary>
-        public uint Magic { get; protected set; }
+        [JsonPropertyName("magic")]
+        public uint Magic { get; set; }
 
         /// <summary>
         /// Byte array representation of a magic number.
         /// </summary>
-        public byte[] MagicBytesArray;
-
+        [JsonIgnore]
+        public byte[] MagicBytesArray { get; private set; }
 
         public Network()
         {
@@ -230,6 +222,7 @@ namespace NBitcoin
         /// Uses <see cref="Magic"/> if <see cref="MagicBytesArray"/> is null.
         /// TODO: Merge these 3 magic properties into fewer.
         /// </summary>
+        [JsonIgnore]
         public byte[] MagicBytes
         {
             get
@@ -253,26 +246,31 @@ namespace NBitcoin
         /// <summary>
         /// The UNIX time at inception of the genesis block for this network.
         /// </summary>
+        [JsonIgnore]
         public uint GenesisTime { get; protected set; }
 
         /// <summary>
         /// A hash which proves that a sufficient amount of computation has been carried out to create the genesis block.
         /// </summary>
+        [JsonIgnore]
         public uint GenesisNonce { get; protected set; }
 
         /// <summary>
         /// Represents the encoded form of the target threshold as it appears in the block header.
         /// </summary>
+        [JsonIgnore]
         public uint GenesisBits { get; protected set; }
 
         /// <summary>
         /// The version of the genesis block.
         /// </summary>
+        [JsonIgnore]
         public int GenesisVersion { get; protected set; }
 
         /// <summary>
         /// The reward for the genesis block, which is unspendable.
         /// </summary>
+        [JsonIgnore]
         public Money GenesisReward { get; protected set; }
 
         /// <summary>
@@ -281,109 +279,8 @@ namespace NBitcoin
         /// A non-standard transaction can still be mined/staked by a willing node and the resulting block will be accepted by the network.
         /// However, a non-standard transaction will typically not be relayed between nodes.
         /// </summary>
+        [JsonIgnore]
         public IStandardScriptsRegistry StandardScriptsRegistry { get; protected set; }
-
-        /// <summary>
-        /// Mines a new genesis block, to use with a new network.
-        /// Typically, 3 such genesis blocks need to be created when bootstrapping a new coin: for Main, Test and Reg networks.
-        /// </summary>
-        /// <param name="consensusFactory">
-        /// The consensus factory used to create transactions and blocks.
-        /// Use <see cref="PosConsensusFactory"/> for proof-of-stake based networks.
-        /// </param>
-        /// <param name="coinbaseText">
-        /// Traditionally a news headline from the day of the launch, but could be any string or link.
-        /// This will be inserted in the input coinbase transaction script.
-        /// It should be shorter than 92 characters.
-        /// </param>
-        /// <param name="target">
-        /// The difficulty target under which the hash of the block need to be.
-        /// Some more details: As an example, the target for the Stratis Main network is 00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff.
-        /// To make it harder to mine the genesis block, have more zeros at the beginning (keeping the length the same). This will make the target smaller, so finding a number under it will be more difficult.
-        /// To make it easier to mine the genesis block ,do the opposite. Example of an easy one: 00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff.
-        /// Make the Test and Reg targets ones easier to find than the Main one so that you don't wait too long to mine the genesis block.
-        /// </param>
-        /// <param name="genesisReward">
-        /// Specify how many coins to put in the genesis transaction's output. These coins are unspendable.
-        /// </param>
-        /// <param name="version">
-        /// The version of the transaction and the block header set in the genesis block.
-        /// </param>
-        /// <example>
-        /// The following example shows the creation of a genesis block.
-        /// <code>
-        /// Block genesis = MineGenesisBlock(new PosConsensusFactory(), "Some topical headline.", new Target(new uint256("000fffff00000000000000000000000000000000000000000000000000000000")), Money.Coins(50m));
-        /// BlockHeader header = genesis.Header;
-        /// Console.WriteLine("Make a note of the following values:");
-        /// Console.WriteLine("bits: " + header.Bits);
-        /// Console.WriteLine("nonce: " + header.Nonce);
-        /// Console.WriteLine("time: " + header.Time);
-        /// Console.WriteLine("version: " + header.Version);
-        /// Console.WriteLine("hash: " + header.GetHash());
-        /// Console.WriteLine("merkleroot: " + header.HashMerkleRoot);
-        /// </code>
-        /// </example>
-        /// <returns>A genesis block.</returns>
-        public static Block MineGenesisBlock(ConsensusFactory consensusFactory, string coinbaseText, Target target, Money genesisReward, int version = 1)
-        {
-            if (consensusFactory == null)
-                throw new ArgumentException($"Parameter '{nameof(consensusFactory)}' cannot be null. Use 'new ConsensusFactory()' for Bitcoin-like proof-of-work blockchains and 'new PosConsensusFactory()' for Stratis-like proof-of-stake blockchains.");
-
-            if (string.IsNullOrEmpty(coinbaseText))
-                throw new ArgumentException($"Parameter '{nameof(coinbaseText)}' cannot be null. Use a news headline or any other appropriate string.");
-
-            if (target == null)
-                throw new ArgumentException($"Parameter '{nameof(target)}' cannot be null. Example use: new Target(new uint256(\"0000ffff00000000000000000000000000000000000000000000000000000000\"))");
-
-            if (coinbaseText.Length >= 92)
-                throw new ArgumentException($"Parameter '{nameof(coinbaseText)}' should be shorter than 92 characters.");
-
-            if (genesisReward == null)
-                throw new ArgumentException($"Parameter '{nameof(genesisReward)}' cannot be null. Example use: 'Money.Coins(50m)'.");
-
-            DateTimeOffset time = DateTimeOffset.Now;
-            uint unixTime = Utils.DateTimeToUnixTime(time);
-
-            Transaction txNew = consensusFactory.CreateTransaction();
-            txNew.Version = (uint)version;
-            txNew.Time = unixTime;
-            txNew.AddInput(new TxIn()
-            {
-                ScriptSig = new Script(
-                    Op.GetPushOp(0),
-                    new Op()
-                    {
-                        Code = (OpcodeType)0x1,
-                        PushData = new[] { (byte)42 }
-                    },
-                    Op.GetPushOp(Encoders.ASCII.DecodeData(coinbaseText)))
-            });
-
-            txNew.AddOutput(new TxOut()
-            {
-                Value = genesisReward,
-            });
-
-            Block genesis = consensusFactory.CreateBlock();
-            genesis.Header.BlockTime = time;
-            genesis.Header.Bits = target;
-            genesis.Header.Nonce = 0;
-            genesis.Header.Version = version;
-            genesis.Transactions.Add(txNew);
-            genesis.Header.HashPrevBlock = uint256.Zero;
-            genesis.UpdateMerkleRoot();
-
-            // Iterate over the nonce until the proof-of-work is valid.
-            // This will mean the block header hash is under the target.
-            while (!genesis.CheckProofOfWork())
-            {
-                genesis.Header.Nonce++;
-                if (genesis.Header.Nonce == 0)
-                    genesis.Header.Time++;
-            }
-
-            return genesis;
-        }
 
         protected static void Assert(bool condition)
         {
@@ -403,7 +300,7 @@ namespace NBitcoin
         /// Create a bitcoin address from base58 data, return a BitcoinAddress or BitcoinScriptAddress
         /// </summary>
         /// <param name="base58">base58 address</param>
-        /// <exception cref="System.FormatException">Invalid base58 address</exception>
+        /// <exception cref="FormatException">Invalid base58 address</exception>
         /// <returns>BitcoinScriptAddress, BitcoinAddress</returns>
         public BitcoinAddress CreateBitcoinAddress(string base58)
         {
@@ -678,12 +575,13 @@ namespace NBitcoin
             return Block.Load(this.Genesis.ToBytes(this.Consensus.ConsensusFactory), this.Consensus.ConsensusFactory);
         }
 
+        [JsonIgnore]
         public uint256 GenesisHash => this.Consensus.HashGenesisBlock;
 
         public Money GetReward(int nHeight)
         {
             long nSubsidy = new Money(50 * Money.COIN);
-            int halvings = nHeight / this.Consensus.SubsidyHalvingInterval;
+            int halvings = nHeight / this.Consensus.ConsensusMiningReward.SubsidyHalvingInterval;
 
             // Force block reward to zero when right shift is undefined.
             if (halvings >= 64)

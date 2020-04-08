@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Rules;
 using Stratis.SmartContracts.CLR;

@@ -5,16 +5,15 @@ using NBitcoin;
 using NBitcoin.BouncyCastle.Math;
 using NBitcoin.DataEncoders;
 using NBitcoin.Protocol;
-using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
-using Stratis.Bitcoin.Features.Consensus.Rules.ProvenHeaderRules;
-using Stratis.Bitcoin.Features.MemoryPool.Rules;
+using Stratis.Features.Consensus.Rules.CommonRules;
+using Stratis.Features.Consensus.Rules.ProvenHeaderRules;
+using Stratis.Features.MemoryPool.Rules;
 using Stratis.Bitcoin.Networks.Deployments;
 using Stratis.Bitcoin.Networks.Policies;
 
 namespace Stratis.Bitcoin.Networks
 {
-    public class StratisMain : Network
+    public class StratisMain : FeeNetwork
     {
         /// <summary> Stratis maximal value for the calculated time offset. If the value is over this limit, the time syncing feature will be switched off. </summary>
         public const int StratisMaxTimeOffsetSeconds = 25 * 60;
@@ -46,7 +45,6 @@ namespace Stratis.Bitcoin.Networks
             this.DefaultPort = 16178;
             this.DefaultMaxOutboundConnections = 16;
             this.DefaultMaxInboundConnections = 109;
-            this.DefaultRPCPort = 16174;
             this.DefaultAPIPort = 37221;
             this.DefaultSignalRPort = 38824;
             this.MaxTipAge = 2 * 60 * 60;
@@ -96,38 +94,40 @@ namespace Stratis.Bitcoin.Networks
                     BIP9DeploymentsParameters.DefaultMainnetThreshold)
             };
 
+            var consensusProofOfWork = new ConsensusProofOfWork()
+            {
+                CoinbaseMaturity = 50,
+                IsProofOfStake = true,
+                LastPOWBlock = 12500,
+                MaxMoney = long.MaxValue,
+                MinerConfirmationWindow = 2016,
+                PosNoRetargeting = false,
+                PowAllowMinDifficultyBlocks = false,
+                PowLimit = new Target(new uint256("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")),
+                PowNoRetargeting = false,
+                PowTargetSpacing = TimeSpan.FromSeconds(10 * 60),
+                PowTargetTimespan = TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
+                PremineHeight = 2,
+                PremineReward = Money.Coins(98000000),
+                ProofOfStakeLimit = new BigInteger(uint256.Parse("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
+                ProofOfStakeLimitV2 = new BigInteger(uint256.Parse("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
+                ProofOfStakeReward = Money.COIN,
+                ProofOfWorkReward = Money.Coins(4),
+                SubsidyHalvingInterval = 210000,
+            };
+
             this.Consensus = new NBitcoin.Consensus(
                 consensusFactory: consensusFactory,
                 consensusOptions: consensusOptions,
                 coinType: 105,
                 hashGenesisBlock: genesisBlock.GetHash(),
-                subsidyHalvingInterval: 210000,
-                majorityEnforceBlockUpgrade: 750,
-                majorityRejectBlockOutdated: 950,
-                majorityWindow: 1000,
                 buriedDeployments: buriedDeployments,
                 bip9Deployments: bip9Deployments,
                 bip34Hash: new uint256("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"),
-                minerConfirmationWindow: 2016, // nPowTargetTimespan / nPowTargetSpacing
                 maxReorgLength: 500,
                 defaultAssumeValid: new uint256("0x50497017e7bb256df205fcbc2caccbe5b516cb33491e1a11737a3bfe83959b9f"), // 1213518
-                maxMoney: long.MaxValue,
-                coinbaseMaturity: 50,
-                premineHeight: 2,
-                premineReward: Money.Coins(98000000),
-                proofOfWorkReward: Money.Coins(4),
-                powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
-                powTargetSpacing: TimeSpan.FromSeconds(10 * 60),
-                powAllowMinDifficultyBlocks: false,
-                posNoRetargeting: false,
-                powNoRetargeting: false,
-                powLimit: new Target(new uint256("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")),
                 minimumChainWork: null,
-                isProofOfStake: true,
-                lastPowBlock: 12500,
-                proofOfStakeLimit: new BigInteger(uint256.Parse("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
-                proofOfStakeLimitV2: new BigInteger(uint256.Parse("000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff").ToBytes(false)),
-                proofOfStakeReward: Money.COIN
+                consensusProofOfWork: consensusProofOfWork
             );
 
             this.Base58Prefixes = new byte[12][];
