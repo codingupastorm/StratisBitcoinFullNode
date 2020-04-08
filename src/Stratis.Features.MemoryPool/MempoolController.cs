@@ -15,6 +15,7 @@ namespace Stratis.Features.MemoryPool
     /// Controller providing operations on the Mempool.
     /// </summary>
     [ApiVersion("1")]
+    [ApiController]
     public class MempoolController : FeatureController
     {
         public MempoolManager MempoolManager { get; private set; }
