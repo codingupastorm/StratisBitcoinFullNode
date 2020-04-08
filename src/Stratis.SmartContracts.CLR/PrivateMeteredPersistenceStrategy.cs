@@ -35,17 +35,41 @@ namespace Stratis.SmartContracts.CLR
 
         public bool ContractExists(uint160 address)
         {
-            throw new System.NotImplementedException();
+            this.gasMeter.Spend((RuntimeObserver.Gas)GasPriceList.StorageCheckContractExistsCost);
+
+            // TODO remove this and consider redefining the interface for private persistent state.
+            return false;
         }
 
         public byte[] FetchBytes(uint160 address, byte[] key)
         {
-            throw new System.NotImplementedException();
+            byte[] encodedKey = this.keyEncodingStrategy.GetBytes(key);
+            var result = this.stateDb.GetBytes(address, encodedKey);
+
+            var storageValue = StorageValue.FromBytes(result);
+
+            this.readWriteSet.AddReadItem(new ReadWriteSetKey(address, key), storageValue.Version);
+
+            RuntimeObserver.Gas operationCost = GasPriceList.StorageRetrieveOperationCost(encodedKey, storageValue.Value);
+            this.gasMeter.Spend(operationCost);
+
+            return storageValue.Value;
         }
 
         public void StoreBytes(uint160 address, byte[] key, byte[] value)
         {
-            throw new System.NotImplementedException();
+            byte[] encodedKey = this.keyEncodingStrategy.GetBytes(key);
+            RuntimeObserver.Gas operationCost = GasPriceList.StorageSaveOperationCost(
+                encodedKey,
+                value);
+
+            this.gasMeter.Spend(operationCost);
+
+            var storageValue = new StorageValue(value, this.version);
+
+            this.stateDb.StoreBytes(address, encodedKey, storageValue.ToBytes());
+
+            this.readWriteSet.AddWriteItem(new ReadWriteSetKey(address, key), value);
         }
     }
 }

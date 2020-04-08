@@ -20,6 +20,8 @@ namespace Stratis.SmartContracts.CLR.Tests
             byte[] testKey = new byte[] { 1 };
             byte[] testValue = new byte[] { 2 };
             uint160 testAddress = uint160.One;
+            var testVersion = "1.1";
+            var testStorageValue = new StorageValue(testValue, testVersion);
 
             var sr = new Mock<IPrivateDataStore>();
             var rws = Mock.Of<IReadWriteSetOperations>();
@@ -27,7 +29,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             sr.Setup(m => m.GetBytes(
                 It.IsAny<uint160>(),
                 It.IsAny<byte[]>()))
-                .Returns(testValue);
+                .Returns(testStorageValue.ToBytes());
 
             var availableGas = (RuntimeObserver.Gas)100000;
             GasMeter gasMeter = new GasMeter(availableGas);
@@ -37,7 +39,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 gasMeter,
                 this.keyEncodingStrategy,
                 rws,
-                "1.1"
+                testVersion
             );
 
             var result = strategy.FetchBytes(
@@ -54,6 +56,8 @@ namespace Stratis.SmartContracts.CLR.Tests
             byte[] testKey = new byte[] { 1 };
             byte[] testValue = new byte[] { 2 };
             uint160 testAddress = uint160.One;
+            var testVersion = "1.1";
+            var testStorageValue = new StorageValue(testValue, testVersion);
 
             var sr = new Mock<IPrivateDataStore>();
             var rws = Mock.Of<IReadWriteSetOperations>();
@@ -71,7 +75,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 gasMeter,
                 this.keyEncodingStrategy,
                 rws,
-                "1.1"
+                testVersion
             );
 
             strategy.StoreBytes(
@@ -79,7 +83,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 testKey,
                 testValue);
 
-            sr.Verify(s => s.StoreBytes(testAddress, testKey, testValue));
+            sr.Verify(s => s.StoreBytes(testAddress, testKey, It.Is<byte[]>(b => testStorageValue.ToBytes().SequenceEqual(b))));
         }
 
         [Fact]
@@ -112,8 +116,6 @@ namespace Stratis.SmartContracts.CLR.Tests
                 testAddress,
                 testKey,
                 testValue);
-
-            sr.Verify(s => s.StoreBytes(testAddress, testKey, testValue));
 
             // Test that gas is used
             Assert.True(gasMeter.GasConsumed < availableGas);
