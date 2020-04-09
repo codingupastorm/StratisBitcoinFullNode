@@ -110,10 +110,8 @@ namespace Stratis.SmartContracts.Core.Tests
             // Create a new instance of the same key.
             var newKeyInstance = new ReadWriteSetKey(uint160.One, Encoding.UTF8.GetBytes("key1"));
 
-            // If something messes with the bytes after they are set in the RWS
             rws.GetWriteItem(newKeyInstance, out var writeItem);
 
-            // They should still have the correct value.
             Assert.True(value.SequenceEqual(writeItem));
         }
     }
