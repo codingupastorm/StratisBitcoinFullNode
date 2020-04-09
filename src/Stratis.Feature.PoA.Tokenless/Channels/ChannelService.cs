@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -69,6 +70,17 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             }
         }
 
+        public void RestartChannelNodesAsync()
+        {
+            try
+            {
+                this.channelRepository.GetChannelCreationRequests().Keys.ToList().ForEach(async n => await this.RestartChannelNodeAsync(n));
+            }
+            catch (Exception ex)
+            {
+                throw new ChannelServiceException($"Failed to restart channel nodes: {ex.Message}");
+            }
+        }
 
         public async Task RestartChannelNodeAsync(string channelName)
         {
