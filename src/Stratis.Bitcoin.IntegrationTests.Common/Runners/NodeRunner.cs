@@ -31,9 +31,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.Runners
         public bool OverrideDateTimeProvider { get; internal set; }
         public Action<IServiceCollection> ServiceToOverride { get; internal set; }
 
-        protected NodeRunner(string dataDir, string agent)
+        public bool IsInfraNode { get; set; }
+
+        protected NodeRunner(string dataFolder, string agent)
         {
-            this.DataFolder = dataDir;
+            this.DataFolder = dataFolder;
             this.Agent = agent;
         }
 

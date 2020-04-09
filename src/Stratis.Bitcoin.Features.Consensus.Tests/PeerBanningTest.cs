@@ -18,7 +18,7 @@ using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests
+namespace Stratis.Features.Consensus.Tests
 {
     public class PeerBanningTest : TestBase
     {
@@ -246,7 +246,6 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             var dataFolder = CreateDataFolder(this);
 
             var loggerFactory = new ExtendedLoggerFactory();
-            loggerFactory.AddConsoleWithFilters();
 
             var ipAddress = IPAddress.Parse("::ffff:192.168.0.1");
             var endpoint = new IPEndPoint(ipAddress, 80);
@@ -279,7 +278,6 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             var dataFolder = CreateDataFolder(this);
 
             var loggerFactory = new ExtendedLoggerFactory();
-            loggerFactory.AddConsoleWithFilters();
 
             var ipAddress = IPAddress.Parse("::ffff:192.168.0.1");
             var endpoint = new IPEndPoint(ipAddress, 80);
@@ -323,7 +321,6 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             var dataFolder = CreateDataFolder(this);
 
             var loggerFactory = new ExtendedLoggerFactory();
-            loggerFactory.AddConsoleWithFilters();
 
             var ipAddress80 = IPAddress.Parse("::ffff:192.168.0.1");
             var endpoint80 = new IPEndPoint(ipAddress80, 80);
@@ -366,7 +363,6 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             DataFolder dataFolder = CreateDataFolder(this);
 
             var loggerFactory = new ExtendedLoggerFactory();
-            loggerFactory.AddConsoleWithFilters();
 
             IPAddress ipAddress = IPAddress.Parse("::ffff:192.168.0.1");
             var endpoint = new IPEndPoint(ipAddress, 80);
@@ -403,7 +399,6 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             DataFolder dataFolder = CreateDataFolder(this);
 
             var loggerFactory = new ExtendedLoggerFactory();
-            loggerFactory.AddConsoleWithFilters();
 
             IPAddress ipAddress = IPAddress.Parse("::ffff:192.168.0.1");
             var endpoint = new IPEndPoint(ipAddress, 80);

@@ -1,8 +1,7 @@
 ﻿using System.IO;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Bitcoin.Features.Api;
-using Stratis.Bitcoin.Features.RPC;
+using Stratis.Features.Api;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
@@ -11,7 +10,7 @@ namespace Stratis.Bitcoin.Tests.NodeConfiguration
 {
     public class NodeSettingsTest : TestBase
     {
-        public NodeSettingsTest():base(KnownNetworks.Main)
+        public NodeSettingsTest() : base(KnownNetworks.Main)
         {
         }
 
@@ -160,14 +159,12 @@ namespace Stratis.Bitcoin.Tests.NodeConfiguration
         {
             const int apiport = 12345;
 
-            var nodeSettings = new NodeSettings(new BitcoinRegTest(), args: new[] {  $"-apiport={apiport}" });
+            var nodeSettings = new NodeSettings(new BitcoinRegTest(), args: new[] { $"-apiport={apiport}" });
 
             var apiSettings = new ApiSettings(nodeSettings);
-            var rpcSettings = new RpcSettings(nodeSettings);
             var configurationManagerSettings = new ConnectionManagerSettings(nodeSettings);
 
             Assert.Equal(apiport, apiSettings.ApiPort);
-            Assert.Equal(nodeSettings.Network.DefaultRPCPort, rpcSettings.RPCPort);
             Assert.Equal(nodeSettings.Network.DefaultPort, configurationManagerSettings.Port);
         }
 
@@ -182,16 +179,14 @@ namespace Stratis.Bitcoin.Tests.NodeConfiguration
             const int rpcPort = 1024 + 456;
             const int apiPort = 1024 + 567;
 
-            var args = new [] {$"-port={port.ToString()}", $"-rpcport={rpcPort.ToString()}", $"-apiport={apiPort.ToString()}"};
+            var args = new[] { $"-port={port.ToString()}", $"-rpcport={rpcPort.ToString()}", $"-apiport={apiPort.ToString()}" };
 
             var nodeSettings = new NodeSettings(new BitcoinRegTest(), args: args);
 
             var apiSettings = new ApiSettings(nodeSettings);
-            var rpcSettings = new RpcSettings(nodeSettings);
             var configurationManagerSettings = new ConnectionManagerSettings(nodeSettings);
 
             Assert.Equal(apiPort, apiSettings.ApiPort);
-            Assert.Equal(rpcPort, rpcSettings.RPCPort);
             Assert.Equal(port, configurationManagerSettings.Port);
         }
     }

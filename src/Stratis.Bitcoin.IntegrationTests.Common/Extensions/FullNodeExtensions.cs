@@ -4,10 +4,10 @@ using System.Reflection;
 using NBitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
+using Stratis.Features.Consensus.CoinViews;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common

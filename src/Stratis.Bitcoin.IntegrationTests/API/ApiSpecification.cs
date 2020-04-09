@@ -13,30 +13,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         }
 
         [Fact]
-        public void Startstaking_enables_staking_but_nothing_staked()
-        {
-            Given(a_proof_of_stake_node_with_api_enabled);
-            When(calling_startstaking);
-            Then(staking_is_enabled_but_nothing_is_staked);
-        }
-
-        [Fact]
-        public void Getblockhash_via_rpc_callbyname_returns_the_blockhash()
-        {
-            Given(a_proof_of_work_node_with_api_enabled);
-            When(calling_rpc_getblockhash_via_callbyname);
-            Then(the_blockhash_is_returned_from_post);
-        }
-
-        [Fact]
-        public void Listmethods_via_rpc_returns_non_empty_list()
-        {
-            Given(a_proof_of_stake_node_with_api_enabled);
-            When(calling_rpc_listmethods);
-            Then(a_full_list_of_available_commands_is_returned);
-        }
-
-        [Fact]
         public void CreateExtPubKeyOnlyWallet_creates_wallet_with_extra_flag()
         {
             Given(a_proof_of_stake_node_with_api_enabled);
@@ -176,22 +152,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
             Given(a_proof_of_work_node_with_api_enabled);
             When(calling_status);
             Then(status_information_is_returned);
-        }
-
-        [Fact]
-        public void Proof_of_stake_node_calls_getstakinginfo_returns_info()
-        {
-            Given(a_proof_of_stake_node_with_api_enabled);
-            When(calling_getstakinginfo);
-            Then(staking_information_is_returned);
-        }
-
-        [Fact]
-        public void Proof_of_work_node_calls_getstakinginfo_and_receives_error()
-        {
-            Given(a_proof_of_work_node_with_api_enabled);
-            When(calling_getstakinginfo);
-            Then(a_method_not_allowed_error_is_returned);
         }
 
         [Fact]

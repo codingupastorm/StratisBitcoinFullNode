@@ -49,8 +49,8 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
         internal DB Storage { get; private set; }
 
         private int nextTablePrefix;
-        private SingleThreadResource transactionLock;
-        private ByteArrayComparer byteArrayComparer;
+        private readonly SingleThreadResource transactionLock;
+        private readonly ByteArrayComparer byteArrayComparer;
 
         public KeyValueStoreLevelDB(string rootPath, ILoggerFactory loggerFactory,
             IRepositorySerializer repositorySerializer)
@@ -101,6 +101,9 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
                 if (tableNameBytes == null)
                     break;
 
+                if (this.nextTablePrefix == 0xff)
+                    throw new Exception($"Too many tables");
+
                 string tableName = Encoding.ASCII.GetString(tableNameBytes);
                 this.Tables[tableName] = new KeyValueStoreLDBTable()
                 {
@@ -117,14 +120,18 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             {
                 int count = 0;
 
-                iterator.SeekToFirst();
+                byte keyPrefix = ((KeyValueStoreLDBTable)table).KeyPrefix;
+
+                iterator.Seek(new[] { keyPrefix });
 
                 while (iterator.IsValid())
                 {
                     byte[] keyBytes = iterator.Key();
 
-                    if (keyBytes[0] == ((KeyValueStoreLDBTable)table).KeyPrefix)
-                        count++;
+                    if (keyBytes[0] != keyPrefix)
+                        break;
+
+                    count++;
 
                     iterator.Next();
                 }
@@ -171,26 +178,113 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             return res;
         }
 
-        public IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction tran, KeyValueStoreTable table, bool keysOnly = false, bool backwards = false)
+        public IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction tran, KeyValueStoreTable table, bool keysOnly = false, SortOrder sortOrder = SortOrder.Ascending,
+            byte[] firstKey = null, byte[] lastKey = null, bool includeFirstKey = true, bool includeLastKey = true)
         {
             using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).ReadOptions))
             {
-                if (backwards)
-                    iterator.SeekToLast();
-                else
-                    iterator.SeekToFirst();
+                byte keyPrefix = ((KeyValueStoreLDBTable)table).KeyPrefix;
+                byte[] firstKeyBytes = (firstKey == null) ? null : new[] { keyPrefix }.Concat(firstKey).ToArray();
+                byte[] lastKeyBytes = (lastKey == null) ? null : new[] { keyPrefix }.Concat(lastKey).ToArray();
+                bool done = false;
+                Func<byte[], bool> breakLoop;
+                Action next;
+
+                if (sortOrder == SortOrder.Descending)
+                {
+                    if (lastKeyBytes == null)
+                    {
+                        // If no last key was provided then seek to the last record with this prefix
+                        // by first seeking to the first record with the next prefix...
+                        iterator.Seek(new[] { (byte)(keyPrefix + 1) });
+
+                        // ...then back up to the previous value if the iterator is still valid.
+                        if (iterator.IsValid())
+                            iterator.Prev();
+                        else
+                            // If the iterator is invalid then there were no records with greater prefixes.
+                            // In this case we can simply seek to the last record.
+                            iterator.SeekToLast();
+                    }
+                    else
+                    {
+                        // Seek to the last key if it was provided.
+                        iterator.Seek(lastKeyBytes);
+
+                        // If it won't be returned, and is current/found, then move to the previous value.
+                        if (!includeLastKey && iterator.IsValid() && this.byteArrayComparer.Equals(iterator.Key(), lastKeyBytes))
+                            iterator.Prev();
+                    }
+
+                    breakLoop = (firstKeyBytes == null) ? (Func<byte[], bool>)null : (keyBytes) =>
+                    {
+                        int compareResult = this.byteArrayComparer.Compare(keyBytes, firstKeyBytes);
+                        if (compareResult <= 0)
+                        {
+                            // If this is the first key and its not included or we've overshot the range then stop without yielding a value.
+                            if (!includeFirstKey || compareResult < 0)
+                                return true;
+
+                            // Stop after yielding the value.
+                            done = true;
+                        }
+
+                        // Keep going.
+                        return false;
+                    };
+
+                    next = () => iterator.Prev();
+                }
+                else /* Ascending */
+                {
+                    if (firstKeyBytes == null)
+                    {
+                        // If no first key was provided then use the key prefix to find the first value.
+                        iterator.Seek(new[] { keyPrefix });
+                    }
+                    else
+                    {
+                        // Seek to the first key if it was provided.
+                        iterator.Seek(firstKeyBytes);
+
+                        // If it won't be returned, and is current/found, then move to the next value.
+                        if (!includeFirstKey && iterator.IsValid() && this.byteArrayComparer.Equals(iterator.Key(), firstKeyBytes))
+                            iterator.Next();
+                    }
+
+                    breakLoop = (lastKeyBytes == null) ? (Func<byte[], bool>)null : (keyBytes) =>
+                    {
+                        int compareResult = this.byteArrayComparer.Compare(keyBytes, lastKeyBytes);
+                        if (compareResult >= 0)
+                        {
+                            // If this is the last key and its not included or we've overshot the range then stop without yielding a value.
+                            if (!includeLastKey || compareResult > 0)
+                                return true;
+
+                            // Stop after yielding the value.
+                            done = true;
+                        }
+
+                        // Keep going.
+                        return false;
+                    };
+
+                    next = () => iterator.Next();
+                }
 
                 while (iterator.IsValid())
                 {
                     byte[] keyBytes = iterator.Key();
 
-                    if (keyBytes[0] == ((KeyValueStoreLDBTable)table).KeyPrefix)
-                        yield return (keyBytes.Skip(1).ToArray(), keysOnly ? null : iterator.Value());
+                    if (keyBytes[0] != keyPrefix || (breakLoop != null && breakLoop(keyBytes)))
+                        break;
 
-                    if (backwards)
-                        iterator.Prev();
-                    else
-                        iterator.Next();
+                    yield return (keyBytes.Skip(1).ToArray(), keysOnly ? null : iterator.Value());
+
+                    if (done)
+                        break;
+
+                    next();
                 }
             }
         }
@@ -199,6 +293,9 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
         {
             if (!this.Tables.TryGetValue(tableName, out KeyValueStoreTable table))
             {
+                if (this.nextTablePrefix >= 0xfe)
+                    throw new Exception($"Too many tables");
+
                 table = new KeyValueStoreLDBTable()
                 {
                     Repository = this,

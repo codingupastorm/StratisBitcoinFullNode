@@ -3,21 +3,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using NBitcoin;
 using NBitcoin.Protocol;
 using NLog;
 using Stratis.Bitcoin.Builder;
-using Stratis.Bitcoin.Features.Api;
-using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.Consensus;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.Miner;
-using Stratis.Bitcoin.Features.RPC;
-using Stratis.Bitcoin.Features.Wallet;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Features.Api;
+using Stratis.Features.BlockStore;
+using Stratis.Features.Consensus;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.Miner;
 using Stratis.Features.SQLiteWalletRepository;
+using Stratis.Features.Wallet;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 {
@@ -27,7 +25,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         public NodeConfigParameters ConfigParameters { get; }
 
-        private readonly string rootFolder;
+        protected readonly string rootFolder;
 
         public NodeBuilder(string rootFolder)
         {
@@ -61,67 +59,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
                 .WithLogsDisabled();
         }
 
-        private static string GetBitcoinCorePath(string version)
+        protected CoreNode CreateNode(NodeRunner runner, string configFile = "bitcoin.conf", NodeConfigParameters configParameters = null)
         {
-            string path;
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                path = $"../../../../External libs/Bitcoin Core/{version}/Windows/bitcoind.exe";
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                path = $"../../../../External libs/Bitcoin Core/{version}/Linux/bitcoind";
-            else
-                path = $"../../../../External libs/Bitcoin Core/{version}/OSX/bitcoind";
-
-            if (File.Exists(path))
-                return path;
-
-            throw new FileNotFoundException($"Could not load the file {path}.");
-        }
-
-        private static string GetStratisXPath(string version)
-        {
-            string path;
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                path = $"../../../../External libs/StratisX/{version}/Windows/stratisd.exe";
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                path = $"../../../../External libs/StratisX/{version}/Linux/stratisd";
-            else
-                path = $"../../../../External libs/StratisX/{version}/OSX/stratisd";
-
-            if (File.Exists(path))
-                return path;
-
-            throw new FileNotFoundException($"Could not load the file {path}.");
-        }
-
-        protected CoreNode CreateNode(NodeRunner runner, string configFile = "bitcoin.conf", bool useCookieAuth = false, NodeConfigParameters configParameters = null)
-        {
-            var node = new CoreNode(runner, configParameters, configFile, useCookieAuth);
+            var node = new CoreNode(runner, configParameters, configFile);
             this.Nodes.Add(node);
             return node;
-        }
-
-        public CoreNode CreateBitcoinCoreNode(string version = "0.13.1", bool useCookieAuth = false)
-        {
-            string bitcoinDPath = GetBitcoinCorePath(version);
-            return this.CreateNode(new BitcoinCoreRunner(this.GetNextDataFolderName(), bitcoinDPath), useCookieAuth: useCookieAuth);
-        }
-
-        public CoreNode CreateStratisXNode(string version = "2.0.0.5", bool useCookieAuth = false)
-        {
-            string stratisDPath = GetStratisXPath(version);
-            return this.CreateNode(new StratisXRunner(this.GetNextDataFolderName(), stratisDPath), "stratis.conf", useCookieAuth);
-        }
-
-        public CoreNode CreateMainnetStratisXNode(string version = "2.0.0.5", bool useCookieAuth = false)
-        {
-            var parameters = new NodeConfigParameters();
-            parameters.Add("regtest", "0");
-            parameters.Add("server", "0");
-
-            string stratisDPath = GetStratisXPath(version);
-            return this.CreateNode(new StratisXRunner(this.GetNextDataFolderName(), stratisDPath), "stratis.conf", useCookieAuth, parameters);
         }
 
         /// <summary>
@@ -148,7 +90,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
                .AddMining()
                .UseWallet()
                .AddSQLiteWalletRepository()
-               .AddRPC()
                .UseApi()
                .UseTestChainedHeaderTree()
                .MockIBD());
@@ -206,8 +147,8 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             string numberedFolderName = string.Join(
                 ".",
                 new[] { hash, folderName }.Where(s => s != null));
-            string dataFolderName = Path.Combine(this.rootFolder, numberedFolderName);
 
+            string dataFolderName = Path.Combine(this.rootFolder, numberedFolderName);
             return dataFolderName;
         }
 

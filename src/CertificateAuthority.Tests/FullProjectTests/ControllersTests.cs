@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using CertificateAuthority.Controllers;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
@@ -295,7 +294,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
         }
 
         [Fact]
-        public async Task CantRequestCertificateTwiceForSameIdentityAndCanReset()
+        public void CantRequestCertificateTwiceForSameIdentityAndCanReset()
         {
             CredentialsModel credentials1 = this.GetPrivilegedAccount();
 
@@ -457,42 +456,6 @@ namespace CertificateAuthority.Tests.FullProjectTests
                     if (result6b.Result is ObjectResult)
                         Assert.True((result6b.Result as ObjectResult).StatusCode == 500);
                     break;
-            }
-        }
-
-        private void CheckThrowsIfNoAccess(Action<int, string> action, AccountAccessFlags requiredAccess)
-        {
-            CredentialsModel noAccessCredentials = CaTestHelper.CreateAccount(this.server.Host);
-            bool throwsIfNoAccess = false;
-
-            try
-            {
-                action.Invoke(noAccessCredentials.AccountId, noAccessCredentials.Password);
-            }
-            catch (InvalidCredentialsException e)
-            {
-                Assert.Equal(CredentialsExceptionErrorCodes.InvalidAccess, e.ErrorCode);
-                throwsIfNoAccess = true;
-            }
-            catch (Exception e)
-            {
-            }
-
-            if (!throwsIfNoAccess)
-                Assert.False(true, "Action was expected to throw.");
-
-            CredentialsModel accessCredentials = CaTestHelper.CreateAccount(this.server.Host, requiredAccess);
-
-            try
-            {
-                action.Invoke(accessCredentials.AccountId, accessCredentials.Password);
-            }
-            catch (InvalidCredentialsException e)
-            {
-                Assert.False(true, "Action was expected to not throw or throw different exception.");
-            }
-            catch (Exception)
-            {
             }
         }
     }

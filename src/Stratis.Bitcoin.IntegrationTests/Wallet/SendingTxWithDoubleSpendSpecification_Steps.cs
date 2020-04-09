@@ -2,10 +2,10 @@
 using System.Linq;
 using FluentAssertions;
 using NBitcoin;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Controllers;
-using Stratis.Bitcoin.Features.Wallet.Models;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Controllers;
+using Stratis.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
@@ -52,7 +52,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
 
         private void wallets_with_coins()
         {
-            var maturity = (int)this.stratisSender.FullNode.Network.Consensus.CoinbaseMaturity;
+            var maturity = (int)this.stratisSender.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity;
             TestHelper.MineBlocks(this.stratisSender, 5);
 
             var total = this.stratisSender.FullNode.WalletManager().GetSpendableTransactionsInWallet(Name).Sum(s => s.Transaction.Amount);
@@ -70,7 +70,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
 
             this.stratisSender.FullNode.NodeController<WalletController>().SendTransaction(new SendTransactionRequest(this.transaction.ToHex()));
 
-            TestBase.WaitLoop(() => this.stratisReceiver.CreateRPCClient().GetRawMempool().Length > 0);
+            TestBase.WaitLoop(() => this.stratisReceiver.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count > 0);
             TestBase.WaitLoop(() => this.stratisReceiver.FullNode.WalletManager().GetSpendableTransactionsInWallet(Name).Any());
 
             var receivetotal = this.stratisReceiver.FullNode.WalletManager().GetSpendableTransactionsInWallet(Name).Sum(s => s.Transaction.Amount);

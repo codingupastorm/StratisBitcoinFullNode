@@ -3,9 +3,9 @@ using System.IO;
 using System.Linq;
 using FluentAssertions;
 using NBitcoin;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Controllers;
-using Stratis.Bitcoin.Features.Wallet.Models;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Controllers;
+using Stratis.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Networks;
@@ -105,7 +105,7 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
             var transactionBuildContext = new TransactionBuildContext(this.node.FullNode.Network)
             {
                 AccountReference = this.miningWalletAccountReference,
-                MinConfirmations = (int)this.node.FullNode.Network.Consensus.CoinbaseMaturity,
+                MinConfirmations = (int)this.node.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity,
                 WalletPassword = password,
                 Recipients = new List<Recipient>() { new Recipient() { Amount = this.transferAmount, ScriptPubKey = this.receiverAddress.ScriptPubKey } }
             };

@@ -108,7 +108,7 @@ namespace Stratis.Bitcoin.Configuration
         /// is met. For this reason, the minimum relay transaction fee is usually lower than the minimum fee.
         /// </summary>
         public FeeRate MinRelayTxFeeRate { get; private set; }
-        
+
         /// <summary>
         /// If true then the node will add and start the SignalR feature.
         /// </summary>
@@ -135,11 +135,8 @@ namespace Stratis.Bitcoin.Configuration
             string agent = "StratisNode", string[] args = null, NetworksSelector networksSelector = null)
         {
             // Create the default logger factory and logger.
-            var loggerFactory = new ExtendedLoggerFactory();
-            this.LoggerFactory = loggerFactory;
-            this.LoggerFactory.AddConsoleWithFilters();
-            this.LoggerFactory.AddNLog();
-            this.Logger = this.LoggerFactory.CreateLogger(typeof(NodeSettings).FullName);
+            var loggerFactory = ExtendedLoggerFactory.Create();
+            this.Logger = loggerFactory.CreateLogger(typeof(NodeSettings).FullName);
 
             // Record arguments.
             this.Network = network;
@@ -209,17 +206,31 @@ namespace Stratis.Bitcoin.Configuration
             }
             else
             {
-                // Combine the data directory with the network's root folder and name.
-                string directoryPath = Path.Combine(this.DataDir, this.Network.RootFolderName, this.Network.Name);
-                this.DataDir = Directory.CreateDirectory(directoryPath).FullName;
-                this.Logger.LogDebug("Data directory initialized with path {0}.", this.DataDir);
+                // If this is a channel node, just use the data directory provided.
+                if (this.ConfigReader.GetOrDefault("ischannelnode", false, this.Logger))
+                {
+                    this.DataDir = Directory.CreateDirectory(this.DataDir).FullName;
+                    this.Logger.LogDebug("Data directory initialized with path {0}.", this.DataDir);
+                }
+                else
+                {
+                    // Else combine the data directory with the network's root folder and name.
+                    string directoryPath = Path.Combine(this.DataDir, this.Network.RootFolderName, this.Network.Name);
+                    this.DataDir = Directory.CreateDirectory(directoryPath).FullName;
+                    this.Logger.LogDebug("Data directory initialized with path {0}.", this.DataDir);
+                }
             }
 
             // Set the data folder.
             this.DataFolder = new DataFolder(this.DataDir);
 
             // Attempt to load NLog configuration from the DataFolder.
-            loggerFactory.LoadNLogConfiguration(this.DataFolder);
+            this.Log = new LogSettings();
+            this.Log.Load(this.ConfigReader);
+            this.LoggerFactory = ExtendedLoggerFactory.Create(this.Log);
+            this.LoggerFactory.AddNLog();
+            this.LoggerFactory.LoadNLogConfiguration(this.DataFolder);
+            this.Logger = this.LoggerFactory.CreateLogger(typeof(NodeSettings).FullName);
 
             // Get the configuration file name for the network if it was not specified on the command line.
             if (this.ConfigurationFile == null)
@@ -231,13 +242,10 @@ namespace Stratis.Bitcoin.Configuration
                     this.ReadConfigurationFile();
             }
 
-            this.EnableSignalR = this.ConfigReader.GetOrDefault<bool>("enableSignalR",  false, this.Logger);
+            this.EnableSignalR = this.ConfigReader.GetOrDefault<bool>("enableSignalR", false, this.Logger);
 
             // Create the custom logger factory.
-            this.Log = new LogSettings();
-            this.Log.Load(this.ConfigReader);
             this.LoggerFactory.AddFilters(this.Log, this.DataFolder);
-            this.LoggerFactory.ConfigureConsoleFilters(this.LoggerFactory.GetConsoleSettings(), this.Log);
 
             // Load the configuration.
             this.LoadConfiguration();
@@ -314,9 +322,10 @@ namespace Stratis.Bitcoin.Configuration
         {
             TextFileConfiguration config = this.ConfigReader;
 
-            this.MinTxFeeRate = new FeeRate(config.GetOrDefault("mintxfee", this.Network.MinTxFee, this.Logger));
-            this.FallbackTxFeeRate = new FeeRate(config.GetOrDefault("fallbackfee", this.Network.FallbackFee, this.Logger));
-            this.MinRelayTxFeeRate = new FeeRate(config.GetOrDefault("minrelaytxfee", this.Network.MinRelayTxFee, this.Logger));
+            var feeNetwork = this.Network as FeeNetwork;
+            this.MinTxFeeRate = new FeeRate(config.GetOrDefault("mintxfee", feeNetwork != null ? feeNetwork.MinTxFee : 0, this.Logger));
+            this.FallbackTxFeeRate = new FeeRate(config.GetOrDefault("fallbackfee", feeNetwork != null ? feeNetwork.FallbackFee : 0, this.Logger));
+            this.MinRelayTxFeeRate = new FeeRate(config.GetOrDefault("minrelaytxfee", feeNetwork != null ? feeNetwork.MinRelayTxFee : 0, this.Logger));
         }
 
         /// <summary>
@@ -392,9 +401,13 @@ namespace Stratis.Bitcoin.Configuration
             // Can be overridden in configuration file.
             builder.AppendLine($"-testnet                  Use the testnet chain.");
             builder.AppendLine($"-regtest                  Use the regtestnet chain.");
-            builder.AppendLine($"-mintxfee=<number>        Minimum fee rate. Defaults to {network.MinTxFee}.");
-            builder.AppendLine($"-fallbackfee=<number>     Fallback fee rate. Defaults to {network.FallbackFee}.");
-            builder.AppendLine($"-minrelaytxfee=<number>   Minimum relay fee rate. Defaults to {network.MinRelayTxFee}.");
+
+            if (network is FeeNetwork feeNetwork)
+            {
+                builder.AppendLine($"-mintxfee=<number>        Minimum fee rate. Defaults to {feeNetwork.MinTxFee}.");
+                builder.AppendLine($"-fallbackfee=<number>     Fallback fee rate. Defaults to {feeNetwork.FallbackFee}.");
+                builder.AppendLine($"-minrelaytxfee=<number>   Minimum relay fee rate. Defaults to {feeNetwork.MinRelayTxFee}.");
+            }
 
             defaults.Logger.LogInformation(builder.ToString());
 
@@ -413,12 +426,17 @@ namespace Stratis.Bitcoin.Configuration
             builder.AppendLine($"testnet={((network.IsTest() && !network.IsRegTest()) ? 1 : 0)}");
             builder.AppendLine($"#Regression test network. Defaults to 0.");
             builder.AppendLine($"regtest={(network.IsRegTest() ? 1 : 0)}");
-            builder.AppendLine($"#Minimum fee rate. Defaults to {network.MinTxFee}.");
-            builder.AppendLine($"#mintxfee={network.MinTxFee}");
-            builder.AppendLine($"#Fallback fee rate. Defaults to {network.FallbackFee}.");
-            builder.AppendLine($"#fallbackfee={network.FallbackFee}");
-            builder.AppendLine($"#Minimum relay fee rate. Defaults to {network.MinRelayTxFee}.");
-            builder.AppendLine($"#minrelaytxfee={network.MinRelayTxFee}");
+
+            if (network is FeeNetwork feeNetwork)
+            {
+                builder.AppendLine($"#Minimum fee rate. Defaults to {feeNetwork.MinTxFee}.");
+                builder.AppendLine($"#mintxfee={feeNetwork.MinTxFee}");
+                builder.AppendLine($"#Fallback fee rate. Defaults to {feeNetwork.FallbackFee}.");
+                builder.AppendLine($"#fallbackfee={feeNetwork.FallbackFee}");
+                builder.AppendLine($"#Minimum relay fee rate. Defaults to {feeNetwork.MinRelayTxFee}.");
+                builder.AppendLine($"#minrelaytxfee={feeNetwork.MinRelayTxFee}");
+            }
+
             builder.AppendLine();
 
             ConnectionManagerSettings.BuildDefaultConfigurationFile(builder, network);

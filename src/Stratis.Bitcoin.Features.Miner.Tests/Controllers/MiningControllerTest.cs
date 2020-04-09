@@ -4,22 +4,23 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
+using Stratis.Bitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.Miner.Controllers;
-using Stratis.Bitcoin.Features.Miner.Interfaces;
-using Stratis.Bitcoin.Features.Miner.Models;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Wallet.Common;
 using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Features.Miner.Controllers;
+using Stratis.Features.Miner.Interfaces;
+using Stratis.Features.Miner.Models;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Interfaces;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Miner.Tests.Controllers
+namespace Stratis.Features.Miner.Tests.Controllers
 {
     public class MiningControllerTest
     {
@@ -38,7 +39,6 @@ namespace Stratis.Bitcoin.Features.Miner.Tests.Controllers
             this.fullNode.Setup(i => i.Network).Returns(this.network);
 
             this.loggerFactory = new ExtendedLoggerFactory();
-            this.loggerFactory.AddConsoleWithFilters();
             this.fullNode.Setup(i => i.NodeService<ILoggerFactory>(false)).Returns(this.loggerFactory);
         }
 
@@ -48,7 +48,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests.Controllers
         public void Generate_With_Incorrect_Block_Count_ReturnsInvalidRequest(int? blockCount)
         {
             var consensusManager = new Mock<IConsensusManager>();
-            consensusManager.Setup(cm => cm.Tip).Returns(new ChainedHeader(this.network.Consensus.ConsensusFactory.CreateBlockHeader(), new uint256(0), this.network.Consensus.LastPOWBlock - 1));
+            consensusManager.Setup(cm => cm.Tip).Returns(new ChainedHeader(this.network.Consensus.ConsensusFactory.CreateBlockHeader(), new uint256(0), this.network.Consensus.ConsensusMiningReward.LastPOWBlock - 1));
 
             var controller = new MiningController(consensusManager.Object, this.fullNode.Object, this.loggerFactory, this.network, new Mock<IPowMining>().Object, new Mock<IWalletManager>().Object);
 
@@ -70,7 +70,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests.Controllers
         public void Generate_Blocks_When_Model_Is_Invalid_ReturnsBadRequest()
         {
             var consensusManager = new Mock<IConsensusManager>();
-            consensusManager.Setup(cm => cm.Tip).Returns(new ChainedHeader(this.network.Consensus.ConsensusFactory.CreateBlockHeader(), new uint256(0), this.network.Consensus.LastPOWBlock - 1));
+            consensusManager.Setup(cm => cm.Tip).Returns(new ChainedHeader(this.network.Consensus.ConsensusFactory.CreateBlockHeader(), new uint256(0), this.network.Consensus.ConsensusMiningReward.LastPOWBlock - 1));
 
             var controller = new MiningController(consensusManager.Object, this.fullNode.Object, this.loggerFactory, this.network, new Mock<IPowMining>().Object, new Mock<IWalletManager>().Object);
             controller.ModelState.AddModelError("key", "error message");
@@ -102,7 +102,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests.Controllers
 
             var powMining = new Mock<IPowMining>();
             powMining.Setup(f => f.GenerateBlocks(It.Is<ReserveScript>(r => r.ReserveFullNodeScript == address.Pubkey), 1, int.MaxValue)).Returns(new List<uint256> { new uint256(1255632623) });
-            powNode.Setup(f => f.NodeFeature<MiningFeature>(false)).Returns(new MiningFeature(new ConnectionManagerSettings(NodeSettings.Default(this.network)), KnownNetworks.RegTest, new MinerSettings(NodeSettings.Default(this.network)), NodeSettings.Default(this.network), this.loggerFactory, new Mock<ITimeSyncBehaviorState>().Object, powMining.Object, null));
+            powNode.Setup(f => f.NodeFeature<MiningFeature>(false)).Returns(new MiningFeature(new ConnectionManagerSettings(NodeSettings.Default(this.network)), KnownNetworks.RegTest, new MinerSettings(NodeSettings.Default(this.network)), this.loggerFactory, new Mock<ITimeSyncBehaviorState>().Object, powMining.Object, null));
 
             var controller = new MiningController(consensusManager.Object, powNode.Object, this.loggerFactory, KnownNetworks.RegTest, powMining.Object, walletManager.Object);
 
@@ -121,7 +121,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests.Controllers
         public void GenerateBlocksOn_PosNetwork_ConsensusTip_IsBeforeLastPowBlock_ReturnsSuccess()
         {
             var consensusManager = new Mock<IConsensusManager>();
-            consensusManager.Setup(cm => cm.Tip).Returns(new ChainedHeader(this.network.Consensus.ConsensusFactory.CreateBlockHeader(), new uint256(0), this.network.Consensus.LastPOWBlock - 1));
+            consensusManager.Setup(cm => cm.Tip).Returns(new ChainedHeader(this.network.Consensus.ConsensusFactory.CreateBlockHeader(), new uint256(0), this.network.Consensus.ConsensusMiningReward.LastPOWBlock - 1));
 
             var walletManager = new Mock<IWalletManager>();
             walletManager.Setup(f => f.GetWalletsNames()).Returns(new List<string> { wallet });
@@ -131,7 +131,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests.Controllers
 
             var powMining = new Mock<IPowMining>();
             powMining.Setup(f => f.GenerateBlocks(It.Is<ReserveScript>(r => r.ReserveFullNodeScript == address.Pubkey), 1, int.MaxValue)).Returns(new List<uint256> { new uint256(1255632623) });
-            this.fullNode.Setup(f => f.NodeFeature<MiningFeature>(false)).Returns(new MiningFeature(new ConnectionManagerSettings(NodeSettings.Default(this.network)), this.network, new MinerSettings(NodeSettings.Default(this.network)), NodeSettings.Default(this.network), this.loggerFactory, new Mock<ITimeSyncBehaviorState>().Object, powMining.Object, null));
+            this.fullNode.Setup(f => f.NodeFeature<MiningFeature>(false)).Returns(new MiningFeature(new ConnectionManagerSettings(NodeSettings.Default(this.network)), this.network, new MinerSettings(NodeSettings.Default(this.network)), this.loggerFactory, new Mock<ITimeSyncBehaviorState>().Object, powMining.Object, null));
 
             var controller = new MiningController(consensusManager.Object, this.fullNode.Object, this.loggerFactory, this.network, powMining.Object, walletManager.Object);
 
@@ -150,7 +150,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests.Controllers
         public void GenerateBlocksOn_PosNetwork_ConsensusTip_IsAfterLastPowBlock_ReturnsError()
         {
             var consensusManager = new Mock<IConsensusManager>();
-            consensusManager.Setup(cm => cm.Tip).Returns(new ChainedHeader(this.network.Consensus.ConsensusFactory.CreateBlockHeader(), new uint256(0), this.network.Consensus.LastPOWBlock + 1));
+            consensusManager.Setup(cm => cm.Tip).Returns(new ChainedHeader(this.network.Consensus.ConsensusFactory.CreateBlockHeader(), new uint256(0), this.network.Consensus.ConsensusMiningReward.LastPOWBlock + 1));
             this.fullNode.Setup(i => i.NodeService<IConsensusManager>(false)).Returns(consensusManager.Object);
 
             var controller = new MiningController(consensusManager.Object, this.fullNode.Object, this.loggerFactory, this.network, new Mock<IPowMining>().Object, new Mock<IWalletManager>().Object);
@@ -164,7 +164,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests.Controllers
             ErrorModel error = errorResponse.Errors[0];
             Assert.Equal(405, error.Status);
             Assert.Equal("Method not allowed", error.Message);
-            Assert.Equal(string.Format(MiningController.LastPowBlockExceededMessage, this.network.Consensus.LastPOWBlock), error.Description);
+            Assert.Equal(string.Format(MiningController.LastPowBlockExceededMessage, this.network.Consensus.ConsensusMiningReward.LastPOWBlock), error.Description);
         }
 
         [Fact]
@@ -173,7 +173,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests.Controllers
             var consensusManager = new Mock<IConsensusManager>();
             var powMining = new Mock<IPowMining>();
 
-            this.fullNode.Setup(f => f.NodeFeature<MiningFeature>(false)).Returns(new MiningFeature(new ConnectionManagerSettings(NodeSettings.Default(this.network)), this.network, new MinerSettings(NodeSettings.Default(this.network)), NodeSettings.Default(this.network), this.loggerFactory, new Mock<ITimeSyncBehaviorState>().Object, powMining.Object, null));
+            this.fullNode.Setup(f => f.NodeFeature<MiningFeature>(false)).Returns(new MiningFeature(new ConnectionManagerSettings(NodeSettings.Default(this.network)), this.network, new MinerSettings(NodeSettings.Default(this.network)), this.loggerFactory, new Mock<ITimeSyncBehaviorState>().Object, powMining.Object, null));
 
             var controller = new MiningController(consensusManager.Object, this.fullNode.Object, this.loggerFactory, this.network, new Mock<IPowMining>().Object, new Mock<IWalletManager>().Object);
 
@@ -194,7 +194,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests.Controllers
             walletManager.Setup(f => f.GetWalletsNames()).Returns(new List<string> { wallet });
             walletManager.Setup(f => f.GetAccounts(wallet)).Returns(new List<HdAccount> { new HdAccount { Name = account } });
 
-            this.fullNode.Setup(f => f.NodeFeature<MiningFeature>(false)).Returns(new MiningFeature(new ConnectionManagerSettings(NodeSettings.Default(this.network)), this.network, new MinerSettings(NodeSettings.Default(this.network)), NodeSettings.Default(this.network), this.loggerFactory, new Mock<ITimeSyncBehaviorState>().Object, powMining.Object, null));
+            this.fullNode.Setup(f => f.NodeFeature<MiningFeature>(false)).Returns(new MiningFeature(new ConnectionManagerSettings(NodeSettings.Default(this.network)), this.network, new MinerSettings(NodeSettings.Default(this.network)), this.loggerFactory, new Mock<ITimeSyncBehaviorState>().Object, powMining.Object, null));
 
             MiningController controller = new MiningController(consensusManager.Object, this.fullNode.Object, this.loggerFactory, this.network, new Mock<IPowMining>().Object, walletManager.Object);
             WalletAccountReference walletAccountReference = controller.GetAccount();
@@ -212,7 +212,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests.Controllers
             var walletManager = new Mock<IWalletManager>();
             walletManager.Setup(f => f.GetWalletsNames()).Returns(new List<string> { wallet });
 
-            this.fullNode.Setup(f => f.NodeFeature<MiningFeature>(false)).Returns(new MiningFeature(new ConnectionManagerSettings(NodeSettings.Default(this.network)), this.network, new MinerSettings(NodeSettings.Default(this.network)), NodeSettings.Default(this.network), this.loggerFactory, new Mock<ITimeSyncBehaviorState>().Object, powMining.Object, null));
+            this.fullNode.Setup(f => f.NodeFeature<MiningFeature>(false)).Returns(new MiningFeature(new ConnectionManagerSettings(NodeSettings.Default(this.network)), this.network, new MinerSettings(NodeSettings.Default(this.network)), this.loggerFactory, new Mock<ITimeSyncBehaviorState>().Object, powMining.Object, null));
 
             MiningController controller = new MiningController(consensusManager.Object, this.fullNode.Object, this.loggerFactory, this.network, new Mock<IPowMining>().Object, walletManager.Object);
             Exception ex = Assert.Throws<Exception>(() => controller.GetAccount());
@@ -225,7 +225,7 @@ namespace Stratis.Bitcoin.Features.Miner.Tests.Controllers
             Mock<IConsensusManager> consensusManager = new Mock<IConsensusManager>();
             Mock<IPowMining> powMining = new Mock<IPowMining>();
 
-            this.fullNode.Setup(f => f.NodeFeature<MiningFeature>(false)).Returns(new MiningFeature(new ConnectionManagerSettings(NodeSettings.Default(this.network)), this.network, new MinerSettings(NodeSettings.Default(this.network)), NodeSettings.Default(this.network), this.loggerFactory, new Mock<ITimeSyncBehaviorState>().Object, powMining.Object, null));
+            this.fullNode.Setup(f => f.NodeFeature<MiningFeature>(false)).Returns(new MiningFeature(new ConnectionManagerSettings(NodeSettings.Default(this.network)), this.network, new MinerSettings(NodeSettings.Default(this.network)), this.loggerFactory, new Mock<ITimeSyncBehaviorState>().Object, powMining.Object, null));
 
             MiningController controller = new MiningController(consensusManager.Object, this.fullNode.Object, this.loggerFactory, this.network, new Mock<IPowMining>().Object, new Mock<IWalletManager>().Object);
 

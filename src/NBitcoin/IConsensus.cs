@@ -1,16 +1,93 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using NBitcoin.BouncyCastle.Math;
-using NBitcoin.Rules;
 
 namespace NBitcoin
 {
     public interface IConsensus
     {
+        [JsonIgnore]
+        IConsensusMiningReward ConsensusMiningReward { get; set; }
+
         /// <summary>
-        /// How many blocks should be on top of a block that includes a coinbase transaction until its outputs are considered spendable.
+        /// Maximal length of reorganization that the node is willing to accept, or 0 to disable long reorganization protection.
         /// </summary>
+        [JsonPropertyName("maxreorglength")]
+        uint MaxReorgLength { get; set; }
+
+        [JsonPropertyName("options")]
+        ConsensusOptions Options { get; set; }
+
+        [JsonIgnore]
+        BuriedDeploymentsArray BuriedDeployments { get; }
+
+        [JsonIgnore]
+        IBIP9DeploymentsArray BIP9Deployments { get; }
+
+        [JsonIgnore]
+        uint256 BIP34Hash { get; }
+
+        [JsonIgnore]
+        uint256 HashGenesisBlock { get; set; }
+
+        /// <summary> The minimum amount of work the best chain should have. </summary>
+        [JsonPropertyName("minimumchainwork")]
+        uint256 MinimumChainWork { get; }
+
+        /// <summary>
+        /// Specify the BIP44 coin type for this network.
+        /// </summary>
+        [JsonPropertyName("cointype")]
+        int CoinType { get; set; }
+
+        /// <summary>The default hash to use for assuming valid blocks.</summary>
+        [JsonPropertyName("defaultassumevalid")]
+        uint256 DefaultAssumeValid { get; set; }
+
+        /// <summary>
+        /// A factory that enables overloading base types.
+        /// </summary>
+        [JsonIgnore]
+        ConsensusFactory ConsensusFactory { get; set; }
+
+        /// <summary>Group of rules that define a given network.</summary>
+        [JsonIgnore]
+        ConsensusRules ConsensusRules { get; set; }
+
+        /// <summary>Group of mempool validation rules used by the given network.</summary>
+        [JsonIgnore]
+        List<Type> MempoolRules { get; set; }
+    }
+
+    /// <summary>
+    /// These consensus properties relates to proof-of-stake and proof-of-work algorithm where mining rewards are expected.
+    /// </summary>
+    public interface IConsensusMiningReward
+    {
+        /// <inheritdoc />
         long CoinbaseMaturity { get; set; }
+
+        /// <summary>
+        /// An indicator whether this is a Proof Of Stake network.
+        /// </summary>
+        bool IsProofOfStake { get; }
+
+        /// <inheritdoc />
+        long MaxMoney { get; set; }
+
+        /// <summary>PoW blocks are not accepted after block with height <see cref="Consensus.LastPOWBlock"/>.</summary>
+        int LastPOWBlock { get; set; }
+
+        int MinerConfirmationWindow { get; set; }
+
+        /// <summary>
+        /// If <c>true</c> disables checking the next block's difficulty (work required) target on a Proof-Of-Stake network.
+        /// <para>
+        /// This can be used in tests to enable fast mining of blocks.
+        /// </para>
+        /// </summary>
+        bool PosNoRetargeting { get; }
 
         /// <summary>
         /// Amount of coins mined when a new network is bootstrapped.
@@ -24,57 +101,18 @@ namespace NBitcoin
         /// </summary>
         long PremineHeight { get; }
 
-        /// <summary>
-        /// The reward that goes to the miner when a block is mined using proof-of-work.
-        /// </summary>
-        Money ProofOfWorkReward { get; }
+        BigInteger ProofOfStakeLimit { get; }
+
+        BigInteger ProofOfStakeLimitV2 { get; }
 
         /// <summary>
         /// The reward that goes to the miner when a block is mined using proof-of-stake.
         /// </summary>
         Money ProofOfStakeReward { get; }
 
-        /// <summary>
-        /// Maximal length of reorganization that the node is willing to accept, or 0 to disable long reorganization protection.
-        /// </summary>
-        uint MaxReorgLength { get; }
-
-        /// <summary>
-        /// The maximum amount of coins in any transaction.
-        /// </summary>
-        long MaxMoney { get; }
-
-        ConsensusOptions Options { get; set; }
-
-        BuriedDeploymentsArray BuriedDeployments { get; }
-
-        IBIP9DeploymentsArray BIP9Deployments { get; }
-
-        int SubsidyHalvingInterval { get; }
-
-        int MajorityEnforceBlockUpgrade { get; }
-
-        int MajorityRejectBlockOutdated { get; }
-
-        int MajorityWindow { get; }
-
-        uint256 BIP34Hash { get; }
-
-        Target PowLimit { get; }
-
-        TimeSpan PowTargetTimespan { get; }
-
-        TimeSpan PowTargetSpacing { get; }
-
         bool PowAllowMinDifficultyBlocks { get; }
 
-        /// <summary>
-        /// If <c>true</c> disables checking the next block's difficulty (work required) target on a Proof-Of-Stake network.
-        /// <para>
-        /// This can be used in tests to enable fast mining of blocks.
-        /// </para>
-        /// </summary>
-        bool PosNoRetargeting { get; }
+        Target PowLimit { get; set; }
 
         /// <summary>
         /// If <c>true</c> disables checking the next block's difficulty (work required) target on a Proof-Of-Work network.
@@ -82,44 +120,15 @@ namespace NBitcoin
         /// This can be used in tests to enable fast mining of blocks.
         /// </para>
         /// </summary>
-        bool PowNoRetargeting { get; }
+        bool PowNoRetargeting { get; set; }
 
-        uint256 HashGenesisBlock { get; }
+        TimeSpan PowTargetSpacing { get; set; }
 
-        /// <summary> The minimum amount of work the best chain should have. </summary>
-        uint256 MinimumChainWork { get; }
+        TimeSpan PowTargetTimespan { get; set; }
 
-        int MinerConfirmationWindow { get; set; }
+        /// <summary> The reward that goes to the miner when a block is mined using proof-of-work.</summary>
+        Money ProofOfWorkReward { get; set; }
 
-        /// <summary>
-        /// Specify the BIP44 coin type for this network.
-        /// </summary>
-        int CoinType { get; }
-
-        BigInteger ProofOfStakeLimit { get; }
-
-        BigInteger ProofOfStakeLimitV2 { get; }
-
-        /// <summary>PoW blocks are not accepted after block with height <see cref="Consensus.LastPOWBlock"/>.</summary>
-        int LastPOWBlock { get; set; }
-
-        /// <summary>
-        /// An indicator whether this is a Proof Of Stake network.
-        /// </summary>
-        bool IsProofOfStake { get; }
-
-        /// <summary>The default hash to use for assuming valid blocks.</summary>
-        uint256 DefaultAssumeValid { get; }
-
-        /// <summary>
-        /// A factory that enables overloading base types.
-        /// </summary>
-        ConsensusFactory ConsensusFactory { get; }
-
-        /// <summary>Group of rules that define a given network.</summary>
-        ConsensusRules ConsensusRules { get; }
-
-        /// <summary>Group of mempool validation rules used by the given network.</summary>
-        List<Type> MempoolRules { get; set; }
+        int SubsidyHalvingInterval { get; set; }
     }
 }

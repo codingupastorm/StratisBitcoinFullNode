@@ -8,7 +8,7 @@ using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers;
-using Stratis.Bitcoin.Features.Wallet;
+using Stratis.Features.Wallet;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Interfaces;
@@ -175,10 +175,10 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
             string[] parameters = null,
             ulong gasLimit = SmartContractFormatLogic.GasLimitMaximum / 2, // half of maximum
             ulong gasPrice = SmartContractMempoolValidator.MinGasPrice,
-            decimal feeAmount = 0.01M, 
+            decimal feeAmount = 0.01M,
             string sender = null,
             List<OutpointRequest> outpoints = null)
-            {
+        {
             var request = new BuildCallContractTransactionRequest
             {
                 AccountName = this.AccountName,
@@ -258,7 +258,7 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
         /// </summary>
         public void WaitMempoolCount(int num)
         {
-            TestBase.WaitLoop(() => this.CoreNode.CreateRPCClient().GetRawMempool().Length >= num);
+            TestBase.WaitLoop(() => this.CoreNode.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count >= num);
         }
     }
 }

@@ -15,15 +15,15 @@ using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.Consensus.Rules;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
-using Stratis.Bitcoin.Features.MemoryPool.Fee;
-using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Features.MemoryPool.Rules;
-using Stratis.Bitcoin.Features.Miner;
-using Stratis.Bitcoin.Features.Wallet;
+using Stratis.Features.Consensus.CoinViews;
+using Stratis.Features.Consensus.Rules;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Broadcasting;
+using Stratis.Features.MemoryPool.Fee;
+using Stratis.Features.MemoryPool.Interfaces;
+using Stratis.Features.MemoryPool.Rules;
+using Stratis.Features.Miner;
+using Stratis.Features.Wallet;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Wallet;
@@ -52,7 +52,7 @@ namespace Stratis.Bitcoin.IntegrationTests
 
         public static PowBlockDefinition AssemblerForTest(TestContext testContext)
         {
-            return new PowBlockDefinition(testContext.consensus, testContext.DateTimeProvider, new LoggerFactory(), testContext.mempool, testContext.mempoolLock, new MinerSettings(NodeSettings.Default(testContext.network)), testContext.network, testContext.ConsensusRules);
+            return new PowBlockDefinition(testContext.consensus, testContext.DateTimeProvider, new LoggerFactory(), testContext.mempool, testContext.mempoolLock, new MinerSettings(NodeSettings.Default(testContext.network)), testContext.network);
         }
 
         public class Blockinfo
@@ -147,7 +147,6 @@ namespace Stratis.Bitcoin.IntegrationTests
                 IDateTimeProvider dateTimeProvider = DateTimeProvider.Default;
 
                 var loggerFactory = new ExtendedLoggerFactory();
-                loggerFactory.AddConsoleWithFilters();
 
                 var inMemoryCoinView = new InMemoryCoinView(this.ChainIndexer.Tip.HashBlock);
                 var nodeStats = new NodeStats(dateTimeProvider, loggerFactory);
@@ -697,8 +696,11 @@ namespace Stratis.Bitcoin.IntegrationTests
             Assert.True(tx.IsFinal(context.ChainIndexer.Tip.GetMedianTimePast().AddMinutes(2), context.ChainIndexer.Tip.Height + 2)); // Locktime passes 2 min later
         }
 
+        /// <summary>
+        /// Miner_PosNetwork_CreatePowTransaction_AheadOfFutureDrift_ShouldNotBeIncludedInBlock
+        /// </summary>
         [Fact]
-        public void Miner_PosNetwork_CreatePowTransaction_AheadOfFutureDrift_ShouldNotBeIncludedInBlock()
+        public void MinerTests_Scenario10()
         {
             var network = KnownNetworks.StratisRegTest;
 
@@ -706,7 +708,7 @@ namespace Stratis.Bitcoin.IntegrationTests
             {
                 CoreNode stratisMiner = builder.CreateStratisPosNode(network).WithWallet().Start();
 
-                int maturity = (int)network.Consensus.CoinbaseMaturity;
+                int maturity = (int)network.Consensus.ConsensusMiningReward.CoinbaseMaturity;
                 TestHelper.MineBlocks(stratisMiner, maturity + 5);
 
                 // Send coins to the receiver

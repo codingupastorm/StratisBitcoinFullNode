@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.SmartContracts.Core.Util;
@@ -39,11 +39,11 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
 
             // We also need to check that the sender given is indeed the one who signed the transaction.
             if (!this.tokenlessSigner.Verify(context.Transaction))
-                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, $"The signature for transaction {context.Transaction.GetHash()} is invalid."));
+                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, $"The signature for transaction {context.Transaction.GetHash()} is invalid.")).Throw();
 
             // Now that we have the sender address, lets get their certificate and check they have necessary permissions.
             if (!this.certificatePermissionsChecker.CheckSenderCertificateHasPermission(getSenderResult.Sender, TransactionSendingPermission.Send))
-                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "The sender of this transaction is not authorised by the CA to send transactions."));
+                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "The sender of this transaction is not authorised by the CA to send transactions.")).Throw();
 
             // Not a smart contract, no further validation to do.
             if (!context.Transaction.IsSmartContractExecTransaction())
@@ -54,7 +54,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
                 : TransactionSendingPermission.CallContract;
 
             if (!this.certificatePermissionsChecker.CheckSenderCertificateHasPermission(getSenderResult.Sender, permission))
-                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, $"The sender of this transaction does not have the {permission.ToString()} permission."));
+                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, $"The sender of this transaction does not have the {permission.ToString()} permission.")).Throw();
         }
     }
 }
