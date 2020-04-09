@@ -5,7 +5,6 @@ using CertificateAuthority;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.Common;
 using MembershipServices;
-using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Networks;
 using Org.BouncyCastle.X509;
@@ -146,10 +145,9 @@ namespace Stratis.SmartContracts.Tests.Common
 
         private TokenlessKeyStoreManager InitializeNodeKeyStore(CoreNode node, Network network, NodeSettings settings)
         {
-            var loggerFactory = new LoggerFactory();
             var revocationChecker = new RevocationChecker(new MembershipServicesDirectory(settings));
-            var certificatesManager = new CertificatesManager(settings.DataFolder, settings, loggerFactory, revocationChecker, network);
-            var keyStoreManager = new TokenlessKeyStoreManager(network, settings.DataFolder, new ChannelSettings(settings), new TokenlessKeyStoreSettings(settings), certificatesManager, loggerFactory);
+            var certificatesManager = new CertificatesManager(settings.DataFolder, settings, settings.LoggerFactory, revocationChecker, network);
+            var keyStoreManager = new TokenlessKeyStoreManager(network, settings.DataFolder, new ChannelSettings(settings.ConfigReader), new TokenlessKeyStoreSettings(settings), certificatesManager, settings.LoggerFactory);
 
             keyStoreManager.Initialize();
 

@@ -132,7 +132,7 @@ namespace Stratis.Bitcoin.Configuration
         ///   name would be determined. In this case we first need to determine the network.
         /// </remarks>
         public NodeSettings(Network network = null, ProtocolVersion protocolVersion = SupportedProtocolVersion,
-            string agent = "StratisNode", string[] args = null, NetworksSelector networksSelector = null)
+            string agent = "StratisNode", TextFileConfiguration configReader = null, string[] args = null, NetworksSelector networksSelector = null)
         {
             // Create the default logger factory and logger.
             var loggerFactory = ExtendedLoggerFactory.Create();
@@ -142,7 +142,11 @@ namespace Stratis.Bitcoin.Configuration
             this.Network = network;
             this.ProtocolVersion = protocolVersion;
             this.Agent = agent;
-            this.ConfigReader = new TextFileConfiguration(args ?? new string[] { });
+
+            if (configReader == null)
+                this.ConfigReader = new TextFileConfiguration(args ?? new string[] { });
+            else
+                this.ConfigReader = configReader;
 
             // Log arguments.
             this.Logger.LogDebug("Arguments: network='{0}', protocolVersion='{1}', agent='{2}', args='{3}'.",

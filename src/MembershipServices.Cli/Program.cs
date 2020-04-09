@@ -107,7 +107,7 @@ namespace MembershipServices.Cli
             var revocationChecker = new RevocationChecker(membershipServices);
             var certificatesManager = new CertificatesManager(nodeSettings.DataFolder, nodeSettings, loggerFactory, revocationChecker, network);
             var keyStoreSettings = new TokenlessKeyStoreSettings(nodeSettings);
-            var keyStoreManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, new ChannelSettings(nodeSettings), keyStoreSettings, certificatesManager, loggerFactory);
+            var keyStoreManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, new ChannelSettings(nodeSettings.ConfigReader), keyStoreSettings, certificatesManager, loggerFactory);
             keyStoreManager.Initialize();
 
             // First check if we have created an account on the CA already.

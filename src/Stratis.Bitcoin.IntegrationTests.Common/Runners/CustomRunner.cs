@@ -37,7 +37,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.Runners
             if (string.IsNullOrEmpty(this.Agent))
                 settings = new NodeSettings(this.Network, this.protocolVersion, args: argsAsStringArray) { MinProtocolVersion = this.minProtocolVersion };
             else
-                settings = new NodeSettings(this.Network, this.protocolVersion, this.Agent, argsAsStringArray) { MinProtocolVersion = this.minProtocolVersion };
+                settings = new NodeSettings(this.Network, this.protocolVersion, this.Agent, args: argsAsStringArray) { MinProtocolVersion = this.minProtocolVersion };
 
             IFullNodeBuilder builder = new FullNodeBuilder().UseNodeSettings(settings);
 

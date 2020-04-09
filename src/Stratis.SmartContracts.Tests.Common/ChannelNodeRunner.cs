@@ -4,6 +4,7 @@ using System.IO;
 using System.Text.Json;
 using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
+using NBitcoin;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
@@ -43,12 +44,15 @@ namespace Stratis.SmartContracts.Tests.Common
             var loadedJson = File.ReadAllText($"{this.DataFolder}\\channels\\{this.channelName}_network.json");
 
             ChannelNetwork channelNetwork = JsonSerializer.Deserialize<ChannelNetwork>(loadedJson);
-
-            // TODO-TL: Find a better way to construct the following items when deserializing.
             channelNetwork.Consensus.ConsensusFactory = new TokenlessConsensusFactory();
-            channelNetwork.Consensus.ConsensusRules = new NBitcoin.ConsensusRules();
+
+            // TODO-TL: Add specific consensus rules here.
+            channelNetwork.Consensus.ConsensusRules = new ConsensusRules();
+
             channelNetwork.Consensus.HashGenesisBlock = channelNetwork.Genesis.GetHash();
             channelNetwork.Consensus.Options = new PoAConsensusOptions(0, 0, 0, 0, 0, new List<IFederationMember>(), 16, false, false, false);
+
+            // TODO-TL: Add specific mempool rules here.
             channelNetwork.Consensus.MempoolRules = new List<Type>();
 
             var settings = new NodeSettings(channelNetwork, args: new string[]
