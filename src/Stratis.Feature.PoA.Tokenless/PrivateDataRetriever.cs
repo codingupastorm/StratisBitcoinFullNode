@@ -1,11 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using NBitcoin;
+using Stratis.Bitcoin.AsyncWork;
+using Stratis.Bitcoin.Utilities;
+using Stratis.Feature.PoA.Tokenless.Payloads;
 using Stratis.SmartContracts.Core.Store;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
     public interface IPrivateDataRetriever
     {
+        /// <summary>
+        /// Starts a loop that periodically retrieves data.
+        /// </summary>
         void StartRetrievalLoop();
 
         /// <summary>
@@ -18,10 +26,29 @@ namespace Stratis.Feature.PoA.Tokenless
     public class PrivateDataRetriever : IPrivateDataRetriever
     {
         private readonly ITransientStore transientStore;
+        private readonly IMissingPrivateDataStore missingPrivateDataStore;
+        private readonly IAsyncProvider asyncProvider;
+        private readonly INodeLifetime nodeLifetime;
+        private readonly ITokenlessBroadcaster tokenlessBroadcaster;
+        private IAsyncLoop asyncLoop;
 
-        public PrivateDataRetriever(ITransientStore transientStore)
+        /// <summary>
+        /// How often to trigger the query to request private data. Increase if there are performance issues.
+        /// If this is ridicul
+        /// </summary>
+        private static readonly TimeSpan TimeBetweenQueries = TimeSpans.TenSeconds;
+
+        public PrivateDataRetriever(ITransientStore transientStore,
+            IMissingPrivateDataStore missingPrivateDataStore,
+            ITokenlessBroadcaster tokenlessBroadcaster,
+            IAsyncProvider asyncProvider,
+            INodeLifetime nodeLifetime)
         {
             this.transientStore = transientStore;
+            this.missingPrivateDataStore = missingPrivateDataStore;
+            this.asyncProvider = asyncProvider;
+            this.nodeLifetime = nodeLifetime;
+            this.tokenlessBroadcaster = tokenlessBroadcaster;
         }
 
         /// <inheritdoc />
@@ -29,20 +56,36 @@ namespace Stratis.Feature.PoA.Tokenless
         {
             // TODO: Check if this node is allowed to get the data.
 
-            if (this.transientStore.Get(txHash) != null)
+            if (this.transientStore.Get(txHash).Data != null)
             {
                 // We have the data!
                 // TODO: In this case, we should put the data into the private data store. Coming in a future PR.
                 return;
             }
 
-            // We don't have the data - put it in transient store with block height 0 so we know to retrieve it later on.
-            throw new NotImplementedException("For the next PR.");
+            // We don't have the data - put it in a store so we know to retrieve it later on.
+            this.missingPrivateDataStore.Add(txHash);
         }
 
         public void StartRetrievalLoop()
         {
-            throw new NotImplementedException("For the next PR.");
+            this.asyncLoop = this.asyncProvider.CreateAndRunAsyncLoop(nameof(PrivateDataRetriever), async token => {
+                    await this.RetrievePrivateData().ConfigureAwait(false);
+                },
+                this.nodeLifetime.ApplicationStopping,
+                TimeBetweenQueries);
+        }
+
+        private async Task RetrievePrivateData()
+        {
+            // Get all of the incomplete private data entries.
+            IEnumerable<uint256> entries = this.missingPrivateDataStore.GetMissingEntries();
+
+            foreach (uint256 txId in entries)
+            {
+                await this.tokenlessBroadcaster.BroadcastToWholeOrganisationAsync(new RequestPrivateDataPayload(txId))
+                    .ConfigureAwait(false);
+            }
         }
     }
 }

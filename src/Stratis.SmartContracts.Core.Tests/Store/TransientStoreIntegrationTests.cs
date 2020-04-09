@@ -88,7 +88,7 @@ namespace Stratis.SmartContracts.Core.Tests.Store
 
             this.store.Persist(txId, blockHeight, data);
 
-            TransientStorePrivateData result = this.store.Get(txId);
+            TransientStorePrivateData result = this.store.Get(txId).Data;
             Assert.NotNull(result);
         }
     }

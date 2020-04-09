@@ -40,6 +40,8 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly IAsyncProvider asyncProvider;
         private readonly INodeLifetime nodeLifetime;
         private readonly ITransientStore transientStore;
+        private readonly IMissingPrivateDataStore missingPrivateDataStore;
+        private readonly IPrivateDataRetriever privateDataRetriever;
         private readonly ILogger logger;
         private IAsyncLoop caPubKeysLoop;
 
@@ -59,6 +61,8 @@ namespace Stratis.Feature.PoA.Tokenless
             IAsyncProvider asyncProvider,
             INodeLifetime nodeLifetime,
             ITransientStore transientStore,
+            IMissingPrivateDataStore missingPrivateDataStore,
+            IPrivateDataRetriever privateDataRetriever,
             ILoggerFactory loggerFactory)
         {
             this.certificatesManager = certificatesManager;
@@ -74,6 +78,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.asyncProvider = asyncProvider;
             this.nodeLifetime = nodeLifetime;
             this.transientStore = transientStore;
+            this.missingPrivateDataStore = missingPrivateDataStore;
             this.caPubKeysLoop = null;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
 
@@ -95,7 +100,8 @@ namespace Stratis.Feature.PoA.Tokenless
 
             connectionParameters.TemplateBehaviors.Add(new EndorsementRequestBehavior(this.requestHandler));
             connectionParameters.TemplateBehaviors.Add(new EndorsementSuccessBehavior(this.successHandler));
-            connectionParameters.TemplateBehaviors.Add(new ReceivePrivateDataBehavior(this.transientStore));
+            connectionParameters.TemplateBehaviors.Add(new ReceivePrivateDataBehavior(this.transientStore, this.missingPrivateDataStore));
+            connectionParameters.TemplateBehaviors.Add(new PrivateDataRequestBehavior(this.transientStore));
 
             this.federationManager.Initialize();
 
@@ -132,6 +138,9 @@ namespace Stratis.Feature.PoA.Tokenless
             this.nodeLifetime.ApplicationStopping,
             repeatEvery: TimeSpans.Minute,
             startAfter: TimeSpans.Minute);
+
+            // Start the private data-getting loop.
+            this.privateDataRetriever.StartRetrievalLoop();
         }
 
         private void SynchronizeMembers()
