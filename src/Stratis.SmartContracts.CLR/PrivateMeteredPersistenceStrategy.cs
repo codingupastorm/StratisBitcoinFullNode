@@ -72,10 +72,6 @@ namespace Stratis.SmartContracts.CLR
 
             this.gasMeter.Spend(operationCost);
 
-            var storageValue = new StorageValue(value, this.version);
-
-            this.stateDb.StoreBytes(address, encodedKey, storageValue.ToBytes());
-
             this.readWriteSet.AddWriteItem(new ReadWriteSetKey(address, key), value);
         }
     }

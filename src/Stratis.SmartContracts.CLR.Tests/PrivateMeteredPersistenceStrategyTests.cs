@@ -102,10 +102,10 @@ namespace Stratis.SmartContracts.CLR.Tests
             byte[] testValue = new byte[] { 2 };
             uint160 testAddress = uint160.One;
             var testVersion = "1.1";
-            var testStorageValue = new StorageValue(testValue, testVersion);
+            var testRwsKey = new ReadWriteSetKey(testAddress, testKey);
 
             var sr = new Mock<IPrivateDataStore>();
-            var rws = Mock.Of<IReadWriteSetOperations>();
+            var rws = new Mock<IReadWriteSetOperations>();
 
             sr.Setup(m => m.StoreBytes(
                 It.IsAny<uint160>(),
@@ -119,7 +119,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 sr.Object,
                 gasMeter,
                 this.keyEncodingStrategy,
-                rws,
+                rws.Object,
                 testVersion
             );
 
@@ -128,7 +128,11 @@ namespace Stratis.SmartContracts.CLR.Tests
                 testKey,
                 testValue);
 
-            sr.Verify(s => s.StoreBytes(testAddress, testKey, It.Is<byte[]>(b => testStorageValue.ToBytes().SequenceEqual(b))));
+            // Should never persist to the underlying store.
+            sr.Verify(s => s.StoreBytes(testAddress, testKey, It.IsAny<byte[]>()), Times.Never());
+
+            // Should only persist to the RWS.
+            rws.Verify(r => r.AddWriteItem(testRwsKey, testValue), Times.Once);
         }
 
         [Fact]
