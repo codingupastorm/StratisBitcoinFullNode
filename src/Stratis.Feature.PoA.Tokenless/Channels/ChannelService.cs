@@ -23,6 +23,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         Task StartChannelNodeAsync(ChannelCreationRequest request);
         Task StartSystemChannelNodeAsync();
         void StopChannelNodes();
+        void RestartChannelNodes();
     }
 
     /// <inheritdoc />
