@@ -70,7 +70,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             }
         }
 
-        public void RestartChannelNodesAsync()
+        public void RestartChannelNodes()
         {
             try
             {
