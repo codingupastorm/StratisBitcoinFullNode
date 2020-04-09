@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels
 {
@@ -10,9 +11,9 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     {
         void Initialize();
 
-        void SaveConfigTx(string channelName, Transaction tx);
+        void SaveChannelCreationRequest(ChannelCreationRequest request);
 
-        Dictionary<string, Transaction> GetChannelConfigTxs();
+        Dictionary<string, ChannelCreationRequest> GetChannelCreationRequests();
     }
 
     public class ChannelRepository : IChannelRepository
@@ -43,19 +44,19 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         {
         }
 
-        public void SaveConfigTx(string channelName, Transaction tx)
+        public void SaveChannelCreationRequest(ChannelCreationRequest request)
         {
             using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(Bitcoin.Interfaces.KeyValueStoreTransactionMode.ReadWrite, ConfigTxTableName))
             {
-                transaction.Insert(ConfigTxTableName, channelName, tx);
+                transaction.Insert(ConfigTxTableName, request.Name, request);
             }
         }
 
-        public Dictionary<string, Transaction> GetChannelConfigTxs()
+        public Dictionary<string, ChannelCreationRequest> GetChannelCreationRequests()
         {
             using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(Bitcoin.Interfaces.KeyValueStoreTransactionMode.Read, ConfigTxTableName))
             {
-                return transaction.SelectDictionary<string, Transaction>(ConfigTxTableName);
+                return transaction.SelectDictionary<string, ChannelCreationRequest>(ConfigTxTableName);
             }
         }
     }
