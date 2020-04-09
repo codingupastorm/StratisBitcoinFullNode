@@ -49,6 +49,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(Bitcoin.Interfaces.KeyValueStoreTransactionMode.ReadWrite, ConfigTxTableName))
             {
                 transaction.Insert(ConfigTxTableName, request.Name, request);
+                transaction.Commit();
             }
         }
 
