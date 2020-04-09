@@ -1,6 +1,5 @@
 ﻿using Moq;
 using NBitcoin;
-using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core.Hashing;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Xunit;
@@ -39,8 +38,8 @@ namespace Stratis.SmartContracts.Core.Tests
 
             operations.AddWriteItem(key, value);
 
-            publicRws.Verify(rws => rws.AddWriteItem(key, hashedValue), Times.Once);
-            privateRws.Verify(rws => rws.AddWriteItem(key, value), Times.Once);
+            publicRws.Verify(rws => rws.AddWriteItem(key, hashedValue, true), Times.Once);
+            privateRws.Verify(rws => rws.AddWriteItem(key, value, false), Times.Once);
         }
     }
 }
