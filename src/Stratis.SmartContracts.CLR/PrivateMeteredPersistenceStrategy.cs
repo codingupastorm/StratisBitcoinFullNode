@@ -44,6 +44,13 @@ namespace Stratis.SmartContracts.CLR
         public byte[] FetchBytes(uint160 address, byte[] key)
         {
             byte[] encodedKey = this.keyEncodingStrategy.GetBytes(key);
+            var rwsKey = new ReadWriteSetKey(address, key);
+
+            if (this.readWriteSet.GetWriteItem(rwsKey, out var rwsValue))
+            {
+                return rwsValue;
+            }
+
             var result = this.stateDb.GetBytes(address, encodedKey);
 
             var storageValue = StorageValue.FromBytes(result);

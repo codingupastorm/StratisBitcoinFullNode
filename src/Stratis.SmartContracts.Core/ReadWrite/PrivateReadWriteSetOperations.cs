@@ -25,9 +25,9 @@ namespace Stratis.SmartContracts.Core.ReadWrite
             this.privateReadWriteSet.AddWriteItem(key, value);
         }
 
-        public byte[] GetWriteItem(ReadWriteSetKey key)
+        public bool GetWriteItem(ReadWriteSetKey key, out byte[] value)
         {
-            return this.privateReadWriteSet.GetWriteItem(key);
+            return this.privateReadWriteSet.GetWriteItem(key, out value);
         }
     }
 }

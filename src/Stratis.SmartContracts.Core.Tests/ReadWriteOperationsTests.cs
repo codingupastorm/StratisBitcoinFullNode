@@ -53,11 +53,11 @@ namespace Stratis.SmartContracts.Core.Tests
 
             var key = new ReadWriteSetKey(uint160.One, new byte[] { 0xAA, 0xBB, 0xCC });
 
-            operations.GetWriteItem(key);
+            operations.GetWriteItem(key, out var value);
 
             // Only looks at the private RWS.
-            publicRws.Verify(rws => rws.GetWriteItem(key), Times.Never);
-            privateRws.Verify(rws => rws.GetWriteItem(key), Times.Once);
+            publicRws.Verify(rws => rws.GetWriteItem(key, out value), Times.Never);
+            privateRws.Verify(rws => rws.GetWriteItem(key, out value), Times.Once);
         }
     }
 }

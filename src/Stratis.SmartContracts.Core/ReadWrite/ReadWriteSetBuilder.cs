@@ -11,7 +11,7 @@ namespace Stratis.SmartContracts.Core.ReadWrite
 
         void AddWriteItem(ReadWriteSetKey key, byte[] value);
 
-        byte[] GetWriteItem(ReadWriteSetKey key);
+        bool GetWriteItem(ReadWriteSetKey key, out byte[] value);
     }
 
     /// <summary>
@@ -60,9 +60,13 @@ namespace Stratis.SmartContracts.Core.ReadWrite
             this.writeSet[key] = clonedValue;
         }
 
-        public byte[] GetWriteItem(ReadWriteSetKey key)
+        public bool GetWriteItem(ReadWriteSetKey key, out byte[] value)
         {
-            return this.writeSet.ContainsKey(key) ? this.writeSet[key] : null;
+            var keyExists = this.writeSet.ContainsKey(key);
+
+            value = keyExists ? this.writeSet[key] : null;
+
+            return keyExists;
         }
 
         public void Merge(ReadWriteSetBuilder toMerge)

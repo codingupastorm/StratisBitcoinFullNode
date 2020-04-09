@@ -27,7 +27,9 @@ namespace Stratis.SmartContracts.CLR.Tests
             var sr = new Mock<IPrivateDataStore>();
             var rws = new Mock<IReadWriteSetOperations>();
 
-            rws.Setup(r => r.GetWriteItem(testRwsKey)).Returns(default(byte[]));
+            byte[] value = null;
+
+            rws.Setup(r => r.GetWriteItem(testRwsKey, out value)).Returns(false);
 
             sr.Setup(m => m.GetBytes(
                 It.IsAny<uint160>(),
@@ -49,7 +51,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 testAddress,
                 testKey);
 
-            rws.Verify(r => r.GetWriteItem(testRwsKey), Times.Once);
+            rws.Verify(r => r.GetWriteItem(testRwsKey, out value), Times.Once);
             sr.Verify(s => s.GetBytes(testAddress, testKey), Times.Once);
             Assert.True(testValue.SequenceEqual(result));
         }
@@ -67,7 +69,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             var sr = new Mock<IPrivateDataStore>();
             var rws = new Mock<IReadWriteSetOperations>();
 
-            rws.Setup(r => r.GetWriteItem(testRwsKey)).Returns(testValue);
+            rws.Setup(r => r.GetWriteItem(testRwsKey, out testValue)).Returns(true);
 
             var availableGas = (RuntimeObserver.Gas)100000;
             GasMeter gasMeter = new GasMeter(availableGas);
@@ -85,7 +87,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 testKey);
 
             // Should hit the RWS
-            rws.Verify(r => r.GetWriteItem(testRwsKey), Times.Once);
+            rws.Verify(r => r.GetWriteItem(testRwsKey, out testValue), Times.Once);
 
             // Should never hit the storage.
             sr.Verify(s => s.GetBytes(testAddress, testKey), Times.Never);
