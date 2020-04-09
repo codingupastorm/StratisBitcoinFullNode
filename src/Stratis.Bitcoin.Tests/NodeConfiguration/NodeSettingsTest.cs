@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Bitcoin.Features.Api;
+using Stratis.Features.Api;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;

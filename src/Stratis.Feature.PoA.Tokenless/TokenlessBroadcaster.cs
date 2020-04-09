@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Features.PoA.ProtocolEncryption;
 
 namespace Stratis.Feature.PoA.Tokenless
 {

@@ -6,7 +6,7 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using SQLite;
-using Stratis.Bitcoin.Features.Wallet;
+using Stratis.Features.Wallet;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Features.SQLiteWalletRepository.Commands;
 using Stratis.Features.SQLiteWalletRepository.Tables;

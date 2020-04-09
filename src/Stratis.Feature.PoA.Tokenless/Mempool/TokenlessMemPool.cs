@@ -4,11 +4,11 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.MemoryPool.Fee;
-using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Fee;
+using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Signals;
-using static Stratis.Bitcoin.Features.MemoryPool.TxMempool;
+using static Stratis.Features.MemoryPool.TxMempool;
 
 namespace Stratis.Feature.PoA.Tokenless.Mempool
 {

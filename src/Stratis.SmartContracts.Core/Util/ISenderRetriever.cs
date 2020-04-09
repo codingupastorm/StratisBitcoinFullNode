@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.MemoryPool;
+using Stratis.Features.MemoryPool;
 
 namespace Stratis.SmartContracts.Core.Util
 {

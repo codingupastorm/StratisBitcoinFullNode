@@ -14,13 +14,7 @@ using NBitcoin;
 using Newtonsoft.Json.Linq;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Controllers.Models;
-using Stratis.Bitcoin.Features.Api;
-using Stratis.Bitcoin.Features.Miner.Controllers;
-using Stratis.Bitcoin.Features.Miner.Interfaces;
-using Stratis.Bitcoin.Features.Miner.Models;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Controllers;
-using Stratis.Bitcoin.Features.Wallet.Models;
+using Stratis.Features.Api;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.TestNetworks;
@@ -28,6 +22,12 @@ using Stratis.Bitcoin.Models;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.TestFramework;
+using Stratis.Features.Miner.Controllers;
+using Stratis.Features.Miner.Interfaces;
+using Stratis.Features.Miner.Models;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Controllers;
+using Stratis.Features.Wallet.Models;
 using Xunit.Abstractions;
 
 namespace Stratis.Bitcoin.IntegrationTests.API
@@ -144,7 +144,7 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         private void the_proof_of_stake_node_has_passed_LastPOWBlock()
         {
             typeof(ChainedHeader).GetProperty("Height").SetValue(this.stratisPosApiNode.FullNode.ConsensusManager().Tip,
-                this.stratisPosApiNode.FullNode.Network.Consensus.LastPOWBlock + 1);
+                this.stratisPosApiNode.FullNode.Network.Consensus.ConsensusMiningReward.LastPOWBlock + 1);
         }
 
         private void two_connected_proof_of_work_nodes_with_api_enabled()
@@ -162,7 +162,7 @@ namespace Stratis.Bitcoin.IntegrationTests.API
             this.firstStratisPowApiNode = this.powNodeBuilder.CreateStratisPowNode(this.powNetwork).WithWallet().Start();
             this.firstStratisPowApiNode.Mnemonic = this.firstStratisPowApiNode.Mnemonic;
 
-            this.firstStratisPowApiNode.FullNode.Network.Consensus.CoinbaseMaturity = this.maturity;
+            this.firstStratisPowApiNode.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity = this.maturity;
             this.apiUri = this.firstStratisPowApiNode.FullNode.NodeService<ApiSettings>().ApiUri;
         }
 
@@ -415,12 +415,12 @@ namespace Stratis.Bitcoin.IntegrationTests.API
 
             List<string> featuresNamespaces = statusResponse.FeaturesData.Select(f => f.Namespace).ToList();
             featuresNamespaces.Should().Contain("Stratis.Bitcoin.Base.BaseFeature");
-            featuresNamespaces.Should().Contain("Stratis.Bitcoin.Features.Api.ApiFeature");
-            featuresNamespaces.Should().Contain("Stratis.Bitcoin.Features.BlockStore.BlockStoreFeature");
-            featuresNamespaces.Should().Contain("Stratis.Bitcoin.Features.Consensus.PowConsensusFeature");
-            featuresNamespaces.Should().Contain("Stratis.Bitcoin.Features.MemoryPool.MempoolFeature");
-            featuresNamespaces.Should().Contain("Stratis.Bitcoin.Features.Miner.MiningFeature");
-            featuresNamespaces.Should().Contain("Stratis.Bitcoin.Features.Wallet.WalletFeature");
+            featuresNamespaces.Should().Contain("Stratis.Features.Api.ApiFeature");
+            featuresNamespaces.Should().Contain("Stratis.Features.BlockStore.BlockStoreFeature");
+            featuresNamespaces.Should().Contain("Stratis.Features.Consensus.PowConsensusFeature");
+            featuresNamespaces.Should().Contain("Stratis.Features.MemoryPool.MempoolFeature");
+            featuresNamespaces.Should().Contain("Stratis.Features.Miner.MiningFeature");
+            featuresNamespaces.Should().Contain("Stratis.Features.Wallet.WalletFeature");
 
             statusResponse.FeaturesData.All(f => f.State == "Initialized").Should().BeTrue();
         }

@@ -4,11 +4,11 @@ using NBitcoin;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.PoA.Voting;
-using Stratis.Bitcoin.Features.PoA.Voting.ConsensusRules;
+using Stratis.Features.PoA.Voting;
+using Stratis.Features.PoA.Voting.ConsensusRules;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.PoA.Tests.Rules
+namespace Stratis.Features.PoA.Tests.Rules
 {
     public class PoAVotingCoinbaseOutputFormatRuleTests : PoATestsBase
     {

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,16 +11,15 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using NBitcoin.Protocol;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.EventBus;
 using Stratis.Bitcoin.EventBus.CoreEvents;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P;
@@ -40,14 +38,13 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         private readonly object lockObject = new object();
         private readonly ILoggerFactory loggerFactory;
         internal readonly NodeRunner runner;
-        private List<Transaction> transactions = new List<Transaction>();
 
         public int ApiPort => int.Parse(this.ConfigParameters["apiport"]);
 
         public BitcoinSecret MinerSecret { get; private set; }
+
         public HdAddress MinerHDAddress { get; internal set; }
         public int ProtocolPort => int.Parse(this.ConfigParameters["port"]);
-        public int RpcPort => int.Parse(this.ConfigParameters["rpcport"]);
 
         /// <summary>Location of the data directory for the node.</summary>
         public string DataFolder => this.runner.DataFolder;
@@ -61,9 +58,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         public bool CookieAuth { get; set; }
 
         public Mnemonic Mnemonic { get; set; }
-
-        public string WalletName => this.builderWalletName;
-        public string WalletPassword => this.builderWalletPassword;
 
         private bool builderAlwaysFlushBlocks;
         private bool builderEnablePeerDiscovery;
@@ -112,14 +106,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         public FullNode FullNode => this.runner.FullNode;
 
         public CoreNodeState State { get; private set; }
-
-        private string GetRPCAuth()
-        {
-            if (!this.CookieAuth)
-                return this.creds.UserName + ":" + this.creds.Password;
-            else
-                return "cookiefile=" + Path.Combine(this.runner.DataFolder, "regtest", ".cookie");
-        }
 
         public CoreNode NoValidation()
         {
@@ -434,53 +420,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         public void SetMinerSecret(BitcoinSecret secret)
         {
             this.MinerSecret = secret;
-        }
-
-        /// <summary>
-        /// Get the chain of headers from the peer (thread safe).
-        /// </summary>
-        /// <param name="peer">Peer to get chain from.</param>
-        /// <param name="hashStop">The highest block wanted.</param>
-        /// <param name="cancellationToken"></param>
-        /// <returns>The chain of headers.</returns>
-        private ChainIndexer GetChain(INetworkPeer peer, uint256 hashStop = null, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            var chain = new ChainIndexer(peer.Network);
-            this.SynchronizeChain(peer, chain, hashStop, cancellationToken);
-            return chain;
-        }
-
-        /// <summary>
-        /// Synchronize a given Chain to the tip of the given node if its height is higher. (Thread safe).
-        /// </summary>
-        /// <param name="peer">Node to synchronize the chain for.</param>
-        /// <param name="chain">The chain to synchronize.</param>
-        /// <param name="hashStop">The location until which it synchronize.</param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        private IEnumerable<ChainedHeader> SynchronizeChain(INetworkPeer peer, ChainIndexer chain, uint256 hashStop = null, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            ChainedHeader oldTip = chain.Tip;
-            List<ChainedHeader> headers = this.GetHeadersFromFork(peer, oldTip, hashStop, cancellationToken).ToList();
-            if (headers.Count == 0)
-                return new ChainedHeader[0];
-
-            ChainedHeader newTip = headers[headers.Count - 1];
-
-            if (newTip.Height <= oldTip.Height)
-                throw new ProtocolException("No tip should have been recieved older than the local one");
-
-            foreach (ChainedHeader header in headers)
-            {
-                if (!header.Validate(peer.Network))
-                {
-                    throw new ProtocolException("A header which does not pass proof of work verification has been received");
-                }
-            }
-
-            chain.SetTip(newTip);
-
-            return headers;
         }
 
         private async Task AssertStateAsync(INetworkPeer peer, NetworkPeerState peerState, CancellationToken cancellationToken = default(CancellationToken))

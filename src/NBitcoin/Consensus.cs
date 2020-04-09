@@ -1,161 +1,123 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Text.Json.Serialization;
 using NBitcoin.BouncyCastle.Math;
-using NBitcoin.Rules;
 
 namespace NBitcoin
 {
     public class Consensus : IConsensus
     {
         /// <inheritdoc />
-        public long CoinbaseMaturity { get; set; }
+        [JsonPropertyName("maxreorglength")]
+        public uint MaxReorgLength { get; set; }
 
-        /// <inheritdoc />
-        public Money PremineReward { get; }
-
-        /// <inheritdoc />
-        public long PremineHeight { get; }
-
-        /// <inheritdoc />
-        public Money ProofOfWorkReward { get; }
-
-        /// <inheritdoc />
-        public Money ProofOfStakeReward { get; }
-
-        /// <inheritdoc />
-        public uint MaxReorgLength { get; private set; }
-
-        /// <inheritdoc />
-        public long MaxMoney { get; }
-
+        [JsonPropertyName("options")]
         public ConsensusOptions Options { get; set; }
 
         public BuriedDeploymentsArray BuriedDeployments { get; }
 
         public IBIP9DeploymentsArray BIP9Deployments { get; }
 
-        public int SubsidyHalvingInterval { get; }
-
-        public int MajorityEnforceBlockUpgrade { get; }
-
-        public int MajorityRejectBlockOutdated { get; }
-
-        public int MajorityWindow { get; }
-
         public uint256 BIP34Hash { get; }
 
-        public Target PowLimit { get; }
-
-        public TimeSpan PowTargetTimespan { get; }
-
-        public TimeSpan PowTargetSpacing { get; }
-
-        public bool PowAllowMinDifficultyBlocks { get; }
+        public uint256 HashGenesisBlock { get; set; }
 
         /// <inheritdoc />
-        public bool PosNoRetargeting { get; }
+        public uint256 MinimumChainWork { get; set; }
 
         /// <inheritdoc />
-        public bool PowNoRetargeting { get; }
-
-        public uint256 HashGenesisBlock { get; }
-
-        /// <inheritdoc />
-        public uint256 MinimumChainWork { get; }
-
-        public int MinerConfirmationWindow { get; set; }
-        
-        /// <inheritdoc />
-        public int CoinType { get; }
-
-        public BigInteger ProofOfStakeLimit { get; }
-
-        public BigInteger ProofOfStakeLimitV2 { get; }
+        [JsonPropertyName("cointype")]
+        public int CoinType { get; set; }
 
         /// <inheritdoc />
-        public int LastPOWBlock { get; set; }
+        [JsonPropertyName("defaultassumevalid")]
+        public uint256 DefaultAssumeValid { get; set; }
 
         /// <inheritdoc />
-        public bool IsProofOfStake { get; }
+        public ConsensusFactory ConsensusFactory { get; set; }
 
         /// <inheritdoc />
-        public uint256 DefaultAssumeValid { get; }
-
-        /// <inheritdoc />
-        public ConsensusFactory ConsensusFactory { get; }
-
-        /// <inheritdoc />
-        public ConsensusRules ConsensusRules { get; }
+        public ConsensusRules ConsensusRules { get; set; }
 
         /// <inheritdoc />
         public List<Type> MempoolRules { get; set; }
+
+        public IConsensusMiningReward ConsensusMiningReward { get; set; }
+
+        public Consensus()
+        {
+            this.BIP9Deployments = new NoBIP9Deployments();
+            this.BuriedDeployments = new BuriedDeploymentsArray();
+        }
 
         public Consensus(
             ConsensusFactory consensusFactory,
             ConsensusOptions consensusOptions,
             int coinType,
             uint256 hashGenesisBlock,
-            int subsidyHalvingInterval,
-            int majorityEnforceBlockUpgrade,
-            int majorityRejectBlockOutdated,
-            int majorityWindow,
             BuriedDeploymentsArray buriedDeployments,
             IBIP9DeploymentsArray bip9Deployments,
             uint256 bip34Hash,
-            int minerConfirmationWindow,
             uint maxReorgLength,
             uint256 defaultAssumeValid,
-            long maxMoney,
-            long coinbaseMaturity,
-            long premineHeight,
-            Money premineReward,
-            Money proofOfWorkReward,
-            TimeSpan powTargetTimespan,
-            TimeSpan powTargetSpacing,
-            bool powAllowMinDifficultyBlocks,
-            bool posNoRetargeting,
-            bool powNoRetargeting,
-            Target powLimit,
             uint256 minimumChainWork,
-            bool isProofOfStake,
-            int lastPowBlock,
-            BigInteger proofOfStakeLimit,
-            BigInteger proofOfStakeLimitV2,
-            Money proofOfStakeReward)
+            IConsensusMiningReward consensusProofOfWork = null)
         {
-            this.CoinbaseMaturity = coinbaseMaturity;
-            this.PremineReward = premineReward;
-            this.PremineHeight = premineHeight;
-            this.ProofOfWorkReward = proofOfWorkReward;
-            this.ProofOfStakeReward = proofOfStakeReward;
             this.MaxReorgLength = maxReorgLength;
-            this.MaxMoney = maxMoney;
             this.Options = consensusOptions;
             this.BuriedDeployments = buriedDeployments;
             this.BIP9Deployments = bip9Deployments;
-            this.SubsidyHalvingInterval = subsidyHalvingInterval;
-            this.MajorityEnforceBlockUpgrade = majorityEnforceBlockUpgrade;
-            this.MajorityRejectBlockOutdated = majorityRejectBlockOutdated;
-            this.MajorityWindow = majorityWindow;
             this.BIP34Hash = bip34Hash;
-            this.PowLimit = powLimit;
-            this.PowTargetTimespan = powTargetTimespan;
-            this.PowTargetSpacing = powTargetSpacing;
-            this.PowAllowMinDifficultyBlocks = powAllowMinDifficultyBlocks;
-            this.PosNoRetargeting = posNoRetargeting;
-            this.PowNoRetargeting = powNoRetargeting;
             this.HashGenesisBlock = hashGenesisBlock;
             this.MinimumChainWork = minimumChainWork;
-            this.MinerConfirmationWindow = minerConfirmationWindow;
             this.CoinType = coinType;
-            this.ProofOfStakeLimit = proofOfStakeLimit;
-            this.ProofOfStakeLimitV2 = proofOfStakeLimitV2;
-            this.LastPOWBlock = lastPowBlock;
-            this.IsProofOfStake = isProofOfStake;
             this.DefaultAssumeValid = defaultAssumeValid;
             this.ConsensusFactory = consensusFactory;
             this.ConsensusRules = new ConsensusRules();
             this.MempoolRules = new List<Type>();
+
+            this.ConsensusMiningReward = consensusProofOfWork;
         }
+    }
+
+    public class ConsensusProofOfWork : IConsensusMiningReward
+    {
+        /// <inheritdoc />
+        public long CoinbaseMaturity { get; set; }
+
+        public bool IsProofOfStake { get; set; }
+
+        public int LastPOWBlock { get; set; }
+
+        /// <inheritdoc />
+        public long MaxMoney { get; set; }
+
+        public int MinerConfirmationWindow { get; set; }
+
+        public bool PosNoRetargeting { get; set; }
+
+        public bool PowAllowMinDifficultyBlocks { get; set; }
+
+        public Target PowLimit { get; set; }
+
+        public bool PowNoRetargeting { get; set; }
+
+        public TimeSpan PowTargetSpacing { get; set; }
+
+        public TimeSpan PowTargetTimespan { get; set; }
+
+        public Money PremineReward { get; set; }
+
+        public long PremineHeight { get; set; }
+
+        public BigInteger ProofOfStakeLimit { get; set; }
+
+        public BigInteger ProofOfStakeLimitV2 { get; set; }
+
+        public Money ProofOfStakeReward { get; set; }
+
+        public Money ProofOfWorkReward { get; set; }
+
+        public int SubsidyHalvingInterval { get; set; }
     }
 }

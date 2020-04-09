@@ -7,33 +7,21 @@ namespace Stratis.SmartContracts.CLR
 {
     public class PrivatePersistentState : IPersistentState
     {
-        private readonly ReadWriteSetBuilder rwsBuilder;
         private readonly ISerializer serializer;
         private readonly IPersistenceStrategy persistenceStrategy;
         private readonly uint160 contractAddress;
 
-        public PrivatePersistentState(
-            ISerializer serializer,
+        public PrivatePersistentState(ISerializer serializer,
             IPersistenceStrategy persistenceStrategy,
-            uint160 contractAddress,
-            ReadWriteSetBuilder readWriteSetBuilder)
+            uint160 contractAddress)
         {
             this.serializer = serializer;
             this.persistenceStrategy = persistenceStrategy;
             this.contractAddress = contractAddress;
-            this.rwsBuilder = readWriteSetBuilder;
         }
-
-        public ReadWriteSet GetReadWriteSet()
-        {
-            return this.rwsBuilder.GetReadWriteSet();
-        }
-
+        
         public void SetBytes(byte[] key, byte[] value)
         {
-            // Keep the bytes in a readwrite set for now. 
-            this.rwsBuilder.AddWriteItem(new ReadWriteSetKey(this.contractAddress, key), value);
-
             // Store a hash of the bytes in the normal data store.
             byte[] hash = HashHelper.Keccak256(value);
             this.persistenceStrategy.StoreBytes(this.contractAddress, key, hash, true);

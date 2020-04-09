@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
+using Stratis.Features.Wallet.Interfaces;
 
 namespace Stratis.Features.SQLiteWalletRepository
 {

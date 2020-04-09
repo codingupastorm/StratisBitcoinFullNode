@@ -13,18 +13,12 @@ namespace Stratis.Bitcoin.Base.Deployments
     /// </summary>
     public class ThresholdConditionCache
     {
-        // What block version to use for new blocks (pre versionbits).
-        private const int VersionbitsLastOldBlockVersion = 4;
-
         // BIP9 reserves the top 3 bits to identify this (001) and future mechanisms (top bits 010 and 011).
         // When a block nVersion does not have top bits 001, it is treated as if all bits are 0 for the purposes of deployments.
         private const uint VersionbitsTopMask = 0xE0000000;
 
         // Represents bits 001 of the VersionBitsTopMask to indicate that this is a BIP9 version.
         public const uint VersionbitsTopBits = 0x20000000;
-
-        // Total bits available for versionbits.
-        private const int VersionbitsNumBits = 29;
 
         // Array size required to hold all BIP9 deployment activation states.
         public int ArraySize => this.consensus.BIP9Deployments.Length;
@@ -86,7 +80,7 @@ namespace Stratis.Bitcoin.Base.Deployments
 
                 int votes = 0;
                 int currentHeight = indexPrev.Height + 1;
-                int period = this.consensus.MinerConfirmationWindow;
+                int period = this.consensus.ConsensusMiningReward.MinerConfirmationWindow;
 
                 // First ancestor outside last confirmation window.
                 ChainedHeader periodStartsHeader = indexPrev.GetAncestor(indexPrev.Height - (currentHeight % period));
@@ -142,7 +136,7 @@ namespace Stratis.Bitcoin.Base.Deployments
                     PeriodStartHeight = periodStartsHeader.Height,
                     PeriodEndHeight = periodEndsHeight,
                     StateValue = thresholdStates[deploymentIndex],
-                    ThresholdState = ((ThresholdState) thresholdStates[deploymentIndex]).ToString()
+                    ThresholdState = thresholdStates[deploymentIndex].ToString()
                 });
             }
 
@@ -160,7 +154,7 @@ namespace Stratis.Bitcoin.Base.Deployments
             if (this.consensus.BIP9Deployments[deployment] == null)
                 return ThresholdState.Failed;
 
-            int period = this.consensus.MinerConfirmationWindow;
+            int period = this.consensus.ConsensusMiningReward.MinerConfirmationWindow;
             long threshold = this.consensus.BIP9Deployments[deployment].Threshold;
             DateTimeOffset? timeStart = this.consensus.BIP9Deployments[deployment]?.StartTime;
             DateTimeOffset? timeTimeout = this.consensus.BIP9Deployments[deployment]?.Timeout;

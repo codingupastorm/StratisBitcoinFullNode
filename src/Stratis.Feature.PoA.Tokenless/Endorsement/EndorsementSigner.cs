@@ -1,6 +1,6 @@
 ﻿using NBitcoin;
 using Stratis.Feature.PoA.Tokenless.Consensus;
-using Stratis.Feature.PoA.Tokenless.Wallet;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
@@ -13,9 +13,9 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     {
         private readonly Network network;
         private readonly ITokenlessSigner tokenlessSigner;
-        private readonly ITokenlessWalletManager tokenlessWalletManager;
+        private readonly ITokenlessKeyStoreManager tokenlessWalletManager;
 
-        public EndorsementSigner(Network network, ITokenlessSigner tokenlessSigner, ITokenlessWalletManager tokenlessWalletManager)
+        public EndorsementSigner(Network network, ITokenlessSigner tokenlessSigner, ITokenlessKeyStoreManager tokenlessWalletManager)
         {
             this.network = network;
             this.tokenlessSigner = tokenlessSigner;
