@@ -7,7 +7,7 @@ namespace Stratis.SmartContracts.Core.ReadWrite
     public interface IReadWriteSetOperations
     {
         void AddReadItem(ReadWriteSetKey key, string version);
-        void AddWriteItem(ReadWriteSetKey key, byte[] value);
+        void AddWriteItem(ReadWriteSetKey key, byte[] value, bool isPrivateData = false);
     }
 
     /// <summary>
