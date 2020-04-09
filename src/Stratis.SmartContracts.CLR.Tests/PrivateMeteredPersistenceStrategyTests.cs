@@ -15,16 +15,19 @@ namespace Stratis.SmartContracts.CLR.Tests
         private readonly IKeyEncodingStrategy keyEncodingStrategy = BasicKeyEncodingStrategy.Default;
 
         [Fact]
-        public void Fetches_Bytes_From_Private_State()
+        public void Fetches_Bytes_From_Private_State_If_Not_In_RWS()
         {
             byte[] testKey = new byte[] { 1 };
             byte[] testValue = new byte[] { 2 };
             uint160 testAddress = uint160.One;
             var testVersion = "1.1";
             var testStorageValue = new StorageValue(testValue, testVersion);
+            var testRwsKey = new ReadWriteSetKey(testAddress, testKey);
 
             var sr = new Mock<IPrivateDataStore>();
-            var rws = Mock.Of<IReadWriteSetOperations>();
+            var rws = new Mock<IReadWriteSetOperations>();
+
+            rws.Setup(r => r.GetWriteItem(testRwsKey)).Returns(default(byte[]));
 
             sr.Setup(m => m.GetBytes(
                 It.IsAny<uint160>(),
@@ -38,7 +41,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 sr.Object,
                 gasMeter,
                 this.keyEncodingStrategy,
-                rws,
+                rws.Object,
                 testVersion
             );
 
@@ -46,12 +49,52 @@ namespace Stratis.SmartContracts.CLR.Tests
                 testAddress,
                 testKey);
 
+            rws.Verify(r => r.GetWriteItem(testRwsKey), Times.Once);
             sr.Verify(s => s.GetBytes(testAddress, testKey), Times.Once);
             Assert.True(testValue.SequenceEqual(result));
         }
 
         [Fact]
-        public void Sets_Bytes_In_Private_State()
+        public void Fetches_Bytes_From_RWS()
+        {
+            byte[] testKey = new byte[] { 1 };
+            byte[] testValue = new byte[] { 2 };
+            uint160 testAddress = uint160.One;
+            var testVersion = "1.1";
+            var testStorageValue = new StorageValue(testValue, testVersion);
+            var testRwsKey = new ReadWriteSetKey(testAddress, testKey);
+
+            var sr = new Mock<IPrivateDataStore>();
+            var rws = new Mock<IReadWriteSetOperations>();
+
+            rws.Setup(r => r.GetWriteItem(testRwsKey)).Returns(testValue);
+
+            var availableGas = (RuntimeObserver.Gas)100000;
+            GasMeter gasMeter = new GasMeter(availableGas);
+
+            var strategy = new PrivateMeteredPersistenceStrategy(
+                sr.Object,
+                gasMeter,
+                this.keyEncodingStrategy,
+                rws.Object,
+                testVersion
+            );
+
+            var result = strategy.FetchBytes(
+                testAddress,
+                testKey);
+
+            // Should hit the RWS
+            rws.Verify(r => r.GetWriteItem(testRwsKey), Times.Once);
+
+            // Should never hit the storage.
+            sr.Verify(s => s.GetBytes(testAddress, testKey), Times.Never);
+
+            Assert.True(testValue.SequenceEqual(result));
+        }
+
+        [Fact]
+        public void Sets_Bytes_In_RWS()
         {
             byte[] testKey = new byte[] { 1 };
             byte[] testValue = new byte[] { 2 };
