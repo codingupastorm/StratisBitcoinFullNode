@@ -82,5 +82,55 @@ namespace Stratis.SmartContracts.IntegrationTests
 
             Assert.True(channelNodeProcess.HasExited);
         }
+
+        [Fact]
+        public void CanRestartChannelNodes()
+        {
+            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+
+            Process channelNodeProcess = null;
+
+            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                var tokenlessNetwork = new TokenlessNetwork();
+
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient();
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
+
+                // Get Authority Certificate.
+                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
+                CaClient client1 = TokenlessTestHelper.GetClient(server);
+
+                // Create and start the parent node.
+                CoreNode parentNode = nodeBuilder.CreateTokenlessNode(tokenlessNetwork, 0, ac, client1);
+                parentNode.Start();
+
+                // Create 5 channels for the identity to be apart of.
+                nodeBuilder.CreateChannel(parentNode, "marketing", 0);
+                nodeBuilder.CreateChannel(parentNode, "sales", 1);
+                nodeBuilder.CreateChannel(parentNode, "legal", 2);
+                nodeBuilder.CreateChannel(parentNode, "it", 3);
+                nodeBuilder.CreateChannel(parentNode, "humanresources", 4);
+
+                // Re-start the parent node as to load and start the channels it belongs to.
+                parentNode.Restart();
+
+                // Ensure that the node started the other daemons, each belonging to their own channel (network)
+                var channelService = parentNode.FullNode.NodeService<IChannelService>();
+                Assert.True(channelService.StartedChannelNodes.Count == 5);
+
+                foreach (var processId in channelService.StartedChannelNodes)
+                {
+                    var process = Process.GetProcessById(processId);
+                    Assert.False(process.HasExited);
+                }
+            }
+
+            Assert.True(channelNodeProcess.HasExited);
+        }
     }
 }

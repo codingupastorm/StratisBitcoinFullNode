@@ -12,6 +12,7 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Channels;
+using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Features.PoA.Tests.Common;
@@ -106,6 +107,23 @@ namespace Stratis.SmartContracts.Tests.Common
 
                 return node;
             }
+        }
+
+        public void CreateChannel(CoreNode parentNode, string channelName, int nodeIndex = 0)
+        {
+            // Serialize the channel network and write the json to disk.
+            //var nodeRootFolder = Path.Combine(this.rootFolder, nodeIndex.ToString());
+            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, "channels");
+            var serializedJson = JsonSerializer.Serialize(channelNetwork);
+
+            var channelRootFolder = Path.Combine(parentNode.FullNode.Settings.DataDir, channelNetwork.RootFolderName, channelName);
+            Directory.CreateDirectory(channelRootFolder);
+
+            var serializedNetworkFileName = $"{channelRootFolder}\\{channelName}_network.json";
+            File.WriteAllText(serializedNetworkFileName, serializedJson);
+
+            IChannelRepository channelRepository = parentNode.FullNode.NodeService<IChannelRepository>();
+            channelRepository.SaveChannelDefinition(new ChannelDefinition() { Name = channelName });
         }
 
         public CoreNode CreateChannelNode(CoreNode infraNode, string channelName, int nodeIndex = 0)

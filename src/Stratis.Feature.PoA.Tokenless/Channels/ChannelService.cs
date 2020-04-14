@@ -87,7 +87,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 {
                     this.logger.LogInformation($"Restarting a node on channel '{channel}'.");
 
-                    Process process = await StartTheProcessAsync($"{this.nodeSettings.DataFolder.RootPath}\\channels\\{channel.ToLowerInvariant()}");
+                    Process process = await StartNodeAsync(channel, "-ischannelnode=true", $"-channelname={channel}");
                     if (process.HasExited)
                         this.logger.LogWarning($"Failed to restart node on channel '{channel}' as the process exited early.");
 
