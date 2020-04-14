@@ -146,7 +146,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
         private async Task<Process> RestartNodeAsync(string channelName)
         {
-            // Write teh serialized version of the network to disk.
+            // Write the serialized version of the network to disk.
             ChannelNetwork channelNetwork = WriteChannelNetworkJson(channelName);
 
             // Copy the parent node's authority and client certificate to the channel node's root.
