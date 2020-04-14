@@ -99,6 +99,10 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<IRevocationChecker, RevocationChecker>();
                         services.AddSingleton<ICertificatePermissionsChecker, CertificatePermissionsChecker>();
 
+                        // Channels
+                        services.AddSingleton<IChannelKeyValueStore, ChannelKeyValueStore>();
+                        services.AddSingleton<IChannelRepository, ChannelRepository>();
+
                         var options = (PoAConsensusOptions)network.Consensus.Options;
                         if (options.EnablePermissionedMembership)
                         {
