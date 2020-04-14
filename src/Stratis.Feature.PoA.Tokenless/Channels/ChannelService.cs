@@ -61,7 +61,12 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
                 this.StartedChannelNodes.Add(process.Id);
 
-                this.channelRepository.SaveChannelCreationRequest(request);
+                var channelDefinition = new ChannelDefinition()
+                {
+                    Name = request.Name
+                };
+
+                this.channelRepository.SaveChannelDefinition(channelDefinition);
 
                 this.logger.LogInformation($"Node started on channel '{request.Name}'.");
             }
@@ -75,7 +80,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         {
             try
             {
-                this.channelRepository.GetChannelCreationRequests().Keys.ToList().ForEach(async n => await this.RestartChannelNodeAsync(n));
+                this.channelRepository.GetChannelDefinitions().Keys.ToList().ForEach(async n => await this.RestartChannelNodeAsync(n));
             }
             catch (Exception ex)
             {

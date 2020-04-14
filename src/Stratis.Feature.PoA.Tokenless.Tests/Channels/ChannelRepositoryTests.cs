@@ -16,7 +16,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
         }
 
         [Fact]
-        public void CanPersistAndReadBackChannelCreationRequests()
+        public void CanPersistAndReadBackChannelDefinitions()
         {
             var dataFolderPath = CreateTestDir(this);
             var dataFolder = new DataFolder(dataFolderPath);
@@ -26,26 +26,24 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
 
             var channelRepository = new ChannelRepository(this.Network, this.LoggerFactory.Object, keyValueStore, repositorySerializer);
 
-            ChannelCreationRequest request1 = new ChannelCreationRequest()
+            var request1 = new ChannelDefinition()
             {
-                Name = "name1",
-                Organisation = "org1"
+                Name = "name1"
             };
 
-            channelRepository.SaveChannelCreationRequest(request1);
+            channelRepository.SaveChannelDefinition(request1);
 
-            ChannelCreationRequest request2 = new ChannelCreationRequest()
+            var request2 = new ChannelDefinition()
             {
-                Name = "name2",
-                Organisation = "org2"
+                Name = "name2"
             };
 
-            channelRepository.SaveChannelCreationRequest(request2);
+            channelRepository.SaveChannelDefinition(request2);
 
-            Dictionary<string, ChannelCreationRequest> dict = channelRepository.GetChannelCreationRequests();
+            Dictionary<string, ChannelDefinition> dict = channelRepository.GetChannelDefinitions();
 
-            Assert.Equal("org1", dict["name1"].Organisation);
-            Assert.Equal("org2", dict["name2"].Organisation);
+            Assert.Equal("name1", dict["name1"].Name);
+            Assert.Equal("name2", dict["name2"].Name);
         }
     }
 }

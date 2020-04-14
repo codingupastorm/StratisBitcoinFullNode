@@ -11,9 +11,9 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     {
         void Initialize();
 
-        void SaveChannelCreationRequest(ChannelCreationRequest request);
+        void SaveChannelDefinition(ChannelDefinition request);
 
-        Dictionary<string, ChannelCreationRequest> GetChannelCreationRequests();
+        Dictionary<string, ChannelDefinition> GetChannelDefinitions();
     }
 
     public class ChannelRepository : IChannelRepository
@@ -44,7 +44,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         {
         }
 
-        public void SaveChannelCreationRequest(ChannelCreationRequest request)
+        public void SaveChannelDefinition(ChannelDefinition request)
         {
             using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(Bitcoin.Interfaces.KeyValueStoreTransactionMode.ReadWrite, ConfigTxTableName))
             {
@@ -53,11 +53,11 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             }
         }
 
-        public Dictionary<string, ChannelCreationRequest> GetChannelCreationRequests()
+        public Dictionary<string, ChannelDefinition> GetChannelDefinitions()
         {
             using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(Bitcoin.Interfaces.KeyValueStoreTransactionMode.Read, ConfigTxTableName))
             {
-                return transaction.SelectDictionary<string, ChannelCreationRequest>(ConfigTxTableName);
+                return transaction.SelectDictionary<string, ChannelDefinition>(ConfigTxTableName);
             }
         }
     }
