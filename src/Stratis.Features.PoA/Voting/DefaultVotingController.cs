@@ -14,6 +14,7 @@ namespace Stratis.Features.PoA.Voting
 {
     [ApiVersion("1")]
     [Route("api/[controller]")]
+    [ApiController]
     public class DefaultVotingController : Controller
     {
         protected readonly IFederationManager fedManager;
