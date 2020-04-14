@@ -23,6 +23,8 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         public async Task<bool> ProcessEndorsementAsync(uint256 proposalId, Transaction signedRWSTransaction)
         {
             // TODO: Recruit multiple endorsements before broadcasting the transactions.
+            // Get the sender/signer of the tx
+            // Validate the signature
 
             EndorsementInfo info = this.endorsements.GetEndorsement(proposalId);
 
