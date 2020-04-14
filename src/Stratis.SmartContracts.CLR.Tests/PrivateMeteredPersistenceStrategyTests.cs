@@ -132,7 +132,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             sr.Verify(s => s.StoreBytes(testAddress, testKey, It.IsAny<byte[]>()), Times.Never());
 
             // Should only persist to the RWS.
-            rws.Verify(r => r.AddWriteItem(testRwsKey, testValue), Times.Once);
+            rws.Verify(r => r.AddWriteItem(testRwsKey, testValue, true), Times.Once);
         }
 
         [Fact]

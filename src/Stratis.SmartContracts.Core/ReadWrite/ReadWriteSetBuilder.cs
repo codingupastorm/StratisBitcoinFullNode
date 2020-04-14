@@ -64,7 +64,7 @@ namespace Stratis.SmartContracts.Core.ReadWrite
         {
             var keyExists = this.writeSet.ContainsKey(key);
 
-            value = keyExists ? this.writeSet[key] : null;
+            value = keyExists ? this.writeSet[key].Item1 : null;
 
             return keyExists;
         }

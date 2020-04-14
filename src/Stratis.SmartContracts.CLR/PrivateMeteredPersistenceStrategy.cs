@@ -63,7 +63,7 @@ namespace Stratis.SmartContracts.CLR
             return storageValue.Value;
         }
 
-        public void StoreBytes(uint160 address, byte[] key, byte[] value)
+        public void StoreBytes(uint160 address, byte[] key, byte[] value, bool isPrivateData = true)
         {
             byte[] encodedKey = this.keyEncodingStrategy.GetBytes(key);
             RuntimeObserver.Gas operationCost = GasPriceList.StorageSaveOperationCost(
@@ -72,7 +72,7 @@ namespace Stratis.SmartContracts.CLR
 
             this.gasMeter.Spend(operationCost);
 
-            this.readWriteSet.AddWriteItem(new ReadWriteSetKey(address, key), value);
+            this.readWriteSet.AddWriteItem(new ReadWriteSetKey(address, key), value, true);
         }
     }
 }
