@@ -29,9 +29,8 @@ namespace Stratis.Features.MemoryPool
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
-        [ActionName("getrawmempool")]
         [ApiExplorerSettings(IgnoreApi = true)]
-        [ActionDescription("Lists the contents of the memory pool.")]
+        [NonAction]
         public Task<List<uint256>> GetRawMempool()
         {
             return this.MempoolManager.GetMempoolAsync();

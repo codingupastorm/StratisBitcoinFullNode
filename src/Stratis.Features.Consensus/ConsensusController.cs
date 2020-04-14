@@ -42,9 +42,8 @@ namespace Stratis.Features.Consensus
         /// Implements the getbestblockhash RPC call.
         /// </summary>
         /// <returns>A <see cref="uint256"/> hash of the block at the consensus tip.</returns>
-        [ActionName("getbestblockhash")]
         [ApiExplorerSettings(IgnoreApi = true)]
-        [ActionDescription("Get the hash of the block at the consensus tip.")]
+        [NonAction]
         public uint256 GetBestBlockHashRPC()
         {
             return this.ChainState.ConsensusTip?.HashBlock;
@@ -104,9 +103,8 @@ namespace Stratis.Features.Consensus
         /// </summary>
         /// <param name="height">The requested block height.</param>
         /// <returns>A <see cref="uint256"/> hash of the block at the given height. <c>Null</c> if block not found.</returns>
-        [ActionName("getblockhash")]
         [ApiExplorerSettings(IgnoreApi = true)]
-        [ActionDescription("Gets the hash of the block at the given height.")]
+        [NonAction]
         public uint256 GetBlockHashRPC(int height)
         {
             this.logger.LogDebug("GetBlockHash {0}", height);
