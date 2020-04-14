@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using MembershipServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NBitcoin;
@@ -6,24 +7,26 @@ using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.Consensus;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
-using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Features.PoA;
-using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
-using Stratis.Bitcoin.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Feature.PoA.Tokenless.Controllers;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mining;
-using Stratis.Feature.PoA.Tokenless.Wallet;
+using Stratis.Features.Consensus;
+using Stratis.Features.Consensus.CoinViews;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Broadcasting;
+using Stratis.Features.MemoryPool.Interfaces;
+using Stratis.Features.PoA;
+using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.Features.PoA.Voting;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Store;
 
@@ -42,6 +45,8 @@ namespace Stratis.Feature.PoA.Tokenless
                     .AddFeature<TokenlessFeature>()
                     .FeatureServices(services =>
                     {
+                        services.AddSingleton<IChannelService, ChannelService>();
+                        services.AddSingleton<ChannelSettings>();
                         services.Replace(ServiceDescriptor.Singleton<ITxMempool, TokenlessMempool>());
                         services.Replace(ServiceDescriptor.Singleton<IMempoolValidator, TokenlessMempoolValidator>());
                         services.AddSingleton<BlockDefinition, TokenlessBlockDefinition>();
@@ -57,6 +62,7 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<IEndorsementRequestValidator, EndorsementRequestValidator>();
                         services.AddSingleton<IEndorsementSigner, EndorsementSigner>();
                         services.AddSingleton<IEndorsements, Endorsements>();
+                        services.AddSingleton<IPrivateDataRetriever, PrivateDataRetriever>();
 
                         // Private data.
                         services.AddSingleton<ITransientKeyValueStore, TransientKeyValueStore>();
@@ -89,7 +95,6 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<IConsensusRuleEngine, TokenlessConsensusRuleEngine>();
                         services.AddSingleton<IChainState, ChainState>();
                         services.AddSingleton<ConsensusQuery>()
-                            .AddSingleton<INetworkDifficulty, ConsensusQuery>(provider => provider.GetService<ConsensusQuery>())
                             .AddSingleton<IGetUnspentTransaction, ConsensusQuery>(provider => provider.GetService<ConsensusQuery>());
 
                         // PoA Specific
@@ -109,10 +114,10 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<IBlockBufferGenerator, BlockBufferGenerator>();
 
                         // Permissioned membership.
+                        services.AddSingleton<IMembershipServicesDirectory, MembershipServicesDirectory>();
                         services.AddSingleton<ICertificatesManager, CertificatesManager>();
                         services.AddSingleton<IRevocationChecker, RevocationChecker>();
                         services.AddSingleton<ICertificatePermissionsChecker, CertificatePermissionsChecker>();
-                        services.AddSingleton<ICertificateCache, CertificateCache>();
 
                         var options = (PoAConsensusOptions)network.Consensus.Options;
                         if (options.EnablePermissionedMembership)
@@ -121,22 +126,26 @@ namespace Stratis.Feature.PoA.Tokenless
                             services.Remove(descriptor);
                             services.AddSingleton<INetworkPeerFactory, TlsEnabledNetworkPeerFactory>();
                         }
+
+                        // Necessary for the dynamic contract controller
+                        // Use AddScoped for instance-per-request lifecycle, ref. https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-2.2#scoped
+                        services.AddScoped<TokenlessController>();
                     });
             });
 
             return fullNodeBuilder;
         }
 
-        public static IFullNodeBuilder UseTokenlessWallet(this IFullNodeBuilder fullNodeBuilder)
+        public static IFullNodeBuilder UseTokenlessKeyStore(this IFullNodeBuilder fullNodeBuilder)
         {
             fullNodeBuilder.ConfigureFeature(features =>
             {
                 features
-                    .AddFeature<TokenlessWalletFeature>()
+                    .AddFeature<TokenlessKeyStoreFeature>()
                     .FeatureServices(services =>
                     {
-                        services.AddSingleton<TokenlessWalletSettings>();
-                        services.AddSingleton<ITokenlessWalletManager, TokenlessWalletManager>();
+                        services.AddSingleton<TokenlessKeyStoreSettings>();
+                        services.AddSingleton<ITokenlessKeyStoreManager, TokenlessKeyStoreManager>();
                         services.AddSingleton<IMiningKeyProvider, TokenlessMiningKeyProvider>();
                     });
             });

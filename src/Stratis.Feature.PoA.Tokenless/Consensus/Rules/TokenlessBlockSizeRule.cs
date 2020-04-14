@@ -4,7 +4,7 @@ using NBitcoin;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
+using Stratis.Features.Consensus.Rules.CommonRules;
 
 namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 {

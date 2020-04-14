@@ -7,15 +7,15 @@ using NBitcoin;
 using NBitcoin.Protocol;
 using NLog;
 using Stratis.Bitcoin.Builder;
-using Stratis.Bitcoin.Features.Api;
-using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.Consensus;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.Miner;
-using Stratis.Bitcoin.Features.Wallet;
+using Stratis.Features.Api;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Features.BlockStore;
+using Stratis.Features.Consensus;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.Miner;
 using Stratis.Features.SQLiteWalletRepository;
+using Stratis.Features.Wallet;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 {
@@ -25,7 +25,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         public NodeConfigParameters ConfigParameters { get; }
 
-        private readonly string rootFolder;
+        protected readonly string rootFolder;
 
         public NodeBuilder(string rootFolder)
         {
@@ -147,8 +147,8 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             string numberedFolderName = string.Join(
                 ".",
                 new[] { hash, folderName }.Where(s => s != null));
-            string dataFolderName = Path.Combine(this.rootFolder, numberedFolderName);
 
+            string dataFolderName = Path.Combine(this.rootFolder, numberedFolderName);
             return dataFolderName;
         }
 

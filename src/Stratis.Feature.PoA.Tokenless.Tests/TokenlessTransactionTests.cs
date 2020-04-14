@@ -1,13 +1,13 @@
 ﻿using System.Linq;
 using System.Text;
+using MembershipServices;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
-using Stratis.Feature.PoA.Tokenless.Wallet;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Util;
 using Xunit;
@@ -32,9 +32,10 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             string testDir = TestBase.GetTestDirectoryPath(this, callingMethod);
             var settings = new NodeSettings(network, args: new[] { $"datadir={testDir}", "password=test" });
-            var revocationChecker = new RevocationChecker(settings, null, settings.LoggerFactory, DateTimeProvider.Default);
+            var membershipServices = new MembershipServicesDirectory(settings);
+            var revocationChecker = new RevocationChecker(membershipServices);
             var certificatesManager = new CertificatesManager(settings.DataFolder, settings, settings.LoggerFactory, revocationChecker, network);
-            var tokenlessWalletManager = new TokenlessWalletManager(network, settings.DataFolder, new TokenlessWalletSettings(settings), certificatesManager, settings.LoggerFactory);
+            var tokenlessWalletManager = new TokenlessKeyStoreManager(network, settings.DataFolder, new TokenlessKeyStoreSettings(settings), certificatesManager, settings.LoggerFactory);
             tokenlessWalletManager.Initialize();
             var signer = new TokenlessSigner(network, new SenderRetriever());
             var endorsementSigner = new EndorsementSigner(network, signer, tokenlessWalletManager);
@@ -66,9 +67,9 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var writeSet = rws.WriteSet.ToList();
             Assert.Equal(Key3, writeSet[0].Key);
-            Assert.Equal(Value1, writeSet[0].Value);
+            Assert.Equal(Value1, writeSet[0].Value.Bytes);
             Assert.Equal(Key4, writeSet[1].Key);
-            Assert.Equal(Value2, writeSet[1].Value);
+            Assert.Equal(Value2, writeSet[1].Value.Bytes);
 
             // Record the ReadWriteSet.
             ReadWriteSet readWriteSet = rws.GetReadWriteSet();

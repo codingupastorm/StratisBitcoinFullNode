@@ -19,8 +19,6 @@ namespace Stratis.Bitcoin.Tests.NodeStorage
 
     public class KeyValueStoreTests
     {
-        private TestKeyValueStore testKeyValueStore;
-
         public IKeyValueStoreRepository GetStore([System.Runtime.CompilerServices.CallerMemberName] string callingMethod = "", Network network = null)
         {
             network = network ?? KnownNetworks.StratisMain;

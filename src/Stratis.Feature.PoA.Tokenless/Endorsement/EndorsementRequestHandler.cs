@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
@@ -16,7 +17,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
     public interface IEndorsementRequestHandler
     {
-        bool ExecuteAndReturnProposal(EndorsementRequest request);
+        Task<bool> ExecuteAndReturnProposalAsync(EndorsementRequest request);
     }
 
     public class EndorsementRequestHandler : IEndorsementRequestHandler
@@ -33,6 +34,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         private readonly IReadWriteSetTransactionSerializer readWriteSetTransactionSerializer;
         private readonly IEndorsements endorsements;
         private readonly ITransientStore transientStore;
+        private readonly ITokenlessBroadcaster tokenlessBroadcaster;
         private readonly ILogger logger;
 
         public EndorsementRequestHandler(
@@ -45,6 +47,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             IReadWriteSetTransactionSerializer readWriteSetTransactionSerializer,
             IEndorsements endorsements,
             ITransientStore transientStore,
+            ITokenlessBroadcaster tokenlessBroadcaster,
             ILoggerFactory loggerFactory)
         {
             this.validator = validator;
@@ -56,10 +59,11 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.readWriteSetTransactionSerializer = readWriteSetTransactionSerializer;
             this.endorsements = endorsements;
             this.transientStore = transientStore;
+            this.tokenlessBroadcaster = tokenlessBroadcaster;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
-        public bool ExecuteAndReturnProposal(EndorsementRequest request)
+        public async Task<bool> ExecuteAndReturnProposalAsync(EndorsementRequest request)
         {
             if (!this.validator.ValidateRequest(request))
             {
@@ -85,15 +89,20 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 return false;
             }
 
-            if (result.PrivateReadWriteSet.WriteSet.Any())
-            {
-                // Store any changes that were made to the transient store
-                byte[] privateReadWriteSetData = Encoding.UTF8.GetBytes(result.PrivateReadWriteSet.GetReadWriteSet().ToJson()); // ew
-                this.transientStore.Persist(request.ContractTransaction.GetHash(), blockHeight, new TransientStorePrivateData(privateReadWriteSetData));
-            }
-
             // TODO: If we have multiple endorsements happening here, check the read write set before signing!
             Transaction signedRWSTransaction = this.readWriteSetTransactionSerializer.Build(result.ReadWriteSet.GetReadWriteSet());
+
+            if (result.PrivateReadWriteSet.WriteSet.Any())
+            {
+                // TODO: Only do this on the final endorsement, depending on the policy.
+
+                // Store any changes that were made to the transient store
+                byte[] privateReadWriteSetData = Encoding.UTF8.GetBytes(result.PrivateReadWriteSet.GetReadWriteSet().ToJson()); // ew
+
+                this.transientStore.Persist(signedRWSTransaction.GetHash(), blockHeight, new TransientStorePrivateData(privateReadWriteSetData));
+
+                await this.BroadcastPrivateDataToOrganisation(signedRWSTransaction.GetHash(), blockHeight, privateReadWriteSetData);
+            }
 
             uint256 proposalId = request.ContractTransaction.GetHash();
             var payload = new EndorsementPayload(signedRWSTransaction, proposalId);
@@ -112,6 +121,11 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             }
 
             return true;
+        }
+
+        private async Task BroadcastPrivateDataToOrganisation(uint256 txHash, uint blockHeight, byte[] privateData)
+        {
+            await this.tokenlessBroadcaster.BroadcastToWholeOrganisationAsync(new PrivateDataPayload(txHash, blockHeight, privateData));
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Bitcoin.Features.MemoryPool.Broadcasting;
+using Stratis.Features.MemoryPool.Broadcasting;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {

@@ -3,10 +3,10 @@ using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules;
+using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.PoA.Tests.Rules
+namespace Stratis.Features.PoA.Tests.Rules
 {
     public class PoAIntegritySignatureRuleTests : PoATestsBase
     {

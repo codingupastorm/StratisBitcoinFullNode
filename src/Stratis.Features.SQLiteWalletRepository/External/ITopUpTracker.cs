@@ -1,4 +1,4 @@
-﻿using Stratis.Bitcoin.Features.Wallet.Interfaces;
+﻿using Stratis.Features.Wallet.Interfaces;
 
 namespace Stratis.Features.SQLiteWalletRepository.External
 {

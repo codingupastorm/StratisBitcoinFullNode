@@ -9,7 +9,7 @@ namespace Stratis.SmartContracts.Core.ReadWrite
     {
         void AddReadItem(ReadWriteSetKey key, string version);
 
-        void AddWriteItem(ReadWriteSetKey key, byte[] value);
+        void AddWriteItem(ReadWriteSetKey key, byte[] value, bool isPrivateData = false);
 
         bool GetWriteItem(ReadWriteSetKey key, out byte[] value);
     }
@@ -25,18 +25,18 @@ namespace Stratis.SmartContracts.Core.ReadWrite
         private readonly Dictionary<ReadWriteSetKey, string> readSet;
 
         /// <summary>
-        /// Key: {storageKey}, Value: {writtenBytes}.
+        /// Key: {storageKey}, Value: {writtenBytes}, {isPrivateData}
         /// </summary>
-        private readonly Dictionary<ReadWriteSetKey, byte[]> writeSet;
+        private readonly Dictionary<ReadWriteSetKey, (byte[], bool)> writeSet;
 
         public IReadOnlyDictionary<ReadWriteSetKey, string> ReadSet => this.readSet;
 
-        public IReadOnlyDictionary<ReadWriteSetKey, byte[]> WriteSet => this.writeSet;
+        public IReadOnlyDictionary<ReadWriteSetKey, (byte[] Bytes, bool IsPrivateData)> WriteSet => this.writeSet;
 
         public ReadWriteSetBuilder()
         {
             this.readSet = new Dictionary<ReadWriteSetKey, string>();
-            this.writeSet = new Dictionary<ReadWriteSetKey, byte[]>();
+            this.writeSet = new Dictionary<ReadWriteSetKey, (byte[], bool)>();
         }
 
         public void AddReadItem(ReadWriteSetKey key, string version)
@@ -52,12 +52,12 @@ namespace Stratis.SmartContracts.Core.ReadWrite
             this.readSet[key] = version;
         }
 
-        public void AddWriteItem(ReadWriteSetKey key, byte[] value)
+        public void AddWriteItem(ReadWriteSetKey key, byte[] value, bool isPrivateData = false)
         {
             // Always store the last value for every key. We clone to avoid issues where the byte array might be altered afterwards.
             byte[] clonedValue = new byte[value.Length];
             Array.Copy(value, clonedValue, value.Length);
-            this.writeSet[key] = clonedValue;
+            this.writeSet[key] = (clonedValue, isPrivateData);
         }
 
         public bool GetWriteItem(ReadWriteSetKey key, out byte[] value)
@@ -85,9 +85,9 @@ namespace Stratis.SmartContracts.Core.ReadWrite
 
         public void MergeWriteSet(ReadWriteSetBuilder toMerge)
         {
-            foreach (KeyValuePair<ReadWriteSetKey, byte[]> write in toMerge.WriteSet.ToList())
+            foreach (KeyValuePair<ReadWriteSetKey, (byte[] Bytes, bool IsPrivateData)> write in toMerge.WriteSet.ToList())
             {
-                this.AddWriteItem(write.Key, write.Value);
+                this.AddWriteItem(write.Key, write.Value.Bytes);
             }
         }
 

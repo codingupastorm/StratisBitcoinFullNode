@@ -8,14 +8,14 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders;
+using Stratis.Features.Consensus.CoinViews;
+using Stratis.Features.Consensus.ProvenBlockHeaders;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests.CoinViews
+namespace Stratis.Features.Consensus.Tests.CoinViews
 {
     public class CoinviewTests
     {

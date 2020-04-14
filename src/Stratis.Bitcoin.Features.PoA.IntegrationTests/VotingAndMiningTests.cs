@@ -4,18 +4,18 @@ using System.Threading.Tasks;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Stratis.Bitcoin.Controllers.Models;
-using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
-using Stratis.Bitcoin.Features.PoA.Voting;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Controllers;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Features.PoA.Tests.Common;
+using Stratis.Features.PoA.Voting;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Controllers;
+using Stratis.Features.Wallet.Interfaces;
+using Stratis.Features.Wallet.Models;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
+namespace Stratis.Features.PoA.IntegrationTests
 {
     public class VotingAndMiningTests : IDisposable
     {
@@ -246,19 +246,17 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
         [Fact]
         public void NodeCanLoadFederationKey()
         {
-            var network = new TestPoANetwork();
-
             using (PoANodeBuilder builder = PoANodeBuilder.CreatePoANodeBuilder(this))
             {
                 // Create first node as fed member.
-                Key key = network.FederationKey1;
-                CoreNode node = builder.CreatePoANode(network, key).Start();
+                Key key = this.network.FederationKey1;
+                CoreNode node = builder.CreatePoANode(this.network, key).Start();
 
                 Assert.True(node.FullNode.NodeService<IFederationManager>().IsFederationMember);
                 Assert.Equal(node.FullNode.NodeService<IFederationManager>().CurrentFederationKey, key);
 
                 // Create second node as normal node.
-                CoreNode node2 = builder.CreatePoANode(network).Start();
+                CoreNode node2 = builder.CreatePoANode(this.network).Start();
 
                 Assert.False(node2.FullNode.NodeService<IFederationManager>().IsFederationMember);
                 Assert.Null(node2.FullNode.NodeService<IFederationManager>().CurrentFederationKey);
@@ -268,35 +266,41 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
         [Fact]
         public async Task NodeCanMineAsync()
         {
-            var network = new TestPoANetwork();
+            int tipBefore = this.node1.GetTip().Height;
 
+            await this.node1.MineBlocksAsync(5).ConfigureAwait(false);
+
+            Assert.True(this.node1.GetTip().Height >= tipBefore + 5);
+        }
+
+        [Fact]
+        public async Task NodeOutsideFederationCannotMineAsync()
+        {
             using (PoANodeBuilder builder = PoANodeBuilder.CreatePoANodeBuilder(this))
             {
-                CoreNode node = builder.CreatePoANode(network, network.FederationKey1).Start();
+                CoreNode node = builder.CreatePoANode(this.network, new Key()).Start();
 
                 int tipBefore = node.GetTip().Height;
 
-                await node.MineBlocksAsync(5).ConfigureAwait(false);
+                await Assert.ThrowsAsync<NotAFederationMemberException>(() => node.MineBlocksAsync(1));
 
-                Assert.True(node.GetTip().Height >= tipBefore + 5);
+                Assert.True(node.GetTip().Height == tipBefore);
             }
         }
 
         [Fact]
         public async Task PremineIsReceivedAsync()
         {
-            TestPoANetwork network = new TestPoANetwork();
-
             using (PoANodeBuilder builder = PoANodeBuilder.CreatePoANodeBuilder(this))
             {
                 string walletName = "mywallet";
-                CoreNode node = builder.CreatePoANode(network, network.FederationKey1).WithWallet("pass", walletName).Start();
+                CoreNode node = builder.CreatePoANode(this.network, this.network.FederationKey1).WithWallet("pass", walletName).Start();
 
                 IWalletManager walletManager = node.FullNode.NodeService<IWalletManager>();
                 long balanceOnStart = walletManager.GetBalances(walletName, "account 0").Sum(x => x.AmountConfirmed);
                 Assert.Equal(0, balanceOnStart);
 
-                long toMineCount = network.Consensus.PremineHeight + network.Consensus.CoinbaseMaturity + 1 - node.GetTip().Height;
+                long toMineCount = this.network.Consensus.ConsensusMiningReward.PremineHeight + this.network.Consensus.ConsensusMiningReward.CoinbaseMaturity + 1 - node.GetTip().Height;
 
                 await node.MineBlocksAsync((int)toMineCount).ConfigureAwait(false);
 
@@ -304,7 +308,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
                 {
                     long balanceAfterPremine = walletManager.GetBalances(walletName, "account 0").Sum(x => x.AmountConfirmed);
 
-                    return network.Consensus.PremineReward.Satoshi == balanceAfterPremine;
+                    return this.network.Consensus.ConsensusMiningReward.PremineReward.Satoshi == balanceAfterPremine;
                 });
             }
         }
@@ -312,8 +316,6 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
         [Fact]
         public async Task TransactionSentFeesReceivedByMinerAsync()
         {
-            TestPoANetwork network = new TestPoANetwork();
-
             using (PoANodeBuilder builder = PoANodeBuilder.CreatePoANodeBuilder(this))
             {
                 string walletName = "mywallet";
@@ -323,12 +325,12 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
                 Money transferAmount = Money.Coins(1m);
                 Money feeAmount = Money.Coins(0.0001m);
 
-                CoreNode nodeA = builder.CreatePoANode(network, network.FederationKey1).WithWallet(walletPassword, walletName).Start();
-                CoreNode nodeB = builder.CreatePoANode(network, network.FederationKey2).WithWallet(walletPassword, walletName).Start();
+                CoreNode nodeA = builder.CreatePoANode(this.network, this.network.FederationKey1).WithWallet(walletPassword, walletName).Start();
+                CoreNode nodeB = builder.CreatePoANode(this.network, this.network.FederationKey2).WithWallet(walletPassword, walletName).Start();
 
                 TestHelper.Connect(nodeA, nodeB);
 
-                long toMineCount = network.Consensus.PremineHeight + network.Consensus.CoinbaseMaturity + 1 - nodeA.GetTip().Height;
+                long toMineCount = this.network.Consensus.ConsensusMiningReward.PremineHeight + this.network.Consensus.ConsensusMiningReward.CoinbaseMaturity + 1 - nodeA.GetTip().Height;
 
                 // Get coins on nodeA via the premine.
                 await nodeA.MineBlocksAsync((int)toMineCount).ConfigureAwait(false);
@@ -338,7 +340,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
                 // Will send funds to one of nodeB's addresses.
                 NBitcoin.Script destination = nodeB.FullNode.WalletManager().GetUnusedAddress().ScriptPubKey;
 
-                var context = new TransactionBuildContext(network)
+                var context = new TransactionBuildContext(this.network)
                 {
                     AccountReference = new WalletAccountReference(walletName, walletAccount),
                     MinConfirmations = 0,

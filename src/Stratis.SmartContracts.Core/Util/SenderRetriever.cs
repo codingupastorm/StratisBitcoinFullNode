@@ -2,7 +2,7 @@
 using System.Linq;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.MemoryPool;
+using Stratis.Features.MemoryPool;
 using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.SmartContracts.Core.Util

@@ -10,12 +10,12 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Features.SQLiteWalletRepository.External;
 using Stratis.Features.SQLiteWalletRepository.Tables;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Interfaces;
 using Script = NBitcoin.Script;
 
 [assembly: InternalsVisibleTo("Stratis.Features.SQLiteWalletRepository.Tests")]
@@ -223,12 +223,12 @@ namespace Stratis.Features.SQLiteWalletRepository
         }
 
         /// <inheritdoc />
-        public Wallet GetWallet(string walletName)
+        public Wallet.Wallet GetWallet(string walletName)
         {
             WalletContainer walletContainer = this.GetWalletContainer(walletName);
             (HDWallet wallet, DBConnection conn) = (walletContainer.Wallet, walletContainer.Conn);
 
-            var res = new Wallet(this)
+            var res = new Wallet.Wallet(this)
             {
                 Name = walletName,
                 EncryptedSeed = wallet.EncryptedSeed,
@@ -310,7 +310,7 @@ namespace Stratis.Features.SQLiteWalletRepository
             }
         }
 
-        public Wallet CreateWallet(string walletName, string encryptedSeed = null, byte[] chainCode = null, HashHeightPair lastBlockSynced = null, BlockLocator blockLocator = null, long? creationTime = null)
+        public Wallet.Wallet CreateWallet(string walletName, string encryptedSeed = null, byte[] chainCode = null, HashHeightPair lastBlockSynced = null, BlockLocator blockLocator = null, long? creationTime = null)
         {
             this.logger.LogDebug("Creating wallet '{0}'.", walletName);
 
@@ -594,7 +594,7 @@ namespace Stratis.Features.SQLiteWalletRepository
         }
 
         /// <inheritdoc />
-        public IEnumerable<HdAccount> GetAccounts(Wallet hdWallet, string accountName = null)
+        public IEnumerable<HdAccount> GetAccounts(Wallet.Wallet hdWallet, string accountName = null)
         {
             WalletContainer walletContainer = this.GetWalletContainer(hdWallet.Name);
             (HDWallet wallet, DBConnection conn) = (walletContainer.Wallet, walletContainer.Conn);
@@ -1170,10 +1170,10 @@ namespace Stratis.Features.SQLiteWalletRepository
             WalletContainer walletContainer = this.GetWalletContainer(walletAccountReference.WalletName);
             DBConnection conn = walletContainer.Conn;
 
-            Wallet hdWallet = this.GetWallet(walletAccountReference.WalletName);
+            Wallet.Wallet hdWallet = this.GetWallet(walletAccountReference.WalletName);
             HdAccount hdAccount = this.GetAccounts(hdWallet, walletAccountReference.AccountName).FirstOrDefault();
 
-            foreach (HDTransactionData transactionData in conn.GetSpendableOutputs(walletContainer.Wallet.WalletId, hdAccount.Index, currentChainHeight, coinBaseMaturity ?? this.Network.Consensus.CoinbaseMaturity, confirmations))
+            foreach (HDTransactionData transactionData in conn.GetSpendableOutputs(walletContainer.Wallet.WalletId, hdAccount.Index, currentChainHeight, coinBaseMaturity ?? this.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity, confirmations))
             {
                 // TODO: This will take time and is possible not needed.
                 /*
@@ -1249,7 +1249,7 @@ namespace Stratis.Features.SQLiteWalletRepository
             DBConnection conn = walletContainer.Conn;
             HDAccount account = conn.GetAccountByName(walletAccountReference.WalletName, walletAccountReference.AccountName);
 
-            (long total, long confirmed, long spendable) = HDTransactionData.GetBalance(conn, account.WalletId, account.AccountIndex, address, currentChainHeight, coinBaseMaturity ?? (int)this.Network.Consensus.CoinbaseMaturity, confirmations);
+            (long total, long confirmed, long spendable) = HDTransactionData.GetBalance(conn, account.WalletId, account.AccountIndex, address, currentChainHeight, coinBaseMaturity ?? (int)this.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity, confirmations);
 
             return (new Money(total), new Money(confirmed), new Money(spendable));
         }
@@ -1270,7 +1270,7 @@ namespace Stratis.Features.SQLiteWalletRepository
         public IEnumerable<TransactionData> GetAllTransactions(HdAddress hdAddress, int limit = int.MaxValue, TransactionData prev = null, bool descending = true)
         {
             HdAccount hdAccount = hdAddress.AddressCollection.Account;
-            Wallet hdWallet = hdAccount.AccountRoot.Wallet;
+            Wallet.Wallet hdWallet = hdAccount.AccountRoot.Wallet;
 
             WalletContainer walletContainer = this.GetWalletContainer(hdWallet.Name);
             (HDWallet wallet, DBConnection conn) = (walletContainer.Wallet, walletContainer.Conn);
@@ -1320,7 +1320,7 @@ namespace Stratis.Features.SQLiteWalletRepository
         /// <inheritdoc />
         public AccountHistory GetHistory(HdAccount account)
         {
-            Wallet hdWallet = account.AccountRoot.Wallet;
+            Wallet.Wallet hdWallet = account.AccountRoot.Wallet;
             WalletContainer walletContainer = this.GetWalletContainer(hdWallet.Name);
             (HDWallet wallet, DBConnection conn) = (walletContainer.Wallet, walletContainer.Conn);
 
@@ -1388,7 +1388,7 @@ namespace Stratis.Features.SQLiteWalletRepository
         /// <inheritdoc />
         public IEnumerable<TransactionData> GetTransactionInputs(HdAccount hdAccount, DateTimeOffset? transactionTime, uint256 transactionId, bool includePayments = false)
         {
-            Wallet hdWallet = hdAccount.AccountRoot.Wallet;
+            Wallet.Wallet hdWallet = hdAccount.AccountRoot.Wallet;
 
             WalletContainer walletContainer = this.GetWalletContainer(hdWallet.Name);
             (HDWallet wallet, DBConnection conn) = (walletContainer.Wallet, walletContainer.Conn);
@@ -1431,7 +1431,7 @@ namespace Stratis.Features.SQLiteWalletRepository
         /// <inheritdoc />
         public IEnumerable<TransactionData> GetTransactionOutputs(HdAccount hdAccount, DateTimeOffset? transactionTime, uint256 transactionId, bool includePayments = false)
         {
-            Wallet hdWallet = hdAccount.AccountRoot.Wallet;
+            Wallet.Wallet hdWallet = hdAccount.AccountRoot.Wallet;
 
             WalletContainer walletContainer = this.GetWalletContainer(hdWallet.Name);
             (HDWallet wallet, DBConnection conn) = (walletContainer.Wallet, walletContainer.Conn);

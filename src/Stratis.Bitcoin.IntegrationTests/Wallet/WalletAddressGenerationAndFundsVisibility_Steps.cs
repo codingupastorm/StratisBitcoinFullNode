@@ -2,9 +2,9 @@
 using System.Linq;
 using FluentAssertions;
 using NBitcoin;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Controllers;
-using Stratis.Bitcoin.Features.Wallet.Models;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Controllers;
+using Stratis.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.TestNetworks;
@@ -47,7 +47,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
 
         private void MineSpendableCoins()
         {
-            this.sendingStratisBitcoinNode.FullNode.Network.Consensus.CoinbaseMaturity.Should().Be(this.receivingStratisBitcoinNode.FullNode.Network.Consensus.CoinbaseMaturity);
+            this.sendingStratisBitcoinNode.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity.Should().Be(this.receivingStratisBitcoinNode.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity);
 
             TestHelper.MineBlocks(this.sendingStratisBitcoinNode, 2);
         }

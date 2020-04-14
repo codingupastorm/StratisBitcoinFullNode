@@ -1,17 +1,18 @@
 using System;
 using System.Threading.Tasks;
+using MembershipServices;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.Api;
-using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
+using Stratis.Features.Api;
+using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless;
-using Stratis.Feature.PoA.Tokenless.Wallet;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Features.BlockStore;
+using Stratis.Features.MemoryPool;
 using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.TokenlessD
@@ -25,9 +26,9 @@ namespace Stratis.TokenlessD
                 var network = new TokenlessNetwork();
                 var nodeSettings = new NodeSettings(network, args: args);
                 var loggerFactory = new LoggerFactory();
-                var revocationChecker = new RevocationChecker(nodeSettings, null, loggerFactory, DateTimeProvider.Default);
+                var revocationChecker = new RevocationChecker(new MembershipServicesDirectory(nodeSettings));
                 var certificatesManager = new CertificatesManager(nodeSettings.DataFolder, nodeSettings, loggerFactory, revocationChecker, network);
-                var walletManager = new TokenlessWalletManager(network, nodeSettings.DataFolder, new TokenlessWalletSettings(nodeSettings), certificatesManager, loggerFactory);
+                var walletManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, new TokenlessKeyStoreSettings(nodeSettings), certificatesManager, loggerFactory);
                 if (!walletManager.Initialize())
                     return;
 
@@ -36,7 +37,7 @@ namespace Stratis.TokenlessD
                     .UseBlockStore()
                     .UseTokenlessPoaConsenus(network)
                     .UseMempool()
-                    .UseTokenlessWallet()
+                    .UseTokenlessKeyStore()
                     .UseApi(o => o.Exclude<SmartContractFeature>())
                     .AddSmartContracts(options =>
                     {

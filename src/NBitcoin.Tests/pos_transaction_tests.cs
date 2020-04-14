@@ -1715,7 +1715,7 @@ namespace NBitcoin.Tests
             {
                 MaxTransactionSize = null,
                 MaxTxFee = null,
-                MinRelayTxFee = new FeeRate(Money.Satoshis(network.MinRelayTxFee)),
+                MinRelayTxFee = new FeeRate(Money.Satoshis(((FeeNetwork)network).MinRelayTxFee)),
                 ScriptVerify = ScriptVerify.Standard & ~ScriptVerify.LowS
             };
         }

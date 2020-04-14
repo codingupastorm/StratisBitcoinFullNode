@@ -40,9 +40,9 @@ namespace Stratis.SmartContracts.Core.Tests
 
             var writeSet = rws.WriteSet.ToList();
             Assert.Equal(Key3, writeSet[0].Key);
-            Assert.Equal(Value1, writeSet[0].Value);
+            Assert.Equal(Value1, writeSet[0].Value.Bytes);
             Assert.Equal(Key4, writeSet[1].Key);
-            Assert.Equal(Value2, writeSet[1].Value);
+            Assert.Equal(Value2, writeSet[1].Value.Bytes);
 
             // Check that serialization and deserialization to json is working.
             ReadWriteSet readWriteSet = rws.GetReadWriteSet();
@@ -64,7 +64,7 @@ namespace Stratis.SmartContracts.Core.Tests
             rws.AddWriteItem(Key1DifferentReference, Value1);
             rws.AddWriteItem(Key1, Value2);
             Assert.Single(rws.WriteSet);
-            Assert.Equal(Value2, rws.WriteSet.ToList()[0].Value);
+            Assert.Equal(Value2, rws.WriteSet.ToList()[0].Value.Bytes);
         }
 
         [Fact]
@@ -95,7 +95,7 @@ namespace Stratis.SmartContracts.Core.Tests
             value[0] = 68;
 
             // They should still have the correct value.
-            Assert.Equal(0, rws.WriteSet.ToList()[0].Value[0]);
+            Assert.Equal(0, rws.WriteSet.ToList()[0].Value.Bytes[0]);
         }
 
         [Fact]

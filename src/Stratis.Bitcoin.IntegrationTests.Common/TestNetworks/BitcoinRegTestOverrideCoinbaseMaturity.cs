@@ -8,7 +8,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.TestNetworks
         public BitcoinRegTestOverrideCoinbaseMaturity(int coinbaseMaturity) : base()
         {
             this.Name = Guid.NewGuid().ToString("N").Substring(0, 7);
-            this.Consensus.CoinbaseMaturity = coinbaseMaturity;
+            this.Consensus.ConsensusMiningReward.CoinbaseMaturity = coinbaseMaturity;
         }
     }
 }
