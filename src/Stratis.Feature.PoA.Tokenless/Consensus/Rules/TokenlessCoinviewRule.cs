@@ -30,7 +30,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
         private readonly ILogger logger;
         private IStateRepositoryRoot mutableStateRepository;
         private readonly IList<Receipt> receipts;
-        private readonly HashSet<uint256> privateDataTxs;
+        private readonly List<uint256> privateDataTxs;
         private readonly IReceiptRepository receiptRepository;
         private readonly IStateRepositoryRoot stateRepositoryRoot;
         private readonly ITokenlessSigner tokenlessSigner;
@@ -54,7 +54,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             this.executorFactory = executorFactory;
             this.executionCache = executionCache;
             this.receipts = new List<Receipt>();
-            this.privateDataTxs = new HashSet<uint256>();
+            this.privateDataTxs = new List<uint256>();
             this.receiptRepository = receiptRepository;
             this.stateRepositoryRoot = stateRepositoryRoot;
             this.tokenlessSigner = tokenlessSigner;
@@ -90,7 +90,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             // Move the private data to the "actual" private state database.
             foreach (uint256 txId in this.privateDataTxs)
             {
-                this.privateDataRetriever.RegisterNewPrivateData(txId); // Could operate on the whole collection...
+                this.privateDataRetriever.MoveDataFromTransientToPrivateStore(this.privateDataTxs);
             }
 
             // Update the globally injected state so all services receive the updates.
@@ -188,6 +188,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 
             if (rws.Writes.Any(x => x.IsPrivateData))
             {
+                this.privateDataRetriever.WaitForPrivateData(transaction.GetHash());
                 this.privateDataTxs.Add(transaction.GetHash());
             }
 

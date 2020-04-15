@@ -39,11 +39,9 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly IEndorsementSuccessHandler successHandler;
         private readonly IPoAMiner miner;
         private readonly IRevocationChecker revocationChecker;
-        private readonly NodeSettings nodeSettings;
         private readonly IAsyncProvider asyncProvider;
         private readonly INodeLifetime nodeLifetime;
         private readonly ITransientStore transientStore;
-        private readonly IMissingPrivateDataStore missingPrivateDataStore;
         private readonly IPrivateDataStore privateDataStore;
         private readonly IPrivateDataRetriever privateDataRetriever;
         private readonly ILogger logger;
@@ -72,7 +70,6 @@ namespace Stratis.Feature.PoA.Tokenless
             ILoggerFactory loggerFactory,
             IMembershipServicesDirectory membershipServices,
             ITransientStore transientStore,
-            IMissingPrivateDataStore missingPrivateDataStore,
             IPrivateDataStore privateDataStore,
             IPrivateDataRetriever privateDataRetriever,
             IChannelService channelService)
@@ -87,12 +84,10 @@ namespace Stratis.Feature.PoA.Tokenless
             this.successHandler = successHandler;
             this.miner = miner;
             this.revocationChecker = revocationChecker;
-            this.nodeSettings = nodeSettings;
             this.tokenlessKeyStoreSettings = tokenlessKeyStoreSettings;
             this.asyncProvider = asyncProvider;
             this.nodeLifetime = nodeLifetime;
             this.transientStore = transientStore;
-            this.missingPrivateDataStore = missingPrivateDataStore;
             this.privateDataStore = privateDataStore;
             this.privateDataRetriever = privateDataRetriever;
             this.caPubKeysLoop = null;
@@ -118,7 +113,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
             connectionParameters.TemplateBehaviors.Add(new EndorsementRequestBehavior(this.requestHandler));
             connectionParameters.TemplateBehaviors.Add(new EndorsementSuccessBehavior(this.successHandler));
-            connectionParameters.TemplateBehaviors.Add(new ReceivePrivateDataBehavior(this.transientStore, this.missingPrivateDataStore, this.privateDataStore, this.blockRepository));
+            connectionParameters.TemplateBehaviors.Add(new ReceivePrivateDataBehavior(this.transientStore, this.privateDataStore));
             connectionParameters.TemplateBehaviors.Add(new PrivateDataRequestBehavior(this.transientStore));
 
             this.federationManager.Initialize();
@@ -157,9 +152,6 @@ namespace Stratis.Feature.PoA.Tokenless
             this.nodeLifetime.ApplicationStopping,
             repeatEvery: TimeSpans.Minute,
             startAfter: TimeSpans.Minute);
-
-            // Start the private data-getting loop.
-            this.privateDataRetriever.StartRetrievalLoop();
 
             // If this node is a infra node, then start another daemon with the serialized version of the network.
             if (this.tokenlessKeyStoreSettings.IsInfraNode)
