@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using DBreeze.Utils;
 using Microsoft.Extensions.Logging;
@@ -18,6 +19,30 @@ namespace Stratis.SmartContracts.Core.Store
     {
         void StoreBytes(uint160 contractAddress, byte[] key, byte[] value);
         byte[] GetBytes(uint160 contractAddress, byte[] key);
+    }
+
+    public class InMemoryPrivateDataStore : IPrivateDataStore
+    {
+        private readonly Dictionary<byte[], byte[]> internalStore;
+
+        public InMemoryPrivateDataStore()
+        {
+            this.internalStore = new Dictionary<byte[], byte[]>(new ByteArrayComparer());
+        }
+
+        public void StoreBytes(uint160 contractAddress, byte[] key, byte[] value)
+        {
+            var compositeKey = PrivateDataStoreQueryParams.CreateCompositeKeyForContract(contractAddress, key);
+
+            this.internalStore[compositeKey] = value;
+        }
+
+        public byte[] GetBytes(uint160 contractAddress, byte[] key)
+        {
+            var compositeKey = PrivateDataStoreQueryParams.CreateCompositeKeyForContract(contractAddress, key);
+
+            return this.internalStore.ContainsKey(compositeKey) ? this.internalStore[compositeKey] : null;
+        }
     }
 
     public class PrivateDataStore : IPrivateDataStore

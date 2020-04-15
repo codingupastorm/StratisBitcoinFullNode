@@ -68,6 +68,8 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<ITransientKeyValueStore, TransientKeyValueStore>();
                         services.AddSingleton<ITransientStore, TransientStore>();
                         services.AddSingleton<IMissingPrivateDataStore, IMissingPrivateDataStore>();
+                        services.AddSingleton<IPrivateDataKeyValueStore, PrivateDataKeyValueStore>();
+                        services.AddSingleton<IPrivateDataStore, PrivateDataStore>();
 
                         // In place of wallet.
                         services.AddSingleton<IBroadcasterManager, FullNodeBroadcasterManager>();

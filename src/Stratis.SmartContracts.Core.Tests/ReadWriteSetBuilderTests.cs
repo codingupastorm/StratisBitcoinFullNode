@@ -106,5 +106,22 @@ namespace Stratis.SmartContracts.Core.Tests
             // They should still have the correct value.
             Assert.Equal(0, rws.WriteSet.ToList()[0].Value.Bytes[0]);
         }
+
+        [Fact]
+        public void Can_Get_Written_Item()
+        {
+            var rws = new ReadWriteSetBuilder();
+
+            byte[] value = new byte[] { 0, 1, 2, 3 };
+
+            rws.AddWriteItem(new ReadWriteSetKey(uint160.One, Encoding.UTF8.GetBytes("key1")), value);
+
+            // Create a new instance of the same key.
+            var newKeyInstance = new ReadWriteSetKey(uint160.One, Encoding.UTF8.GetBytes("key1"));
+
+            rws.GetWriteItem(newKeyInstance, out var writeItem);
+
+            Assert.True(value.SequenceEqual(writeItem));
+        }
     }
 }

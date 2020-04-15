@@ -3,6 +3,7 @@ using Stratis.SmartContracts.CLR.ContractLogging;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
+using Stratis.SmartContracts.Core.Store;
 using Stratis.SmartContracts.RuntimeObserver;
 using Stratis.SmartContracts.Tokenless;
 
@@ -13,14 +14,17 @@ namespace Stratis.SmartContracts.CLR
         private readonly ISerializer serializer;
         private readonly IContractPrimitiveSerializer primitiveSerializer;
         private readonly IInternalExecutorFactory internalTransactionExecutorFactory;
+        private readonly IPrivateDataStore privateDataStore;
 
         public SmartContractStateFactory(IContractPrimitiveSerializer primitiveSerializer,
             IInternalExecutorFactory internalTransactionExecutorFactory,
+            IPrivateDataStore privateDataStore,
             ISerializer serializer)
         {
             this.serializer = serializer;
             this.primitiveSerializer = primitiveSerializer;
             this.internalTransactionExecutorFactory = internalTransactionExecutorFactory;
+            this.privateDataStore = privateDataStore;
         }
 
         /// <summary>
@@ -37,7 +41,7 @@ namespace Stratis.SmartContracts.CLR
         {
             IPersistenceStrategy persistenceStrategy = new MeteredPersistenceStrategy(repository, gasMeter, new BasicKeyEncodingStrategy(), readWriteSet, state.Version);
 
-            var privatePersistenceStrategy = new MeteredPersistenceStrategy(repository, gasMeter, new BasicKeyEncodingStrategy(), new PrivateReadWriteSetOperations(readWriteSet, privateReadWriteSet), state.Version);
+            var privatePersistenceStrategy = new PrivateMeteredPersistenceStrategy(this.privateDataStore, gasMeter, new BasicKeyEncodingStrategy(), new PrivateReadWriteSetOperations(readWriteSet, privateReadWriteSet), state.Version);
 
             var persistentState = new PersistentState(persistenceStrategy, this.serializer, address);
 
