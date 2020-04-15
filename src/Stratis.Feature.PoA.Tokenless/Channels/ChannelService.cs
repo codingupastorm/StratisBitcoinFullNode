@@ -217,10 +217,16 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 var process = Process.GetProcessById(channelNodePId);
 
                 this.logger.LogInformation($"Stopping channel node with PId: {channelNodePId}.");
-                // TODO-TL: Need to gracefully shutdown
-                process.Kill();
-                //process.CloseMainWindow();
-                //process.WaitForExit();
+
+                // Wait for main window to be created, if not created already.
+                process.WaitForInputIdle();
+
+                // Close the main window.
+                process.CloseMainWindow();
+
+                // Wait until the process exits.
+                process.WaitForExit();
+
                 this.logger.LogInformation($"Channel node stopped.");
             }
         }
