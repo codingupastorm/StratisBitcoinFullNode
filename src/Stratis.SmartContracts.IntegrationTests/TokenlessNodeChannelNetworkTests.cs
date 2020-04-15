@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
@@ -88,7 +89,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         {
             TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
 
-            Process channelNodeProcess = null;
+            var processes = new List<Process>();
 
             using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
@@ -106,7 +107,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CaClient client1 = TokenlessTestHelper.GetClient(server);
 
                 // Create and start the parent node.
-                CoreNode parentNode = nodeBuilder.CreateTokenlessNode(tokenlessNetwork, 0, ac, client1);
+                CoreNode parentNode = nodeBuilder.CreateTokenlessNode(tokenlessNetwork, 0, ac, client1, willStartChannels: true);
                 parentNode.Start();
 
                 // Create 5 channels for the identity to be apart of.
@@ -127,10 +128,15 @@ namespace Stratis.SmartContracts.IntegrationTests
                 {
                     var process = Process.GetProcessById(processId);
                     Assert.False(process.HasExited);
+
+                    processes.Add(process);
                 }
             }
 
-            Assert.True(channelNodeProcess.HasExited);
+            foreach (var process in processes)
+            {
+                Assert.True(process.HasExited);
+            }
         }
     }
 }

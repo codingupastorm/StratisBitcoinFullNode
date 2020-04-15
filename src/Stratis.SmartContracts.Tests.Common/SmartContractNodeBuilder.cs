@@ -46,9 +46,7 @@ namespace Stratis.SmartContracts.Tests.Common
             if (willStartChannels)
                 configParameters.Add("channelprocesspath", "..\\..\\..\\..\\Stratis.TokenlessD\\");
 
-            var runner = new TokenlessNodeRunner(dataFolder, network, this.TimeProvider);
-
-            CoreNode node = this.CreateNode(runner, "poa.conf", configParameters: configParameters);
+            CoreNode node = this.CreateNode(new TokenlessNodeRunner(dataFolder, network, this.TimeProvider), "poa.conf", configParameters: configParameters);
 
             Mnemonic mnemonic = nodeIndex < 3
                 ? TokenlessNetwork.Mnemonics[nodeIndex]
