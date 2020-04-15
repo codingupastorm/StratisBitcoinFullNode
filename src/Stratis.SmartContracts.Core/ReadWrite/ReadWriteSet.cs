@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using NBitcoin;
 using Newtonsoft.Json;
 
@@ -44,7 +45,7 @@ namespace Stratis.SmartContracts.Core.ReadWrite
 
         // TODO: Don't be responsible for own serialization.
 
-        public ReadWriteSet FromJson(string json)
+        public static ReadWriteSet FromJson(string json)
         {
             return JsonConvert.DeserializeObject<ReadWriteSet>(json);
         }
@@ -52,6 +53,16 @@ namespace Stratis.SmartContracts.Core.ReadWrite
         public string ToJson()
         {
             return JsonConvert.SerializeObject(this);
+        }
+
+        public static ReadWriteSet FromJsonEncodedBytes(byte[] bytes)
+        {
+            return FromJson(Encoding.UTF8.GetString(bytes));
+        }
+
+        public byte[] ToJsonEncodedBytes()
+        {
+            return Encoding.UTF8.GetBytes(this.ToJson());
         }
     }
 

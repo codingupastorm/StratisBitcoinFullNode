@@ -5,6 +5,7 @@ using NBitcoin;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Payloads;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Store;
 
 namespace Stratis.Feature.PoA.Tokenless
@@ -26,6 +27,7 @@ namespace Stratis.Feature.PoA.Tokenless
     public class PrivateDataRetriever : IPrivateDataRetriever
     {
         private readonly ITransientStore transientStore;
+        private readonly IPrivateDataStore privateDataStore;
         private readonly IMissingPrivateDataStore missingPrivateDataStore;
         private readonly IAsyncProvider asyncProvider;
         private readonly INodeLifetime nodeLifetime;
@@ -39,12 +41,14 @@ namespace Stratis.Feature.PoA.Tokenless
         private static readonly TimeSpan TimeBetweenQueries = TimeSpans.TenSeconds;
 
         public PrivateDataRetriever(ITransientStore transientStore,
+            IPrivateDataStore privateDataStore,
             IMissingPrivateDataStore missingPrivateDataStore,
             ITokenlessBroadcaster tokenlessBroadcaster,
             IAsyncProvider asyncProvider,
             INodeLifetime nodeLifetime)
         {
             this.transientStore = transientStore;
+            this.privateDataStore = privateDataStore;
             this.missingPrivateDataStore = missingPrivateDataStore;
             this.asyncProvider = asyncProvider;
             this.nodeLifetime = nodeLifetime;
@@ -56,10 +60,23 @@ namespace Stratis.Feature.PoA.Tokenless
         {
             // TODO: Check if this node is allowed to get the data.
 
-            if (this.transientStore.Get(txHash).Data != null)
+            (TransientStorePrivateData Data, uint BlockHeight) item = this.transientStore.Get(txHash);
+
+            if (item.Data != null)
             {
                 // We have the data!
-                // TODO: In this case, we should put the data into the private data store. Coming in a future PR.
+                // Put it into the private data store.
+                ReadWriteSet rws = ReadWriteSet.FromJsonEncodedBytes(item.Data.ToBytes());
+
+                // TODO: Validate the read set so that the data is committed in the correct order always.
+
+                foreach (WriteItem write in rws.Writes)
+                {
+                    this.privateDataStore.StoreBytes(write.ContractAddress, write.Key, write.Value);
+                }
+
+                // TODO: At the moment the data is always stored in the transient store but we should remove it once it's in the private data store.
+
                 return;
             }
 
