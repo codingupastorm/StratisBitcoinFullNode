@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using DBreeze.Utils;
 
 namespace Stratis.SmartContracts.Core.ReadWrite
 {
     public interface IReadWriteSetOperations
     {
         void AddReadItem(ReadWriteSetKey key, string version);
-
         void AddWriteItem(ReadWriteSetKey key, byte[] value, bool isPrivateData = false);
 
         bool GetWriteItem(ReadWriteSetKey key, out byte[] value);

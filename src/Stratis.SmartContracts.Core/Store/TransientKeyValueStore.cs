@@ -32,7 +32,7 @@ namespace Stratis.SmartContracts.Core.Store
     {
         void Persist(uint256 txId, uint blockHeight, TransientStorePrivateData data);
 
-        TransientStorePrivateData Get(uint256 txId);
+        (TransientStorePrivateData Data, uint BlockHeight) Get(uint256 txId);
     }
 
     /// <summary>
@@ -75,7 +75,7 @@ namespace Stratis.SmartContracts.Core.Store
         /// <summary>
         /// Returns the private data changes a particular transaction made. 
         /// </summary>
-        public TransientStorePrivateData Get(uint256 txId)
+        public (TransientStorePrivateData Data, uint BlockHeight) Get(uint256 txId)
         {
             // This could surely be more efficient.
 
@@ -88,15 +88,15 @@ namespace Stratis.SmartContracts.Core.Store
 
                 foreach ((byte[] Key, byte[] Value) record in values)
                 {
-                    (uint256 recordTxId, Guid _, uint _) = TransientStoreQueryParams.SplitCompositeKeyForPvtRWSet(record.Key);
+                    (uint256 recordTxId, Guid _, uint blockHeight) = TransientStoreQueryParams.SplitCompositeKeyForPvtRWSet(record.Key);
 
                     if (recordTxId == txId)
                     {
-                        return new TransientStorePrivateData(record.Value);
+                        return (new TransientStorePrivateData(record.Value), blockHeight);
                     }
                 }
 
-                return null;
+                return (null, 0);
             }
         }
 
