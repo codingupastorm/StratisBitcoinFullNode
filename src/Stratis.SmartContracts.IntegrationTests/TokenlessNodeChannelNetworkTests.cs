@@ -120,7 +120,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Re-start the parent node as to load and start the channels it belongs to.
                 parentNode.Restart();
 
-                // Ensure that the node started the other daemons, each belonging to their own channel (network)
+                // Ensure that the node started the other daemons, each belonging to their own channel (network).
                 var channelService = parentNode.FullNode.NodeService<IChannelService>();
                 Assert.True(channelService.StartedChannelNodes.Count == 5);
 
