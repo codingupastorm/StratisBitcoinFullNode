@@ -30,6 +30,7 @@ using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.CLR.Validation;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
+using Stratis.SmartContracts.Core.Store;
 using Stratis.SmartContracts.RuntimeObserver;
 using Stratis.SmartContracts.Tokenless;
 using Xunit;
@@ -247,7 +248,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             this.internalTxExecutorFactory = new InternalExecutorFactory(this.stateProcessor);
             this.primitiveSerializer = new ContractPrimitiveSerializer(this.helper.Network);
             this.serializer = new Serializer(this.primitiveSerializer);
-            this.smartContractStateFactory = new SmartContractStateFactory(this.primitiveSerializer, this.internalTxExecutorFactory, this.serializer);
+            this.smartContractStateFactory = new SmartContractStateFactory(this.primitiveSerializer, this.internalTxExecutorFactory, new InMemoryPrivateDataStore(), this.serializer);
             this.stateFactory = new StateFactory(this.smartContractStateFactory);
             this.executorFactory = new TokenlessReflectionExecutorFactory(this.helper.CallDataSerializer, this.stateFactory, this.stateProcessor, this.primitiveSerializer);
 
