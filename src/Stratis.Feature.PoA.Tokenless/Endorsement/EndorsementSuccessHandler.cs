@@ -1,6 +1,8 @@
 ﻿using System.Threading.Tasks;
 using NBitcoin;
+using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Features.MemoryPool.Broadcasting;
+using Stratis.SmartContracts.CLR;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
@@ -27,7 +29,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             // Validate the signature
 
             EndorsementInfo info = this.endorsements.GetEndorsement(proposalId);
-
+            
             if (info != null)
             {
                 info.SetState(EndorsementState.Approved);

@@ -101,8 +101,12 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             }
         }
     }
+
     public class EndorsementInfo
     {
+        private readonly List<CertificateInfoModel> certificates;
+        private readonly MofNPolicyValidator validator;
+
         /// <summary>
         /// A basic policy definining a minimum number of endorsement signatures required for an organisation.
         /// </summary>
@@ -113,17 +117,41 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         public EndorsementInfo()
         {
             // TODO remove this constructor once we are able to pass in the policy.
+            // TODO cheat policy allows anything
+            this.Policy = new Dictionary<Organisation, int>();
+
             this.SetState(EndorsementState.Proposed);
         }
 
-        public EndorsementInfo(Dictionary<Organisation, int> policy)
+        public EndorsementInfo(Dictionary<Organisation, int> policy, List<CertificateInfoModel> certificates)
         {
+            this.certificates = certificates;
             this.Policy = policy;
+            this.validator = new MofNPolicyValidator(this.Policy);
         }
 
         public void SetState(EndorsementState state)
         {
             this.State = state;
+        }
+
+        public void AddSignature(Organisation org, string address)
+        {
+            this.validator.AddSignature(org, address);
+
+            if (this.Validate())
+            {
+                this.State = EndorsementState.Approved;
+            }
+        }
+
+        /// <summary>
+        /// Validate the transaction against the policy.
+        /// </summary>
+        /// <returns></returns>
+        public bool Validate()
+        {
+            return this.validator.Valid;
         }
     }
 
@@ -136,9 +164,11 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     public class Endorsements : IEndorsements
     {
         private readonly Dictionary<uint256, EndorsementInfo> endorsements;
+        private List<CertificateInfoModel> knownCertificates;
 
         public Endorsements()
         {
+            //this.knownCertificates = certificates;
             this.endorsements = new Dictionary<uint256, EndorsementInfo>();
         }
 
