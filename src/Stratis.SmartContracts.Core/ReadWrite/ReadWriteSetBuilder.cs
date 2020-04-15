@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using DBreeze.Utils;
 
 namespace Stratis.SmartContracts.Core.ReadWrite
 {
     public interface IReadWriteSetOperations
     {
         void AddReadItem(ReadWriteSetKey key, string version);
+
         void AddWriteItem(ReadWriteSetKey key, byte[] value, bool isPrivateData = false);
+
+        bool GetWriteItem(ReadWriteSetKey key, out byte[] value);
     }
 
     /// <summary>
@@ -54,6 +58,15 @@ namespace Stratis.SmartContracts.Core.ReadWrite
             byte[] clonedValue = new byte[value.Length];
             Array.Copy(value, clonedValue, value.Length);
             this.writeSet[key] = (clonedValue, isPrivateData);
+        }
+
+        public bool GetWriteItem(ReadWriteSetKey key, out byte[] value)
+        {
+            var keyExists = this.writeSet.ContainsKey(key);
+
+            value = keyExists ? this.writeSet[key].Item1 : null;
+
+            return keyExists;
         }
 
         public void Merge(ReadWriteSetBuilder toMerge)

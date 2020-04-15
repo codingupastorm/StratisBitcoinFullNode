@@ -24,5 +24,10 @@ namespace Stratis.SmartContracts.Core.ReadWrite
             this.publicReadWriteSet.AddWriteItem(key, HashHelper.Keccak256(value), true);
             this.privateReadWriteSet.AddWriteItem(key, value);
         }
+
+        public bool GetWriteItem(ReadWriteSetKey key, out byte[] value)
+        {
+            return this.privateReadWriteSet.GetWriteItem(key, out value);
+        }
     }
 }
