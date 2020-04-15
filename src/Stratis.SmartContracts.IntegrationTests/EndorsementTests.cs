@@ -171,6 +171,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var rwsTransaction = lastBlock.Transactions[1];
                 Assert.NotNull(node1.FullNode.NodeService<ITransientStore>().Get(rwsTransaction.GetHash()));
                 Assert.NotNull(node2.FullNode.NodeService<ITransientStore>().Get(rwsTransaction.GetHash()));
+
+                Thread.Sleep(2000);
+
+                Assert.NotNull(node2.FullNode.NodeService<IPrivateDataStore>().GetBytes(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("TransientPrivate")));
+                Assert.NotNull(node2.FullNode.NodeService<IPrivateDataStore>().GetBytes(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("TransientPrivate")));
             }
         }
     }

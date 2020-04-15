@@ -67,7 +67,7 @@ namespace Stratis.Feature.PoA.Tokenless
                         // Private data.
                         services.AddSingleton<ITransientKeyValueStore, TransientKeyValueStore>();
                         services.AddSingleton<ITransientStore, TransientStore>();
-                        services.AddSingleton<IMissingPrivateDataStore, IMissingPrivateDataStore>();
+                        services.AddSingleton<IMissingPrivateDataStore, MissingPrivateDataStore>();
                         services.AddSingleton<IPrivateDataKeyValueStore, PrivateDataKeyValueStore>();
                         services.AddSingleton<IPrivateDataStore, PrivateDataStore>();
 
