@@ -8,10 +8,10 @@ using NBitcoin;
 using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Caching;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.ReadWrite;
@@ -30,6 +30,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
         private readonly ILogger logger;
         private IStateRepositoryRoot mutableStateRepository;
         private readonly IList<Receipt> receipts;
+        private readonly HashSet<uint256> privateDataTxs;
         private readonly IReceiptRepository receiptRepository;
         private readonly IStateRepositoryRoot stateRepositoryRoot;
         private readonly ITokenlessSigner tokenlessSigner;
@@ -53,6 +54,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             this.executorFactory = executorFactory;
             this.executionCache = executionCache;
             this.receipts = new List<Receipt>();
+            this.privateDataTxs = new HashSet<uint256>();
             this.receiptRepository = receiptRepository;
             this.stateRepositoryRoot = stateRepositoryRoot;
             this.tokenlessSigner = tokenlessSigner;
@@ -74,6 +76,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             this.logger.LogDebug("Block to validate '{0}'.", context.ValidationContext.BlockToValidate.GetHash());
 
             this.receipts.Clear();
+            this.privateDataTxs.Clear();
 
             this.DetermineIfResultIsAlreadyCached(context);
             this.ProcessTransactions(context);
@@ -84,7 +87,11 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             // Push to underlying database
             this.mutableStateRepository.Commit();
 
-            // TODO: Move all of the private data to the private state.
+            // Move the private data to the "actual" private state database.
+            foreach (uint256 txId in this.privateDataTxs)
+            {
+                this.privateDataRetriever.RegisterNewPrivateData(txId); // Could operate on the whole collection...
+            }
 
             // Update the globally injected state so all services receive the updates.
             this.stateRepositoryRoot.SyncToRoot(this.mutableStateRepository.Root);
@@ -181,7 +188,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 
             if (rws.Writes.Any(x => x.IsPrivateData))
             {
-                this.privateDataRetriever.RegisterNewPrivateData(transaction.GetHash());
+                this.privateDataTxs.Add(transaction.GetHash());
             }
 
             this.rwsValidator.ApplyReadWriteSet(this.mutableStateRepository, rws, version);

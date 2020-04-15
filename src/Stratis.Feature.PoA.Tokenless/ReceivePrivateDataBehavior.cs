@@ -61,8 +61,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 // The transaction is in a block already - apply the RWS to the private data db.
                 ReadWriteSet rws = ReadWriteSet.FromJsonEncodedBytes(payload.ReadWriteSetData);
 
-                // TODO: Validate the read set so that the data is committed in the correct order always.
-
+                // TODO: Validate the read set so that the data is committed in the correct order always. And this could be componentised with the same code from PrivateDataRetriever
                 foreach (WriteItem write in rws.Writes)
                 {
                     this.privateDataStore.StoreBytes(write.ContractAddress, write.Key, write.Value);
