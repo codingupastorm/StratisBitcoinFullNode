@@ -1,44 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using MembershipServices;
-using Microsoft.Extensions.Logging;
+﻿using System.Collections.Generic;
+using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Tests.Common;
-using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
-using Stratis.Feature.PoA.Tokenless.KeyStore;
-using Stratis.Features.PoA.ProtocolEncryption;
-using Stratis.SmartContracts.Core.Util;
 using Xunit;
 
 namespace Stratis.Feature.PoA.Tokenless.Tests
 {
     public class EndorsementInfoTests
     {
-        private TokenlessSigner tokenlessSigner;
-        private CertificatePermissionsChecker certificatePermissionsChecker;
-        private MembershipServicesDirectory membershipServices;
-
-        public EndorsementSigner GetSigner(Network network = null, [System.Runtime.CompilerServices.CallerMemberName] string callingMethod = "")
-        {
-            network = network ?? new TokenlessNetwork();
-
-            string testDir = TestBase.GetTestDirectoryPath(this, callingMethod);
-            var settings = new NodeSettings(network, args: new[] { $"datadir={testDir}", "password=test" });
-            this.membershipServices = new MembershipServicesDirectory(settings);
-            var revocationChecker = new RevocationChecker(membershipServices);
-            var certificatesManager = new CertificatesManager(settings.DataFolder, settings, settings.LoggerFactory, revocationChecker, network);
-            var tokenlessWalletManager = new TokenlessKeyStoreManager(network, settings.DataFolder, new TokenlessKeyStoreSettings(settings), certificatesManager, settings.LoggerFactory);
-            tokenlessWalletManager.Initialize();
-            this.tokenlessSigner = new TokenlessSigner(network, new SenderRetriever());
-            this.certificatePermissionsChecker =
-                new CertificatePermissionsChecker(membershipServices, certificatesManager, new LoggerFactory());
-            return new EndorsementSigner(network, this.tokenlessSigner, tokenlessWalletManager);
-        }
-
         [Fact]
         public void New_Endorsement_Has_State_Proposed()
         {
@@ -48,16 +17,66 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         [Fact]
         public void Endorsement_Gets_Address_Org_From_Transaction()
         {
-            var endorsement = new EndorsementInfo();
-            var network = new TokenlessNetwork();
-            var tx = network.CreateTransaction();
-            Script outputScript = TxReadWriteDataTemplate.Instance.GenerateScriptPubKey(new byte[] { 0xAA });
-            tx.Outputs.Add(new TxOut(Money.Zero, outputScript));
-            var signer = GetSigner();
-            signer.Sign(tx);
+            var organisationLookup = new Mock<IOrganisationLookup>();
 
-            var addr = this.tokenlessSigner.GetSender(tx);
-            var cert = this.membershipServices.GetCertificateForAddress(addr.Sender);
+            var organisation = (Organisation) "ORG_1_DN";
+            var senderAddress = "SENDER";
+            var transaction = new Transaction();
+
+            // Rig the lookup to return what we want.
+            organisationLookup
+                .Setup(l => l.FromTransaction(It.IsAny<Transaction>()))
+                .Returns((organisation, senderAddress));
+
+            // Basic policy that only requires 1 sig from organisation.
+            var basicPolicy = new Dictionary<Organisation, int>
+            {
+                { organisation, 1 }
+            };
+
+            var endorsement = new EndorsementInfo(basicPolicy, organisationLookup.Object);
+
+            Assert.False(endorsement.Validate());
+            Assert.Equal(EndorsementState.Proposed, endorsement.State);
+            
+            endorsement.AddSignature(transaction);
+
+            Assert.True(endorsement.Validate());
+            Assert.Equal(EndorsementState.Approved, endorsement.State);
+            organisationLookup.Verify(l => l.FromTransaction(transaction), Times.Once);
+        }
+
+        [Fact]
+        public void Endorsement_Gets_Address_Unapproved_Org_From_Transaction()
+        {
+            var organisationLookup = new Mock<IOrganisationLookup>();
+
+            var organisation = (Organisation)"ORG_1_DN";
+            var unapprovedOrg = (Organisation) "BAD_ORG_DN";
+            var senderAddress = "SENDER";
+            var transaction = new Transaction();
+
+            // Rig the lookup to return what we want.
+            organisationLookup
+                .Setup(l => l.FromTransaction(It.IsAny<Transaction>()))
+                .Returns((unapprovedOrg, senderAddress));
+
+            // Basic policy that only requires 1 sig from the valid organisation.
+            var basicPolicy = new Dictionary<Organisation, int>
+            {
+                { organisation, 1 }
+            };
+
+            var endorsement = new EndorsementInfo(basicPolicy, organisationLookup.Object);
+
+            Assert.False(endorsement.Validate());
+            Assert.Equal(EndorsementState.Proposed, endorsement.State);
+
+            endorsement.AddSignature(transaction);
+
+            Assert.False(endorsement.Validate());
+            Assert.Equal(EndorsementState.Proposed, endorsement.State);
+            organisationLookup.Verify(l => l.FromTransaction(transaction), Times.Once);
         }
 
         [Fact]

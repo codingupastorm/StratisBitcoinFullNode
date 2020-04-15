@@ -1,8 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using CertificateAuthority.Models;
+using MembershipServices;
 using NBitcoin;
+using Org.BouncyCastle.X509;
+using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.SmartContracts.CLR;
+using Stratis.SmartContracts.Core.Util;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
@@ -102,9 +107,40 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         }
     }
 
+    public interface IOrganisationLookup
+    {
+        (Organisation organisation, string Sender) FromTransaction(Transaction transaction);
+    }
+
+    public class OrganisationLookup : IOrganisationLookup
+    {
+        private readonly TokenlessSigner tokenlessSigner;
+        private readonly MembershipServicesDirectory membershipServices;
+        private readonly Network network;
+
+        public OrganisationLookup(TokenlessSigner tokenlessSigner, MembershipServicesDirectory membershipServices, Network network)
+        {
+            this.tokenlessSigner = tokenlessSigner;
+            this.membershipServices = membershipServices;
+            this.network = network;
+        }
+
+        public (Organisation organisation, string Sender) FromTransaction(Transaction transaction)
+        {
+            // Retrieving sender and certificate should not fail due to mempool rule ie. we shouldn't need to check for errors here.
+            GetSenderResult sender = this.tokenlessSigner.GetSender(transaction);
+
+            X509Certificate certificate = this.membershipServices.GetCertificateForAddress(sender.Sender);
+
+            var organisation = (Organisation)certificate.GetOrganisation();
+
+            return (organisation, sender.Sender.ToBase58Address(this.network));
+        }
+    }
+
     public class EndorsementInfo
     {
-        private readonly List<CertificateInfoModel> certificates;
+        private readonly IOrganisationLookup organisationLookupObject;
         private readonly MofNPolicyValidator validator;
 
         /// <summary>
@@ -123,9 +159,9 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.SetState(EndorsementState.Proposed);
         }
 
-        public EndorsementInfo(Dictionary<Organisation, int> policy, List<CertificateInfoModel> certificates)
+        public EndorsementInfo(Dictionary<Organisation, int> policy, IOrganisationLookup organisationLookupObject)
         {
-            this.certificates = certificates;
+            this.organisationLookupObject = organisationLookupObject;
             this.Policy = policy;
             this.validator = new MofNPolicyValidator(this.Policy);
         }
@@ -133,6 +169,18 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         public void SetState(EndorsementState state)
         {
             this.State = state;
+        }
+
+        /// <summary>
+        /// Extracts the sender address from the transaction, obtains its certificate from
+        /// membership services, and extracts its organisation.
+        /// </summary>
+        /// <param name="transaction"></param>
+        public void AddSignature(Transaction transaction)
+        {
+            (Organisation organisation, string sender) = this.organisationLookupObject.FromTransaction(transaction);
+
+            this.AddSignature(organisation, sender);
         }
 
         public void AddSignature(Organisation org, string address)
