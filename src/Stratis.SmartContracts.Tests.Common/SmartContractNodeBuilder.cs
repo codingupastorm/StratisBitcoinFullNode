@@ -29,7 +29,7 @@ namespace Stratis.SmartContracts.Tests.Common
             this.TimeProvider = new EditableTimeProvider();
         }
 
-        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client, bool isInfraNode = false, bool initialRun = true)
+        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client, bool isInfraNode = false, bool willStartChannels = false, bool initialRun = true)
         {
             string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
 
@@ -41,15 +41,12 @@ namespace Stratis.SmartContracts.Tests.Common
             };
 
             if (isInfraNode)
-            {
-                configParameters.Add("channelprocesspath", "..\\..\\..\\..\\Stratis.TokenlessD\\");
                 configParameters.Add("isinfranode", "True");
-            }
 
-            var runner = new TokenlessNodeRunner(dataFolder, network, this.TimeProvider)
-            {
-                IsInfraNode = isInfraNode
-            };
+            if (willStartChannels)
+                configParameters.Add("channelprocesspath", "..\\..\\..\\..\\Stratis.TokenlessD\\");
+
+            var runner = new TokenlessNodeRunner(dataFolder, network, this.TimeProvider);
 
             CoreNode node = this.CreateNode(runner, "poa.conf", configParameters: configParameters);
 
@@ -109,11 +106,11 @@ namespace Stratis.SmartContracts.Tests.Common
             }
         }
 
-        public void CreateChannel(CoreNode parentNode, string channelName, int nodeIndex = 0)
+        public void CreateChannel(CoreNode parentNode, string channelName, int nodeIndex)
         {
             // Serialize the channel network and write the json to disk.
-            //var nodeRootFolder = Path.Combine(this.rootFolder, nodeIndex.ToString());
             ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, "channels");
+            channelNetwork.DefaultAPIPort += nodeIndex;
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
 
             var channelRootFolder = Path.Combine(parentNode.FullNode.Settings.DataDir, channelNetwork.RootFolderName, channelName);
@@ -122,17 +119,19 @@ namespace Stratis.SmartContracts.Tests.Common
             var serializedNetworkFileName = $"{channelRootFolder}\\{channelName}_network.json";
             File.WriteAllText(serializedNetworkFileName, serializedJson);
 
+            // Save the channel definition so that it can loaded on node start.
             IChannelRepository channelRepository = parentNode.FullNode.NodeService<IChannelRepository>();
             channelRepository.SaveChannelDefinition(new ChannelDefinition() { Name = channelName });
         }
 
-        public CoreNode CreateChannelNode(CoreNode infraNode, string channelName, int nodeIndex = 0)
+        public CoreNode CreateChannelNode(CoreNode infraNode, string channelName, int nodeIndex)
         {
             // Serialize the channel network and write the json to disk.
-            var nodeRootFolder = Path.Combine(this.rootFolder, nodeIndex.ToString());
             ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, "channels");
+            channelNetwork.DefaultAPIPort += nodeIndex;
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
 
+            var nodeRootFolder = Path.Combine(this.rootFolder, nodeIndex.ToString());
             var channelRootFolder = Path.Combine(nodeRootFolder, channelNetwork.RootFolderName);
             Directory.CreateDirectory(channelRootFolder);
 
@@ -140,7 +139,7 @@ namespace Stratis.SmartContracts.Tests.Common
             File.WriteAllText(serializedNetworkFileName, serializedJson);
 
             // Create the channel node runner.
-            CoreNode channelNode = this.CreateNode(new ChannelNodeRunner(channelName, nodeRootFolder, this.TimeProvider), "poa.conf");
+            CoreNode channelNode = this.CreateNode(new ChannelNodeRunner(channelName, nodeRootFolder, this.TimeProvider), "channel.conf");
 
             // Initialize the channel nodes's data folder etc.
             string[] args = new string[] { "-datadir=" + nodeRootFolder, };
@@ -158,7 +157,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
         public CoreNode CreateInfraNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client)
         {
-            return CreateTokenlessNode(network, nodeIndex, authorityCertificate, client, true);
+            return CreateTokenlessNode(network, nodeIndex, authorityCertificate, client, true, true);
         }
 
         private TokenlessKeyStoreManager InitializeNodeKeyStore(CoreNode node, Network network, NodeSettings settings)

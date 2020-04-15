@@ -30,6 +30,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     public sealed class ChannelService : IChannelService
     {
         private const string ChannelConfigurationFileName = "channel.conf";
+        private const int SystemChannelApiPort = 30001;
         private const string SystemChannelName = "system";
 
         private readonly ChannelSettings channelSettings;
@@ -149,6 +150,11 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 return rootFolderName;
 
             ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, rootFolderName);
+
+            // If the node we are starting is a system channel node, then its API port will always be 30001
+            if (channelName == SystemChannelName)
+                channelNetwork.DefaultAPIPort = SystemChannelApiPort;
+
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
             Directory.CreateDirectory(rootFolderName);
             File.WriteAllText(networkFileName, serializedJson);
@@ -176,7 +182,6 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 return;
 
             var args = new StringBuilder();
-            args.AppendLine($"-apiport={this.channelSettings.ChannelApiPort}");
             args.AppendLine($"-certificatepassword=test");
             args.AppendLine($"-password=test");
             args.AppendLine($"-{CertificatesManager.CaAccountIdKey}={Settings.AdminAccountId}");
@@ -194,10 +199,13 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
         private async Task<Process> StartTheProcessAsync(string channelRootFolder)
         {
+            var startUpArgs = $"run --no-build -nowarn -conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
+            this.logger.LogInformation($"Attempting to start process with args '{startUpArgs}'");
+
             var process = new Process();
             process.StartInfo.WorkingDirectory = this.channelSettings.ProcessPath;
             process.StartInfo.FileName = "dotnet";
-            process.StartInfo.Arguments = $"run --no-build -conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
+            process.StartInfo.Arguments = startUpArgs;
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.CreateNoWindow = false;
             process.Start();

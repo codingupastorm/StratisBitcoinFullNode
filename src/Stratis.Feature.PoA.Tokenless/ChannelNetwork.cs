@@ -35,7 +35,7 @@ namespace Stratis.Feature.PoA.Tokenless
         public override Block Genesis { get; set; }
 
         /// <summary>
-        /// Deserialized the given json string to a new instance of <see cref="ChannelNetwork"/>.
+        /// Deserializes the given json string to a new instance of <see cref="ChannelNetwork"/>.
         /// </summary>
         /// <param name="channelSettings">The string containing the Json.</param>
         /// <returns>A new instance of <see cref="ChannelNetwork"/>.</returns>

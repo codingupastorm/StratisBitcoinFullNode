@@ -94,14 +94,10 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
                 this.ConfigParameters.Import(configParameters);
 
             // Set the various ports.
-            var randomFoundPorts = new int[3];
+            var randomFoundPorts = new int[2];
             IpHelper.FindPorts(randomFoundPorts);
             this.ConfigParameters.SetDefaultValueIfUndefined("port", randomFoundPorts[0].ToString());
             this.ConfigParameters.SetDefaultValueIfUndefined("apiport", randomFoundPorts[1].ToString());
-
-            // If this node is an infra node then also define the channel api port it will start up.
-            if (runner.IsInfraNode)
-                this.ConfigParameters.SetDefaultValueIfUndefined("channelapiport", randomFoundPorts[2].ToString());
 
             this.loggerFactory = new ExtendedLoggerFactory();
 

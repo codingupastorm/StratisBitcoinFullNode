@@ -42,7 +42,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 tokenlessNode.Start();
 
                 // Create and start the channel node.
-                CoreNode channelNode = nodeBuilder.CreateChannelNode(tokenlessNode, "system");
+                CoreNode channelNode = nodeBuilder.CreateChannelNode(tokenlessNode, "system", 1);
                 channelNode.Start();
             }
         }
@@ -110,11 +110,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 parentNode.Start();
 
                 // Create 5 channels for the identity to be apart of.
-                nodeBuilder.CreateChannel(parentNode, "marketing", 0);
-                nodeBuilder.CreateChannel(parentNode, "sales", 1);
-                nodeBuilder.CreateChannel(parentNode, "legal", 2);
-                nodeBuilder.CreateChannel(parentNode, "it", 3);
-                nodeBuilder.CreateChannel(parentNode, "humanresources", 4);
+                nodeBuilder.CreateChannel(parentNode, "marketing", 1);
+                nodeBuilder.CreateChannel(parentNode, "sales", 2);
+                nodeBuilder.CreateChannel(parentNode, "legal", 3);
+                nodeBuilder.CreateChannel(parentNode, "it", 4);
+                nodeBuilder.CreateChannel(parentNode, "humanresources", 5);
 
                 // Re-start the parent node as to load and start the channels it belongs to.
                 parentNode.Restart();
