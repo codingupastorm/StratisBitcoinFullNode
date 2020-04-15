@@ -28,6 +28,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.transientStore = transientStore;
             this.missingPrivateDataStore = missingPrivateDataStore;
             this.privateDataStore = privateDataStore;
+            this.blockRepository = blockRepository;
         }
 
         protected override void AttachCore()
