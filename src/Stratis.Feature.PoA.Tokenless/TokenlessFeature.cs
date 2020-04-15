@@ -30,7 +30,7 @@ namespace Stratis.Feature.PoA.Tokenless
     public sealed class TokenlessFeature : FullNodeFeature
     {
         private readonly ICoreComponent coreComponent;
-
+        private readonly IBlockRepository blockRepository;
         private readonly ICertificatesManager certificatesManager;
         private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
         private readonly VotingManager votingManager;
@@ -44,6 +44,7 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly INodeLifetime nodeLifetime;
         private readonly ITransientStore transientStore;
         private readonly IMissingPrivateDataStore missingPrivateDataStore;
+        private readonly IPrivateDataStore privateDataStore;
         private readonly IPrivateDataRetriever privateDataRetriever;
         private readonly ILogger logger;
         private readonly IMembershipServicesDirectory membershipServices;
@@ -53,6 +54,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         public TokenlessFeature(
             ICertificatesManager certificatesManager,
+            IBlockRepository blockRepository,
             ICertificatePermissionsChecker certificatePermissionsChecker,
             VotingManager votingManager,
             ICoreComponent coreComponent,
@@ -71,9 +73,11 @@ namespace Stratis.Feature.PoA.Tokenless
             IMembershipServicesDirectory membershipServices,
             ITransientStore transientStore,
             IMissingPrivateDataStore missingPrivateDataStore,
+            IPrivateDataStore privateDataStore,
             IPrivateDataRetriever privateDataRetriever,
             IChannelService channelService)
-            {
+        {
+            this.blockRepository = blockRepository;
             this.certificatesManager = certificatesManager;
             this.certificatePermissionsChecker = certificatePermissionsChecker;
             this.votingManager = votingManager;
@@ -89,6 +93,8 @@ namespace Stratis.Feature.PoA.Tokenless
             this.nodeLifetime = nodeLifetime;
             this.transientStore = transientStore;
             this.missingPrivateDataStore = missingPrivateDataStore;
+            this.privateDataStore = privateDataStore;
+            this.privateDataRetriever = privateDataRetriever;
             this.caPubKeysLoop = null;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.membershipServices = membershipServices;
@@ -112,7 +118,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
             connectionParameters.TemplateBehaviors.Add(new EndorsementRequestBehavior(this.requestHandler));
             connectionParameters.TemplateBehaviors.Add(new EndorsementSuccessBehavior(this.successHandler));
-            connectionParameters.TemplateBehaviors.Add(new ReceivePrivateDataBehavior(this.transientStore, this.missingPrivateDataStore));
+            connectionParameters.TemplateBehaviors.Add(new ReceivePrivateDataBehavior(this.transientStore, this.missingPrivateDataStore, this.privateDataStore, this.blockRepository));
             connectionParameters.TemplateBehaviors.Add(new PrivateDataRequestBehavior(this.transientStore));
 
             this.federationManager.Initialize();
