@@ -82,5 +82,43 @@ namespace Stratis.SmartContracts.IntegrationTests
 
             Assert.True(channelNodeProcess.HasExited);
         }
+
+        [Fact]
+        public void InfraNodeCanCreateAndStartAndStopSystemChannelNode()
+        {
+            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+
+            Process channelNodeProcess = null;
+
+            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                var network = new TokenlessNetwork();
+
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient();
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
+                CaClient client1 = TokenlessTestHelper.GetClient(server);
+
+                // Create and start the main "infra" tokenless node which will internally start the "system channel node".
+                CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, ac, client1);
+                infraNode.Start();
+
+                var channelService = infraNode.FullNode.NodeService<IChannelService>();
+                Assert.True(channelService.StartedChannelNodes.Count == 1);
+
+                channelNodeProcess = Process.GetProcessById(channelService.StartedChannelNodes.First());
+                Assert.False(channelNodeProcess.HasExited);
+
+                channelService.StopChannelNodes();
+            }
+
+            Assert.True(channelNodeProcess.HasExited);
+        }
     }
 }

@@ -200,7 +200,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             process.StartInfo.WorkingDirectory = this.channelSettings.ProcessPath;
             process.StartInfo.FileName = "dotnet";
             process.StartInfo.Arguments = $"run --no-build -conf={ChannelConfigurationFileName} -datadir={channelNetwork.RootFolderName}";
-            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.UseShellExecute = true;
             process.StartInfo.CreateNoWindow = false;
             process.Start();
 
@@ -212,20 +212,19 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
         public void StopChannelNodes()
         {
-            foreach (var channelNodePId in this.StartedChannelNodes)
+            foreach (var channelNodePId in this.StartedChannelNodes.ToList())
             {
                 var process = Process.GetProcessById(channelNodePId);
 
                 this.logger.LogInformation($"Stopping channel node with PId: {channelNodePId}.");
 
                 // Wait for main window to be created, if not created already.
-                process.WaitForInputIdle();
-
-                // Close the main window.
                 process.CloseMainWindow();
 
                 // Wait until the process exits.
                 process.WaitForExit();
+
+                this.StartedChannelNodes.Remove(process.Id);
 
                 this.logger.LogInformation($"Channel node stopped.");
             }
