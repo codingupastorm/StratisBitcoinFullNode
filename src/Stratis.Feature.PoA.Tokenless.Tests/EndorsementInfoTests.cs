@@ -91,8 +91,20 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         [Fact]
         public void MofNPolicyValidator_Validates_One_Signature_One_Organisation_Correctly()
         {
-            var policy = new Dictionary<Organisation, int>();
+            var org = (Organisation)"Test";
+            var org2 = (Organisation)"Test2";
+            var policy = new Dictionary<Organisation, int>
+            {
+                { org, 1 }
+            };
+
             var validator = new MofNPolicyValidator(policy);
+
+            validator.AddSignature(org2, "test");
+
+            Assert.False(validator.Valid);
+
+            validator.AddSignature(org, "test");
 
             Assert.True(validator.Valid);
         }
