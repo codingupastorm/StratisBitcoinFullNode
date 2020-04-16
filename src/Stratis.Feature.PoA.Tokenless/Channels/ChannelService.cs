@@ -23,13 +23,14 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         Task StartChannelNodeAsync(ChannelCreationRequest request);
         Task StartSystemChannelNodeAsync();
         void StopChannelNodes();
-        void RestartChannelNodes();
+        Task RestartChannelNodesAsync();
     }
 
     /// <inheritdoc />
     public sealed class ChannelService : IChannelService
     {
         private const string ChannelConfigurationFileName = "channel.conf";
+        private const int SystemChannelApiPort = 30001;
         private const string SystemChannelName = "system";
 
         private readonly ChannelSettings channelSettings;
@@ -76,36 +77,29 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             }
         }
 
-        public void RestartChannelNodes()
+        public async Task RestartChannelNodesAsync()
         {
-            try
+            var channelDefinitions = this.channelRepository.GetChannelDefinitions().Keys.ToList();
+            this.logger.LogInformation($"This node has {channelDefinitions.Count} to start.");
+
+            foreach (var channel in channelDefinitions)
             {
-                this.channelRepository.GetChannelDefinitions().Keys.ToList().ForEach(async n => await this.RestartChannelNodeAsync(n));
-            }
-            catch (Exception ex)
-            {
-                throw new ChannelServiceException($"Failed to restart channel nodes: {ex.Message}");
-            }
-        }
+                try
+                {
+                    this.logger.LogInformation($"Restarting a node on channel '{channel}'.");
 
-        public async Task RestartChannelNodeAsync(string channelName)
-        {
-            try
-            {
-                this.logger.LogInformation($"Restarting a node on channel '{channelName}'.");
+                    Process process = await StartNodeAsync(channel, "-ischannelnode=true", $"-channelname={channel}");
+                    if (process.HasExited)
+                        this.logger.LogWarning($"Failed to restart node on channel '{channel}' as the process exited early.");
 
-                Process process = await RestartNodeAsync(channelName);
-                if (process.HasExited)
-                    this.logger.LogWarning($"Failed to restart node on channel '{channelName}' as the process exited early.");
+                    this.StartedChannelNodes.Add(process.Id);
 
-                this.StartedChannelNodes.Add(process.Id);
-
-                this.logger.LogInformation($"Node restarted on channel '{channelName}'.");
-
-            }
-            catch (Exception ex)
-            {
-                throw new ChannelServiceException($"Failed to restart node on channel '{channelName}': {ex.Message}");
+                    this.logger.LogInformation($"Node restarted on channel '{channel}'.");
+                }
+                catch (Exception ex)
+                {
+                    throw new ChannelServiceException($"Failed to restart channel nodes: {ex.Message}");
+                }
             }
         }
 
@@ -131,54 +125,63 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
         private async Task<Process> StartNodeAsync(string channelName, params string[] channelArgs)
         {
-            // Write teh serialized version of the network to disk.
-            ChannelNetwork channelNetwork = WriteChannelNetworkJson(channelName);
+            // Write the serialized version of the network to disk.
+            string channelRootFolder = WriteChannelNetworkJson(channelName);
 
             // Copy the parent node's authority and client certificate to the channel node's root.
-            CopyCertificatesToChannelRoot(channelNetwork);
+            CopyCertificatesToChannelRoot(channelRootFolder);
 
             // Create channel configuration file.
-            CreateChannelConfigurationFile(channelNetwork, channelArgs);
+            CreateChannelConfigurationFile(channelRootFolder, channelArgs);
 
             // Pass the path to the serialized network to the system channel node and start it.
-            return await StartTheProcessAsync(channelNetwork);
+            return await StartTheProcessAsync(channelRootFolder);
         }
 
-        private async Task<Process> RestartNodeAsync(string channelName)
-        {
-            // Write the serialized version of the network to disk.
-            ChannelNetwork channelNetwork = WriteChannelNetworkJson(channelName);
-
-            // Copy the parent node's authority and client certificate to the channel node's root.
-            CopyCertificatesToChannelRoot(channelNetwork);
-
-            // Pass the path to the serialized network to the system channel node and start it.
-            return await StartTheProcessAsync(channelNetwork);
-        }
-
-        /// <summary> Write the serialized network to disk. </summary>
+        /// <summary>Write the serialized network to disk.</summary>
         /// <param name="channelName">The name of the channel.</param>
-        /// <returns>An instance of the <see cref="ChannelNetwork"/>.</returns>
-        private ChannelNetwork WriteChannelNetworkJson(string channelName)
+        /// <returns>The channel's root folder path.</returns>
+        private string WriteChannelNetworkJson(string channelName)
         {
-            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, $"{this.nodeSettings.DataFolder.RootPath}\\channels\\{channelName.ToLowerInvariant()}");
+            // If the network json already exist, do nothing.
+            var rootFolderName = $"{this.nodeSettings.DataFolder.RootPath}\\channels\\{channelName.ToLowerInvariant()}";
+            var networkFileName = $"{rootFolderName}\\{channelName}_network.json";
+            if (File.Exists(networkFileName))
+                return rootFolderName;
+
+            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, rootFolderName);
+
+            // If the node we are starting is a system channel node, then its API port will always be 30001
+            if (channelName == SystemChannelName)
+                channelNetwork.DefaultAPIPort = SystemChannelApiPort;
+
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
-            Directory.CreateDirectory(channelNetwork.RootFolderName);
-            var filePath = $"{channelNetwork.RootFolderName}\\{channelName}_network.json";
-            File.WriteAllText(filePath, serializedJson);
-            return channelNetwork;
+            Directory.CreateDirectory(rootFolderName);
+            File.WriteAllText(networkFileName, serializedJson);
+            return rootFolderName;
         }
 
-        private void CopyCertificatesToChannelRoot(ChannelNetwork channelNetwork)
+        private void CopyCertificatesToChannelRoot(string channelRootFolder)
         {
-            File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificatesManager.AuthorityCertificateName), Path.Combine(channelNetwork.RootFolderName, CertificatesManager.AuthorityCertificateName));
-            File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificatesManager.ClientCertificateName), Path.Combine(channelNetwork.RootFolderName, CertificatesManager.ClientCertificateName));
+            // If the certificates already exist, do nothing.
+            var authorityCertificatePath = Path.Combine(channelRootFolder, CertificatesManager.AuthorityCertificateName);
+            if (!File.Exists(authorityCertificatePath))
+                File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificatesManager.AuthorityCertificateName), authorityCertificatePath);
+
+            // If the certificates already exist, do nothing.
+            var clientCertificatePath = Path.Combine(channelRootFolder, CertificatesManager.ClientCertificateName);
+            if (!File.Exists(clientCertificatePath))
+                File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificatesManager.ClientCertificateName), clientCertificatePath);
         }
 
-        private void CreateChannelConfigurationFile(ChannelNetwork channelNetwork, params string[] channelArgs)
+        private void CreateChannelConfigurationFile(string channelRootFolder, params string[] channelArgs)
         {
+            // If the configuration file already exist, do nothing.
+            var configurationFilePath = Path.Combine(channelRootFolder, ChannelConfigurationFileName);
+            if (File.Exists(configurationFilePath))
+                return;
+
             var args = new StringBuilder();
-            args.AppendLine($"-apiport={this.channelSettings.ChannelApiPort}");
             args.AppendLine($"-certificatepassword=test");
             args.AppendLine($"-password=test");
             args.AppendLine($"-{CertificatesManager.CaAccountIdKey}={Settings.AdminAccountId}");
@@ -191,15 +194,18 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 args.AppendLine(channelArg);
             }
 
-            File.WriteAllText(Path.Combine(channelNetwork.RootFolderName, ChannelConfigurationFileName), args.ToString());
+            File.WriteAllText(configurationFilePath, args.ToString());
         }
 
-        private async Task<Process> StartTheProcessAsync(ChannelNetwork channelNetwork)
+        private async Task<Process> StartTheProcessAsync(string channelRootFolder)
         {
+            var startUpArgs = $"run --no-build -nowarn -conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
+            this.logger.LogInformation($"Attempting to start process with args '{startUpArgs}'");
+
             var process = new Process();
             process.StartInfo.WorkingDirectory = this.channelSettings.ProcessPath;
             process.StartInfo.FileName = "dotnet";
-            process.StartInfo.Arguments = $"run --no-build -conf={ChannelConfigurationFileName} -datadir={channelNetwork.RootFolderName}";
+            process.StartInfo.Arguments = startUpArgs;
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.CreateNoWindow = false;
             process.Start();
