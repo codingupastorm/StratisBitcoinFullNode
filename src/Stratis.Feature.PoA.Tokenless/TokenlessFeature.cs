@@ -133,15 +133,13 @@ namespace Stratis.Feature.PoA.Tokenless
             repeatEvery: TimeSpans.Minute,
             startAfter: TimeSpans.Minute);
 
-            // If this node is a infra node, then start another daemon with the serialized version of the network.
+            // If this node is a infra node, then start a system channel node daemon with the serialized version of the network.
             if (this.channelSettings.IsInfraNode)
                 await this.channelService.StartSystemChannelNodeAsync();
 
-            // Restart any channel nodes that were created previously.
-            if (this.channelSettings.IsSystemChannelNode)
-                this.channelService.RestartChannelNodes();
+            // Restart any channels that were created previously or that this nodes belong to.
+            await this.channelService.RestartChannelNodesAsync();
         }
-
 
         private void SynchronizeMembers()
         {

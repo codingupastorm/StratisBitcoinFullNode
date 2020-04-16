@@ -59,7 +59,7 @@ namespace Stratis.SmartContracts.Tests.Common
             {
                 "-certificatepassword=test",
                 "-password=test",
-                "-conf=poa.conf",
+                "-conf=channel.conf",
                 "-datadir=" + this.DataFolder,
                 $"-{CertificatesManager.CaAccountIdKey}={Settings.AdminAccountId}",
                 $"-{CertificatesManager.CaPasswordKey}={CaTestHelper.AdminPassword}",
