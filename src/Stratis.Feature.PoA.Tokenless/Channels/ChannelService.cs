@@ -8,7 +8,9 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using Microsoft.Extensions.Logging;
+using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Features.PoA.ProtocolEncryption;
 
@@ -22,7 +24,6 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
         Task StartChannelNodeAsync(ChannelCreationRequest request);
         Task StartSystemChannelNodeAsync();
-        void StopChannelNodes();
         void RestartChannelNodes();
     }
 
@@ -36,17 +37,37 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         private readonly ILogger logger;
         private readonly NodeSettings nodeSettings;
         private readonly IChannelRepository channelRepository;
+        private readonly INodeLifetime nodeLifetime;
+        private readonly IAsyncProvider asyncProvider;
+
+        private IAsyncLoop terminationLoop;
 
         /// <inheritdoc />
         public List<int> StartedChannelNodes { get; }
 
-        public ChannelService(ChannelSettings channelSettings, ILoggerFactory loggerFactory, NodeSettings nodeSettings, IChannelRepository channelRepository)
+        public ChannelService(ChannelSettings channelSettings, ILoggerFactory loggerFactory, NodeSettings nodeSettings, IChannelRepository channelRepository, INodeLifetime nodeLifetime, IAsyncProvider asyncProvider)
         {
             this.channelSettings = channelSettings;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.nodeSettings = nodeSettings;
             this.StartedChannelNodes = new List<int>();
             this.channelRepository = channelRepository;
+            this.nodeLifetime = nodeLifetime;
+            this.asyncProvider = asyncProvider;
+
+            if (this.channelSettings.ChannelParentPID != 0)
+            {
+                this.terminationLoop = this.asyncProvider.CreateAndRunAsyncLoop($"{nameof(ChannelService)}.TerminationLoop", token =>
+                {
+                    if (Process.GetProcessById(this.channelSettings.ChannelParentPID) == null)
+                        this.nodeLifetime.StopApplication();
+
+                    return Task.CompletedTask;
+                },
+                this.nodeLifetime.ApplicationStopping,
+                repeatEvery: TimeSpan.FromSeconds(1), // Weird number to prevent collisions with some other periodic console outputs.
+                startAfter: TimeSpans.FiveSeconds);
+            }
         }
 
         public async Task StartChannelNodeAsync(ChannelCreationRequest request)
@@ -59,7 +80,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 if (process.HasExited)
                     this.logger.LogWarning($"Failed to start node on channel '{request.Name}' as the process exited early.");
 
-                this.StartedChannelNodes.Add(process.Id);
+                lock (this.StartedChannelNodes)
+                    this.StartedChannelNodes.Add(process.Id);
 
                 var channelDefinition = new ChannelDefinition()
                 {
@@ -98,7 +120,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 if (process.HasExited)
                     this.logger.LogWarning($"Failed to restart node on channel '{channelName}' as the process exited early.");
 
-                this.StartedChannelNodes.Add(process.Id);
+                lock (this.StartedChannelNodes)
+                    this.StartedChannelNodes.Add(process.Id);
 
                 this.logger.LogInformation($"Node restarted on channel '{channelName}'.");
 
@@ -119,7 +142,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 if (process.HasExited)
                     throw new ChannelServiceException($"Failed to start system channel node as the processs exited early.");
 
-                this.StartedChannelNodes.Add(process.Id);
+                lock (this.StartedChannelNodes)
+                    this.StartedChannelNodes.Add(process.Id);
 
                 this.logger.LogInformation("System channel node started.");
             }
@@ -196,10 +220,12 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
         private async Task<Process> StartTheProcessAsync(ChannelNetwork channelNetwork)
         {
+            Process parentProcess = Process.GetCurrentProcess();
+
             var process = new Process();
             process.StartInfo.WorkingDirectory = this.channelSettings.ProcessPath;
             process.StartInfo.FileName = "dotnet";
-            process.StartInfo.Arguments = $"run --no-build -conf={ChannelConfigurationFileName} -datadir={channelNetwork.RootFolderName}";
+            process.StartInfo.Arguments = $"run --no-build -channelparentpid={parentProcess.Id} -conf={ChannelConfigurationFileName} -datadir={channelNetwork.RootFolderName}";
             process.StartInfo.UseShellExecute = true;
             process.StartInfo.CreateNoWindow = false;
             process.Start();
@@ -208,26 +234,6 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             await Task.Delay(TimeSpan.FromSeconds(10));
 
             return process;
-        }
-
-        public void StopChannelNodes()
-        {
-            foreach (var channelNodePId in this.StartedChannelNodes.ToList())
-            {
-                var process = Process.GetProcessById(channelNodePId);
-
-                this.logger.LogInformation($"Stopping channel node with PId: {channelNodePId}.");
-
-                // Wait for main window to be created, if not created already.
-                process.CloseMainWindow();
-
-                // Wait until the process exits.
-                process.WaitForExit();
-
-                this.StartedChannelNodes.Remove(process.Id);
-
-                this.logger.LogInformation($"Channel node stopped.");
-            }
         }
     }
 }
