@@ -140,7 +140,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
     public class EndorsementInfo
     {
-        private readonly IOrganisationLookup organisationLookupObject;
+        private readonly IOrganisationLookup organisationLookup;
         private readonly MofNPolicyValidator validator;
 
         /// <summary>
@@ -159,9 +159,9 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.SetState(EndorsementState.Proposed);
         }
 
-        public EndorsementInfo(Dictionary<Organisation, int> policy, IOrganisationLookup organisationLookupObject)
+        public EndorsementInfo(Dictionary<Organisation, int> policy, IOrganisationLookup organisationLookup)
         {
-            this.organisationLookupObject = organisationLookupObject;
+            this.organisationLookup = organisationLookup;
             this.Policy = policy;
             this.validator = new MofNPolicyValidator(this.Policy);
         }
@@ -178,7 +178,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         /// <param name="transaction"></param>
         public void AddSignature(Transaction transaction)
         {
-            (Organisation organisation, string sender) = this.organisationLookupObject.FromTransaction(transaction);
+            (Organisation organisation, string sender) = this.organisationLookup.FromTransaction(transaction);
 
             this.AddSignature(organisation, sender);
         }
