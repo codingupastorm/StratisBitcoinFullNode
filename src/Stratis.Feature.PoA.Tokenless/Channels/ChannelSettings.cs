@@ -4,7 +4,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 {
     public sealed class ChannelSettings
     {
-        public readonly int ChannelParentPID;
+        public readonly string ChannelParentPipeName;
         public readonly string ChannelName;
         public readonly bool IsChannelNode;
         public readonly bool IsInfraNode;
@@ -13,7 +13,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
         public ChannelSettings(NodeSettings nodeSettings)
         {
-            this.ChannelParentPID = nodeSettings.ConfigReader.GetOrDefault("channelparentpid", 0);
+            this.ChannelParentPipeName = nodeSettings.ConfigReader.GetOrDefault("channelparentpipename", (string)null);
             this.ChannelName = nodeSettings.ConfigReader.GetOrDefault("channelname", "");
             this.IsChannelNode = nodeSettings.ConfigReader.GetOrDefault<bool>("ischannelnode", false);
             this.IsInfraNode = nodeSettings.ConfigReader.GetOrDefault<bool>("isinfranode", false);
@@ -23,7 +23,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
         public ChannelSettings(TextFileConfiguration fileConfiguration)
         {
-            this.ChannelParentPID = fileConfiguration.GetOrDefault("channelparentpid", 0);
+            this.ChannelParentPipeName = fileConfiguration.GetOrDefault("channelparentpipename", (string)null);
             this.ChannelName = fileConfiguration.GetOrDefault("channelname", "");
             this.IsChannelNode = fileConfiguration.GetOrDefault<bool>("ischannelnode", false);
             this.IsInfraNode = fileConfiguration.GetOrDefault<bool>("isinfranode", false);

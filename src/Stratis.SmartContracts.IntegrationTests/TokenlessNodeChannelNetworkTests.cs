@@ -172,6 +172,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.False(channelNodeProcess.HasExited);
 
                 // TODO: Get the system channel node to create channel nodes and test that they terminate when the system channel node terminates.
+                infraNode.Restart();
             }
 
             Assert.True(channelNodeProcess.HasExited);

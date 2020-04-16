@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -28,7 +29,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     }
 
     /// <inheritdoc />
-    public sealed class ChannelService : IChannelService
+    public sealed class ChannelService : IChannelService, IDisposable
     {
         private const string ChannelConfigurationFileName = "channel.conf";
         private const int SystemChannelApiPort = 30001;
@@ -38,13 +39,15 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         private readonly ILogger logger;
         private readonly NodeSettings nodeSettings;
         private readonly IChannelRepository channelRepository;
-        private readonly INodeLifetime nodeLifetime;
         private readonly IAsyncProvider asyncProvider;
+        private readonly string pipeName;
+        private readonly NamedPipeServerStream pipe;
 
         private IAsyncLoop terminationLoop;
 
         /// <inheritdoc />
         public List<int> StartedChannelNodes { get; }
+        public INodeLifetime NodeLifetime { get; private set; }
 
         public ChannelService(ChannelSettings channelSettings, ILoggerFactory loggerFactory, NodeSettings nodeSettings, IChannelRepository channelRepository, INodeLifetime nodeLifetime, IAsyncProvider asyncProvider)
         {
@@ -53,22 +56,44 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.nodeSettings = nodeSettings;
             this.StartedChannelNodes = new List<int>();
             this.channelRepository = channelRepository;
-            this.nodeLifetime = nodeLifetime;
+            this.NodeLifetime = nodeLifetime;
             this.asyncProvider = asyncProvider;
+            this.pipeName = (Guid.NewGuid()).ToString().Replace("-", "");
+            this.pipe = new NamedPipeServerStream(this.pipeName, PipeDirection.Out);
 
-            if (this.channelSettings.ChannelParentPID != 0)
+            if (this.channelSettings.ChannelParentPipeName != null)
             {
                 this.terminationLoop = this.asyncProvider.CreateAndRunAsyncLoop($"{nameof(ChannelService)}.TerminationLoop", token =>
                 {
-                    if (Process.GetProcessById(this.channelSettings.ChannelParentPID) == null)
-                        this.nodeLifetime.StopApplication();
+                    static void PipeBrokenCallback(IAsyncResult ar)
+                    {
+                        // The pipe was closed (parent process died), so exit the child process too.
+                        try
+                        {
+                            (NamedPipeClientStream pipe, ChannelService service) = ((NamedPipeClientStream, ChannelService))ar.AsyncState;
+                            service.NodeLifetime.StopApplication();
+                            pipe.EndRead(ar);
+                        }
+                        catch (IOException) { }
+                    }
+
+                    using (NamedPipeClientStream pipe = new NamedPipeClientStream(".", this.channelSettings.ChannelParentPipeName, PipeDirection.In))
+                    {
+                        pipe.Connect();
+                        pipe.BeginRead(new byte[1], 0, 1, PipeBrokenCallback, (pipe, this));
+                    }
 
                     return Task.CompletedTask;
                 },
-                this.nodeLifetime.ApplicationStopping,
+                this.NodeLifetime.ApplicationStopping,
                 repeatEvery: TimeSpan.FromSeconds(1),
                 startAfter: TimeSpans.FiveSeconds);
             }
+        }
+
+        public void Dispose()
+        {
+            this.pipe.Dispose();
         }
 
         public async Task StartChannelNodeAsync(ChannelCreationRequest request)
@@ -223,8 +248,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
         private async Task<Process> StartTheProcessAsync(string channelRootFolder)
         {
-            Process parentProcess = Process.GetCurrentProcess();
-            var startUpArgs = $"run --no-build -nowarn -channelparentpid={parentProcess.Id} -conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
+            var startUpArgs = $"run --no-build -nowarn -channelparentpipename={this.pipeName} -conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
             this.logger.LogInformation($"Attempting to start process with args '{startUpArgs}'");
 
             var process = new Process();
