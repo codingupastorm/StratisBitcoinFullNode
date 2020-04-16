@@ -17,10 +17,12 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
     public class Endorsements : IEndorsements
     {
+        private readonly IOrganisationLookup organisationLookup;
         private readonly Dictionary<uint256, EndorsementInfo> endorsements;
 
-        public Endorsements()
+        public Endorsements(IOrganisationLookup organisationLookup)
         {
+            this.organisationLookup = organisationLookup;
             this.endorsements = new Dictionary<uint256, EndorsementInfo>();
         }
 
@@ -33,7 +35,8 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
         public EndorsementInfo RecordEndorsement(uint256 proposalId)
         {
-            var info = new EndorsementInfo();
+            // TODO this policy allows everything. Need to replace with the actual policy.
+            var info = new EndorsementInfo(new Dictionary<Organisation, int>(), this.organisationLookup);
             this.endorsements[proposalId] = info;
 
             return info;

@@ -15,15 +15,6 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
         public EndorsementState State { get; private set; }
 
-        public EndorsementInfo()
-        {
-            // TODO remove this constructor once we are able to pass in the policy.
-            // TODO cheat policy allows anything
-            this.Policy = new Dictionary<Organisation, int>();
-
-            this.SetState(EndorsementState.Proposed);
-        }
-
         public EndorsementInfo(Dictionary<Organisation, int> policy, IOrganisationLookup organisationLookup)
         {
             this.organisationLookup = organisationLookup;

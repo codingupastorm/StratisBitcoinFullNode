@@ -11,7 +11,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         [Fact]
         public void New_Endorsement_Has_State_Proposed()
         {
-            Assert.Equal(EndorsementState.Proposed, new EndorsementInfo().State);
+            Assert.Equal(EndorsementState.Proposed, new EndorsementInfo(new Dictionary<Organisation, int>(), Mock.Of<IOrganisationLookup>()).State);
         }
 
         [Fact]
