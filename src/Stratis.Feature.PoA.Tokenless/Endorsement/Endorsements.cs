@@ -1,8 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using CertificateAuthority.Models;
 using NBitcoin;
-using Stratis.Features.PoA.ProtocolEncryption;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
@@ -21,11 +18,9 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     public class Endorsements : IEndorsements
     {
         private readonly Dictionary<uint256, EndorsementInfo> endorsements;
-        private List<CertificateInfoModel> knownCertificates;
 
         public Endorsements()
         {
-            //this.knownCertificates = certificates;
             this.endorsements = new Dictionary<uint256, EndorsementInfo>();
         }
 
