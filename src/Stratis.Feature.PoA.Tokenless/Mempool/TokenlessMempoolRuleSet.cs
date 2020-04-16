@@ -18,6 +18,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
                 typeof(SenderInputMempoolRule)
             };
         }
+
         public static void Create(ChannelNetwork channelNetwork, bool isSystemChannelNode)
         {
             Create(channelNetwork);
