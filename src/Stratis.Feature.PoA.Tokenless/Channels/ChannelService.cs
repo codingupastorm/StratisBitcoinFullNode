@@ -66,7 +66,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                     return Task.CompletedTask;
                 },
                 this.nodeLifetime.ApplicationStopping,
-                repeatEvery: TimeSpan.FromSeconds(1), // Weird number to prevent collisions with some other periodic console outputs.
+                repeatEvery: TimeSpan.FromSeconds(1),
                 startAfter: TimeSpans.FiveSeconds);
             }
         }
