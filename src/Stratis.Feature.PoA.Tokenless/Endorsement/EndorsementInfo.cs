@@ -22,11 +22,6 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.validator = new MofNPolicyValidator(this.Policy);
         }
 
-        public void SetState(EndorsementState state)
-        {
-            this.State = state;
-        }
-
         /// <summary>
         /// Extracts the sender address from the transaction, obtains its certificate from
         /// membership services, and extracts its organisation.
