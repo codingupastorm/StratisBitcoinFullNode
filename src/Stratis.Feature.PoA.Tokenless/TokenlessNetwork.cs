@@ -4,14 +4,11 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using Stratis.Features.Consensus.Rules.CommonRules;
-using Stratis.Features.PoA;
-using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
 using Stratis.Bitcoin.Features.SmartContracts.PoA;
 using Stratis.Feature.PoA.Tokenless.Consensus;
-using Stratis.Feature.PoA.Tokenless.Consensus.Rules;
-using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Feature.PoA.Tokenless.Mempool;
+using Stratis.Features.PoA;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -112,11 +109,6 @@ namespace Stratis.Feature.PoA.Tokenless
             this.Base58Prefixes[(int)Base58Type.ENCRYPTED_SECRET_KEY_NO_EC] = new byte[] { 0x01, 0x42 };
             this.Base58Prefixes[(int)Base58Type.EXT_PUBLIC_KEY] = new byte[] { (0x04), (0x88), (0xB2), (0x1E) };
 
-            this.Checkpoints = new Dictionary<int, CheckpointInfo>();
-
-            this.DNSSeeds = new List<DNSSeedData> { };
-            this.SeedNodes = this.ConvertToNetworkAddresses(new string[] { }, this.DefaultPort).ToList();
-
             // TODO-TL: This is different now because the consensus factory is different.
             // Assert(this.Consensus.HashGenesisBlock == uint256.Parse("690a702893d30a75739b52d9e707f05e5c7da38df0500aa791468a5e609244ba"));
             // Assert(this.Genesis.Header.HashMerkleRoot == uint256.Parse("0x9928b372fd9e4cf62a31638607344c03c48731ba06d24576342db9c8591e1432"));
@@ -126,8 +118,8 @@ namespace Stratis.Feature.PoA.Tokenless
             if ((consensusOptions.GenesisFederationMembers == null) || (consensusOptions.GenesisFederationMembers.Count == 0))
                 throw new Exception("No keys for initial federation are configured!");
 
-            this.RegisterRules(this.Consensus);
-            this.RegisterMempoolRules(this.Consensus);
+            TokenlessConsensusRuleSet.Create(this);
+            TokenlessMempoolRuleSet.Create(this);
         }
 
         public static ChannelNetwork CreateChannelNetwork(string name, string rootFolderName)
@@ -175,44 +167,6 @@ namespace Stratis.Feature.PoA.Tokenless
             channelNetwork.Genesis = genesisBlock;
 
             return channelNetwork;
-        }
-
-        private void RegisterRules(IConsensus consensus)
-        {
-            // IHeaderValidationConsensusRules
-            consensus.ConsensusRules
-                .Register<HeaderTimeChecksPoARule>()
-                .Register<PoAHeaderDifficultyRule>()
-                .Register<TokenlessHeaderSignatureRule>();
-
-            // IIntegrityValidationConsensusRules
-            consensus.ConsensusRules
-                .Register<BlockMerkleRootRule>()
-                .Register<PoAIntegritySignatureRule>();
-
-            // IPartialValidationConsensusRules
-            consensus.ConsensusRules
-                .Register<TokenlessBlockSizeRule>()
-                .Register<IsSmartContractWellFormedPartialValidationRule>()
-                .Register<SenderInputPartialValidationRule>();
-
-            // IFullValidationConsensusRule
-            consensus.ConsensusRules
-                .Register<NoDuplicateTransactionExistOnChainRule>()
-                .Register<TokenlessCoinviewRule>();
-            // ------------------------------------------------------
-        }
-
-        private void RegisterMempoolRules(IConsensus consensus)
-        {
-            consensus.MempoolRules = new List<Type>()
-            {
-                typeof(CheckSenderCertificateIsNotRevoked),
-                typeof(NoDuplicateTransactionExistOnChainMempoolRule),
-                typeof(CreateTokenlessMempoolEntryRule),
-                typeof(IsSmartContractWellFormedMempoolRule),
-                typeof(SenderInputMempoolRule)
-            };
         }
 
         private Block CreateGenesisBlock(TokenlessConsensusFactory consensusFactory, uint time, uint nonce, uint bits, int version, string data = "")

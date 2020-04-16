@@ -37,7 +37,7 @@ namespace Stratis.TokenlessD
 
                 var channelSettings = new ChannelSettings(configReader);
                 if (channelSettings.IsChannelNode)
-                    network = ChannelNetwork.Construct(channelSettings, dataDir);
+                    network = ChannelNetwork.Construct(dataDir, channelSettings.ChannelName, channelSettings.IsSystemChannelNode);
                 else
                     network = new TokenlessNetwork();
 
