@@ -37,6 +37,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         private readonly ILogger logger;
         private readonly NodeSettings nodeSettings;
         private readonly IChannelRepository channelRepository;
+        private readonly Dictionary<string, int> channelPortOffset;
 
         /// <inheritdoc />
         public List<int> StartedChannelNodes { get; }
@@ -48,6 +49,10 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.nodeSettings = nodeSettings;
             this.StartedChannelNodes = new List<int>();
             this.channelRepository = channelRepository;
+            this.channelPortOffset = new Dictionary<string, int>();
+
+            // If the node we are starting is a system channel node, then its API port offset will always be 1.
+            this.channelPortOffset["system"] = 1;
         }
 
         public async Task StartChannelNodeAsync(ChannelCreationRequest request)
@@ -151,9 +156,16 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
             ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, rootFolderName);
 
-            // If the node we are starting is a system channel node, then its API port will always be 30001
-            if (channelName == SystemChannelName)
-                channelNetwork.DefaultAPIPort = SystemChannelApiPort;
+            // TODO: The assumption is that this method will be called in the order that channels are discovered in blocks.
+            if (!this.channelPortOffset.TryGetValue(channelName, out int value))
+            {
+                value = this.channelPortOffset.Count > 0 ? this.channelPortOffset.Values.Max() : 0;
+                this.channelPortOffset[channelName] = value + 1;
+            }
+
+            channelNetwork.DefaultAPIPort += this.channelPortOffset[channelName];
+            channelNetwork.DefaultPort += this.channelPortOffset[channelName];
+            channelNetwork.DefaultSignalRPort += this.channelPortOffset[channelName];
 
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
             Directory.CreateDirectory(rootFolderName);
