@@ -36,6 +36,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     /// </summary>
     public class ChannelNode : IDisposable
     {
+        public const int MillisecondsBeforeForcedKill = 10000;
+
         public string PipeName { get; private set; }
         public NamedPipeServerStream Pipe { get; private set; }
         public Process Process { get; private set; }
@@ -52,7 +54,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         public void Dispose()
         {
             this.Pipe.Dispose();
-            if (!this.Process.WaitForExit(10000))
+            if (!this.Process.WaitForExit(MillisecondsBeforeForcedKill))
                 this.Process.Kill();
         }
     }
