@@ -8,7 +8,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
     public interface IEndorsementSuccessHandler
     {
-        Task<bool> ProcessEndorsementAsync(uint256 proposalId, Transaction signedRWSTransaction);
+        Task<bool> ProcessEndorsementAsync(uint256 proposalId, SignedProposalResponse signedProposalResponse);
     }
 
     public class EndorsementSuccessHandler : IEndorsementSuccessHandler
@@ -22,7 +22,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.endorsements = endorsements;
         }
 
-        public async Task<bool> ProcessEndorsementAsync(uint256 proposalId, Transaction signedRWSTransaction)
+        public async Task<bool> ProcessEndorsementAsync(uint256 proposalId, SignedProposalResponse signedProposalResponse)
         {
             // TODO: Recruit multiple endorsements before broadcasting the transactions.
 
@@ -31,13 +31,14 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             if (info != null)
             {
                 // Add the signature org + address to the policy state.
-                info.AddSignature(signedRWSTransaction);
+                info.AddSignature(null); // TODO
 
                 // If the policy has been satisfied, this will return true and we can broadcast the signed transaction.
-                // TODO rebuild the broadcasted transaction with the txins of all the endorsers.
+
                 if (info.Validate())
                 {
-                    await this.broadcasterManager.BroadcastTransactionAsync(signedRWSTransaction);
+                    // TODO build the endorsed transaction with the txins of all the endorsers.
+                    //await this.broadcasterManager.BroadcastTransactionAsync(finalTransactionWithEndorsements);
                     return true;
                 }
             }

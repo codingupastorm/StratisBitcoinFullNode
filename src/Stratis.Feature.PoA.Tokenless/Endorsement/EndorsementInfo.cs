@@ -30,7 +30,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         public void AddSignature(Transaction transaction)
         {
             (Organisation organisation, string sender) = this.organisationLookup.FromTransaction(transaction);
-
+            
             this.AddSignature(organisation, sender);
         }
 
