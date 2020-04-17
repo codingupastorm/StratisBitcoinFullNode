@@ -21,11 +21,36 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     public interface IChannelService
     {
         /// <summary>This is a list of PIds of channel processes that are running.</summary>
-        List<int> StartedChannelNodes { get; }
+        List<ChannelNode> StartedChannelNodes { get; }
 
         Task StartChannelNodeAsync(ChannelCreationRequest request);
         Task StartSystemChannelNodeAsync();
         Task RestartChannelNodesAsync();
+    }
+
+    /// <summary>
+    /// Server-side class representing a channel process.
+    /// </summary>
+    public class ChannelNode : IDisposable
+    {
+        public string PipeName { get; private set; }
+        public NamedPipeServerStream Pipe { get; private set; }
+        public Process Process { get; private set; }
+
+        public ChannelNode(Process process)
+        {
+            // The child will use the validity of this pipe to decide whether to terminate.
+            this.PipeName = (Guid.NewGuid()).ToString().Replace("-", "");
+            this.Pipe = new NamedPipeServerStream(this.PipeName, PipeDirection.Out);
+
+            this.Process = process;
+        }
+
+        public void Dispose()
+        {
+            this.Pipe.Dispose();
+            this.Process.WaitForExit();
+        }
     }
 
     /// <inheritdoc />
@@ -40,13 +65,11 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         private readonly NodeSettings nodeSettings;
         private readonly IChannelRepository channelRepository;
         private readonly IAsyncProvider asyncProvider;
-        private readonly string pipeName;
-        private readonly NamedPipeServerStream pipe;
 
         private IAsyncLoop terminationLoop;
 
         /// <inheritdoc />
-        public List<int> StartedChannelNodes { get; }
+        public List<ChannelNode> StartedChannelNodes { get; }
         public INodeLifetime NodeLifetime { get; private set; }
 
         public ChannelService(ChannelSettings channelSettings, ILoggerFactory loggerFactory, NodeSettings nodeSettings, IChannelRepository channelRepository, INodeLifetime nodeLifetime, IAsyncProvider asyncProvider)
@@ -54,12 +77,10 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.channelSettings = channelSettings;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.nodeSettings = nodeSettings;
-            this.StartedChannelNodes = new List<int>();
+            this.StartedChannelNodes = new List<ChannelNode>();
             this.channelRepository = channelRepository;
             this.NodeLifetime = nodeLifetime;
             this.asyncProvider = asyncProvider;
-            this.pipeName = (Guid.NewGuid()).ToString().Replace("-", "");
-            this.pipe = new NamedPipeServerStream(this.pipeName, PipeDirection.Out);
 
             if (this.channelSettings.ChannelParentPipeName != null)
             {
@@ -93,7 +114,10 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
         public void Dispose()
         {
-            this.pipe.Dispose();
+            Parallel.ForEach(this.StartedChannelNodes, (channelNode) =>
+            {
+                channelNode.Dispose();
+            });
         }
 
         public async Task StartChannelNodeAsync(ChannelCreationRequest request)
@@ -102,12 +126,12 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             {
                 this.logger.LogInformation($"Starting a node on channel '{request.Name}'.");
 
-                Process process = await StartNodeAsync(request.Name, "-ischannelnode=true");
-                if (process.HasExited)
+                ChannelNode channelNode = await StartNodeAsync(request.Name, "-ischannelnode=true");
+                if (channelNode.Process.HasExited)
                     this.logger.LogWarning($"Failed to start node on channel '{request.Name}' as the process exited early.");
 
                 lock (this.StartedChannelNodes)
-                    this.StartedChannelNodes.Add(process.Id);
+                    this.StartedChannelNodes.Add(channelNode);
 
                 var channelDefinition = new ChannelDefinition()
                 {
@@ -135,12 +159,12 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 {
                     this.logger.LogInformation($"Restarting a node on channel '{channel}'.");
 
-                    Process process = await StartNodeAsync(channel, "-ischannelnode=true", $"-channelname={channel}");
-                    if (process.HasExited)
+                    ChannelNode channelNode = await StartNodeAsync(channel, "-ischannelnode=true", $"-channelname={channel}");
+                    if (channelNode.Process.HasExited)
                         this.logger.LogWarning($"Failed to restart node on channel '{channel}' as the process exited early.");
 
                 lock (this.StartedChannelNodes)
-                    this.StartedChannelNodes.Add(process.Id);
+                    this.StartedChannelNodes.Add(channelNode);
 
                     this.logger.LogInformation($"Node restarted on channel '{channel}'.");
                 }
@@ -157,12 +181,12 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             {
                 this.logger.LogInformation("Starting a system channel node.");
 
-                Process process = await StartNodeAsync(SystemChannelName, $"-channelname={SystemChannelName}", "-issystemchannelnode=true", "-ischannelnode=true");
-                if (process.HasExited)
+                ChannelNode channelNode = await StartNodeAsync(SystemChannelName, $"-channelname={SystemChannelName}", "-issystemchannelnode=true", "-ischannelnode=true");
+                if (channelNode.Process.HasExited)
                     throw new ChannelServiceException($"Failed to start system channel node as the processs exited early.");
 
                 lock (this.StartedChannelNodes)
-                    this.StartedChannelNodes.Add(process.Id);
+                    this.StartedChannelNodes.Add(channelNode);
 
                 this.logger.LogInformation("System channel node started.");
             }
@@ -172,7 +196,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             }
         }
 
-        private async Task<Process> StartNodeAsync(string channelName, params string[] channelArgs)
+        private async Task<ChannelNode> StartNodeAsync(string channelName, params string[] channelArgs)
         {
             // Write the serialized version of the network to disk.
             string channelRootFolder = WriteChannelNetworkJson(channelName);
@@ -246,12 +270,13 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             File.WriteAllText(configurationFilePath, args.ToString());
         }
 
-        private async Task<Process> StartTheProcessAsync(string channelRootFolder)
+        private async Task<ChannelNode> StartTheProcessAsync(string channelRootFolder)
         {
-            var startUpArgs = $"run --no-build -nowarn -channelparentpipename={this.pipeName} -conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
+            var process = new Process();
+            var channelNode = new ChannelNode(process);
+            var startUpArgs = $"run --no-build -nowarn -channelparentpipename={channelNode.PipeName} -conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
             this.logger.LogInformation($"Attempting to start process with args '{startUpArgs}'");
 
-            var process = new Process();
             process.StartInfo.WorkingDirectory = this.channelSettings.ProcessPath;
             process.StartInfo.FileName = "dotnet";
             process.StartInfo.Arguments = startUpArgs;
@@ -262,7 +287,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.logger.LogInformation("Executing a delay to wait for the node to start.");
             await Task.Delay(TimeSpan.FromSeconds(10));
 
-            return process;
+            return channelNode;
         }
     }
 }

@@ -77,7 +77,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var channelService = infraNode.FullNode.NodeService<IChannelService>();
                 Assert.True(channelService.StartedChannelNodes.Count == 1);
 
-                channelNodeProcess = Process.GetProcessById(channelService.StartedChannelNodes.First());
+                channelNodeProcess = Process.GetProcessById(channelService.StartedChannelNodes.First().Process.Id);
                 Assert.False(channelNodeProcess.HasExited);
             }
 
@@ -124,9 +124,9 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var channelService = parentNode.FullNode.NodeService<IChannelService>();
                 Assert.True(channelService.StartedChannelNodes.Count == 5);
 
-                foreach (var processId in channelService.StartedChannelNodes)
+                foreach (var channel in channelService.StartedChannelNodes)
                 {
-                    var process = Process.GetProcessById(processId);
+                    var process = channel.Process;
                     Assert.False(process.HasExited);
 
                     processes.Add(process);
@@ -168,7 +168,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var channelService = infraNode.FullNode.NodeService<IChannelService>();
                 Assert.True(channelService.StartedChannelNodes.Count == 1);
 
-                channelNodeProcess = Process.GetProcessById(channelService.StartedChannelNodes.First());
+                channelNodeProcess = channelService.StartedChannelNodes.First().Process;
                 Assert.False(channelNodeProcess.HasExited);
 
                 // TODO: Get the system channel node to create channel nodes and test that they terminate when the system channel node terminates.
