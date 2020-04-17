@@ -71,7 +71,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var readWriteSetTransactionSerializerMock = new Mock<IReadWriteSetTransactionSerializer>();
             readWriteSetTransactionSerializerMock.Setup(x => x.Build(It.IsAny<ReadWriteSet>()))
-                .Returns((Transaction)null);
+                .Returns((SignedProposalResponse)null);
 
             var tokenlessBroadcasterMock = new Mock<ITokenlessBroadcaster>();
 
@@ -130,7 +130,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var readWriteSetTransactionSerializerMock = new Mock<IReadWriteSetTransactionSerializer>();
             readWriteSetTransactionSerializerMock.Setup(x => x.Build(It.IsAny<ReadWriteSet>()))
-                .Returns((Transaction)null);
+                .Returns((SignedProposalResponse)null);
 
             var executorFactoryMock = new Mock<IContractExecutorFactory>();
 

@@ -3,10 +3,29 @@ using System.Collections.Generic;
 using System.Text;
 using HashLib;
 using NBitcoin;
+using Newtonsoft.Json;
 using Stratis.SmartContracts.Core.ReadWrite;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
+    public class SignedProposalResponse
+    {
+        public SignedProposalResponse()
+        {
+            this.Signatures = new List<byte[]>();
+        }
+
+        public ProposalResponse ProposalResponse { get; set; }
+
+        public List<byte[]> Signatures { get; set; }
+
+        public byte[] ToBytes()
+        {
+            // TODO check
+            return Encoding.UTF8.GetBytes(JsonConvert.ToString(this));
+        }
+    }
+
     public class ProposalResponse
     {
         public ReadWriteSet ReadWriteSet { get; set; }

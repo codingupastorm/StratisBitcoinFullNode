@@ -7,7 +7,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
 {
     public interface IReadWriteSetTransactionSerializer 
     {
-        Transaction Build(ReadWriteSet readWriteSet);
+        SignedProposalResponse Build(ReadWriteSet readWriteSet);
         ReadWriteSet GetReadWriteSet(Transaction tx);
     }
 
@@ -22,17 +22,19 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
             this.endorsementSigner = endorsementSigner;
         }
 
-        public Transaction Build(ReadWriteSet readWriteSet)
+        public SignedProposalResponse Build(ReadWriteSet readWriteSet)
         {
-            string json = readWriteSet.ToJson();
-            byte[] opRWSData = Encoding.UTF8.GetBytes(json);
-            Transaction transaction = this.network.CreateTransaction();
-            Script outputScript = TxReadWriteDataTemplate.Instance.GenerateScriptPubKey(opRWSData);
-            transaction.Outputs.Add(new TxOut(Money.Zero, outputScript));
+            var proposalResponse = new ProposalResponse
+            {
+                ReadWriteSet = readWriteSet
+            };
 
-            this.endorsementSigner.Sign(transaction);
+            var signature = this.endorsementSigner.Sign(proposalResponse);
 
-            return transaction;
+            var signedProposalResponse = new SignedProposalResponse();
+            signedProposalResponse.Signatures.Add(signature);
+
+            return signedProposalResponse;
         }
 
         public ReadWriteSet GetReadWriteSet(Transaction tx)
@@ -44,8 +46,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
             if (rwsData == null || rwsData.Length != 1)
                 return null;
 
-            string json = Encoding.UTF8.GetString(rwsData[0]);
-            return ReadWriteSet.FromJson(json);
+            return ReadWriteSet.FromJsonEncodedBytes(rwsData[0]);
         }
     }
 }
