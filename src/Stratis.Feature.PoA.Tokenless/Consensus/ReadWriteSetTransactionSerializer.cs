@@ -31,7 +31,11 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
 
             var signature = this.endorsementSigner.Sign(proposalResponse);
 
-            var signedProposalResponse = new SignedProposalResponse();
+            var signedProposalResponse = new SignedProposalResponse
+            {
+                ProposalResponse = proposalResponse
+            };
+
             signedProposalResponse.Signatures.Add(signature);
 
             return signedProposalResponse;
