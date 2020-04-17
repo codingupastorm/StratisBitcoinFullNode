@@ -14,14 +14,15 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using Org.BouncyCastle.X509;
-using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Compilation;
+using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
 using Xunit;
 
@@ -191,7 +192,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             ContractCompilationResult compilationResult = ContractCompiler.CompileFile(contractFilename);
             Assert.True(compilationResult.Success);
 
-            var contractTxData = new ContractTxData(0, 0, (Gas)0, compilationResult.Compilation);
+            var contractTxData = new ContractTxData(0, 0, (Gas)0, compilationResult.Compilation, AccountState.PolicyPlaceHolder);
             byte[] outputScript = node.FullNode.NodeService<ICallDataSerializer>().Serialize(contractTxData);
             transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
 

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Stratis.SmartContracts.Core.ReadWrite;
+using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
 
 namespace Stratis.SmartContracts.CLR
@@ -49,6 +50,7 @@ namespace Stratis.SmartContracts.CLR
                 amountToTransfer,
                 (Gas) gasBudget,
                 parameters,
+                AccountState.PolicyPlaceHolder, // TODO: Get the current contract's policy and use it to create the new policy?
                 typeof(T).Name
             );
 

@@ -62,6 +62,7 @@ namespace Stratis.SmartContracts.CLR.Local
                     txOutValue,
                     callData.GasLimit,
                     callData.ContractExecutionCode,
+                    AccountState.PolicyPlaceHolder, // Shouldn't matter for LocalExecutor
                     callData.MethodParameters
                 );
 

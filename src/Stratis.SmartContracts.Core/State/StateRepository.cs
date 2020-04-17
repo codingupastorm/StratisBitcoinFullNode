@@ -122,6 +122,19 @@ namespace Stratis.SmartContracts.Core.State
             this.accountStateCache.Put(addr.ToBytes(), accountState);
         }
 
+        public byte[] GetPolicy(uint160 addr)
+        {
+            AccountState accountState = this.GetAccountState(addr);
+            return accountState != null ? accountState.Policy : new byte[0];
+        }
+
+        public void SetPolicy(uint160 addr, byte[] policy)
+        {
+            AccountState accountState = this.GetOrCreateAccountState(addr);
+            accountState.Policy = policy;
+            this.accountStateCache.Put(addr.ToBytes(), accountState);
+        }
+
         public IStateRepository StartTracking()
         {
             ISource<byte[], AccountState> trackAccountStateCache = new WriteCache<AccountState>(this.accountStateCache, WriteCache<AccountState>.CacheType.SIMPLE);

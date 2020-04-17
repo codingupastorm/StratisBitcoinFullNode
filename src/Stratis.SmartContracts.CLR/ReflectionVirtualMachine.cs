@@ -57,6 +57,7 @@ namespace Stratis.SmartContracts.CLR
             ISmartContractState contractState,
             ExecutionContext executionContext,
             byte[] contractCode,
+            byte[] policy,
             object[] parameters,
             string typeName = null)
         {
@@ -159,6 +160,7 @@ namespace Stratis.SmartContracts.CLR
             // Set the code and the Type before the method is invoked
             repository.SetCode(contract.Address, contractCode);
             repository.SetContractType(contract.Address, typeToInstantiate);
+            repository.SetPolicy(contract.Address, policy);
 
             // Set Observer and load and execute.
             assemblyPackage.Assembly.SetObserver(executionContext.Observer);

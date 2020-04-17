@@ -133,7 +133,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             try
             {
                 var methodParameters = ExtractMethodParameters(model.Parameters);
-                var contractTxData = new ContractTxData(0, 0, (Gas)0, model.ContractCode, methodParameters);
+                var contractTxData = new ContractTxData(0, 0, (Gas)0, model.ContractCode, AccountState.PolicyPlaceHolder, methodParameters);
 
                 Transaction transaction = CreateAndSignTransaction(contractTxData);
 

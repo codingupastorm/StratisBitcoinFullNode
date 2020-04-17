@@ -10,7 +10,6 @@ using Stratis.SmartContracts.CLR.ILRewrite;
 using Stratis.SmartContracts.CLR.Loader;
 using Stratis.SmartContracts.CLR.Metering;
 using Stratis.SmartContracts.Core.Hashing;
-using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
 using Stratis.SmartContracts.Tokenless;
@@ -128,7 +127,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             var methodParameters = new object[] { (ulong)5 };
             var executionContext = new ExecutionContext(new Observer(this.gasMeter, new MemoryMeter(100_000)));
 
-            VmExecutionResult result = this.vm.Create(this.state, this.contractState, executionContext, contractExecutionCode, methodParameters);
+            VmExecutionResult result = this.vm.Create(this.state, this.contractState, executionContext, contractExecutionCode, AccountState.PolicyPlaceHolder, methodParameters);
 
             CachedAssemblyPackage cachedAssembly = this.context.ContractCache.Retrieve(new uint256(codeHash));
 
@@ -180,6 +179,7 @@ public class Contract : SmartContract
                 contractState,
                 executionContext,
                 contractExecutionCode,
+                AccountState.PolicyPlaceHolder,
                 null);
             
             CachedAssemblyPackage cachedAssembly = this.context.ContractCache.Retrieve(new uint256(codeHash));

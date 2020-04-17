@@ -12,6 +12,7 @@ namespace Stratis.SmartContracts.CLR
         /// Creates a ContractTxData object for a method invocation
         /// </summary>
         public ContractTxData(int vmVersion, ulong gasPrice, RuntimeObserver.Gas gasLimit, uint160 contractAddress,
+
             string method, object[] methodParameters = null)
         {
             this.OpCodeType = (byte) ScOpcodeType.OP_CALLCONTRACT;
@@ -27,7 +28,7 @@ namespace Stratis.SmartContracts.CLR
         /// <summary>
         /// Creates a ContractTxData for contract creation
         /// </summary>
-        public ContractTxData(int vmVersion, ulong gasPrice, RuntimeObserver.Gas gasLimit, byte[] code,
+        public ContractTxData(int vmVersion, ulong gasPrice, RuntimeObserver.Gas gasLimit, byte[] code, byte[] endorsementPolicy,
             object[] methodParameters = null)
         {
             this.OpCodeType = (byte)ScOpcodeType.OP_CREATECONTRACT;
@@ -35,6 +36,7 @@ namespace Stratis.SmartContracts.CLR
             this.GasPrice = gasPrice;
             this.GasLimit = gasLimit;
             this.ContractExecutionCode = code;
+            this.EndorsementPolicy = endorsementPolicy;
             this.MethodName = "";
             this.MethodParameters = methodParameters;
             this.ContractAddress = uint160.Zero;
@@ -63,6 +65,11 @@ namespace Stratis.SmartContracts.CLR
 
         /// <summary>The contract code that will be executed.</summary>
         public byte[] ContractExecutionCode { get; }
+
+        /// <summary>
+        /// Ideally this will be an object instead.
+        /// </summary>
+        public byte[] EndorsementPolicy { get; }
 
         /// <summary>The maximum cost (in satoshi) the contract can spend.</summary>
         public ulong GasCostBudget

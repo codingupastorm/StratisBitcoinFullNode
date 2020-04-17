@@ -3,6 +3,7 @@ using System.Text;
 using CSharpFunctionalExtensions;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Networks;
 using Stratis.SmartContracts.RuntimeObserver;
 using Xunit;
@@ -36,7 +37,9 @@ namespace Stratis.SmartContracts.CLR.Tests
                 }"
             );
 
-            var contractTxData = new ContractTxData(0, 0, (Gas)0, contractExecutionCode);
+            byte[] policy = new byte[]{0,1,2,3};
+
+            var contractTxData = new ContractTxData(0, 0, (Gas)0, contractExecutionCode, policy);
             Result<ContractTxData> callDataResult = this.serializer.Deserialize(this.serializer.Serialize(contractTxData));
             ContractTxData callData = callDataResult.Value;
 
@@ -46,6 +49,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             Assert.Equal<byte[]>(contractExecutionCode, callData.ContractExecutionCode);
             Assert.Equal((Gas)NoGasCallDataSerializer.GasPriceToSet, callData.GasPrice);
             Assert.Equal((Gas)NoGasCallDataSerializer.GasLimitToSet, callData.GasLimit);
+            Assert.Equal(policy, callData.EndorsementPolicy);
         }
 
         [Fact]
@@ -75,7 +79,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 '#'
             };
 
-            var contractTxData = new ContractTxData(NoGasCallDataSerializer.VmVersionToSet, NoGasCallDataSerializer.GasPriceToSet, (Gas)NoGasCallDataSerializer.GasLimitToSet, contractExecutionCode, methodParameters);
+            var contractTxData = new ContractTxData(NoGasCallDataSerializer.VmVersionToSet, NoGasCallDataSerializer.GasPriceToSet, (Gas)NoGasCallDataSerializer.GasLimitToSet, contractExecutionCode, AccountState.PolicyPlaceHolder, methodParameters);
 
             Result<ContractTxData> callDataResult = this.serializer.Deserialize(this.serializer.Serialize(contractTxData));
             ContractTxData callData = callDataResult.Value;

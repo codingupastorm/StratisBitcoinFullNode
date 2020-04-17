@@ -16,6 +16,8 @@ namespace Stratis.SmartContracts.Core.State
         void SetCode(uint160 addr, byte[] code);
         byte[] GetCode(uint160 addr);
         byte[] GetCodeHash(uint160 addr);
+        byte[] GetPolicy(uint160 addr);
+        void SetPolicy(uint160 addr, byte[] policy);
         void SetStorageValue(uint160 addr, byte[] key, byte[] value, string version);
         StorageValue GetStorageValue(uint160 addr, byte[] key);
         string GetContractType(uint160 addr);

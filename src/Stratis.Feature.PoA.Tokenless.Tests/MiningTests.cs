@@ -12,7 +12,6 @@ using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Features.MemoryPool;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Caching;
 using Stratis.Bitcoin.Mining;
@@ -21,6 +20,7 @@ using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mining;
+using Stratis.Features.MemoryPool;
 using Stratis.Patricia;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Caching;
@@ -88,7 +88,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/TokenlessExample.cs");
             Assert.True(compilationResult.Success);
 
-            var contractTxData = new ContractTxData(0, 0, (Gas)0, compilationResult.Compilation);
+            var contractTxData = new ContractTxData(0, 0, (Gas)0, compilationResult.Compilation, AccountState.PolicyPlaceHolder);
             byte[] outputScript = this.helper.CallDataSerializer.Serialize(contractTxData);
             transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
 

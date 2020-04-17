@@ -16,6 +16,7 @@ namespace Stratis.SmartContracts.CLR
     /// - CREATE opcode
     /// - SmartContract bytecode
     /// - Method parameters
+    /// - Contract config
     ///
     /// For CALL:
     /// - CALL opcode
@@ -64,8 +65,9 @@ namespace Stratis.SmartContracts.CLR
 
             var contractExecutionCode = this.primitiveSerializer.Deserialize<byte[]>(decodedParams[0]);
             object[] methodParameters = this.DeserializeMethodParameters(decodedParams[1]);
+            byte[] endorsementPolicy = decodedParams[2]; // TODO: Serialize in some useful way
 
-            var callData = new ContractTxData(VmVersionToSet, GasPriceToSet, (Gas) GasLimitToSet, contractExecutionCode, methodParameters);
+            var callData = new ContractTxData(VmVersionToSet, GasPriceToSet, (Gas) GasLimitToSet, contractExecutionCode, endorsementPolicy, methodParameters);
             return Result.Ok(callData);
         }
 
@@ -118,6 +120,8 @@ namespace Stratis.SmartContracts.CLR
 
             rlpBytes.Add(contractTxData.ContractExecutionCode);
 
+            this.AddPolicy(rlpBytes);
+
             base.AddMethodParams(rlpBytes, contractTxData.MethodParameters);
 
             byte[] encoded = RLP.EncodeList(rlpBytes.Select(RLP.EncodeElement).ToArray());
@@ -127,6 +131,12 @@ namespace Stratis.SmartContracts.CLR
             encoded.CopyTo(bytes, OpcodeSize);
 
             return bytes;
+        }
+
+        private void AddPolicy(List<byte[]> rlpBytes)
+        {
+            // TODO: Add the policy to be serialized.
+            rlpBytes.Add(new byte[0]);
         }
     }
 }

@@ -21,7 +21,8 @@ namespace Stratis.SmartContracts.CLR
 
         private StateTransitionResult ApplyCreate(IState state, 
             object[] parameters, 
-            byte[] code, 
+            byte[] code,
+            byte[] policy,
             BaseMessage message,
             uint160 address,
             ExecutionContext executionContext,
@@ -31,7 +32,7 @@ namespace Stratis.SmartContracts.CLR
 
             ISmartContractState smartContractState = state.CreateSmartContractState(state, executionContext.ReadWriteSet, executionContext.PrivateReadWriteSet, executionContext.GasMeter, address, message, state.ContractState);
 
-            VmExecutionResult result = this.Vm.Create(state.ContractState, smartContractState, executionContext, code, parameters, type);
+            VmExecutionResult result = this.Vm.Create(state.ContractState, smartContractState, executionContext, code, policy,  parameters, type);
 
             bool revert = !result.IsSuccess;
 
@@ -68,7 +69,7 @@ namespace Stratis.SmartContracts.CLR
             // account any funds sent as part of the original contract invocation transaction.
             state.AddInitialTransfer(new TransferInfo(message.From, address, message.Amount));
 
-            return this.ApplyCreate(state, message.Parameters, message.Code, message, address, executionContext);
+            return this.ApplyCreate(state, message.Parameters, message.Code, message.Policy, message, address, executionContext);
         }
 
         /// <summary>
@@ -95,7 +96,7 @@ namespace Stratis.SmartContracts.CLR
             // For external creates we do not need to do this.
             state.AddInternalTransfer(new TransferInfo(message.From, address, message.Amount));
 
-            StateTransitionResult result = this.ApplyCreate(state, message.Parameters, contractCode, message, address, executionContext, message.Type);
+            StateTransitionResult result = this.ApplyCreate(state, message.Parameters, contractCode, message.Policy, message, address, executionContext, message.Type);
             
             return result;
         }
