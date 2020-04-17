@@ -254,10 +254,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
         private void CreateChannelConfigurationFile(string channelRootFolder, params string[] channelArgs)
         {
-            // If the configuration file already exist, do nothing.
             var configurationFilePath = Path.Combine(channelRootFolder, ChannelConfigurationFileName);
-            if (File.Exists(configurationFilePath))
-                return;
 
             var args = new StringBuilder();
             args.AppendLine($"-certificatepassword=test");
