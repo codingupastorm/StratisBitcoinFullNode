@@ -1,12 +1,15 @@
 ﻿using NBitcoin;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.SmartContracts.Core.ReadWrite;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
     public interface IEndorsementSigner
     {
         void Sign(Transaction transaction);
+
+        byte[] Sign(ProposalResponse response);
     }
 
     public class EndorsementSigner : IEndorsementSigner
@@ -27,6 +30,22 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             Key key = this.tokenlessWalletManager.LoadTransactionSigningKey();
 
             this.tokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
+        }
+
+        /// <summary>
+        /// Signs the proposal response using the current wallet private key, and returns the signature as a byte array.
+        /// </summary>
+        /// <param name="response"></param>
+        /// <returns></returns>
+        public byte[] Sign(ProposalResponse response)
+        {
+            Key key = this.tokenlessWalletManager.LoadTransactionSigningKey();
+
+            uint256 hash = response.GetHash();
+
+            var ecdsaSignature = key.Sign(hash);
+
+            return ecdsaSignature.ToDER();
         }
     }
 }
