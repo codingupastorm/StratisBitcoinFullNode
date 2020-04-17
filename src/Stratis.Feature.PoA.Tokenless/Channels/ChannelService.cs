@@ -27,6 +27,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         Task StartSystemChannelNodeAsync();
         Task RestartChannelNodesAsync();
         void StopChannelNodes();
+
+        void Initialize();
     }
 
     /// <summary>
@@ -50,7 +52,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         public void Dispose()
         {
             this.Pipe.Dispose();
-            this.Process.WaitForExit();
+            if (!this.Process.WaitForExit(10000))
+                this.Process.Kill();
         }
     }
 
@@ -82,34 +85,37 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.channelRepository = channelRepository;
             this.NodeLifetime = nodeLifetime;
             this.asyncProvider = asyncProvider;
+        }
+
+        public void Initialize()
+        {
+            this.logger.LogDebug($"ChannelParentPipeName = '{this.channelSettings.ChannelParentPipeName}'.");
 
             if (this.channelSettings.ChannelParentPipeName != null)
             {
                 this.terminationLoop = this.asyncProvider.CreateAndRunAsyncLoop($"{nameof(ChannelService)}.TerminationLoop", token =>
                 {
-                    static void PipeBrokenCallback(IAsyncResult ar)
-                    {
-                        // The pipe was closed (parent process died), so exit the child process too.
-                        try
-                        {
-                            (NamedPipeClientStream pipe, ChannelService service) = ((NamedPipeClientStream, ChannelService))ar.AsyncState;
-                            service.NodeLifetime.StopApplication();
-                            pipe.EndRead(ar);
-                        }
-                        catch (IOException) { }
-                    }
+                    this.logger.LogDebug($"Connecting to parent on pipe '{this.channelSettings.ChannelParentPipeName}'.");
 
                     using (NamedPipeClientStream pipe = new NamedPipeClientStream(".", this.channelSettings.ChannelParentPipeName, PipeDirection.In))
                     {
-                        pipe.Connect();
-                        pipe.BeginRead(new byte[1], 0, 1, PipeBrokenCallback, (pipe, this));
+                        try
+                        {
+                            pipe.Connect();
+                            pipe.Read(new byte[1], 0, 1);
+                        }
+                        catch (Exception)
+                        {
+                        }
                     }
+
+                    this.logger.LogDebug("Parent pipe broken. Stopping application.");
+                    this.NodeLifetime.StopApplication();
 
                     return Task.CompletedTask;
                 },
                 this.NodeLifetime.ApplicationStopping,
-                repeatEvery: TimeSpan.FromSeconds(1),
-                startAfter: TimeSpans.FiveSeconds);
+                repeatEvery: TimeSpan.FromSeconds(1));
             }
         }
 

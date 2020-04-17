@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using CertificateAuthority;
@@ -79,9 +80,16 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 channelNodeProcess = Process.GetProcessById(channelService.StartedChannelNodes.First().Process.Id);
                 Assert.False(channelNodeProcess.HasExited);
-            }
 
-            Assert.True(channelNodeProcess.HasExited);
+                DateTime flagFall = DateTime.Now;
+
+                infraNode.Kill();
+
+                // If this is less than 10 seconds then the system channel node was shutdown gracefully.
+                Assert.True((DateTime.Now - flagFall) < TimeSpan.FromSeconds(10));
+
+                Assert.True(channelNodeProcess.HasExited);
+            }
         }
 
         [Fact]
@@ -137,45 +145,6 @@ namespace Stratis.SmartContracts.IntegrationTests
             {
                 Assert.True(process.HasExited);
             }
-        }
-
-        [Fact]
-        public void InfraNodeCanCreateAndStartAndStopSystemChannelNode()
-        {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
-
-            Process channelNodeProcess = null;
-
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
-            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
-            {
-                var network = new TokenlessNetwork();
-
-                server.Start();
-
-                // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
-                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
-
-                // Get Authority Certificate.
-                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
-                CaClient client1 = TokenlessTestHelper.GetClient(server);
-
-                // Create and start the main "infra" tokenless node which will internally start the "system channel node".
-                CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, ac, client1);
-                infraNode.Start();
-
-                var channelService = infraNode.FullNode.NodeService<IChannelService>();
-                Assert.True(channelService.StartedChannelNodes.Count == 1);
-
-                channelNodeProcess = channelService.StartedChannelNodes.First().Process;
-                Assert.False(channelNodeProcess.HasExited);
-
-                // TODO: Get the system channel node to create channel nodes and test that they terminate when the system channel node terminates.
-                infraNode.Restart();
-            }
-
-            Assert.True(channelNodeProcess.HasExited);
         }
     }
 }
