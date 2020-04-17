@@ -120,9 +120,9 @@ namespace Stratis.SmartContracts.CLR
 
             rlpBytes.Add(contractTxData.ContractExecutionCode);
 
-            this.AddPolicy(rlpBytes);
-
             base.AddMethodParams(rlpBytes, contractTxData.MethodParameters);
+
+            this.AddPolicy(rlpBytes, contractTxData.EndorsementPolicy);
 
             byte[] encoded = RLP.EncodeList(rlpBytes.Select(RLP.EncodeElement).ToArray());
 
@@ -133,10 +133,10 @@ namespace Stratis.SmartContracts.CLR
             return bytes;
         }
 
-        private void AddPolicy(List<byte[]> rlpBytes)
+        private void AddPolicy(List<byte[]> rlpBytes, byte[] endorsementPolicy)
         {
             // TODO: Add the policy to be serialized.
-            rlpBytes.Add(new byte[0]);
+            rlpBytes.Add(endorsementPolicy);
         }
     }
 }

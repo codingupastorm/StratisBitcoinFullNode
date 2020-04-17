@@ -134,6 +134,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
                 TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
 
+                byte[] policy = new byte[] { 0, 1, 2, 3 };
+
                 node1.Start();
                 node2.Start();
 
@@ -143,7 +145,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
                 var stateRepo = node2.FullNode.NodeService<IStateRepositoryRoot>();
 
-                Transaction createTransaction = TokenlessTestHelper.CreateContractCreateTransaction(node1, node1.TransactionSigningPrivateKey, "SmartContracts/PrivateDataContract.cs");
+                Transaction createTransaction = TokenlessTestHelper.CreateContractCreateTransaction(node1, node1.TransactionSigningPrivateKey, "SmartContracts/PrivateDataContract.cs", policy);
                 await node1.BroadcastTransactionAsync(createTransaction);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
@@ -151,6 +153,8 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 Receipt createReceipt = receiptRepository.Retrieve(createTransaction.GetHash());
                 Assert.True(createReceipt.Success);
+
+                Assert.Equal(policy, stateRepo.GetPolicy(createReceipt.NewContractAddress));
 
                 Transaction callTransaction = TokenlessTestHelper.CreateContractCallTransaction(node1, createReceipt.NewContractAddress, node1.TransactionSigningPrivateKey, "StoreTransientData");
 

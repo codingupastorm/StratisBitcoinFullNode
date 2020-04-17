@@ -186,13 +186,18 @@ namespace Stratis.SmartContracts.IntegrationTests
             return builder;
         }
 
-        public static Transaction CreateContractCreateTransaction(CoreNode node, Key key, string contractFilename)
+        public static Transaction CreateContractCreateTransaction(CoreNode node, Key key, string contractFilename, byte[] policy = null)
         {
+            if (policy == null)
+            {
+                policy = AccountState.PolicyPlaceHolder;
+            }
+
             Transaction transaction = Network.CreateTransaction();
             ContractCompilationResult compilationResult = ContractCompiler.CompileFile(contractFilename);
             Assert.True(compilationResult.Success);
 
-            var contractTxData = new ContractTxData(0, 0, (Gas)0, compilationResult.Compilation, AccountState.PolicyPlaceHolder);
+            var contractTxData = new ContractTxData(0, 0, (Gas)0, compilationResult.Compilation, policy);
             byte[] outputScript = node.FullNode.NodeService<ICallDataSerializer>().Serialize(contractTxData);
             transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
 

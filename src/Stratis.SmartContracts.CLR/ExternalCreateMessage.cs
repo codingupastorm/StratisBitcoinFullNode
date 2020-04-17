@@ -12,6 +12,7 @@ namespace Stratis.SmartContracts.CLR
             : base(from, amount, gasLimit)
         {
             this.Code = code;
+            this.Policy = policy;
             this.Parameters = parameters;
         }
 
