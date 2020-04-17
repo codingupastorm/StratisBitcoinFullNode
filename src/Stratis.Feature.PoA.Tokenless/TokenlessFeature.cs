@@ -223,6 +223,8 @@ namespace Stratis.Feature.PoA.Tokenless
 
             if (((PoAConsensusOptions)this.coreComponent.Network.Consensus.Options).EnablePermissionedMembership)
                 this.revocationChecker.Dispose();
+
+            this.channelService.StopChannelNodes();
         }
     }
 }

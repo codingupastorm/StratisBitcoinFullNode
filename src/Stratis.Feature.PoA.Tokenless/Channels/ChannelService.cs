@@ -26,6 +26,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         Task StartChannelNodeAsync(ChannelCreationRequest request);
         Task StartSystemChannelNodeAsync();
         Task RestartChannelNodesAsync();
+        void StopChannelNodes();
     }
 
     /// <summary>
@@ -54,7 +55,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     }
 
     /// <inheritdoc />
-    public sealed class ChannelService : IChannelService, IDisposable
+    public sealed class ChannelService : IChannelService
     {
         private const string ChannelConfigurationFileName = "channel.conf";
         private const int SystemChannelApiPort = 30001;
@@ -110,14 +111,6 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 repeatEvery: TimeSpan.FromSeconds(1),
                 startAfter: TimeSpans.FiveSeconds);
             }
-        }
-
-        public void Dispose()
-        {
-            Parallel.ForEach(this.StartedChannelNodes, (channelNode) =>
-            {
-                channelNode.Dispose();
-            });
         }
 
         public async Task StartChannelNodeAsync(ChannelCreationRequest request)
@@ -288,6 +281,20 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             await Task.Delay(TimeSpan.FromSeconds(10));
 
             return channelNode;
+        }
+
+        public void StopChannelNodes()
+        {
+            Parallel.ForEach(this.StartedChannelNodes, (channelNode) =>
+            {
+                int pid = channelNode.Process.Id;
+
+                this.logger.LogInformation($"Stopping channel node with PId: {pid}.");
+
+                channelNode.Dispose();
+
+                this.logger.LogInformation($"Stopped channel node with PId: {pid}.");
+            });
         }
     }
 }
