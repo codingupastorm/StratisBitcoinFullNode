@@ -8,7 +8,7 @@ using Stratis.SmartContracts.Core.ReadWrite;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
-    public class SignedProposalResponse
+    public class SignedProposalResponse : IBitcoinSerializable
     {
         public SignedProposalResponse()
         {
@@ -21,8 +21,13 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
         public byte[] ToBytes()
         {
-            // TODO check
             return Encoding.UTF8.GetBytes(JsonConvert.ToString(this));
+        }
+
+        public void ReadWrite(BitcoinStream stream)
+        {
+            var serialized = this.ToBytes();
+            stream.ReadWrite(ref serialized);
         }
     }
 

@@ -1,5 +1,6 @@
 ﻿using NBitcoin;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Feature.PoA.Tokenless.Endorsement;
 
 namespace Stratis.Feature.PoA.Tokenless.Payloads
 {
@@ -7,31 +8,31 @@ namespace Stratis.Feature.PoA.Tokenless.Payloads
     public class EndorsementPayload : Payload
     {
         private uint256 proposalId;
-        private Transaction transaction;
+        private SignedProposalResponse proposalResponse;
 
         public uint256 ProposalId => this.proposalId;
-        public Transaction Transaction => this.transaction;
+        public SignedProposalResponse ProposalResponse => this.proposalResponse;
 
         /// <remarks>Needed for deserialization.</remarks>
         public EndorsementPayload()
         {
         }
 
-        public EndorsementPayload(Transaction transaction, uint256 proposalId)
+        public EndorsementPayload(SignedProposalResponse proposalResponse, uint256 proposalId)
         {
             this.proposalId = proposalId;
-            this.transaction = transaction;
+            this.proposalResponse = proposalResponse;
         }
 
         public override void ReadWriteCore(BitcoinStream stream)
         {
             stream.ReadWrite(ref this.proposalId);
-            stream.ReadWrite(ref this.transaction);
+            stream.ReadWrite(ref this.proposalResponse);
         }
 
         public override string ToString()
         {
-            return $"{nameof(this.Command)}:'{this.Command}',{nameof(this.ProposalId)}:'{this.proposalId}',{nameof(this.Transaction)}:'{this.transaction.GetHash()}'";
+            return $"{nameof(this.Command)}:'{this.Command}',{nameof(this.ProposalId)}:'{this.proposalId}',{nameof(this.ProposalResponse)}";
         }
     }
 }
