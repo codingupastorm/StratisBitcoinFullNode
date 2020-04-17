@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NBitcoin;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Utilities.Extensions;
@@ -44,14 +45,30 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
                 .AddCoins(dummyTx.Outputs.AsCoins());
             builder.SignTransactionInPlace(transaction);
 
-            // A bit of Bitcoin Script magic. Use OP_CODESEPARATOR to ensure the signature is still valid, but allow us to append to the input.
-            byte[] finalisedInputScript = transaction.Inputs[0].ScriptSig.ToBytes()
-                .Concat(new byte[] { (byte)OpcodeType.OP_CODESEPARATOR })
-                .Concat(senderScript.ToBytes()).ToArray();
-
-            transaction.Inputs[0].ScriptSig = new Script(finalisedInputScript);
         }
 
+        /// <summary>
+        /// Takes several transactions and merges their txins into a final transaction with multiple txins
+        /// in the same order.
+        /// </summary>
+        /// <param name="transactions"></param>
+        /// <returns></returns>
+        public Transaction MergeSignedTxIns(Transaction[] transactions)
+        {
+            if (transactions == null || transactions.Length == 0)
+                return null;
+
+            // Clone the first transaction and use it as a base.
+            Transaction baseTransaction = this.network.CreateTransaction(transactions[0].ToBytes());
+
+            foreach(Transaction transaction in transactions.Skip(1))
+            {
+                baseTransaction.Inputs.Add(transaction.Inputs[0].Clone());
+            }
+
+            return baseTransaction;
+        }
+        
         /// <inheritdoc />
         public GetSenderResult GetSender(Transaction transaction)
         {

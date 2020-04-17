@@ -105,5 +105,48 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             // We've built 2 identical transactions (except for time). We need their hashes to be different,  as hashes are used to prevent duplicates in DLT.
             Assert.NotEqual(transaction1.GetHash(), transaction2.GetHash());
         }
+
+        [Fact]
+        public void Merge_Signed_Inputs()
+        {
+            // TODO rather than this roundabout approach of signing inputs etc. just use the protocol
+            // - use OP_READWRITE to identify a proposal payload
+            // - Make consensus rule that if OP_READWRITE is first output, second output must be endorsement signatures
+
+            Transaction transaction = this.network.CreateTransaction();
+            Transaction transaction2 = this.network.CreateTransaction(transaction.ToBytes());
+
+            Script outputScript = TxNullDataTemplate.Instance.GenerateScriptPubKey(new byte[] { 0, 1, 2, 3 });
+            transaction.Outputs.Add(new TxOut(Money.Zero, outputScript));
+            transaction2.Outputs.Add(new TxOut(Money.Zero, outputScript));
+
+            var key = new Key();
+            var key2 = new Key();
+            
+            // Sign the same transaction with two different keys.
+            this.signer.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.network));
+            this.signer.InsertSignedTxIn(transaction2, key2.GetBitcoinSecret(this.network));
+
+            //Assert.True(transaction.Inputs.AsIndexedInputs().First().VerifyScript(this.network, new Script()));
+
+            var mergedTransaction = this.signer.MergeSignedTxIns(new[] {transaction, transaction2});
+
+            var hashesEqual = transaction.GetHash() == transaction2.GetHash();
+            //Assert.True(inputs[0].VerifyScript(this.network, outputScript));
+            var clone = this.network.CreateTransaction(mergedTransaction.ToBytes());
+            //clone.Inputs.RemoveAt(0);
+
+            var inputs = clone.Inputs.AsIndexedInputs().ToList();
+
+           // Assert.True(inputs[0].VerifyScript(this.network, new Script()));
+            Assert.True(this.signer.Verify(transaction));
+            Assert.True(this.signer.Verify(transaction2));
+
+            string expectedAddress = key.PubKey.GetAddress(this.network).ToString();
+            uint160 expectedUint160 = expectedAddress.ToUint160(this.network);
+            GetSenderResult getSenderResult = this.signer.GetSender(transaction);
+            Assert.True(getSenderResult.Success);
+            Assert.Equal(expectedUint160, getSenderResult.Sender);
+        }
     }
 }
