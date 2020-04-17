@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -79,6 +80,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 .Returns(Mock.Of<ILogger>());
 
             var transientStore = new Mock<ITransientStore>();
+            
+            var organisationLookup = Mock.Of<IOrganisationLookup>();
 
             var endorsementRequestHandler = new EndorsementRequestHandler(validatorMock.Object,
                 signerMock.Object,
@@ -87,7 +90,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 consensusManagerMock.Object,
                 stateRootMock.Object,
                 readWriteSetTransactionSerializerMock.Object,
-                new Endorsements(),
+                new Endorsements(organisationLookup),
                 transientStore.Object,
                 tokenlessBroadcasterMock.Object,
                 loggerFactoryMock.Object
@@ -143,6 +146,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var transientStore = new Mock<ITransientStore>();
 
+            var organisationLookup = Mock.Of<IOrganisationLookup>();
+
             var endorsementRequestHandler = new EndorsementRequestHandler(validatorMock.Object,
                 signerMock.Object,
                 executorFactoryMock.Object,
@@ -150,7 +155,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 consensusManagerMock.Object,
                 stateRootMock.Object,
                 readWriteSetTransactionSerializerMock.Object,
-                new Endorsements(),
+                new Endorsements(organisationLookup),
                 transientStore.Object,
                 tokenlessBroadcasterMock.Object,
                 loggerFactoryMock.Object

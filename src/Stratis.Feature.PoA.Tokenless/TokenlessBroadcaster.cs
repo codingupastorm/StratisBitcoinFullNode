@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.P2P.Peer;
@@ -62,7 +61,7 @@ namespace Stratis.Feature.PoA.Tokenless
         {
             if (organisation == null)
             {
-                organisation = GetOrganisation(this.certificatesManager.ClientCertificate);
+                organisation = this.certificatesManager.ClientCertificate.GetOrganisation();
             }
 
             IEnumerable<(INetworkPeer Peer, X509Certificate Certificate)> peers = this.GetPeersForOrganisation(organisation);
@@ -86,12 +85,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         private IEnumerable<(INetworkPeer Peer, X509Certificate Certificate)> GetPeersForOrganisation(string organisation)
         {
-            return this.PeersWithCerts.Where(x => GetOrganisation(x.Certificate) == organisation);
-        }
-
-        private static string GetOrganisation(X509Certificate certificate)
-        {
-            return certificate.SubjectDN.GetValueList(X509Name.O).OfType<string>().First();
+            return this.PeersWithCerts.Where(x => x.Certificate.GetOrganisation() == organisation);
         }
     }
 }
