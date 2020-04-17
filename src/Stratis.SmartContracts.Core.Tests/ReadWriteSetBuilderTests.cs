@@ -47,12 +47,21 @@ namespace Stratis.SmartContracts.Core.Tests
             // Check that serialization and deserialization to json is working.
             ReadWriteSet readWriteSet = rws.GetReadWriteSet();
             string json = readWriteSet.ToJson();
-            ReadWriteSet deserialized = readWriteSet.FromJson(json);
+            ReadWriteSet deserialized = ReadWriteSet.FromJson(json);
             Assert.Equal(readWriteSet.Reads.Count, deserialized.Reads.Count);
             Assert.Equal(readWriteSet.Writes.Count, deserialized.Writes.Count);
             Assert.Equal(readWriteSet.Reads[0].ContractAddress, deserialized.Reads[0].ContractAddress);
             Assert.Equal(readWriteSet.Reads[0].Key, deserialized.Reads[0].Key);
             Assert.Equal(readWriteSet.Reads[0].Version, deserialized.Reads[0].Version);
+
+            // And serialization to and from bytes is working too.
+            byte[] readWriteSetBytes = readWriteSet.ToJsonEncodedBytes();
+            ReadWriteSet deserializedBytes = ReadWriteSet.FromJsonEncodedBytes(readWriteSetBytes);
+            Assert.Equal(readWriteSet.Reads.Count, deserializedBytes.Reads.Count);
+            Assert.Equal(readWriteSet.Writes.Count, deserializedBytes.Writes.Count);
+            Assert.Equal(readWriteSet.Reads[0].ContractAddress, deserializedBytes.Reads[0].ContractAddress);
+            Assert.Equal(readWriteSet.Reads[0].Key, deserializedBytes.Reads[0].Key);
+            Assert.Equal(readWriteSet.Reads[0].Version, deserializedBytes.Reads[0].Version);
         }
 
         [Fact]

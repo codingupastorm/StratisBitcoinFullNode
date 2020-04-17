@@ -13,12 +13,14 @@ namespace Stratis.Feature.PoA.Tokenless
     public class ReceivePrivateDataBehavior : NetworkPeerBehavior
     {
         private readonly ITransientStore transientStore;
-        private readonly IMissingPrivateDataStore missingPrivateDataStore;
+        private readonly IPrivateDataStore privateDataStore;
 
-        public ReceivePrivateDataBehavior(ITransientStore transientStore, IMissingPrivateDataStore missingPrivateDataStore)
+        public ReceivePrivateDataBehavior(
+            ITransientStore transientStore,
+            IPrivateDataStore privateDataStore)
         {
             this.transientStore = transientStore;
-            this.missingPrivateDataStore = missingPrivateDataStore;
+            this.privateDataStore = privateDataStore;
         }
 
         protected override void AttachCore()
@@ -33,7 +35,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         public override object Clone()
         {
-            return new ReceivePrivateDataBehavior(this.transientStore, this.missingPrivateDataStore);
+            return new ReceivePrivateDataBehavior(this.transientStore, this.privateDataStore);
         }
 
         private async Task OnMessageReceivedAsync(INetworkPeer peer, IncomingMessage message)
@@ -41,13 +43,11 @@ namespace Stratis.Feature.PoA.Tokenless
             if (!(message.Message.Payload is PrivateDataPayload payload))
                 return;
 
-            // TODO: Check if we already have the data?
-
-            // TODO: If block is committed, put the data in the private data store.
-            this.transientStore.Persist(payload.TransactionId, payload.BlockHeight, new TransientStorePrivateData(payload.ReadWriteSetData));
-
-            // Also remove this from the missing data store in case it was in there!
-            this.missingPrivateDataStore.Remove(payload.TransactionId);
+            if (this.transientStore.Get(payload.TransactionId).Data == null)
+            {
+                // At the moment we're always storing in the transient store. This is the only way for us to know that we've received the RWS.
+                this.transientStore.Persist(payload.TransactionId, payload.BlockHeight, new TransientStorePrivateData(payload.ReadWriteSetData));
+            }
         }
     }
 }

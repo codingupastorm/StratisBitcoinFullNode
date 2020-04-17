@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -97,7 +96,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 // TODO: Only do this on the final endorsement, depending on the policy.
 
                 // Store any changes that were made to the transient store
-                byte[] privateReadWriteSetData = Encoding.UTF8.GetBytes(result.PrivateReadWriteSet.GetReadWriteSet().ToJson()); // ew
+                byte[] privateReadWriteSetData = result.PrivateReadWriteSet.GetReadWriteSet().ToJsonEncodedBytes();
 
                 this.transientStore.Persist(signedRWSTransaction.GetHash(), blockHeight, new TransientStorePrivateData(privateReadWriteSetData));
 

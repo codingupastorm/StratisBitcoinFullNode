@@ -45,7 +45,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
                 return null;
 
             string json = Encoding.UTF8.GetString(rwsData[0]);
-            return new ReadWriteSet().FromJson(json);
+            return ReadWriteSet.FromJson(json);
         }
     }
 }
