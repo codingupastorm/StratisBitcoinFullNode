@@ -7,14 +7,6 @@ using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Features.Consensus;
-using Stratis.Features.Consensus.CoinViews;
-using Stratis.Features.MemoryPool;
-using Stratis.Features.MemoryPool.Broadcasting;
-using Stratis.Features.MemoryPool.Interfaces;
-using Stratis.Features.PoA;
-using Stratis.Features.PoA.ProtocolEncryption;
-using Stratis.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
@@ -26,6 +18,14 @@ using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mining;
+using Stratis.Features.Consensus;
+using Stratis.Features.Consensus.CoinViews;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Broadcasting;
+using Stratis.Features.MemoryPool.Interfaces;
+using Stratis.Features.PoA;
+using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.Features.PoA.Voting;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -102,6 +102,7 @@ namespace Stratis.Feature.PoA.Tokenless
                         // Channels
                         services.AddSingleton<IChannelKeyValueStore, ChannelKeyValueStore>();
                         services.AddSingleton<IChannelRepository, ChannelRepository>();
+                        services.AddSingleton<IChannelRequestSerializer, ChannelRequestSerializer>();
 
                         var options = (PoAConsensusOptions)network.Consensus.Options;
                         if (options.EnablePermissionedMembership)

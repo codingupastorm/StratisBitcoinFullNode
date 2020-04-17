@@ -35,13 +35,18 @@ namespace Stratis.TokenlessD
                 var fileConfig = new TextFileConfiguration(File.ReadAllText(configurationFilePath));
                 fileConfig.MergeInto(configReader);
 
+                NodeSettings nodeSettings = null;
                 var channelSettings = new ChannelSettings(configReader);
                 if (channelSettings.IsChannelNode)
+                {
                     network = ChannelNetwork.Construct(dataDir, channelSettings.ChannelName, channelSettings.IsSystemChannelNode);
+                    nodeSettings = new NodeSettings(network, agent: "Channel", configReader: configReader);
+                }
                 else
+                {
                     network = new TokenlessNetwork();
-
-                var nodeSettings = new NodeSettings(network, configReader: configReader);
+                    nodeSettings = new NodeSettings(network, configReader: configReader);
+                }
 
                 // Only non-channel nodes will need to go through the key store initialization process.
                 if (!channelSettings.IsChannelNode)

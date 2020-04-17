@@ -234,7 +234,10 @@ namespace Stratis.Bitcoin.P2P
         /// </summary>
         private void AddSeedNodes(List<IPEndPoint> endPoints)
         {
-            endPoints.AddRange(this.network.SeedNodes?.Select(ipAddress => ipAddress.Endpoint));
+            if (this.network.SeedNodes == null)
+                return;
+
+            endPoints.AddRange(this.network.SeedNodes.Select(ipAddress => ipAddress.Endpoint));
         }
 
         /// <inheritdoc />
