@@ -157,15 +157,15 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, rootFolderName);
 
             // TODO: The assumption is that this method will be called in the order that channels are discovered in blocks.
-            if (!this.channelPortOffset.TryGetValue(channelName, out int value))
+            if (!this.channelPortOffset.TryGetValue(channelName, out int portOffset))
             {
-                value = this.channelPortOffset.Count > 0 ? this.channelPortOffset.Values.Max() : 0;
-                this.channelPortOffset[channelName] = value + 1;
+                portOffset = this.channelPortOffset.Count > 0 ? this.channelPortOffset.Values.Max() + 1: 1;
+                this.channelPortOffset[channelName] = portOffset;
             }
 
-            channelNetwork.DefaultAPIPort += this.channelPortOffset[channelName];
-            channelNetwork.DefaultPort += this.channelPortOffset[channelName];
-            channelNetwork.DefaultSignalRPort += this.channelPortOffset[channelName];
+            channelNetwork.DefaultAPIPort += portOffset;
+            channelNetwork.DefaultPort += portOffset;
+            channelNetwork.DefaultSignalRPort += portOffset;
 
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
             Directory.CreateDirectory(rootFolderName);
