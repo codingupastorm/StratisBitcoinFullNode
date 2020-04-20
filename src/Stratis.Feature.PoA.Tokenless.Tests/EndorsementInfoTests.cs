@@ -1,7 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using Castle.Components.DictionaryAdapter;
 using Moq;
 using NBitcoin;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Xunit;
 
 namespace Stratis.Feature.PoA.Tokenless.Tests
@@ -159,6 +162,37 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             validator.AddSignature(org2, "test2 4");
 
             Assert.True(validator.Valid);
+        }
+
+
+        [Fact]
+        public void Signed_Proposal_Response_Roundtrip()
+        {
+            var proposalResponse = new SignedProposalResponse
+            {
+                ProposalResponse = new ProposalResponse
+                {
+                    ReadWriteSet = new ReadWriteSet
+                    {
+                        Reads = new List<ReadItem>
+                        {
+                            new ReadItem { ContractAddress = uint160.One, Key = new byte[] { 0xCC, 0xCC, 0xCC }, Version = "1"}
+                        },
+                        Writes = new List<WriteItem>
+                        {
+                            new WriteItem { ContractAddress = uint160.One, IsPrivateData = false, Key = new byte[] { 0xDD, 0xDD, 0xDD }, Value = new byte[] { 0xEE, 0xEE, 0xEE }}
+                        }
+                    }
+                },
+                Endorsement = new Endorsement.Endorsement(new byte[] {0xAA, 0xAA, 0xAA}, new byte[] {0xBB, 0xBB, 0XBB})
+            };
+
+            var toBytes = proposalResponse.ToBytes();
+
+            var fromBytes = SignedProposalResponse.FromBytes(toBytes);
+
+            // Full roundtrip serialize and compare.
+            Assert.True(toBytes.SequenceEqual(fromBytes.ToBytes()));
         }
     }
 }

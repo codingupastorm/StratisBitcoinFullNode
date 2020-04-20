@@ -16,7 +16,12 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
         public byte[] ToBytes()
         {
-            return Encoding.UTF8.GetBytes(JsonConvert.ToString(this));
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(this));
+        }
+
+        public static SignedProposalResponse FromBytes(byte[] bytes)
+        {
+            return JsonConvert.DeserializeObject<SignedProposalResponse>(Encoding.UTF8.GetString(bytes));
         }
 
         public void ReadWrite(BitcoinStream stream)
