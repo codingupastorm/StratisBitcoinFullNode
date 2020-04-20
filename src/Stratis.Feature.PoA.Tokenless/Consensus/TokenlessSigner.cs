@@ -45,6 +45,12 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
                 .AddCoins(dummyTx.Outputs.AsCoins());
             builder.SignTransactionInPlace(transaction);
 
+            // A bit of Bitcoin Script magic. Use OP_CODESEPARATOR to ensure the signature is still valid, but allow us to append to the input.	
+            byte[] finalisedInputScript = transaction.Inputs[0].ScriptSig.ToBytes()
+                .Concat(new byte[] { (byte)OpcodeType.OP_CODESEPARATOR })
+                .Concat(senderScript.ToBytes()).ToArray();
+
+            transaction.Inputs[0].ScriptSig = new Script(finalisedInputScript);
         }
 
         /// <summary>
