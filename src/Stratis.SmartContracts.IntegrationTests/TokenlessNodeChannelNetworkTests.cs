@@ -86,7 +86,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 infraNode.Kill();
 
                 // If this is less than 10 seconds then the system channel node was shutdown gracefully.
-                Assert.True((DateTime.Now - flagFall) < TimeSpan.FromMilliseconds(ChannelNode.MillisecondsBeforeForcedKill));
+                Assert.True((DateTime.Now - flagFall) < TimeSpan.FromMilliseconds(ChannelNodeProcess.MillisecondsBeforeForcedKill));
 
                 Assert.True(channelNodeProcess.HasExited);
             }
