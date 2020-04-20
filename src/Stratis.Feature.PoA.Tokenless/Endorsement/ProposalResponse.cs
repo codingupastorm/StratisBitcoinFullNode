@@ -30,7 +30,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             stream.ReadWrite(ref serialized);
         }
     }
-
+    
     public class ProposalResponse
     {
         public ReadWriteSet ReadWriteSet { get; set; }

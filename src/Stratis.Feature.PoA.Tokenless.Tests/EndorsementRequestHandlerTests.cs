@@ -82,6 +82,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var transientStore = new Mock<ITransientStore>();
             
             var organisationLookup = Mock.Of<IOrganisationLookup>();
+            var permissionsChecker = Mock.Of<ICertificatePermissionsChecker>();
 
             var endorsementRequestHandler = new EndorsementRequestHandler(validatorMock.Object,
                 signerMock.Object,
@@ -90,7 +91,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 consensusManagerMock.Object,
                 stateRootMock.Object,
                 readWriteSetTransactionSerializerMock.Object,
-                new Endorsements(organisationLookup),
+                new Endorsements(organisationLookup, permissionsChecker, this.network),
                 transientStore.Object,
                 tokenlessBroadcasterMock.Object,
                 loggerFactoryMock.Object
@@ -147,6 +148,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var transientStore = new Mock<ITransientStore>();
 
             var organisationLookup = Mock.Of<IOrganisationLookup>();
+            var permissionsChecker = Mock.Of<ICertificatePermissionsChecker>();
 
             var endorsementRequestHandler = new EndorsementRequestHandler(validatorMock.Object,
                 signerMock.Object,
@@ -155,7 +157,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 consensusManagerMock.Object,
                 stateRootMock.Object,
                 readWriteSetTransactionSerializerMock.Object,
-                new Endorsements(organisationLookup),
+                new Endorsements(organisationLookup, permissionsChecker, this.network),
                 transientStore.Object,
                 tokenlessBroadcasterMock.Object,
                 loggerFactoryMock.Object

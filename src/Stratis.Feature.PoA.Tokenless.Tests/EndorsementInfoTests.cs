@@ -11,13 +11,15 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         [Fact]
         public void New_Endorsement_Has_State_Proposed()
         {
-            Assert.Equal(EndorsementState.Proposed, new EndorsementInfo(new Dictionary<Organisation, int>(), Mock.Of<IOrganisationLookup>()).State);
+            Assert.Equal(EndorsementState.Proposed, new EndorsementInfo(new Dictionary<Organisation, int>(), Mock.Of<IOrganisationLookup>(), Mock.Of<ICertificatePermissionsChecker>(), new TokenlessNetwork()).State);
         }
 
         [Fact]
         public void Endorsement_Gets_Address_Org_From_Transaction()
         {
             var organisationLookup = new Mock<IOrganisationLookup>();
+            var permissionsChecker = Mock.Of<ICertificatePermissionsChecker>();
+            var network = new TokenlessNetwork();
 
             var organisation = (Organisation) "ORG_1_DN";
             var senderAddress = "SENDER";
@@ -34,7 +36,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 { organisation, 1 }
             };
 
-            var endorsement = new EndorsementInfo(basicPolicy, organisationLookup.Object);
+            var endorsement = new EndorsementInfo(basicPolicy, organisationLookup.Object, permissionsChecker, network);
 
             Assert.False(endorsement.Validate());
             Assert.Equal(EndorsementState.Proposed, endorsement.State);
@@ -50,6 +52,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public void Endorsement_Gets_Address_Unapproved_Org_From_Transaction()
         {
             var organisationLookup = new Mock<IOrganisationLookup>();
+            var permissionsChecker = Mock.Of<ICertificatePermissionsChecker>();
+            var network = new TokenlessNetwork();
 
             var organisation = (Organisation)"ORG_1_DN";
             var unapprovedOrg = (Organisation) "BAD_ORG_DN";
@@ -67,7 +71,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 { organisation, 1 }
             };
 
-            var endorsement = new EndorsementInfo(basicPolicy, organisationLookup.Object);
+            var endorsement = new EndorsementInfo(basicPolicy, organisationLookup.Object, permissionsChecker, network);
 
             Assert.False(endorsement.Validate());
             Assert.Equal(EndorsementState.Proposed, endorsement.State);

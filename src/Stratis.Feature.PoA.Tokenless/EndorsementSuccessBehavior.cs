@@ -40,7 +40,7 @@ namespace Stratis.Feature.PoA.Tokenless
             if (!(message.Message.Payload is EndorsementPayload payload))
                 return;
 
-            await this.requestHandler.ProcessEndorsementAsync(payload.ProposalId, payload.ProposalResponse);
+            await this.requestHandler.ProcessEndorsementAsync(payload.ProposalId, payload.ProposalResponse, peer);
         }
     }
 }

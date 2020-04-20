@@ -1,11 +1,17 @@
 ﻿using System.Collections.Generic;
+using CertificateAuthority;
+using MembershipServices;
 using NBitcoin;
+using NBitcoin.Crypto;
+using Org.BouncyCastle.X509;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
     public class EndorsementInfo
     {
         private readonly IOrganisationLookup organisationLookup;
+        private readonly ICertificatePermissionsChecker permissionsChecker;
+        private readonly Network network;
         private readonly MofNPolicyValidator validator;
 
         /// <summary>
@@ -15,9 +21,11 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
         public EndorsementState State { get; private set; }
 
-        public EndorsementInfo(Dictionary<Organisation, int> policy, IOrganisationLookup organisationLookup)
+        public EndorsementInfo(Dictionary<Organisation, int> policy, IOrganisationLookup organisationLookup, ICertificatePermissionsChecker permissionsChecker, Network network)
         {
             this.organisationLookup = organisationLookup;
+            this.permissionsChecker = permissionsChecker;
+            this.network = network;
             this.Policy = policy;
             this.validator = new MofNPolicyValidator(this.Policy);
         }
@@ -32,6 +40,27 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             (Organisation organisation, string sender) = this.organisationLookup.FromTransaction(transaction);
             
             this.AddSignature(organisation, sender);
+        }
+
+        public bool AddSignature(X509Certificate certificate, SignedProposalResponse signedProposalResponse)
+        {
+            // Verify the signature matches the peer's certificate.
+            var signature = new ECDSASignature(signedProposalResponse.Signatures[0]);
+            var pubKey = new PubKey(""); // TODO get from proposal response
+
+            var signatureValid = this.permissionsChecker.CheckSignature(CaCertificatesManager.GetThumbprint(certificate), signature, pubKey, signedProposalResponse.ProposalResponse.GetHash());
+
+            if (!signatureValid)
+            {
+                return false;
+            }
+
+            // Add the signature org + address to the policy state.
+            var address = MembershipServicesDirectory.GetCertificateTransactionSigningAddress(certificate, this.network);
+
+            AddSignature((Organisation)certificate.GetOrganisation(), address);
+
+            return true;
         }
 
         public void AddSignature(Organisation org, string address)
