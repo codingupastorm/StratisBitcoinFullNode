@@ -19,12 +19,12 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
             };
         }
 
-        public static void Create(ChannelNetwork channelNetwork, bool isSystemChannelNode)
+        public static void CreateForSystemChannel(ChannelNetwork channelNetwork)
         {
-            Create(channelNetwork);
-
-            if (isSystemChannelNode)
-                channelNetwork.Consensus.MempoolRules.Add(typeof(IsChannelCreationRequestWellFormed));
+            channelNetwork.Consensus.MempoolRules = new List<Type>
+            {
+                typeof(IsChannelCreationRequestWellFormed)
+            };
         }
     }
 }
