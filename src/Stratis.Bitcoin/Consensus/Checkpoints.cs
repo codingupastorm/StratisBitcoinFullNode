@@ -127,7 +127,7 @@ namespace Stratis.Bitcoin.Consensus
         [NoTrace]
         private Dictionary<int, CheckpointInfo> GetCheckpoints()
         {
-            if (this.consensusSettings == null || !this.consensusSettings.UseCheckpoints)
+            if (this.consensusSettings == null || !this.consensusSettings.UseCheckpoints || this.network.Checkpoints == null)
                 return new Dictionary<int, CheckpointInfo>();
 
             return this.network.Checkpoints;
