@@ -113,7 +113,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             Assert.NotNull(await endorsementRequestHandler.ExecuteAndReturnProposalAsync(request));
 
             executorMock.Verify(x=>x.Execute(It.Is<ContractTransactionContext>(y =>
-                y.TxIndex == 0 && y.BlockHeight == height && y.CoinbaseAddress == uint160.Zero && y.Sender == sender && y.TransactionHash == transaction.GetHash())));
+                y.TxIndex == 0 && y.BlockHeight == height + 1 && y.CoinbaseAddress == uint160.Zero && y.Sender == sender && y.TransactionHash == transaction.GetHash())));
 
             mockPeer.Verify(i => i.SendMessageAsync(It.IsAny<EndorsementPayload>(), It.IsAny<CancellationToken>()));
         }
