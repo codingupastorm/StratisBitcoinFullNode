@@ -1,15 +1,9 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
-using CertificateAuthority;
-using MembershipServices;
+﻿using System.Threading.Tasks;
 using NBitcoin;
-using NBitcoin.Crypto;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.Features.PoA.ProtocolEncryption;
-using Stratis.SmartContracts.CLR;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
