@@ -284,6 +284,10 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         private async Task<ChannelNodeProcess> StartTheProcessAsync(string channelRootFolder, params string[] channelArgs)
         {
             var channelNodeProcess = new ChannelNodeProcess();
+
+            // Create channel configuration file.
+            CreateChannelConfigurationFile(channelRootFolder, channelArgs.Concat(new[] { $"-channelparentpipename={channelNodeProcess.PipeName}" }).ToArray());
+
             var startUpArgs = $"run --no-build -nowarn -conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
             this.logger.LogInformation($"Attempting to start process with args '{startUpArgs}'");
 
