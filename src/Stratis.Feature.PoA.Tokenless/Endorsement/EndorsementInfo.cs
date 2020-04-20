@@ -30,18 +30,6 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.validator = new MofNPolicyValidator(this.Policy);
         }
 
-        /// <summary>
-        /// Extracts the sender address from the transaction, obtains its certificate from
-        /// membership services, and extracts its organisation.
-        /// </summary>
-        /// <param name="transaction"></param>
-        public void AddSignature(Transaction transaction)
-        {
-            (Organisation organisation, string sender) = this.organisationLookup.FromTransaction(transaction);
-            
-            this.AddSignature(organisation, sender);
-        }
-
         public bool AddSignature(X509Certificate certificate, SignedProposalResponse signedProposalResponse)
         {
             // Verify the signature matches the peer's certificate.
