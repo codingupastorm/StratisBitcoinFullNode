@@ -26,8 +26,11 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
 
             var channelRepository = new ChannelRepository(this.Network, this.LoggerFactory.Object, keyValueStore, repositorySerializer);
 
+            channelRepository.Initialize();
+
             var request1 = new ChannelDefinition()
             {
+                Id = channelRepository.GetNextChannelId(),
                 Name = "name1"
             };
 
@@ -35,6 +38,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
 
             var request2 = new ChannelDefinition()
             {
+                Id = channelRepository.GetNextChannelId(),
                 Name = "name2"
             };
 
@@ -44,6 +48,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
 
             Assert.Equal("name1", dict["name1"].Name);
             Assert.Equal("name2", dict["name2"].Name);
+            Assert.Equal(2, dict["name1"].Id);
+            Assert.Equal(3, dict["name2"].Id);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using CertificateAuthority;
@@ -79,10 +80,18 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.True(channelService.StartedChannelNodes.Count == 1);
 
                 channelNodeProcess = Process.GetProcessById(channelService.StartedChannelNodes.First().Process.Id);
-                Assert.False(channelNodeProcess.HasExited);
-            }
 
-            TestBase.WaitLoop(() => { return channelNodeProcess.HasExited; });
+                Assert.False(channelNodeProcess.HasExited);
+
+                DateTime flagFall = DateTime.Now;
+
+                infraNode.Kill();
+
+                TestBase.WaitLoop(() => { return channelNodeProcess.HasExited; });
+
+                // If this is less than 10 seconds then the system channel node was shutdown gracefully.
+                Assert.True((DateTime.Now - flagFall) < TimeSpan.FromMilliseconds(ChannelNodeProcess.MillisecondsBeforeForcedKill));
+            }
         }
 
         [Fact]
