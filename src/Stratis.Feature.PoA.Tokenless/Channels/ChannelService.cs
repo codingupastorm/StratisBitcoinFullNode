@@ -67,27 +67,27 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         private const string ChannelConfigurationFileName = "channel.conf";
         private const string SystemChannelName = "system";
 
+        private readonly IAsyncProvider asyncProvider;
+        private readonly IChannelRepository channelRepository;
         private readonly ChannelSettings channelSettings;
         private readonly ILogger logger;
+        private readonly INodeLifetime nodeLifetime;
         private readonly NodeSettings nodeSettings;
-        private readonly IChannelRepository channelRepository;
-        private readonly IAsyncProvider asyncProvider;
-
         private IAsyncLoop terminationLoop;
 
         /// <inheritdoc />
         public List<ChannelNodeProcess> StartedChannelNodes { get; }
-        public INodeLifetime NodeLifetime { get; private set; }
 
         public ChannelService(ChannelSettings channelSettings, ILoggerFactory loggerFactory, NodeSettings nodeSettings, IChannelRepository channelRepository, INodeLifetime nodeLifetime, IAsyncProvider asyncProvider)
         {
             this.channelSettings = channelSettings;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.nodeSettings = nodeSettings;
-            this.StartedChannelNodes = new List<ChannelNodeProcess>();
             this.channelRepository = channelRepository;
-            this.NodeLifetime = nodeLifetime;
+            this.nodeLifetime = nodeLifetime;
             this.asyncProvider = asyncProvider;
+
+            this.StartedChannelNodes = new List<ChannelNodeProcess>();
         }
 
         public void Initialize()
@@ -113,11 +113,11 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                     }
 
                     this.logger.LogInformation("Parent pipe broken. Stopping application.");
-                    this.NodeLifetime.StopApplication();
+                    this.nodeLifetime.StopApplication();
 
                     return Task.CompletedTask;
                 },
-                this.NodeLifetime.ApplicationStopping,
+                this.nodeLifetime.ApplicationStopping,
                 repeatEvery: TimeSpan.FromSeconds(1));
             }
         }
