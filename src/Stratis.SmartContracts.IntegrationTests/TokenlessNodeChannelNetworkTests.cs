@@ -7,6 +7,7 @@ using CertificateAuthority.Tests.Common;
 using Microsoft.AspNetCore.Hosting;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.SmartContracts.Tests.Common;
@@ -79,7 +80,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.True(channelService.StartedChannelNodes.Count == 1);
 
                 channelNodeProcess = Process.GetProcessById(channelService.StartedChannelNodes.First().Process.Id);
-                Assert.False(channelNodeProcess.HasExited);
 
                 DateTime flagFall = DateTime.Now;
 
@@ -88,7 +88,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // If this is less than 10 seconds then the system channel node was shutdown gracefully.
                 Assert.True((DateTime.Now - flagFall) < TimeSpan.FromMilliseconds(ChannelNodeProcess.MillisecondsBeforeForcedKill));
 
-                Assert.True(channelNodeProcess.HasExited);
+                TestBase.WaitLoop(() => { return channelNodeProcess.HasExited; });
             }
         }
 
