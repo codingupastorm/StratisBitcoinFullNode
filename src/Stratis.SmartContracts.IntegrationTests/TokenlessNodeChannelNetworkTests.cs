@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using CertificateAuthority;
@@ -77,11 +78,18 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var channelService = infraNode.FullNode.NodeService<IChannelService>();
                 Assert.True(channelService.StartedChannelNodes.Count == 1);
 
-                channelNodeProcess = Process.GetProcessById(channelService.StartedChannelNodes.First());
+                channelNodeProcess = Process.GetProcessById(channelService.StartedChannelNodes.First().Process.Id);
                 Assert.False(channelNodeProcess.HasExited);
-            }
 
-            Assert.True(channelNodeProcess.HasExited);
+                DateTime flagFall = DateTime.Now;
+
+                infraNode.Kill();
+
+                // If this is less than 10 seconds then the system channel node was shutdown gracefully.
+                Assert.True((DateTime.Now - flagFall) < TimeSpan.FromMilliseconds(ChannelNode.MillisecondsBeforeForcedKill));
+
+                Assert.True(channelNodeProcess.HasExited);
+            }
         }
 
         [Fact]
@@ -124,9 +132,9 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var channelService = parentNode.FullNode.NodeService<IChannelService>();
                 Assert.True(channelService.StartedChannelNodes.Count == 5);
 
-                foreach (var processId in channelService.StartedChannelNodes)
+                foreach (var channel in channelService.StartedChannelNodes)
                 {
-                    var process = Process.GetProcessById(processId);
+                    var process = channel.Process;
                     Assert.False(process.HasExited);
 
                     processes.Add(process);

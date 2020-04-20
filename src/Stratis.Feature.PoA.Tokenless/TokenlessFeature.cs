@@ -133,6 +133,8 @@ namespace Stratis.Feature.PoA.Tokenless
             repeatEvery: TimeSpans.Minute,
             startAfter: TimeSpans.Minute);
 
+            this.channelService.Initialize();
+
             // If this node is a infra node, then start a system channel node daemon with the serialized version of the network.
             if (this.channelSettings.IsInfraNode)
                 await this.channelService.StartSystemChannelNodeAsync();
