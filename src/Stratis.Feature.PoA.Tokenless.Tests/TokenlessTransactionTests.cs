@@ -82,7 +82,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var bytes = response.ProposalResponse.ToBytes();
             var proposal = ProposalResponse.FromBytes(bytes);
             Assert.NotNull(proposal.ReadWriteSet);
-            Assert.NotEmpty(response.Signatures);
+            Assert.NotNull(response.Endorsement);
 
             // Compare the original ReadWriteSet's json with the recovered ReadWriteSet's json.
             Assert.Equal(readWriteSet.ToJson(), proposal.ReadWriteSet.ToJson());

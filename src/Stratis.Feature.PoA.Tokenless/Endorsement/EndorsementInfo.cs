@@ -45,8 +45,8 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         public bool AddSignature(X509Certificate certificate, SignedProposalResponse signedProposalResponse)
         {
             // Verify the signature matches the peer's certificate.
-            var signature = new ECDSASignature(signedProposalResponse.Signatures[0]);
-            var pubKey = new PubKey(""); // TODO get from proposal response
+            var signature = new ECDSASignature(signedProposalResponse.Endorsement.Signature);
+            var pubKey = new PubKey(signedProposalResponse.Endorsement.PubKey);
 
             var signatureValid = this.permissionsChecker.CheckSignature(CaCertificatesManager.GetThumbprint(certificate), signature, pubKey, signedProposalResponse.ProposalResponse.GetHash());
 

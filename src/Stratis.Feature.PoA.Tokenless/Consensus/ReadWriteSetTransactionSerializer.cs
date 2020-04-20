@@ -29,14 +29,13 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
                 ReadWriteSet = readWriteSet
             };
 
-            var signature = this.endorsementSigner.Sign(proposalResponse);
+            var endorsement = this.endorsementSigner.Sign(proposalResponse);
 
             var signedProposalResponse = new SignedProposalResponse
             {
-                ProposalResponse = proposalResponse
+                ProposalResponse = proposalResponse,
+                Endorsement = endorsement
             };
-
-            signedProposalResponse.Signatures.Add(signature);
 
             return signedProposalResponse;
         }

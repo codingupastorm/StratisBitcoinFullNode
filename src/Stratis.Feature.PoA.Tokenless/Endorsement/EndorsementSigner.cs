@@ -9,7 +9,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     {
         void Sign(Transaction transaction);
 
-        byte[] Sign(ProposalResponse response);
+        Endorsement Sign(ProposalResponse response);
     }
 
     public class EndorsementSigner : IEndorsementSigner
@@ -24,6 +24,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.tokenlessSigner = tokenlessSigner;
             this.tokenlessWalletManager = tokenlessWalletManager;
         }
+        public PubKey PubKey => this.tokenlessWalletManager.LoadTransactionSigningKey().PubKey;
 
         public void Sign(Transaction transaction)
         {
@@ -37,7 +38,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         /// </summary>
         /// <param name="response"></param>
         /// <returns></returns>
-        public byte[] Sign(ProposalResponse response)
+        public Endorsement Sign(ProposalResponse response)
         {
             Key key = this.tokenlessWalletManager.LoadTransactionSigningKey();
 
@@ -45,7 +46,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
             var ecdsaSignature = key.Sign(hash);
 
-            return ecdsaSignature.ToDER();
+            return new Endorsement(ecdsaSignature.ToDER(), key.PubKey.ToBytes());
         }
     }
 }

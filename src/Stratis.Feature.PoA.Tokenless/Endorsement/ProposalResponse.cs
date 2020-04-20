@@ -10,14 +10,9 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
     public class SignedProposalResponse : IBitcoinSerializable
     {
-        public SignedProposalResponse()
-        {
-            this.Signatures = new List<byte[]>();
-        }
-
         public ProposalResponse ProposalResponse { get; set; }
 
-        public List<byte[]> Signatures { get; set; }
+        public Endorsement Endorsement { get; set; }
 
         public byte[] ToBytes()
         {
@@ -29,6 +24,19 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             var serialized = this.ToBytes();
             stream.ReadWrite(ref serialized);
         }
+    }
+
+    public class Endorsement
+    {
+        public Endorsement(byte[] signature, byte[] pubKey)
+        {
+            this.Signature = signature;
+            this.PubKey = pubKey;
+        }
+
+        public byte[] Signature { get; }
+
+        public byte[] PubKey { get; }
     }
     
     public class ProposalResponse
