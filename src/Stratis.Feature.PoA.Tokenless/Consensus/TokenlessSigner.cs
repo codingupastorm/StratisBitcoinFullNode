@@ -53,28 +53,6 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
             transaction.Inputs[0].ScriptSig = new Script(finalisedInputScript);
         }
 
-        /// <summary>
-        /// Takes several transactions and merges their txins into a final transaction with multiple txins
-        /// in the same order.
-        /// </summary>
-        /// <param name="transactions"></param>
-        /// <returns></returns>
-        public Transaction MergeSignedTxIns(Transaction[] transactions)
-        {
-            if (transactions == null || transactions.Length == 0)
-                return null;
-
-            // Clone the first transaction and use it as a base.
-            Transaction baseTransaction = this.network.CreateTransaction(transactions[0].ToBytes());
-
-            foreach(Transaction transaction in transactions.Skip(1))
-            {
-                baseTransaction.Inputs.Add(transaction.Inputs[0].Clone());
-            }
-
-            return baseTransaction;
-        }
-        
         /// <inheritdoc />
         public GetSenderResult GetSender(Transaction transaction)
         {
