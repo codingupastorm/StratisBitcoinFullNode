@@ -56,9 +56,9 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             }
 
             // Add the signature org + address to the policy state.
-            var address = MembershipServicesDirectory.GetCertificateTransactionSigningAddress(certificate, this.network);
+            (Organisation org, string sender) = this.organisationLookup.FromCertificate(certificate);
 
-            AddSignature((Organisation)certificate.GetOrganisation(), address);
+            AddSignature(org, sender);
 
             return true;
         }
