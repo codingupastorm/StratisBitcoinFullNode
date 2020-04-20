@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Interfaces;
@@ -14,6 +15,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         void SaveChannelDefinition(ChannelDefinition request);
 
         Dictionary<string, ChannelDefinition> GetChannelDefinitions();
+
+        int GetNextChannelId();
     }
 
     public class ChannelRepository : IChannelRepository
@@ -27,6 +30,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         internal readonly Network network;
 
         private readonly IRepositorySerializer repositorySerializer;
+
+        private int maxChannelId = 0;
 
         public ChannelRepository(Network network, ILoggerFactory loggerFactory, IChannelKeyValueStore blockKeyValueStore, IRepositorySerializer repositorySerializer)
         {
@@ -42,6 +47,14 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         /// <inheritdoc />
         public void Initialize()
         {
+            Dictionary<string, ChannelDefinition> channels = this.GetChannelDefinitions();
+
+            this.maxChannelId = (channels.Count == 0) ? 1 : channels.Values.Max(d => d.Id);
+        }
+
+        public int GetNextChannelId()
+        {
+            return this.maxChannelId + 1;
         }
 
         public void SaveChannelDefinition(ChannelDefinition request)
@@ -50,6 +63,9 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             {
                 transaction.Insert(ConfigTxTableName, request.Name, request);
                 transaction.Commit();
+
+                if (request.Id > this.maxChannelId)
+                    this.maxChannelId = request.Id;
             }
         }
 
