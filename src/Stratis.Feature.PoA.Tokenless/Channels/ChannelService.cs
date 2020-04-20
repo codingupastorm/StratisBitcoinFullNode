@@ -23,7 +23,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         /// <summary>This is a list of PIds of channel processes that are running.</summary>
         List<ChannelNodeProcess> StartedChannelNodes { get; }
 
-        Task StartChannelNodeAsync(ChannelCreationRequest request);
+        Task CreateAndStartChannelNodeAsync(ChannelCreationRequest request);
         Task StartSystemChannelNodeAsync();
         Task RestartChannelNodesAsync();
         void StopChannelNodes();
@@ -122,11 +122,11 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             }
         }
 
-        public async Task StartChannelNodeAsync(ChannelCreationRequest request)
+        public async Task CreateAndStartChannelNodeAsync(ChannelCreationRequest request)
         {
             try
             {
-                this.logger.LogInformation($"Starting a node on channel '{request.Name}'.");
+                this.logger.LogInformation($"Creating and starting a node on channel '{request.Name}'.");
 
                 int channelNodeId = this.channelRepository.GetNextChannelId();
                 string channelRootFolder = PrepareNodeForStartup(request.Name, channelNodeId);

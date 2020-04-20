@@ -47,7 +47,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
                 if (channelCreationRequest != null)
                 {
                     this.logger.LogDebug("Transaction '{0}' contains a request to create channel '{1}'.", transaction.GetHash(), channelCreationRequest.Name);
-                    await this.channelService.StartChannelNodeAsync(channelCreationRequest);
+                    await this.channelService.CreateAndStartChannelNodeAsync(channelCreationRequest);
                 }
             }
         }
