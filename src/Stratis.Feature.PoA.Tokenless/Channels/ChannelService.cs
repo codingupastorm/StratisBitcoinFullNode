@@ -30,7 +30,6 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     public sealed class ChannelService : IChannelService
     {
         private const string ChannelConfigurationFileName = "channel.conf";
-        private const int SystemChannelApiPort = 30001;
         private const string SystemChannelName = "system";
 
         private readonly ChannelSettings channelSettings;
