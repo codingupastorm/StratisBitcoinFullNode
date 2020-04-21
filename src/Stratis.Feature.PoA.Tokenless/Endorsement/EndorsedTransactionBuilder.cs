@@ -8,10 +8,15 @@ using Stratis.SmartContracts.Core.ReadWrite;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
+    public interface IEndorsedTransactionBuilder
+    {
+        Transaction Build(List<SignedProposalResponse> proposalResponses);
+    }
+
     /// <summary>
     /// Builds a transaction that has satisfied an endorsement policy.
     /// </summary>
-    public class EndorsedTransactionBuilder
+    public class EndorsedTransactionBuilder : IEndorsedTransactionBuilder
     {
         private readonly IEndorsementSigner endorsementSigner;
 

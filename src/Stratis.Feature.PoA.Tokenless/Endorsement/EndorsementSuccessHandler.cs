@@ -18,11 +18,13 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     {
         private readonly IBroadcasterManager broadcasterManager;
         private readonly IEndorsements endorsements;
+        private readonly IEndorsedTransactionBuilder endorsedTransactionBuilder;
 
-        public EndorsementSuccessHandler(IBroadcasterManager broadcasterManager, IEndorsements endorsements)
+        public EndorsementSuccessHandler(IBroadcasterManager broadcasterManager, IEndorsements endorsements, IEndorsedTransactionBuilder endorsedTransactionBuilder)
         {
             this.broadcasterManager = broadcasterManager;
             this.endorsements = endorsements;
+            this.endorsedTransactionBuilder = endorsedTransactionBuilder;
         }
 
         public async Task<bool> ProcessEndorsementAsync(uint256 proposalId, SignedProposalResponse signedProposalResponse, INetworkPeer peer)
@@ -41,8 +43,9 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             // If the policy has been satisfied, this will return true and we can broadcast the signed transaction.
             if (info.Validate())
             {
-                // TODO build the endorsed transaction with the txins of all the endorsers.
-                //await this.broadcasterManager.BroadcastTransactionAsync(finalTransactionWithEndorsements);
+                Transaction endorsedTx = this.endorsedTransactionBuilder.Build(null); // TODO
+
+                await this.broadcasterManager.BroadcastTransactionAsync(endorsedTx);
                 return true;
             }
 
