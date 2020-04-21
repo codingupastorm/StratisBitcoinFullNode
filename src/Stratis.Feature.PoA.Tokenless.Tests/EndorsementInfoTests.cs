@@ -164,6 +164,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             validator.AddSignature(org, "test");
 
             Assert.True(validator.Valid);
+            Assert.Single(validator.GetValidAddresses());
         }
 
         [Fact]
@@ -184,6 +185,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             validator.AddSignature(org, "test2");
 
             Assert.True(validator.Valid);
+            Assert.Equal("test", validator.GetValidAddresses()[0]);
+            Assert.Equal("test2", validator.GetValidAddresses()[1]);
         }
 
         [Fact]
@@ -212,6 +215,35 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             validator.AddSignature(org2, "test2 4");
 
             Assert.True(validator.Valid);
+        }
+
+        [Fact]
+        public void MofNPolicyValidator_Returns_Valid_Addresses_Correctly()
+        {
+            var org = (Organisation)"Test";
+            var org2 = (Organisation)"Test2";
+            var policy = new Dictionary<Organisation, int>
+            {
+                { org, 2 },
+            };
+
+            var validator = new MofNPolicyValidator(policy);
+
+            // Add org 2 signatures - they don't contribute to the policy being valid
+            validator.AddSignature(org2, "test2 2");
+            validator.AddSignature(org2, "test2 3");
+            validator.AddSignature(org2, "test2 4");
+            Assert.False(validator.Valid);
+
+            // Add org 1 signatures
+            validator.AddSignature(org, "test");
+            validator.AddSignature(org, "test 2");
+
+            Assert.True(validator.Valid);
+
+            // Ensure only org 1 addresses are returned
+            Assert.Equal("test", validator.GetValidAddresses()[0]);
+            Assert.Equal("test 2", validator.GetValidAddresses()[1]);
         }
 
 

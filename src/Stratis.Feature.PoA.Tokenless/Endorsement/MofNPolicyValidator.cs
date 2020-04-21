@@ -51,6 +51,22 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             return this.policyValidationState[org].Count;
         }
 
+        /// <summary>
+        /// Returns addresses that match the validation policy.
+        /// </summary>
+        /// <returns></returns>
+        public IReadOnlyList<string> GetValidAddresses()
+        {
+            var result = new List<string>();
+
+            foreach ((Organisation org, int _) in this.policy)
+            {
+                result.AddRange(this.policyValidationState[org]);
+            }
+
+            return result;
+        }
+
         public bool Valid 
         {
             get
