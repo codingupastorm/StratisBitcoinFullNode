@@ -1,7 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Castle.Components.DictionaryAdapter;
+using CertificateAuthority;
 using Moq;
 using NBitcoin;
+using NBitcoin.Crypto;
+using Org.BouncyCastle.X509;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Endorsement;
 using Xunit;
 
@@ -12,22 +20,31 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         [Fact]
         public void New_Endorsement_Has_State_Proposed()
         {
-            Assert.Equal(EndorsementState.Proposed, new EndorsementInfo(new Dictionary<Organisation, int>(), Mock.Of<IOrganisationLookup>()).State);
+            Assert.Equal(EndorsementState.Proposed, new EndorsementInfo(new Dictionary<Organisation, int>(), Mock.Of<IOrganisationLookup>(), Mock.Of<ICertificatePermissionsChecker>(), new TokenlessNetwork()).State);
         }
 
         [Fact]
-        public void Endorsement_Gets_Address_Org_From_Transaction()
+        public void Endorsement_Gets_Address_Org_From_Certificate()
         {
             var organisationLookup = new Mock<IOrganisationLookup>();
+            var permissionsChecker = new Mock<ICertificatePermissionsChecker>();
+            var network = new TokenlessNetwork();
 
-            var organisation = (Organisation) "ORG_1_DN";
+            var certParser = new X509CertificateParser();
+            X509Certificate certificate = certParser.ReadCertificate(File.ReadAllBytes("Certificates/cert.crt"));
+
+            var organisation = (Organisation)certificate.GetOrganisation();
             var senderAddress = "SENDER";
-            var transaction = new Transaction();
 
             // Rig the lookup to return what we want.
             organisationLookup
-                .Setup(l => l.FromTransaction(It.IsAny<Transaction>()))
+                .Setup(l => l.FromCertificate(It.IsAny<X509Certificate>()))
                 .Returns((organisation, senderAddress));
+
+            permissionsChecker
+                .Setup(p => p.CheckSignature(It.IsAny<string>(), It.IsAny<ECDSASignature>(),
+                    It.IsAny<PubKey>(), It.IsAny<uint256>()))
+                .Returns(true);
 
             // Basic policy that only requires 1 sig from organisation.
             var basicPolicy = new Dictionary<Organisation, int>
@@ -35,49 +52,88 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 { organisation, 1 }
             };
 
-            var endorsement = new EndorsementInfo(basicPolicy, organisationLookup.Object);
+            var key = new Key();
+            var signature = key.Sign(new uint256()); // Some random sig
+
+            var endorsement = new EndorsementInfo(basicPolicy, organisationLookup.Object, permissionsChecker.Object, network);
+            var proposalResponse = new SignedProposalResponse
+            {
+                ProposalResponse = new ProposalResponse
+                {
+                    ReadWriteSet = new ReadWriteSet()
+                },
+                Endorsement = new Endorsement.Endorsement(signature.ToDER(), key.PubKey.ToBytes())
+            };
 
             Assert.False(endorsement.Validate());
             Assert.Equal(EndorsementState.Proposed, endorsement.State);
             
-            endorsement.AddSignature(transaction);
+            Assert.True(endorsement.AddSignature(certificate, proposalResponse));
 
             Assert.True(endorsement.Validate());
             Assert.Equal(EndorsementState.Approved, endorsement.State);
-            organisationLookup.Verify(l => l.FromTransaction(transaction), Times.Once);
+
+            permissionsChecker.Verify(p => 
+                p.CheckSignature(CaCertificatesManager.GetThumbprint(certificate), It.Is<ECDSASignature>(x => x.ToDER().SequenceEqual(signature.ToDER())), key.PubKey, proposalResponse.ProposalResponse.GetHash()));
+            organisationLookup.Verify(l => l.FromCertificate(certificate), Times.Once);
         }
 
         [Fact]
         public void Endorsement_Gets_Address_Unapproved_Org_From_Transaction()
         {
             var organisationLookup = new Mock<IOrganisationLookup>();
+            var permissionsChecker = new Mock<ICertificatePermissionsChecker>();
+            var network = new TokenlessNetwork();
 
-            var organisation = (Organisation)"ORG_1_DN";
-            var unapprovedOrg = (Organisation) "BAD_ORG_DN";
+            var certParser = new X509CertificateParser();
+            X509Certificate certificate = certParser.ReadCertificate(File.ReadAllBytes("Certificates/cert.crt"));
+
+            var unapprovedOrganisation = (Organisation)certificate.GetOrganisation();
+            var approvedOrganisation = (Organisation) "Approved";
             var senderAddress = "SENDER";
-            var transaction = new Transaction();
 
             // Rig the lookup to return what we want.
             organisationLookup
-                .Setup(l => l.FromTransaction(It.IsAny<Transaction>()))
-                .Returns((unapprovedOrg, senderAddress));
+                .Setup(l => l.FromCertificate(It.IsAny<X509Certificate>()))
+                .Returns((unapprovedOrganisation, senderAddress));
 
-            // Basic policy that only requires 1 sig from the valid organisation.
+            permissionsChecker
+                .Setup(p => p.CheckSignature(It.IsAny<string>(), It.IsAny<ECDSASignature>(),
+                    It.IsAny<PubKey>(), It.IsAny<uint256>()))
+                .Returns(true);
+
+            // Basic policy that only requires 1 sig from organisation.
             var basicPolicy = new Dictionary<Organisation, int>
             {
-                { organisation, 1 }
+                { approvedOrganisation, 1 }
             };
 
-            var endorsement = new EndorsementInfo(basicPolicy, organisationLookup.Object);
+            var key = new Key();
+            var signature = key.Sign(new uint256()); // Some random sig
+
+            var endorsement = new EndorsementInfo(basicPolicy, organisationLookup.Object, permissionsChecker.Object, network);
+            var proposalResponse = new SignedProposalResponse
+            {
+                ProposalResponse = new ProposalResponse
+                {
+                    ReadWriteSet = new ReadWriteSet()
+                },
+                Endorsement = new Endorsement.Endorsement(signature.ToDER(), key.PubKey.ToBytes())
+            };
 
             Assert.False(endorsement.Validate());
             Assert.Equal(EndorsementState.Proposed, endorsement.State);
 
-            endorsement.AddSignature(transaction);
+            // Adding sig should still work as it's valid for the cert.
+            Assert.True(endorsement.AddSignature(certificate, proposalResponse));
 
+            // Validation fails because the org is not valid.
             Assert.False(endorsement.Validate());
             Assert.Equal(EndorsementState.Proposed, endorsement.State);
-            organisationLookup.Verify(l => l.FromTransaction(transaction), Times.Once);
+
+            permissionsChecker.Verify(p =>
+                p.CheckSignature(CaCertificatesManager.GetThumbprint(certificate), It.Is<ECDSASignature>(x => x.ToDER().SequenceEqual(signature.ToDER())), key.PubKey, proposalResponse.ProposalResponse.GetHash()));
+            organisationLookup.Verify(l => l.FromCertificate(certificate), Times.Once);
         }
 
         [Fact]
@@ -156,6 +212,37 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             validator.AddSignature(org2, "test2 4");
 
             Assert.True(validator.Valid);
+        }
+
+
+        [Fact]
+        public void Signed_Proposal_Response_Roundtrip()
+        {
+            var proposalResponse = new SignedProposalResponse
+            {
+                ProposalResponse = new ProposalResponse
+                {
+                    ReadWriteSet = new ReadWriteSet
+                    {
+                        Reads = new List<ReadItem>
+                        {
+                            new ReadItem { ContractAddress = uint160.One, Key = new byte[] { 0xCC, 0xCC, 0xCC }, Version = "1"}
+                        },
+                        Writes = new List<WriteItem>
+                        {
+                            new WriteItem { ContractAddress = uint160.One, IsPrivateData = false, Key = new byte[] { 0xDD, 0xDD, 0xDD }, Value = new byte[] { 0xEE, 0xEE, 0xEE }}
+                        }
+                    }
+                },
+                Endorsement = new Endorsement.Endorsement(new byte[] {0xAA, 0xAA, 0xAA}, new byte[] {0xBB, 0xBB, 0XBB})
+            };
+
+            var toBytes = proposalResponse.ToBytes();
+
+            var fromBytes = SignedProposalResponse.FromBytes(toBytes);
+
+            // Full roundtrip serialize and compare.
+            Assert.True(toBytes.SequenceEqual(fromBytes.ToBytes()));
         }
     }
 }

@@ -1,7 +1,11 @@
+using System.Collections.Generic;
+using System.Linq;
 using CertificateAuthority;
+using CertificateAuthority.Models;
 using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitcoin.Crypto;
 using Org.BouncyCastle.X509;
 using Stratis.Features.PoA.ProtocolEncryption;
 
@@ -27,6 +31,15 @@ namespace Stratis.Feature.PoA.Tokenless
         /// <param name="permission">The permission we're checking for.</param>
         /// <returns>Whether or not they have the required permissions to send a transaction.</returns>
         bool CheckSenderCertificateHasPermission(uint160 address, TransactionSendingPermission permission);
+
+        /// <summary>
+        /// Used to validate that the signature has been signed by the transaction signing pubkey corresponding to the given certificate.
+        /// </summary>
+        /// <param name="certificate"></param>
+        /// <param name="signature"></param>
+        /// <param name="hash"></param>
+        /// <returns></returns>
+        bool CheckSignature(string certificateThumbprint, ECDSASignature signature, PubKey pubKey, uint256 hash);
     }
 
     public sealed class CertificatePermissionsChecker : ICertificatePermissionsChecker
@@ -61,6 +74,22 @@ namespace Stratis.Feature.PoA.Tokenless
         {
             X509Certificate certificate = this.GetCertificate(address);
             return ValidateCertificateHasPermission(certificate, permission);
+        }
+
+        /// <inheritdoc />
+        public bool CheckSignature(string certificateThumbprint, ECDSASignature signature, PubKey pubKey, uint256 hash)
+        {
+            List<CertificateInfoModel> certificates = this.certificatesManager.GetAllCertificates();
+
+            CertificateInfoModel match = certificates.FirstOrDefault(c => c.Thumbprint == certificateThumbprint);
+
+            if (match == null) return false;
+
+            // Verify the pubkey matches the hash.
+            if (new KeyId(match.TransactionSigningPubKeyHash) != pubKey.Hash)
+                return false;
+            
+            return pubKey.Verify(hash, signature);
         }
 
         private X509Certificate GetCertificate(uint160 address)
