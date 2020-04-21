@@ -154,14 +154,14 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task SystemChannelNodeCanCreateAndStartChannelNodeFromChannelCreationTx()
+        public async Task SystemChannelNodeCanCreateAndStartChannelNodeFromChannelCreationTxAsync()
         {
             TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
 
             Process channelNodeProcess = null;
 
             using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
-            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 var network = new TokenlessNetwork();
 

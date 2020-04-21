@@ -23,6 +23,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         {
             channelNetwork.Consensus.MempoolRules = new List<Type>
             {
+                typeof(CreateTokenlessMempoolEntryRule),
                 typeof(IsChannelCreationRequestWellFormed)
             };
         }

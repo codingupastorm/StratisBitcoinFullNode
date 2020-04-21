@@ -39,6 +39,8 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             if (!this.ModelState.IsValid)
                 return ModelStateErrors.BuildErrorResponse(this.ModelState);
 
+            this.logger.LogInformation($"Request to create channel '{request.Name}' for organisation '{request.Organisation}' received.");
+
             try
             {
                 var serializer = new ChannelRequestSerializer();
@@ -46,7 +48,9 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                 Transaction transaction = this.coreComponent.Network.CreateTransaction();
                 transaction.Outputs.Add(new TxOut(Money.Zero, new Script(serialized)));
 
+                this.logger.LogInformation($"Create channel request transaction created.");
                 await this.broadcasterManager.BroadcastTransactionAsync(transaction);
+                this.logger.LogInformation($"Create channel request transaction broadcasted.");
 
                 return Ok();
             }
