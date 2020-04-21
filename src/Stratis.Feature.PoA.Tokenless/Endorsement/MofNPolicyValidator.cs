@@ -61,7 +61,8 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
             foreach ((Organisation org, int _) in this.policy)
             {
-                result.AddRange(this.policyValidationState[org]);
+                if(this.policyValidationState.ContainsKey(org))
+                    result.AddRange(this.policyValidationState[org]);
             }
 
             return result;
