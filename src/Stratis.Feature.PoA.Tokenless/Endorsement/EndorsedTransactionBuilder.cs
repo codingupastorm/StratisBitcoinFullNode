@@ -10,7 +10,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
     public interface IEndorsedTransactionBuilder
     {
-        Transaction Build(List<SignedProposalResponse> proposalResponses);
+        Transaction Build(IReadOnlyList<SignedProposalResponse> proposalResponses);
     }
 
     /// <summary>
@@ -25,7 +25,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.endorsementSigner = endorsementSigner;
         }
 
-        public Transaction Build(List<SignedProposalResponse> proposalResponses)
+        public Transaction Build(IReadOnlyList<SignedProposalResponse> proposalResponses)
         {
             if (!ValidateProposalResponses(proposalResponses))
                 return null;
@@ -35,13 +35,14 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             // Endorsement signer uses the same logic to sign the first input with the transaction signing key.
             this.endorsementSigner.Sign(transaction);
 
+            // TODO at the moment this is the full RWS. We should check that only the public RWS is signed and returned by the endorser.
             AddReadWriteSet(transaction, proposalResponses);
             AddEndorsements(transaction, proposalResponses.Select(p => p.Endorsement));
 
             return transaction;
         }
 
-        private void AddEndorsements(Transaction transaction, IEnumerable<Endorsement> endorsements)
+        private static void AddEndorsements(Transaction transaction, IEnumerable<Endorsement> endorsements)
         {
             foreach(Endorsement endorsement in endorsements)
             {
@@ -49,7 +50,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             }
         }
 
-        private static void AddReadWriteSet(Transaction transaction, List<SignedProposalResponse> proposalResponses)
+        private static void AddReadWriteSet(Transaction transaction, IEnumerable<SignedProposalResponse> proposalResponses)
         {
             // We can pick any RWS here as they should all be the same
             ReadWriteSet rws = GetReadWriteSet(proposalResponses);
@@ -59,7 +60,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             transaction.Outputs.Add(new TxOut(Money.Zero, rwsScriptPubKey));
         }
 
-        private static bool ValidateProposalResponses(List<SignedProposalResponse> proposalResponses)
+        private static bool ValidateProposalResponses(IReadOnlyList<SignedProposalResponse> proposalResponses)
         {
             // Nothing to compare against.
             if (proposalResponses.Count < 2) return true;
@@ -72,7 +73,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             return serializedProposalResponses.All(b => b.SequenceEqual(serializedProposalResponses[0]));
         }
 
-        private static ReadWriteSet GetReadWriteSet(List<SignedProposalResponse> proposalResponses)
+        private static ReadWriteSet GetReadWriteSet(IEnumerable<SignedProposalResponse> proposalResponses)
         {
             return proposalResponses.First().ProposalResponse.ReadWriteSet;
         }

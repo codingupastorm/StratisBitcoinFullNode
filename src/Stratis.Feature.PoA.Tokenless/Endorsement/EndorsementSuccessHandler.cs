@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.P2P.Peer;
@@ -39,11 +40,12 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             if (!info.AddSignature(certificate, signedProposalResponse))
                 return false;
 
-            // TODO: Recruit multiple endorsements before broadcasting the transactions.
             // If the policy has been satisfied, this will return true and we can broadcast the signed transaction.
             if (info.Validate())
             {
-                Transaction endorsedTx = this.endorsedTransactionBuilder.Build(null); // TODO
+                IReadOnlyList<SignedProposalResponse> validProposalResponses = info.GetValidProposalResponses();
+
+                Transaction endorsedTx = this.endorsedTransactionBuilder.Build(validProposalResponses);
 
                 await this.broadcasterManager.BroadcastTransactionAsync(endorsedTx);
                 return true;
