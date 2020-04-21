@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Moq;
 using NBitcoin;
 using Newtonsoft.Json;
 using Stratis.Feature.PoA.Tokenless.Consensus;
@@ -61,30 +62,24 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         }
 
         [Fact]
-        public void First_Input_Is_Proposer()
+        public void Proposer_Signs_Transaction()
         {
-            var builder = new EndorsedTransactionBuilder();
+            var endorsementSigner = new Mock<IEndorsementSigner>();
+
+            var builder = new EndorsedTransactionBuilder(endorsementSigner.Object);
 
             Transaction tx = builder.Build(this.proposalResponses);
 
-            Assert.Single(tx.Inputs);
-
-            var firstInput = tx.Inputs.AsIndexedInputs().First();
-
-            Assert.True(firstInput.VerifyScript(this.network, new Script()));
-            Assert.True(this.signer.Verify(tx));
-
-            string expectedAddress = this.transactionSigningKey.PubKey.GetAddress(this.network).ToString();
-            uint160 expectedUint160 = expectedAddress.ToUint160(this.network);
-            GetSenderResult getSenderResult = this.signer.GetSender(tx);
-            Assert.True(getSenderResult.Success);
-            Assert.Equal(expectedUint160, getSenderResult.Sender);
+            // We don't need to verify the tx here, the endorsement signer tests take care of that already.
+            endorsementSigner.Verify(s => s.Sign(tx), Times.Once);
         }
 
         [Fact]
         public void First_Output_Uses_OpReadWrite()
         {
-            var builder = new EndorsedTransactionBuilder();
+            var endorsementSigner = new Mock<IEndorsementSigner>();
+
+            var builder = new EndorsedTransactionBuilder(endorsementSigner.Object);
 
             Transaction tx = builder.Build(this.proposalResponses);
 
@@ -94,7 +89,9 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         [Fact]
         public void Second_Output_Is_Endorsement()
         {
-            var builder = new EndorsedTransactionBuilder();
+            var endorsementSigner = new Mock<IEndorsementSigner>();
+
+            var builder = new EndorsedTransactionBuilder(endorsementSigner.Object);
 
             Transaction tx = builder.Build(this.proposalResponses);
 
@@ -119,7 +116,9 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         [Fact]
         public void First_Output_Contains_Correct_Data()
         {
-            var builder = new EndorsedTransactionBuilder();
+            var endorsementSigner = new Mock<IEndorsementSigner>();
+
+            var builder = new EndorsedTransactionBuilder(endorsementSigner.Object);
 
             Transaction tx = builder.Build(this.proposalResponses);
 
