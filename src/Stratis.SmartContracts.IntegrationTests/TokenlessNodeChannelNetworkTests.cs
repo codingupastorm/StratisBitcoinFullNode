@@ -190,6 +190,13 @@ namespace Stratis.SmartContracts.IntegrationTests
                 };
 
                 var response = await $"http://localhost:{30001}/api".AppendPathSegment("channels/create").PostJsonAsync(channelCreationRequest);
+
+                // Wait until there tranasction has arrived in the system channel node's mempool.
+                TestBase.WaitLoop(() =>
+                {
+                    var mempoolResponse = $"http://localhost:{30001}/api".AppendPathSegment("mempool/getrawmempool").GetJsonAsync<List<string>>().GetAwaiter().GetResult();
+                    return mempoolResponse.Count == 1;
+                }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(1).TotalMilliseconds);
             }
         }
     }
