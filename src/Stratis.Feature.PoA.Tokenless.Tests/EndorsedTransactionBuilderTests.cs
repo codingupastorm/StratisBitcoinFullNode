@@ -4,9 +4,12 @@ using System.Linq;
 using System.Text;
 using NBitcoin;
 using Newtonsoft.Json;
+using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
+using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.ReadWrite;
+using Stratis.SmartContracts.Core.Util;
 using Xunit;
 
 namespace Stratis.Feature.PoA.Tokenless.Tests
@@ -16,10 +19,17 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         private readonly List<SignedProposalResponse> proposalResponses;
         private readonly Key key;
         private readonly ProposalResponse response;
+        private readonly TokenlessNetwork network;
+        private readonly TokenlessSigner signer;
+        private readonly Key transactionSigningKey;
 
         public EndorsedTransactionBuilderTests()
         {
+            this.network = new TokenlessNetwork();
+            this.signer = new TokenlessSigner(this.network, new SenderRetriever());
+
             this.key = new Key();
+            this.transactionSigningKey = new Key();
 
             this.response = new ProposalResponse
             {
@@ -48,6 +58,27 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                     Endorsement = new Endorsement.Endorsement(this.key.Sign(response.GetHash()).ToDER(), this.key.PubKey.ToBytes())
                 }
             };
+        }
+
+        [Fact]
+        public void First_Input_Is_Proposer()
+        {
+            var builder = new EndorsedTransactionBuilder();
+
+            Transaction tx = builder.Build(this.proposalResponses);
+
+            Assert.Single(tx.Inputs);
+
+            var firstInput = tx.Inputs.AsIndexedInputs().First();
+
+            Assert.True(firstInput.VerifyScript(this.network, new Script()));
+            Assert.True(this.signer.Verify(tx));
+
+            string expectedAddress = this.transactionSigningKey.PubKey.GetAddress(this.network).ToString();
+            uint160 expectedUint160 = expectedAddress.ToUint160(this.network);
+            GetSenderResult getSenderResult = this.signer.GetSender(tx);
+            Assert.True(getSenderResult.Success);
+            Assert.Equal(expectedUint160, getSenderResult.Sender);
         }
 
         [Fact]
