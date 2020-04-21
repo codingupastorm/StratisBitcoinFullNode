@@ -42,6 +42,16 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         public byte[] Signature { get; }
 
         public byte[] PubKey { get; }
+
+        public byte[] ToJson()
+        {
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(this));
+        }
+
+        public static Endorsement FromBytes(byte[] data)
+        {
+            return JsonConvert.DeserializeObject<Endorsement>(Encoding.UTF8.GetString(data));
+        }
     }
     
     public class ProposalResponse

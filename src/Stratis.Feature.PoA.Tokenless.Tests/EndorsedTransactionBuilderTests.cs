@@ -99,18 +99,11 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var endorsementData = tx.Outputs[1].ScriptPubKey.ToBytes();
 
-            var endorsements =
-                JsonConvert.DeserializeObject<List<Endorsement.Endorsement>>(Encoding.UTF8.GetString(endorsementData));
+            var endorsement = Endorsement.Endorsement.FromBytes(endorsementData);
 
-            Assert.NotEmpty(endorsements);
-
-            for (var i = 0; i < endorsements.Count; i++)
-            {
-                var endorsement = endorsements[i];
-
-                Assert.True(endorsement.Signature.SequenceEqual(this.proposalResponses[i].Endorsement.Signature));
-                Assert.True(endorsement.PubKey.SequenceEqual(this.proposalResponses[i].Endorsement.PubKey));
-            }
+            Assert.NotNull(endorsement);
+            Assert.True(endorsement.Signature.SequenceEqual(this.proposalResponses[0].Endorsement.Signature));
+            Assert.True(endorsement.PubKey.SequenceEqual(this.proposalResponses[0].Endorsement.PubKey));
         }
 
         [Fact]

@@ -31,8 +31,17 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.endorsementSigner.Sign(transaction);
 
             AddReadWriteSet(transaction, proposalResponses);
+            AddEndorsements(transaction, proposalResponses.Select(p => p.Endorsement));
 
             return transaction;
+        }
+
+        private void AddEndorsements(Transaction transaction, IEnumerable<Endorsement> endorsements)
+        {
+            foreach(Endorsement endorsement in endorsements)
+            {
+                transaction.Outputs.Add(new TxOut(Money.Zero, new Script(endorsement.ToJson())));
+            }
         }
 
         private static void AddReadWriteSet(Transaction transaction, List<SignedProposalResponse> proposalResponses)
