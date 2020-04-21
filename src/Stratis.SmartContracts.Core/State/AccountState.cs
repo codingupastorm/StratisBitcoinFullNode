@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Nethereum.RLP;
+using Stratis.SmartContracts.Core.Endorsement;
 
 namespace Stratis.SmartContracts.Core.State
 {
@@ -29,6 +30,11 @@ namespace Stratis.SmartContracts.Core.State
         /// </summary>
         public string TypeName { get; set; }
 
+        /// <summary>
+        /// Endorsement (and private data) policy for this contract.
+        /// </summary>
+        public EndorsementPolicy Policy { get; set; }
+
         public AccountState() { }
 
         #region Serialization
@@ -41,6 +47,7 @@ namespace Stratis.SmartContracts.Core.State
             this.StateRoot = innerList[1].RLPData;
             this.UnspentHash = innerList[2].RLPData;
             this.TypeName = innerList[3].RLPData == null ? null : Encoding.UTF8.GetString(innerList[3].RLPData);
+            this.Policy = EndorsementPolicy.FromJsonEncodedBytes(innerList[4].RLPData);
         }
 
         public byte[] ToBytes()
@@ -49,7 +56,8 @@ namespace Stratis.SmartContracts.Core.State
                 RLP.EncodeElement(this.CodeHash ?? new byte[0]),
                 RLP.EncodeElement(this.StateRoot ?? new byte[0]),
                 RLP.EncodeElement(this.UnspentHash ?? new byte[0]),
-                RLP.EncodeElement(this.TypeName == null ? new byte[0] : Encoding.UTF8.GetBytes(this.TypeName))
+                RLP.EncodeElement(this.TypeName == null ? new byte[0] : Encoding.UTF8.GetBytes(this.TypeName)),
+                RLP.EncodeElement(this.Policy != null ? this.Policy.ToJsonEncodedBytes() : new byte[0])
                 );
         }
 

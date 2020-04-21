@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.SmartContracts.CLR.Serialization;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.State;
 
 namespace Stratis.SmartContracts.CLR.Local
@@ -55,6 +56,12 @@ namespace Stratis.SmartContracts.CLR.Local
             StateTransitionResult result;
             IState newState = state.Snapshot();
 
+            var placeholderPolicy = new EndorsementPolicy
+            {
+                Organisation = (Organisation) "LocalExecutorOrgansation",
+                RequiredSignatures = EndorsementPolicy.DefaultRequiredSignatures
+            };
+
             if (creation)
             {
                 var message = new ExternalCreateMessage(
@@ -62,6 +69,7 @@ namespace Stratis.SmartContracts.CLR.Local
                     txOutValue,
                     callData.GasLimit,
                     callData.ContractExecutionCode,
+                    placeholderPolicy, // Shouldn't matter for LocalExecutor
                     callData.MethodParameters
                 );
 

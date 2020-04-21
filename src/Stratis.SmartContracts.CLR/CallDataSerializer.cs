@@ -56,15 +56,7 @@ namespace Stratis.SmartContracts.CLR
 
         private Result<ContractTxData> DeserializeCreateContract(byte[] smartContractBytes, int vmVersion, ulong gasPrice, RuntimeObserver.Gas gasLimit)
         {
-            byte[] remaining = smartContractBytes.Slice(PrefixSize, (uint)(smartContractBytes.Length - PrefixSize));
-
-            IList<byte[]> decodedParams = RLPDecode(remaining);
-
-            var contractExecutionCode = this.primitiveSerializer.Deserialize<byte[]>(decodedParams[0]);
-            object[] methodParameters = this.DeserializeMethodParameters(decodedParams[1]);
-
-            var callData = new ContractTxData(vmVersion, gasPrice, gasLimit, contractExecutionCode, methodParameters);
-            return Result.Ok(callData);
+            throw new NotImplementedException("Removed in DLT");
         }
 
         private Result<ContractTxData> DeserializeCallContract(byte[] smartContractBytes, int vmVersion, ulong gasPrice, RuntimeObserver.Gas gasLimit)
