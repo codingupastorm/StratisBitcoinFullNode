@@ -18,6 +18,7 @@ using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Controllers;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.Features.PoA.Tests.Common;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Store;
@@ -134,6 +135,12 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
                 TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
 
+                EndorsementPolicy policy = new EndorsementPolicy
+                {
+                    Organisation = (Organisation) "Test",
+                    RequiredSignatures = 2
+                };
+
                 node1.Start();
                 node2.Start();
 
@@ -143,7 +150,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
                 var stateRepo = node2.FullNode.NodeService<IStateRepositoryRoot>();
 
-                Transaction createTransaction = TokenlessTestHelper.CreateContractCreateTransaction(node1, node1.TransactionSigningPrivateKey, "SmartContracts/PrivateDataContract.cs");
+                Transaction createTransaction = TokenlessTestHelper.CreateContractCreateTransaction(node1, node1.TransactionSigningPrivateKey, "SmartContracts/PrivateDataContract.cs", policy);
                 await node1.BroadcastTransactionAsync(createTransaction);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
@@ -151,6 +158,11 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 Receipt createReceipt = receiptRepository.Retrieve(createTransaction.GetHash());
                 Assert.True(createReceipt.Success);
+
+                EndorsementPolicy savedPolicy = stateRepo.GetPolicy(createReceipt.NewContractAddress);
+
+                Assert.Equal(policy.Organisation, savedPolicy.Organisation);
+                Assert.Equal(policy.RequiredSignatures, savedPolicy.RequiredSignatures);
 
                 Transaction callTransaction = TokenlessTestHelper.CreateContractCallTransaction(node1, createReceipt.NewContractAddress, node1.TransactionSigningPrivateKey, "StoreTransientData");
 

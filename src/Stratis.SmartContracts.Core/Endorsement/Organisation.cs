@@ -1,4 +1,4 @@
-﻿namespace Stratis.Feature.PoA.Tokenless.Endorsement
+﻿namespace Stratis.SmartContracts.Core.Endorsement
 {
     public struct Organisation
     {

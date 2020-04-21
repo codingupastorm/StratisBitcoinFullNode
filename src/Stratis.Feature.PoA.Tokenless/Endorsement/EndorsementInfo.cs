@@ -4,6 +4,7 @@ using MembershipServices;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Org.BouncyCastle.X509;
+using Stratis.SmartContracts.Core.Endorsement;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {

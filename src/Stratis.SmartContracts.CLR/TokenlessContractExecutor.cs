@@ -64,6 +64,7 @@ namespace Stratis.SmartContracts.CLR
                     transactionContext.TxOutValue,
                     callData.GasLimit,
                     callData.ContractExecutionCode,
+                    callData.EndorsementPolicy,
                     callData.MethodParameters
                 );
 

@@ -10,6 +10,7 @@ using NBitcoin.Crypto;
 using Org.BouncyCastle.X509;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.SmartContracts.Core.ReadWrite;
+using Stratis.SmartContracts.Core.Endorsement;
 using Xunit;
 
 namespace Stratis.Feature.PoA.Tokenless.Tests

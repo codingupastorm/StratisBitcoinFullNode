@@ -1,6 +1,7 @@
 ﻿using System;
 using NBitcoin;
 using Stratis.Patricia;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.State.AccountAbstractionLayer;
 
 namespace Stratis.SmartContracts.Core.State
@@ -119,6 +120,19 @@ namespace Stratis.SmartContracts.Core.State
         {
             AccountState accountState = this.GetOrCreateAccountState(addr);
             accountState.TypeName = type;
+            this.accountStateCache.Put(addr.ToBytes(), accountState);
+        }
+
+        public EndorsementPolicy GetPolicy(uint160 addr)
+        {
+            AccountState accountState = this.GetAccountState(addr);
+            return accountState?.Policy;
+        }
+
+        public void SetPolicy(uint160 addr, EndorsementPolicy policy)
+        {
+            AccountState accountState = this.GetOrCreateAccountState(addr);
+            accountState.Policy = policy;
             this.accountStateCache.Put(addr.ToBytes(), accountState);
         }
 

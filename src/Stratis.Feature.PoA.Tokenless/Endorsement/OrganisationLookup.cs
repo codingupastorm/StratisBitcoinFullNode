@@ -3,6 +3,7 @@ using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.SmartContracts.CLR;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.Util;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
@@ -15,11 +16,11 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
     public class OrganisationLookup : IOrganisationLookup
     {
-        private readonly TokenlessSigner tokenlessSigner;
-        private readonly MembershipServicesDirectory membershipServices;
+        private readonly ITokenlessSigner tokenlessSigner;
+        private readonly IMembershipServicesDirectory membershipServices;
         private readonly Network network;
 
-        public OrganisationLookup(TokenlessSigner tokenlessSigner, MembershipServicesDirectory membershipServices, Network network)
+        public OrganisationLookup(ITokenlessSigner tokenlessSigner, IMembershipServicesDirectory membershipServices, Network network)
         {
             this.tokenlessSigner = tokenlessSigner;
             this.membershipServices = membershipServices;
