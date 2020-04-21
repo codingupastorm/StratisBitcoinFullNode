@@ -103,7 +103,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 JsonConvert.DeserializeObject<List<Endorsement.Endorsement>>(Encoding.UTF8.GetString(endorsementData));
 
             Assert.NotEmpty(endorsements);
-            // TODO assert content of endorsements
+
             for (var i = 0; i < endorsements.Count; i++)
             {
                 var endorsement = endorsements[i];
@@ -124,7 +124,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             // Expect the data to include the generated RWS, and endorsements
             // First op should be OP_READWRITE, second op should be raw data
-            var rwsData = tx.Outputs[0].ScriptPubKey.ToOps()[1].ToBytes();
+            var rwsData = tx.Outputs[0].ScriptPubKey.ToBytes().Skip(1).ToArray();
 
             var rws = ReadWriteSet.FromJsonEncodedBytes(rwsData);
 
