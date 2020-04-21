@@ -31,6 +31,7 @@ using Stratis.SmartContracts.CLR.Decompilation;
 using Stratis.SmartContracts.CLR.Local;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
@@ -130,10 +131,12 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         [HttpPost]
         public IActionResult BuildCreateContractTransaction([FromBody] BuildCreateContractTransactionModel model)
         {
+            // TODO: Build a policy relevant to this node.
+
             try
             {
                 var methodParameters = ExtractMethodParameters(model.Parameters);
-                var contractTxData = new ContractTxData(0, 0, (Gas)0, model.ContractCode, AccountState.PolicyPlaceHolder, methodParameters);
+                var contractTxData = new ContractTxData(0, 0, (Gas)0, model.ContractCode, new EndorsementPolicy(), methodParameters);
 
                 Transaction transaction = CreateAndSignTransaction(contractTxData);
 

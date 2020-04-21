@@ -3,7 +3,7 @@ using System.Text;
 using CSharpFunctionalExtensions;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core;
-using Stratis.SmartContracts.Core.State;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Networks;
 using Stratis.SmartContracts.RuntimeObserver;
 using Xunit;
@@ -37,7 +37,11 @@ namespace Stratis.SmartContracts.CLR.Tests
                 }"
             );
 
-            byte[] policy = new byte[]{0,1,2,3};
+            EndorsementPolicy policy = new EndorsementPolicy
+            {
+                Organisation = (Organisation) "TestOrganisation",
+                RequiredSignatures = 3
+            };
 
             var contractTxData = new ContractTxData(0, 0, (Gas)0, contractExecutionCode, policy);
             Result<ContractTxData> callDataResult = this.serializer.Deserialize(this.serializer.Serialize(contractTxData));
@@ -79,7 +83,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 '#'
             };
 
-            var contractTxData = new ContractTxData(NoGasCallDataSerializer.VmVersionToSet, NoGasCallDataSerializer.GasPriceToSet, (Gas)NoGasCallDataSerializer.GasLimitToSet, contractExecutionCode, AccountState.PolicyPlaceHolder, methodParameters);
+            var contractTxData = new ContractTxData(NoGasCallDataSerializer.VmVersionToSet, NoGasCallDataSerializer.GasPriceToSet, (Gas)NoGasCallDataSerializer.GasLimitToSet, contractExecutionCode, new EndorsementPolicy(), methodParameters);
 
             Result<ContractTxData> callDataResult = this.serializer.Deserialize(this.serializer.Serialize(contractTxData));
             ContractTxData callData = callDataResult.Value;

@@ -1,5 +1,6 @@
 ﻿using NBitcoin;
 using Stratis.SmartContracts.CLR.Metering;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State.AccountAbstractionLayer;
 using Stratis.SmartContracts.RuntimeObserver;
@@ -22,7 +23,7 @@ namespace Stratis.SmartContracts.CLR
         private StateTransitionResult ApplyCreate(IState state, 
             object[] parameters, 
             byte[] code,
-            byte[] policy,
+            EndorsementPolicy policy,
             BaseMessage message,
             uint160 address,
             ExecutionContext executionContext,
@@ -88,6 +89,7 @@ namespace Stratis.SmartContracts.CLR
             var executionContext = new ExecutionContext(observer);
 
             byte[] contractCode = state.ContractState.GetCode(message.From);
+            EndorsementPolicy policy = state.ContractState.GetPolicy(message.From);
 
             uint160 address = state.GenerateAddress(this.AddressGenerator);
 
@@ -96,7 +98,7 @@ namespace Stratis.SmartContracts.CLR
             // For external creates we do not need to do this.
             state.AddInternalTransfer(new TransferInfo(message.From, address, message.Amount));
 
-            StateTransitionResult result = this.ApplyCreate(state, message.Parameters, contractCode, message.Policy, message, address, executionContext, message.Type);
+            StateTransitionResult result = this.ApplyCreate(state, message.Parameters, contractCode, policy, message, address, executionContext, message.Type);
             
             return result;
         }

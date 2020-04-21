@@ -5,6 +5,7 @@ using CSharpFunctionalExtensions;
 using NBitcoin;
 using Nethereum.RLP;
 using Stratis.SmartContracts.CLR.Serialization;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.RuntimeObserver;
 
 namespace Stratis.SmartContracts.CLR
@@ -65,7 +66,7 @@ namespace Stratis.SmartContracts.CLR
 
             var contractExecutionCode = this.primitiveSerializer.Deserialize<byte[]>(decodedParams[0]);
             object[] methodParameters = this.DeserializeMethodParameters(decodedParams[1]);
-            byte[] endorsementPolicy = decodedParams[2]; // TODO: Serialize in some useful way
+            EndorsementPolicy endorsementPolicy = EndorsementPolicy.FromJsonEncodedBytes(decodedParams[2]); // TODO: Serialize in some useful way
 
             var callData = new ContractTxData(VmVersionToSet, GasPriceToSet, (Gas) GasLimitToSet, contractExecutionCode, endorsementPolicy, methodParameters);
             return Result.Ok(callData);
@@ -133,10 +134,10 @@ namespace Stratis.SmartContracts.CLR
             return bytes;
         }
 
-        private void AddPolicy(List<byte[]> rlpBytes, byte[] endorsementPolicy)
+        private void AddPolicy(List<byte[]> rlpBytes, EndorsementPolicy endorsementPolicy)
         {
             // TODO: Add the policy to be serialized.
-            rlpBytes.Add(endorsementPolicy);
+            rlpBytes.Add(endorsementPolicy.ToJsonEncodedBytes());
         }
     }
 }

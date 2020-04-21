@@ -9,6 +9,7 @@ using Stratis.SmartContracts.CLR.Exceptions;
 using Stratis.SmartContracts.CLR.ILRewrite;
 using Stratis.SmartContracts.CLR.Loader;
 using Stratis.SmartContracts.CLR.Validation;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.Hashing;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
@@ -57,7 +58,7 @@ namespace Stratis.SmartContracts.CLR
             ISmartContractState contractState,
             ExecutionContext executionContext,
             byte[] contractCode,
-            byte[] policy,
+            EndorsementPolicy policy,
             object[] parameters,
             string typeName = null)
         {

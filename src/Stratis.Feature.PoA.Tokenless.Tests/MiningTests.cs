@@ -28,6 +28,7 @@ using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.CLR.Loader;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.CLR.Validation;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Store;
@@ -88,7 +89,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/TokenlessExample.cs");
             Assert.True(compilationResult.Success);
 
-            var contractTxData = new ContractTxData(0, 0, (Gas)0, compilationResult.Compilation, AccountState.PolicyPlaceHolder);
+            var contractTxData = new ContractTxData(0, 0, (Gas)0, compilationResult.Compilation, new EndorsementPolicy());
             byte[] outputScript = this.helper.CallDataSerializer.Serialize(contractTxData);
             transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
 

@@ -1,4 +1,5 @@
-﻿using Stratis.SmartContracts.Core.State;
+﻿using Stratis.SmartContracts.Core.Endorsement;
+using Stratis.SmartContracts.Core.State;
 
 namespace Stratis.SmartContracts.CLR
 {
@@ -8,7 +9,7 @@ namespace Stratis.SmartContracts.CLR
             ISmartContractState contractState,
             ExecutionContext executionContext,
             byte[] contractCode,
-            byte[] policy,
+            EndorsementPolicy policy,
             object[] parameters,
             string typeName = null);
 

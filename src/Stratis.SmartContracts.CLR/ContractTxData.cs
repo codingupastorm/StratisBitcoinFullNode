@@ -1,5 +1,6 @@
 ﻿using NBitcoin;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.Endorsement;
 
 namespace Stratis.SmartContracts.CLR
 {
@@ -28,7 +29,7 @@ namespace Stratis.SmartContracts.CLR
         /// <summary>
         /// Creates a ContractTxData for contract creation
         /// </summary>
-        public ContractTxData(int vmVersion, ulong gasPrice, RuntimeObserver.Gas gasLimit, byte[] code, byte[] endorsementPolicy,
+        public ContractTxData(int vmVersion, ulong gasPrice, RuntimeObserver.Gas gasLimit, byte[] code, EndorsementPolicy endorsementPolicy,
             object[] methodParameters = null)
         {
             this.OpCodeType = (byte)ScOpcodeType.OP_CREATECONTRACT;
@@ -69,7 +70,7 @@ namespace Stratis.SmartContracts.CLR
         /// <summary>
         /// Ideally this will be an object instead.
         /// </summary>
-        public byte[] EndorsementPolicy { get; }
+        public EndorsementPolicy EndorsementPolicy { get; }
 
         /// <summary>The maximum cost (in satoshi) the contract can spend.</summary>
         public ulong GasCostBudget

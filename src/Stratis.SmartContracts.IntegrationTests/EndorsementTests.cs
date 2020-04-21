@@ -18,6 +18,7 @@ using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Controllers;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.Features.PoA.Tests.Common;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Store;
@@ -134,7 +135,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
                 TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
 
-                byte[] policy = new byte[] { 0, 1, 2, 3 };
+                EndorsementPolicy policy = new EndorsementPolicy
+                {
+                    Organisation = (Organisation) "Test",
+                    RequiredSignatures = 2
+                };
 
                 node1.Start();
                 node2.Start();
@@ -154,7 +159,10 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Receipt createReceipt = receiptRepository.Retrieve(createTransaction.GetHash());
                 Assert.True(createReceipt.Success);
 
-                Assert.Equal(policy, stateRepo.GetPolicy(createReceipt.NewContractAddress));
+                EndorsementPolicy savedPolicy = stateRepo.GetPolicy(createReceipt.NewContractAddress);
+
+                Assert.Equal(policy.Organisation, savedPolicy.Organisation);
+                Assert.Equal(policy.RequiredSignatures, savedPolicy.RequiredSignatures);
 
                 Transaction callTransaction = TokenlessTestHelper.CreateContractCallTransaction(node1, createReceipt.NewContractAddress, node1.TransactionSigningPrivateKey, "StoreTransientData");
 

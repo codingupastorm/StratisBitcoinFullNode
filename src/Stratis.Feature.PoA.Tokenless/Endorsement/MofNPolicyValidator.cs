@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Stratis.SmartContracts.Core.Endorsement;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {

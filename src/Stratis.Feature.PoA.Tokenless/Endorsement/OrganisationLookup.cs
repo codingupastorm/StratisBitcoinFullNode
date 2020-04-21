@@ -3,6 +3,7 @@ using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.SmartContracts.CLR;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.Util;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement

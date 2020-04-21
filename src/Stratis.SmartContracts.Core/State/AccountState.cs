@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Nethereum.RLP;
+using Stratis.SmartContracts.Core.Endorsement;
 
 namespace Stratis.SmartContracts.Core.State
 {
@@ -8,11 +9,6 @@ namespace Stratis.SmartContracts.Core.State
     /// </summary>
     public class AccountState
     {
-        /// <summary>
-        /// Not the right place for this - a placeholder to be replaced in the future.
-        /// </summary>
-        public static readonly byte[] PolicyPlaceHolder = new byte[0];
-
         /// <summary>
         /// 32 byte hash of the code deployed at this contract.
         /// Can be used to lookup the actual code in the code table
@@ -35,9 +31,9 @@ namespace Stratis.SmartContracts.Core.State
         public string TypeName { get; set; }
 
         /// <summary>
-        /// TODO This will hopefully be a type, not a byte array.
+        /// Endorsement (and private data) policy for this contract.
         /// </summary>
-        public byte[] Policy { get; set; }
+        public EndorsementPolicy Policy { get; set; }
 
         public AccountState() { }
 
@@ -51,7 +47,7 @@ namespace Stratis.SmartContracts.Core.State
             this.StateRoot = innerList[1].RLPData;
             this.UnspentHash = innerList[2].RLPData;
             this.TypeName = innerList[3].RLPData == null ? null : Encoding.UTF8.GetString(innerList[3].RLPData);
-            this.Policy = innerList[4].RLPData;
+            this.Policy = EndorsementPolicy.FromJsonEncodedBytes(innerList[4].RLPData);
         }
 
         public byte[] ToBytes()
@@ -61,7 +57,7 @@ namespace Stratis.SmartContracts.Core.State
                 RLP.EncodeElement(this.StateRoot ?? new byte[0]),
                 RLP.EncodeElement(this.UnspentHash ?? new byte[0]),
                 RLP.EncodeElement(this.TypeName == null ? new byte[0] : Encoding.UTF8.GetBytes(this.TypeName)),
-                RLP.EncodeElement(this.Policy ?? new byte[0])
+                RLP.EncodeElement(this.Policy != null ? this.Policy.ToJsonEncodedBytes() : new byte[0])
                 );
         }
 

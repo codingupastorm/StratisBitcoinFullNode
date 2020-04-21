@@ -1,4 +1,5 @@
 ﻿using NBitcoin;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.RuntimeObserver;
 
 namespace Stratis.SmartContracts.CLR
@@ -8,7 +9,7 @@ namespace Stratis.SmartContracts.CLR
     /// </summary>
     public class ExternalCreateMessage : BaseMessage
     {
-        public ExternalCreateMessage(uint160 from, ulong amount, Gas gasLimit, byte[] code, byte[] policy, object[] parameters)
+        public ExternalCreateMessage(uint160 from, ulong amount, Gas gasLimit, byte[] code, EndorsementPolicy policy, object[] parameters)
             : base(from, amount, gasLimit)
         {
             this.Code = code;
@@ -21,7 +22,7 @@ namespace Stratis.SmartContracts.CLR
         /// </summary>
         public byte[] Code { get; }
 
-        public byte[] Policy { get; }
+        public EndorsementPolicy Policy { get; }
 
         /// <summary>
         /// The parameters to use when creating the contract.

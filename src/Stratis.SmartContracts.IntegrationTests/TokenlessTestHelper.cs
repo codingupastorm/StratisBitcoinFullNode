@@ -22,7 +22,7 @@ using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Compilation;
-using Stratis.SmartContracts.Core.State;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.RuntimeObserver;
 using Xunit;
 
@@ -186,11 +186,11 @@ namespace Stratis.SmartContracts.IntegrationTests
             return builder;
         }
 
-        public static Transaction CreateContractCreateTransaction(CoreNode node, Key key, string contractFilename, byte[] policy = null)
+        public static Transaction CreateContractCreateTransaction(CoreNode node, Key key, string contractFilename, EndorsementPolicy policy = null)
         {
             if (policy == null)
             {
-                policy = AccountState.PolicyPlaceHolder;
+                policy = new EndorsementPolicy();
             }
 
             Transaction transaction = Network.CreateTransaction();
