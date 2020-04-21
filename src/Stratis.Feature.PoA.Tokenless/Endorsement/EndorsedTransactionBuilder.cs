@@ -10,7 +10,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     /// </summary>
     public class EndorsedTransactionBuilder
     {
-        public Transaction Build()
+        public Transaction Build(List<SignedProposalResponse> proposalResponses)
         {
             throw new NotImplementedException();
         }

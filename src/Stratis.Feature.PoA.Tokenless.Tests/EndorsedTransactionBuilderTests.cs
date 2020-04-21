@@ -13,12 +13,49 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 {
     public class EndorsedTransactionBuilderTests
     {
+        private readonly List<SignedProposalResponse> proposalResponses;
+        private readonly Key key;
+        private readonly ProposalResponse response;
+
+        public EndorsedTransactionBuilderTests()
+        {
+            this.key = new Key();
+
+            this.response = new ProposalResponse
+            {
+                ReadWriteSet = new ReadWriteSet
+                {
+                    Reads = new List<ReadItem>
+                    {
+                        new ReadItem {ContractAddress = uint160.One, Key = new byte[] {0xAA}, Version = "1"}
+                    },
+                    Writes = new List<WriteItem>
+                    {
+                        new WriteItem
+                        {
+                            ContractAddress = uint160.One, IsPrivateData = false, Key = new byte[] {0xBB},
+                            Value = new byte[] {0xCC}
+                        }
+                    }
+                }
+            };
+
+            this.proposalResponses = new List<SignedProposalResponse>
+            {
+                new SignedProposalResponse
+                {
+                    ProposalResponse = response,
+                    Endorsement = new Endorsement.Endorsement(this.key.Sign(response.GetHash()).ToDER(), this.key.PubKey.ToBytes())
+                }
+            };
+        }
+
         [Fact]
         public void First_Output_Uses_OpReadWrite()
         {
             var builder = new EndorsedTransactionBuilder();
 
-            Transaction tx = builder.Build();
+            Transaction tx = builder.Build(this.proposalResponses);
 
             Assert.True(tx.Outputs[0].ScriptPubKey.IsReadWriteSet());
         }
@@ -28,7 +65,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             var builder = new EndorsedTransactionBuilder();
 
-            Transaction tx = builder.Build();
+            Transaction tx = builder.Build(this.proposalResponses);
 
             Assert.True(tx.Outputs.Count > 1);
 
@@ -39,6 +76,13 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             Assert.NotEmpty(endorsements);
             // TODO assert content of endorsements
+            for (var i = 0; i < endorsements.Count; i++)
+            {
+                var endorsement = endorsements[i];
+
+                Assert.True(endorsement.Signature.SequenceEqual(this.proposalResponses[i].Endorsement.Signature));
+                Assert.True(endorsement.PubKey.SequenceEqual(this.proposalResponses[i].Endorsement.PubKey));
+            }
         }
 
         [Fact]
@@ -46,7 +90,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             var builder = new EndorsedTransactionBuilder();
 
-            Transaction tx = builder.Build();
+            Transaction tx = builder.Build(this.proposalResponses);
 
             // Expect the data to include the generated RWS, and endorsements
             // First op should be OP_READWRITE, second op should be raw data
@@ -55,7 +99,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var rws = ReadWriteSet.FromJsonEncodedBytes(rwsData);
 
             Assert.NotNull(rws);
-            // TODO assert content of RWS
+            Assert.True(rwsData.SequenceEqual(this.proposalResponses[0].ProposalResponse.ReadWriteSet.ToJsonEncodedBytes()));
         }
     }
 }
