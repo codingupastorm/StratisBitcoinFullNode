@@ -32,7 +32,7 @@ namespace Stratis.Feature.PoA.Tokenless.Payloads
 
         public override string ToString()
         {
-            return $"{nameof(this.Command)}:'{this.Command}',{nameof(this.ProposalId)}:'{this.proposalId}',{nameof(this.ProposalResponse)}";
+            return $"{nameof(this.Command)}:'{this.Command}',{nameof(this.ProposalId)}:'{this.proposalId}',{nameof(this.ProposalResponse)}:'{this.ProposalResponse.ProposalResponse.GetHash()}'";
         }
     }
 }
