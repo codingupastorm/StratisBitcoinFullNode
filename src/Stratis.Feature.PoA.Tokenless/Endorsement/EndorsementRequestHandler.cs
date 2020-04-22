@@ -94,7 +94,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             uint256 proposalId = request.ContractTransaction.GetHash();
             var payload = new EndorsementPayload(signedProposalResponse, proposalId);
 
-            EndorsementPolicy contractsPolicy = this.stateRoot.GetPolicy(result.NewContractAddress);
+            EndorsementPolicy contractsPolicy = this.stateRoot.GetPolicy(result.To);
 
             try
             {
