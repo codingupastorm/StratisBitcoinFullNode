@@ -24,6 +24,7 @@ using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Payloads;
 using Stratis.Features.MemoryPool.Broadcasting;
+using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Compilation;
@@ -59,6 +60,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         private readonly IEndorsements endorsements;
         private readonly ISerializer serializer;
         private readonly ILocalExecutor localExecutor;
+        private readonly ICertificatesManager certificatesManager;
         private readonly ILogger logger;
 
         public TokenlessController(
@@ -76,7 +78,8 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             ITokenlessBroadcaster tokenlessBroadcaster,
             IEndorsements endorsements,
             ISerializer serializer,
-            ILocalExecutor localExecutor)
+            ILocalExecutor localExecutor,
+            ICertificatesManager certificatesManager)
             {
             this.coreComponent = coreComponent;
             this.tokenlessSigner = tokenlessSigner;
@@ -93,6 +96,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             this.primitiveSerializer = primitiveSerializer;
             this.serializer = serializer;
             this.localExecutor = localExecutor;
+            this.certificatesManager = certificatesManager;
             this.logger = coreComponent.LoggerFactory.CreateLogger(this.GetType());
         }
 
@@ -131,12 +135,17 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         [HttpPost]
         public IActionResult BuildCreateContractTransaction([FromBody] BuildCreateContractTransactionModel model)
         {
-            // TODO: Build a policy relevant to this node.
-
             try
             {
+                // When sending off CREATE transactions, use this node's organisation and the default number of required sigs. Can be configable in future.
+                EndorsementPolicy policy = new EndorsementPolicy
+                {
+                    Organisation = (Organisation) this.certificatesManager.ClientCertificate.GetOrganisation(),
+                    RequiredSignatures = EndorsementPolicy.DefaultRequiredSignatures
+                };
+
                 var methodParameters = ExtractMethodParameters(model.Parameters);
-                var contractTxData = new ContractTxData(0, 0, (Gas)0, model.ContractCode, new EndorsementPolicy(), methodParameters);
+                var contractTxData = new ContractTxData(0, 0, (Gas)0, model.ContractCode, policy, methodParameters);
 
                 Transaction transaction = CreateAndSignTransaction(contractTxData);
 
