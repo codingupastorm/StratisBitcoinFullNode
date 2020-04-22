@@ -133,7 +133,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 int channelNodeId = this.channelRepository.GetNextChannelId();
                 string channelRootFolder = PrepareNodeForStartup(request.Name, channelNodeId);
 
-                ChannelNodeProcess channelNode = await StartTheProcessAsync(channelRootFolder, "-ischannelnode=true");
+                ChannelNodeProcess channelNode = await StartTheProcessAsync(channelRootFolder, "-ischannelnode=true", $"-channelname={request.Name}");
                 if (channelNode.Process.HasExited)
                     this.logger.LogWarning($"Failed to start node on channel '{request.Name}' as the process exited early.");
 
@@ -233,11 +233,11 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         {
             // If the network json already exist, do nothing.
             var rootFolderName = $"{this.nodeSettings.DataFolder.RootPath}\\channels\\{channelName.ToLowerInvariant()}";
-            var networkFileName = $"{rootFolderName}\\{channelName}_network.json";
+            var networkFileName = $"{rootFolderName}\\{channelName.ToLowerInvariant()}_network.json";
             if (File.Exists(networkFileName))
                 return rootFolderName;
 
-            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, rootFolderName);
+            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName.ToLowerInvariant(), rootFolderName);
 
             int portOffset = channelId;
 
