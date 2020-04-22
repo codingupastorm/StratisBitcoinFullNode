@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitcoin.PoA;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Features.PoA.Events;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.PoA.Events;
 
 namespace Stratis.Features.PoA
 {

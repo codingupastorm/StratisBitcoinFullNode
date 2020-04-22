@@ -404,7 +404,7 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         private void status_information_is_returned()
         {
             var statusNode = this.firstStratisPowApiNode.FullNode;
-            var statusResponse = JsonDataSerializer.Instance.Deserialize<StatusModel>(this.responseText);
+            var statusResponse = JsonDataSerializer.Instance.Deserialize<NodeStatusModel>(this.responseText);
             statusResponse.Agent.Should().Contain(statusNode.Settings.Agent);
             statusResponse.Version.Should().Be(statusNode.Version.ToString());
             statusResponse.Network.Should().Be(statusNode.Network.Name);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using NBitcoin.PoA;
 using NBitcoin.Protocol;
 using Stratis.Bitcoin.Features.SmartContracts.MempoolRules;
 using Stratis.Bitcoin.Features.SmartContracts.PoA;

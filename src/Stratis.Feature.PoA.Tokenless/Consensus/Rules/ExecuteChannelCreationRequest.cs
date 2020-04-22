@@ -46,7 +46,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
                 (ChannelCreationRequest channelCreationRequest, string message) = this.channelRequestSerializer.Deserialize<ChannelCreationRequest>(txOut.ScriptPubKey);
                 if (channelCreationRequest != null)
                 {
-                    this.logger.LogDebug("Transaction '{0}' contains a request to create channel '{1}'.", transaction.GetHash(), channelCreationRequest.Name);
+                    this.logger.LogInformation("Transaction '{0}' contains a request to create channel '{1}'.", transaction.GetHash(), channelCreationRequest.Name);
                     await this.channelService.CreateAndStartChannelNodeAsync(channelCreationRequest);
                 }
             }

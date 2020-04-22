@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
@@ -9,6 +10,7 @@ using Flurl;
 using Flurl.Http;
 using Microsoft.AspNetCore.Hosting;
 using Org.BouncyCastle.X509;
+using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
@@ -190,12 +192,21 @@ namespace Stratis.SmartContracts.IntegrationTests
                 };
 
                 var response = await $"http://localhost:{30001}/api".AppendPathSegment("channels/create").PostJsonAsync(channelCreationRequest);
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-                // Wait until there tranasction has arrived in the system channel node's mempool.
+                // Wait until the transaction has arrived in the system channel node's mempool.
                 TestBase.WaitLoop(() =>
                 {
                     var mempoolResponse = $"http://localhost:{30001}/api".AppendPathSegment("mempool/getrawmempool").GetJsonAsync<List<string>>().GetAwaiter().GetResult();
                     return mempoolResponse.Count == 1;
+                }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(1).TotalMilliseconds);
+
+                // Wait until the block has been mined on the system channel node.
+                TestBase.WaitLoop(() =>
+                {
+                    var nodeStatus = $"http://localhost:{30001}/api".AppendPathSegment("node/status").GetJsonAsync<NodeStatusModel>().GetAwaiter().GetResult();
+                    return nodeStatus.ConsensusHeight == 1;
+
                 }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(1).TotalMilliseconds);
             }
         }
