@@ -43,7 +43,11 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
         public EndorsementInfo RecordEndorsement(uint256 proposalId)
         {
-            // TODO this policy allows everything. Need to replace with the actual policy.
+            if(this.endorsements.ContainsKey(proposalId))
+            {
+                return this.endorsements[proposalId];
+            }
+
             var info = new EndorsementInfo(new Dictionary<Organisation, int>(), this.organisationLookup, this.permissionsChecker, this.network);
             this.endorsements[proposalId] = info;
 
