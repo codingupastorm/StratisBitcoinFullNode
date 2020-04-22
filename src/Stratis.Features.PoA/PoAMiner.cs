@@ -150,7 +150,7 @@ namespace Stratis.Features.PoA
                         (this.ibdState.IsInitialBlockDownload() || !this.connectionManager.ConnectedPeers.Any())
                         && !this.settings.BootstrappingMode
                         )
-                        //|| !this.federationManager.IsFederationMember
+                        || !this.federationManager.IsFederationMember
                         )
                     {
                         int attemptDelayMs = 30_000;
@@ -231,9 +231,9 @@ namespace Stratis.Features.PoA
                     {
                         myTimestamp = this.slotsManager.GetMiningTimestamp(timeNow);
                     }
-                    catch (NotAFederationMemberException)
+                    catch (NotAFederationMemberException ex)
                     {
-                        this.logger.LogWarning("This node is no longer a federation member!");
+                        this.logger.LogWarning(ex.Message);
 
                         throw new OperationCanceledException();
                     }

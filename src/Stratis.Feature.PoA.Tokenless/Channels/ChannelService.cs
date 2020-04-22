@@ -13,6 +13,8 @@ using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Features.PoA;
 using Stratis.Features.PoA.ProtocolEncryption;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels
@@ -196,7 +198,9 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
                 string channelRootFolder = PrepareNodeForStartup(SystemChannelName, channelNodeId);
 
-                ChannelNodeProcess channelNode = await StartTheProcessAsync(channelRootFolder, "-bootstrap=1", $"-channelname={SystemChannelName}", "-issystemchannelnode=true", "-ischannelnode=true");
+                CopyKeyStoreFilesToChannelRoot(channelRootFolder);
+
+                ChannelNodeProcess channelNode = await StartTheProcessAsync(channelRootFolder, "debug=1", "-bootstrap=1", $"-channelname={SystemChannelName}", "-issystemchannelnode=true", "-ischannelnode=true");
                 if (channelNode.Process.HasExited)
                     throw new ChannelServiceException($"Failed to start system channel node as the processs exited early.");
 
@@ -258,6 +262,21 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             var clientCertificatePath = Path.Combine(channelRootFolder, CertificatesManager.ClientCertificateName);
             if (!File.Exists(clientCertificatePath))
                 File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificatesManager.ClientCertificateName), clientCertificatePath);
+        }
+
+        private void CopyKeyStoreFilesToChannelRoot(string channelRootFolder)
+        {
+            var miningKeyFile = Path.Combine(channelRootFolder, KeyTool.FederationKeyFileName);
+            if (!File.Exists(miningKeyFile))
+                File.Copy(Path.Combine(this.nodeSettings.DataDir, KeyTool.FederationKeyFileName), miningKeyFile);
+
+            var transactionSigningKeyFile = Path.Combine(channelRootFolder, KeyTool.TransactionSigningKeyFileName);
+            if (!File.Exists(transactionSigningKeyFile))
+                File.Copy(Path.Combine(this.nodeSettings.DataDir, KeyTool.TransactionSigningKeyFileName), transactionSigningKeyFile);
+
+            var keyStoreFile = Path.Combine(channelRootFolder, TokenlessKeyStoreManager.KeyStoreFileName);
+            if (!File.Exists(keyStoreFile))
+                File.Copy(Path.Combine(this.nodeSettings.DataDir, TokenlessKeyStoreManager.KeyStoreFileName), keyStoreFile);
         }
 
         private void CreateChannelConfigurationFile(string channelRootFolder, params string[] channelArgs)
