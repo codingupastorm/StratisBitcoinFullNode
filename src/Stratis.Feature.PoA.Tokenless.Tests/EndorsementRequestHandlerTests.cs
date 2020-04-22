@@ -13,6 +13,7 @@ using Stratis.Feature.PoA.Tokenless.Payloads;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Store;
@@ -38,6 +39,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             const int height = 16;
             uint160 sender = uint160.One;
+            uint160 contract = new uint160(RandomUtils.GetBytes(20));
+            var policy = new EndorsementPolicy();
 
             var validatorMock = new Mock<IEndorsementRequestValidator>();
             validatorMock.Setup(x => x.ValidateRequest(It.IsAny<EndorsementRequest>()))
@@ -46,6 +49,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var signerMock = new Mock<IEndorsementSigner>();
 
             var stateRootMock = new Mock<IStateRepositoryRoot>();
+            stateRootMock.Setup(s => s.GetPolicy(It.IsAny<uint160>()))
+                .Returns(policy);
 
             var readWriteSetBuilder = new ReadWriteSetBuilder();
 
@@ -54,7 +59,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 .Returns(new SmartContractExecutionResult
                 {
                     ReadWriteSet = readWriteSetBuilder,
-                    Revert = false
+                    Revert = false,
+                    To = contract
                 });
 
             var executorFactoryMock = new Mock<IContractExecutorFactory>();
