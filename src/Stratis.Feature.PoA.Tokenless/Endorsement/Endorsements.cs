@@ -16,6 +16,9 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         EndorsementInfo RecordEndorsement(uint256 proposalId);
     }
 
+    /// <summary>
+    /// Maintains the state of received endorsement responses for each proposal. Currently in memory only.
+    /// </summary>
     public class Endorsements : IEndorsements
     {
         private readonly IOrganisationLookup organisationLookup;

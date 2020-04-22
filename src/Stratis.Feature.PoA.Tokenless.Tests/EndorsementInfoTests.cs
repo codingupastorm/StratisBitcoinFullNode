@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Castle.Components.DictionaryAdapter;
 using CertificateAuthority;
 using Moq;
 using NBitcoin;
