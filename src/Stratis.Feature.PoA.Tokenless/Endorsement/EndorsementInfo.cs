@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using CertificateAuthority;
 using MembershipServices;
 using NBitcoin;
@@ -14,6 +15,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         private readonly ICertificatePermissionsChecker permissionsChecker;
         private readonly Network network;
         private readonly MofNPolicyValidator validator;
+        private readonly Dictionary<string, SignedProposalResponse> signedProposals;
 
         /// <summary>
         /// A basic policy definining a minimum number of endorsement signatures required for an organisation.
@@ -29,6 +31,11 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.network = network;
             this.Policy = policy;
             this.validator = new MofNPolicyValidator(this.Policy);
+
+            // To prevent returning proposals that were signed correctly but do not match the policy,
+            // we should keep track of signed proposals from all addresses and filter them by the
+            // valid addresses in the policy.
+            this.signedProposals = new Dictionary<string, SignedProposalResponse>();
         }
 
         public bool AddSignature(X509Certificate certificate, SignedProposalResponse signedProposalResponse)
@@ -49,7 +56,18 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
             AddSignature(org, sender);
 
+            this.signedProposals[sender] = signedProposalResponse;
+
             return true;
+        }
+
+        public IReadOnlyList<SignedProposalResponse> GetValidProposalResponses()
+        {
+            // Returns signed proposal responses that match current proposals returned by addresses that meet the policy,
+            return this.validator.GetValidAddresses()
+                .Where(a => this.signedProposals.ContainsKey(a))
+                .Select(a => this.signedProposals[a])
+                .ToList();
         }
 
         public void AddSignature(Organisation org, string address)

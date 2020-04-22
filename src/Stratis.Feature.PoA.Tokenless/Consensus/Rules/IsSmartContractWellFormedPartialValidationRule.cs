@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
@@ -15,23 +16,45 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
         {
             foreach (Transaction transaction in context.ValidationContext.BlockToValidate.Transactions)
             {
-                for(var i = 0; i < transaction.Outputs.Count; i++)
-                {
-                    var output = transaction.Outputs[i];
-                    if (!output.ScriptPubKey.IsReadWriteSet())
-                        continue;
+                if (transaction.Outputs.Count == 0)
+                    continue;
+                
+                var output = transaction.Outputs[0];
+                if (!output.ScriptPubKey.IsReadWriteSet())
+                    continue;
 
-                    // No more outputs to check.
-                    if (i + 1 == transaction.Outputs.Count)
-                        new ConsensusError("badly-formed-rws", "An OP_READWRITE must be followed by an endorsement").Throw();
+                // Must have 2 or more outputs if OP_RWS
+                if(transaction.Outputs.Count < 2)
+                    new ConsensusError("badly-formed-rws", "An OP_READWRITE must be followed by an endorsement").Throw();
 
-                    // TODO check that i + 1 is a signature format
+                for (var i = 1; i < transaction.Outputs.Count; i++)
+                {  
+                    // Validate endorsement format
+                    if(!ValidateEndorsement(transaction.Outputs[i].ScriptPubKey.ToBytes()))
+                    {
+                        new ConsensusError("badly-formed-endorsement", "Endorsement was not in the correct format.").Throw();
+                    }
                 }
             }
 
             return Task.CompletedTask;
         }
+
+        private static bool ValidateEndorsement(byte[] toBytes)
+        {
+            try
+            {
+                Endorsement.Endorsement.FromBytes(toBytes);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
+
     /// <summary>
     /// Checks that smart contract transactions are in a valid format and the data is serialized correctly.
     /// </summary>
