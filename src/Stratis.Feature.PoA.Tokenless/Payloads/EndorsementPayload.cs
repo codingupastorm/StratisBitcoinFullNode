@@ -27,7 +27,19 @@ namespace Stratis.Feature.PoA.Tokenless.Payloads
         public override void ReadWriteCore(BitcoinStream stream)
         {
             stream.ReadWrite(ref this.proposalId);
-            stream.ReadWrite(ref this.proposalResponse);
+
+            // These methods are awful
+            if (stream.Serializing)
+            {
+                byte[] proposalResponseBytes = this.proposalResponse.ToBytes();
+                stream.ReadWrite(ref proposalResponseBytes);
+            }
+            else
+            {
+                byte[] data = new byte[stream.Inner.Length - stream.Inner.Position];
+                stream.ReadWrite(ref data);
+                this.proposalResponse = SignedProposalResponse.FromBytes(data);
+            }
         }
 
         public override string ToString()

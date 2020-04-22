@@ -214,6 +214,13 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             {
                 Transaction transaction = this.coreComponent.Network.CreateTransaction(model.TransactionHex);
 
+                // As it is an endorsement we assume this is a CALL transaction. TODO: Should this assumption be asserted?
+                // We can use the contract address to get the endorsement policy.
+
+                Result<ContractTxData> deserializationResult = this.callDataSerializer.Deserialize(transaction.Outputs.First().ScriptPubKey.ToBytes());
+                uint160 contractAddress = deserializationResult.Value.ContractAddress;
+                EndorsementPolicy policy = this.stateRoot.GetPolicy(contractAddress);
+
                 byte[] transientData = null;
 
                 if (!String.IsNullOrEmpty(model.TransientDataHex))
@@ -224,7 +231,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                 // Build message to send to other nodes
                 var message = new ProposalPayload(transaction, transientData);
 
-                this.endorsements.RecordEndorsement(transaction.GetHash());
+                this.endorsements.RecordEndorsement(transaction.GetHash(), policy);
 
                 // Broadcast message
                 await this.tokenlessBroadcaster.BroadcastToFirstInOrganisationAsync(message, model.Organisation);
