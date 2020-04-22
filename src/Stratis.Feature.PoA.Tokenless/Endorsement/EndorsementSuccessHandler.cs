@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.P2P.Peer;
@@ -18,11 +19,13 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     {
         private readonly IBroadcasterManager broadcasterManager;
         private readonly IEndorsements endorsements;
+        private readonly IEndorsedTransactionBuilder endorsedTransactionBuilder;
 
-        public EndorsementSuccessHandler(IBroadcasterManager broadcasterManager, IEndorsements endorsements)
+        public EndorsementSuccessHandler(IBroadcasterManager broadcasterManager, IEndorsements endorsements, IEndorsedTransactionBuilder endorsedTransactionBuilder)
         {
             this.broadcasterManager = broadcasterManager;
             this.endorsements = endorsements;
+            this.endorsedTransactionBuilder = endorsedTransactionBuilder;
         }
 
         public async Task<bool> ProcessEndorsementAsync(uint256 proposalId, SignedProposalResponse signedProposalResponse, INetworkPeer peer)
@@ -37,12 +40,14 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             if (!info.AddSignature(certificate, signedProposalResponse))
                 return false;
 
-            // TODO: Recruit multiple endorsements before broadcasting the transactions.
             // If the policy has been satisfied, this will return true and we can broadcast the signed transaction.
             if (info.Validate())
             {
-                // TODO build the endorsed transaction with the txins of all the endorsers.
-                //await this.broadcasterManager.BroadcastTransactionAsync(finalTransactionWithEndorsements);
+                IReadOnlyList<SignedProposalResponse> validProposalResponses = info.GetValidProposalResponses();
+
+                Transaction endorsedTx = this.endorsedTransactionBuilder.Build(validProposalResponses);
+
+                await this.broadcasterManager.BroadcastTransactionAsync(endorsedTx);
                 return true;
             }
 

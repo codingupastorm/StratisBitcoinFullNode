@@ -62,6 +62,7 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<IEndorsementRequestValidator, EndorsementRequestValidator>();
                         services.AddSingleton<IEndorsementSigner, EndorsementSigner>();
                         services.AddSingleton<IEndorsements, Endorsements>();
+                        services.AddSingleton<IEndorsedTransactionBuilder, EndorsedTransactionBuilder>();
                         services.AddSingleton<IOrganisationLookup, OrganisationLookup>();
                         services.AddSingleton<IPrivateDataRetriever, PrivateDataRetriever>();
 
