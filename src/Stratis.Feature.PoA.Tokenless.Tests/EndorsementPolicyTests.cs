@@ -32,7 +32,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         }
 
         [Fact]
-        public void NotEmtpy_ToDictionary_Success()
+        public void NotEmpty_ToDictionary_Success()
         {
             var policy = new EndorsementPolicy
             {
