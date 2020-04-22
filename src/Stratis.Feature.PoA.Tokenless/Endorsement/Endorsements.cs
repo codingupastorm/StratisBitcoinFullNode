@@ -13,7 +13,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     public interface IEndorsements
     {
         EndorsementInfo GetEndorsement(uint256 proposalId);
-        EndorsementInfo RecordEndorsement(uint256 proposalId);
+        EndorsementInfo RecordEndorsement(uint256 proposalId, EndorsementPolicy policy);
     }
 
     public class Endorsements : IEndorsements
@@ -38,10 +38,9 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             return info;
         }
 
-        public EndorsementInfo RecordEndorsement(uint256 proposalId)
+        public EndorsementInfo RecordEndorsement(uint256 proposalId, EndorsementPolicy endorsementPolicy)
         {
-            // TODO this policy allows everything. Need to replace with the actual policy.
-            var info = new EndorsementInfo(new Dictionary<Organisation, int>(), this.organisationLookup, this.permissionsChecker, this.network);
+            var info = new EndorsementInfo(endorsementPolicy, this.organisationLookup, this.permissionsChecker, this.network);
             this.endorsements[proposalId] = info;
 
             return info;

@@ -5,7 +5,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
     public class MofNPolicyValidator
     {
-        private readonly Dictionary<Organisation, int> policy;
+        private readonly EndorsementPolicy policy;
 
         /// <summary>
         /// Keeps track of the current validation state of the policy. Once the minimum number of unique signatures has been met per organisation.
@@ -14,7 +14,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         /// </summary>
         private readonly Dictionary<Organisation, HashSet<string>> policyValidationState = new Dictionary<Organisation, HashSet<string>>();
 
-        public MofNPolicyValidator(Dictionary<Organisation, int> policy)
+        public MofNPolicyValidator(EndorsementPolicy policy)
         {
             this.policy = policy;
         }
@@ -55,12 +55,9 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         {
             get
             {
-                foreach ((Organisation org, int requiredSigCount) in this.policy)
+                if (GetUniqueSignatureCount(this.policy.Organisation) < this.policy.RequiredSignatures)
                 {
-                    if (GetUniqueSignatureCount(org) < requiredSigCount)
-                    {
-                        return false;
-                    }
+                    return false;
                 }
 
                 return true;
