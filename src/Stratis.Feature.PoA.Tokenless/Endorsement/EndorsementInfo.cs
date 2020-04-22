@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using CertificateAuthority;
-using MembershipServices;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Org.BouncyCastle.X509;
@@ -20,11 +19,11 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         /// <summary>
         /// A basic policy definining a minimum number of endorsement signatures required for an organisation.
         /// </summary>
-        public Dictionary<Organisation, int> Policy { get; }
+        public EndorsementPolicy Policy { get; }
 
         public EndorsementState State { get; private set; }
 
-        public EndorsementInfo(Dictionary<Organisation, int> policy, IOrganisationLookup organisationLookup, ICertificatePermissionsChecker permissionsChecker, Network network)
+        public EndorsementInfo(EndorsementPolicy policy, IOrganisationLookup organisationLookup, ICertificatePermissionsChecker permissionsChecker, Network network)
         {
             this.organisationLookup = organisationLookup;
             this.permissionsChecker = permissionsChecker;

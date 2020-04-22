@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -8,6 +7,7 @@ using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Payloads;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Store;
 using Stratis.SmartContracts.Core.Util;
@@ -94,11 +94,13 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             uint256 proposalId = request.ContractTransaction.GetHash();
             var payload = new EndorsementPayload(signedProposalResponse, proposalId);
 
+            EndorsementPolicy contractsPolicy = this.stateRoot.GetPolicy(result.To);
+
             try
             {
                 // Send the result back.
                 // TODO do we need to keep track of endorsements outside of the proposer?
-                EndorsementInfo info = this.endorsements.RecordEndorsement(proposalId);               
+                EndorsementInfo info = this.endorsements.RecordEndorsement(proposalId, contractsPolicy);               
 
                 request.Peer.SendMessageAsync(payload).ConfigureAwait(false).GetAwaiter().GetResult();
             }
@@ -108,11 +110,6 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             }
 
             return true;
-        }
-
-        private async Task BroadcastPrivateDataToOrganisation(uint256 txHash, uint blockHeight, byte[] privateData)
-        {
-            await this.tokenlessBroadcaster.BroadcastToWholeOrganisationAsync(new PrivateDataPayload(txHash, blockHeight, privateData));
         }
     }
 }

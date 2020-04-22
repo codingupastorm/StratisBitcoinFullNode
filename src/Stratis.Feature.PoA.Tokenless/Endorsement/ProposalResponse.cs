@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 using HashLib;
 using NBitcoin;
 using Newtonsoft.Json;
@@ -8,7 +6,7 @@ using Stratis.SmartContracts.Core.ReadWrite;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
-    public class SignedProposalResponse : IBitcoinSerializable
+    public class SignedProposalResponse
     {
         public ProposalResponse ProposalResponse { get; set; }
 
@@ -22,12 +20,6 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         public static SignedProposalResponse FromBytes(byte[] bytes)
         {
             return JsonConvert.DeserializeObject<SignedProposalResponse>(Encoding.UTF8.GetString(bytes));
-        }
-
-        public void ReadWrite(BitcoinStream stream)
-        {
-            var serialized = this.ToBytes();
-            stream.ReadWrite(ref serialized);
         }
     }
 

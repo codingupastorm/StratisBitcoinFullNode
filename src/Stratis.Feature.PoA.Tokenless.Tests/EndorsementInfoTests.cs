@@ -2,15 +2,14 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Castle.Components.DictionaryAdapter;
 using CertificateAuthority;
 using Moq;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Org.BouncyCastle.X509;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
-using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Endorsement;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Xunit;
 
 namespace Stratis.Feature.PoA.Tokenless.Tests
@@ -20,7 +19,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         [Fact]
         public void New_Endorsement_Has_State_Proposed()
         {
-            Assert.Equal(EndorsementState.Proposed, new EndorsementInfo(new Dictionary<Organisation, int>(), Mock.Of<IOrganisationLookup>(), Mock.Of<ICertificatePermissionsChecker>(), new TokenlessNetwork()).State);
+            Assert.Equal(EndorsementState.Proposed, new EndorsementInfo(new EndorsementPolicy(), Mock.Of<IOrganisationLookup>(), Mock.Of<ICertificatePermissionsChecker>(), new TokenlessNetwork()).State);
         }
 
         [Fact]
@@ -47,9 +46,10 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 .Returns(true);
 
             // Basic policy that only requires 1 sig from organisation.
-            var basicPolicy = new Dictionary<Organisation, int>
+            var basicPolicy = new EndorsementPolicy
             {
-                { organisation, 1 }
+                Organisation = organisation,
+                RequiredSignatures = 1
             };
 
             var key = new Key();
@@ -103,9 +103,10 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 .Returns(true);
 
             // Basic policy that only requires 1 sig from organisation.
-            var basicPolicy = new Dictionary<Organisation, int>
+            var basicPolicy = new EndorsementPolicy
             {
-                { approvedOrganisation, 1 }
+                Organisation = approvedOrganisation,
+                RequiredSignatures = 1
             };
 
             var key = new Key();
@@ -139,7 +140,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         [Fact]
         public void MofNPolicyValidator_Validates_No_Signature_Correctly()
         {
-            var policy = new Dictionary<Organisation, int>();
+            var policy = new EndorsementPolicy();
             var validator = new MofNPolicyValidator(policy);
 
             Assert.True(validator.Valid);
@@ -150,9 +151,10 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             var org = (Organisation)"Test";
             var org2 = (Organisation)"Test2";
-            var policy = new Dictionary<Organisation, int>
+            var policy = new EndorsementPolicy
             {
-                { org, 1 }
+                Organisation = org,
+                RequiredSignatures = 1
             };
 
             var validator = new MofNPolicyValidator(policy);
@@ -171,9 +173,10 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public void MofNPolicyValidator_Validates_Multiple_Signatures_One_Organisation_Correctly()
         {
             var org = (Organisation) "Test";
-            var policy = new Dictionary<Organisation, int>
+            var policy = new EndorsementPolicy
             {
-                { org, 2 }
+                Organisation = org,
+                RequiredSignatures = 2
             };
 
             var validator = new MofNPolicyValidator(policy);
@@ -189,33 +192,35 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             Assert.Equal("test2", validator.GetValidAddresses()[1]);
         }
 
-        [Fact]
-        public void MofNPolicyValidator_Validates_Multiple_Signatures_Multiple_Organisations_Correctly()
-        {
-            var org = (Organisation)"Test";
-            var org2 = (Organisation)"Test2";
-            var policy = new Dictionary<Organisation, int>
-            {
-                { org, 2 },
-                { org2, 3 }
-            };
+        // I broke this test with the current implementation but when we add support for multiple organisations in it may be helpful so keeping it below.
+        
+        //[Fact]
+        //public void MofNPolicyValidator_Validates_Multiple_Signatures_Multiple_Organisations_Correctly()
+        //{
+        //    var org = (Organisation)"Test";
+        //    var org2 = (Organisation)"Test2";
+        //    var policy = new Dictionary<Organisation, int>
+        //    {
+        //        { org, 2 },
+        //        { org2, 3 }
+        //    };
 
-            var validator = new MofNPolicyValidator(policy);
+        //    var validator = new MofNPolicyValidator(policy);
 
-            // Add org 1 signatures
-            validator.AddSignature(org, "test");
-            validator.AddSignature(org, "test 2");
+        //    // Add org 1 signatures
+        //    validator.AddSignature(org, "test");
+        //    validator.AddSignature(org, "test 2");
 
-            Assert.False(validator.Valid);
+        //    Assert.False(validator.Valid);
 
-            // Add org 2 signatures
+        //    // Add org 2 signatures
 
-            validator.AddSignature(org2, "test2 2");
-            validator.AddSignature(org2, "test2 3");
-            validator.AddSignature(org2, "test2 4");
+        //    validator.AddSignature(org2, "test2 2");
+        //    validator.AddSignature(org2, "test2 3");
+        //    validator.AddSignature(org2, "test2 4");
 
-            Assert.True(validator.Valid);
-        }
+        //    Assert.True(validator.Valid);
+        //}
 
         [Fact]
         public void MofNPolicyValidator_Returns_Valid_Addresses_Correctly()
