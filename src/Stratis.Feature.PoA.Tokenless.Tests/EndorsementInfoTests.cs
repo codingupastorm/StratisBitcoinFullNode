@@ -141,7 +141,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public void MofNPolicyValidator_Validates_No_Signature_Correctly()
         {
             var policy = new EndorsementPolicy();
-            var validator = new MofNPolicyValidator(policy);
+            var validator = new MofNPolicyValidator(policy.ToDictionary());
 
             Assert.True(validator.Valid);
         }
@@ -157,7 +157,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 RequiredSignatures = 1
             };
 
-            var validator = new MofNPolicyValidator(policy);
+            var validator = new MofNPolicyValidator(policy.ToDictionary());
 
             validator.AddSignature(org2, "test");
 
@@ -179,7 +179,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 RequiredSignatures = 2
             };
 
-            var validator = new MofNPolicyValidator(policy);
+            var validator = new MofNPolicyValidator(policy.ToDictionary());
 
             validator.AddSignature(org, "test");
 
@@ -192,35 +192,33 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             Assert.Equal("test2", validator.GetValidAddresses()[1]);
         }
 
-        // I broke this test with the current implementation but when we add support for multiple organisations in it may be helpful so keeping it below.
-        
-        //[Fact]
-        //public void MofNPolicyValidator_Validates_Multiple_Signatures_Multiple_Organisations_Correctly()
-        //{
-        //    var org = (Organisation)"Test";
-        //    var org2 = (Organisation)"Test2";
-        //    var policy = new Dictionary<Organisation, int>
-        //    {
-        //        { org, 2 },
-        //        { org2, 3 }
-        //    };
+        [Fact]
+        public void MofNPolicyValidator_Validates_Multiple_Signatures_Multiple_Organisations_Correctly()
+        {
+            var org = (Organisation)"Test";
+            var org2 = (Organisation)"Test2";
+            var policy = new Dictionary<Organisation, int>
+            {
+                { org, 2 },
+                { org2, 3 }
+            };
 
-        //    var validator = new MofNPolicyValidator(policy);
+            var validator = new MofNPolicyValidator(policy);
 
-        //    // Add org 1 signatures
-        //    validator.AddSignature(org, "test");
-        //    validator.AddSignature(org, "test 2");
+            // Add org 1 signatures
+            validator.AddSignature(org, "test");
+            validator.AddSignature(org, "test 2");
 
-        //    Assert.False(validator.Valid);
+            Assert.False(validator.Valid);
 
-        //    // Add org 2 signatures
+            // Add org 2 signatures
 
-        //    validator.AddSignature(org2, "test2 2");
-        //    validator.AddSignature(org2, "test2 3");
-        //    validator.AddSignature(org2, "test2 4");
+            validator.AddSignature(org2, "test2 2");
+            validator.AddSignature(org2, "test2 3");
+            validator.AddSignature(org2, "test2 4");
 
-        //    Assert.True(validator.Valid);
-        //}
+            Assert.True(validator.Valid);
+        }
 
         [Fact]
         public void MofNPolicyValidator_Returns_Valid_Addresses_Correctly()

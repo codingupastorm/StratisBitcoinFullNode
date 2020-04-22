@@ -29,7 +29,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.permissionsChecker = permissionsChecker;
             this.network = network;
             this.Policy = policy;
-            this.validator = new MofNPolicyValidator(this.Policy);
+            this.validator = new MofNPolicyValidator(this.Policy.ToDictionary());
 
             // To prevent returning proposals that were signed correctly but do not match the policy,
             // we should keep track of signed proposals from all addresses and filter them by the
