@@ -194,11 +194,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 this.logger.LogInformation("Starting a system channel node.");
 
                 // If the node we are starting is a system channel node, then its API port offset will always be 1.
-                int channelNodeId = 1;
-
-                string channelRootFolder = PrepareNodeForStartup(SystemChannelName, channelNodeId);
-
-                CopyKeyStoreFilesToChannelRoot(channelRootFolder);
+                string channelRootFolder = PrepareNodeForStartup(SystemChannelName, 1);
 
                 ChannelNodeProcess channelNode = await StartTheProcessAsync(channelRootFolder, "debug=1", "-bootstrap=1", $"-channelname={SystemChannelName}", "-issystemchannelnode=true", "-ischannelnode=true");
                 if (channelNode.Process.HasExited)
@@ -222,6 +218,9 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
             // Copy the parent node's authority and client certificate to the channel node's root.
             CopyCertificatesToChannelRoot(channelRootFolder);
+
+            // Copy the parent node's key store files to the channel node's root.
+            CopyKeyStoreToChannelRoot(channelRootFolder);
 
             return channelRootFolder;
         }
@@ -264,7 +263,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificatesManager.ClientCertificateName), clientCertificatePath);
         }
 
-        private void CopyKeyStoreFilesToChannelRoot(string channelRootFolder)
+        private void CopyKeyStoreToChannelRoot(string channelRootFolder)
         {
             var miningKeyFile = Path.Combine(channelRootFolder, KeyTool.FederationKeyFileName);
             if (!File.Exists(miningKeyFile))

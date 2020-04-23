@@ -126,13 +126,12 @@ namespace Stratis.Feature.PoA.Tokenless
                 }
                 catch (Exception e)
                 {
-                    this.logger.LogDebug(e, "Exception raised when calling CA to synchronize members.");
-                    this.logger.LogWarning("Could not synchronize members with CA. CA is possibly down! Will retry in 1 minute.");
+                    this.logger.LogWarning("Could not synchronize members, contacting the CA Server failed:", e.Message);
                 }
             },
             this.nodeLifetime.ApplicationStopping,
-            repeatEvery: TimeSpans.Minute,
-            startAfter: TimeSpans.Minute);
+            repeatEvery: TimeSpan.FromSeconds(15),
+            startAfter: TimeSpan.FromSeconds(30));
 
             this.channelService.Initialize();
 

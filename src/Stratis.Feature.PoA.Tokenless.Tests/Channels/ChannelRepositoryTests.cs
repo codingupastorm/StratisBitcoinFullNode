@@ -12,7 +12,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
     {
         public ChannelRepositoryTests() : base(new TokenlessNetwork())
         {
-
         }
 
         [Fact]
@@ -24,8 +23,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
             var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
             var keyValueStore = new ChannelKeyValueStore(repositorySerializer, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
-            var channelRepository = new ChannelRepository(this.Network, this.LoggerFactory.Object, keyValueStore, repositorySerializer);
-
+            var channelRepository = new ChannelRepository(this.LoggerFactory.Object, keyValueStore);
             channelRepository.Initialize();
 
             var request1 = new ChannelDefinition()
@@ -33,16 +31,13 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
                 Id = channelRepository.GetNextChannelId(),
                 Name = "name1"
             };
-
             channelRepository.SaveChannelDefinition(request1);
 
             var request2 = new ChannelDefinition()
             {
                 Id = channelRepository.GetNextChannelId(),
                 Name = "name2"
-            };
-
-            channelRepository.SaveChannelDefinition(request2);
+            }; channelRepository.SaveChannelDefinition(request2);
 
             Dictionary<string, ChannelDefinition> dict = channelRepository.GetChannelDefinitions();
 

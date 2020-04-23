@@ -10,6 +10,7 @@ using Flurl;
 using Flurl.Http;
 using Microsoft.AspNetCore.Hosting;
 using Org.BouncyCastle.X509;
+using Stratis.Bitcoin;
 using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
@@ -156,11 +157,9 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task SystemChannelNodeCanCreateAndStartChannelNodeFromChannelCreationTxAsync()
+        public async Task SystemChannelCreateChannelFromChannelRequestTxAsync()
         {
             TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
-
-            Process channelNodeProcess = null;
 
             using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
@@ -204,8 +203,30 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Wait until the block has been mined on the system channel node.
                 TestBase.WaitLoop(() =>
                 {
-                    var nodeStatus = $"http://localhost:{30001}/api".AppendPathSegment("node/status").GetJsonAsync<NodeStatusModel>().GetAwaiter().GetResult();
-                    return nodeStatus.ConsensusHeight == 1;
+                    try
+                    {
+                        var nodeStatus = $"http://localhost:{30001}/api".AppendPathSegment("node/status").GetJsonAsync<NodeStatusModel>().GetAwaiter().GetResult();
+                        return nodeStatus.ConsensusHeight == 1;
+                    }
+                    catch (Exception)
+                    {
+                    }
+
+                    return false;
+
+                }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(1).TotalMilliseconds);
+
+                // Wait until the "sales" channel has been created and the node is running.
+                TestBase.WaitLoop(() =>
+                {
+                    try
+                    {
+                        var nodeStatus = $"http://localhost:{30002}/api".AppendPathSegment("node/status").GetJsonAsync<NodeStatusModel>().GetAwaiter().GetResult();
+                        return nodeStatus.State == FullNodeState.Started.ToString();
+                    }
+                    catch (Exception) { }
+
+                    return false;
 
                 }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(1).TotalMilliseconds);
             }
