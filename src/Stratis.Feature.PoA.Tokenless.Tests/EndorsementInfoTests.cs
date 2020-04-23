@@ -269,7 +269,18 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                         }
                     }
                 },
-                Endorsement = new Endorsement.Endorsement(new byte[] {0xAA, 0xAA, 0xAA}, new byte[] {0xBB, 0xBB, 0XBB})
+                Endorsement = new Endorsement.Endorsement(new byte[] {0xAA, 0xAA, 0xAA}, new byte[] {0xBB, 0xBB, 0XBB}),
+                PrivateReadWriteSet = new ReadWriteSet
+                {
+                    Reads = new List<ReadItem>
+                    {
+                        new ReadItem { ContractAddress = uint160.One, Key = new byte[] { 0xCC, 0xCC, 0xCC }, Version = "1"}
+                    },
+                    Writes = new List<WriteItem>
+                    {
+                        new WriteItem { ContractAddress = uint160.One, IsPrivateData = true, Key = new byte[] { 0xDD, 0xDD, 0xDD }, Value = new byte[] { 0xEE, 0xEE, 0xEE }}
+                    }
+                }
             };
 
             var toBytes = proposalResponse.ToBytes();
