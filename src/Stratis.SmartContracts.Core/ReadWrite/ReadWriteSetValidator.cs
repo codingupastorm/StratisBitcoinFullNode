@@ -45,10 +45,10 @@ namespace Stratis.SmartContracts.Core.ReadWrite
         /// <summary>
         /// Validates that this read write set matches the corresponding public read write set.
         /// </summary>
-        /// <param name="privateReadWriteSet">The private read write set.</param>
         /// <param name="publicReadWriteSet">The public read write set.</param>
+        /// <param name="privateReadWriteSet">The private read write set.</param>
         /// <returns></returns>
-        public static bool ValidatePublicReadWriteSet(ReadWriteSet privateReadWriteSet, ReadWriteSet publicReadWriteSet)
+        public static bool ValidatePublicReadWriteSet(ReadWriteSet publicReadWriteSet, ReadWriteSet privateReadWriteSet)
         {
             // TODO validate reads?
             foreach (WriteItem write in privateReadWriteSet.Writes.Where(w => !w.IsPrivateData))

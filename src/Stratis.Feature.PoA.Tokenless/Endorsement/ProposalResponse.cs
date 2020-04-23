@@ -27,8 +27,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
         public bool ValidateReadWriteSets()
         {
-            return ReadWriteSetValidator.ValidatePublicReadWriteSet(this.PrivateReadWriteSet,
-                this.ProposalResponse.ReadWriteSet);
+            return ReadWriteSetValidator.ValidatePublicReadWriteSet(this.ProposalResponse.ReadWriteSet, this.PrivateReadWriteSet);
         }
     }
 
