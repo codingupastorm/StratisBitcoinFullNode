@@ -38,16 +38,30 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
 
             // If the TxOut is null then this transaction does not contain any channel update execution code.
             TxOut txOut = context.Transaction.TryGetChannelCreationRequestTxOut();
-            if (txOut == null)
-                return;
-
-            (ChannelCreationRequest channelCreationRequest, string message) = this.channelRequestSerializer.Deserialize<ChannelCreationRequest>(txOut.ScriptPubKey);
-            if (channelCreationRequest == null)
+            if (txOut != null)
             {
-                var errorMessage = $"Transaction '{context.Transaction.GetHash()}' contained a channel creation request but its contents was malformed: {message}";
+                (ChannelCreationRequest channelCreationRequest, string message) = this.channelRequestSerializer.Deserialize<ChannelCreationRequest>(txOut.ScriptPubKey);
+                if (channelCreationRequest == null)
+                {
+                    var errorMessage = $"Transaction '{context.Transaction.GetHash()}' contained a channel creation request but its contents was malformed: {message}";
 
-                this.logger.LogDebug(errorMessage);
-                context.State.Fail(new MempoolError(MempoolErrors.RejectMalformed, "channel-creation-request-malformed"), errorMessage).Throw();
+                    this.logger.LogDebug(errorMessage);
+                    context.State.Fail(new MempoolError(MempoolErrors.RejectMalformed, "channel-creation-request-malformed"), errorMessage).Throw();
+                }
+            }
+
+            // If the TxOut is null then this transaction does not contain any channel update execution code.
+            txOut = context.Transaction.TryGetChannelAddMemberRequestTxOut();
+            if (txOut != null)
+            {
+                (ChannelAddMemberRequest channelAddMemberRequest, string message) = this.channelRequestSerializer.Deserialize<ChannelAddMemberRequest>(txOut.ScriptPubKey);
+                if (channelAddMemberRequest == null)
+                {
+                    var errorMessage = $"Transaction '{context.Transaction.GetHash()}' contained a channel 'add member` request but its contents was malformed: {message}";
+
+                    this.logger.LogDebug(errorMessage);
+                    context.State.Fail(new MempoolError(MempoolErrors.RejectMalformed, "channel-addmember-request-malformed"), errorMessage).Throw();
+                }
             }
         }
     }
