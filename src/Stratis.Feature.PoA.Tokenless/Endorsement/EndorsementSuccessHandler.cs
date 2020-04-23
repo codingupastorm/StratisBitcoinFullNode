@@ -1,10 +1,14 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using NBitcoin;
 using Org.BouncyCastle.X509;
+using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.SmartContracts.Core.ReadWrite;
+using Stratis.SmartContracts.Core.Store;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
@@ -20,12 +24,16 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         private readonly IBroadcasterManager broadcasterManager;
         private readonly IEndorsements endorsements;
         private readonly IEndorsedTransactionBuilder endorsedTransactionBuilder;
+        private readonly ITransientStore transientStore;
+        private readonly IConsensusManager consensus;
 
-        public EndorsementSuccessHandler(IBroadcasterManager broadcasterManager, IEndorsements endorsements, IEndorsedTransactionBuilder endorsedTransactionBuilder)
+        public EndorsementSuccessHandler(IBroadcasterManager broadcasterManager, IEndorsements endorsements, IEndorsedTransactionBuilder endorsedTransactionBuilder, ITransientStore transientStore, IConsensusManager consensus)
         {
             this.broadcasterManager = broadcasterManager;
             this.endorsements = endorsements;
             this.endorsedTransactionBuilder = endorsedTransactionBuilder;
+            this.transientStore = transientStore;
+            this.consensus = consensus;
         }
 
         public async Task<bool> ProcessEndorsementAsync(uint256 proposalId, SignedProposalResponse signedProposalResponse, INetworkPeer peer)
@@ -48,6 +56,14 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 Transaction endorsedTx = this.endorsedTransactionBuilder.Build(validProposalResponses);
 
                 await this.broadcasterManager.BroadcastTransactionAsync(endorsedTx);
+
+                // We can choose any RWS here, they should all be in agreeance.
+                ReadWriteSet privateReadWriteSetData = validProposalResponses.First().PrivateReadWriteSet;
+
+                uint blockHeight = (uint)this.consensus.Tip.Height + 1;
+
+                this.transientStore.Persist(signedProposalResponse.ProposalResponse.GetHash(), blockHeight, new TransientStorePrivateData(privateReadWriteSetData.ToJsonEncodedBytes()));
+
                 return true;
             }
 
