@@ -30,9 +30,9 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public void CanStartSystemChannelNode()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 var tokenlessNetwork = new TokenlessNetwork();
@@ -60,11 +60,11 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public void InfraNodeCanCreateAndStartSystemChannelNode()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
             Process channelNodeProcess = null;
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 var network = new TokenlessNetwork();
@@ -104,11 +104,11 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public void CanRestartChannelNodes()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
             var processes = new List<Process>();
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 var tokenlessNetwork = new TokenlessNetwork();
@@ -159,9 +159,9 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task SystemChannelCreateChannelFromChannelRequestTxAsync()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 var network = new TokenlessNetwork();
@@ -213,7 +213,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                     }
 
                     return false;
-
                 }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(1).TotalMilliseconds);
 
                 // Wait until the "sales" channel has been created and the node is running.

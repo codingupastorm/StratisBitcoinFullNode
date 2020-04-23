@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using CertificateAuthority.Controllers;
 using CertificateAuthority.Database;
@@ -13,6 +14,7 @@ using NBitcoin;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Pkcs;
 using Org.BouncyCastle.X509;
+using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 using AccountAccessFlags = CertificateAuthority.Models.AccountAccessFlags;
 using AccountInfo = CertificateAuthority.Models.AccountInfo;
@@ -23,11 +25,11 @@ namespace CertificateAuthority.Tests.FullProjectTests
 {
     public sealed class ControllersTests
     {
-        private readonly AccountsController accountsController;
+        private AccountsController accountsController;
         private readonly CredentialsModel adminCredentials;
-        private readonly CertificatesController certificatesController;
-        private readonly DataCacheLayer dataCacheLayer;
-        private readonly TestServer server;
+        private CertificatesController certificatesController;
+        private DataCacheLayer dataCacheLayer;
+        private TestServer server;
 
         private static int transactionSigningIndex = 0;
         private static int blockSigningIndex = 1;
@@ -41,10 +43,14 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
         public ControllersTests()
         {
-            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder();
-            this.server = new TestServer(builder);
-
             this.adminCredentials = new CredentialsModel(Settings.AdminAccountId, CaTestHelper.AdminPassword);
+        }
+
+        private void CreateServer([CallerMemberName] string callingMethod = "")
+        {
+            TestBase.GetTestRootFolder(out string testRootFolder, callingMethod);
+            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder(testRootFolder);
+            this.server = new TestServer(builder);
 
             this.accountsController = (AccountsController)this.server.Host.Services.GetService(typeof(AccountsController));
             this.certificatesController = (CertificatesController)this.server.Host.Services.GetService(typeof(CertificatesController));
@@ -75,6 +81,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void TestCertificatesControllerMethods()
         {
+            CreateServer();
+
             CredentialsModel credentials1 = this.GetPrivilegedAccount();
 
             // We need to be absolutely sure that the components of the subject DN are in the same order in a CSR versus the resulting certificate.
@@ -198,6 +206,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void CanIssueCertificateViaTemplateCsrFromManager()
         {
+            CreateServer();
+
             CredentialsModel credentials1 = this.GetPrivilegedAccount();
 
             // Check that we can obtain an unsigned CSR template from the CA, which we then sign locally and receive a certificate for.
@@ -250,6 +260,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void CanIssueCertificateViaTemplateCsr()
         {
+            CreateServer();
+
             CredentialsModel credentials1 = this.GetPrivilegedAccount();
 
             // Try do the issuance the same way a node would, by populating the relevant model and submitting it to the API.
@@ -296,6 +308,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void CantRequestCertificateTwiceForSameIdentityAndCanReset()
         {
+            CreateServer();
+
             CredentialsModel credentials1 = this.GetPrivilegedAccount();
 
             // Try do the issuance the same way a node would, by populating the relevant model and submitting it to the API.
@@ -361,6 +375,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         private void TestAccessLevels()
         {
+            CreateServer();
+
             // Accounts.
             this.Returns403IfNoAccess((int accountId, string password) => this.accountsController.GetAccountInfoById(new CredentialsModelWithTargetId(1, accountId, password)),
                 AccountAccessFlags.AccessAccountInfo);

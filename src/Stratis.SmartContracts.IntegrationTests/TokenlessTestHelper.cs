@@ -3,23 +3,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.Common;
 using MembershipServices;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using Org.BouncyCastle.X509;
-using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.RuntimeObserver;
@@ -153,37 +150,16 @@ namespace Stratis.SmartContracts.IntegrationTests
             }
         }
 
-        internal static void GetTestRootFolder(out string testRootFolder, [CallerMemberName] string callingMethod = "")
-        {
-            string hash = Guid.NewGuid().ToString("N").Substring(0, 7);
-            string numberedFolderName = string.Join(".", new[] { hash }.Where(s => s != null));
-            testRootFolder = Path.Combine("..", "..", "..", "..", "TestCase", callingMethod, numberedFolderName);
-        }
+        //public static string GetDataFolderName([CallerMemberName] string callingMethod = null)
+        //{
+        //    // Create a datafolder path for the CA settings to use
+        //    string hash = Guid.NewGuid().ToString("N").Substring(0, 7);
+        //    string numberedFolderName = string.Join(
+        //        ".",
+        //        new[] { hash }.Where(s => s != null));
 
-        public static string GetDataFolderName([CallerMemberName] string callingMethod = null)
-        {
-            // Create a datafolder path for the CA settings to use
-            string hash = Guid.NewGuid().ToString("N").Substring(0, 7);
-            string numberedFolderName = string.Join(
-                ".",
-                new[] { hash }.Where(s => s != null));
-
-
-            return TestBase.CreateTestDir(callingMethod, numberedFolderName);
-        }
-
-        public static IWebHostBuilder CreateWebHostBuilder(string dataFolderName)
-        {
-            var settings = new Settings();
-            settings.Initialize(new string[] { $"-datadir={dataFolderName}", $"-serverurls={BaseAddress}" });
-
-            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseUrls(settings.ServerUrls);
-            builder.UseStartup<TestOnlyStartup>();
-            builder.ConfigureServices((services) => { services.AddSingleton(settings); });
-
-            return builder;
-        }
+        //    return TestBase.CreateTestDir(callingMethod, numberedFolderName);
+        //}
 
         public static Transaction CreateContractCreateTransaction(CoreNode node, Key key)
         {

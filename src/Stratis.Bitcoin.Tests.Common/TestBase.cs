@@ -69,6 +69,13 @@ namespace Stratis.Bitcoin.Tests.Common
             return AssureEmptyDir(directoryPath).FullName;
         }
 
+        public static void GetTestRootFolder(out string testRootFolder, [CallerMemberName] string callingMethod = "")
+        {
+            string hash = Guid.NewGuid().ToString("N").Substring(0, 7);
+            string numberedFolderName = string.Join(".", new[] { hash }.Where(s => s != null));
+            testRootFolder = Path.Combine("..", "..", "..", "..", "TestCase", callingMethod, numberedFolderName);
+        }
+
         /// <summary>
         /// Gets the path of the directory that <see cref="CreateTestDir(object, string)"/> or <see cref="CreateDataFolder(object, string)"/> would create.
         /// </summary>

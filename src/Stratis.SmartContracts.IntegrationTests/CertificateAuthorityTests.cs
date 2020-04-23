@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Models;
@@ -11,13 +10,12 @@ using MembershipServices;
 using Microsoft.AspNetCore.Hosting;
 using NBitcoin;
 using Org.BouncyCastle.X509;
-using Stratis.Features.PoA.Tests.Common;
-using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
-using Stratis.SmartContracts.CLR;
+using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.Features.PoA.Tests.Common;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;
 
@@ -35,9 +33,9 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public void StartCACorrectlyAndTestApi()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
@@ -88,9 +86,9 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesFunctionIfCATurnsOffAsync()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
@@ -143,7 +141,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public void RestartCAAndEverythingStillWorks()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
@@ -151,7 +149,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate ac = null;
                 CaClient client = null;
 
-                using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+                using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
                 {
                     server.Start();
 
@@ -170,7 +168,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Server has been killed. Restart it.
 
-                using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+                using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
                 {
                     server.Start();
 
@@ -191,14 +189,14 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public void RestartNodeWithoutCARemembersWhichCertificatesRevoked()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 X509Certificate ac = null;
                 CaClient client = null;
 
-                using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+                using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
                 {
                     server.Start();
 
@@ -254,9 +252,9 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public void CantInitializeCATwice()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             {
                 server.Start();
 

@@ -126,12 +126,13 @@ namespace Stratis.Feature.PoA.Tokenless
                 }
                 catch (Exception e)
                 {
-                    this.logger.LogWarning("Could not synchronize members, contacting the CA Server failed:", e.Message);
+                    var innerException = e.InnerException?.Message;
+                    this.logger.LogWarning("Could not synchronize members, contacting the CA Server failed:", innerException);
                 }
             },
             this.nodeLifetime.ApplicationStopping,
-            repeatEvery: TimeSpan.FromSeconds(15),
-            startAfter: TimeSpan.FromSeconds(30));
+            repeatEvery: TimeSpan.FromSeconds(5),
+            startAfter: TimeSpan.FromSeconds(10));
 
             this.channelService.Initialize();
 
@@ -148,7 +149,7 @@ namespace Stratis.Feature.PoA.Tokenless
             // If we're not a federation member, it's not our job to vote. Don't schedule any votes until we are one.
             if (!this.federationManager.IsFederationMember)
             {
-                this.logger.LogDebug("Attempted to Synchronize members but we aren't a member yet.");
+                this.logger.LogDebug("Attempted to synchronize members but we aren't a member yet.");
                 return;
             }
 
