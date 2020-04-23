@@ -96,6 +96,8 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             uint256 proposalId = request.ContractTransaction.GetHash();
             var payload = new EndorsementPayload(signedProposalResponse, proposalId);
 
+            this.transientStore.Persist(signedProposalResponse.ProposalResponse.GetHash(), blockHeight, new TransientStorePrivateData(result.PrivateReadWriteSet.GetReadWriteSet().ToJsonEncodedBytes()));
+
             EndorsementPolicy contractsPolicy = this.stateRoot.GetPolicy(result.To);
 
             try
