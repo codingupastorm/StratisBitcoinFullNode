@@ -16,6 +16,9 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         EndorsementInfo RecordEndorsement(uint256 proposalId, EndorsementPolicy policy);
     }
 
+    /// <summary>
+    /// Maintains the state of received endorsement responses for each proposal. Currently in memory only.
+    /// </summary>
     public class Endorsements : IEndorsements
     {
         private readonly IOrganisationLookup organisationLookup;
@@ -40,7 +43,13 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
         public EndorsementInfo RecordEndorsement(uint256 proposalId, EndorsementPolicy endorsementPolicy)
         {
+            if(this.endorsements.ContainsKey(proposalId))
+            {
+                return this.endorsements[proposalId];
+            }
+
             var info = new EndorsementInfo(endorsementPolicy, this.organisationLookup, this.permissionsChecker, this.network);
+
             this.endorsements[proposalId] = info;
 
             return info;

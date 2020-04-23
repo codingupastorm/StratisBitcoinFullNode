@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
 using Newtonsoft.Json;
 
 namespace Stratis.SmartContracts.Core.Endorsement
@@ -13,6 +14,18 @@ namespace Stratis.SmartContracts.Core.Endorsement
 
         public EndorsementPolicy()
         {
+        }
+
+        public Dictionary<Organisation, int> ToDictionary()
+        {
+            // If no org is defined return an empty dictionary.
+            if (string.IsNullOrWhiteSpace(this.Organisation))
+                return new Dictionary<Organisation, int>();
+
+            return new Dictionary<Organisation, int>
+            {
+                { this.Organisation, this.RequiredSignatures }
+            };
         }
 
         #region Serialization
