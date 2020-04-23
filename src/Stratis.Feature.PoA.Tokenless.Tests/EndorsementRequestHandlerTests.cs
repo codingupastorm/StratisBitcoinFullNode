@@ -76,9 +76,14 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             consensusManagerMock.Setup(x => x.Tip)
                 .Returns(new ChainedHeader(new SmartContractBlockHeader(), uint256.One, height));
 
+            var proposalResponse = new SignedProposalResponse
+            {
+                ProposalResponse = new ProposalResponse()
+            };
+
             var readWriteSetTransactionSerializerMock = new Mock<IReadWriteSetTransactionSerializer>();
             readWriteSetTransactionSerializerMock.Setup(x => x.Build(It.IsAny<ReadWriteSet>(), It.IsAny<ReadWriteSet>(), It.IsAny<uint256>()))
-                .Returns((SignedProposalResponse)null);
+                .Returns(proposalResponse);
 
             var tokenlessBroadcasterMock = new Mock<ITokenlessBroadcaster>();
 
@@ -117,7 +122,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 ContractTransaction = transaction
             };
 
-            Assert.NotNull(await endorsementRequestHandler.ExecuteAndReturnProposalAsync(request));
+            Assert.True(await endorsementRequestHandler.ExecuteAndReturnProposalAsync(request));
 
             executorMock.Verify(x=>x.Execute(It.Is<ContractTransactionContext>(y =>
                 y.TxIndex == 0 && y.BlockHeight == height + 1 && y.CoinbaseAddress == uint160.Zero && y.Sender == sender && y.TransactionHash == transaction.GetHash())));
