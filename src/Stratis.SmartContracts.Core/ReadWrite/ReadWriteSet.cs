@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using NBitcoin;
 using Newtonsoft.Json;
+using Stratis.SmartContracts.Core.Hashing;
 
 namespace Stratis.SmartContracts.Core.ReadWrite
 {

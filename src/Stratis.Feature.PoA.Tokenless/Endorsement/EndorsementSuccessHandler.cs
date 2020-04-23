@@ -43,6 +43,10 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             if (info == null) 
                 return false;
 
+            // Check public and private RWSs match
+            if (!signedProposalResponse.ValidateReadWriteSets())
+                return false;
+
             X509Certificate certificate = (peer.Connection as TlsEnabledNetworkPeerConnection).GetPeerCertificate();
 
             if (!info.AddSignature(certificate, signedProposalResponse))

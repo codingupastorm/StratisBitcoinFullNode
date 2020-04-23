@@ -24,6 +24,12 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         {
             return JsonConvert.DeserializeObject<SignedProposalResponse>(Encoding.UTF8.GetString(bytes));
         }
+
+        public bool ValidateReadWriteSets()
+        {
+            return ReadWriteSetValidator.ValidatePublicReadWriteSet(this.PrivateReadWriteSet,
+                this.ProposalResponse.ReadWriteSet);
+        }
     }
 
     public class Endorsement
