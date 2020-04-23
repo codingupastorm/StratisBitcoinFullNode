@@ -88,7 +88,6 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 return false;
             }
 
-            // TODO: If we have multiple endorsements happening here, check the read write set before signing!
             SignedProposalResponse signedProposalResponse = this.readWriteSetTransactionSerializer.Build(
                 result.ReadWriteSet.GetReadWriteSet(),
                 result.PrivateReadWriteSet.GetReadWriteSet());
