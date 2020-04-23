@@ -77,7 +77,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             // Create a transaction containing the ReadWriteSet.
             ReadWriteSetTransactionSerializer builder = GetBuilder();
-            var response = builder.Build(readWriteSet, privateReadWriteSet);
+            var response = builder.Build(readWriteSet, privateReadWriteSet, new uint256());
 
             // Recover the ReadWriteSet from the transaction.
             var bytes = response.ProposalResponse.ToBytes();

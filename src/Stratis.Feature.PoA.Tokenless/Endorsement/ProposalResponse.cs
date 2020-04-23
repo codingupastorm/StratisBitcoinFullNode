@@ -51,19 +51,22 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     
     public class ProposalResponse
     {
+        /// <summary>
+        /// The unique ID for this proposal. This must be included when signing the response
+        /// to prevent collisions with other transactions that may generate the same RWS.
+        /// </summary>
+        public uint256 ProposalId { get; set; }
+
         public ReadWriteSet ReadWriteSet { get; set; }
 
         public byte[] ToBytes()
         {
-            return this.ReadWriteSet.ToJsonEncodedBytes();
+            return Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(this));
         }
 
         public static ProposalResponse FromBytes(byte[] data)
         {
-            return new ProposalResponse
-            {
-                ReadWriteSet = ReadWriteSet.FromJsonEncodedBytes(data)
-            };
+            return JsonConvert.DeserializeObject<ProposalResponse>(Encoding.UTF8.GetString(data));
         }
 
         public uint256 GetHash()

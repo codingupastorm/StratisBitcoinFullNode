@@ -7,7 +7,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
 {
     public interface IReadWriteSetTransactionSerializer 
     {
-        SignedProposalResponse Build(ReadWriteSet readWriteSet, ReadWriteSet privateReadWriteSet);
+        SignedProposalResponse Build(ReadWriteSet readWriteSet, ReadWriteSet privateReadWriteSet, uint256 proposalId);
         ReadWriteSet GetReadWriteSet(Transaction tx);
     }
 
@@ -22,11 +22,13 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
             this.endorsementSigner = endorsementSigner;
         }
 
-        public SignedProposalResponse Build(ReadWriteSet readWriteSet, ReadWriteSet privateReadWriteSet)
+        public SignedProposalResponse Build(ReadWriteSet readWriteSet, ReadWriteSet privateReadWriteSet,
+            uint256 proposalId)
         {
             var proposalResponse = new ProposalResponse
             {
-                ReadWriteSet = readWriteSet
+                ReadWriteSet = readWriteSet,
+                ProposalId = proposalId
             };
 
             var endorsement = this.endorsementSigner.Sign(proposalResponse);
