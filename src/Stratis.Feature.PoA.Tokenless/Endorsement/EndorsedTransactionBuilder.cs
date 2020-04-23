@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using NBitcoin;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.SmartContracts.Core.ReadWrite;
@@ -31,13 +30,13 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 return null;
 
             var transaction = new Transaction();
-            
-            // Endorsement signer uses the same logic to sign the first input with the transaction signing key.
-            this.endorsementSigner.Sign(transaction);
 
             // TODO at the moment this is the full RWS. We should check that only the public RWS is signed and returned by the endorser.
             AddReadWriteSet(transaction, proposalResponses);
             AddEndorsements(transaction, proposalResponses.Select(p => p.Endorsement));
+
+            // Endorsement signer uses the same logic to sign the first input with the transaction signing key.
+            this.endorsementSigner.Sign(transaction);
 
             return transaction;
         }
