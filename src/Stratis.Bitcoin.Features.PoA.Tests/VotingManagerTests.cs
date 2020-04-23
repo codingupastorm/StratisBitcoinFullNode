@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Moq;
 using NBitcoin;
+using NBitcoin.PoA;
 using Stratis.Bitcoin.EventBus.CoreEvents;
 using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Tests.Common;
