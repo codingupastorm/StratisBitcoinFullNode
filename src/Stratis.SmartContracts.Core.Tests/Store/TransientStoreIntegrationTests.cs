@@ -82,13 +82,13 @@ namespace Stratis.SmartContracts.Core.Tests.Store
         [Fact]
         public void GetAndSetPrivateData()
         {
-            uint256 txId = new uint256(123456);
+            uint256 id = new uint256(123456);
             uint blockHeight = 6789;
             TransientStorePrivateData data = new TransientStorePrivateData(new byte[] {0, 1, 2, 3});
 
-            this.store.Persist(txId, blockHeight, data);
+            this.store.Persist(id, blockHeight, data);
 
-            TransientStorePrivateData result = this.store.Get(txId).Data;
+            TransientStorePrivateData result = this.store.Get(id).Data;
             Assert.NotNull(result);
         }
     }

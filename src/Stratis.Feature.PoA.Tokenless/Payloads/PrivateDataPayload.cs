@@ -6,13 +6,13 @@ namespace Stratis.Feature.PoA.Tokenless.Payloads
     [Payload("privdata")]
     public class PrivateDataPayload : Payload
     {
-        private uint256 transactionId;
+        private uint256 id;
 
         private uint blockHeight;
 
         private byte[] readWriteSetData;
 
-        public uint256 TransactionId => this.transactionId;
+        public uint256 Id => this.id;
 
         public uint BlockHeight => this.blockHeight;
 
@@ -23,16 +23,16 @@ namespace Stratis.Feature.PoA.Tokenless.Payloads
         {
         }
 
-        public PrivateDataPayload(uint256 transactionId, uint blockHeight, byte[] readWriteSetData)
+        public PrivateDataPayload(uint256 id, uint blockHeight, byte[] readWriteSetData)
         {
-            this.transactionId = transactionId;
+            this.id = id;
             this.blockHeight = blockHeight;
             this.readWriteSetData = readWriteSetData;
         }
 
         public override void ReadWriteCore(BitcoinStream stream)
         {
-            stream.ReadWrite(ref this.transactionId);
+            stream.ReadWrite(ref this.id);
             stream.ReadWrite(ref this.blockHeight);
             if (stream.Serializing)
             {
@@ -48,7 +48,7 @@ namespace Stratis.Feature.PoA.Tokenless.Payloads
 
         public override string ToString()
         {
-            return $"{nameof(this.Command)}:'{this.Command}',{nameof(this.TransactionId)}:'{this.transactionId}'";
+            return $"{nameof(this.Command)}:'{this.Command}',{nameof(this.Id)}:'{this.id}'";
         }
     }
 }

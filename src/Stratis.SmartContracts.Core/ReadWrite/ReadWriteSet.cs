@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using HashLib;
 using NBitcoin;
 using Newtonsoft.Json;
 using Stratis.SmartContracts.Core.Hashing;
@@ -64,6 +65,11 @@ namespace Stratis.SmartContracts.Core.ReadWrite
         public byte[] ToJsonEncodedBytes()
         {
             return Encoding.UTF8.GetBytes(this.ToJson());
+        }
+
+        public uint256 GetHash()
+        {
+            return new uint256(HashFactory.Crypto.SHA3.CreateKeccak256().ComputeBytes(this.ToJsonEncodedBytes()).GetBytes());
         }
     }
 
