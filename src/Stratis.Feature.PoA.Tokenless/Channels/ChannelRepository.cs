@@ -18,7 +18,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
         Dictionary<string, ChannelDefinition> GetChannelDefinitions();
 
-        Dictionary<string, ChannelDefinition> GetMemberDefinitions(string channelName);
+        Dictionary<string, ChannelMemberDefinition> GetMemberDefinitions(string channelName);
 
         int GetNextChannelId();
     }
@@ -93,13 +93,13 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             }
         }
 
-        public Dictionary<string, ChannelDefinition> GetMemberDefinitions(string channelName)
+        public Dictionary<string, ChannelMemberDefinition> GetMemberDefinitions(string channelName)
         {
             string memberTableName = $"{MemberTableNamePrefix}_{channelName}";
 
             using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(Bitcoin.Interfaces.KeyValueStoreTransactionMode.Read, memberTableName))
             {
-                return transaction.SelectDictionary<string, ChannelDefinition>(memberTableName);
+                return transaction.SelectDictionary<string, ChannelMemberDefinition>(memberTableName);
             }
         }
     }
