@@ -71,9 +71,9 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     public sealed class ChannelService : IChannelService
     {
         public const int SystemChannelId = 1;
+        private const string SystemChannelName = "system";
 
         private const string ChannelConfigurationFileName = "channel.conf";
-        private const string SystemChannelName = "system";
 
         private readonly IAsyncProvider asyncProvider;
         private readonly IChannelRepository channelRepository;
@@ -82,6 +82,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         private readonly INodeLifetime nodeLifetime;
         private readonly NodeSettings nodeSettings;
         private IAsyncLoop terminationLoop;
+        private readonly TokenlessNetwork tokenlessNetworkDefaults;
 
         /// <inheritdoc />
         public List<ChannelNodeProcess> StartedChannelNodes { get; }
@@ -257,10 +258,12 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         {
             return this.tokenlessNetworkDefaults.DefaultAPIPort + channelId;
         }
+
         public int GetDefaulPort(int channelId)
         {
             return this.tokenlessNetworkDefaults.DefaultPort + channelId;
         }
+
         public int GetDefaultSignalRPort(int channelId)
         {
             return this.tokenlessNetworkDefaults.DefaultSignalRPort + channelId;

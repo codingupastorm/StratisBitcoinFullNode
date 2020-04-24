@@ -190,13 +190,13 @@ namespace Stratis.SmartContracts.IntegrationTests
                     Organisation = "Stratis"
                 };
 
-                var response = await $"http://localhost:{30001}/api".AppendPathSegment("channels/create").PostJsonAsync(channelCreationRequest);
+                var response = await $"http://localhost:{channelService.GetDefaultAPIPort(ChannelService.SystemChannelId)}/api".AppendPathSegment("channels/create").PostJsonAsync(channelCreationRequest);
                 Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
                 // Wait until the transaction has arrived in the system channel node's mempool.
                 TestBase.WaitLoop(() =>
                 {
-                    var mempoolResponse = $"http://localhost:{30001}/api".AppendPathSegment("mempool/getrawmempool").GetJsonAsync<List<string>>().GetAwaiter().GetResult();
+                    var mempoolResponse = $"http://localhost:{channelService.GetDefaultAPIPort(ChannelService.SystemChannelId)}/api".AppendPathSegment("mempool/getrawmempool").GetJsonAsync<List<string>>().GetAwaiter().GetResult();
                     return mempoolResponse.Count == 1;
                 }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(1).TotalMilliseconds);
 
@@ -205,7 +205,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 {
                     try
                     {
-                        var nodeStatus = $"http://localhost:{30001}/api".AppendPathSegment("node/status").GetJsonAsync<NodeStatusModel>().GetAwaiter().GetResult();
+                        var nodeStatus = $"http://localhost:{channelService.GetDefaultAPIPort(ChannelService.SystemChannelId)}/api".AppendPathSegment("node/status").GetJsonAsync<NodeStatusModel>().GetAwaiter().GetResult();
                         return nodeStatus.ConsensusHeight == 1;
                     }
                     catch (Exception)
