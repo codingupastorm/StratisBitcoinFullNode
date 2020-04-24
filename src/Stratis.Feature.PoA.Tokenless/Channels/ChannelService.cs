@@ -23,6 +23,10 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         /// <summary>This is a list of PIds of channel processes that are running.</summary>
         List<ChannelNodeProcess> StartedChannelNodes { get; }
 
+        int GetDefaultAPIPort(int channelId);
+        int GetDefaulPort(int channelId);
+        int GetDefaultSignalRPort(int channelId);
+
         Task CreateAndStartChannelNodeAsync(ChannelCreationRequest request);
         Task StartSystemChannelNodeAsync();
         Task RestartChannelNodesAsync();
@@ -64,6 +68,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     /// <inheritdoc />
     public sealed class ChannelService : IChannelService
     {
+        public const int SystemChannelId = 1;
+
         private const string ChannelConfigurationFileName = "channel.conf";
         private const string SystemChannelName = "system";
 
@@ -72,6 +78,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         private readonly NodeSettings nodeSettings;
         private readonly IChannelRepository channelRepository;
         private readonly IAsyncProvider asyncProvider;
+        private readonly TokenlessNetwork tokenlessNetworkDefaults;
 
         private IAsyncLoop terminationLoop;
 
@@ -88,6 +95,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.channelRepository = channelRepository;
             this.NodeLifetime = nodeLifetime;
             this.asyncProvider = asyncProvider;
+            this.tokenlessNetworkDefaults = new TokenlessNetwork();
         }
 
         public void Initialize()
@@ -192,9 +200,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 this.logger.LogInformation("Starting a system channel node.");
 
                 // If the node we are starting is a system channel node, then its API port offset will always be 1.
-                int channelNodeId = 1;
-
-                string channelRootFolder = PrepareNodeForStartup(SystemChannelName, channelNodeId);
+                string channelRootFolder = PrepareNodeForStartup(SystemChannelName, SystemChannelId);
 
                 ChannelNodeProcess channelNode = await StartTheProcessAsync(channelRootFolder, $"-channelname={SystemChannelName}", "-issystemchannelnode=true", "-ischannelnode=true");
                 if (channelNode.Process.HasExited)
@@ -234,17 +240,27 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 return rootFolderName;
 
             ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, rootFolderName);
-
-            int portOffset = channelId;
-
-            channelNetwork.DefaultAPIPort += portOffset;
-            channelNetwork.DefaultPort += portOffset;
-            channelNetwork.DefaultSignalRPort += portOffset;
+            channelNetwork.DefaultAPIPort = this.GetDefaultAPIPort(channelId);
+            channelNetwork.DefaultPort = this.GetDefaulPort(channelId);
+            channelNetwork.DefaultSignalRPort = this.GetDefaultSignalRPort(channelId);
 
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
             Directory.CreateDirectory(rootFolderName);
             File.WriteAllText(networkFileName, serializedJson);
             return rootFolderName;
+        }
+
+        public int GetDefaultAPIPort(int channelId)
+        {
+            return this.tokenlessNetworkDefaults.DefaultAPIPort + channelId;
+        }
+        public int GetDefaulPort(int channelId)
+        {
+            return this.tokenlessNetworkDefaults.DefaultPort + channelId;
+        }
+        public int GetDefaultSignalRPort(int channelId)
+        {
+            return this.tokenlessNetworkDefaults.DefaultSignalRPort + channelId;
         }
 
         private void CopyCertificatesToChannelRoot(string channelRootFolder)
