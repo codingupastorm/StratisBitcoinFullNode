@@ -234,7 +234,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                 this.endorsements.RecordEndorsement(transaction.GetHash(), policy);
 
                 // Broadcast message
-                await this.tokenlessBroadcaster.BroadcastToFirstInOrganisationAsync(message, model.Organisation);
+                await this.tokenlessBroadcaster.BroadcastToWholeOrganisationAsync(message, model.Organisation);
 
                 // Just let user know that it has been sent off. The endorsement and sending of the transaction will happen asynchronously.
 
