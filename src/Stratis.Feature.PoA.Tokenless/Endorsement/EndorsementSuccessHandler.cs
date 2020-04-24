@@ -66,7 +66,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
                 uint blockHeight = (uint)this.consensus.Tip.Height + 1;
 
-                this.transientStore.Persist(signedProposalResponse.ProposalResponse.GetHash(), blockHeight, new TransientStorePrivateData(privateReadWriteSetData.ToJsonEncodedBytes()));
+                this.transientStore.Persist(signedProposalResponse.ProposalResponse.ReadWriteSet.GetHash(), blockHeight, new TransientStorePrivateData(privateReadWriteSetData.ToJsonEncodedBytes()));
 
                 return true;
             }
