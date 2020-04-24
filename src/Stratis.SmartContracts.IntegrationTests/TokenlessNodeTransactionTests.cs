@@ -277,6 +277,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 node3.Start();
 
                 TestHelper.Connect(node1, node2);
+                TestHelper.Connect(node2, node3);
+                TestHelper.Connect(node1, node3);
 
                 // Broadcast from node1, check state of node2.
                 var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
