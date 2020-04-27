@@ -43,10 +43,10 @@ namespace Stratis.Feature.PoA.Tokenless
             if (!(message.Message.Payload is PrivateDataPayload payload))
                 return;
 
-            if (this.transientStore.Get(payload.TransactionId).Data == null)
+            if (this.transientStore.Get(payload.Id).Data == null)
             {
                 // At the moment we're always storing in the transient store. This is the only way for us to know that we've received the RWS.
-                this.transientStore.Persist(payload.TransactionId, payload.BlockHeight, new TransientStorePrivateData(payload.ReadWriteSetData));
+                this.transientStore.Persist(payload.Id, payload.BlockHeight, new TransientStorePrivateData(payload.ReadWriteSetData));
             }
         }
     }

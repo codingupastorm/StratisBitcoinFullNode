@@ -30,7 +30,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
         private readonly ILogger logger;
         private IStateRepositoryRoot mutableStateRepository;
         private readonly IList<Receipt> receipts;
-        private readonly List<uint256> privateDataTxs;
+        private readonly List<uint256> privateDataRwsHashes;
         private readonly IReceiptRepository receiptRepository;
         private readonly IStateRepositoryRoot stateRepositoryRoot;
         private readonly ITokenlessSigner tokenlessSigner;
@@ -54,7 +54,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             this.executorFactory = executorFactory;
             this.executionCache = executionCache;
             this.receipts = new List<Receipt>();
-            this.privateDataTxs = new List<uint256>();
+            this.privateDataRwsHashes = new List<uint256>();
             this.receiptRepository = receiptRepository;
             this.stateRepositoryRoot = stateRepositoryRoot;
             this.tokenlessSigner = tokenlessSigner;
@@ -76,7 +76,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             this.logger.LogDebug("Block to validate '{0}'.", context.ValidationContext.BlockToValidate.GetHash());
 
             this.receipts.Clear();
-            this.privateDataTxs.Clear();
+            this.privateDataRwsHashes.Clear();
 
             this.DetermineIfResultIsAlreadyCached(context);
             this.ProcessTransactions(context);
@@ -88,10 +88,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             this.mutableStateRepository.Commit();
 
             // Move the private data to the "actual" private state database.
-            foreach (uint256 txId in this.privateDataTxs)
-            {
-                this.privateDataRetriever.MoveDataFromTransientToPrivateStore(this.privateDataTxs);
-            }
+            this.privateDataRetriever.MoveDataFromTransientToPrivateStore(this.privateDataRwsHashes);
 
             // Update the globally injected state so all services receive the updates.
             this.stateRepositoryRoot.SyncToRoot(this.mutableStateRepository.Root);
@@ -188,8 +185,8 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 
             if (rws.Writes.Any(x => x.IsPrivateData))
             {
-                this.privateDataRetriever.WaitForPrivateData(transaction.GetHash());
-                this.privateDataTxs.Add(transaction.GetHash());
+                this.privateDataRetriever.WaitForPrivateData(rws.GetHash());
+                this.privateDataRwsHashes.Add(rws.GetHash());
             }
 
             this.rwsValidator.ApplyReadWriteSet(this.mutableStateRepository, rws, version);

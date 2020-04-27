@@ -73,19 +73,22 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             // Record the ReadWriteSet.
             ReadWriteSet readWriteSet = rws.GetReadWriteSet();
+            ReadWriteSet privateReadWriteSet = rws.GetReadWriteSet(); // Reuse for convenience, shouldn't affect test
 
             // Create a transaction containing the ReadWriteSet.
             ReadWriteSetTransactionSerializer builder = GetBuilder();
-            var response = builder.Build(readWriteSet);
+            var response = builder.Build(readWriteSet, privateReadWriteSet);
 
             // Recover the ReadWriteSet from the transaction.
             var bytes = response.ProposalResponse.ToBytes();
             var proposal = ProposalResponse.FromBytes(bytes);
             Assert.NotNull(proposal.ReadWriteSet);
             Assert.NotNull(response.Endorsement);
+            Assert.NotNull(response.PrivateReadWriteSet);
 
             // Compare the original ReadWriteSet's json with the recovered ReadWriteSet's json.
             Assert.Equal(readWriteSet.ToJson(), proposal.ReadWriteSet.ToJson());
+            Assert.Equal(response.PrivateReadWriteSet.ToJson(), privateReadWriteSet.ToJson());
         }
     }
 }

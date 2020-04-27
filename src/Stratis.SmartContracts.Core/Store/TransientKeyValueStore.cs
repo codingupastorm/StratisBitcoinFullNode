@@ -30,7 +30,7 @@ namespace Stratis.SmartContracts.Core.Store
 
     public interface ITransientStore
     {
-        void Persist(uint256 txId, uint blockHeight, TransientStorePrivateData data);
+        void Persist(uint256 id, uint blockHeight, TransientStorePrivateData data);
 
         (TransientStorePrivateData Data, uint BlockHeight) Get(uint256 txId);
     }
@@ -50,11 +50,11 @@ namespace Stratis.SmartContracts.Core.Store
             this.repository = repository;
         }
 
-        public void Persist(uint256 txId, uint blockHeight, TransientStorePrivateData data)
+        public void Persist(uint256 id, uint blockHeight, TransientStorePrivateData data)
         {
             var uuid = Guid.NewGuid();
-            var key = TransientStoreQueryParams.CreateCompositeKeyForPvtRWSet(blockHeight, txId, uuid);
-            var compositePurgeIndexKey = TransientStoreQueryParams.CreateCompositeKeyForPurgeIndexByHeight(blockHeight, txId, uuid);
+            var key = TransientStoreQueryParams.CreateCompositeKeyForPvtRWSet(blockHeight, id, uuid);
+            var compositePurgeIndexKey = TransientStoreQueryParams.CreateCompositeKeyForPurgeIndexByHeight(blockHeight, id, uuid);
 
             using (IKeyValueStoreTransaction tx = this.repository.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, Table))
             {

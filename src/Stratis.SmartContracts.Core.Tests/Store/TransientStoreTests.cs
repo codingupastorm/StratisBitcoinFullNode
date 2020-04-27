@@ -57,12 +57,12 @@ namespace Stratis.SmartContracts.Core.Tests.Store
             ))
             .Returns(transaction.Object);
 
-            uint256 txId = uint256.One;
+            uint256 id = uint256.One;
             uint blockHeight = 1;
             var privateData = new byte[] {0xAA, 0xBB, 0xCC};
             var data = new TransientStorePrivateData(privateData);
 
-            this.store.Persist(txId, blockHeight, data);
+            this.store.Persist(id, blockHeight, data);
 
             transaction.Verify(t => t.Insert(
                 TransientStore.Table, 

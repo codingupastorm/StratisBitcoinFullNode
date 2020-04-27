@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Linq;
+using System.Text;
 using Moq;
 using NBitcoin;
 using Stratis.Patricia;
@@ -99,6 +100,34 @@ namespace Stratis.SmartContracts.Core.Tests
 
             Assert.Equal(Value1, repository.GetStorageValue(TestAddress, Key1Bytes).Value);
             Assert.Equal(Value2, repository.GetStorageValue(TestAddress, Key2Bytes).Value);
+        }
+
+        [Fact]
+        public void ValidatePublicRwsWithDifferentHashFails()
+        {
+            var publicReadWriteSetBuilder = new ReadWriteSetBuilder();
+            var privateReadWriteSetBuilder = new ReadWriteSetBuilder();
+
+            // Use this to make it easier to build the initial two RWS.
+            var operations = new PrivateReadWriteSetOperations(publicReadWriteSetBuilder, privateReadWriteSetBuilder);
+            
+            operations.AddWriteItem(new ReadWriteSetKey(TestAddress, Key1Bytes), Value1);
+            operations.AddWriteItem(new ReadWriteSetKey(TestAddress, Key2Bytes), Value2);
+
+            var publicRws = publicReadWriteSetBuilder.GetReadWriteSet();
+            var privateRws = privateReadWriteSetBuilder.GetReadWriteSet();
+
+            // Should be the same at the moment.
+            Assert.True(ReadWriteSetValidator.ValidatePublicReadWriteSet(publicRws, privateRws));
+
+            // Now change some data in the public RWS
+            publicReadWriteSetBuilder = new ReadWriteSetBuilder();
+            publicReadWriteSetBuilder.AddWriteItem(new ReadWriteSetKey(TestAddress, Key1Bytes), Value1);
+            publicReadWriteSetBuilder.AddWriteItem(new ReadWriteSetKey(TestAddress, Key2Bytes), Value1); // Subtle change
+
+            publicRws = publicReadWriteSetBuilder.GetReadWriteSet();
+
+            Assert.False(ReadWriteSetValidator.ValidatePublicReadWriteSet(publicRws, privateRws));
         }
     }
 }

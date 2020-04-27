@@ -88,11 +88,15 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 return false;
             }
 
-            // TODO: If we have multiple endorsements happening here, check the read write set before signing!
-            SignedProposalResponse signedProposalResponse = this.readWriteSetTransactionSerializer.Build(result.ReadWriteSet.GetReadWriteSet());
+            SignedProposalResponse signedProposalResponse = this.readWriteSetTransactionSerializer.Build(
+                result.ReadWriteSet.GetReadWriteSet(),
+                result.PrivateReadWriteSet.GetReadWriteSet());
 
             uint256 proposalId = request.ContractTransaction.GetHash();
             var payload = new EndorsementPayload(signedProposalResponse, proposalId);
+
+            // Persist the private RWS using the public RWS hash as we will be querying for the private RWS when only knowing the public RWS.
+            this.transientStore.Persist(signedProposalResponse.ProposalResponse.ReadWriteSet.GetHash(), blockHeight, new TransientStorePrivateData(result.PrivateReadWriteSet.GetReadWriteSet().ToJsonEncodedBytes()));
 
             EndorsementPolicy contractsPolicy = this.stateRoot.GetPolicy(result.To);
 

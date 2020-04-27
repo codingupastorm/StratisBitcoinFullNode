@@ -39,14 +39,14 @@ namespace Stratis.Feature.PoA.Tokenless
             // TODO: Check they're allowed to access this?
 
             // See if we have the data.
-            (TransientStorePrivateData Data, uint BlockHeight) entry = this.transientStore.Get(payload.TxId);
+            (TransientStorePrivateData Data, uint BlockHeight) entry = this.transientStore.Get(payload.Id);
 
             // If we do, send it to them.
             if (entry.Data != null)
             {
                 try
                 {
-                    await peer.SendMessageAsync(new PrivateDataPayload(payload.TxId, entry.BlockHeight, entry.Data.ToBytes())).ConfigureAwait(false);
+                    await peer.SendMessageAsync(new PrivateDataPayload(payload.Id, entry.BlockHeight, entry.Data.ToBytes())).ConfigureAwait(false);
                 }
                 catch (OperationCanceledException e)
                 {
