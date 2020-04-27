@@ -1,20 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Features.Consensus.Rules.CommonRules;
-using Stratis.Features.MemoryPool;
-using Stratis.Features.MemoryPool.Interfaces;
-using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.Caching;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Features.Consensus.Rules.CommonRules;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Interfaces;
+using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.ReadWrite;
@@ -36,6 +35,8 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         private readonly IReadWriteSetTransactionSerializer rwsSerializer;
         private readonly IReadWriteSetValidator rwsValidator;
         private readonly ITokenlessSigner tokenlessSigner;
+        private readonly ITxMempool mempool;
+        private readonly MempoolSchedulerLock mempoolLock;
 
         public TokenlessBlockDefinition(
             IBlockBufferGenerator blockBufferGenerator,
@@ -63,6 +64,8 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             this.executionCache = executionCache;
             this.rwsSerializer = readWriteSerializer;
             this.rwsValidator = rwsValidator;
+            this.mempool = mempool;
+            this.mempoolLock = mempoolLock;
             this.receipts = new List<Receipt>();
 
             // When building smart contract blocks, we will be generating and adding both transactions to the block and txouts to the coinbase. 
@@ -185,7 +188,19 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         {
             if (entry.Transaction.Outputs.First().ScriptPubKey.IsReadWriteSet())
             {
-                this.ExecuteReadWriteTransaction(entry.Transaction);
+                bool valid = this.ExecuteReadWriteTransaction(entry.Transaction);
+
+                if (!valid)
+                {
+                    // Remove the dud transaction from the mempool, and return early so we don't include the transaction in this block.
+
+                    this.mempoolLock.WriteAsync(() =>
+                    {
+                        this.mempool.RemoveRecursive(entry.Transaction);
+                    }).ConfigureAwait(false).GetAwaiter().GetResult();
+
+                    return;
+                }
             }
 
             TxOut smartContractTxOut = entry.Transaction.TryGetSmartContractTxOut();
@@ -241,15 +256,20 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             scHeader.LogsBloom = logsBloom;
         }
 
-        private void ExecuteReadWriteTransaction(Transaction transaction)
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="transaction"></param>
+        /// <returns></returns>
+        private bool ExecuteReadWriteTransaction(Transaction transaction)
         {
             // Apply RWS to the state repository.
             ReadWriteSet rws = this.rwsSerializer.GetReadWriteSet(transaction);
 
             if (!this.rwsValidator.IsReadWriteSetValid(this.stateSnapshot, rws))
             {
-                // TODO: Remove the transaction from the mempool and don't include in a block
-                throw new NotImplementedException("Do we discard transactions if they are no longer valid by version?");
+                return false;
             }
 
             int txIndex = this.block.Transactions.Count;
@@ -257,6 +277,8 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             string version = $"{this.height}.{txIndex}";
 
             this.rwsValidator.ApplyReadWriteSet(this.stateSnapshot, rws, version);
+
+            return true;
         }
 
         /// <summary>
