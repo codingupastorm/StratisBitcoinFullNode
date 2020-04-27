@@ -28,8 +28,6 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         Task RestartChannelNodesAsync();
         void StopChannelNodes();
 
-        void AddChannelMember(string channelName, string memberPublicKey);
-
         void Initialize();
     }
 
@@ -211,17 +209,6 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             {
                 throw new ChannelServiceException($"Failed to start system channel node: {ex.Message}");
             }
-        }
-
-        public void AddChannelMember(string channelName, string memberPublicKey)
-        {
-            var memberDefinition = new ChannelMemberDefinition()
-            {
-                ChannelName = channelName,
-                MemberPublicKey = memberPublicKey
-            };
-
-            this.channelRepository.SaveMemberDefinition(memberDefinition);
         }
 
         private string PrepareNodeForStartup(string channelName, int channelId)
