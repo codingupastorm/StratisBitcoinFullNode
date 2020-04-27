@@ -14,7 +14,11 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
         void SaveChannelDefinition(ChannelDefinition request);
 
+        void SaveMemberDefinition(ChannelMemberDefinition request);
+
         Dictionary<string, ChannelDefinition> GetChannelDefinitions();
+
+        Dictionary<string, ChannelMemberDefinition> GetMemberDefinitions(string channelName);
 
         int GetNextChannelId();
     }
@@ -22,6 +26,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     public class ChannelRepository : IChannelRepository
     {
         internal const string ConfigTxTableName = "ConfigTx";
+        internal const string MemberTableNamePrefix = "Member";
 
         public IChannelKeyValueStore KeyValueStore { get; }
 
@@ -69,11 +74,32 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             }
         }
 
+        public void SaveMemberDefinition(ChannelMemberDefinition request)
+        {
+            string memberTableName = $"{MemberTableNamePrefix}_{request.ChannelName}";
+
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(Bitcoin.Interfaces.KeyValueStoreTransactionMode.ReadWrite, memberTableName))
+            {
+                transaction.Insert(memberTableName, request.MemberPublicKey, request);
+                transaction.Commit();
+            }
+        }
+
         public Dictionary<string, ChannelDefinition> GetChannelDefinitions()
         {
             using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(Bitcoin.Interfaces.KeyValueStoreTransactionMode.Read, ConfigTxTableName))
             {
                 return transaction.SelectDictionary<string, ChannelDefinition>(ConfigTxTableName);
+            }
+        }
+
+        public Dictionary<string, ChannelMemberDefinition> GetMemberDefinitions(string channelName)
+        {
+            string memberTableName = $"{MemberTableNamePrefix}_{channelName}";
+
+            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(Bitcoin.Interfaces.KeyValueStoreTransactionMode.Read, memberTableName))
+            {
+                return transaction.SelectDictionary<string, ChannelMemberDefinition>(memberTableName);
             }
         }
     }
