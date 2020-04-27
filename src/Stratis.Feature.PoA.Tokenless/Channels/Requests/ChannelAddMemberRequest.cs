@@ -9,10 +9,10 @@ namespace Stratis.Feature.PoA.Tokenless.Channels.Requests
         public string Organisation { get; set; }
 
         /// <summary> The name of the channel.</summary>
-        [JsonPropertyName("name")]
-        public string Name { get; set; }
+        [JsonPropertyName("channel")]
+        public string ChannelName { get; set; }
 
         [JsonPropertyName("member")]
-        public string PubKey { get; set; }
+        public string PubKeyHex { get; set; }
     }
 }

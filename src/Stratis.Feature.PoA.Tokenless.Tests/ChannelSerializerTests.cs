@@ -45,9 +45,9 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             var request = new ChannelAddMemberRequest()
             {
-                Name = "test",
+                ChannelName = "test",
                 Organisation = "org",
-                PubKey = "123"
+                PubKeyHex = "123"
             };
 
             var serializer = new ChannelRequestSerializer();
@@ -58,9 +58,9 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var script = new Script(serialized);
             (ChannelAddMemberRequest deserialized, _) = serializer.Deserialize<ChannelAddMemberRequest>(script);
             Assert.NotNull(deserialized);
-            Assert.Equal("test", deserialized.Name);
+            Assert.Equal("test", deserialized.ChannelName);
             Assert.Equal("org", deserialized.Organisation);
-            Assert.Equal("123", deserialized.PubKey);
+            Assert.Equal("123", deserialized.PubKeyHex);
         }
     }
 }
