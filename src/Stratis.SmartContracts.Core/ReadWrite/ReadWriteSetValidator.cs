@@ -53,7 +53,7 @@ namespace Stratis.SmartContracts.Core.ReadWrite
             // TODO validate reads?
             foreach (WriteItem write in privateReadWriteSet.Writes.Where(w => !w.IsPrivateData))
             {
-                WriteItem publicWrite = publicReadWriteSet.Writes.FirstOrDefault(w => w.Key == write.Key);
+                WriteItem publicWrite = publicReadWriteSet.Writes.FirstOrDefault(w => w.Key.SequenceEqual(write.Key));
 
                 if (publicWrite == null)
                 {
