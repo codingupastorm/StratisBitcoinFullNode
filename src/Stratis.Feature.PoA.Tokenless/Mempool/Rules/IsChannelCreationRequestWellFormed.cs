@@ -34,13 +34,19 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
         {
             // This rule is only applicable if this node is a system channel node.
             if (!this.channelSettings.IsSystemChannelNode)
+            {
+                this.logger.LogDebug($"This is not a system channel node.");
                 return;
+            }
 
             // If the TxOut is null then this transaction does not contain any channel update execution code.
             TxOut txOut = context.Transaction.TryGetChannelCreationRequestTxOut();
             if (txOut == null)
+            {
+                this.logger.LogDebug($"{context.Transaction.GetHash()}' does not contain a channel creation request.");
                 return;
-            
+            }
+
             (ChannelCreationRequest channelCreationRequest, string message) = this.channelRequestSerializer.Deserialize<ChannelCreationRequest>(txOut.ScriptPubKey);
             if (channelCreationRequest == null)
             {

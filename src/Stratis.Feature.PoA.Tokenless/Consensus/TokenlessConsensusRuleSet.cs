@@ -34,15 +34,11 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
                 .Register<TokenlessCoinviewRule>();
         }
 
-        public static void Create(ChannelNetwork channelNetwork, bool isSystemChannelNode)
+        public static void CreateForSystemChannel(ChannelNetwork channelNetwork)
         {
-            Create(channelNetwork);
-
-            if (isSystemChannelNode)
-            {
-                channelNetwork.Consensus.ConsensusRules.Register<ExecuteChannelCreationRequest>();
-                channelNetwork.Consensus.ConsensusRules.Register<ExecuteChannelAddMemberRequest>();
-            }
+            channelNetwork.Consensus.ConsensusRules = new ConsensusRules();
+            channelNetwork.Consensus.ConsensusRules.Register<ExecuteChannelCreationRequest>();
+            channelNetwork.Consensus.ConsensusRules.Register<ExecuteChannelAddMemberRequest>();
         }
     }
 }

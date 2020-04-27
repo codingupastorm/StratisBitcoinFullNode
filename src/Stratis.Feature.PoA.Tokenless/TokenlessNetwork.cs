@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using NBitcoin.PoA;
 using Stratis.Bitcoin.Features.SmartContracts.PoA;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Mempool;
-using Stratis.Features.PoA;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -157,9 +157,9 @@ namespace Stratis.Feature.PoA.Tokenless
                 channelNetwork.Consensus.Options.MaxStandardTxWeight,
                 0,
                 0,
-                new List<IFederationMember>(),
+                ((PoAConsensusOptions)channelNetwork.Consensus.Options).GenesisFederationMembers,
                 ((PoAConsensusOptions)channelNetwork.Consensus.Options).TargetSpacingSeconds,
-                false,
+                true,
                 false,
                 false
                 );

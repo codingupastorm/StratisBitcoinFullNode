@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using NBitcoin.BouncyCastle.Math;
+using NBitcoin.Serialization;
 
 namespace NBitcoin
 {
@@ -12,6 +13,7 @@ namespace NBitcoin
         public uint MaxReorgLength { get; set; }
 
         [JsonPropertyName("options")]
+        [JsonConverter(typeof(JsonConsensusOptionsConverter))]
         public ConsensusOptions Options { get; set; }
 
         public BuriedDeploymentsArray BuriedDeployments { get; }

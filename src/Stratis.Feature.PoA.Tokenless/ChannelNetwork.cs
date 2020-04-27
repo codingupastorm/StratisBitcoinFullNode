@@ -1,12 +1,10 @@
-﻿using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using NBitcoin;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Core.Serialization;
 using Stratis.Feature.PoA.Tokenless.Mempool;
-using Stratis.Features.PoA;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -40,10 +38,17 @@ namespace Stratis.Feature.PoA.Tokenless
             ChannelNetwork channelNetwork = JsonSerializer.Deserialize<ChannelNetwork>(json);
             channelNetwork.Consensus.ConsensusFactory = new TokenlessConsensusFactory();
             channelNetwork.Consensus.HashGenesisBlock = channelNetwork.Genesis.GetHash();
-            channelNetwork.Consensus.Options = new PoAConsensusOptions(0, 0, 0, 0, 0, new List<IFederationMember>(), 16, false, false, false);
 
-            TokenlessConsensusRuleSet.Create(channelNetwork, isSystemChannelNode);
-            TokenlessMempoolRuleSet.Create(channelNetwork, isSystemChannelNode);
+            if (isSystemChannelNode)
+            {
+                TokenlessConsensusRuleSet.CreateForSystemChannel(channelNetwork);
+                TokenlessMempoolRuleSet.CreateForSystemChannel(channelNetwork);
+            }
+            else
+            {
+                TokenlessConsensusRuleSet.Create(channelNetwork);
+                TokenlessMempoolRuleSet.Create(channelNetwork);
+            }
 
             return channelNetwork;
         }

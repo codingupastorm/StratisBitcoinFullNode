@@ -2,14 +2,21 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
+using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
+using Flurl;
+using Flurl.Http;
 using Microsoft.AspNetCore.Hosting;
 using Org.BouncyCastle.X509;
+using Stratis.Bitcoin;
+using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Channels;
+using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;
 
@@ -23,9 +30,9 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public void CanStartSystemChannelNode()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 var tokenlessNetwork = new TokenlessNetwork();
@@ -53,11 +60,11 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public void InfraNodeCanCreateAndStartSystemChannelNode()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
             Process channelNodeProcess = null;
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 var network = new TokenlessNetwork();
@@ -97,11 +104,11 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public void CanRestartChannelNodes()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
             var processes = new List<Process>();
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 var tokenlessNetwork = new TokenlessNetwork();
@@ -146,6 +153,81 @@ namespace Stratis.SmartContracts.IntegrationTests
             foreach (var process in processes)
             {
                 Assert.True(process.HasExited);
+            }
+        }
+
+        [Fact]
+        public async Task SystemChannelCreateChannelFromChannelRequestTxAsync()
+        {
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                var network = new TokenlessNetwork();
+
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient();
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
+                CaClient client1 = TokenlessTestHelper.GetClient(server);
+
+                // Create and start the main "infra" tokenless node which will internally start the "system channel node".
+                CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, ac, client1);
+                infraNode.Start();
+
+                var channelService = infraNode.FullNode.NodeService<IChannelService>();
+                Assert.True(channelService.StartedChannelNodes.Count == 1);
+
+                // Call the create channel API method on the system channel node.
+                var channelCreationRequest = new ChannelCreationRequest()
+                {
+                    Name = "Sales",
+                    Organisation = "Stratis"
+                };
+
+                var response = await $"http://localhost:{channelService.GetDefaultAPIPort(ChannelService.SystemChannelId)}/api".AppendPathSegment("channels/create").PostJsonAsync(channelCreationRequest);
+                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+                // Wait until the transaction has arrived in the system channel node's mempool.
+                TestBase.WaitLoop(() =>
+                {
+                    var mempoolResponse = $"http://localhost:{channelService.GetDefaultAPIPort(ChannelService.SystemChannelId)}/api".AppendPathSegment("mempool/getrawmempool").GetJsonAsync<List<string>>().GetAwaiter().GetResult();
+                    return mempoolResponse.Count == 1;
+                }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(1).TotalMilliseconds);
+
+                // Wait until the block has been mined on the system channel node.
+                TestBase.WaitLoop(() =>
+                {
+                    try
+                    {
+                        var nodeStatus = $"http://localhost:{channelService.GetDefaultAPIPort(ChannelService.SystemChannelId)}/api".AppendPathSegment("node/status").GetJsonAsync<NodeStatusModel>().GetAwaiter().GetResult();
+                        return nodeStatus.ConsensusHeight == 1;
+                    }
+                    catch (Exception)
+                    {
+                    }
+
+                    return false;
+                }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(1).TotalMilliseconds);
+
+                // Wait until the "sales" channel has been created and the node is running.
+                TestBase.WaitLoop(() =>
+                {
+                    try
+                    {
+                        var nodeStatus = $"http://localhost:{30002}/api".AppendPathSegment("node/status").GetJsonAsync<NodeStatusModel>().GetAwaiter().GetResult();
+                        return nodeStatus.State == FullNodeState.Started.ToString();
+                    }
+                    catch (Exception) { }
+
+                    return false;
+
+                }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(1).TotalMilliseconds);
             }
         }
     }

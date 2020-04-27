@@ -6,6 +6,7 @@ using CertificateAuthority;
 using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitcoin.PoA;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration;
@@ -125,13 +126,13 @@ namespace Stratis.Feature.PoA.Tokenless
                 }
                 catch (Exception e)
                 {
-                    this.logger.LogDebug(e, "Exception raised when calling CA to synchronize members.");
-                    this.logger.LogWarning("Could not synchronize members with CA. CA is possibly down! Will retry in 1 minute.");
+                    var innerException = e.InnerException?.Message;
+                    this.logger.LogWarning("Could not synchronize members, contacting the CA Server failed:", innerException);
                 }
             },
             this.nodeLifetime.ApplicationStopping,
-            repeatEvery: TimeSpans.Minute,
-            startAfter: TimeSpans.Minute);
+            repeatEvery: TimeSpan.FromSeconds(5),
+            startAfter: TimeSpan.FromSeconds(10));
 
             this.channelService.Initialize();
 
@@ -148,7 +149,7 @@ namespace Stratis.Feature.PoA.Tokenless
             // If we're not a federation member, it's not our job to vote. Don't schedule any votes until we are one.
             if (!this.federationManager.IsFederationMember)
             {
-                this.logger.LogDebug("Attempted to Synchronize members but we aren't a member yet.");
+                this.logger.LogDebug("Attempted to synchronize members but we aren't a member yet.");
                 return;
             }
 

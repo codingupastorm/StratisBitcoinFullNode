@@ -1,5 +1,6 @@
 ﻿using System;
 using NBitcoin;
+using NBitcoin.PoA;
 
 namespace Stratis.Features.PoA
 {

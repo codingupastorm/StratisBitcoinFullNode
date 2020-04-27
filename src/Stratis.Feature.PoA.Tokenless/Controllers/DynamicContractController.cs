@@ -83,7 +83,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             {
                 new UrlDescriptor
                 {
-                    Name = $"{address}", 
+                    Name = $"{address}",
                     Url = $"/swagger/contracts/{address}"
                 }
             };
@@ -104,10 +104,10 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         {
             var contractCode = this.stateRoot.GetCode(address.ToUint160(this.network));
 
-            if(contractCode == null)
+            if (contractCode == null)
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, "Contract does not exist", $"No contract code found at address {address}");
-            
-            Result<IContractAssembly> loadResult = this.loader.Load((ContractByteCode) contractCode);
+
+            Result<IContractAssembly> loadResult = this.loader.Load((ContractByteCode)contractCode);
 
             IContractAssembly assembly = loadResult.Value;
 

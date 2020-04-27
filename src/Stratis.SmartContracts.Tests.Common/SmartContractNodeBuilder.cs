@@ -38,6 +38,7 @@ namespace Stratis.SmartContracts.Tests.Common
             var configParameters = new NodeConfigParameters()
             {
                 { "caurl" , "http://localhost:5050" },
+                { "debug" , "1" },
             };
 
             if (isInfraNode)
