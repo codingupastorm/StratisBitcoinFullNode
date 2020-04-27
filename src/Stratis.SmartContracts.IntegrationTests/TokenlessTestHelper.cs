@@ -31,7 +31,6 @@ namespace Stratis.SmartContracts.IntegrationTests
     public static class TokenlessTestHelper
     {
         public static readonly TokenlessNetwork Network = new TokenlessNetwork();
-        private static readonly string BaseAddress = "http://localhost:5050";
 
         public static void WaitForNodeToSync(params CoreNode[] nodes)
         {
@@ -96,7 +95,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         public static CaClient GetAdminClient()
         {
             var httpClient = new HttpClient();
-            return new CaClient(new Uri(BaseAddress), httpClient, Settings.AdminAccountId, CaTestHelper.AdminPassword);
+            return new CaClient(new Uri(CaTestHelper.BaseAddress), httpClient, Settings.AdminAccountId, CaTestHelper.AdminPassword);
         }
 
         /// <summary>
@@ -106,7 +105,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         {
             var httpClient = new HttpClient();
             CredentialsModel credentials = CaTestHelper.CreateAccount(server, AccountAccessFlags.AdminAccess, permissions: requestedPermissions);
-            return new CaClient(new Uri(BaseAddress), httpClient, credentials.AccountId, credentials.Password);
+            return new CaClient(new Uri(CaTestHelper.BaseAddress), httpClient, credentials.AccountId, credentials.Password);
         }
 
         /// <summary>

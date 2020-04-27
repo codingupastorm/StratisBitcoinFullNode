@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using NBitcoin.PoA;
+using Stratis.Bitcoin.Utilities;
 using Xunit;
 
 namespace Stratis.Feature.PoA.Tokenless.Tests
@@ -9,7 +10,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         [Fact]
         public void CanSerializeAndDeserializeNetwork()
         {
-            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork("Test", "TestFolder");
+            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork("Test", "TestFolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
 
             var serialized = JsonSerializer.Serialize(channelNetwork);
             ChannelNetwork deserialized = JsonSerializer.Deserialize<ChannelNetwork>(serialized);
