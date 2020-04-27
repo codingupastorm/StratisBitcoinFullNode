@@ -213,16 +213,8 @@ namespace Stratis.Features.PoA.ProtocolEncryption
 
         public List<PubKey> GetCertificatePublicKeys()
         {
-            try
-            {
-                CaClient caClient = this.GetClient();
-                return caClient.GetCertificatePublicKeys(this.logger);
-            }
-            catch (Exception ex)
-            {
-                this.logger.LogError(ex.Message);
-                throw ex;
-            }
+            CaClient caClient = this.GetClient();
+            return caClient.GetCertificatePublicKeys(this.logger);
         }
 
         /// <summary>
