@@ -10,12 +10,12 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
     /// <summary>
     /// Ensures that a channel creation request is well formed before passing it to consensus.
     /// </summary>
-    public sealed class IsChannelCreationRequestWellFormed : MempoolRule
+    public sealed class IsChannelAddMemberRequestWellFormed : MempoolRule
     {
         private readonly ChannelSettings channelSettings;
         private readonly IChannelRequestSerializer channelRequestSerializer;
 
-        public IsChannelCreationRequestWellFormed(
+        public IsChannelAddMemberRequestWellFormed(
             Network network,
             ITxMempool mempool,
             MempoolSettings settings,
@@ -37,17 +37,17 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
                 return;
 
             // If the TxOut is null then this transaction does not contain any channel update execution code.
-            TxOut txOut = context.Transaction.TryGetChannelCreationRequestTxOut();
+            TxOut txOut = context.Transaction.TryGetChannelAddMemberRequestTxOut();
             if (txOut == null)
                 return;
             
-            (ChannelCreationRequest channelCreationRequest, string message) = this.channelRequestSerializer.Deserialize<ChannelCreationRequest>(txOut.ScriptPubKey);
-            if (channelCreationRequest == null)
+            (ChannelAddMemberRequest channelAddMemberRequest, string message) = this.channelRequestSerializer.Deserialize<ChannelAddMemberRequest>(txOut.ScriptPubKey);
+            if (channelAddMemberRequest == null)
             {
-                var errorMessage = $"Transaction '{context.Transaction.GetHash()}' contained a channel creation request but its contents was malformed: {message}";
+                var errorMessage = $"Transaction '{context.Transaction.GetHash()}' contained a channel 'add member` request but its contents was malformed: {message}";
 
                 this.logger.LogDebug(errorMessage);
-                context.State.Fail(new MempoolError(MempoolErrors.RejectMalformed, "channel-creation-request-malformed"), errorMessage).Throw();
+                context.State.Fail(new MempoolError(MempoolErrors.RejectMalformed, "channel-addmember-request-malformed"), errorMessage).Throw();
             }            
         }
     }
