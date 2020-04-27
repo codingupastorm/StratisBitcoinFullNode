@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Utilities;
@@ -45,6 +46,45 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
             Assert.Equal("name2", dict["name2"].Name);
             Assert.Equal(2, dict["name1"].Id);
             Assert.Equal(3, dict["name2"].Id);
+        }
+
+        [Fact]
+        public void CanPersistAndReadBackChannelMembers()
+        {
+            var dataFolderPath = CreateTestDir(this);
+            var dataFolder = new DataFolder(dataFolderPath);
+
+            var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
+            var keyValueStore = new ChannelKeyValueStore(repositorySerializer, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
+
+            var channelRepository = new ChannelRepository(this.Network, this.LoggerFactory.Object, keyValueStore, repositorySerializer);
+
+            channelRepository.Initialize();
+
+            var member1 = new Key().PubKey.ToString();
+            var request1 = new ChannelMemberDefinition()
+            {
+                ChannelName = "name1",
+                MemberPublicKey = member1
+            };
+
+            channelRepository.SaveMemberDefinition(request1);
+
+            var member2 = new Key().PubKey.ToString();
+            var request2 = new ChannelMemberDefinition()
+            {
+                ChannelName = "name1",
+                MemberPublicKey = member2
+            };
+
+            channelRepository.SaveMemberDefinition(request2);
+
+            Dictionary<string, ChannelMemberDefinition> dict = channelRepository.GetMemberDefinitions("name1");
+
+            Assert.Equal(member1, dict[member1].MemberPublicKey);
+            Assert.Equal("name1", dict[member1].ChannelName);
+            Assert.Equal(member2, dict[member2].MemberPublicKey);
+            Assert.Equal("name1", dict[member2].ChannelName);
         }
     }
 }

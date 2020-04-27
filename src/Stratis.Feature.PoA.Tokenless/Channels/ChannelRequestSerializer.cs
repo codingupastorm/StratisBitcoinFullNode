@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 using NBitcoin;
+using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.SmartContracts.CLR;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels
@@ -18,6 +20,10 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     public sealed class ChannelRequestSerializer : IChannelRequestSerializer
     {
         public const int OpcodeSize = sizeof(byte);
+        public Dictionary<Type, byte> OpcodeMap = new Dictionary<Type, byte> {
+                { typeof(ChannelCreationRequest), (byte)ChannelOpCodes.OP_CREATECHANNEL },
+                { typeof(ChannelAddMemberRequest), (byte)ChannelOpCodes.OP_ADDCHANNELMEMBER }
+            };
 
         /// <inheritdoc/>
         public byte[] Serialize<T>(T request)
@@ -27,7 +33,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
             var requestBytes = new byte[OpcodeSize + requestJsonBytes.Length];
 
-            requestBytes[0] = (byte)ChannelOpCodes.OP_CREATECHANNEL;
+            requestBytes[0] = this.OpcodeMap[typeof(T)];
             requestJsonBytes.CopyTo(requestBytes, OpcodeSize);
 
             return requestBytes;
@@ -40,7 +46,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             {
                 var bytes = script.ToBytes();
 
-                if (bytes[0] != (byte)ChannelOpCodes.OP_CREATECHANNEL)
+                if (bytes[0] != this.OpcodeMap[typeof(T)])
                     return default;
 
                 var channelRequestBytes = bytes.Slice(OpcodeSize, (uint)(bytes.Length - OpcodeSize));
