@@ -39,7 +39,10 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
             Create(channelNetwork);
 
             if (isSystemChannelNode)
+            {
                 channelNetwork.Consensus.ConsensusRules.Register<ExecuteChannelCreationRequest>();
+                channelNetwork.Consensus.ConsensusRules.Register<ExecuteChannelAddMemberRequest>();
+            }
         }
     }
 }
