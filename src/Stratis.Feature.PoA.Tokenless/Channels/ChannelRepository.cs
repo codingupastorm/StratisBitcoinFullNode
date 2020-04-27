@@ -77,7 +77,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         {
             string memberTableName = $"{MemberTableNamePrefix}_{request.ChannelName}";
 
-            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(Bitcoin.Interfaces.KeyValueStoreTransactionMode.ReadWrite, memberTableName))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(Bitcoin.Interfaces.KeyValueStoreTransactionMode.ReadWrite, memberTableName))
             {
                 transaction.Insert(memberTableName, request.MemberPublicKey, request);
                 transaction.Commit();
@@ -98,7 +98,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         {
             string memberTableName = $"{MemberTableNamePrefix}_{channelName}";
 
-            using (IKeyValueStoreTransaction transaction = this.KeyValueStore.CreateTransaction(Bitcoin.Interfaces.KeyValueStoreTransactionMode.Read, memberTableName))
+            using (IKeyValueStoreTransaction transaction = this.keyValueStore.CreateTransaction(Bitcoin.Interfaces.KeyValueStoreTransactionMode.Read, memberTableName))
             {
                 return transaction.SelectDictionary<string, ChannelMemberDefinition>(memberTableName);
             }

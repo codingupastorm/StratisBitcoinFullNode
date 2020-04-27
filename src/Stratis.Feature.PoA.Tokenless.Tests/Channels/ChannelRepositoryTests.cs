@@ -57,7 +57,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
             var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
             var keyValueStore = new ChannelKeyValueStore(repositorySerializer, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
-            var channelRepository = new ChannelRepository(this.Network, this.LoggerFactory.Object, keyValueStore, repositorySerializer);
+            var channelRepository = new ChannelRepository(this.LoggerFactory.Object, keyValueStore);
 
             channelRepository.Initialize();
 
