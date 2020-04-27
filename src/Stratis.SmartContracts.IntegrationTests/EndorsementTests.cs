@@ -333,7 +333,6 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Broadcast from node1, check state of node2.
                 var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
-                var stateRepo = node2.FullNode.NodeService<IStateRepositoryRoot>();
 
                 Transaction createTransaction = TokenlessTestHelper.CreateContractCreateTransaction(node1, node1.TransactionSigningPrivateKey, "SmartContracts/TokenlessSimpleContract.cs", policy);
                 await node1.BroadcastTransactionAsync(createTransaction);
@@ -347,6 +346,9 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Now we put a CALL into the mempool
                 Transaction standardTransaction = TokenlessTestHelper.CreateContractCallTransaction(node1, createReceipt.NewContractAddress, node1.TransactionSigningPrivateKey, "CallMe");
                 await node1.BroadcastTransactionAsync(standardTransaction);
+
+                // Wait a couple seconds so we can get a new tx time.
+                Thread.Sleep(2000);
 
                 // And then get a transaction endorsed.
                 Transaction endorsed = TokenlessTestHelper.CreateContractCallTransaction(node1, createReceipt.NewContractAddress, node1.TransactionSigningPrivateKey, "CallMe");
