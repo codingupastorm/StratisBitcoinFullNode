@@ -123,16 +123,16 @@ namespace Stratis.SmartContracts.Core.Tests
             byte[] root3 = repository.Root;
 
             IStateRepository snapshot = new StateRepositoryRoot(stateDB, root);
-            Assert.Null(snapshot.GetStorageValue(cowAddress, cowKey1));
-            Assert.Null(snapshot.GetStorageValue(cowAddress, cowKey2));
-            Assert.Null(snapshot.GetStorageValue(horseAddress, horseKey1));
-            Assert.Null(snapshot.GetStorageValue(horseAddress, horseKey2));
+            Assert.Same(StorageValue.Default, snapshot.GetStorageValue(cowAddress, cowKey1));
+            Assert.Same(StorageValue.Default, snapshot.GetStorageValue(cowAddress, cowKey2));
+            Assert.Same(StorageValue.Default, snapshot.GetStorageValue(horseAddress, horseKey1));
+            Assert.Same(StorageValue.Default, snapshot.GetStorageValue(horseAddress, horseKey2));
 
             snapshot = new StateRepositoryRoot(stateDB, root2);
             Assert.Equal(cowVal1, snapshot.GetStorageValue(cowAddress, cowKey1).Value);
-            Assert.Null(snapshot.GetStorageValue(cowAddress, cowKey2));
+            Assert.Same(StorageValue.Default, snapshot.GetStorageValue(cowAddress, cowKey2));
             Assert.Equal(horseVal1, snapshot.GetStorageValue(horseAddress, horseKey1).Value);
-            Assert.Null(snapshot.GetStorageValue(horseAddress, horseKey2));
+            Assert.Same(StorageValue.Default, snapshot.GetStorageValue(horseAddress, horseKey2));
 
             snapshot = new StateRepositoryRoot(stateDB, root3);
             Assert.Equal(cowVal1, snapshot.GetStorageValue(cowAddress, cowKey1).Value);
@@ -175,16 +175,16 @@ namespace Stratis.SmartContracts.Core.Tests
             byte[] root3 = repository.Root;
 
             IStateRepository snapshot = new StateRepositoryRoot(stateDB, root);
-            Assert.Null(snapshot.GetStorageValue(cowAddress, cowKey1));
-            Assert.Null(snapshot.GetStorageValue(cowAddress, cowKey2));
-            Assert.Null(snapshot.GetStorageValue(horseAddress, horseKey1));
-            Assert.Null(snapshot.GetStorageValue(horseAddress, horseKey2));
+            Assert.Same(StorageValue.Default, snapshot.GetStorageValue(cowAddress, cowKey1));
+            Assert.Same(StorageValue.Default, snapshot.GetStorageValue(cowAddress, cowKey2));
+            Assert.Same(StorageValue.Default, snapshot.GetStorageValue(horseAddress, horseKey1));
+            Assert.Same(StorageValue.Default, snapshot.GetStorageValue(horseAddress, horseKey2));
 
             snapshot = new StateRepositoryRoot(stateDB, root2);
             Assert.Equal(cowVal1, snapshot.GetStorageValue(cowAddress, cowKey1).Value);
-            Assert.Null(snapshot.GetStorageValue(cowAddress, cowKey2));
+            Assert.Same(StorageValue.Default, snapshot.GetStorageValue(cowAddress, cowKey2));
             Assert.Equal(horseVal1, snapshot.GetStorageValue(horseAddress, horseKey1).Value);
-            Assert.Null(snapshot.GetStorageValue(horseAddress, horseKey2));
+            Assert.Same(StorageValue.Default, snapshot.GetStorageValue(horseAddress, horseKey2));
 
             snapshot = new StateRepositoryRoot(stateDB, root3);
             Assert.Equal(cowVal1, snapshot.GetStorageValue(cowAddress, cowKey1).Value);
@@ -222,7 +222,7 @@ namespace Stratis.SmartContracts.Core.Tests
 
             repository.SyncToRoot(root1);
             Assert.Equal(cat, snapshot.GetStorageValue(testAddress, dog).Value);
-            Assert.Null(snapshot.GetStorageValue(testAddress, dodecahedron));
+            Assert.Same(StorageValue.Default, snapshot.GetStorageValue(testAddress, dodecahedron));
         }
 
         [Fact]
@@ -258,7 +258,7 @@ namespace Stratis.SmartContracts.Core.Tests
             IStateRepository txTrack = repository.StartTracking();
             txTrack.CreateAccount(testAddress);
             txTrack.SetStorageValue(testAddress, dog, cat, VersionString);
-            Assert.Null(repository.GetStorageValue(testAddress, dog));
+            Assert.Same(StorageValue.Default, repository.GetStorageValue(testAddress, dog));
             txTrack.Commit();
             Assert.Equal(cat, repository.GetStorageValue(testAddress, dog).Value);
         }
