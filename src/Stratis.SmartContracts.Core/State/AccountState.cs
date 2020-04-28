@@ -47,7 +47,7 @@ namespace Stratis.SmartContracts.Core.State
             this.StateRoot = innerList[1].RLPData;
             this.UnspentHash = innerList[2].RLPData;
             this.TypeName = innerList[3].RLPData == null ? null : Encoding.UTF8.GetString(innerList[3].RLPData);
-            this.Policy = EndorsementPolicy.FromJsonEncodedBytes(innerList[4].RLPData);
+            this.Policy = innerList[4].RLPData == null ? null : EndorsementPolicy.FromJsonEncodedBytes(innerList[4].RLPData);
         }
 
         public byte[] ToBytes()
