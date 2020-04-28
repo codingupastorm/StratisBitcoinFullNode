@@ -1,11 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Payloads;
+using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.ReadWrite;
+using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Store;
 
 namespace Stratis.Feature.PoA.Tokenless
@@ -14,9 +18,11 @@ namespace Stratis.Feature.PoA.Tokenless
     {
         /// <summary>
         /// Lets the node know about some private data that has arrived in a block, so it can decide whether to ask around for it.
+        /// It will only ask around for it if it is allowed to access this data.
         /// </summary>
-        /// <param name="id">The hash of the ReadWriteSet transaction that came in a block.</param>
-        Task WaitForPrivateData(uint256 id);
+        /// <param name="rws">The ReadWriteSet that came in a transaction.</param>
+        /// <returns>Whether this node received the private data as it is from this organisation.</returns>
+        Task<bool> WaitForPrivateDataIfRequired(ReadWriteSet rws);
 
         /// <summary>
         /// Retrieves the specified read-write sets from the transient store and then puts them in the private state db.
@@ -29,6 +35,8 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly ITransientStore transientStore;
         private readonly IPrivateDataStore privateDataStore;
         private readonly ITokenlessBroadcaster tokenlessBroadcaster;
+        private readonly IStateRepositoryRoot stateRepository;
+        private readonly ICertificatesManager certificatesManager;
 
         /// <summary>
         /// How often to go out and request the private data.
@@ -42,26 +50,40 @@ namespace Stratis.Feature.PoA.Tokenless
 
         public PrivateDataRetriever(ITransientStore transientStore,
             IPrivateDataStore privateDataStore,
-            ITokenlessBroadcaster tokenlessBroadcaster)
+            ITokenlessBroadcaster tokenlessBroadcaster,
+            IStateRepositoryRoot stateRepository, 
+            ICertificatesManager certificatesManager)
         {
             this.transientStore = transientStore;
             this.privateDataStore = privateDataStore;
             this.tokenlessBroadcaster = tokenlessBroadcaster;
+            this.stateRepository = stateRepository;
+            this.certificatesManager = certificatesManager;
         }
 
         /// <inheritdoc />
-        public async Task WaitForPrivateData(uint256 id)
+        public async Task<bool> WaitForPrivateDataIfRequired(ReadWriteSet readWriteSet)
         {
-            // TODO: Check if this node is allowed to get the data.
+            // Check if we are meant to have the data. 
+            WriteItem write = readWriteSet.Writes.First(x => x.IsPrivateData);
+            EndorsementPolicy policy = this.stateRepository.GetPolicy(write.ContractAddress);
 
-            for(int i=0; i< AmountOfTimesToRetry; i++)
+            if (policy.Organisation != this.certificatesManager.ClientCertificate.GetOrganisation())
+            {
+                // This private data is for a different organisation. Let block validation move on.
+                return false;
+            }
+
+            uint256 id = readWriteSet.GetHash();
+
+            for (int i=0; i< AmountOfTimesToRetry; i++)
             {
                 (TransientStorePrivateData Data, uint BlockHeight) item = this.transientStore.Get(id);
 
                 if (item.Data != null)
                 {
                     // We have the data inside the transient store - we're good to go!
-                    return;
+                    return true;
                 }
 
                 await this.tokenlessBroadcaster.BroadcastToWholeOrganisationAsync(new RequestPrivateDataPayload(id))

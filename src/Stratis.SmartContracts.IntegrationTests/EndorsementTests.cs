@@ -217,11 +217,15 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 CaClient client1 = TokenlessTestHelper.GetClient(server);
                 CaClient client2 = TokenlessTestHelper.GetClient(server);
+                CaClient client3 = TokenlessTestHelper.GetClient(server, organisation: "Organisation2");
 
                 CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
                 CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
 
-                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
+                // From a different organisation.
+                CoreNode node3 = nodeBuilder.CreateTokenlessNode(this.network, 2, ac, client3);
+
+                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate(), node3.ClientCertificate.ToCertificate() };
 
                 TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
                 TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
@@ -234,8 +238,11 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 node1.Start();
                 node2.Start();
+                node3.Start();
 
                 TestHelper.Connect(node1, node2);
+                TestHelper.Connect(node2, node3);
+                TestHelper.Connect(node1, node3);
 
                 // Broadcast from node1, check state of node2.
                 var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
@@ -245,7 +252,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 await node1.BroadcastTransactionAsync(createTransaction);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1.MineBlocksAsync(1);
-                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2, node3);
 
                 Receipt createReceipt = receiptRepository.Retrieve(createTransaction.GetHash());
                 Assert.True(createReceipt.Success);
@@ -273,10 +280,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().InfoAll().Count > 0);
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().InfoAll().Count > 0);
 
-                Thread.Sleep(3000); // TODO: Remove this in future PRs. This will ensure that the private data gets to the node before he mines.
-
                 await node1.MineBlocksAsync(1);
-                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2, node3);
 
                 // Check that the transient data was stored in the non-private store.
                 Assert.Equal(transientDataToStore, stateRepo.GetStorageValue(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("Transient")).Value);
@@ -291,6 +296,9 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 Assert.NotNull(node2.FullNode.NodeService<IPrivateDataStore>().GetBytes(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("TransientPrivate")));
                 Assert.NotNull(node2.FullNode.NodeService<IPrivateDataStore>().GetBytes(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("TransientPrivate")));
+
+                // This node doesn't have the data because he's not permitted to
+                Assert.Null(node3.FullNode.NodeService<IPrivateDataStore>().GetBytes(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("TransientPrivate")));
             }
         }
     }

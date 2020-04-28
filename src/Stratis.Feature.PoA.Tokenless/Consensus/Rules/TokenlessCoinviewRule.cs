@@ -79,7 +79,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             this.privateDataRwsHashes.Clear();
 
             this.DetermineIfResultIsAlreadyCached(context);
-            this.ProcessTransactions(context);
+            await this.ProcessTransactionsAsync(context);
             this.CompareAndValidateStateRoot(context);
             this.ValidateAndStoreReceipts(context);
             this.ValidateLogsBloom(context);
@@ -133,7 +133,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
                 SmartContractConsensusErrors.UnequalStateRoots.Throw();
         }
 
-        private void ProcessTransactions(RuleContext context)
+        private async Task ProcessTransactionsAsync(RuleContext context)
         {
             if (context.SkipValidation)
                 return;
@@ -152,7 +152,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 
                 if (transaction.Outputs.First().ScriptPubKey.IsReadWriteSet())
                 {
-                    this.ExecuteReadWriteTransaction(context.ValidationContext, transaction);
+                    await this.ExecuteReadWriteTransactionAsync(context.ValidationContext, transaction);
                     continue;
                 }
 
@@ -167,7 +167,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             }
         }
 
-        private void ExecuteReadWriteTransaction(ValidationContext validationContext, Transaction transaction)
+        private async Task ExecuteReadWriteTransactionAsync(ValidationContext validationContext, Transaction transaction)
         {
             // Apply RWS to the state repository.
             ReadWriteSet rws = this.rwsSerializer.GetReadWriteSet(transaction);
@@ -185,8 +185,11 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 
             if (rws.Writes.Any(x => x.IsPrivateData))
             {
-                this.privateDataRetriever.WaitForPrivateData(rws.GetHash());
-                this.privateDataRwsHashes.Add(rws.GetHash());
+                if (await this.privateDataRetriever.WaitForPrivateDataIfRequired(rws))
+                {
+                    // If we did get the private data, as it is applicable to us, add the private data RWS to be committed on block commit.
+                    this.privateDataRwsHashes.Add(rws.GetHash());
+                }
             }
 
             this.rwsValidator.ApplyReadWriteSet(this.mutableStateRepository, rws, version);
