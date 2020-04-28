@@ -35,10 +35,10 @@ namespace Stratis.Feature.PoA.Tokenless
 
             return policy.Organisation == organisation;
         }
+
         public bool OrganisationCanAccessPrivateData(X509Certificate certificate, ReadWriteSet readWriteSet)
         {
             return this.OrganisationCanAccessPrivateData((Organisation) certificate.GetOrganisation(), readWriteSet);
         }
-
     }
 }
