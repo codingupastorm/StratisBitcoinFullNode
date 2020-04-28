@@ -6,11 +6,12 @@ namespace Stratis.SmartContracts.Core.State
     public class StorageValue
     {
         /// <summary>
-        /// We will be able to use this to find all instances where we need to insert the version.
+        /// The default version of a stored item. When a key does not exist, or an account state has
+        /// not been initialized, this version will be returned along with the default storage value.
         /// </summary>
-        public const string InsertVersion = "0.0";
+        public const string DefaultVersion = "0.0";
 
-        public static StorageValue Default = new StorageValue(null, InsertVersion);
+        public static StorageValue Default = new StorageValue(null, DefaultVersion);
 
         public byte[] Value { get;}
 
