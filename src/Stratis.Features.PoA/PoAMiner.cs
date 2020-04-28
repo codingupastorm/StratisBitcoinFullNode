@@ -159,7 +159,11 @@ namespace Stratis.Features.PoA
                         continue;
                     }
 
+                    this.logger.LogDebug("Miner waiting for mining slot...");
+
                     uint miningTimestamp = await this.WaitUntilMiningSlotAsync().ConfigureAwait(false);
+
+                    this.logger.LogDebug($"Mining slot obtained '{miningTimestamp}'");
 
                     ChainedHeader chainedHeader = await this.MineBlockAtTimestampAsync(miningTimestamp).ConfigureAwait(false);
 
@@ -221,6 +225,7 @@ namespace Stratis.Features.PoA
 
                 if (timeNow <= this.consensusManager.Tip.Header.Time)
                 {
+                    this.logger.LogDebug($"Time Now {timeNow} : Consensus Tip {this.consensusManager.Tip.Header.Time}.");
                     await Task.Delay(TimeSpan.FromMilliseconds(500)).ConfigureAwait(false);
                     continue;
                 }
@@ -240,6 +245,7 @@ namespace Stratis.Features.PoA
                 }
 
                 int estimatedWaitingTime = (int)(myTimestamp - timeNow) - 1;
+                this.logger.LogDebug($"Estimated waiting time {estimatedWaitingTime}.");
 
                 if (estimatedWaitingTime <= 0)
                     return myTimestamp.Value;

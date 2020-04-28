@@ -122,10 +122,10 @@ namespace Stratis.Feature.PoA.Tokenless
             TokenlessMempoolRuleSet.Create(this);
         }
 
-        public static ChannelNetwork CreateChannelNetwork(string name, string rootFolderName)
+        public static ChannelNetwork CreateChannelNetwork(string name, string rootFolderName, long genesisTime)
         {
             var tokenlessNetwork = new TokenlessNetwork();
-            Block genesisBlock = tokenlessNetwork.CreateGenesisBlock((TokenlessConsensusFactory)tokenlessNetwork.Consensus.ConsensusFactory, (uint)DateTime.UtcNow.Ticks, 0, 0, 0, name);
+            Block genesisBlock = tokenlessNetwork.CreateGenesisBlock((TokenlessConsensusFactory)tokenlessNetwork.Consensus.ConsensusFactory, (uint)genesisTime, 0, 0, 0, name);
 
             var channelNetwork = new ChannelNetwork()
             {

@@ -10,6 +10,7 @@ using NBitcoin.Networks;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
@@ -37,7 +38,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
             var configParameters = new NodeConfigParameters()
             {
-                { "caurl" , "http://localhost:5050" },
+                { "caurl" , CaTestHelper.BaseAddress },
                 { "debug" , "1" },
             };
 
@@ -108,7 +109,7 @@ namespace Stratis.SmartContracts.Tests.Common
         public void CreateChannel(CoreNode parentNode, string channelName, int nodeIndex)
         {
             // Serialize the channel network and write the json to disk.
-            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, "channels");
+            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, "channels", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
             channelNetwork.DefaultAPIPort += nodeIndex;
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
 
@@ -126,7 +127,7 @@ namespace Stratis.SmartContracts.Tests.Common
         public CoreNode CreateChannelNode(CoreNode infraNode, string channelName, int nodeIndex)
         {
             // Serialize the channel network and write the json to disk.
-            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, "channels");
+            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, "channels", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
             channelNetwork.DefaultAPIPort += nodeIndex;
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
 
