@@ -49,6 +49,7 @@ namespace Stratis.Feature.PoA.Tokenless
         private IAsyncLoop caPubKeysLoop;
         private readonly TokenlessKeyStoreSettings tokenlessKeyStoreSettings;
         private readonly IChannelService channelService;
+        private readonly ReadWriteSetPolicyValidator rwsPolicyValidator;
 
         public TokenlessFeature(
             ICertificatesManager certificatesManager,
@@ -72,7 +73,8 @@ namespace Stratis.Feature.PoA.Tokenless
             ITransientStore transientStore,
             IPrivateDataStore privateDataStore,
             IPrivateDataRetriever privateDataRetriever,
-            IChannelService channelService)
+            IChannelService channelService,
+            ReadWriteSetPolicyValidator rwsPolicyValidator)
         {
             this.blockRepository = blockRepository;
             this.certificatesManager = certificatesManager;
@@ -94,6 +96,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.membershipServices = membershipServices;
             this.channelService = channelService;
+            this.rwsPolicyValidator = rwsPolicyValidator;
 
             // TODO-TL: Is there a better place to do this?
             storeSettings.TxIndex = true;
@@ -114,7 +117,7 @@ namespace Stratis.Feature.PoA.Tokenless
             connectionParameters.TemplateBehaviors.Add(new EndorsementRequestBehavior(this.requestHandler));
             connectionParameters.TemplateBehaviors.Add(new EndorsementSuccessBehavior(this.successHandler));
             connectionParameters.TemplateBehaviors.Add(new ReceivePrivateDataBehavior(this.transientStore, this.privateDataStore));
-            connectionParameters.TemplateBehaviors.Add(new PrivateDataRequestBehavior(this.transientStore));
+            connectionParameters.TemplateBehaviors.Add(new PrivateDataRequestBehavior(this.transientStore, this.rwsPolicyValidator));
 
             this.federationManager.Initialize();
 

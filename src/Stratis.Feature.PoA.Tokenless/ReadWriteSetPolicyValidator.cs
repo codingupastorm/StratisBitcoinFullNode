@@ -33,6 +33,11 @@ namespace Stratis.Feature.PoA.Tokenless
             WriteItem write = readWriteSet.Writes.First(x => x.IsPrivateData);
             EndorsementPolicy policy = this.stateRepository.GetPolicy(write.ContractAddress);
 
+            if (policy == null)
+            {
+                return false;
+            }
+
             return policy.Organisation == organisation;
         }
 
