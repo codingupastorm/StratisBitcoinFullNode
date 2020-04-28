@@ -10,6 +10,8 @@ namespace Stratis.SmartContracts.Core.State
         /// </summary>
         public const string InsertVersion = "0.0";
 
+        public static StorageValue Default = new StorageValue(null, InsertVersion);
+
         public byte[] Value { get;}
 
         /// <summary>

@@ -98,14 +98,13 @@ namespace Stratis.SmartContracts.Core.State
 
             // Account doesn't exist.
             if (accountState == null)
-                return null;
+                return StorageValue.Default;
 
             byte[] storedBytes = this.storageCaches.Get(addr.ToBytes()).Get(key);
 
             // Key doesn't exist.
             if (storedBytes == null)
-                return null;
-
+                return StorageValue.Default;
 
             return StorageValue.FromBytes(this.storageCaches.Get(addr.ToBytes()).Get(key));
         }
