@@ -280,5 +280,27 @@ namespace Stratis.SmartContracts.Core.Tests
             // Nope, comes back null...
             Assert.Null(repository2.GetStorageValue(testAddress, dog).Value);
         }
+
+        [Fact]
+        public void KVP_Does_Not_Exist_Returns_Default_StorageValue()
+        {
+            // If the KVP is not found, treat it as version "0.0" (default storage value) and return this.
+            ISource<byte[], byte[]> stateDB = new NoDeleteSource<byte[], byte[]>(new MemoryDictionarySource());
+            StateRepositoryRoot repository = new StateRepositoryRoot(stateDB);
+            repository.CreateAccount(testAddress);
+            repository.Commit();
+
+            Assert.Same(StorageValue.Default, repository.GetStorageValue(testAddress, dog));
+        }
+
+        [Fact]
+        public void AccountState_Does_Not_Exist_Returns_Default_StorageValue()
+        {
+            // If the account state is not found, treat it as version "0.0" (default storage value) and return this.
+            ISource<byte[], byte[]> stateDB = new NoDeleteSource<byte[], byte[]>(new MemoryDictionarySource());
+            StateRepositoryRoot repository = new StateRepositoryRoot(stateDB);
+
+            Assert.Same(StorageValue.Default, repository.GetStorageValue(testAddress, dog));
+        }
     }
 }
