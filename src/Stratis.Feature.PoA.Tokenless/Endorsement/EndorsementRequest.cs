@@ -11,7 +11,6 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         // We wil be responding back to this peer.
         public INetworkPeer Peer;
 
-        // TODO: Put transient data in here.
         public byte[] TransientData { get; set; }
     }
 }

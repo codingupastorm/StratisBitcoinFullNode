@@ -103,7 +103,6 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             try
             {
                 // Send the result back.
-                // TODO do we need to keep track of endorsements outside of the proposer?
                 EndorsementInfo info = this.endorsements.RecordEndorsement(proposalId, contractsPolicy);               
 
                 request.Peer.SendMessageAsync(payload).ConfigureAwait(false).GetAwaiter().GetResult();
