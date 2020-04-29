@@ -182,25 +182,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             if (this.channelSettings.IsSystemChannelNode || this.channelSettings.IsChannelNode || this.channelSettings.IsInfraNode)
                 throw new ChannelServiceException("Only normal nodes can process channel join requests.");
 
-
-            /*
-            // Get transaction signing pubkey for this node.
-            PubKey member = this.tokenlessKeyStoreManager.GetPubKey(TokenlessKeyStoreAccount.TransactionSigning);
-
-            byte[] pubKeyHash = member.Hash.ToBytes();
-
-            X509Certificate x509Certificate = null;
-
-            if (!this.revocationChecker.IsCertificateRevokedByTransactionSigningKeyHash(pubKeyHash))
-                x509Certificate = this.membershipServicesDirectory.GetCertificateForTransactionSigningPubKeyHash(pubKeyHash);
-
-            if (x509Certificate == null)
-            {
-                throw new InvalidOperationException("This node's certificate has been revoked.");
-            }
-            */
-
-            // TODO: Record channel membership (in normal node repo) and start up channel node.
+            // Record channel membership (in normal node repo) and start up channel node.
             this.logger.LogInformation($"Joining and starting a node on channel '{network.Name}'.");
 
             string channelRootFolder = PrepareNodeForStartup(network.Name, network.Id, network);
@@ -311,8 +293,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             }
             else
             {
-                Guard.Assert(channelName == channelNetwork.Name);
-                Guard.Assert(channelId == channelNetwork.Id);
+                Guard.Equals(channelName, channelNetwork.Name);
+                Guard.Equals(channelId, channelNetwork.Id);
             }
 
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
