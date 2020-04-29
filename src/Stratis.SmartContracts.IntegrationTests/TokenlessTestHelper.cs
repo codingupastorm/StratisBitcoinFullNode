@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.Common;
 using MembershipServices;
-using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.IntegrationTests.Common;
@@ -35,7 +32,6 @@ namespace Stratis.SmartContracts.IntegrationTests
     public static class TokenlessTestHelper
     {
         public static readonly TokenlessNetwork Network = new TokenlessNetwork();
-        private static readonly string BaseAddress = "http://localhost:5050";
 
         public static void WaitForNodeToSync(params CoreNode[] nodes)
         {
@@ -100,7 +96,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         public static CaClient GetAdminClient()
         {
             var httpClient = new HttpClient();
-            return new CaClient(new Uri(BaseAddress), httpClient, Settings.AdminAccountId, CaTestHelper.AdminPassword);
+            return new CaClient(new Uri(CaTestHelper.BaseAddress), httpClient, Settings.AdminAccountId, CaTestHelper.AdminPassword);
         }
 
         /// <summary>
@@ -109,8 +105,8 @@ namespace Stratis.SmartContracts.IntegrationTests
         public static CaClient GetClient(IWebHost server, List<string> requestedPermissions = null, string organisation = null)
         {
             var httpClient = new HttpClient();
-            CredentialsModel credentials = CaTestHelper.CreateAccount(server, AccountAccessFlags.AdminAccess, permissions: requestedPermissions, organisation: organisation);
-            return new CaClient(new Uri(BaseAddress), httpClient, credentials.AccountId, credentials.Password);
+            CredentialsModel credentials = CaTestHelper.CreateAccount(server, AccountAccessFlags.AdminAccess, permissions: requestedPermissions, organisation:organisation);
+            return new CaClient(new Uri(CaTestHelper.BaseAddress), httpClient, credentials.AccountId, credentials.Password);
         }
 
         /// <summary>
@@ -154,37 +150,16 @@ namespace Stratis.SmartContracts.IntegrationTests
             }
         }
 
-        internal static void GetTestRootFolder(out string testRootFolder, [CallerMemberName] string callingMethod = "")
-        {
-            string hash = Guid.NewGuid().ToString("N").Substring(0, 7);
-            string numberedFolderName = string.Join(".", new[] { hash }.Where(s => s != null));
-            testRootFolder = Path.Combine("..", "..", "..", "..", "TestCase", callingMethod, numberedFolderName);
-        }
+        //public static string GetDataFolderName([CallerMemberName] string callingMethod = null)
+        //{
+        //    // Create a datafolder path for the CA settings to use
+        //    string hash = Guid.NewGuid().ToString("N").Substring(0, 7);
+        //    string numberedFolderName = string.Join(
+        //        ".",
+        //        new[] { hash }.Where(s => s != null));
 
-        public static string GetDataFolderName([CallerMemberName] string callingMethod = null)
-        {
-            // Create a datafolder path for the CA settings to use
-            string hash = Guid.NewGuid().ToString("N").Substring(0, 7);
-            string numberedFolderName = string.Join(
-                ".",
-                new[] { hash }.Where(s => s != null));
-
-
-            return TestBase.CreateTestDir(callingMethod, numberedFolderName);
-        }
-
-        public static IWebHostBuilder CreateWebHostBuilder(string dataFolderName)
-        {
-            var settings = new Settings();
-            settings.Initialize(new string[] { $"-datadir={dataFolderName}", $"-serverurls={BaseAddress}" });
-
-            IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
-            builder.UseUrls(settings.ServerUrls);
-            builder.UseStartup<TestOnlyStartup>();
-            builder.ConfigureServices((services) => { services.AddSingleton(settings); });
-
-            return builder;
-        }
+        //    return TestBase.CreateTestDir(callingMethod, numberedFolderName);
+        //}
 
         public static Transaction CreateContractCreateTransaction(CoreNode node, Key key, string contractFilename, EndorsementPolicy policy = null)
         {

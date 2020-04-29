@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitcoin.PoA;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Features.PoA.Events;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.PoA.Events;
 
 namespace Stratis.Features.PoA
 {
@@ -82,20 +83,19 @@ namespace Stratis.Features.PoA
             if (this.federationMembers == null)
             {
                 this.logger.LogDebug("Federation members are not stored in the db. Loading genesis federation members.");
-
                 this.federationMembers = new List<IFederationMember>(((PoAConsensusOptions)this.network.Consensus.Options).GenesisFederationMembers);
 
                 this.SaveFederation(this.federationMembers);
             }
 
             // Display federation.
-            this.logger.LogInformation("Federation contains {0} members. Their public keys are: {1}",
-                this.federationMembers.Count, Environment.NewLine + string.Join(Environment.NewLine, this.federationMembers));
+            this.logger.LogInformation("Federation contains {0} members. Their public keys are: {1}", this.federationMembers.Count, Environment.NewLine + string.Join(Environment.NewLine, this.federationMembers));
 
             // Load key.
             Key key = new KeyTool(this.settings.DataFolder).LoadPrivateKey(KeyType.FederationKey);
 
             this.CurrentFederationKey = key;
+
             this.SetIsFederationMember();
 
             if (this.CurrentFederationKey == null)
@@ -106,11 +106,7 @@ namespace Stratis.Features.PoA
 
             // Loaded key has to be a key for current federation.
             if (!this.federationMembers.Any(x => x.PubKey == this.CurrentFederationKey.PubKey))
-            {
-                string message = "Key provided is not registered on the network!";
-
-                this.logger.LogWarning(message);
-            }
+                this.logger.LogWarning($"Key '{this.CurrentFederationKey.PubKey}' provided is not registered on the network.");
 
             this.logger.LogInformation("Federation key pair was successfully loaded. Your public key is: '{0}'.", this.CurrentFederationKey.PubKey);
         }

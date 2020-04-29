@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using DBreeze.Utils;
 using NBitcoin;
 
@@ -73,6 +74,12 @@ namespace Stratis.Bitcoin.Utilities
                 byte[] bytes = BitConverter.GetBytes((ulong)(object)obj);
                 if (BitConverter.IsLittleEndian)
                     bytes = bytes.Reverse().ToArray();
+                return bytes;
+            }
+
+            if (typeof(T) == typeof(string))
+            {
+                byte[] bytes = Encoding.UTF8.GetBytes((string)(object)obj);
                 return bytes;
             }
 
@@ -164,6 +171,11 @@ namespace Stratis.Bitcoin.Utilities
                 if (BitConverter.IsLittleEndian)
                     clonedBytes = clonedBytes.Reverse().ToArray();
                 return (T)(object)BitConverter.ToUInt64(clonedBytes, 0);
+            }
+
+            if (typeof(T) == typeof(string))
+            {
+                return (T)(object)Encoding.UTF8.GetString(bytes);
             }
 
             Guard.Assert(!typeof(T).IsValueType);

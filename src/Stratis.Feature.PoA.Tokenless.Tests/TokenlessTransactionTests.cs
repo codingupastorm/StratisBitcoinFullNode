@@ -4,6 +4,7 @@ using MembershipServices;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
@@ -35,7 +36,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var membershipServices = new MembershipServicesDirectory(settings);
             var revocationChecker = new RevocationChecker(membershipServices);
             var certificatesManager = new CertificatesManager(settings.DataFolder, settings, settings.LoggerFactory, revocationChecker, network);
-            var tokenlessWalletManager = new TokenlessKeyStoreManager(network, settings.DataFolder, new TokenlessKeyStoreSettings(settings), certificatesManager, settings.LoggerFactory);
+            var channelSettings = new ChannelSettings(settings);
+            var tokenlessWalletManager = new TokenlessKeyStoreManager(network, settings.DataFolder, channelSettings, new TokenlessKeyStoreSettings(settings), certificatesManager, settings.LoggerFactory);
             tokenlessWalletManager.Initialize();
             var signer = new TokenlessSigner(network, new SenderRetriever());
             var endorsementSigner = new EndorsementSigner(network, signer, tokenlessWalletManager);

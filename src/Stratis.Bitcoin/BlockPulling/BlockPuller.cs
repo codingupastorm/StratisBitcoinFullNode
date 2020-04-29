@@ -716,7 +716,8 @@ namespace Stratis.Bitcoin.BlockPulling
         private void CheckStalling()
         {
             int lastImportantHeight = this.chainState.ConsensusTip.Height + ImportantHeightMargin;
-            this.logger.LogDebug("Blocks up to height {0} are considered to be important.", lastImportantHeight);
+
+            this.logger.LogTrace("Blocks up to height {0} are considered to be important.", lastImportantHeight);
 
             var allReleasedAssignments = new List<Dictionary<int, List<ChainedHeader>>>();
 

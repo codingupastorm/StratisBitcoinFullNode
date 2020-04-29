@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using NBitcoin.PoA;
 using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Features.MemoryPool.Rules;
 using Stratis.Features.PoA.BasePoAFeatureConsensusRules;

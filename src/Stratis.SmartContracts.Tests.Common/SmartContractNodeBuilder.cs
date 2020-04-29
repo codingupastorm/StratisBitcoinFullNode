@@ -5,16 +5,18 @@ using CertificateAuthority;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.Common;
 using MembershipServices;
-using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Networks;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Features.PoA.Tests.Common;
-using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless;
+using Stratis.Feature.PoA.Tokenless.Channels;
+using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.Features.PoA.Tests.Common;
 using Xunit;
 
 namespace Stratis.SmartContracts.Tests.Common
@@ -28,7 +30,7 @@ namespace Stratis.SmartContracts.Tests.Common
             this.TimeProvider = new EditableTimeProvider();
         }
 
-        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client, bool isInfraNode = false, bool initialRun = true)
+        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client, string agent = "TKL", bool isInfraNode = false, bool willStartChannels = false, bool initialRun = true)
         {
             string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
 
@@ -36,13 +38,17 @@ namespace Stratis.SmartContracts.Tests.Common
 
             var configParameters = new NodeConfigParameters()
             {
-                { "caurl" , "http://localhost:5050" },
-                { "channelapiport" , "20000" },
-                { "channelprocesspath" , "..\\..\\..\\..\\Stratis.TokenlessD\\" },
-                { "isinfranode", isInfraNode.ToString() }
+                { "caurl" , CaTestHelper.BaseAddress },
+                { "debug" , "1" },
             };
 
-            CoreNode node = this.CreateNode(new TokenlessNodeRunner(dataFolder, network, this.TimeProvider), "poa.conf", configParameters: configParameters);
+            if (isInfraNode)
+                configParameters.Add("isinfranode", "True");
+
+            if (willStartChannels)
+                configParameters.Add("channelprocesspath", "..\\..\\..\\..\\Stratis.TokenlessD\\");
+
+            CoreNode node = this.CreateNode(new TokenlessNodeRunner(dataFolder, network, this.TimeProvider, agent), "poa.conf", configParameters: configParameters);
 
             Mnemonic mnemonic = nodeIndex < 3
                 ? TokenlessNetwork.Mnemonics[nodeIndex]
@@ -100,13 +106,32 @@ namespace Stratis.SmartContracts.Tests.Common
             }
         }
 
-        public CoreNode CreateChannelNode(CoreNode infraNode, string channelName, int nodeIndex = 0)
+        public void CreateChannel(CoreNode parentNode, string channelName, int nodeIndex)
         {
             // Serialize the channel network and write the json to disk.
-            var nodeRootFolder = Path.Combine(this.rootFolder, nodeIndex.ToString());
-            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, "channels");
+            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, "channels", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
+            channelNetwork.DefaultAPIPort += nodeIndex;
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
 
+            var channelRootFolder = Path.Combine(parentNode.FullNode.Settings.DataDir, channelNetwork.RootFolderName, channelName);
+            Directory.CreateDirectory(channelRootFolder);
+
+            var serializedNetworkFileName = $"{channelRootFolder}\\{channelName}_network.json";
+            File.WriteAllText(serializedNetworkFileName, serializedJson);
+
+            // Save the channel definition so that it can loaded on node start.
+            IChannelRepository channelRepository = parentNode.FullNode.NodeService<IChannelRepository>();
+            channelRepository.SaveChannelDefinition(new ChannelDefinition() { Name = channelName });
+        }
+
+        public CoreNode CreateChannelNode(CoreNode infraNode, string channelName, int nodeIndex)
+        {
+            // Serialize the channel network and write the json to disk.
+            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, "channels", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
+            channelNetwork.DefaultAPIPort += nodeIndex;
+            var serializedJson = JsonSerializer.Serialize(channelNetwork);
+
+            var nodeRootFolder = Path.Combine(this.rootFolder, nodeIndex.ToString());
             var channelRootFolder = Path.Combine(nodeRootFolder, channelNetwork.RootFolderName);
             Directory.CreateDirectory(channelRootFolder);
 
@@ -114,7 +139,7 @@ namespace Stratis.SmartContracts.Tests.Common
             File.WriteAllText(serializedNetworkFileName, serializedJson);
 
             // Create the channel node runner.
-            CoreNode channelNode = this.CreateNode(new ChannelNodeRunner(channelName, nodeRootFolder, this.TimeProvider), "poa.conf");
+            CoreNode channelNode = this.CreateNode(new ChannelNodeRunner(channelName, nodeRootFolder, this.TimeProvider), "channel.conf");
 
             // Initialize the channel nodes's data folder etc.
             string[] args = new string[] { "-datadir=" + nodeRootFolder, };
@@ -132,15 +157,14 @@ namespace Stratis.SmartContracts.Tests.Common
 
         public CoreNode CreateInfraNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client)
         {
-            return CreateTokenlessNode(network, nodeIndex, authorityCertificate, client, true);
+            return CreateTokenlessNode(network, nodeIndex, authorityCertificate, client, "system", true, true);
         }
 
         private TokenlessKeyStoreManager InitializeNodeKeyStore(CoreNode node, Network network, NodeSettings settings)
         {
-            var loggerFactory = new LoggerFactory();
             var revocationChecker = new RevocationChecker(new MembershipServicesDirectory(settings));
-            var certificatesManager = new CertificatesManager(settings.DataFolder, settings, loggerFactory, revocationChecker, network);
-            var keyStoreManager = new TokenlessKeyStoreManager(network, settings.DataFolder, new TokenlessKeyStoreSettings(settings), certificatesManager, loggerFactory);
+            var certificatesManager = new CertificatesManager(settings.DataFolder, settings, settings.LoggerFactory, revocationChecker, network);
+            var keyStoreManager = new TokenlessKeyStoreManager(network, settings.DataFolder, new ChannelSettings(settings.ConfigReader), new TokenlessKeyStoreSettings(settings), certificatesManager, settings.LoggerFactory);
 
             keyStoreManager.Initialize();
 

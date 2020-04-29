@@ -1,24 +1,34 @@
-﻿using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Utilities;
+﻿using Stratis.Bitcoin.Configuration;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels
 {
     public sealed class ChannelSettings
     {
-        private readonly ILogger logger;
-
-        public readonly int ChannelApiPort;
+        public readonly string ChannelParentPipeName;
+        public readonly string ChannelName;
+        public readonly bool IsChannelNode;
+        public readonly bool IsInfraNode;
+        public readonly bool IsSystemChannelNode;
         public readonly string ProcessPath;
 
         public ChannelSettings(NodeSettings nodeSettings)
         {
-            Guard.NotNull(nodeSettings, nameof(nodeSettings));
+            this.ChannelParentPipeName = nodeSettings.ConfigReader.GetOrDefault("channelparentpipename", (string)null);
+            this.ChannelName = nodeSettings.ConfigReader.GetOrDefault("channelname", "");
+            this.IsChannelNode = nodeSettings.ConfigReader.GetOrDefault<bool>("ischannelnode", false);
+            this.IsInfraNode = nodeSettings.ConfigReader.GetOrDefault<bool>("isinfranode", false);
+            this.IsSystemChannelNode = nodeSettings.ConfigReader.GetOrDefault<bool>("issystemchannelnode", false);
+            this.ProcessPath = nodeSettings.ConfigReader.GetOrDefault("channelprocesspath", "");
+        }
 
-            this.logger = nodeSettings.LoggerFactory.CreateLogger(this.GetType().FullName);
-
-            this.ChannelApiPort = nodeSettings.ConfigReader.GetOrDefault("channelapiport", 0, this.logger);
-            this.ProcessPath = nodeSettings.ConfigReader.GetOrDefault("channelprocesspath", "", this.logger);
+        public ChannelSettings(TextFileConfiguration fileConfiguration)
+        {
+            this.ChannelParentPipeName = fileConfiguration.GetOrDefault("channelparentpipename", (string)null);
+            this.ChannelName = fileConfiguration.GetOrDefault("channelname", "");
+            this.IsChannelNode = fileConfiguration.GetOrDefault<bool>("ischannelnode", false);
+            this.IsInfraNode = fileConfiguration.GetOrDefault<bool>("isinfranode", false);
+            this.IsSystemChannelNode = fileConfiguration.GetOrDefault<bool>("issystemchannelnode", false);
+            this.ProcessPath = fileConfiguration.GetOrDefault("channelprocesspath", "");
         }
     }
 }

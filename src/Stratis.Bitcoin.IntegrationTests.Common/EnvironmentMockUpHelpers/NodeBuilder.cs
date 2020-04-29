@@ -7,9 +7,9 @@ using NBitcoin;
 using NBitcoin.Protocol;
 using NLog;
 using Stratis.Bitcoin.Builder;
-using Stratis.Features.Api;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Features.Api;
 using Stratis.Features.BlockStore;
 using Stratis.Features.Consensus;
 using Stratis.Features.MemoryPool;
@@ -59,9 +59,9 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
                 .WithLogsDisabled();
         }
 
-        protected CoreNode CreateNode(NodeRunner runner, string configFile = "bitcoin.conf", bool useCookieAuth = false, NodeConfigParameters configParameters = null)
+        protected CoreNode CreateNode(NodeRunner runner, string configFile = "bitcoin.conf", NodeConfigParameters configParameters = null)
         {
-            var node = new CoreNode(runner, configParameters, configFile, useCookieAuth);
+            var node = new CoreNode(runner, configParameters, configFile);
             this.Nodes.Add(node);
             return node;
         }

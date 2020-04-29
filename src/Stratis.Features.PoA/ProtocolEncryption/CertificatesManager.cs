@@ -37,6 +37,12 @@ namespace Stratis.Features.PoA.ProtocolEncryption
         /// <summary>The password used by the node to query the CA.</summary>
         public const string CaPasswordKey = "capassword";
 
+        /// <summary>The base url key to be used.</summary>
+        public const string CaBaseUrl = "http://localhost:5050";
+
+        /// <summary>The base url to be used to query the CA.</summary>
+        public const string CaBaseUrlKey = "caurl";
+
         /// <inheritdoc/>
         public X509Certificate AuthorityCertificate { get; private set; }
 
@@ -71,9 +77,9 @@ namespace Stratis.Features.PoA.ProtocolEncryption
             this.revocationChecker = revocationChecker;
             this.network = network;
 
-            this.caUrl = this.configuration.GetOrDefault<string>("caurl", "https://localhost:5001");
+            this.caUrl = this.configuration.GetOrDefault(CaBaseUrlKey, CaBaseUrl);
 
-            this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
+            this.logger = loggerFactory.CreateLogger(GetType().FullName);
         }
 
         /// <inheritdoc/>
@@ -157,7 +163,7 @@ namespace Stratis.Features.PoA.ProtocolEncryption
 
             if (!clientCertValid)
                 throw new CertificateConfigurationException("Provided client certificate isn't valid or isn't signed by the authority certificate!");
-            
+
             bool revoked = this.revocationChecker.IsCertificateRevoked(CaCertificatesManager.GetThumbprint(this.ClientCertificate));
 
             if (revoked)
@@ -208,7 +214,7 @@ namespace Stratis.Features.PoA.ProtocolEncryption
         public List<PubKey> GetCertificatePublicKeys()
         {
             CaClient caClient = this.GetClient();
-            return caClient.GetCertificatePublicKeys();
+            return caClient.GetCertificatePublicKeys(this.logger);
         }
 
         public List<CertificateInfoModel> GetAllCertificates()

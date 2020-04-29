@@ -3,6 +3,7 @@ using MembershipServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NBitcoin;
+using NBitcoin.PoA;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration.Logging;
@@ -120,6 +121,11 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<ICertificatesManager, CertificatesManager>();
                         services.AddSingleton<IRevocationChecker, RevocationChecker>();
                         services.AddSingleton<ICertificatePermissionsChecker, CertificatePermissionsChecker>();
+
+                        // Channels
+                        services.AddSingleton<IChannelKeyValueStore, ChannelKeyValueStore>();
+                        services.AddSingleton<IChannelRepository, ChannelRepository>();
+                        services.AddSingleton<IChannelRequestSerializer, ChannelRequestSerializer>();
 
                         var options = (PoAConsensusOptions)network.Consensus.Options;
                         if (options.EnablePermissionedMembership)

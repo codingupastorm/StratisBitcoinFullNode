@@ -34,6 +34,7 @@ namespace Stratis.Bitcoin.Controllers
     /// </summary>
     [ApiVersion("1")]
     [Route("api/[controller]")]
+    [ApiController]
     public class NodeController : Controller
     {
         /// <summary>Full Node.</summary>
@@ -125,13 +126,13 @@ namespace Stratis.Bitcoin.Controllers
         /// Gets general information about this full node including the version,
         /// protocol version, network name, coin ticker, and consensus height.
         /// </summary>
-        /// <returns>A <see cref="StatusModel"/> with information about the node.</returns>
+        /// <returns>A <see cref="NodeStatusModel"/> with information about the node.</returns>
         [HttpGet]
         [Route("status")]
         public IActionResult Status()
         {
             // Output has been merged with RPC's GetInfo() since they provided similar functionality.
-            var model = new StatusModel
+            var model = new NodeStatusModel
             {
                 Version = this.fullNode.Version?.ToString() ?? "0",
                 ProtocolVersion = (uint)(this.nodeSettings.ProtocolVersion),

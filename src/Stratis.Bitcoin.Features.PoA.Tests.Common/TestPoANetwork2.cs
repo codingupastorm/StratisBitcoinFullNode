@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using NBitcoin;
+using NBitcoin.PoA;
 using Stratis.Bitcoin.Tests.Common;
 
 namespace Stratis.Features.PoA.Tests.Common

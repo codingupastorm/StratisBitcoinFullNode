@@ -28,6 +28,7 @@ namespace Stratis.Bitcoin.Configuration
             this.ChainPath = Path.Combine(path, "chain");
             this.KeyValueRepositoryPath = Path.Combine(path, "common");
             this.BlockPath = Path.Combine(path, "blocks");
+            this.ChannelsPath = Path.Combine(path, "channels");
             this.PollsPath = Path.Combine(path, "polls");
             this.IndexPath = Path.Combine(path, "index");
             this.RpcCookieFile = Path.Combine(path, ".cookie");
@@ -65,6 +66,9 @@ namespace Stratis.Bitcoin.Configuration
         /// <summary>Path to the folder with block repository database files.</summary>
         /// <seealso cref="Features.BlockStore.BlockRepository.BlockRepository"/>
         public string BlockPath { get; internal set; }
+
+        /// <summary>Path to the folder with the channel data.</summary>
+        public string ChannelsPath { get; internal set; }
 
         /// <summary>Path to the folder with polls.</summary>
         public string PollsPath { get; internal set; }

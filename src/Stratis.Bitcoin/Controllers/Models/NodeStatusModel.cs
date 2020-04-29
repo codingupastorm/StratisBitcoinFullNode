@@ -6,12 +6,12 @@ namespace Stratis.Bitcoin.Controllers.Models
     /// <summary>
     /// Class representing the status of the currently running node.
     /// </summary>
-    public class StatusModel
+    public class NodeStatusModel
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="StatusModel"/> class.
+        /// Initializes a new instance of the <see cref="NodeStatusModel"/> class.
         /// </summary>
-        public StatusModel()
+        public NodeStatusModel()
         {
             this.InboundPeers = new List<ConnectedPeerModel>();
             this.OutboundPeers = new List<ConnectedPeerModel>();

@@ -22,6 +22,7 @@ namespace Stratis.Features.BlockStore.Controllers
     /// <summary>Controller providing operations on a blockstore.</summary>
     [ApiVersion("1")]
     [Route("api/[controller]")]
+    [ApiController]
     public class BlockStoreController : Controller
     {
         /// <summary>Provides access to the block store on disk.</summary>
