@@ -308,9 +308,10 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task InvalidTransactionNotIncludedInBlock()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
+            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder(testRootFolder);
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
+            using (IWebHost server = builder.Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
