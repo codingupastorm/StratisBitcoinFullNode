@@ -150,14 +150,6 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 lock (this.StartedChannelNodes)
                     this.StartedChannelNodes.Add(channelNode);
 
-                var channelDefinition = new ChannelDefinition()
-                {
-                    Id = channelNodeId,
-                    Name = request.Name
-                };
-
-                this.channelRepository.SaveChannelDefinition(channelDefinition);
-
                 this.logger.LogInformation($"Node started on channel '{request.Name}' with Pid '{channelNode.Process.Id}'.");
             }
             catch (Exception ex)
@@ -253,6 +245,16 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
             Directory.CreateDirectory(rootFolderName);
             File.WriteAllText(networkFileName, serializedJson);
+
+            var channelDefinition = new ChannelDefinition()
+            {
+                Id = channelId,
+                Name = channelName,
+                NetworkJson = serializedJson,
+            };
+
+            this.channelRepository.SaveChannelDefinition(channelDefinition);
+
             return rootFolderName;
         }
 
