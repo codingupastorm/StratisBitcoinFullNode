@@ -5,14 +5,9 @@ namespace Stratis.Feature.PoA.Tokenless.Channels.Requests
 {
     public sealed class ChannelJoinRequest
     {
-        /// <summary> The id of the channel to join.</summary>
-        [JsonPropertyName("id")]
+        /// <summary> The network json of the channel to join.</summary>
+        [JsonPropertyName("network_json")]
         [Required]
-        public int Id { get; set; }
-
-        /// <summary> The name of the channel to join.</summary>
-        [JsonPropertyName("name")]
-        [Required]
-        public string Name { get; set; }
+        public string NetworkJson { get; set; }
     }
 }

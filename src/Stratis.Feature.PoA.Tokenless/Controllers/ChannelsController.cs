@@ -5,7 +5,7 @@ using MembershipServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Org.BouncyCastle.X509;
+using Newtonsoft.Json;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Utilities.JsonErrors;
 using Stratis.Bitcoin.Utilities.ModelStateErrors;
@@ -87,12 +87,14 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             if (!this.ModelState.IsValid)
                 return ModelStateErrors.BuildErrorResponse(this.ModelState);
 
-            this.logger.LogInformation($"Request to join channel '{request.Name}' received.");
+            var network = JsonConvert.DeserializeObject<ChannelNetwork>(request.NetworkJson);
+
+            this.logger.LogInformation($"Request to join channel '{network.Name}' received.");
 
             try
             {                
                 // Record channel membership (in normal node repo) and start up channel node.
-                await this.channelService.JoinChannelAsync(request);
+                await this.channelService.JoinChannelAsync(network);
 
                 return Ok();
             }
