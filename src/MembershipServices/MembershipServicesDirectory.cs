@@ -101,6 +101,12 @@ namespace MembershipServices
             throw new NotImplementedException();
         }
 
+        public bool IsSignedByAuthorityCertificate(X509Certificate certificateToValidate, X509Certificate authorityCertificate)
+        {
+            // TODO: Validate authority certificate against one of the known authorities in the MSD?
+            return CaCertificatesManager.ValidateCertificateChain(authorityCertificate, certificateToValidate);
+        }
+
         public X509Certificate GetCertificateForAddress(uint160 address)
         {
             var p2pkh = new BitcoinPubKeyAddress(new KeyId(address), this.nodeSettings.Network);
@@ -113,9 +119,28 @@ namespace MembershipServices
             return this.localMembershipServices.GetCertificateByTransactionSigningPubKeyHash(transactionSigningPubKeyHash);
         }
 
+        // TODO: Perhaps move revocation checking into a sub-component of the MSD to keep the top level cleaner.
         public bool IsCertificateRevoked(string thumbprint)
         {
             return this.localMembershipServices.IsCertificateRevoked(thumbprint);
+        }
+
+        public bool IsCertificateRevokedByTransactionSigningKeyHash(byte[] pubKeyHash)
+        {
+            X509Certificate certificate = this.GetCertificateForTransactionSigningPubKeyHash(pubKeyHash);
+
+            // If the certificate is unknown to us, assume revocation.
+            if (certificate == null)
+                return true;
+
+            string thumbprint = GetCertificateThumbprint(certificate);
+
+            return this.IsCertificateRevoked(thumbprint);
+        }
+
+        public bool IsCertificateRevokedByAddress(uint160 address)
+        {
+            return this.IsCertificateRevokedByTransactionSigningKeyHash(address.ToBytes());
         }
 
         public static string GetCertificateThumbprint(X509Certificate certificate)
@@ -163,17 +188,38 @@ namespace MembershipServices
             return null;
         }
 
-        public static byte[] GetTransactionSigningPubKeyHash(X509Certificate certificate)
+        public static byte[] ExtractCertificateExtension(X509Certificate certificate, string oid)
         {
-            // TODO: This implementation is directly from CertificatesManager. Need to avoid the duplication.
-
             // TODO: Find a way of extracting this extension cleanly without a trip through X509Certificate2.
             X509Certificate2 cert = CaCertificatesManager.ConvertCertificate(certificate, new SecureRandom());
 
             foreach (X509Extension extension in cert.Extensions)
             {
-                if (extension.Oid.Value == CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid)
+                if (extension.Oid.Value == oid)
+                    // This is truly horrible, but it isn't clear how we can correctly go from the DER bytes in the extension, to a relevant BC class, to a string.
+                    // Perhaps we are meant to recursively evaluate the extension data as ASN.1 until we land up with raw data that can't be decoded further?
+                    // IMPORTANT: The two prefix bytes being removed consist of a type tag (e.g. `0x04` = octet string)
+                    // and a length byte. For lengths > 127 more than one byte is needed, which would break this code.
                     return extension.RawData.Skip(2).ToArray();
+            }
+
+            return null;
+        }
+
+        public static string ExtractCertificateExtensionString(X509Certificate certificate, string oid)
+        {
+            X509Certificate2 cert = CaCertificatesManager.ConvertCertificate(certificate, new SecureRandom());
+
+            foreach (X509Extension extension in cert.Extensions)
+            {
+                if (extension.Oid.Value == oid)
+                {
+                    // This is truly horrible, but it isn't clear how we can correctly go from the DER bytes in the extension, to a relevant BC class, to a string.
+                    // Perhaps we are meant to recursively evaluate the extension data as ASN.1 until we land up with raw data that can't be decoded further?
+                    var temp = extension.RawData.Skip(2).ToArray();
+
+                    return Encoding.UTF8.GetString(temp);
+                }
             }
 
             return null;

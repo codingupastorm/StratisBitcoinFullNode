@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using CertificateAuthority;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Utilities;
@@ -127,7 +128,7 @@ namespace MembershipServices
                 this.mapThumbprints.TryRemove(MembershipServicesDirectory.GetCertificateThumbprint(certificate), out _);
                 this.mapCommonNames.TryRemove(MembershipServicesDirectory.GetCertificateCommonName(certificate), out _);
                 this.mapAddresses.TryRemove(MembershipServicesDirectory.GetCertificateTransactionSigningAddress(certificate, this.network), out _);
-                this.mapTransactionSigningPubKeyHash.TryRemove(MembershipServicesDirectory.GetTransactionSigningPubKeyHash(certificate), out _);
+                this.mapTransactionSigningPubKeyHash.TryRemove(MembershipServicesDirectory.ExtractCertificateExtension(certificate, CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid), out _);
             }
             catch (Exception e)
             {
@@ -241,7 +242,7 @@ namespace MembershipServices
             this.mapThumbprints.TryAdd(MembershipServicesDirectory.GetCertificateThumbprint(certificate), certificate);
             this.mapCommonNames.TryAdd(MembershipServicesDirectory.GetCertificateCommonName(certificate), certificate);
             this.mapAddresses.TryAdd(MembershipServicesDirectory.GetCertificateTransactionSigningAddress(certificate, this.network), certificate);
-            this.mapTransactionSigningPubKeyHash.TryAdd(MembershipServicesDirectory.GetTransactionSigningPubKeyHash(certificate), certificate);
+            this.mapTransactionSigningPubKeyHash.TryAdd(MembershipServicesDirectory.ExtractCertificateExtension(certificate, CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid), certificate);
         }
 
         private string GetCertificatePath(X509Certificate certificate, MemberType memberType)

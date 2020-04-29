@@ -47,7 +47,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.PoA
 
                         // Purely to make DI work, shouldn't be used.
                         services.AddSingleton<ICertificatesManager, CertificatesManager>();
-                        services.AddSingleton<IRevocationChecker, RevocationChecker>();
                     });
             });
 

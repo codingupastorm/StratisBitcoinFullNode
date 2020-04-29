@@ -52,7 +52,7 @@ namespace Stratis.Feature.PoA.Tokenless
             if (this.certificatesManager.ClientCertificate == null)
                 return false;
 
-            byte[] permissionBytes = CertificatesManager.ExtractCertificateExtension(this.certificatesManager.ClientCertificate, oId);
+            byte[] permissionBytes = MembershipServicesDirectory.ExtractCertificateExtension(this.certificatesManager.ClientCertificate, oId);
             return permissionBytes != null;
         }
 
@@ -69,7 +69,7 @@ namespace Stratis.Feature.PoA.Tokenless
             if (this.certificatesManager?.ClientCertificate != null)
             {
                 // TODO: This value could be cached, or retrieved from the wallet?
-                byte[] myCertTransactionSigningHash = CertificatesManager.ExtractCertificateExtension(this.certificatesManager.ClientCertificate, CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid);
+                byte[] myCertTransactionSigningHash = MembershipServicesDirectory.ExtractCertificateExtension(this.certificatesManager.ClientCertificate, CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid);
                 var myCertAddress = new uint160(myCertTransactionSigningHash);
 
                 if (myCertAddress == address)
@@ -88,7 +88,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
             string oidToCheckFor = permission.GetPermissionOid();
 
-            byte[] result = CertificatesManager.ExtractCertificateExtension(certificate, oidToCheckFor);
+            byte[] result = MembershipServicesDirectory.ExtractCertificateExtension(certificate, oidToCheckFor);
             return result != null && result[0] == 1;
         }
     }

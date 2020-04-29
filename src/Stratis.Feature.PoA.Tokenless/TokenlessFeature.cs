@@ -36,7 +36,6 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly VotingManager votingManager;
         private readonly IFederationManager federationManager;
         private readonly IPoAMiner miner;
-        private readonly IRevocationChecker revocationChecker;
         private readonly NodeSettings nodeSettings;
         private readonly IAsyncProvider asyncProvider;
         private readonly INodeLifetime nodeLifetime;
@@ -55,7 +54,6 @@ namespace Stratis.Feature.PoA.Tokenless
             IFederationManager federationManager,
             IPoAMiner miner,
             PayloadProvider payloadProvider,
-            IRevocationChecker revocationChecker,
             StoreSettings storeSettings,
             NodeSettings nodeSettings,
             TokenlessKeyStoreSettings tokenlessKeyStoreSettings,
@@ -72,7 +70,6 @@ namespace Stratis.Feature.PoA.Tokenless
             this.coreComponent = coreComponent;
             this.federationManager = federationManager;
             this.miner = miner;
-            this.revocationChecker = revocationChecker;
             this.nodeSettings = nodeSettings;
             this.tokenlessKeyStoreSettings = tokenlessKeyStoreSettings;
             this.asyncProvider = asyncProvider;
@@ -104,7 +101,6 @@ namespace Stratis.Feature.PoA.Tokenless
             if (options.EnablePermissionedMembership)
             {
                 this.membershipServices.Initialize();
-                this.revocationChecker.Initialize();
                 // We do not need to initialize the CertificatesManager here like it would have been in the regular PoA feature, because the TokenlessWalletManager is now responsible for ensuring a client certificate is created instead.
             }
 
@@ -211,7 +207,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
             connectionParameters.TemplateBehaviors.Remove(defaultBlockStoreBehavior);
             connectionParameters.TemplateBehaviors.Add(new PoABlockStoreBehavior(this.coreComponent.ChainIndexer, this.coreComponent.ChainState, this.coreComponent.LoggerFactory, this.coreComponent.ConsensusManager, this.coreComponent.BlockStoreQueue));
-            connectionParameters.TemplateBehaviors.Add(new RevocationBehavior(this.coreComponent.Network, this.coreComponent.LoggerFactory, this.revocationChecker));
+            connectionParameters.TemplateBehaviors.Add(new RevocationBehavior(this.coreComponent.Network, this.coreComponent.LoggerFactory, this.membershipServices));
         }
 
         /// <inheritdoc />
@@ -222,9 +218,6 @@ namespace Stratis.Feature.PoA.Tokenless
             this.miner.Dispose();
 
             this.votingManager.Dispose();
-
-            if (((PoAConsensusOptions)this.coreComponent.Network.Consensus.Options).EnablePermissionedMembership)
-                this.revocationChecker.Dispose();
 
             this.channelService.StopChannelNodes();
         }

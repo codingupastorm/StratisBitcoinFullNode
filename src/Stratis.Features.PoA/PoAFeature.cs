@@ -61,13 +61,10 @@ namespace Stratis.Features.PoA
 
         private readonly ICertificatesManager certificatesManager;
 
-        private readonly IRevocationChecker revocationChecker;
-
         public PoAFeature(IFederationManager federationManager, PayloadProvider payloadProvider, IConnectionManager connectionManager, ChainIndexer chainIndexer,
             IInitialBlockDownloadState initialBlockDownloadState, IConsensusManager consensusManager, IPeerBanning peerBanning, ILoggerFactory loggerFactory,
             VotingManager votingManager, Network network, IWhitelistedHashesRepository whitelistedHashesRepository,
-            IdleFederationMembersKicker idleFederationMembersKicker, IChainState chainState, IBlockStoreQueue blockStoreQueue, ICertificatesManager certificatesManager,
-            IRevocationChecker revocationChecker)
+            IdleFederationMembersKicker idleFederationMembersKicker, IChainState chainState, IBlockStoreQueue blockStoreQueue, ICertificatesManager certificatesManager)
         {
             this.federationManager = federationManager;
             this.connectionManager = connectionManager;
@@ -83,7 +80,6 @@ namespace Stratis.Features.PoA
             this.chainState = chainState;
             this.blockStoreQueue = blockStoreQueue;
             this.certificatesManager = certificatesManager;
-            this.revocationChecker = revocationChecker;
 
             payloadProvider.DiscoverPayloads(this.GetType().Assembly);
         }
@@ -112,7 +108,6 @@ namespace Stratis.Features.PoA
 
             if (options.EnablePermissionedMembership)
             {
-                this.revocationChecker.Initialize();
                 this.certificatesManager.Initialize();
             }
         }
@@ -151,11 +146,6 @@ namespace Stratis.Features.PoA
             this.votingManager.Dispose();
 
             this.idleFederationMembersKicker.Dispose();
-
-            if (((PoAConsensusOptions)this.network.Consensus.Options).EnablePermissionedMembership)
-            {
-                this.revocationChecker.Dispose();
-            }
         }
     }
 
@@ -209,7 +199,6 @@ namespace Stratis.Features.PoA
                         // TODO: PoA shouldn't actually require the MSD. Perhaps remove TLS support from PoA entirely?
                         services.AddSingleton<IMembershipServicesDirectory, MembershipServicesDirectory>();
                         services.AddSingleton<ICertificatesManager, CertificatesManager>();
-                        services.AddSingleton<IRevocationChecker, RevocationChecker>();
 
                         var options = (PoAConsensusOptions)network.Consensus.Options;
 
