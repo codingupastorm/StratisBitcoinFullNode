@@ -43,7 +43,7 @@ namespace Stratis.SmartContracts.CLR.Local
                 Address.Zero
             );
 
-            string version = StorageValue.InsertVersion;
+            string version = StorageValue.DefaultVersion;
 
             IState state = this.stateFactory.Create(
                 this.stateRoot.StartTracking(),
