@@ -1,6 +1,10 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using NBitcoin;
+using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Core.Serialization;
+using Stratis.Feature.PoA.Tokenless.Mempool;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -21,5 +25,32 @@ namespace Stratis.Feature.PoA.Tokenless
         [JsonPropertyName("genesisblock")]
         [JsonConverter(typeof(TokenlessGenesisBlockConverter))]
         public override Block Genesis { get; set; }
+
+        /// <summary>
+        /// Deserializes the given json string to a new instance of <see cref="ChannelNetwork"/>.
+        /// </summary>
+        /// <param name="channelSettings">The string containing the Json.</param>
+        /// <returns>A new instance of <see cref="ChannelNetwork"/>.</returns>
+        public static ChannelNetwork Construct(string channelDataFolder, string channelName, bool isSystemChannelNode)
+        {
+            var json = File.ReadAllText($"{channelDataFolder}\\{channelName}_network.json");
+
+            ChannelNetwork channelNetwork = JsonSerializer.Deserialize<ChannelNetwork>(json);
+            channelNetwork.Consensus.ConsensusFactory = new TokenlessConsensusFactory();
+            channelNetwork.Consensus.HashGenesisBlock = channelNetwork.Genesis.GetHash();
+
+            if (isSystemChannelNode)
+            {
+                TokenlessConsensusRuleSet.CreateForSystemChannel(channelNetwork);
+                TokenlessMempoolRuleSet.CreateForSystemChannel(channelNetwork);
+            }
+            else
+            {
+                TokenlessConsensusRuleSet.Create(channelNetwork);
+                TokenlessMempoolRuleSet.Create(channelNetwork);
+            }
+
+            return channelNetwork;
+        }
     }
 }

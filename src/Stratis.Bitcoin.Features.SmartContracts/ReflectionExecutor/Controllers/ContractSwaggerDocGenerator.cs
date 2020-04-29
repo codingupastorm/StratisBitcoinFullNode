@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.OpenApi.Models;
 using Stratis.SmartContracts.CLR.Loader;
+using Stratis.SmartContracts.Tokenless;
 using Swashbuckle.AspNetCore.Swagger;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -40,14 +41,25 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
 
             IEnumerable<MethodInfo> methods = this.assembly.GetPublicMethods();
 
-            var methodPaths = methods
-                .ToDictionary(k => $"/api/contract/{this.address}/method/{k.Name}", v => this.CreatePathItem(v, schema));
+            IEnumerable<MethodInfo> pureMethods = methods.Where(x => x.CustomAttributes.Any(y => y.AttributeType.Name == typeof(PureAttribute).Name));
+
+            IEnumerable<MethodInfo> normalMethods = methods.Where(x => x.CustomAttributes.All(y => y.AttributeType.Name != typeof(PureAttribute).Name));
+
+            var methodPaths = normalMethods.ToDictionary(k => $"/api/contract/{this.address}/method/{k.Name}", v => this.CreatePathItem(v, schema));
+
+            var pureMethodPaths = pureMethods.ToDictionary(k => $"/api/contract/{this.address}/local-method/{k.Name}", v => this.CreatePathItem(v, schema));
 
             IEnumerable<PropertyInfo> properties = this.assembly.GetPublicGetterProperties();
 
-            var propertyPaths = properties
-                .ToDictionary(k => $"/api/contract/{this.address}/property/{k.Name}", v => this.CreatePathItem(v));
-            
+            var propertyPaths = properties.ToDictionary(k => $"/api/contract/{this.address}/property/{k.Name}", v => this.CreatePathItem(v));
+
+            // Add them all to one dictionary.
+
+            foreach (KeyValuePair<string, OpenApiPathItem> item in pureMethodPaths)
+            {
+                methodPaths[item.Key] = item.Value;
+            }
+
             foreach (KeyValuePair<string, OpenApiPathItem> item in propertyPaths)
             {
                 methodPaths[item.Key] = item.Value;

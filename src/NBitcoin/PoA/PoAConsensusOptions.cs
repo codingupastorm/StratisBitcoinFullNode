@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using NBitcoin;
+using System.Text.Json.Serialization;
+using NBitcoin.Serialization;
 
-namespace Stratis.Features.PoA
+namespace NBitcoin.PoA
 {
     public class PoAConsensusOptions : ConsensusOptions
     {
@@ -13,26 +14,37 @@ namespace Stratis.Features.PoA
         /// Use <see cref="IFederationManager.GetFederationMembers"/> as a source of
         /// up to date federation keys.
         /// </remarks>
-        public List<IFederationMember> GenesisFederationMembers { get; protected set; }
+        [JsonPropertyName("genesisfederationmembers")]
+        [JsonConverter(typeof(JsonListInterfaceConverter<FederationMember, IFederationMember>))]
+        public List<IFederationMember> GenesisFederationMembers { get; set; }
 
-        public uint TargetSpacingSeconds { get; protected set; }
+        [JsonPropertyName("targetspacingseconds")]
+        public uint TargetSpacingSeconds { get; set; }
 
-        /// <summary>Adds capability of voting for adding\kicking federation members and other things.</summary>
-        public bool VotingEnabled { get; protected set; }
+        /// <summary>Adds capability of voting for adding/kicking federation members and other things.</summary>
+        [JsonPropertyName("votingenabled")]
+        public bool VotingEnabled { get; set; }
 
         /// <summary>Makes federation members kick idle members.</summary>
         /// <remarks>Requires voting to be enabled to be set <c>true</c>.</remarks>
-        public bool AutoKickIdleMembers { get; protected set; }
+        [JsonPropertyName("autokickidlemembers")]
+        public bool AutoKickIdleMembers { get; set; }
 
         /// <summary>Time that federation member has to be idle to be kicked by others in case <see cref="AutoKickIdleMembers"/> is enabled.</summary>
-        public uint FederationMemberMaxIdleTimeSeconds { get; protected set; }
+        [JsonPropertyName("fedmembermaxidletimesecs")]
+        public uint FederationMemberMaxIdleTimeSeconds { get; set; }
 
         /// <summary>Enables permissioned membership on the network.</summary>
         /// <remarks>
         /// If set to <c>true</c> only nodes that have certificate that is signed by authority certificate will be able to join the network.
         /// All traffic on the network where this option is enabled is encrypted using TLS.
         /// </remarks>
-        public bool EnablePermissionedMembership { get; protected set; }
+        [JsonPropertyName("enablepermissionedmembership")]
+        public bool EnablePermissionedMembership { get; set; }
+
+        public PoAConsensusOptions()
+        {
+        }
 
         /// <summary>Initializes values for networks that use block size rules.</summary>
         public PoAConsensusOptions(

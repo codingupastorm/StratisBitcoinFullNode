@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using CertificateAuthority.Controllers;
 using CertificateAuthority.Database;
 using CertificateAuthority.Models;
@@ -8,23 +9,29 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
 using NBitcoin;
+using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
 namespace CertificateAuthority.Tests.FullProjectTests
 {
     public sealed class AccountsControllerTests
     {
-        private readonly AccountsController accountsController;
+        private AccountsController accountsController;
         private readonly CredentialsModel adminCredentials;
-        private readonly DataCacheLayer dataCacheLayer;
-        private readonly TestServer server;
+        private DataCacheLayer dataCacheLayer;
+        private TestServer server;
 
         public AccountsControllerTests()
         {
-            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder();
+            this.adminCredentials = new CredentialsModel(Settings.AdminAccountId, CaTestHelper.AdminPassword);
+        }
+
+        private void CreateServer([CallerMemberName] string callingMethod = "")
+        {
+            TestBase.GetTestRootFolder(out string testRootFolder, callingMethod);
+            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder(testRootFolder);
             this.server = new TestServer(builder);
 
-            this.adminCredentials = new CredentialsModel(Settings.AdminAccountId, CaTestHelper.AdminPassword);
             this.accountsController = (AccountsController)this.server.Host.Services.GetService(typeof(AccountsController));
             this.dataCacheLayer = (DataCacheLayer)this.server.Host.Services.GetService(typeof(DataCacheLayer));
 
@@ -34,6 +41,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void TestAccountsControllerMethods()
         {
+            CreateServer();
+
             // Just admin on start.
             Assert.Single(CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.ListAll(this.adminCredentials)));
 
@@ -108,6 +117,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void ListUnapprovedAccounts()
         {
+            CreateServer();
+
             _ = CaTestHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess, approve: false);
             _ = CaTestHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess);
 
@@ -118,6 +129,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void ChangeAccountPassword_CurrentUser_Pass()
         {
+            CreateServer();
+
             CredentialsModel credentials = CaTestHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess);
 
             var model = new ChangeAccountPasswordModel(credentials.AccountId, credentials.AccountId, credentials.Password, "newpassword");
@@ -132,6 +145,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void ChangeAccountPassword_CurrentUser_WrongPassword_Fail()
         {
+            CreateServer();
+
             CredentialsModel credentials = CaTestHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess);
 
             var model = new ChangeAccountPasswordModel(credentials.AccountId, credentials.AccountId, "wrongpassword", "newpassword");
@@ -146,6 +161,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void ChangeAccountPassword_AdminUser_Pass()
         {
+            CreateServer();
+
             CredentialsModel userA_Credentials = CaTestHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess);
 
             var changePasswordModel = new ChangeAccountPasswordModel(this.adminCredentials.AccountId, userA_Credentials.AccountId, this.adminCredentials.Password, "newpassword");
@@ -160,6 +177,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void ChangeAccountPassword_DifferentUser_Fail()
         {
+            CreateServer();
+
             CredentialsModel userA_Credentials = CaTestHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess);
             CredentialsModel userB_Credentials = CaTestHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess);
 
@@ -176,6 +195,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void RejectAccount_Pass()
         {
+            CreateServer();
+
             CredentialsModel userA_Credentials = CaTestHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess, approve: false);
 
             var model = new CredentialsModelWithTargetId(userA_Credentials.AccountId, this.adminCredentials.AccountId, this.adminCredentials.Password);
@@ -188,6 +209,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void RejectAccount_AccountAlreadyApproved_Fail()
         {
+            CreateServer();
+
             CredentialsModel userA_Credentials = CaTestHelper.CreateAccount(this.server.Host, AccountAccessFlags.BasicAccess);
 
             var model = new CredentialsModelWithTargetId(userA_Credentials.AccountId, this.adminCredentials.AccountId, this.adminCredentials.Password);

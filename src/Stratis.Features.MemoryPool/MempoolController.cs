@@ -15,6 +15,7 @@ namespace Stratis.Features.MemoryPool
     /// Controller providing operations on the Mempool.
     /// </summary>
     [ApiVersion("1")]
+    [ApiController]
     public class MempoolController : FeatureController
     {
         public MempoolManager MempoolManager { get; private set; }
@@ -28,9 +29,8 @@ namespace Stratis.Features.MemoryPool
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
-        [ActionName("getrawmempool")]
         [ApiExplorerSettings(IgnoreApi = true)]
-        [ActionDescription("Lists the contents of the memory pool.")]
+        [NonAction]
         public Task<List<uint256>> GetRawMempool()
         {
             return this.MempoolManager.GetMempoolAsync();

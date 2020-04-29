@@ -4,15 +4,13 @@ using MembershipServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitcoin.PoA;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Features.PoA.Behaviors;
-using Stratis.Features.PoA.ProtocolEncryption;
-using Stratis.Features.PoA.Voting;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.P2P.Peer;
@@ -22,6 +20,9 @@ using Stratis.Features.BlockStore;
 using Stratis.Features.Consensus;
 using Stratis.Features.Consensus.CoinViews;
 using Stratis.Features.MemoryPool;
+using Stratis.Features.PoA.Behaviors;
+using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.Features.PoA.Voting;
 
 namespace Stratis.Features.PoA
 {

@@ -1,4 +1,6 @@
 ﻿using System.Text.Json;
+using NBitcoin.PoA;
+using Stratis.Bitcoin.Utilities;
 using Xunit;
 
 namespace Stratis.Feature.PoA.Tokenless.Tests
@@ -8,7 +10,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         [Fact]
         public void CanSerializeAndDeserializeNetwork()
         {
-            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork("Test", "TestFolder");
+            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork("Test", "TestFolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
 
             var serialized = JsonSerializer.Serialize(channelNetwork);
             ChannelNetwork deserialized = JsonSerializer.Deserialize<ChannelNetwork>(serialized);
@@ -30,6 +32,16 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             Assert.Equal(channelNetwork.Consensus.Options.MaxBlockWeight, deserialized.Consensus.Options.MaxBlockWeight);
             Assert.Equal(channelNetwork.Consensus.Options.MaxStandardTxWeight, deserialized.Consensus.Options.MaxStandardTxWeight);
             Assert.Equal(channelNetwork.Consensus.Options.MaxStandardVersion, deserialized.Consensus.Options.MaxStandardVersion);
+
+            var expectedConsensusOptions = channelNetwork.Consensus.Options as PoAConsensusOptions;
+            var deseializedConsensusOptions = deserialized.Consensus.Options as PoAConsensusOptions;
+
+            Assert.Equal(expectedConsensusOptions.AutoKickIdleMembers, deseializedConsensusOptions.AutoKickIdleMembers);
+            Assert.Equal(expectedConsensusOptions.EnablePermissionedMembership, deseializedConsensusOptions.EnablePermissionedMembership);
+            Assert.Equal(expectedConsensusOptions.FederationMemberMaxIdleTimeSeconds, deseializedConsensusOptions.FederationMemberMaxIdleTimeSeconds);
+            Assert.Equal(expectedConsensusOptions.GenesisFederationMembers, deseializedConsensusOptions.GenesisFederationMembers);
+            Assert.Equal(expectedConsensusOptions.TargetSpacingSeconds, deseializedConsensusOptions.TargetSpacingSeconds);
+            Assert.Equal(expectedConsensusOptions.VotingEnabled, deseializedConsensusOptions.VotingEnabled);
 
             Assert.Equal(channelNetwork.DefaultAPIPort, deserialized.DefaultAPIPort);
             Assert.Equal(channelNetwork.DefaultBanTimeSeconds, deserialized.DefaultBanTimeSeconds);

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using CertificateAuthority.Models;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Newtonsoft.Json;
 
@@ -100,7 +101,7 @@ namespace CertificateAuthority
             return this.RequestFromCA<List<CertificateInfoModel>>(GetAllCertificatesEndpoint, credentialsModel);
         }
 
-        public List<PubKey> GetCertificatePublicKeys()
+        public List<PubKey> GetCertificatePublicKeys(ILogger logger = null)
         {
             var credentialsModel = new CredentialsModel()
             {
@@ -108,7 +109,7 @@ namespace CertificateAuthority
                 Password = this.password
             };
 
-            List<string> pubKeyList = this.RequestFromCA<List<string>>(GetCertificatePublicKeysEndpoint, credentialsModel);
+            List<string> pubKeyList = this.RequestFromCA<List<string>>(GetCertificatePublicKeysEndpoint, credentialsModel, logger);
 
             return pubKeyList.Select(x => new PubKey(x)).ToList();
         }
@@ -204,26 +205,28 @@ namespace CertificateAuthority
         /// <param name="endpoint"></param>
         /// <param name="model"></param>
         /// <returns></returns>
-        private T RequestFromCA<T>(string endpoint, object model)
+        private T RequestFromCA<T>(string endpoint, object model, ILogger logger = null)
         {
             HttpResponseMessage response;
+
             try
             {
-                response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{endpoint}", model).GetAwaiter()
-                    .GetResult();
+                if (logger != null)
+                    logger.LogDebug($"Calling {this.baseApiUrl}{endpoint}");
+
+                response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{endpoint}", model).GetAwaiter().GetResult();
             }
             catch (HttpRequestException exception)
             {
-                throw new CaClientException("Failed to connect to the CA.", exception);
+                throw new CaClientException($"Failed to connect to the CA: '{exception.Message}'");
             }
 
             if (!response.IsSuccessStatusCode)
             {
-                string errorMessage = $"Failed to connect to the CA. Response Code: {response.StatusCode}.";
+                string errorMessage = $"Failed to connect to the CA, response Code: {response.StatusCode}.";
+
                 if (response.Content != null)
-                {
                     errorMessage += $" Message: {response.Content.ReadAsStringAsync().GetAwaiter().GetResult()}";
-                }
 
                 throw new CaClientException(errorMessage);
             }

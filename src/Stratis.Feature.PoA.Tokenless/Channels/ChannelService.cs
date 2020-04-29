@@ -2,13 +2,19 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using Microsoft.Extensions.Logging;
+using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Features.PoA;
 using Stratis.Features.PoA.ProtocolEncryption;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels
@@ -17,50 +23,177 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     public interface IChannelService
     {
         /// <summary>This is a list of PIds of channel processes that are running.</summary>
-        List<int> StartedChannelNodes { get; }
+        List<ChannelNodeProcess> StartedChannelNodes { get; }
 
-        Task StartChannelNodeAsync(ChannelCreationRequest request);
+        int GetDefaultAPIPort(int channelId);
+        int GetDefaulPort(int channelId);
+        int GetDefaultSignalRPort(int channelId);
+
+        Task CreateAndStartChannelNodeAsync(ChannelCreationRequest request);
         Task StartSystemChannelNodeAsync();
+        Task RestartChannelNodesAsync();
         void StopChannelNodes();
+
+        void Initialize();
+    }
+
+    /// <summary>
+    /// Server-side class representing a channel process.
+    /// </summary>
+    public class ChannelNodeProcess : IDisposable
+    {
+        public const int MillisecondsBeforeForcedKill = 20000;
+
+        public string PipeName { get; private set; }
+        public NamedPipeServerStream Pipe { get; private set; }
+        public Process Process { get; private set; }
+
+        public ChannelNodeProcess()
+        {
+            // The child will use the validity of this pipe to decide whether to terminate.
+            this.PipeName = (Guid.NewGuid()).ToString().Replace("-", "");
+            this.Pipe = new NamedPipeServerStream(this.PipeName, PipeDirection.Out);
+
+            this.Process = new Process();
+        }
+
+        public void Dispose()
+        {
+            // This will break the pipe so that the child node will be prompted to shut itself down.
+            this.Pipe.Dispose();
+
+            if (!this.Process.WaitForExit(MillisecondsBeforeForcedKill))
+                this.Process.Kill();
+        }
     }
 
     /// <inheritdoc />
     public sealed class ChannelService : IChannelService
     {
+        public const int SystemChannelId = 1;
         private const string SystemChannelName = "system";
 
+        private const string ChannelConfigurationFileName = "channel.conf";
+
+        private readonly IAsyncProvider asyncProvider;
+        private readonly IChannelRepository channelRepository;
         private readonly ChannelSettings channelSettings;
+        private readonly IDateTimeProvider dateTimeProvider;
         private readonly ILogger logger;
+        private readonly INodeLifetime nodeLifetime;
         private readonly NodeSettings nodeSettings;
+        private IAsyncLoop terminationLoop;
+        private readonly TokenlessNetwork tokenlessNetworkDefaults;
 
         /// <inheritdoc />
-        public List<int> StartedChannelNodes { get; }
+        public List<ChannelNodeProcess> StartedChannelNodes { get; }
 
-        public ChannelService(ChannelSettings channelSettings, ILoggerFactory loggerFactory, NodeSettings nodeSettings)
+        public ChannelService(ChannelSettings channelSettings, IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, NodeSettings nodeSettings, IChannelRepository channelRepository, INodeLifetime nodeLifetime, IAsyncProvider asyncProvider)
         {
             this.channelSettings = channelSettings;
+            this.dateTimeProvider = dateTimeProvider;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.nodeSettings = nodeSettings;
-            this.StartedChannelNodes = new List<int>();
+            this.channelRepository = channelRepository;
+            this.nodeLifetime = nodeLifetime;
+            this.asyncProvider = asyncProvider;
+            this.tokenlessNetworkDefaults = new TokenlessNetwork();
+
+            this.StartedChannelNodes = new List<ChannelNodeProcess>();
         }
 
-        public async Task StartChannelNodeAsync(ChannelCreationRequest request)
+        public void Initialize()
+        {
+            this.logger.LogInformation($"ChannelParentPipeName = '{this.channelSettings.ChannelParentPipeName}'.");
+
+            if (this.channelSettings.ChannelParentPipeName != null)
+            {
+                this.terminationLoop = this.asyncProvider.CreateAndRunAsyncLoop($"{nameof(ChannelService)}.TerminationLoop", token =>
+                {
+                    this.logger.LogInformation($"Connecting to parent on pipe '{this.channelSettings.ChannelParentPipeName}'.");
+
+                    using (var pipe = new NamedPipeClientStream(".", this.channelSettings.ChannelParentPipeName, PipeDirection.In))
+                    {
+                        try
+                        {
+                            pipe.Connect();
+                            pipe.Read(new byte[1], 0, 1);
+                        }
+                        catch (Exception)
+                        {
+                        }
+                    }
+
+                    this.logger.LogInformation("Parent pipe broken. Stopping application.");
+                    this.nodeLifetime.StopApplication();
+
+                    return Task.CompletedTask;
+                },
+                this.nodeLifetime.ApplicationStopping,
+                repeatEvery: TimeSpan.FromSeconds(1));
+            }
+        }
+
+        public async Task CreateAndStartChannelNodeAsync(ChannelCreationRequest request)
         {
             try
             {
-                this.logger.LogInformation($"Starting a node on channel '{request.Name}'.");
+                this.logger.LogInformation($"Creating and starting a node on channel '{request.Name}'.");
 
-                Process process = await StartNodeAsync(request.Name);
-                if (process.HasExited)
+                int channelNodeId = this.channelRepository.GetNextChannelId();
+                string channelRootFolder = PrepareNodeForStartup(request.Name, channelNodeId);
+
+                ChannelNodeProcess channelNode = await StartTheProcessAsync(channelRootFolder, $"-channelname={request.Name}");
+                if (channelNode.Process.HasExited)
                     this.logger.LogWarning($"Failed to start node on channel '{request.Name}' as the process exited early.");
 
-                this.StartedChannelNodes.Add(process.Id);
+                lock (this.StartedChannelNodes)
+                    this.StartedChannelNodes.Add(channelNode);
 
-                this.logger.LogInformation($"Node started on channel '{request.Name}'.");
+                var channelDefinition = new ChannelDefinition()
+                {
+                    Id = channelNodeId,
+                    Name = request.Name
+                };
+
+                this.channelRepository.SaveChannelDefinition(channelDefinition);
+
+                this.logger.LogInformation($"Node started on channel '{request.Name}' with Pid '{channelNode.Process.Id}'.");
             }
             catch (Exception ex)
             {
                 throw new ChannelServiceException($"Failed to start node on channel '{request.Name}': {ex.Message}");
+            }
+        }
+
+        public async Task RestartChannelNodesAsync()
+        {
+            Dictionary<string, ChannelDefinition> channels = this.channelRepository.GetChannelDefinitions();
+            var channelDefinitions = channels.Keys.ToList();
+            this.logger.LogInformation($"This node has {channelDefinitions.Count} channels to start.");
+
+            foreach (var channel in channelDefinitions)
+            {
+                try
+                {
+                    this.logger.LogInformation($"Restarting a node on channel '{channel}'.");
+
+                    int channelNodeId = channels[channel].Id;
+                    string channelRootFolder = PrepareNodeForStartup(channel, channelNodeId);
+
+                    ChannelNodeProcess channelNode = await StartTheProcessAsync(channelRootFolder, $"-channelname={channel}");
+                    if (channelNode.Process.HasExited)
+                        this.logger.LogWarning($"Failed to restart node on channel '{channel}' as the process exited early.");
+
+                    lock (this.StartedChannelNodes)
+                        this.StartedChannelNodes.Add(channelNode);
+
+                    this.logger.LogInformation($"Node restarted on channel '{channel}' with Pid '{channelNode.Process.Id}'.");
+                }
+                catch (Exception ex)
+                {
+                    throw new ChannelServiceException($"Failed to restart channel nodes: {ex.Message}");
+                }
             }
         }
 
@@ -70,13 +203,16 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             {
                 this.logger.LogInformation("Starting a system channel node.");
 
-                Process process = await StartNodeAsync(SystemChannelName);
-                if (process.HasExited)
+                string channelRootFolder = PrepareNodeForStartup(SystemChannelName, SystemChannelId);
+
+                ChannelNodeProcess channelNode = await StartTheProcessAsync(channelRootFolder, "-bootstrap=1", $"-channelname={SystemChannelName}", "-issystemchannelnode=true");
+                if (channelNode.Process.HasExited)
                     throw new ChannelServiceException($"Failed to start system channel node as the processs exited early.");
 
-                this.StartedChannelNodes.Add(process.Id);
+                lock (this.StartedChannelNodes)
+                    this.StartedChannelNodes.Add(channelNode);
 
-                this.logger.LogInformation("System channel node started.");
+                this.logger.LogInformation($"System channel node started with Pid '{channelNode.Process.Id}'.");
             }
             catch (Exception ex)
             {
@@ -84,64 +220,145 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             }
         }
 
-        private async Task<Process> StartNodeAsync(string channelName)
+        private string PrepareNodeForStartup(string channelName, int channelId)
         {
-            // Write the serialized network to disk.
-            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, $"{this.nodeSettings.DataFolder.RootPath}\\channels\\{channelName.ToLowerInvariant()}");
-            var serializedJson = JsonSerializer.Serialize(channelNetwork);
-            Directory.CreateDirectory(channelNetwork.RootFolderName);
-
-            var filePath = $"{channelNetwork.RootFolderName}\\{channelName}_network.json";
-            File.WriteAllText(filePath, serializedJson);
-
-            // Copy the parent node's configuration file (.conf) to the channel node's root.
-            File.Copy(Path.Combine(this.nodeSettings.ConfigurationFile), Path.Combine(channelNetwork.RootFolderName, "poa.conf"));
+            // Write the serialized version of the network to disk.
+            string channelRootFolder = WriteChannelNetworkJson(channelName, channelId);
 
             // Copy the parent node's authority and client certificate to the channel node's root.
-            File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificatesManager.AuthorityCertificateName), Path.Combine(channelNetwork.RootFolderName, CertificatesManager.AuthorityCertificateName));
-            File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificatesManager.ClientCertificateName), Path.Combine(channelNetwork.RootFolderName, CertificatesManager.ClientCertificateName));
+            CopyCertificatesToChannelRoot(channelRootFolder);
 
-            // Pass the path to the serialized network to the system channel node and start it.
-            var process = new Process();
-            process.StartInfo.WorkingDirectory = this.channelSettings.ProcessPath;
-            process.StartInfo.FileName = "dotnet";
+            // Copy the parent node's key store files to the channel node's root.
+            CopyKeyStoreToChannelRoot(channelRootFolder);
+
+            return channelRootFolder;
+        }
+
+        /// <summary>Write the serialized network to disk.</summary>
+        /// <param name="channelName">The name of the channel.</param>
+        /// <returns>The channel's root folder path.</returns>
+        private string WriteChannelNetworkJson(string channelName, int channelId)
+        {
+            // If the network json already exist, do nothing.
+            var rootFolderName = $"{this.nodeSettings.DataFolder.RootPath}\\channels\\{channelName.ToLowerInvariant()}";
+            var networkFileName = $"{rootFolderName}\\{channelName.ToLowerInvariant()}_network.json";
+            if (File.Exists(networkFileName))
+                return rootFolderName;
+
+            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName.ToLowerInvariant(), rootFolderName, this.dateTimeProvider.GetAdjustedTimeAsUnixTimestamp());
+            channelNetwork.DefaultAPIPort = this.GetDefaultAPIPort(channelId);
+            channelNetwork.DefaultPort = this.GetDefaulPort(channelId);
+            channelNetwork.DefaultSignalRPort = this.GetDefaultSignalRPort(channelId);
+
+            var serializedJson = JsonSerializer.Serialize(channelNetwork);
+            Directory.CreateDirectory(rootFolderName);
+            File.WriteAllText(networkFileName, serializedJson);
+            return rootFolderName;
+        }
+
+        public int GetDefaultAPIPort(int channelId)
+        {
+            return this.tokenlessNetworkDefaults.DefaultAPIPort + channelId;
+        }
+
+        public int GetDefaulPort(int channelId)
+        {
+            return this.tokenlessNetworkDefaults.DefaultPort + channelId;
+        }
+
+        public int GetDefaultSignalRPort(int channelId)
+        {
+            return this.tokenlessNetworkDefaults.DefaultSignalRPort + channelId;
+        }
+
+        private void CopyCertificatesToChannelRoot(string channelRootFolder)
+        {
+            // If the certificates already exist, do nothing.
+            var authorityCertificatePath = Path.Combine(channelRootFolder, CertificatesManager.AuthorityCertificateName);
+            if (!File.Exists(authorityCertificatePath))
+                File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificatesManager.AuthorityCertificateName), authorityCertificatePath);
+
+            // If the certificates already exist, do nothing.
+            var clientCertificatePath = Path.Combine(channelRootFolder, CertificatesManager.ClientCertificateName);
+            if (!File.Exists(clientCertificatePath))
+                File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificatesManager.ClientCertificateName), clientCertificatePath);
+        }
+
+        private void CopyKeyStoreToChannelRoot(string channelRootFolder)
+        {
+            var miningKeyFile = Path.Combine(channelRootFolder, KeyTool.FederationKeyFileName);
+            if (!File.Exists(miningKeyFile))
+                File.Copy(Path.Combine(this.nodeSettings.DataDir, KeyTool.FederationKeyFileName), miningKeyFile);
+
+            var transactionSigningKeyFile = Path.Combine(channelRootFolder, KeyTool.TransactionSigningKeyFileName);
+            if (!File.Exists(transactionSigningKeyFile))
+                File.Copy(Path.Combine(this.nodeSettings.DataDir, KeyTool.TransactionSigningKeyFileName), transactionSigningKeyFile);
+
+            var keyStoreFile = Path.Combine(channelRootFolder, TokenlessKeyStoreManager.KeyStoreFileName);
+            if (!File.Exists(keyStoreFile))
+                File.Copy(Path.Combine(this.nodeSettings.DataDir, TokenlessKeyStoreManager.KeyStoreFileName), keyStoreFile);
+        }
+
+        private void CreateChannelConfigurationFile(string channelRootFolder, params string[] channelArgs)
+        {
+            var configurationFilePath = Path.Combine(channelRootFolder, ChannelConfigurationFileName);
 
             var args = new StringBuilder();
-            args.Append($"-apiport={this.channelSettings.ChannelApiPort} ");
-            args.Append("-certificatepassword=test ");
-            args.Append("-password=test ");
-            args.Append("-conf=poa.conf ");
-            args.Append($"-datadir={channelNetwork.RootFolderName} ");
-            args.Append($"-{CertificatesManager.CaAccountIdKey}={Settings.AdminAccountId} ");
-            args.Append($"-{CertificatesManager.CaPasswordKey}={this.nodeSettings.ConfigReader.GetOrDefault(CertificatesManager.CaPasswordKey, "")} ");
-            args.Append($"-{CertificatesManager.ClientCertificateConfigurationKey}=test ");
-            args.Append("-ischannelnode=true ");
-            args.Append("-isinfranode=false");
+            args.AppendLine($"-certificatepassword=test");
+            args.AppendLine($"-password=test");
+            args.AppendLine($"-{CertificatesManager.CaBaseUrlKey}={CertificatesManager.CaBaseUrl}");
+            args.AppendLine($"-{CertificatesManager.CaAccountIdKey}={Settings.AdminAccountId}");
+            args.AppendLine($"-{CertificatesManager.CaPasswordKey}={this.nodeSettings.ConfigReader.GetOrDefault(CertificatesManager.CaPasswordKey, "")} ");
+            args.AppendLine($"-{CertificatesManager.ClientCertificateConfigurationKey}=test");
+            args.AppendLine($"-agent{CertificatesManager.ClientCertificateConfigurationKey}=test");
 
-            process.StartInfo.Arguments = $"run --no-build {args.ToString()}";
+            // Append any channel specific arguments.
+            foreach (var channelArg in channelArgs)
+            {
+                args.AppendLine(channelArg);
+            }
+
+            File.WriteAllText(configurationFilePath, args.ToString());
+        }
+
+        private async Task<ChannelNodeProcess> StartTheProcessAsync(string channelRootFolder, params string[] channelArgs)
+        {
+            var channelNodeProcess = new ChannelNodeProcess();
+
+            // Create channel configuration file.
+            CreateChannelConfigurationFile(channelRootFolder, channelArgs.Concat(new[] { "ischannelnode=true", $"-channelparentpipename={channelNodeProcess.PipeName}" }).ToArray());
+
+            var startUpArgs = $"run --no-build -nowarn -conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
+            this.logger.LogInformation($"Attempting to start process with args '{startUpArgs}'");
+
+            Process process = channelNodeProcess.Process;
+            process.StartInfo.WorkingDirectory = this.channelSettings.ProcessPath;
+            process.StartInfo.FileName = "dotnet";
+            process.StartInfo.Arguments = startUpArgs;
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.CreateNoWindow = false;
             process.Start();
 
-            this.logger.LogInformation("Executing delay to wait for node to start.");
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            this.logger.LogInformation("Executing a delay to wait for the node to start.");
+            await Task.Delay(TimeSpan.FromSeconds(10));
 
-            return process;
+            return channelNodeProcess;
         }
 
         public void StopChannelNodes()
         {
-            foreach (var channelNodePId in this.StartedChannelNodes)
+            Parallel.ForEach(this.StartedChannelNodes, (channelNode) =>
             {
-                var process = Process.GetProcessById(channelNodePId);
+                int pid = channelNode.Process.Id;
 
-                this.logger.LogInformation($"Stopping channel node with PId: {channelNodePId}.");
-                // TODO-TL: Need to gracefully shutdown
-                process.Kill();
-                //process.CloseMainWindow();
-                //process.WaitForExit();
-                this.logger.LogInformation($"Channel node stopped.");
-            }
+                this.logger.LogInformation($"Stopping channel node with PId: {pid}.");
+
+                channelNode.Dispose();
+
+                this.logger.LogInformation($"Stopped channel node with PId: {pid}.");
+            });
+
+            this.terminationLoop?.Dispose();
         }
     }
 }

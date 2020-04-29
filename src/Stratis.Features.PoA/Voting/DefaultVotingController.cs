@@ -5,6 +5,7 @@ using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitcoin.PoA;
 using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Utilities.JsonErrors;
@@ -14,6 +15,7 @@ namespace Stratis.Features.PoA.Voting
 {
     [ApiVersion("1")]
     [Route("api/[controller]")]
+    [ApiController]
     public class DefaultVotingController : Controller
     {
         protected readonly IFederationManager fedManager;

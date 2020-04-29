@@ -54,9 +54,9 @@ namespace Stratis.Bitcoin.Tests.Utilities
         {
             Assert.Throws<NotSupportedException>(() =>
             {
-                string test = "Should throw exception.";
+                var shouldThrowException = new NotSupportedClass();
 
-                this.repositorySerializer.Serialize(test);
+                this.repositorySerializer.Serialize(shouldThrowException);
             });
         }
 
@@ -126,6 +126,11 @@ namespace Stratis.Bitcoin.Tests.Utilities
             Assert.Equal(block.GetHash(), result.GetHash());
         }
 
+        class NotSupportedClass
+        {
+
+        };
+
         [Fact]
         public void DeserializerWithNotSupportedClassThrowsException()
         {
@@ -133,7 +138,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             {
                 string test = "Should throw exception.";
 
-                this.repositorySerializer.Deserialize<string>(Encoding.UTF8.GetBytes(test));
+                this.repositorySerializer.Deserialize<NotSupportedClass>(Encoding.UTF8.GetBytes(test));
             });
         }
 

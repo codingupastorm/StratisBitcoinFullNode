@@ -6,15 +6,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitcoin.PoA;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Validators;
-using Stratis.Features.MemoryPool;
-using Stratis.Features.PoA.Voting;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.PoA.Voting;
 using TracerAttributes;
 
 namespace Stratis.Features.PoA
@@ -140,13 +141,17 @@ namespace Stratis.Features.PoA
             {
                 try
                 {
-                    this.logger.LogDebug("IsInitialBlockDownload={0}, AnyConnectedPeers={1}, BootstrappingMode={2}, IsFederationMember={3}",
+                    this.logger.LogInformation("IsInitialBlockDownload={0}, AnyConnectedPeers={1}, BootstrappingMode={2}, IsFederationMember={3}",
                         this.ibdState.IsInitialBlockDownload(), this.connectionManager.ConnectedPeers.Any(), this.settings.BootstrappingMode, this.federationManager.IsFederationMember);
 
                     // Don't mine in IBD or if we aren't connected to any node (unless bootstrapping mode is enabled).
                     // Don't try to mine if we aren't a federation member.
-                    if (((this.ibdState.IsInitialBlockDownload() || !this.connectionManager.ConnectedPeers.Any()) && !this.settings.BootstrappingMode)
-                        || !this.federationManager.IsFederationMember)
+                    if ((
+                        (this.ibdState.IsInitialBlockDownload() || !this.connectionManager.ConnectedPeers.Any())
+                        && !this.settings.BootstrappingMode
+                        )
+                        || !this.federationManager.IsFederationMember
+                        )
                     {
                         int attemptDelayMs = 30_000;
                         await Task.Delay(attemptDelayMs, this.cancellation.Token).ConfigureAwait(false);
@@ -154,7 +159,11 @@ namespace Stratis.Features.PoA
                         continue;
                     }
 
+                    this.logger.LogDebug("Miner waiting for mining slot...");
+
                     uint miningTimestamp = await this.WaitUntilMiningSlotAsync().ConfigureAwait(false);
+
+                    this.logger.LogDebug($"Mining slot obtained '{miningTimestamp}'");
 
                     ChainedHeader chainedHeader = await this.MineBlockAtTimestampAsync(miningTimestamp).ConfigureAwait(false);
 
@@ -216,6 +225,7 @@ namespace Stratis.Features.PoA
 
                 if (timeNow <= this.consensusManager.Tip.Header.Time)
                 {
+                    this.logger.LogDebug($"Time Now {timeNow} : Consensus Tip {this.consensusManager.Tip.Header.Time}.");
                     await Task.Delay(TimeSpan.FromMilliseconds(500)).ConfigureAwait(false);
                     continue;
                 }
@@ -226,15 +236,16 @@ namespace Stratis.Features.PoA
                     {
                         myTimestamp = this.slotsManager.GetMiningTimestamp(timeNow);
                     }
-                    catch (NotAFederationMemberException)
+                    catch (NotAFederationMemberException ex)
                     {
-                        this.logger.LogWarning("This node is no longer a federation member!");
+                        this.logger.LogWarning(ex.Message);
 
                         throw new OperationCanceledException();
                     }
                 }
 
                 int estimatedWaitingTime = (int)(myTimestamp - timeNow) - 1;
+                this.logger.LogDebug($"Estimated waiting time {estimatedWaitingTime}.");
 
                 if (estimatedWaitingTime <= 0)
                     return myTimestamp.Value;
@@ -389,7 +400,7 @@ namespace Stratis.Features.PoA
 
             log.Append("...");
             log.AppendLine();
-            log.AppendLine($"Block producers hits      : {hitCount} of {maxDepth}({(((float)hitCount / (float)maxDepth)).ToString("P2")})");
+            log.AppendLine($"Block producers hits      : {hitCount} of {maxDepth}({(hitCount / (float)maxDepth).ToString("P2")})");
             log.AppendLine($"Block producers idle time : {TimeSpan.FromSeconds(((PoAConsensusOptions)this.network.Consensus.Options).TargetSpacingSeconds * (maxDepth - hitCount)).ToString(@"hh\:mm\:ss")}");
             log.AppendLine();
         }

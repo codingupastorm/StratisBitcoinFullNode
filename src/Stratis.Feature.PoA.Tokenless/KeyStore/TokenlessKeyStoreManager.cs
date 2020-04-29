@@ -3,9 +3,10 @@ using System.IO;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Utilities;
+using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Features.PoA;
 using Stratis.Features.PoA.ProtocolEncryption;
-using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Feature.PoA.Tokenless.KeyStore
 {
@@ -45,24 +46,28 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
         private readonly Network network;
         private readonly DataFolder dataFolder;
         private readonly FileStorage<TokenlessKeyStore> fileStorage;
+        private readonly ChannelSettings channelSettings;
         private readonly TokenlessKeyStoreSettings keyStoreSettings;
         private readonly ICertificatesManager certificatesManager;
         private readonly ILogger logger;
 
-        public TokenlessKeyStoreManager(Network network, DataFolder dataFolder, TokenlessKeyStoreSettings keyStoreSettings, ICertificatesManager certificatesManager, ILoggerFactory loggerFactory)
+        public TokenlessKeyStoreManager(Network network, DataFolder dataFolder, ChannelSettings channelSettings, TokenlessKeyStoreSettings keyStoreSettings, ICertificatesManager certificatesManager, ILoggerFactory loggerFactory)
         {
-            this.network = network;
-            this.dataFolder = dataFolder;
-            this.fileStorage = new FileStorage<TokenlessKeyStore>(this.dataFolder.RootPath);
-            this.keyStoreSettings = keyStoreSettings;
             this.certificatesManager = certificatesManager;
+            this.channelSettings = channelSettings;
+            this.dataFolder = dataFolder;
+            this.keyStoreSettings = keyStoreSettings;
+            this.network = network;
+
+            this.fileStorage = new FileStorage<TokenlessKeyStore>(this.dataFolder.RootPath);
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
         public bool Initialize()
         {
-            this.logger.LogInformation($"Initializing the keystore; channel node is {this.keyStoreSettings.IsChannelNode}");
-            this.logger.LogInformation($"Initializing the keystore; infra node node is {this.keyStoreSettings.IsInfraNode}");
+            this.logger.LogInformation($"Initializing the keystore; channel node is {this.channelSettings.IsChannelNode}");
+            this.logger.LogInformation($"Initializing the keystore; system channel node is {this.channelSettings.IsSystemChannelNode}");
+            this.logger.LogInformation($"Initializing the keystore; infra node node is {this.channelSettings.IsInfraNode}");
 
             bool keyStoreOk = this.CheckKeyStore();
             bool blockSigningKeyFileOk = this.CheckBlockSigningKeyFile();
@@ -167,7 +172,7 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
                 this.logger.LogError($"IMPORTANT: You will need the mnemonic to recover the wallet.");
 
                 // Only stop the node if this node is not a channel node.
-                if (!this.keyStoreSettings.IsChannelNode)
+                if (!this.channelSettings.IsChannelNode)
                     canStart = false; // Stop the node so that the user can record the mnemonic.
             }
             else
@@ -200,7 +205,7 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
                 this.logger.LogError($"The key file '{KeyTool.FederationKeyFileName}' has been created.");
 
                 // Only stop the node if this node is not a channel node.
-                if (!this.keyStoreSettings.IsChannelNode)
+                if (!this.channelSettings.IsChannelNode)
                     return false;
             }
 
@@ -229,7 +234,7 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
                 this.logger.LogError($"The key file '{KeyTool.TransactionSigningKeyFileName}' has been created.");
 
                 // Only stop the node if this node is not a channel node.
-                if (!this.keyStoreSettings.IsChannelNode)
+                if (!this.channelSettings.IsChannelNode)
                     return false;
             }
 

@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.TestHost;
 using NBitcoin;
 using Org.BouncyCastle.Pkcs;
 using Stratis.Bitcoin.Networks;
+using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
 namespace CertificateAuthority.Tests.FullProjectTests
@@ -26,7 +27,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void CertificateAuthorityTestServerStartsUp()
         {
-            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder();
+            TestBase.GetTestRootFolder(out string testRootFolder);
+            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder(testRootFolder);
 
             var server = new TestServer(builder);
             var client = new CaClient(server.BaseAddress, server.CreateClient(), Settings.AdminAccountId, CaTestHelper.AdminPassword);
@@ -43,7 +45,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void CertificateAuthorityTestServerGetsInitialized()
         {
-            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder();
+            TestBase.GetTestRootFolder(out string testRootFolder);
+            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder(testRootFolder);
 
             var server = new TestServer(builder);
             var client = new CaClient(server.BaseAddress, server.CreateClient(), Settings.AdminAccountId, CaTestHelper.AdminPassword);
@@ -56,7 +59,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void CertificateAuthorityCanAddANewAccount()
         {
-            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder();
+            TestBase.GetTestRootFolder(out string testRootFolder);
+            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder(testRootFolder);
 
             var server = new TestServer(builder);
             var client = new CaClient(server.BaseAddress, server.CreateClient(), Settings.AdminAccountId, CaTestHelper.AdminPassword);
@@ -127,7 +131,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void CertificateAuthorityCanGenerateCertificateSigningRequest()
         {
-            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder();
+            TestBase.GetTestRootFolder(out string testRootFolder);
+            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder(testRootFolder);
 
             var server = new TestServer(builder);
             var client = new CaClient(server.BaseAddress, server.CreateClient(), Settings.AdminAccountId, CaTestHelper.AdminPassword);
@@ -154,7 +159,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void CertificateAuthorityCanIssueCertificate()
         {
-            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder();
+            TestBase.GetTestRootFolder(out string testRootFolder);
+            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder(testRootFolder);
 
             var server = new TestServer(builder);
             var client = new CaClient(server.BaseAddress, server.CreateClient(), Settings.AdminAccountId, CaTestHelper.AdminPassword);
@@ -194,7 +200,8 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void CertificateAuthorityCanIssueCertificateToMultipleOrganisations()
         {
-            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder();
+            TestBase.GetTestRootFolder(out string testRootFolder);
+            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder(testRootFolder);
 
             var server = new TestServer(builder);
             var adminClient = new CaClient(server.BaseAddress, server.CreateClient(), Settings.AdminAccountId, CaTestHelper.AdminPassword);

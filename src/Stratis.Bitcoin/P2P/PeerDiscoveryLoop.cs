@@ -211,6 +211,9 @@ namespace Stratis.Bitcoin.P2P
         /// </summary>
         private void AddDNSSeedNodes(List<IPEndPoint> endPoints)
         {
+            if (this.network.DNSSeeds == null)
+                return;
+
             foreach (DNSSeedData seed in this.network.DNSSeeds)
             {
                 try
@@ -231,6 +234,9 @@ namespace Stratis.Bitcoin.P2P
         /// </summary>
         private void AddSeedNodes(List<IPEndPoint> endPoints)
         {
+            if (this.network.SeedNodes == null)
+                return;
+
             endPoints.AddRange(this.network.SeedNodes.Select(ipAddress => ipAddress.Endpoint));
         }
 

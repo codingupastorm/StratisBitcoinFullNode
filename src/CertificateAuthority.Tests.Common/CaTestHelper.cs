@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using CertificateAuthority.Controllers;
 using CertificateAuthority.Models;
 using FluentAssertions;
@@ -11,6 +10,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using NLog;
 using Stratis.Feature.PoA.Tokenless;
 
 namespace CertificateAuthority.Tests.Common
@@ -74,23 +74,34 @@ namespace CertificateAuthority.Tests.Common
         public static void InitializeCa(TestServer server)
         {
             var network = new TokenlessNetwork();
-
             var certificatesController = (CertificatesController)server.Host.Services.GetService(typeof(CertificatesController));
             var model = new InitializeCertificateAuthorityModel(CaMnemonic, CaMnemonicPassword, network.Consensus.CoinType, AdminPassword);
             certificatesController.InitializeCertificateAuthority(model);
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder([CallerMemberName] string callingMethod = null)
+        public static IWebHostBuilder CreateWebHostBuilder(string dataFolderName)
         {
-            // Create a datafolder path for the CA settings to use
-            string hash = Guid.NewGuid().ToString("N").Substring(0, 7);
-            string numberedFolderName = string.Join(
-                ".",
-                new[] { hash }.Where(s => s != null));
-            string dataFolderName = Path.Combine(Path.GetTempPath(), callingMethod, numberedFolderName);
-
+            // Initialize settings
             var settings = new Settings();
             settings.Initialize(new string[] { $"-datadir={dataFolderName}", $"-serverurls={BaseAddress}" });
+
+            // Create the log folder
+            string logFolder = Path.Combine(settings.DataDirectory, "Logs");
+            Directory.CreateDirectory(logFolder);
+
+            // Initialize logging for tests.
+            var config = new NLog.Config.LoggingConfiguration();
+
+            // Targets where to log to: File and Console
+            var logfile = new NLog.Targets.FileTarget("logfile") { FileName = Path.Combine(logFolder, "ca.txt") };
+            var logconsole = new NLog.Targets.ConsoleTarget("logconsole");
+
+            // Rules for mapping loggers to targets            
+            config.AddRule(LogLevel.Info, LogLevel.Fatal, logconsole);
+            config.AddRule(LogLevel.Debug, LogLevel.Fatal, logfile);
+
+            // Apply config           
+            NLog.LogManager.Configuration = config;
 
             IWebHostBuilder builder = WebHost.CreateDefaultBuilder();
             builder.UseUrls(settings.ServerUrls);

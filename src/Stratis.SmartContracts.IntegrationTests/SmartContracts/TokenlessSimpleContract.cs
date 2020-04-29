@@ -20,5 +20,4 @@ public class TokenlessSimpleContract : TokenlessSmartContract
         this.Increment = this.Increment + 1;
         return this.Increment;
     }
-
 }

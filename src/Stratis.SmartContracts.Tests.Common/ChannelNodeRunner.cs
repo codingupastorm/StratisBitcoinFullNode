@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
+﻿using System.IO;
 using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
 using Stratis.Bitcoin;
@@ -15,11 +12,9 @@ using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless;
-using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Features.Api;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
-using Stratis.Features.PoA;
 using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Features.PoA.Tests.Common;
 using Stratis.SmartContracts.Tokenless;
@@ -40,22 +35,13 @@ namespace Stratis.SmartContracts.Tests.Common
 
         public override void BuildNode()
         {
-            var loadedJson = File.ReadAllText($"{this.DataFolder}\\channels\\{this.channelName}_network.json");
-
-            ChannelNetwork channelNetwork = JsonSerializer.Deserialize<ChannelNetwork>(loadedJson);
-
-            // TODO-TL: Find a better way to construct the following items when deserializing.
-            channelNetwork.Consensus.ConsensusFactory = new TokenlessConsensusFactory();
-            channelNetwork.Consensus.ConsensusRules = new NBitcoin.ConsensusRules();
-            channelNetwork.Consensus.HashGenesisBlock = channelNetwork.Genesis.GetHash();
-            channelNetwork.Consensus.Options = new PoAConsensusOptions(0, 0, 0, 0, 0, new List<IFederationMember>(), 16, false, false, false);
-            channelNetwork.Consensus.MempoolRules = new List<Type>();
+            var channelNetwork = ChannelNetwork.Construct(Path.Combine(this.DataFolder, "channels"), this.channelName, false);
 
             var settings = new NodeSettings(channelNetwork, args: new string[]
             {
                 "-certificatepassword=test",
                 "-password=test",
-                "-conf=poa.conf",
+                "-conf=channel.conf",
                 "-datadir=" + this.DataFolder,
                 $"-{CertificatesManager.CaAccountIdKey}={Settings.AdminAccountId}",
                 $"-{CertificatesManager.CaPasswordKey}={CaTestHelper.AdminPassword}",

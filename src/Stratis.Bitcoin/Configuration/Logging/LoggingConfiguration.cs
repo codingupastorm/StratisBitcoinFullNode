@@ -259,7 +259,9 @@ namespace Stratis.Bitcoin.Configuration.Logging
                     if (settings.DebugArgs[0] == "1")
                     {
                         // Increase all logging to Debug.
-                        builder.AddFilter($"{nameof(Stratis)}.{nameof(Bitcoin)}", Microsoft.Extensions.Logging.LogLevel.Debug);
+                        builder.AddFilter($"{nameof(Stratis)}.{nameof(Bitcoin)}", LogLevel.Debug);
+                        builder.AddFilter($"{nameof(Stratis)}.Feature", LogLevel.Debug);
+                        builder.AddFilter($"{nameof(Stratis)}.Features", LogLevel.Debug);
                     }
                     else
                     {
@@ -279,7 +281,7 @@ namespace Stratis.Bitcoin.Configuration.Logging
                                 if (!usedCategories.Contains(category))
                                 {
                                     usedCategories.Add(category);
-                                    builder.AddFilter(category.TrimEnd('*').TrimEnd('.'), Microsoft.Extensions.Logging.LogLevel.Debug);
+                                    builder.AddFilter(category.TrimEnd('*').TrimEnd('.'), LogLevel.Debug);
                                 }
                             }
                         }

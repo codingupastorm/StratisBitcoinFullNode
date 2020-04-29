@@ -6,6 +6,7 @@ using CertificateAuthority;
 using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitcoin.PoA;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration;
@@ -31,6 +32,7 @@ namespace Stratis.Feature.PoA.Tokenless
     {
         private readonly ICoreComponent coreComponent;
         private readonly IBlockRepository blockRepository;
+        private readonly ChannelSettings channelSettings;
         private readonly ICertificatesManager certificatesManager;
         private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
         private readonly VotingManager votingManager;
@@ -52,6 +54,7 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly ReadWriteSetPolicyValidator rwsPolicyValidator;
 
         public TokenlessFeature(
+            ChannelSettings channelSettings,
             ICertificatesManager certificatesManager,
             IBlockRepository blockRepository,
             ICertificatePermissionsChecker certificatePermissionsChecker,
@@ -77,6 +80,7 @@ namespace Stratis.Feature.PoA.Tokenless
             ReadWriteSetPolicyValidator rwsPolicyValidator)
         {
             this.blockRepository = blockRepository;
+            this.channelSettings = channelSettings;
             this.certificatesManager = certificatesManager;
             this.certificatePermissionsChecker = certificatePermissionsChecker;
             this.votingManager = votingManager;
@@ -148,26 +152,29 @@ namespace Stratis.Feature.PoA.Tokenless
                 }
                 catch (Exception e)
                 {
-                    this.logger.LogDebug(e, "Exception raised when calling CA to synchronize members.");
-                    this.logger.LogWarning("Could not synchronize members with CA. CA is possibly down! Will retry in 1 minute.");
+                    this.logger.LogWarning("Could not synchronize members, contacting the CA Server failed:", e.Message);
                 }
             },
             this.nodeLifetime.ApplicationStopping,
-            repeatEvery: TimeSpans.Minute,
-            startAfter: TimeSpans.Minute);
+            repeatEvery: TimeSpan.FromSeconds(10),
+            startAfter: TimeSpan.FromSeconds(30));
 
-            // If this node is a infra node, then start another daemon with the serialized version of the network.
-            if (this.tokenlessKeyStoreSettings.IsInfraNode)
+            this.channelService.Initialize();
+
+            // If this node is a infra node, then start a system channel node daemon with the serialized version of the network.
+            if (this.channelSettings.IsInfraNode)
                 await this.channelService.StartSystemChannelNodeAsync();
-        }
 
+            // Restart any channels that were created previously or that this nodes belong to.
+            await this.channelService.RestartChannelNodesAsync();
+        }
 
         private void SynchronizeMembers()
         {
             // If we're not a federation member, it's not our job to vote. Don't schedule any votes until we are one.
             if (!this.federationManager.IsFederationMember)
             {
-                this.logger.LogDebug("Attempted to Synchronize members but we aren't a member yet.");
+                this.logger.LogDebug("Attempted to synchronize members but we aren't a member yet.");
                 return;
             }
 

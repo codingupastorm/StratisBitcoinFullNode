@@ -9,9 +9,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using Org.BouncyCastle.X509;
-using Stratis.Features.PoA;
-using Stratis.Features.PoA.Tests.Common;
-using Stratis.Features.PoA.Voting;
 using Stratis.Bitcoin.Features.SmartContracts.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
@@ -20,6 +17,9 @@ using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Controllers;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
+using Stratis.Features.PoA;
+using Stratis.Features.PoA.Tests.Common;
+using Stratis.Features.PoA.Voting;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.Core.Receipts;
@@ -41,9 +41,9 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesMineAnEmptyBlockAsync()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
@@ -79,9 +79,9 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesConnectAndMineOpReturnAsync()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
@@ -127,9 +127,9 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesConnectAndMineWithoutPasswordAsync()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
@@ -187,9 +187,9 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesCreateAndCallAContractAsync()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
@@ -253,11 +253,77 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
+        public async Task MultipleTokenlessNodesCreateAndCallAContractAsync()
+        {
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient();
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
+
+                CaClient client1 = TokenlessTestHelper.GetClient(server);
+                CaClient client2 = TokenlessTestHelper.GetClient(server);
+                CaClient client3 = TokenlessTestHelper.GetClient(server);
+
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node3 = nodeBuilder.CreateTokenlessNode(this.network, 2, ac, client3);
+
+                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate(), node3.ClientCertificate.ToCertificate() };
+
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node3.DataFolder, this.network.RootFolderName, this.network.Name));
+
+                node1.Start();
+                node2.Start();
+                node3.Start();
+
+                TestHelper.Connect(node1, node2);
+                TestHelper.Connect(node2, node3);
+                TestHelper.Connect(node1, node3);
+
+                // Broadcast from node1, check state of node2.
+                var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
+                var stateRepo = node2.FullNode.NodeService<IStateRepositoryRoot>();
+
+
+
+                Transaction createTransaction = TokenlessTestHelper.CreateContractCreateTransaction(node1, node1.TransactionSigningPrivateKey, "SmartContracts/TokenlessSimpleContract.cs");
+                await node1.BroadcastTransactionAsync(createTransaction);
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                await node1.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2, node3);
+
+                Receipt createReceipt = receiptRepository.Retrieve(createTransaction.GetHash());
+                Assert.True(createReceipt.Success);
+
+                Transaction callTransaction = TokenlessTestHelper.CreateContractCallTransaction(node1, createReceipt.NewContractAddress, node1.TransactionSigningPrivateKey, "CallMe");
+
+                await node1.BroadcastTransactionAsync(callTransaction);
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                await node1.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+
+                Receipt callReceipt = receiptRepository.Retrieve(callTransaction.GetHash());
+                Assert.True(callReceipt.Success);
+            }
+        }
+
+        [Fact]
         public async Task TokenlessNodesCreateAndCallWithControllerAsync()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
@@ -353,9 +419,9 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesKickAMinerBasedOnCAAsync()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
@@ -475,9 +541,9 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task TokenlessNodesCanSendSameOpReturnDataTwiceAsync()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
@@ -550,6 +616,67 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.Contains(node1.GetTip().Block.Transactions, t => t.GetHash() == transactionId2);
                 Assert.NotEqual(transactionId1, transactionId2);
                 Assert.NotEqual(tx1.Time, tx2.Time);
+            }
+        }
+
+        [Fact(Skip = "This is useful locally to test the Swagger UI for Pure methods.")]
+        public async Task SwaggerRendersPureMethods()
+        {
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient();
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
+
+                CaClient client1 = TokenlessTestHelper.GetClient(server);
+                CaClient client2 = TokenlessTestHelper.GetClient(server);
+
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
+
+                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
+
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+
+                node1.Start();
+                node2.Start();
+
+                TestHelper.Connect(node1, node2);
+
+                // Broadcast from node1, check state of node2.
+                var node1Controller = node1.FullNode.NodeController<TokenlessController>();
+                var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
+
+                ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/TokenlessPureExample.cs");
+
+                var createModel = new BuildCreateContractTransactionModel()
+                {
+                    ContractCode = compilationResult.Compilation
+                };
+
+                var createResult = (JsonResult)node1Controller.BuildCreateContractTransaction(createModel);
+                var createResponse = (BuildCreateContractTransactionResponse)createResult.Value;
+
+                await node1Controller.SendTransactionAsync(new SendTransactionModel()
+                {
+                    TransactionHex = createResponse.Hex
+                });
+
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                await node1.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+
+                Receipt createReceipt = receiptRepository.Retrieve(createResponse.TransactionId);
+                Assert.True(createReceipt.Success);
             }
         }
     }

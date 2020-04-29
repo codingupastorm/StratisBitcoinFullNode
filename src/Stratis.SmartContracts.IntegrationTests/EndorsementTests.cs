@@ -42,9 +42,10 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task EndorseCallTransaction()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
+            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder(testRootFolder);
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
+            using (IWebHost server = builder.Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
@@ -116,9 +117,10 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task CallTransaction_MultipleSignatures()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
+            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder(testRootFolder);
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
+            using (IWebHost server = builder.Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
@@ -201,9 +203,10 @@ namespace Stratis.SmartContracts.IntegrationTests
         [Fact]
         public async Task PrivateDataTransaction()
         {
-            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+            TestBase.GetTestRootFolder(out string testRootFolder);
+            IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder(testRootFolder);
 
-            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
+            using (IWebHost server = builder.Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();

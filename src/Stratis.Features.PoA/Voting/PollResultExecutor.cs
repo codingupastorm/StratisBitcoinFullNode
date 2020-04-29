@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using NBitcoin.PoA;
 
 namespace Stratis.Features.PoA.Voting
 {
