@@ -53,7 +53,8 @@ namespace Stratis.SmartContracts.CLR.Tests
             Assert.Equal<byte[]>(contractExecutionCode, callData.ContractExecutionCode);
             Assert.Equal((Gas)NoGasCallDataSerializer.GasPriceToSet, callData.GasPrice);
             Assert.Equal((Gas)NoGasCallDataSerializer.GasLimitToSet, callData.GasLimit);
-            Assert.Equal(policy, callData.EndorsementPolicy);
+            Assert.Equal(policy.Organisation, callData.EndorsementPolicy.Organisation);
+            Assert.Equal(policy.RequiredSignatures, callData.EndorsementPolicy.RequiredSignatures);
         }
 
         [Fact]

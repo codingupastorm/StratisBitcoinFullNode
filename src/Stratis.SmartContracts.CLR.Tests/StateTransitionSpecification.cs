@@ -31,6 +31,8 @@ namespace Stratis.SmartContracts.CLR.Tests
         [Fact]
         public void ExternalCreate_Success()
         {
+            EndorsementPolicy policy = new EndorsementPolicy();
+
             var newContractAddress = uint160.One;
             var vmExecutionResult = VmExecutionResult.Ok(true, "Test");
 
@@ -39,11 +41,11 @@ namespace Stratis.SmartContracts.CLR.Tests
                 10,
                 (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000),
                 new byte[0],
-                new EndorsementPolicy(), 
+                policy, 
                 null
             );
 
-            this.vm.Setup(v => v.Create(this.contractStateRoot.Object, It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), externalCreateMessage.Code, new EndorsementPolicy(), externalCreateMessage.Parameters, null))
+            this.vm.Setup(v => v.Create(this.contractStateRoot.Object, It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), externalCreateMessage.Code, policy, externalCreateMessage.Parameters, null))
                 .Returns(vmExecutionResult);
 
             var state = new Mock<IState>();
@@ -62,7 +64,7 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<ReadWriteSetBuilder>(), It.IsAny<ReadWriteSetBuilder>(), It.IsAny<RuntimeObserver.IGasMeter>(), newContractAddress, externalCreateMessage, this.contractStateRoot.Object));
 
-            this.vm.Verify(v => v.Create(this.contractStateRoot.Object, It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), externalCreateMessage.Code, new EndorsementPolicy(), externalCreateMessage.Parameters,  null), Times.Once);
+            this.vm.Verify(v => v.Create(this.contractStateRoot.Object, It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), externalCreateMessage.Code, policy, externalCreateMessage.Parameters,  null), Times.Once);
 
             Assert.True(result.IsSuccess);
             Assert.NotNull(result.Success);
@@ -77,16 +79,18 @@ namespace Stratis.SmartContracts.CLR.Tests
             var newContractAddress = uint160.One;
             var vmExecutionResult = VmExecutionResult.Fail(VmExecutionErrorKind.InvocationFailed, "Error");
 
+            EndorsementPolicy policy = new EndorsementPolicy();
+
             var externalCreateMessage = new ExternalCreateMessage(
                 uint160.Zero,
                 10,
                 (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000),
                 new byte[0],
-                new EndorsementPolicy(), 
+                policy, 
                 null
             );
 
-            this.vm.Setup(v => v.Create(this.contractStateRoot.Object, It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), externalCreateMessage.Code, new EndorsementPolicy(), externalCreateMessage.Parameters, null))
+            this.vm.Setup(v => v.Create(this.contractStateRoot.Object, It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), externalCreateMessage.Code, policy, externalCreateMessage.Parameters, null))
                 .Returns(vmExecutionResult);
 
             var state = new Mock<IState>();
@@ -101,7 +105,7 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             this.contractStateRoot.Verify(ts => ts.CreateAccount(newContractAddress), Times.Once);
 
-            this.vm.Verify(v => v.Create(this.contractStateRoot.Object, It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), externalCreateMessage.Code, new EndorsementPolicy(), externalCreateMessage.Parameters, null), Times.Once);
+            this.vm.Verify(v => v.Create(this.contractStateRoot.Object, It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), externalCreateMessage.Code, policy, externalCreateMessage.Parameters, null), Times.Once);
 
             Assert.False(result.IsSuccess);
             Assert.True(result.IsFailure);
@@ -277,7 +281,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                 .Setup(sr => sr.GetCode(internalCreateMessage.From))
                 .Returns(code);
 
-            this.vm.Setup(v => v.Create(this.contractStateRoot.Object, It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), code, new EndorsementPolicy(), internalCreateMessage.Parameters, internalCreateMessage.Type))
+            this.vm.Setup(v => v.Create(this.contractStateRoot.Object, It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), code, null, internalCreateMessage.Parameters, internalCreateMessage.Type))
                 .Returns(vmExecutionResult);
 
             var state = new Mock<IState>();
@@ -306,7 +310,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             state.Verify(s => s.CreateSmartContractState(state.Object, It.IsAny<ReadWriteSetBuilder>(), It.IsAny<ReadWriteSetBuilder>(), It.IsAny<RuntimeObserver.IGasMeter>(), newContractAddress, internalCreateMessage, this.contractStateRoot.Object));
 
             // Verify the VM was invoked
-            this.vm.Verify(v => v.Create(this.contractStateRoot.Object, It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), code, new EndorsementPolicy(), internalCreateMessage.Parameters, internalCreateMessage.Type), Times.Once);
+            this.vm.Verify(v => v.Create(this.contractStateRoot.Object, It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), code, null, internalCreateMessage.Parameters, internalCreateMessage.Type), Times.Once);
 
             // Verify the value was added to the internal transfer list
             state.Verify(s => s.AddInternalTransfer(It.Is<TransferInfo>(t => t.From == internalCreateMessage.From 
@@ -344,7 +348,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                         It.IsAny<ISmartContractState>(),
                         It.IsAny<ExecutionContext>(),
                         It.IsAny<byte[]>(),
-                        new EndorsementPolicy(), 
+                        null, 
                         It.IsAny<object[]>(),
                         It.IsAny<string>()))
                 .Returns(vmExecutionResult);
@@ -371,7 +375,7 @@ namespace Stratis.SmartContracts.CLR.Tests
                     It.IsAny<ISmartContractState>(),
                     It.IsAny<ExecutionContext>(),
                     code,
-                    new EndorsementPolicy(), 
+                    null, 
                     internalCreateMessage.Parameters,
                     internalCreateMessage.Type),
                 Times.Once);
@@ -421,16 +425,18 @@ namespace Stratis.SmartContracts.CLR.Tests
             var newContractAddress = uint160.One;
             var vmExecutionResult = VmExecutionResult.Fail(VmExecutionErrorKind.OutOfGas, "Error");
 
+            EndorsementPolicy policy = new EndorsementPolicy();
+
             var createMessage = new ExternalCreateMessage(
                 uint160.Zero,
                 10,
                 (RuntimeObserver.Gas)(GasPriceList.BaseCost + 100000),
                 new byte[0],
-                new EndorsementPolicy(), 
+                policy, 
                 null
             );
 
-            this.vm.Setup(v => v.Create(this.contractStateRoot.Object, It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), createMessage.Code, new EndorsementPolicy(), createMessage.Parameters, null))
+            this.vm.Setup(v => v.Create(this.contractStateRoot.Object, It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), createMessage.Code, policy, createMessage.Parameters, null))
                 .Returns(vmExecutionResult);
 
             var state = new Mock<IState>();
@@ -445,7 +451,7 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             this.contractStateRoot.Verify(ts => ts.CreateAccount(newContractAddress), Times.Once);
 
-            this.vm.Verify(v => v.Create(this.contractStateRoot.Object, It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), createMessage.Code, new EndorsementPolicy(), createMessage.Parameters, null), Times.Once);
+            this.vm.Verify(v => v.Create(this.contractStateRoot.Object, It.IsAny<ISmartContractState>(), It.IsAny<ExecutionContext>(), createMessage.Code, policy, createMessage.Parameters, null), Times.Once);
 
             Assert.False(result.IsSuccess);
             Assert.True(result.IsFailure);
