@@ -16,7 +16,7 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly ICertificatesManager certificatesManager;
         private readonly IStateRepository stateRepository;
 
-        public ReadWriteSetPolicyValidator(ICertificatesManager certificatesManager, IStateRepository stateRepository)
+        public ReadWriteSetPolicyValidator(ICertificatesManager certificatesManager, IStateRepositoryRoot stateRepository)
         {
             this.certificatesManager = certificatesManager;
             this.stateRepository = stateRepository;
