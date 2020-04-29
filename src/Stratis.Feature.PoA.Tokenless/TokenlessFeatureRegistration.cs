@@ -65,6 +65,7 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<IEndorsedTransactionBuilder, EndorsedTransactionBuilder>();
                         services.AddSingleton<IOrganisationLookup, OrganisationLookup>();
                         services.AddSingleton<IPrivateDataRetriever, PrivateDataRetriever>();
+                        services.AddSingleton<ReadWriteSetPolicyValidator>();
 
                         // Private data.
                         services.AddSingleton<ITransientKeyValueStore, TransientKeyValueStore>();

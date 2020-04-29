@@ -4,6 +4,8 @@ using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Feature.PoA.Tokenless.Payloads;
+using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Store;
 
 namespace Stratis.Feature.PoA.Tokenless
@@ -11,10 +13,12 @@ namespace Stratis.Feature.PoA.Tokenless
     public class PrivateDataRequestBehavior : NetworkPeerBehavior
     {
         private readonly ITransientStore transientStore;
+        private readonly ReadWriteSetPolicyValidator rwsPolicyValidator;
 
-        public PrivateDataRequestBehavior(ITransientStore transientStore)
+        public PrivateDataRequestBehavior(ITransientStore transientStore, ReadWriteSetPolicyValidator rwsPolicyValidator)
         {
             this.transientStore = transientStore;
+            this.rwsPolicyValidator = rwsPolicyValidator;
         }
 
         protected override void AttachCore()
@@ -28,7 +32,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         public override object Clone()
         {
-            return new PrivateDataRequestBehavior(this.transientStore);
+            return new PrivateDataRequestBehavior(this.transientStore, this.rwsPolicyValidator);
         }
 
         private async Task OnMessageReceivedAsync(INetworkPeer peer, IncomingMessage message)
@@ -36,7 +40,7 @@ namespace Stratis.Feature.PoA.Tokenless
             if (!(message.Message.Payload is RequestPrivateDataPayload payload))
                 return;
 
-            // TODO: Check they're allowed to access this?
+            var cert = ((TlsEnabledNetworkPeerConnection) peer.Connection).GetPeerCertificate();
 
             // See if we have the data.
             (TransientStorePrivateData Data, uint BlockHeight) entry = this.transientStore.Get(payload.Id);
@@ -44,6 +48,13 @@ namespace Stratis.Feature.PoA.Tokenless
             // If we do, send it to them.
             if (entry.Data != null)
             {
+                ReadWriteSet rws = ReadWriteSet.FromJsonEncodedBytes(entry.Data.ToBytes());
+
+                if (!this.rwsPolicyValidator.OrganisationCanAccessPrivateData(cert, rws))
+                {
+                    return;
+                }
+
                 try
                 {
                     await peer.SendMessageAsync(new PrivateDataPayload(payload.Id, entry.BlockHeight, entry.Data.ToBytes())).ConfigureAwait(false);

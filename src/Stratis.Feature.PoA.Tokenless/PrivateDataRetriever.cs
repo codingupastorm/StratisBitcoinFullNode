@@ -35,8 +35,7 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly ITransientStore transientStore;
         private readonly IPrivateDataStore privateDataStore;
         private readonly ITokenlessBroadcaster tokenlessBroadcaster;
-        private readonly IStateRepositoryRoot stateRepository;
-        private readonly ICertificatesManager certificatesManager;
+        private readonly ReadWriteSetPolicyValidator rwsPolicyValidator;
 
         /// <summary>
         /// How often to go out and request the private data.
@@ -51,26 +50,19 @@ namespace Stratis.Feature.PoA.Tokenless
         public PrivateDataRetriever(ITransientStore transientStore,
             IPrivateDataStore privateDataStore,
             ITokenlessBroadcaster tokenlessBroadcaster,
-            IStateRepositoryRoot stateRepository, 
-            ICertificatesManager certificatesManager)
+            ReadWriteSetPolicyValidator rwsPolicyValidator)
         {
             this.transientStore = transientStore;
             this.privateDataStore = privateDataStore;
             this.tokenlessBroadcaster = tokenlessBroadcaster;
-            this.stateRepository = stateRepository;
-            this.certificatesManager = certificatesManager;
+            this.rwsPolicyValidator = rwsPolicyValidator;
         }
 
         /// <inheritdoc />
         public async Task<bool> WaitForPrivateDataIfRequired(ReadWriteSet readWriteSet)
         {
-            // Check if we are meant to have the data. 
-            WriteItem write = readWriteSet.Writes.First(x => x.IsPrivateData);
-            EndorsementPolicy policy = this.stateRepository.GetPolicy(write.ContractAddress);
-
-            if (policy.Organisation != this.certificatesManager.ClientCertificate.GetOrganisation())
+            if (!this.rwsPolicyValidator.ClientCanAccessPrivateData(readWriteSet))
             {
-                // This private data is for a different organisation. Let block validation move on.
                 return false;
             }
 
