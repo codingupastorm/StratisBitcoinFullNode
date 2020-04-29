@@ -179,9 +179,6 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             if (network.Id == 0)
                 throw new ChannelServiceException("The network id can't be 0.");
 
-            if (this.channelSettings.IsSystemChannelNode || this.channelSettings.IsChannelNode || this.channelSettings.IsInfraNode)
-                throw new ChannelServiceException("Only normal nodes can process channel join requests.");
-
             // Record channel membership (in normal node repo) and start up channel node.
             this.logger.LogInformation($"Joining and starting a node on channel '{network.Name}'.");
 
