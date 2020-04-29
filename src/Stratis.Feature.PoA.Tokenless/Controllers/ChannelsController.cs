@@ -90,42 +90,9 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             this.logger.LogInformation($"Request to join channel '{request.Name}' received.");
 
             try
-            {
-                // Must be a "normal" node.
-                if (this.channelSettings.IsChannelNode || this.channelSettings.IsInfraNode ||
-                    this.channelSettings.IsSystemChannelNode)
-                {
-                    throw new InvalidOperationException("Only normal nodes can receive channel join requests.");
-                }
-
-                // The channel id is required.
-                if (request.Id == 0)
-                {
-                    throw new InvalidOperationException("The channel id can't be 0.");
-                }
-
-                // Get transaction signing pubkey for this node.
-                PubKey member = this.tokenlessKeyStoreManager.GetPubKey(TokenlessKeyStoreAccount.TransactionSigning);
-
-                byte[] pubKeyHash = member.Hash.ToBytes();
-
-                X509Certificate x509Certificate = null;
-
-                if (!this.revocationChecker.IsCertificateRevokedByTransactionSigningKeyHash(pubKeyHash))
-                    x509Certificate = this.membershipServicesDirectory.GetCertificateForTransactionSigningPubKeyHash(pubKeyHash);
-
-                if (x509Certificate == null)
-                {
-                    throw new InvalidOperationException("This node's certificate has been revoked.");
-                }
-
-                // TODO: Record channel membership (in normal node repo) and start up channel node.
-                this.channelService.CreateAndStartChannelNodeAsync(new ChannelCreationRequest()
-                {
-                    Name = request.Name,
-                    Id = request.Id,
-                    Organisation = x509Certificate.
-                });
+            {                
+                // Record channel membership (in normal node repo) and start up channel node.
+                await this.channelService.JoinChannelAsync(request);
 
                 return Ok();
             }

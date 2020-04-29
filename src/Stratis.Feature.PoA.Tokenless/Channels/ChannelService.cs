@@ -29,7 +29,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         int GetDefaulPort(int channelId);
         int GetDefaultSignalRPort(int channelId);
 
-        Task CreateAndStartChannelNodeAsync(ChannelCreationRequest request);
+        Task JoinChannelAsync(ChannelJoinRequest request);
+        Task CreateAndStartChannelNodeAsync(ChannelCreationRequest request, int channelNodeId = 0);
         Task StartSystemChannelNodeAsync();
         Task RestartChannelNodesAsync();
         void StopChannelNodes();
@@ -134,13 +135,12 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             }
         }
 
-        public async Task CreateAndStartChannelNodeAsync(ChannelCreationRequest request)
+        public async Task CreateAndStartChannelNodeAsync(ChannelCreationRequest request, int channelNodeId = 0)
         {
             try
             {
-                this.logger.LogInformation($"{((request.Id == 0) ? "Creating" : "Joining")} and starting a node on channel '{request.Name}'.");
+                this.logger.LogInformation($"{((channelNodeId == 0) ? "Creating" : "Joining")} and starting a node on channel '{request.Name}'.");
 
-                int channelNodeId = request.Id;
                 if (channelNodeId == 0)
                 {
                     Guard.Assert(this.channelSettings.IsSystemChannelNode);
@@ -175,6 +175,52 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             catch (Exception ex)
             {
                 throw new ChannelServiceException($"Failed to start node on channel '{request.Name}': {ex.Message}");
+            }
+        }
+
+        public async Task JoinChannelAsync(ChannelJoinRequest request)
+        {
+            // Must be a "normal" node.
+            if (this.channelSettings.IsChannelNode || this.channelSettings.IsInfraNode || this.channelSettings.IsSystemChannelNode)
+            {
+                throw new ChannelServiceException("Only normal nodes can process channel join requests.");
+            }
+
+            // The channel id is required.
+            if (request.Id == 0)
+            {
+                throw new ChannelServiceException("The channel id can't be 0.");
+            }
+
+            /*
+            // Get transaction signing pubkey for this node.
+            PubKey member = this.tokenlessKeyStoreManager.GetPubKey(TokenlessKeyStoreAccount.TransactionSigning);
+
+            byte[] pubKeyHash = member.Hash.ToBytes();
+
+            X509Certificate x509Certificate = null;
+
+            if (!this.revocationChecker.IsCertificateRevokedByTransactionSigningKeyHash(pubKeyHash))
+                x509Certificate = this.membershipServicesDirectory.GetCertificateForTransactionSigningPubKeyHash(pubKeyHash);
+
+            if (x509Certificate == null)
+            {
+                throw new InvalidOperationException("This node's certificate has been revoked.");
+            }
+            */
+
+            // TODO: Record channel membership (in normal node repo) and start up channel node.
+            try
+            {
+                await this.CreateAndStartChannelNodeAsync(new ChannelCreationRequest()
+                {
+                    Name = request.Name,
+                    Organisation = "Stratis"
+                }, request.Id);
+            }
+            catch (Exception ex)
+            {
+                throw new ChannelServiceException($"Failed to join channel '{request.Name}': {ex.Message}");
             }
         }
 
