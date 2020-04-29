@@ -121,7 +121,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
             // Save the channel definition so that it can loaded on node start.
             IChannelRepository channelRepository = parentNode.FullNode.NodeService<IChannelRepository>();
-            channelRepository.SaveChannelDefinition(new ChannelDefinition() { Name = channelName });
+            channelRepository.SaveChannelDefinition(new ChannelDefinition() { Id = nodeIndex, Name = channelName, NetworkJson = serializedJson });
         }
 
         public CoreNode CreateChannelNode(CoreNode infraNode, string channelName, int nodeIndex)
