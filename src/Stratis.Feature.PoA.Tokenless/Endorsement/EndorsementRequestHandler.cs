@@ -88,15 +88,9 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 return false;
             }
 
-            SignedProposalResponse signedProposalResponse = new SignedProposalResponse
-            {
-                Endorsement = new Endorsement(new byte[] {}, new byte[] {}),
-                PrivateReadWriteSet = result.PrivateReadWriteSet.GetReadWriteSet(),
-                ProposalResponse = new ProposalResponse
-                {
-                    ReadWriteSet = result.ReadWriteSet.GetReadWriteSet()
-                }
-            };
+            SignedProposalResponse signedProposalResponse =
+                this.readWriteSetTransactionSerializer.Build(result.ReadWriteSet.GetReadWriteSet(),
+                    result.PrivateReadWriteSet.GetReadWriteSet());
 
             uint256 proposalId = request.ContractTransaction.GetHash();
             var payload = new EndorsementPayload(signedProposalResponse, proposalId);
