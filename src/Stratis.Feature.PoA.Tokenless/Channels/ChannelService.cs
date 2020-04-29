@@ -138,9 +138,21 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         {
             try
             {
-                this.logger.LogInformation($"Creating and starting a node on channel '{request.Name}'.");
+                this.logger.LogInformation($"{((request.Id == 0) ? "Creating" : "Joining")} and starting a node on channel '{request.Name}'.");
 
-                int channelNodeId = this.channelRepository.GetNextChannelId();
+                int channelNodeId = request.Id;
+                if (channelNodeId == 0)
+                {
+                    Guard.Assert(this.channelSettings.IsSystemChannelNode);
+                    channelNodeId = this.channelRepository.GetNextChannelId();
+                }
+                else
+                {
+                    Guard.Assert(!this.channelSettings.IsSystemChannelNode);
+                    Guard.Assert(!this.channelSettings.IsChannelNode);
+                    Guard.Assert(!this.channelSettings.IsInfraNode);
+                }
+
                 string channelRootFolder = PrepareNodeForStartup(request.Name, channelNodeId);
 
                 ChannelNodeProcess channelNode = await StartTheProcessAsync(channelRootFolder, $"-channelname={request.Name}");

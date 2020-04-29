@@ -21,8 +21,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     {
         public const int OpcodeSize = sizeof(byte);
         public Dictionary<Type, byte> OpcodeMap = new Dictionary<Type, byte> {
-                { typeof(ChannelCreationRequest), (byte)ChannelOpCodes.OP_CREATECHANNEL },
-                { typeof(ChannelAddMemberRequest), (byte)ChannelOpCodes.OP_ADDCHANNELMEMBER }
+                { typeof(ChannelCreationRequest), (byte)ChannelOpCodes.OP_CREATECHANNEL }
             };
 
         /// <inheritdoc/>

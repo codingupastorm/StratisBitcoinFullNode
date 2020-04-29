@@ -10,6 +10,11 @@ namespace Stratis.Feature.PoA.Tokenless.Channels.Requests
         [Required]
         public string Organisation { get; set; }
 
+        /// <summary> The id when joining a pre-existing channel.</summary>
+        [JsonPropertyName("id")]
+        [Required]
+        public int Id { get; set; }
+
         /// <summary> The name of the channel to create.</summary>
         [JsonPropertyName("name")]
         [Required]
