@@ -14,5 +14,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts
         public static ConsensusError MissingRefundOutput => new ConsensusError("missing-refund-output", "contract execution refunded some amount but refund output is missing.");
         public static ConsensusError FeeTooSmallForGas => new ConsensusError("total-gas-value-greater-than-total-fee", "total supplied gas value was greater than total supplied fee value");
         public static ConsensusError GasLimitPerBlockExceeded => new ConsensusError("gas-limit-per-block-exceeded", "the total gas cost to execute the contract exceeded the block gas limit");
+        public static ConsensusError InvalidReadWriteSet => new ConsensusError("readwriteset-invalid", "the read write set for an endorsed transaction is invalid.");
     }
 }

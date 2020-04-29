@@ -43,6 +43,12 @@ namespace Stratis.SmartContracts.IntegrationTests
             nodes.Skip(1).ToList().ForEach(n => TestBase.WaitLoop(() => AreNodesSynced(nodes.First(), n)));
         }
 
+        public static void WaitForNodeToSyncAvoidMempool(params CoreNode[] nodes)
+        {
+            nodes.ToList().ForEach(n => TestBase.WaitLoop(() => IsNodeSynced(n)));
+            nodes.Skip(1).ToList().ForEach(n => TestBase.WaitLoop(() => AreNodesSynced(nodes.First(), n, true)));
+        }
+
         private static bool IsNodeSynced(CoreNode node)
         {
             // If the node is at genesis it is considered synced.

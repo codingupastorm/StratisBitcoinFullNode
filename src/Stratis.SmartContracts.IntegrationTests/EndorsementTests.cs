@@ -301,5 +301,93 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.Null(node3.FullNode.NodeService<IPrivateDataStore>().GetBytes(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("TransientPrivate")));
             }
         }
+
+        [Fact]
+        public async Task InvalidTransactionNotIncludedInBlock()
+        {
+            TokenlessTestHelper.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = TokenlessTestHelper.CreateWebHostBuilder(TokenlessTestHelper.GetDataFolderName()).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient();
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
+
+                // Get Authority Certificate.
+                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
+
+                CaClient client1 = TokenlessTestHelper.GetClient(server);
+                CaClient client2 = TokenlessTestHelper.GetClient(server);
+
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
+
+                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
+
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+
+                EndorsementPolicy policy = new EndorsementPolicy
+                {
+                    Organisation = (Organisation)node1.ClientCertificate.ToCertificate().GetOrganisation(),
+                    RequiredSignatures = 1
+                };
+
+                node1.Start();
+                node2.Start();
+
+                TestHelper.Connect(node1, node2);
+
+                // Broadcast from node1, check state of node2.
+                var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
+
+                Transaction createTransaction = TokenlessTestHelper.CreateContractCreateTransaction(node1, node1.TransactionSigningPrivateKey, "SmartContracts/TokenlessSimpleContract.cs", policy);
+                await node1.BroadcastTransactionAsync(createTransaction);
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                await node1.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+
+                Receipt createReceipt = receiptRepository.Retrieve(createTransaction.GetHash());
+                Assert.True(createReceipt.Success);
+
+                // Now we put a CALL into the mempool
+                Transaction standardTransaction = TokenlessTestHelper.CreateContractCallTransaction(node1, createReceipt.NewContractAddress, node1.TransactionSigningPrivateKey, "CallMe");
+                await node1.BroadcastTransactionAsync(standardTransaction);
+
+                // Wait a couple seconds so we can get a new tx time.
+                Thread.Sleep(2000);
+
+                // And then get a transaction endorsed.
+                Transaction endorsed = TokenlessTestHelper.CreateContractCallTransaction(node1, createReceipt.NewContractAddress, node1.TransactionSigningPrivateKey, "CallMe");
+
+                var tokenlessController = node1.FullNode.NodeController<TokenlessController>();
+                JsonResult result = (JsonResult)await tokenlessController.SendProposalAsync(new SendProposalModel
+                {
+                    TransactionHex = endorsed.ToHex(),
+                    Organisation = OrganisationName
+                });
+
+                var endorsementResponse = (SendProposalResponseModel)result.Value;
+                Assert.Equal("Transaction has been sent to endorsing node for execution.", endorsementResponse.Message);
+
+                // Our mempool should now contain the original call, and the endorsed transaction.
+
+                TestBase.WaitLoop(() => node1.FullNode.MempoolManager().InfoAll().Count == 2);
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().InfoAll().Count == 2);
+
+                await node1.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSyncAvoidMempool(node1, node2);
+
+                // But only the initial CALL should be in the block
+                NBitcoin.Block lastBlock = node1.FullNode.BlockStore().GetBlock(node1.FullNode.ChainIndexer.Tip.HashBlock);
+                Assert.Equal(2, lastBlock.Transactions.Count);
+                Assert.Equal(standardTransaction.GetHash(), lastBlock.Transactions[1].GetHash());
+
+                // TODO: node2 still has the invalid transaction in its mempool. It needs to be taken out via Signals?
+            }
+        }
     }
 }
