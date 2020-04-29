@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using System.Threading.Tasks;
-using MembershipServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -12,9 +11,7 @@ using Stratis.Bitcoin.Utilities.ModelStateErrors;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.Core;
-using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Features.MemoryPool.Broadcasting;
-using Stratis.Features.PoA.ProtocolEncryption;
 
 namespace Stratis.Feature.PoA.Tokenless.Controllers
 {
@@ -25,29 +22,17 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
     {
         private readonly ICoreComponent coreComponent;
         private readonly IBroadcasterManager broadcasterManager;
-        private readonly ChannelSettings channelSettings;
         private readonly IChannelService channelService;
-        private readonly ITokenlessKeyStoreManager tokenlessKeyStoreManager;
-        private readonly IMembershipServicesDirectory membershipServicesDirectory;
-        private readonly IRevocationChecker revocationChecker;
         private readonly ILogger logger;
 
         public ChannelsController(
             ICoreComponent coreComponent,
             IBroadcasterManager broadcasterManager,
-            ChannelSettings channelSettings,
-            IChannelService channelService,
-            ITokenlessKeyStoreManager tokenlessKeyStoreManager,
-            IMembershipServicesDirectory membershipServicesDirectory,
-            IRevocationChecker revocationChecker)
+            IChannelService channelService)
         {
             this.broadcasterManager = broadcasterManager;
             this.coreComponent = coreComponent;
-            this.channelSettings = channelSettings;
             this.channelService = channelService;
-            this.tokenlessKeyStoreManager = tokenlessKeyStoreManager;
-            this.membershipServicesDirectory = membershipServicesDirectory;
-            this.revocationChecker = revocationChecker;
             this.logger = coreComponent.LoggerFactory.CreateLogger(this.GetType());
         }
 
