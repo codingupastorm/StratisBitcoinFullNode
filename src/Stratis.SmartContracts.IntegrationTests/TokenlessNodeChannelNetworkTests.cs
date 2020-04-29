@@ -128,11 +128,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 parentNode.Start();
 
                 // Create 5 channels for the identity to be apart of.
-                nodeBuilder.CreateChannel(parentNode, "marketing", 1);
-                nodeBuilder.CreateChannel(parentNode, "sales", 2);
-                nodeBuilder.CreateChannel(parentNode, "legal", 3);
-                nodeBuilder.CreateChannel(parentNode, "it", 4);
-                nodeBuilder.CreateChannel(parentNode, "humanresources", 5);
+                nodeBuilder.CreateChannel(parentNode, "marketing", 2);
+                nodeBuilder.CreateChannel(parentNode, "sales", 3);
+                nodeBuilder.CreateChannel(parentNode, "legal", 4);
+                nodeBuilder.CreateChannel(parentNode, "it", 5);
+                nodeBuilder.CreateChannel(parentNode, "humanresources", 6);
 
                 // Re-start the parent node as to load and start the channels it belongs to.
                 parentNode.Restart();

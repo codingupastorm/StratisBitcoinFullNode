@@ -150,14 +150,6 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 lock (this.StartedChannelNodes)
                     this.StartedChannelNodes.Add(channelNode);
 
-                var channelDefinition = new ChannelDefinition()
-                {
-                    Id = channelNodeId,
-                    Name = request.Name
-                };
-
-                this.channelRepository.SaveChannelDefinition(channelDefinition);
-
                 this.logger.LogInformation($"Node started on channel '{request.Name}' with Pid '{channelNode.Process.Id}'.");
             }
             catch (Exception ex)
@@ -169,26 +161,29 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         public async Task RestartChannelNodesAsync()
         {
             Dictionary<string, ChannelDefinition> channels = this.channelRepository.GetChannelDefinitions();
-            var channelDefinitions = channels.Keys.ToList();
-            this.logger.LogInformation($"This node has {channelDefinitions.Count} channels to start.");
 
-            foreach (var channel in channelDefinitions)
+            // Don't include the system channel node in this as it is explicitly started by the infra node.
+            IEnumerable<ChannelDefinition> channelDefinitions = channels.Values.ToList().Where(c => c.Id != SystemChannelId);
+
+            this.logger.LogInformation($"This node has {channelDefinitions.Count()} channels to start.");
+
+            foreach (ChannelDefinition channel in channelDefinitions)
             {
                 try
                 {
-                    this.logger.LogInformation($"Restarting a node on channel '{channel}'.");
+                    this.logger.LogInformation($"Restarting a node on channel '{channel.Name}'.");
 
-                    int channelNodeId = channels[channel].Id;
-                    string channelRootFolder = PrepareNodeForStartup(channel, channelNodeId);
+                    int channelNodeId = channel.Id;
+                    string channelRootFolder = PrepareNodeForStartup(channel.Name, channelNodeId);
 
-                    ChannelNodeProcess channelNode = await StartTheProcessAsync(channelRootFolder, $"-channelname={channel}");
+                    ChannelNodeProcess channelNode = await StartTheProcessAsync(channelRootFolder, $"-channelname={channel.Name}");
                     if (channelNode.Process.HasExited)
-                        this.logger.LogWarning($"Failed to restart node on channel '{channel}' as the process exited early.");
+                        this.logger.LogWarning($"Failed to restart node on channel '{channel.Name}' as the process exited early.");
 
                     lock (this.StartedChannelNodes)
                         this.StartedChannelNodes.Add(channelNode);
 
-                    this.logger.LogInformation($"Node restarted on channel '{channel}' with Pid '{channelNode.Process.Id}'.");
+                    this.logger.LogInformation($"Node restarted on channel '{channel.Name}' with Pid '{channelNode.Process.Id}'.");
                 }
                 catch (Exception ex)
                 {
@@ -253,6 +248,16 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
             Directory.CreateDirectory(rootFolderName);
             File.WriteAllText(networkFileName, serializedJson);
+
+            var channelDefinition = new ChannelDefinition()
+            {
+                Id = channelId,
+                Name = channelName,
+                NetworkJson = serializedJson,
+            };
+
+            this.channelRepository.SaveChannelDefinition(channelDefinition);
+
             return rootFolderName;
         }
 
@@ -326,7 +331,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             var channelNodeProcess = new ChannelNodeProcess();
 
             // Create channel configuration file.
-            CreateChannelConfigurationFile(channelRootFolder, channelArgs.Concat(new[] { "ischannelnode=true", $"-channelparentpipename={channelNodeProcess.PipeName}" }).ToArray());
+            CreateChannelConfigurationFile(channelRootFolder, channelArgs.Concat(new[] { "-ischannelnode=true", $"-channelparentpipename={channelNodeProcess.PipeName}" }).ToArray());
 
             var startUpArgs = $"run --no-build -nowarn -conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
             this.logger.LogInformation($"Attempting to start process with args '{startUpArgs}'");
