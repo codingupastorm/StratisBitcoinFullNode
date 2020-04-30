@@ -33,6 +33,8 @@ namespace Stratis.SmartContracts.Core.Store
         void Persist(uint256 id, uint blockHeight, TransientStorePrivateData data);
 
         (TransientStorePrivateData Data, uint BlockHeight) Get(uint256 txId);
+
+        void Purge(uint256 txId);
     }
 
     /// <summary>
@@ -116,7 +118,7 @@ namespace Stratis.SmartContracts.Core.Store
         /// Purge entries from the transient store by txid.
         /// </summary>
         /// <param name="txId"></param>
-        public void Purge(string[] txId)
+        public void Purge(uint256 txId)
         {
             throw new NotImplementedException("TODO");
         }

@@ -102,7 +102,7 @@ namespace Stratis.Feature.PoA.Tokenless
                     this.privateDataStore.StoreBytes(write.ContractAddress, write.Key, write.Value);
                 }
 
-                // TODO: Remove from transient store.
+                this.transientStore.Purge(rwsHash);
             }
         }
     }
