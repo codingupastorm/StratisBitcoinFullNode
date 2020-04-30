@@ -183,15 +183,6 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             lock (this.StartedChannelNodes)
                 this.StartedChannelNodes.Add(channelNode);
 
-            var channelDefinition = new ChannelDefinition()
-            {
-                Id = network.Id,
-                Name = network.Name,
-                NetworkJson = JsonSerializer.Serialize(network)
-            };
-
-            this.channelRepository.SaveChannelDefinition(channelDefinition);
-
             this.logger.LogInformation($"Node started on channel '{network.Name}' with Pid '{channelNode.Process.Id}'.");
         }
 

@@ -99,13 +99,13 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             if (!this.ModelState.IsValid)
                 return ModelStateErrors.BuildErrorResponse(this.ModelState);
 
-            var network = JsonConvert.DeserializeObject<ChannelNetwork>(request.NetworkJson);
-
-            this.logger.LogInformation($"Request to join channel '{network.Name}' received.");
-
             try
-            {                
+            {
                 // Record channel membership (in normal node repo) and start up channel node.
+                ChannelNetwork network = JsonConvert.DeserializeObject<ChannelNetwork>(request.NetworkJson);
+
+                this.logger.LogInformation($"Request to join channel '{network.Name}' received.");
+
                 await this.channelService.JoinChannelAsync(network);
 
                 return Ok();
