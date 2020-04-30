@@ -20,105 +20,76 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
     public class EndorsementValidatorTests
     {
         [Fact]
-        public void Endorsement_Gets_Address_Org_From_Certificate()
+        public void Endorsement_Org_Valid_Signature_Matches_Data()
         {
+            var key = new Key();
+            var data = RandomUtils.GetBytes(128);
+            var hash = new uint256(HashHelper.Keccak256(data));
+            var signature = key.Sign(hash);
+
             var certificatesManager = new Mock<ICertificatesManager>();
             var permissionsChecker = new Mock<ICertificatePermissionsChecker>();
-
-            var certParser = new X509CertificateParser();
-            X509Certificate certificate = certParser.ReadCertificate(File.ReadAllBytes("Certificates/cert.crt"));
-
-            var organisation = (Organisation)certificate.GetOrganisation();
-            var senderAddress = "SENDER";
-
-            // Rig the lookup to return what we want.
+            
             certificatesManager
                 .Setup(l => l.GetAllCertificates())
                 .Returns(new List<CertificateInfoModel>
                 {
                     new CertificateInfoModel()
                     {
-                        Thumbprint = "TEST"
+                        Thumbprint = "TEST",
+                        TransactionSigningPubKeyHash = key.PubKey.Hash.ToBytes()
                     }
                 });
 
             permissionsChecker
-                .Setup(p => p.CheckSignature(It.IsAny<string>(), It.IsAny<ECDSASignature>(),
-                    It.IsAny<PubKey>(), It.IsAny<uint256>()))
+                .Setup(p => p.CheckSignature(
+                    It.IsAny<string>(), 
+                    It.IsAny<ECDSASignature>(),
+                    It.IsAny<PubKey>(), 
+                    It.IsAny<uint256>()))
                 .Returns(true);
 
+            var validator = new EndorsementValidator(certificatesManager.Object, permissionsChecker.Object);
+            
+            Assert.True(validator.Validate(new Endorsement.Endorsement(signature.ToDER(), key.PubKey.ToBytes()), data));
+
+            // Check the signature once.
+            permissionsChecker.Verify(p =>
+                p.CheckSignature("TEST", It.Is<ECDSASignature>(x => x.ToDER().SequenceEqual(signature.ToDER())), key.PubKey, hash), Times.Once);
+        }
+
+        [Fact]
+        public void Endorsement_Org_Invalid_Signature_For_Certificate()
+        {
             var key = new Key();
             var data = RandomUtils.GetBytes(128);
             var hash = new uint256(HashHelper.Keccak256(data));
             var signature = key.Sign(hash);
 
+            var badKey = new Key();
+
+            var certificatesManager = new Mock<ICertificatesManager>();
+            var permissionsChecker = new Mock<ICertificatePermissionsChecker>();
+
+            certificatesManager
+                .Setup(l => l.GetAllCertificates())
+                .Returns(new List<CertificateInfoModel>
+                {
+                    new CertificateInfoModel()
+                    {
+                        Thumbprint = "TEST",
+                        TransactionSigningPubKeyHash = badKey.PubKey.Hash.ToBytes()
+                    }
+                });
+
             var validator = new EndorsementValidator(certificatesManager.Object, permissionsChecker.Object);
-            
+
             Assert.False(validator.Validate(new Endorsement.Endorsement(signature.ToDER(), key.PubKey.ToBytes()), data));
 
-            // Never check the signature because the policy is invalid.
+            // Never check the signature
             permissionsChecker.Verify(p =>
-                p.CheckSignature(CaCertificatesManager.GetThumbprint(certificate), It.Is<ECDSASignature>(x => x.ToDER().SequenceEqual(signature.ToDER())), key.PubKey, hash), Times.Never);
+                p.CheckSignature(It.IsAny<string>(), It.IsAny<ECDSASignature>(), It.IsAny<PubKey>(), It.IsAny<uint256>()), Times.Never);
         }
-
-        //[Fact]
-        //public void Endorsement_Gets_Address_Unapproved_Org_From_Transaction()
-        //{
-        //    var organisationLookup = new Mock<IOrganisationLookup>();
-        //    var permissionsChecker = new Mock<ICertificatePermissionsChecker>();
-        //    var endorsementValidator = new Mock<IEndorsementValidator>();
-
-        //    var certParser = new X509CertificateParser();
-        //    X509Certificate certificate = certParser.ReadCertificate(File.ReadAllBytes("Certificates/cert.crt"));
-
-        //    var unapprovedOrganisation = (Organisation)certificate.GetOrganisation();
-        //    var approvedOrganisation = (Organisation)"Approved";
-        //    var senderAddress = "SENDER";
-
-        //    // Rig the lookup to return what we want.
-        //    organisationLookup
-        //        .Setup(l => l.FromCertificate(It.IsAny<X509Certificate>()))
-        //        .Returns((unapprovedOrganisation, senderAddress));
-
-        //    permissionsChecker
-        //        .Setup(p => p.CheckSignature(It.IsAny<string>(), It.IsAny<ECDSASignature>(),
-        //            It.IsAny<PubKey>(), It.IsAny<uint256>()))
-        //        .Returns(true);
-
-        //    // Basic policy that only requires 1 sig from organisation.
-        //    var basicPolicy = new EndorsementPolicy
-        //    {
-        //        Organisation = approvedOrganisation,
-        //        RequiredSignatures = 1
-        //    };
-
-        //    var key = new Key();
-        //    var signature = key.Sign(new uint256()); // Some random sig
-
-        //    var endorsement = new EndorsementInfo(basicPolicy, organisationLookup.Object, endorsementValidator.Object);
-        //    var proposalResponse = new SignedProposalResponse
-        //    {
-        //        ProposalResponse = new ProposalResponse
-        //        {
-        //            ReadWriteSet = new ReadWriteSet()
-        //        },
-        //        Endorsement = new Endorsement.Endorsement(signature.ToDER(), key.PubKey.ToBytes())
-        //    };
-
-        //    Assert.False(endorsement.Validate());
-        //    Assert.Equal(EndorsementState.Proposed, endorsement.State);
-
-        //    // Adding sig should still work as it's valid for the cert.
-        //    Assert.True(endorsement.AddSignature(certificate, proposalResponse));
-
-        //    // Validation fails because the org is not valid.
-        //    Assert.False(endorsement.Validate());
-        //    Assert.Equal(EndorsementState.Proposed, endorsement.State);
-
-        //    permissionsChecker.Verify(p =>
-        //        p.CheckSignature(CaCertificatesManager.GetThumbprint(certificate), It.Is<ECDSASignature>(x => x.ToDER().SequenceEqual(signature.ToDER())), key.PubKey, proposalResponse.ProposalResponse.GetHash()));
-        //    organisationLookup.Verify(l => l.FromCertificate(certificate), Times.Once);
-        //}
     }
     public class EndorsementInfoTests
     {
