@@ -20,12 +20,14 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
         public void CanPersistAndReadBackChannelDefinitions()
         {
             ChannelNetwork salesChannelNetwork = TokenlessNetwork.CreateChannelNetwork("sales", "salesfolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
+            salesChannelNetwork.Id = 2;
             salesChannelNetwork.DefaultAPIPort = 1;
             salesChannelNetwork.DefaultPort = 2;
             salesChannelNetwork.DefaultSignalRPort = 3;
             var salesNetworkJson = JsonSerializer.Serialize(salesChannelNetwork);
 
             ChannelNetwork marketingChannelNetwork = TokenlessNetwork.CreateChannelNetwork("marketing", "marketingfolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
+            marketingChannelNetwork.Id = 3;
             marketingChannelNetwork.DefaultAPIPort = 4;
             marketingChannelNetwork.DefaultPort = 5;
             marketingChannelNetwork.DefaultSignalRPort = 6;
@@ -70,6 +72,14 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
             Assert.Equal(2, salesChannelDefinition.Id);
             Assert.Equal("sales", salesChannelDefinition.Name);
             Assert.Equal(salesNetworkJson, salesChannelDefinition.NetworkJson);
+
+            ChannelNetwork salesNetwork = JsonSerializer.Deserialize<ChannelNetwork>(salesNetworkJson);
+            Assert.Equal(2, salesNetwork.Id);
+            Assert.Equal("sales", salesNetwork.Name);
+
+            ChannelNetwork marketingNetwork = JsonSerializer.Deserialize<ChannelNetwork>(marketingNetworkJson);
+            Assert.Equal(3, marketingNetwork.Id);
+            Assert.Equal("marketing", marketingNetwork.Name);
         }
 
         [Fact]
