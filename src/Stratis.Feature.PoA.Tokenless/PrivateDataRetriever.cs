@@ -101,6 +101,9 @@ namespace Stratis.Feature.PoA.Tokenless
                 {
                     this.privateDataStore.StoreBytes(write.ContractAddress, write.Key, write.Value);
                 }
+                
+                // TODO - Remove from transient store.
+                // Currently doesn't address the issue of the transient store retaining data indefinitely as this would break the happy path.                
             }
         }
     }
