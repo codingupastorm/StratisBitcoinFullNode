@@ -101,8 +101,6 @@ namespace Stratis.Feature.PoA.Tokenless
                 {
                     this.privateDataStore.StoreBytes(write.ContractAddress, write.Key, write.Value);
                 }
-
-                this.transientStore.Purge(rwsHash);
             }
         }
     }
