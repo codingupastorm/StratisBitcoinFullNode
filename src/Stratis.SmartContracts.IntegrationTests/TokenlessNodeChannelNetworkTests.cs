@@ -229,9 +229,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                         var nodeStatus = $"http://localhost:{channelNetwork.defaultapiport}/api".AppendPathSegment("node/status").GetJsonAsync<NodeStatusModel>().GetAwaiter().GetResult();
                         return nodeStatus.State == FullNodeState.Started.ToString();
                     }
-                    catch (Exception ex) 
-                    { 
-                    }
+                    catch (Exception) { } 
 
                     return false;
 
