@@ -165,18 +165,19 @@ namespace Stratis.SmartContracts.Core.Store
             // We know we're removing the key at height, so ignore it in our query
             var values = tx.SelectForward<byte[], byte[]>(Table, startKey, keysOnly: true);
 
-            uint blockHeight = 0;
-
             (byte[], byte[]) minKey = values.FirstOrDefault();
 
             if(minKey.Item1 != null)
             {
                 (uint256 txId, Guid uuid, uint keyBlockHeight) explode = TransientStoreQueryParams.SplitCompositeKeyOfPurgeIndexByHeight(minKey.Item1);
 
-                blockHeight = explode.keyBlockHeight;
+                tx.Insert(Table, MinBlockHeightKey, explode.keyBlockHeight);
             }
-
-            tx.Insert(Table, MinBlockHeightKey, blockHeight);
+            else
+            {
+                // No purge keys left, no min block height left, can remove the key.
+                tx.RemoveKey(Table, this.MinBlockHeightKey, (object)null);
+            }
         }
 
         /// <summary>
