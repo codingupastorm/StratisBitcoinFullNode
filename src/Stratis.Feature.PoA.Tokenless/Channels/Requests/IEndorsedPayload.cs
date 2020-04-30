@@ -8,6 +8,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels.Requests
     /// </summary>
     public interface IEndorsedPayload
     {
+        public byte[] ToBytes();
+
         EndorsementPolicy EndorsementPolicy { get; }
 
         List<Endorsement.Endorsement> Endorsements { get; }
