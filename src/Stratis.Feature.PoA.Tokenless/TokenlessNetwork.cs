@@ -7,8 +7,12 @@ using NBitcoin.DataEncoders;
 using NBitcoin.PoA;
 using Stratis.Bitcoin.Features.SmartContracts.PoA;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Feature.PoA.Tokenless.Consensus.Rules;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Mempool;
+using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
+using Stratis.Features.Consensus.Rules.CommonRules;
+using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -167,6 +171,45 @@ namespace Stratis.Feature.PoA.Tokenless
             channelNetwork.Genesis = genesisBlock;
 
             return channelNetwork;
+        }
+
+        private void RegisterRules(IConsensus consensus)
+        {
+            // IHeaderValidationConsensusRules
+            consensus.ConsensusRules
+                .Register<HeaderTimeChecksPoARule>()
+                .Register<PoAHeaderDifficultyRule>()
+                .Register<TokenlessHeaderSignatureRule>();
+
+            // IIntegrityValidationConsensusRules
+            consensus.ConsensusRules
+                .Register<BlockMerkleRootRule>()
+                .Register<PoAIntegritySignatureRule>();
+
+            // IPartialValidationConsensusRules
+            consensus.ConsensusRules
+                .Register<TokenlessBlockSizeRule>()
+                .Register<IsSmartContractWellFormedPartialValidationRule>()
+                .Register<OpReadWriteSetMustContainSignatures>()
+                .Register<SenderInputPartialValidationRule>();
+
+            // IFullValidationConsensusRule
+            consensus.ConsensusRules
+                .Register<NoDuplicateTransactionExistOnChainRule>()
+                .Register<TokenlessCoinviewRule>();
+            // ------------------------------------------------------
+        }
+
+        private void RegisterMempoolRules(IConsensus consensus)
+        {
+            consensus.MempoolRules = new List<Type>()
+            {
+                typeof(CheckSenderCertificateIsNotRevoked),
+                typeof(NoDuplicateTransactionExistOnChainMempoolRule),
+                typeof(CreateTokenlessMempoolEntryRule),
+                typeof(IsSmartContractWellFormedMempoolRule),
+                typeof(SenderInputMempoolRule)
+            };
         }
 
         private Block CreateGenesisBlock(TokenlessConsensusFactory consensusFactory, uint time, uint nonce, uint bits, int version, string data = "")

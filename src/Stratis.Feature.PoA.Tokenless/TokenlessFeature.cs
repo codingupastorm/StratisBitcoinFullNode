@@ -17,42 +17,52 @@ using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Core;
+using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Features.BlockStore;
 using Stratis.Features.PoA;
 using Stratis.Features.PoA.Behaviors;
 using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Features.PoA.Voting;
+using Stratis.SmartContracts.Core.Store;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
     public sealed class TokenlessFeature : FullNodeFeature
     {
         private readonly ICoreComponent coreComponent;
-
+        private readonly IBlockRepository blockRepository;
         private readonly ChannelSettings channelSettings;
         private readonly ICertificatesManager certificatesManager;
         private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
         private readonly VotingManager votingManager;
         private readonly IFederationManager federationManager;
+        private readonly IEndorsementRequestHandler requestHandler;
+        private readonly IEndorsementSuccessHandler successHandler;
         private readonly IPoAMiner miner;
         private readonly IRevocationChecker revocationChecker;
-        private readonly NodeSettings nodeSettings;
         private readonly IAsyncProvider asyncProvider;
         private readonly INodeLifetime nodeLifetime;
+        private readonly ITransientStore transientStore;
+        private readonly IPrivateDataStore privateDataStore;
+        private readonly IPrivateDataRetriever privateDataRetriever;
         private readonly ILogger logger;
         private readonly IMembershipServicesDirectory membershipServices;
         private IAsyncLoop caPubKeysLoop;
         private readonly TokenlessKeyStoreSettings tokenlessKeyStoreSettings;
         private readonly IChannelService channelService;
+        private readonly ReadWriteSetPolicyValidator rwsPolicyValidator;
 
         public TokenlessFeature(
             ChannelSettings channelSettings,
             ICertificatesManager certificatesManager,
+            IBlockRepository blockRepository,
             ICertificatePermissionsChecker certificatePermissionsChecker,
             VotingManager votingManager,
             ICoreComponent coreComponent,
             IFederationManager federationManager,
+            IEndorsementRequestHandler requestHandler,
+            IEndorsementSuccessHandler successHandler,
             IPoAMiner miner,
             PayloadProvider payloadProvider,
             IRevocationChecker revocationChecker,
@@ -63,29 +73,40 @@ namespace Stratis.Feature.PoA.Tokenless
             INodeLifetime nodeLifetime,
             ILoggerFactory loggerFactory,
             IMembershipServicesDirectory membershipServices,
-            IChannelService channelService)
+            ITransientStore transientStore,
+            IPrivateDataStore privateDataStore,
+            IPrivateDataRetriever privateDataRetriever,
+            IChannelService channelService,
+            ReadWriteSetPolicyValidator rwsPolicyValidator)
         {
+            this.blockRepository = blockRepository;
             this.channelSettings = channelSettings;
             this.certificatesManager = certificatesManager;
             this.certificatePermissionsChecker = certificatePermissionsChecker;
             this.votingManager = votingManager;
             this.coreComponent = coreComponent;
             this.federationManager = federationManager;
+            this.requestHandler = requestHandler;
+            this.successHandler = successHandler;
             this.miner = miner;
             this.revocationChecker = revocationChecker;
-            this.nodeSettings = nodeSettings;
             this.tokenlessKeyStoreSettings = tokenlessKeyStoreSettings;
             this.asyncProvider = asyncProvider;
             this.nodeLifetime = nodeLifetime;
+            this.transientStore = transientStore;
+            this.privateDataStore = privateDataStore;
+            this.privateDataRetriever = privateDataRetriever;
             this.caPubKeysLoop = null;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.membershipServices = membershipServices;
             this.channelService = channelService;
+            this.rwsPolicyValidator = rwsPolicyValidator;
 
             // TODO-TL: Is there a better place to do this?
             storeSettings.TxIndex = true;
 
             payloadProvider.DiscoverPayloads(typeof(PoAFeature).Assembly);
+            payloadProvider.DiscoverPayloads(this.GetType().Assembly);
         }
 
         /// <inheritdoc />
@@ -96,6 +117,11 @@ namespace Stratis.Feature.PoA.Tokenless
             this.ReplaceConsensusManagerBehavior(connectionParameters);
 
             this.ReplaceBlockStoreBehavior(connectionParameters);
+
+            connectionParameters.TemplateBehaviors.Add(new EndorsementRequestBehavior(this.requestHandler));
+            connectionParameters.TemplateBehaviors.Add(new EndorsementSuccessBehavior(this.successHandler));
+            connectionParameters.TemplateBehaviors.Add(new ReceivePrivateDataBehavior(this.transientStore, this.privateDataStore));
+            connectionParameters.TemplateBehaviors.Add(new PrivateDataRequestBehavior(this.transientStore, this.rwsPolicyValidator));
 
             this.federationManager.Initialize();
 

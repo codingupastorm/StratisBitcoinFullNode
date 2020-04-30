@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
+using Stratis.SmartContracts.RuntimeObserver;
 
 namespace Stratis.SmartContracts.CLR
 {
@@ -9,14 +11,14 @@ namespace Stratis.SmartContracts.CLR
     {
         private readonly IStateProcessor stateProcessor;
 
-        public InternalExecutorFactory(ILoggerFactory loggerFactory, IStateProcessor stateProcessor)
+        public InternalExecutorFactory(IStateProcessor stateProcessor)
         {
             this.stateProcessor = stateProcessor;
         }
 
-        public IInternalTransactionExecutor Create(RuntimeObserver.IGasMeter gasMeter, IState state)
+        public IInternalTransactionExecutor Create(IGasMeter gasMeter, ReadWriteSetBuilder readWriteSet, ReadWriteSetBuilder privateReadWriteSet, IState state)
         {
-            return new InternalExecutor(gasMeter, state, this.stateProcessor);
+            return new InternalExecutor(gasMeter, readWriteSet, privateReadWriteSet,  state, this.stateProcessor);
         }
     }
 }

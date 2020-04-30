@@ -1,5 +1,6 @@
 ﻿using Moq;
 using NBitcoin;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Xunit;
 
 namespace Stratis.SmartContracts.CLR.Tests
@@ -17,7 +18,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             
             fixture.SetGasMeterLimitAbove(gasLimit);
             
-            StateTransitionResult stateTransitionResult = StateTransitionResult.Ok((RuntimeObserver.Gas) 1000, uint160.One, new object());
+            StateTransitionResult stateTransitionResult = StateTransitionResult.Ok((RuntimeObserver.Gas) 1000, uint160.One, new ReadWriteSetBuilder(), new ReadWriteSetBuilder(), new object());
             
             fixture.StateProcessor
                 .Setup(sp => sp.Apply(It.IsAny<IState>(), It.IsAny<InternalCreateMessage>()))
@@ -25,6 +26,8 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             var internalExecutor = new InternalExecutor(
                 fixture.GasMeter.Object,
+                new ReadWriteSetBuilder(), 
+                new ReadWriteSetBuilder(), 
                 fixture.State.Object,
                 fixture.StateProcessor.Object);
 
@@ -68,6 +71,8 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             var internalExecutor = new InternalExecutor(
                 fixture.GasMeter.Object,
+                new ReadWriteSetBuilder(),
+                new ReadWriteSetBuilder(), 
                 fixture.State.Object,
                 fixture.StateProcessor.Object);
 
@@ -105,6 +110,8 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             var internalExecutor = new InternalExecutor(
                 fixture.GasMeter.Object,
+                new ReadWriteSetBuilder(), 
+                new ReadWriteSetBuilder(), 
                 fixture.State.Object,
                 fixture.StateProcessor.Object);
 
@@ -137,7 +144,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             
             fixture.SetGasMeterLimitAbove(gasLimit);
 
-            StateTransitionResult stateTransitionResult = StateTransitionResult.Ok((RuntimeObserver.Gas)1000, uint160.One, new object());
+            StateTransitionResult stateTransitionResult = StateTransitionResult.Ok((RuntimeObserver.Gas)1000, uint160.One, new ReadWriteSetBuilder(), new ReadWriteSetBuilder(), new object());
 
             fixture.StateProcessor
                 .Setup(sp => sp.Apply(It.IsAny<IState>(), It.IsAny<InternalCallMessage>()))
@@ -145,6 +152,8 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             var internalExecutor = new InternalExecutor(
                 fixture.GasMeter.Object,
+                new ReadWriteSetBuilder(), 
+                new ReadWriteSetBuilder(), 
                 fixture.State.Object,
                 fixture.StateProcessor.Object);
 
@@ -191,6 +200,8 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             var internalExecutor = new InternalExecutor(
                 fixture.GasMeter.Object,
+                new ReadWriteSetBuilder(),
+                new ReadWriteSetBuilder(), 
                 fixture.State.Object,
                 fixture.StateProcessor.Object);
 
@@ -231,6 +242,8 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             var internalExecutor = new InternalExecutor(
                 fixture.GasMeter.Object,
+                new ReadWriteSetBuilder(),
+                new ReadWriteSetBuilder(), 
                 fixture.State.Object,
                 fixture.StateProcessor.Object);
 
@@ -259,7 +272,7 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             fixture.SetGasMeterLimitAbove((RuntimeObserver.Gas) InternalExecutor.DefaultGasLimit);
 
-            StateTransitionResult stateTransitionResult = StateTransitionResult.Ok((RuntimeObserver.Gas)1000, uint160.One, new object());
+            StateTransitionResult stateTransitionResult = StateTransitionResult.Ok((RuntimeObserver.Gas)1000, uint160.One, new ReadWriteSetBuilder(), new ReadWriteSetBuilder(), new object());
 
             fixture.StateProcessor
                 .Setup(sp => sp.Apply(It.IsAny<IState>(), It.IsAny<ContractTransferMessage>()))
@@ -267,6 +280,8 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             var internalExecutor = new InternalExecutor(
                 fixture.GasMeter.Object,
+                new ReadWriteSetBuilder(),
+                new ReadWriteSetBuilder(), 
                 fixture.State.Object,
                 fixture.StateProcessor.Object);
 
@@ -308,6 +323,8 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             var internalExecutor = new InternalExecutor(
                 fixture.GasMeter.Object,
+                new ReadWriteSetBuilder(),
+                new ReadWriteSetBuilder(), 
                 fixture.State.Object,
                 fixture.StateProcessor.Object);
 
@@ -343,6 +360,8 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             var internalExecutor = new InternalExecutor(
                 fixture.GasMeter.Object,
+                new ReadWriteSetBuilder(), 
+                new ReadWriteSetBuilder(),
                 fixture.State.Object,
                 fixture.StateProcessor.Object);
 

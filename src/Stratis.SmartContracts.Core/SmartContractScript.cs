@@ -36,6 +36,13 @@ namespace Stratis.SmartContracts.Core
         {
             return ByteUtils.TestFirstByte(script, (byte)ScOpcodeType.OP_INTERNALCONTRACTTRANSFER);
         }
+
+        [NoTrace]
+        public static bool IsReadWriteSet(this Script script)
+        {
+            // Is this the correct place for this?
+            return ByteUtils.TestFirstByte(script, (byte) OpcodeType.OP_READWRITE);
+        }
     }
 
     public enum ScOpcodeType : byte

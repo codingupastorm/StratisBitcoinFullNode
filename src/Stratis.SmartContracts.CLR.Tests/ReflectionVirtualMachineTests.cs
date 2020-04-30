@@ -9,21 +9,25 @@ using Stratis.SmartContracts.CLR.ContractLogging;
 using Stratis.SmartContracts.CLR.ILRewrite;
 using Stratis.SmartContracts.CLR.Loader;
 using Stratis.SmartContracts.CLR.Metering;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.Hashing;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
+using Stratis.SmartContracts.Tokenless;
 using Xunit;
 
 namespace Stratis.SmartContracts.CLR.Tests
 {
     public sealed class ReflectionVirtualMachineTests
     {
+        public const string ContractStateVersion = "1.1";
+
         private readonly Network network;
         private readonly ReflectionVirtualMachine vm;
 
         private readonly Address TestAddress;
         private IStateRepository state;
-        private SmartContractState contractState;
+        private TokenlessSmartContractState contractState;
         private ContractExecutorTestContext context;
         private readonly GasMeter gasMeter;
 
@@ -35,17 +39,19 @@ namespace Stratis.SmartContracts.CLR.Tests
             this.TestAddress = "0x0000000000000000000000000000000000000001".HexToAddress();
             this.vm = this.context.Vm;
             this.state = this.context.State;
-            this.contractState = new SmartContractState(
+            this.contractState = new TokenlessSmartContractState(
                 new Block(1, this.TestAddress),
                 new Message(this.TestAddress, this.TestAddress, 0),
                 new PersistentState(
                     new TestPersistenceStrategy(this.state),
                     this.context.Serializer, this.TestAddress.ToUint160()),
+                new PrivatePersistentState(this.context.Serializer, new TestPersistenceStrategy(this.state), this.TestAddress.ToUint160()), 
                 this.context.Serializer,
                 new ContractLogHolder(),
                 Mock.Of<IInternalTransactionExecutor>(),
                 new InternalHashHelper(),
-                () => 1000);
+                () => 1000,
+                null);
             this.gasMeter = new GasMeter((RuntimeObserver.Gas)50_000);
         }
 
@@ -122,7 +128,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             var methodParameters = new object[] { (ulong)5 };
             var executionContext = new ExecutionContext(new Observer(this.gasMeter, new MemoryMeter(100_000)));
 
-            VmExecutionResult result = this.vm.Create(this.state, this.contractState, executionContext, contractExecutionCode, methodParameters);
+            VmExecutionResult result = this.vm.Create(this.state, this.contractState, executionContext, contractExecutionCode, new EndorsementPolicy(), methodParameters);
 
             CachedAssemblyPackage cachedAssembly = this.context.ContractCache.Retrieve(new uint256(codeHash));
 
@@ -174,6 +180,7 @@ public class Contract : SmartContract
                 contractState,
                 executionContext,
                 contractExecutionCode,
+                new EndorsementPolicy(), 
                 null);
             
             CachedAssemblyPackage cachedAssembly = this.context.ContractCache.Retrieve(new uint256(codeHash));
@@ -203,7 +210,7 @@ public class Contract : SmartContract
             byte[] keyToClear = Encoding.UTF8.GetBytes(ClearStorage.KeyToClear);
 
             // Set a value to be cleared
-            this.state.SetStorageValue(contractAddress, keyToClear, new byte[] { 1, 2, 3 });
+            this.state.SetStorageValue(contractAddress, keyToClear, new byte[] { 1, 2, 3 },  ContractStateVersion);
 
             var executionContext = new ExecutionContext(new Observer(this.gasMeter, new MemoryMeter(100_000)));
 
@@ -222,7 +229,7 @@ public class Contract : SmartContract
             Assert.Null(cachedAssembly.Assembly.GetObserver());
 
             Assert.Null(result.Error);
-            Assert.Null(this.state.GetStorageValue(contractAddress, keyToClear));
+            Assert.Null(this.state.GetStorageValue(contractAddress, keyToClear).Value); // Value set to null, but version increased.
         }
 
         [Fact]
@@ -308,12 +315,12 @@ public class Contract : SmartContract
 
         public byte[] FetchBytes(uint160 address, byte[] key)
         {
-            return this.stateDb.GetStorageValue(address, key);
+            return this.stateDb.GetStorageValue(address, key).Value;
         }
 
-        public void StoreBytes(uint160 address, byte[] key, byte[] value)
+        public void StoreBytes(uint160 address, byte[] key, byte[] value, bool isPrivateData = false)
         {
-            this.stateDb.SetStorageValue(address, key, value);
+            this.stateDb.SetStorageValue(address, key, value, ReflectionVirtualMachineTests.ContractStateVersion);
         }
     }
 }

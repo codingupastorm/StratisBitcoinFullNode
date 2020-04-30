@@ -79,7 +79,9 @@ namespace Stratis.SmartContracts.CLR.Tests
                     It.IsAny<IStateRepository>(),
                     It.IsAny<IBlock>(),
                     It.IsAny<ulong>(),
-                    It.IsAny<uint256>()))
+                    It.IsAny<uint256>(),
+                    It.IsAny<string>(),
+                    It.IsAny<byte[]>()))
                 .Returns(this.State.Object);
             this.StateFactory = stateFactory;
         }

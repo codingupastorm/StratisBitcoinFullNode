@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using CertificateAuthority.Models;
 using NBitcoin;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.X509;
@@ -36,5 +37,7 @@ namespace Stratis.Features.PoA.ProtocolEncryption
         bool IsCertificateRevokedByAddress(uint160 address);
 
         List<PubKey> GetCertificatePublicKeys();
+
+        List<CertificateInfoModel> GetAllCertificates();
     }
 }
