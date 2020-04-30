@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Stratis.SmartContracts.Core.Endorsement;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels.Requests
 {
@@ -15,6 +16,11 @@ namespace Stratis.Feature.PoA.Tokenless.Channels.Requests
         [JsonPropertyName("name")]
         [Required]
         public string Name { get; set; }
+
+        /// <summary>
+        /// The endorsement policy for this channel creation request. </summary>
+        [Required]
+        public EndorsementPolicy EndorsementPolicy { get; set; }
 
         /// <summary> The endorser's signatures of this channel creation request. </summary>
         [Required]
