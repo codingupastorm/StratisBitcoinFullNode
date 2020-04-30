@@ -202,7 +202,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
         [Route("send-endorsement")]
         [HttpPost]
-        public async Task<IActionResult> SendProposalAsync(SendProposalModel model)
+        public async Task<IActionResult> SendProposalAsync([FromBody] SendProposalModel model)
         {
             if (!this.coreComponent.ConnectionManager.ConnectedPeers.Any())
             {

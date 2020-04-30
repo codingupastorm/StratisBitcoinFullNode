@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -78,9 +77,13 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var proposalResponse = new SignedProposalResponse
             {
-                ProposalResponse = new ProposalResponse()
+                Endorsement = new Endorsement.Endorsement(new byte[] { }, new byte[] { }),
+                ProposalResponse = new ProposalResponse
+                {
+                    ReadWriteSet = new ReadWriteSet()
+                },
+                PrivateReadWriteSet = new ReadWriteSet()
             };
-
             var readWriteSetTransactionSerializerMock = new Mock<IReadWriteSetTransactionSerializer>();
             readWriteSetTransactionSerializerMock.Setup(x => x.Build(It.IsAny<ReadWriteSet>(), It.IsAny<ReadWriteSet>()))
                 .Returns(proposalResponse);
