@@ -186,7 +186,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             var channelDefinition = new ChannelDefinition()
             {
                 Id = network.Id,
-                Name = network.Name
+                Name = network.Name,
+                NetworkJson = JsonSerializer.Serialize(network)
             };
 
             this.channelRepository.SaveChannelDefinition(channelDefinition);

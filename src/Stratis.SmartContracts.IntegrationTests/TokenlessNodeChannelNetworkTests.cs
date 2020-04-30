@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Text.Json;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
@@ -153,6 +154,53 @@ namespace Stratis.SmartContracts.IntegrationTests
             foreach (var process in processes)
             {
                 Assert.True(process.HasExited);
+            }
+        }
+
+
+        [Fact]
+        public async Task CanJoinChannelNodeAsync()
+        {
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                var tokenlessNetwork = new TokenlessNetwork();
+
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient();
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
+
+                // Get Authority Certificate.
+                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
+
+                // Create and start the parent node.
+                CaClient client1 = TokenlessTestHelper.GetClient(server);
+                CoreNode parentNode = nodeBuilder.CreateTokenlessNode(tokenlessNetwork, 0, ac, client1, willStartChannels: true);
+                parentNode.Start();
+
+                // Create a channel for the identity to be apart of.
+                nodeBuilder.CreateChannel(parentNode, "marketing", 2);
+                parentNode.Restart();
+
+                // Create another node.
+                CaClient client2 = TokenlessTestHelper.GetClient(server);
+                CoreNode otherNode = nodeBuilder.CreateTokenlessNode(tokenlessNetwork, 1, ac, client2, willStartChannels: true);
+                otherNode.Start();
+
+                // Get the marketing network's JSON.
+                IChannelRepository channelRepository = parentNode.FullNode.NodeService<IChannelRepository>();
+                ChannelDefinition channelDefinition = channelRepository.GetChannelDefinition("marketing");
+
+                // Join the channel.
+                ChannelNetwork channelNetwork = JsonSerializer.Deserialize<ChannelNetwork>(channelDefinition.NetworkJson);
+                IChannelService channelService = otherNode.FullNode.NodeService<IChannelService>();
+                await channelService.JoinChannelAsync(channelNetwork);
+
+                Assert.Single(channelService.StartedChannelNodes);
             }
         }
 
