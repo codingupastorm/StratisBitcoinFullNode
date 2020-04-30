@@ -220,10 +220,16 @@ namespace Stratis.SmartContracts.IntegrationTests
                 {
                     try
                     {
-                        var nodeStatus = $"http://localhost:{30002}/api".AppendPathSegment("node/status").GetJsonAsync<NodeStatusModel>().GetAwaiter().GetResult();
+                        dynamic channelNetwork = $"http://localhost:{channelService.GetDefaultAPIPort(ChannelService.SystemChannelId)}/api"
+                            .AppendPathSegment("channels/networkjson")
+                            .SetQueryParam("cn", "Sales")
+                            .GetJsonAsync()
+                            .GetAwaiter().GetResult();
+
+                        var nodeStatus = $"http://localhost:{channelNetwork.defaultapiport}/api".AppendPathSegment("node/status").GetJsonAsync<NodeStatusModel>().GetAwaiter().GetResult();
                         return nodeStatus.State == FullNodeState.Started.ToString();
                     }
-                    catch (Exception) { }
+                    catch (Exception) { } 
 
                     return false;
 
