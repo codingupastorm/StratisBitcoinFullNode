@@ -5,7 +5,7 @@ using Stratis.SmartContracts.Core.Endorsement;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels.Requests
 {
-    public sealed class ChannelCreationRequest
+    public sealed class ChannelCreationRequest : IEndorsedPayload
     {
         /// <summary> The organisation to add to the channel.</summary>
         [JsonPropertyName("organisation")]
