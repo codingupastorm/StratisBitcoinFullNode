@@ -2,95 +2,16 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CertificateAuthority;
-using CertificateAuthority.Models;
 using Moq;
 using NBitcoin;
-using NBitcoin.Crypto;
 using Org.BouncyCastle.X509;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
-using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.SmartContracts.Core.Endorsement;
-using Stratis.SmartContracts.Core.Hashing;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Xunit;
 
 namespace Stratis.Feature.PoA.Tokenless.Tests
 {
-    public class EndorsementValidatorTests
-    {
-        [Fact]
-        public void Endorsement_Org_Valid_Signature_Matches_Data()
-        {
-            var key = new Key();
-            var data = RandomUtils.GetBytes(128);
-            var hash = new uint256(HashHelper.Keccak256(data));
-            var signature = key.Sign(hash);
-
-            var certificatesManager = new Mock<ICertificatesManager>();
-            var permissionsChecker = new Mock<ICertificatePermissionsChecker>();
-            
-            certificatesManager
-                .Setup(l => l.GetAllCertificates())
-                .Returns(new List<CertificateInfoModel>
-                {
-                    new CertificateInfoModel()
-                    {
-                        Thumbprint = "TEST",
-                        TransactionSigningPubKeyHash = key.PubKey.Hash.ToBytes()
-                    }
-                });
-
-            permissionsChecker
-                .Setup(p => p.CheckSignature(
-                    It.IsAny<string>(), 
-                    It.IsAny<ECDSASignature>(),
-                    It.IsAny<PubKey>(), 
-                    It.IsAny<uint256>()))
-                .Returns(true);
-
-            var validator = new EndorsementValidator(certificatesManager.Object, permissionsChecker.Object);
-            
-            Assert.True(validator.Validate(new Endorsement.Endorsement(signature.ToDER(), key.PubKey.ToBytes()), data));
-
-            // Check the signature once.
-            permissionsChecker.Verify(p =>
-                p.CheckSignature("TEST", It.Is<ECDSASignature>(x => x.ToDER().SequenceEqual(signature.ToDER())), key.PubKey, hash), Times.Once);
-        }
-
-        [Fact]
-        public void Endorsement_Org_Invalid_Signature_For_Certificate()
-        {
-            var key = new Key();
-            var data = RandomUtils.GetBytes(128);
-            var hash = new uint256(HashHelper.Keccak256(data));
-            var signature = key.Sign(hash);
-
-            var badKey = new Key();
-
-            var certificatesManager = new Mock<ICertificatesManager>();
-            var permissionsChecker = new Mock<ICertificatePermissionsChecker>();
-
-            certificatesManager
-                .Setup(l => l.GetAllCertificates())
-                .Returns(new List<CertificateInfoModel>
-                {
-                    new CertificateInfoModel()
-                    {
-                        Thumbprint = "TEST",
-                        TransactionSigningPubKeyHash = badKey.PubKey.Hash.ToBytes()
-                    }
-                });
-
-            var validator = new EndorsementValidator(certificatesManager.Object, permissionsChecker.Object);
-
-            Assert.False(validator.Validate(new Endorsement.Endorsement(signature.ToDER(), key.PubKey.ToBytes()), data));
-
-            // Never check the signature
-            permissionsChecker.Verify(p =>
-                p.CheckSignature(It.IsAny<string>(), It.IsAny<ECDSASignature>(), It.IsAny<PubKey>(), It.IsAny<uint256>()), Times.Never);
-        }
-    }
     public class EndorsementInfoTests
     {
         [Fact]
