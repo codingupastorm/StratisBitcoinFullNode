@@ -83,7 +83,7 @@ namespace Stratis.SmartContracts.Core.Tests.Store
         public void PurgeById_Success()
         {
             var recordsToAdd = 100;
-            var recordIdToPurge = new uint256(50);
+            var recordIdToPurge = new uint256(0); // Purge the bottom record so we can also check that the min block height changed
 
             // Add some fake data
             for (uint i = 0; i < recordsToAdd; i++)
@@ -114,6 +114,7 @@ namespace Stratis.SmartContracts.Core.Tests.Store
 
             Assert.Null(data.Data);
             Assert.Equal(0U, data.BlockHeight);
+            Assert.Equal(1U, this.store.GetMinBlockHeight());
         }
 
         [Fact]

@@ -120,7 +120,63 @@ namespace Stratis.SmartContracts.Core.Store
         /// <param name="txId"></param>
         public void Purge(uint256 txId)
         {
-            throw new NotImplementedException("TODO");
+            using (IKeyValueStoreTransaction tx = this.repository.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, Table))
+            {
+                var purgeKeyStart = TransientStoreQueryParams.CreateTxIdRangeStartKey(txId);
+                var purgeKeyEnd = TransientStoreQueryParams.CreateTxIdRangeEndKey(txId);
+
+                var values = tx.SelectForward<byte[], byte[]>(Table, purgeKeyStart, purgeKeyEnd, true, includeLastKey: false, keysOnly:true);
+
+                // We can safely expect only a single value here due to the range query start key being the same as the end key.
+                var record = values.FirstOrDefault();
+
+                if (record.Item1 != null)
+                {
+                    var key = record.Item1;
+
+                    // We're in the right range
+                    // Explode key
+                    (uint256 id, Guid uuid, uint blockHeight) = TransientStoreQueryParams.SplitCompositeKeyForPvtRWSet(key);
+
+                    // Remove data key value
+                    var dataKey = TransientStoreQueryParams.CreateCompositeKeyForPvtRWSet(blockHeight, id, uuid);
+                    tx.RemoveKey(Table, dataKey, (object)null);
+
+                    // Remove block height purge key
+                    var purgeKey = TransientStoreQueryParams.CreateCompositeKeyForPurgeIndexByHeight(blockHeight, id, uuid);
+                    tx.RemoveKey(Table, purgeKey, (object)null);
+
+                    // Update current min block height
+                    if (this.GetMinBlockHeight() == blockHeight)
+                    {
+                        UpdateMinBlockHeight(tx, blockHeight);
+                    }
+
+                    // Commit
+                    tx.Commit();
+                }
+            }
+        }
+
+        private void UpdateMinBlockHeight(IKeyValueStoreTransaction tx, uint oldMinBlockHeight)
+        {
+            var startKey = TransientStoreQueryParams.CreatePurgeIndexByHeightRangeStartKey(oldMinBlockHeight + 1);
+
+            // We know we're removing the key at height, so ignore it in our query
+            var values = tx.SelectForward<byte[], byte[]>(Table, startKey, keysOnly: true);
+
+            uint blockHeight = 0;
+
+            (byte[], byte[]) minKey = values.FirstOrDefault();
+
+            if(minKey.Item1 != null)
+            {
+                (uint256 txId, Guid uuid, uint keyBlockHeight) explode = TransientStoreQueryParams.SplitCompositeKeyOfPurgeIndexByHeight(minKey.Item1);
+
+                blockHeight = explode.keyBlockHeight;
+            }
+
+            tx.Insert(Table, MinBlockHeightKey, blockHeight);
         }
 
         /// <summary>
