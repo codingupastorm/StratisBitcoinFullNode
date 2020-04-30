@@ -55,7 +55,9 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
                 Id = channelRepository.GetNextChannelId(),
                 Name = "marketing",
                 NetworkJson = marketingNetworkJson
-            }; channelRepository.SaveChannelDefinition(marketingChannel);
+            }; 
+            
+            channelRepository.SaveChannelDefinition(marketingChannel);
 
             Dictionary<string, ChannelDefinition> channels = channelRepository.GetChannelDefinitions();
 
@@ -72,14 +74,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
             Assert.Equal(2, salesChannelDefinition.Id);
             Assert.Equal("sales", salesChannelDefinition.Name);
             Assert.Equal(salesNetworkJson, salesChannelDefinition.NetworkJson);
-
-            ChannelNetwork salesNetwork = JsonSerializer.Deserialize<ChannelNetwork>(salesNetworkJson);
-            Assert.Equal(2, salesNetwork.Id);
-            Assert.Equal("sales", salesNetwork.Name);
-
-            ChannelNetwork marketingNetwork = JsonSerializer.Deserialize<ChannelNetwork>(marketingNetworkJson);
-            Assert.Equal(3, marketingNetwork.Id);
-            Assert.Equal("marketing", marketingNetwork.Name);
         }
 
         [Fact]
