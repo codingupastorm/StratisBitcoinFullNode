@@ -279,6 +279,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             if (channelNetwork == null)
             {
                 channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName.ToLowerInvariant(), rootFolderName, this.dateTimeProvider.GetAdjustedTimeAsUnixTimestamp());
+                channelNetwork.Id = channelId;
                 channelNetwork.DefaultAPIPort = this.GetDefaultAPIPort(channelId);
                 channelNetwork.DefaultPort = this.GetDefaulPort(channelId);
                 channelNetwork.DefaultSignalRPort = this.GetDefaultSignalRPort(channelId);
