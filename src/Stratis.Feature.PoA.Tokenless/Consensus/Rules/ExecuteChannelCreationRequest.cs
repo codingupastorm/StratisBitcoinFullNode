@@ -53,16 +53,6 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
                 (ChannelCreationRequest channelCreationRequest, string message) = this.channelRequestSerializer.Deserialize<ChannelCreationRequest>(txOut.ScriptPubKey);
                 if (channelCreationRequest != null)
                 {
-                    var endorsementInfo =
-                        new EndorsementInfo(channelCreationRequest.EndorsementPolicy, null, null, null);
-                    
-                    endorsementInfo.AddEndorsements(channelCreationRequest.Endorsements);
-
-                    if (!endorsementInfo.Validate())
-                    {
-                        TokenlessPoAConsensusErrors.DuplicateTransaction.Throw();
-                    }
-
                     this.logger.LogDebug("Transaction '{0}' contains a request to create channel '{1}'.", transaction.GetHash(), channelCreationRequest.Name);
                     await this.channelService.CreateAndStartChannelNodeAsync(channelCreationRequest);
                 }

@@ -51,13 +51,11 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 return false;
             }
 
-            X509Certificate certificate = certificateInfoModel.ToCertificate();
-
             var hash = new uint256(HashHelper.Keccak256(data));
 
             var signature = new ECDSASignature(endorsement.Signature);
 
-            return this.permissionsChecker.CheckSignature(CaCertificatesManager.GetThumbprint(certificate), signature, pubKey, hash);
+            return this.permissionsChecker.CheckSignature(certificateInfoModel.Thumbprint, signature, pubKey, hash);
         }
     }
 }
