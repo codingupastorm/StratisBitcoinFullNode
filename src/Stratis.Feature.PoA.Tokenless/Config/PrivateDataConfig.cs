@@ -4,11 +4,6 @@ namespace Stratis.Feature.PoA.Tokenless.Config
 {
     /// <summary>
     /// The configuration to apply to private data dissemination and access.
-    ///
-    /// TODO - Implement policy validation methods
-    /// TODO - Distribute policy with contract deployment transaction
-    /// TODO - Add a way to query policies to avoid trawling through all blocks (policy cache/store?) with a way to update existing configs
-    /// TODO - Disseminate private data and enforce policy
     /// </summary>
     public class PrivateDataConfig
     {
