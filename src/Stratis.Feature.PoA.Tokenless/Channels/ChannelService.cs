@@ -286,7 +286,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             }
             else
             {
-                Guard.Equals(channelName, channelNetwork.Name);
+                Guard.Equals(channelName.ToLowerInvariant(), channelNetwork.Name);
                 Guard.Equals(channelId, channelNetwork.Id);
             }
 
