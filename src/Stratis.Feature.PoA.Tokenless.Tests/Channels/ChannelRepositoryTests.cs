@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text.Json;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Tests.Common.Logging;
@@ -18,6 +19,18 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
         [Fact]
         public void CanPersistAndReadBackChannelDefinitions()
         {
+            ChannelNetwork salesChannelNetwork = TokenlessNetwork.CreateChannelNetwork("sales", "salesfolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
+            salesChannelNetwork.DefaultAPIPort = 1;
+            salesChannelNetwork.DefaultPort = 2;
+            salesChannelNetwork.DefaultSignalRPort = 3;
+            var salesNetworkJson = JsonSerializer.Serialize(salesChannelNetwork);
+
+            ChannelNetwork marketingChannelNetwork = TokenlessNetwork.CreateChannelNetwork("marketing", "marketingfolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
+            marketingChannelNetwork.DefaultAPIPort = 4;
+            marketingChannelNetwork.DefaultPort = 5;
+            marketingChannelNetwork.DefaultSignalRPort = 6;
+            var marketingNetworkJson = JsonSerializer.Serialize(marketingChannelNetwork);
+
             var dataFolderPath = CreateTestDir(this);
             var dataFolder = new DataFolder(dataFolderPath);
 
@@ -27,25 +40,36 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
             var channelRepository = new ChannelRepository(this.LoggerFactory.Object, keyValueStore);
             channelRepository.Initialize();
 
-            var request1 = new ChannelDefinition()
+            var salesChannel = new ChannelDefinition()
             {
                 Id = channelRepository.GetNextChannelId(),
-                Name = "name1"
+                Name = "sales",
+                NetworkJson = salesNetworkJson
             };
-            channelRepository.SaveChannelDefinition(request1);
+            channelRepository.SaveChannelDefinition(salesChannel);
 
-            var request2 = new ChannelDefinition()
+            var marketingChannel = new ChannelDefinition()
             {
                 Id = channelRepository.GetNextChannelId(),
-                Name = "name2"
-            }; channelRepository.SaveChannelDefinition(request2);
+                Name = "marketing",
+                NetworkJson = marketingNetworkJson
+            }; channelRepository.SaveChannelDefinition(marketingChannel);
 
-            Dictionary<string, ChannelDefinition> dict = channelRepository.GetChannelDefinitions();
+            Dictionary<string, ChannelDefinition> channels = channelRepository.GetChannelDefinitions();
 
-            Assert.Equal("name1", dict["name1"].Name);
-            Assert.Equal("name2", dict["name2"].Name);
-            Assert.Equal(2, dict["name1"].Id);
-            Assert.Equal(3, dict["name2"].Id);
+            Assert.Equal(2, channels["sales"].Id);
+            Assert.Equal("sales", channels["sales"].Name);
+            Assert.Equal(salesNetworkJson, channels["sales"].NetworkJson);
+
+            Assert.Equal(3, channels["marketing"].Id);
+            Assert.Equal("marketing", channels["marketing"].Name);
+            Assert.Equal(marketingNetworkJson, channels["marketing"].NetworkJson);
+
+            ChannelDefinition salesChannelDefinition = channelRepository.GetChannelDefinition("sales");
+
+            Assert.Equal(2, salesChannelDefinition.Id);
+            Assert.Equal("sales", salesChannelDefinition.Name);
+            Assert.Equal(salesNetworkJson, salesChannelDefinition.NetworkJson);
         }
 
         [Fact]
