@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using CertificateAuthority.Models;
 using NBitcoin;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.X509;

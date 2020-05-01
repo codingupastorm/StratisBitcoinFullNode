@@ -19,6 +19,7 @@ using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Compilation;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.RuntimeObserver;
 using Xunit;
 
@@ -36,6 +37,12 @@ namespace Stratis.SmartContracts.IntegrationTests
         {
             nodes.ToList().ForEach(n => TestBase.WaitLoop(() => IsNodeSynced(n)));
             nodes.Skip(1).ToList().ForEach(n => TestBase.WaitLoop(() => AreNodesSynced(nodes.First(), n)));
+        }
+
+        public static void WaitForNodeToSyncAvoidMempool(params CoreNode[] nodes)
+        {
+            nodes.ToList().ForEach(n => TestBase.WaitLoop(() => IsNodeSynced(n)));
+            nodes.Skip(1).ToList().ForEach(n => TestBase.WaitLoop(() => AreNodesSynced(nodes.First(), n, true)));
         }
 
         private static bool IsNodeSynced(CoreNode node)
@@ -101,10 +108,10 @@ namespace Stratis.SmartContracts.IntegrationTests
         /// <summary>
         /// Creates a new account against the supplied running CA from scratch, and returns the client for it.
         /// </summary>
-        public static CaClient GetClient(IWebHost server, List<string> requestedPermissions = null)
+        public static CaClient GetClient(IWebHost server, List<string> requestedPermissions = null, string organisation = null)
         {
             var httpClient = new HttpClient();
-            CredentialsModel credentials = CaTestHelper.CreateAccount(server, AccountAccessFlags.AdminAccess, permissions: requestedPermissions);
+            CredentialsModel credentials = CaTestHelper.CreateAccount(server, AccountAccessFlags.AdminAccess, permissions: requestedPermissions, organisation:organisation);
             return new CaClient(new Uri(CaTestHelper.BaseAddress), httpClient, credentials.AccountId, credentials.Password);
         }
 
@@ -160,13 +167,18 @@ namespace Stratis.SmartContracts.IntegrationTests
         //    return TestBase.CreateTestDir(callingMethod, numberedFolderName);
         //}
 
-        public static Transaction CreateContractCreateTransaction(CoreNode node, Key key)
+        public static Transaction CreateContractCreateTransaction(CoreNode node, Key key, string contractFilename, EndorsementPolicy policy = null)
         {
+            if (policy == null)
+            {
+                policy = new EndorsementPolicy();
+            }
+
             Transaction transaction = Network.CreateTransaction();
-            ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/TokenlessSimpleContract.cs");
+            ContractCompilationResult compilationResult = ContractCompiler.CompileFile(contractFilename);
             Assert.True(compilationResult.Success);
 
-            var contractTxData = new ContractTxData(0, 0, (Gas)0, compilationResult.Compilation);
+            var contractTxData = new ContractTxData(0, 0, (Gas)0, compilationResult.Compilation, policy);
             byte[] outputScript = node.FullNode.NodeService<ICallDataSerializer>().Serialize(contractTxData);
             transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
 
@@ -176,11 +188,11 @@ namespace Stratis.SmartContracts.IntegrationTests
             return transaction;
         }
 
-        public static Transaction CreateContractCallTransaction(CoreNode node, uint160 address, Key key)
+        public static Transaction CreateContractCallTransaction(CoreNode node, uint160 address, Key key, string methodName)
         {
             Transaction transaction = Network.CreateTransaction();
 
-            var contractTxData = new ContractTxData(0, 0, (Gas)0, address, "CallMe");
+            var contractTxData = new ContractTxData(0, 0, (Gas)0, address, methodName);
             byte[] outputScript = node.FullNode.NodeService<ICallDataSerializer>().Serialize(contractTxData);
             transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
 

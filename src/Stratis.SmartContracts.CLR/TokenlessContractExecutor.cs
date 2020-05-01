@@ -43,11 +43,16 @@ namespace Stratis.SmartContracts.CLR
                 transactionContext.CoinbaseAddress.ToAddress()
             );
 
+            string version = $"{transactionContext.BlockHeight}.{transactionContext.TxIndex}";
+
             IState state = this.stateFactory.Create(
                 this.stateRoot,
                 block,
                 transactionContext.TxOutValue,
-                transactionContext.TransactionHash);
+                transactionContext.TransactionHash,
+                version,
+                transactionContext.TransientData
+                );
 
             StateTransitionResult result;
             IState newState = state.Snapshot();
@@ -59,6 +64,7 @@ namespace Stratis.SmartContracts.CLR
                     transactionContext.TxOutValue,
                     callData.GasLimit,
                     callData.ContractExecutionCode,
+                    callData.EndorsementPolicy,
                     callData.MethodParameters
                 );
 
@@ -82,6 +88,8 @@ namespace Stratis.SmartContracts.CLR
 
             bool revert = !result.IsSuccess;
 
+            // TODO: We need to get the private data RWS somewhere here and include them in the result back.
+
             var executionResult = new SmartContractExecutionResult
             {
                 To = !callData.IsCreateContract ? callData.ContractAddress : null,
@@ -90,7 +98,9 @@ namespace Stratis.SmartContracts.CLR
                 Revert = revert,
                 GasConsumed = result.GasConsumed,
                 Return = result.Success?.ExecutionResult,
-                Logs = state.GetLogs(this.contractPrimitiveSerializer)
+                Logs = state.GetLogs(this.contractPrimitiveSerializer),
+                ReadWriteSet = result.Success?.ReadWriteSet,
+                PrivateReadWriteSet = result.Success?.PrivateReadWriteSet
             };
 
             return executionResult;

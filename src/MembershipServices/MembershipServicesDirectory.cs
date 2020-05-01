@@ -107,6 +107,11 @@ namespace MembershipServices
             return CaCertificatesManager.ValidateCertificateChain(authorityCertificate, certificateToValidate);
         }
 
+        public X509Certificate GetCertificateForThumbprint(string thumbprint)
+        {
+            return this.localMembershipServices.GetCertificateByThumbprint(thumbprint);
+        }
+
         public X509Certificate GetCertificateForAddress(uint160 address)
         {
             var p2pkh = new BitcoinPubKeyAddress(new KeyId(address), this.nodeSettings.Network);
@@ -204,6 +209,12 @@ namespace MembershipServices
             }
 
             return null;
+        }
+
+        public byte[] ExtractCertificateExtensionFromOid(X509Certificate certificate, string oid)
+        {
+            // TODO: This is an unfortunate hack needed to simplify testing.
+            return ExtractCertificateExtension(certificate, oid);
         }
 
         public static string ExtractCertificateExtensionString(X509Certificate certificate, string oid)

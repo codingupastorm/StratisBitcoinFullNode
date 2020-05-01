@@ -7,6 +7,8 @@ namespace MembershipServices
     {
         void Initialize();
 
+        X509Certificate GetCertificateForThumbprint(string thumbprint);
+
         X509Certificate GetCertificateForAddress(uint160 address);
 
         X509Certificate GetCertificateForTransactionSigningPubKeyHash(byte[] transactionSigningPubKeyHash);
@@ -52,5 +54,7 @@ namespace MembershipServices
         /// </summary>
         /// <exception cref="Exception">Thrown in case authority chain build failed.</exception>
         bool IsSignedByAuthorityCertificate(X509Certificate certificateToValidate, X509Certificate authorityCertificate);
+
+        byte[] ExtractCertificateExtensionFromOid(X509Certificate certificate, string oid);
     }
 }

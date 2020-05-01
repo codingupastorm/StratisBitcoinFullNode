@@ -98,6 +98,14 @@ namespace Stratis.Features.MemoryPool
         public List<TxMempoolInfo> InfoAll()
         {
             // TODO: DepthAndScoreComparator
+            if (this.memPool.MapTx.Any(t => t.Value.Fee == null))
+            {
+                return this.memPool.MapTx.Values.Select(item => new TxMempoolInfo
+                {
+                    Trx = item.Transaction,
+                    Time = item.Time
+                }).ToList();
+            }
 
             var infoList = this.memPool.MapTx.DescendantScore.Select(item => new TxMempoolInfo
             {

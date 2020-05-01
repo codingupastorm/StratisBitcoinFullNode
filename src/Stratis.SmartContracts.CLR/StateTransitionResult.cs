@@ -1,6 +1,7 @@
 ﻿using System;
 using NBitcoin;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
 
 namespace Stratis.SmartContracts.CLR
 {
@@ -48,11 +49,15 @@ namespace Stratis.SmartContracts.CLR
         public StateTransitionSuccess(
             RuntimeObserver.Gas gasConsumed,
             uint160 contractAddress,
+            ReadWriteSetBuilder readWriteSet,
+            ReadWriteSetBuilder privateReadWriteSet,
             object result = null)
         {
             this.GasConsumed = gasConsumed;
             this.ContractAddress = contractAddress;
             this.ExecutionResult = result;
+            this.ReadWriteSet = readWriteSet;
+            this.PrivateReadWriteSet = privateReadWriteSet;
         }
 
         /// <summary>
@@ -69,6 +74,16 @@ namespace Stratis.SmartContracts.CLR
         /// The receiving contract's address.
         /// </summary>
         public uint160 ContractAddress { get; }
+
+        /// <summary>
+        /// The collection of changes made during this state transition.
+        /// </summary>
+        public ReadWriteSetBuilder ReadWriteSet { get; }
+
+        /// <summary>
+        /// The collection of private state changes made during this state transition.
+        /// </summary>
+        public ReadWriteSetBuilder PrivateReadWriteSet { get; }
 
     }
 
@@ -165,10 +180,12 @@ namespace Stratis.SmartContracts.CLR
         /// </summary>
         public static StateTransitionResult Ok(RuntimeObserver.Gas gasConsumed,
             uint160 contractAddress,
+            ReadWriteSetBuilder readWriteSet,
+            ReadWriteSetBuilder privateReadWriteSet,
             object result = null)
         {
             return new StateTransitionResult(
-                new StateTransitionSuccess(gasConsumed, contractAddress, result));
+                new StateTransitionSuccess(gasConsumed, contractAddress, readWriteSet, privateReadWriteSet, result));
         }
 
         /// <summary>

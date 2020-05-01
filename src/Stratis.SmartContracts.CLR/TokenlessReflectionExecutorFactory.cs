@@ -29,9 +29,7 @@ namespace Stratis.SmartContracts.CLR
         /// After the contract has been executed, it will process any fees and/or refunds.
         /// </para>
         /// </summary>
-        public IContractExecutor CreateExecutor(
-            IStateRepositoryRoot stateRepository,
-            IContractTransactionContext transactionContext)
+        public IContractExecutor CreateExecutor(IStateRepositoryRoot stateRepository)
         {
             return new TokenlessContractExecutor(this.serializer, stateRepository, this.stateFactory, this.stateProcessor, this.contractPrimitiveSerializer);
         }

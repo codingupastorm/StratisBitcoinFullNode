@@ -16,6 +16,7 @@ using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Controllers;
 using Stratis.Feature.PoA.Tokenless.Core;
+using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mining;
@@ -27,6 +28,8 @@ using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Features.PoA;
 using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Features.PoA.Voting;
+using Stratis.SmartContracts.Core.ReadWrite;
+using Stratis.SmartContracts.Core.Store;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -50,6 +53,26 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<BlockDefinition, TokenlessBlockDefinition>();
                         services.AddSingleton<ITokenlessSigner, TokenlessSigner>();
                         services.AddSingleton<ICoreComponent, CoreComponent>();
+                        services.AddSingleton<ITokenlessBroadcaster, TokenlessBroadcaster>();
+                        services.AddSingleton<IReadWriteSetTransactionSerializer, ReadWriteSetTransactionSerializer>();
+                        services.AddSingleton<IReadWriteSetValidator, ReadWriteSetValidator>();
+
+                        // Endorsement. For now everyone gets this. May not be the case in the future.
+                        services.AddSingleton<IEndorsementRequestHandler, EndorsementRequestHandler>();
+                        services.AddSingleton<IEndorsementSuccessHandler, EndorsementSuccessHandler>();
+                        services.AddSingleton<IEndorsementRequestValidator, EndorsementRequestValidator>();
+                        services.AddSingleton<IEndorsementSigner, EndorsementSigner>();
+                        services.AddSingleton<IEndorsements, Endorsements>();
+                        services.AddSingleton<IEndorsedTransactionBuilder, EndorsedTransactionBuilder>();
+                        services.AddSingleton<IOrganisationLookup, OrganisationLookup>();
+                        services.AddSingleton<IPrivateDataRetriever, PrivateDataRetriever>();
+                        services.AddSingleton<ReadWriteSetPolicyValidator>();
+
+                        // Private data.
+                        services.AddSingleton<ITransientKeyValueStore, TransientKeyValueStore>();
+                        services.AddSingleton<ITransientStore, TransientStore>();
+                        services.AddSingleton<IPrivateDataKeyValueStore, PrivateDataKeyValueStore>();
+                        services.AddSingleton<IPrivateDataStore, PrivateDataStore>();
 
                         // In place of wallet.
                         services.AddSingleton<IBroadcasterManager, FullNodeBroadcasterManager>();
