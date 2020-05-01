@@ -13,6 +13,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
     {
         private readonly IEndorsedTransactionBuilder endorsedTransactionBuilder;
         private readonly IEndorsementSignatureValidator signatureValidator;
+        private readonly IOrganisationLookup organisationLookup;
 
         public enum EndorsementValidationErrorType
         {
@@ -22,10 +23,11 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
             SignaturesInvalid
         }
 
-        public EndorsedContractTransactionValidationRule(IEndorsedTransactionBuilder endorsedTransactionBuilder, IEndorsementSignatureValidator signatureValidator)
+        public EndorsedContractTransactionValidationRule(IEndorsedTransactionBuilder endorsedTransactionBuilder, IEndorsementSignatureValidator signatureValidator, IOrganisationLookup organisationLookup)
         {
             this.endorsedTransactionBuilder = endorsedTransactionBuilder;
             this.signatureValidator = signatureValidator;
+            this.organisationLookup = organisationLookup;
         }
 
         public (bool, EndorsementValidationErrorType) CheckTransaction(Transaction transaction)

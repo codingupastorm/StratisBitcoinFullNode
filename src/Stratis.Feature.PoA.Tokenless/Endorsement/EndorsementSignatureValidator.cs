@@ -6,7 +6,10 @@ using NBitcoin;
 using NBitcoin.Crypto;
 using Org.BouncyCastle.X509;
 using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.Hashing;
+using Stratis.SmartContracts.Core.ReadWrite;
+using Stratis.SmartContracts.Core.State;
 using ByteArrayComparer = Stratis.Bitcoin.Utilities.ByteArrayComparer;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
