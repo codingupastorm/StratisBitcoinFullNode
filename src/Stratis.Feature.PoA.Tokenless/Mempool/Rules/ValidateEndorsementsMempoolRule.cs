@@ -12,6 +12,54 @@ using Stratis.SmartContracts.Core.ReadWrite;
 
 namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
 {
+    /// <summary>
+    /// The logic for the endorsement validation rules.
+    /// </summary>
+    public class EndorsedContractTransactionValidationRule
+    {
+        private readonly IEndorsedTransactionBuilder endorsedTransactionBuilder;
+        private readonly IEndorsementValidator endorsementValidator;
+
+        public enum EndorsementValidationErrorType
+        {
+            None,
+            InvalidCall,
+            Malformed,
+            SignaturesInvalid
+        }
+
+        public EndorsedContractTransactionValidationRule(IEndorsedTransactionBuilder endorsedTransactionBuilder, IEndorsementValidator endorsementValidator)
+        {
+            this.endorsedTransactionBuilder = endorsedTransactionBuilder;
+            this.endorsementValidator = endorsementValidator;
+        }
+
+        public (bool, EndorsementValidationErrorType) CheckTransaction(Transaction transaction)
+        {
+            // Check that this is a call contract transaction
+            // For now, create contract transactions don't need endorsement.
+            if (!transaction.IsSmartContractExecTransaction())
+            {
+                return (false, EndorsementValidationErrorType.InvalidCall);
+            }
+
+            if (!this.endorsedTransactionBuilder.TryParseTransaction(transaction, out IEnumerable<Endorsement.Endorsement> endorsements, out ReadWriteSet _))
+            {
+                return (false, EndorsementValidationErrorType.Malformed);
+            }
+
+            // Save a serialization roundtrip by getting the RWS bytes.
+            var rwsBytes = transaction.Outputs[0].ScriptPubKey.ToBytes();
+
+            if (this.endorsementValidator.Validate(endorsements, rwsBytes))
+            {
+                return (true, EndorsementValidationErrorType.None);
+            }
+
+            return (false, EndorsementValidationErrorType.SignaturesInvalid);
+        }
+    }
+
     public class ValidateEndorsementsMempoolRule : MempoolRule
     {
         private readonly IEndorsementValidator endorsementValidator;
