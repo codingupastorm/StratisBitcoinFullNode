@@ -159,7 +159,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
 
         [Fact]
-        public async Task CanJoinChannelNodeAsync()
+        public void CanJoinChannelNode()
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 
@@ -178,7 +178,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
 
                 // Create and start the parent node.
-                CaClient client1 = TokenlessTestHelper.GetClient(server);
+                CaClient client1 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
                 CoreNode parentNode = nodeBuilder.CreateTokenlessNode(tokenlessNetwork, 0, ac, client1, willStartChannels: true);
                 parentNode.Start();
 
@@ -187,7 +187,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 parentNode.Restart();
 
                 // Create another node.
-                CaClient client2 = TokenlessTestHelper.GetClient(server);
+                CaClient client2 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
                 CoreNode otherNode = nodeBuilder.CreateTokenlessNode(tokenlessNetwork, 1, ac, client2, willStartChannels: true);
                 otherNode.Start();
 
