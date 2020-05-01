@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Net;
+using System.Text.Json;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using Microsoft.AspNetCore.Mvc;
@@ -30,6 +31,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         private readonly IBroadcasterManager broadcasterManager;
         private readonly ITokenlessKeyStoreManager tokenlessKeyStoreManager;
         private readonly ITokenlessSigner tokenlessSigner;
+        private readonly IChannelService channelService;
         private readonly ILogger logger;
 
         public ChannelsController(
@@ -39,7 +41,8 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             IChannelRepository channelRepository,
             ITokenlessKeyStoreManager tokenlessKeyStoreManager,
             ITokenlessSigner tokenlessSigner,
-            ICoreComponent coreComponent
+            ICoreComponent coreComponent,
+            IChannelService channelService
             )
         {
             this.certificatesManager = certificatesManager;
@@ -49,6 +52,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             this.coreComponent = coreComponent;
             this.tokenlessKeyStoreManager = tokenlessKeyStoreManager;
             this.tokenlessSigner = tokenlessSigner;
+            this.channelService = channelService;
             this.logger = coreComponent.LoggerFactory.CreateLogger(this.GetType());
         }
 
@@ -106,6 +110,31 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                 }
 
                 return Ok(channelDefinition.NetworkJson);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError("Exception occurred: {0}", ex.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, ex.Message, ex.ToString());
+            }
+        }
+
+        [Route("join")]
+        [HttpPost]
+        public async Task<IActionResult> JoinChannelAsync([FromBody] ChannelJoinRequest request)
+        {
+            if (!this.ModelState.IsValid)
+                return ModelStateErrors.BuildErrorResponse(this.ModelState);
+
+            try
+            {
+                // Record channel membership (in normal node repo) and start up channel node.
+                ChannelNetwork network = JsonSerializer.Deserialize<ChannelNetwork>(request.NetworkJson);
+
+                this.logger.LogInformation($"Request to join channel '{network.Name}' received.");
+
+                await this.channelService.JoinChannelAsync(network);
+
+                return Ok();
             }
             catch (Exception ex)
             {

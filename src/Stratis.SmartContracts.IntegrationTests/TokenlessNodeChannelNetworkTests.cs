@@ -17,6 +17,7 @@ using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
+using Stratis.Features.Api;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;
 
@@ -153,6 +154,61 @@ namespace Stratis.SmartContracts.IntegrationTests
             foreach (var process in processes)
             {
                 Assert.True(process.HasExited);
+            }
+        }
+
+
+        [Fact]
+        public async Task CanJoinChannelNodeAsync()
+        {
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                var tokenlessNetwork = new TokenlessNetwork();
+
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient();
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
+
+                // Get Authority Certificate.
+                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
+
+                // Create and start the parent node.
+                CaClient client1 = TokenlessTestHelper.GetClient(server);
+                CoreNode parentNode = nodeBuilder.CreateTokenlessNode(tokenlessNetwork, 0, ac, client1, willStartChannels: true);
+                parentNode.Start();
+
+                // Create a channel for the identity to be apart of.
+                nodeBuilder.CreateChannel(parentNode, "marketing", 2);
+                parentNode.Restart();
+
+                // Create another node.
+                CaClient client2 = TokenlessTestHelper.GetClient(server);
+                CoreNode otherNode = nodeBuilder.CreateTokenlessNode(tokenlessNetwork, 1, ac, client2, willStartChannels: true);
+                otherNode.Start();
+
+                // Get the marketing network's JSON.
+                string networkJson = $"{(new ApiSettings(parentNode.FullNode.Settings)).ApiUri}"
+                    .AppendPathSegment("api/channels/networkjson")
+                    .SetQueryParam("cn", "marketing")
+                    .GetStringAsync()
+                    .GetAwaiter().GetResult();
+
+                // Join the channel.
+                var response = $"{(new ApiSettings(otherNode.FullNode.Settings)).ApiUri}"
+                    .AppendPathSegment("api/channels/join")
+                    .PostJsonAsync(new ChannelJoinRequest()
+                    {
+                        NetworkJson = networkJson
+                    })
+                    .GetAwaiter().GetResult();
+
+                IChannelService channelService = parentNode.FullNode.NodeService<IChannelService>();
+                Assert.Single(channelService.StartedChannelNodes);
             }
         }
 
