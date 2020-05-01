@@ -230,8 +230,6 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Get Authority Certificate.
                 X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
-
-                // Add the channel create permission to the infra node as this certificate will be passed to system channel node.
                 CaClient client1 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
 
                 // Create and start the main "infra" tokenless node which will internally start the "system channel node".
