@@ -11,13 +11,19 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 {
     public class EndorsedContractTransactionValidationRuleTests
     {
+        private readonly Mock<IEndorsedTransactionBuilder> builder;
+        private readonly Mock<IEndorsementValidator> validator;
+
+        public EndorsedContractTransactionValidationRuleTests()
+        {
+            this.builder = new Mock<IEndorsedTransactionBuilder>();
+            this.validator = new Mock<IEndorsementValidator>();
+        }
+
         [Fact]
         public void Transaction_Is_Not_ReadWriteSet()
         {
-            var builder = new Mock<IEndorsedTransactionBuilder>();
-            var validator = new Mock<IEndorsementValidator>();
-
-            var rule = new EndorsedContractTransactionValidationRule(builder.Object, validator.Object);
+            var rule = new EndorsedContractTransactionValidationRule(this.builder.Object, this.validator.Object);
 
             var tx = new Transaction();
             var ops = new List<byte>
@@ -34,17 +40,14 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             
             IEnumerable<Endorsement.Endorsement> endorsements;
             ReadWriteSet rws;
-            builder.Verify(x => x.TryParseTransaction(It.IsAny<Transaction>(), out endorsements, out rws), Times.Never);
-            validator.Verify(x => x.Validate(It.IsAny<Endorsement.Endorsement>(), It.IsAny<byte[]>()), Times.Never);
+            this.builder.Verify(x => x.TryParseTransaction(It.IsAny<Transaction>(), out endorsements, out rws), Times.Never);
+            this.validator.Verify(x => x.Validate(It.IsAny<Endorsement.Endorsement>(), It.IsAny<byte[]>()), Times.Never);
         }
 
         [Fact]
         public void Transaction_Missing_Data_Is_Malformed()
         {
-            var builder = new Mock<IEndorsedTransactionBuilder>();
-            var validator = new Mock<IEndorsementValidator>();
-
-            var rule = new EndorsedContractTransactionValidationRule(builder.Object, validator.Object);
+            var rule = new EndorsedContractTransactionValidationRule(this.builder.Object, this.validator.Object);
 
             var tx = new Transaction();
             var ops = new List<byte>
@@ -62,8 +65,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             IEnumerable<Endorsement.Endorsement> endorsements;
             ReadWriteSet rws;
-            builder.Verify(x => x.TryParseTransaction(It.IsAny<Transaction>(), out endorsements, out rws), Times.Once);
-            validator.Verify(x => x.Validate(It.IsAny<Endorsement.Endorsement>(), It.IsAny<byte[]>()), Times.Never);
+            this.builder.Verify(x => x.TryParseTransaction(It.IsAny<Transaction>(), out endorsements, out rws), Times.Once);
+            this.validator.Verify(x => x.Validate(It.IsAny<Endorsement.Endorsement>(), It.IsAny<byte[]>()), Times.Never);
         }
 
         [Fact]
@@ -71,14 +74,11 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             IEnumerable<Endorsement.Endorsement> endorsements;
             ReadWriteSet rws;
-            var builder = new Mock<IEndorsedTransactionBuilder>();
 
             // Returns false = malformed
-            builder.Setup(b => b.TryParseTransaction(It.IsAny<Transaction>(), out endorsements, out rws)).Returns(false);
+            this.builder.Setup(b => b.TryParseTransaction(It.IsAny<Transaction>(), out endorsements, out rws)).Returns(false);
 
-            var validator = new Mock<IEndorsementValidator>();
-
-            var rule = new EndorsedContractTransactionValidationRule(builder.Object, validator.Object);
+            var rule = new EndorsedContractTransactionValidationRule(this.builder.Object, this.validator.Object);
 
             var tx = new Transaction();
             var ops = new List<byte>
@@ -93,8 +93,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             Assert.False(result.Item1);
             Assert.Equal(EndorsedContractTransactionValidationRule.EndorsementValidationErrorType.Malformed, result.Item2);
 
-            builder.Verify(x => x.TryParseTransaction(It.IsAny<Transaction>(), out endorsements, out rws), Times.Once);
-            validator.Verify(x => x.Validate(It.IsAny<Endorsement.Endorsement>(), It.IsAny<byte[]>()), Times.Never);
+            this.builder.Verify(x => x.TryParseTransaction(It.IsAny<Transaction>(), out endorsements, out rws), Times.Once);
+            this.validator.Verify(x => x.Validate(It.IsAny<Endorsement.Endorsement>(), It.IsAny<byte[]>()), Times.Never);
         }
 
         [Fact]
@@ -102,17 +102,14 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             IEnumerable<Endorsement.Endorsement> endorsements;
             ReadWriteSet rws;
-            var builder = new Mock<IEndorsedTransactionBuilder>();
 
             // Not malformed
-            builder.Setup(b => b.TryParseTransaction(It.IsAny<Transaction>(), out endorsements, out rws)).Returns(true);
-
-            var validator = new Mock<IEndorsementValidator>();
+            this.builder.Setup(b => b.TryParseTransaction(It.IsAny<Transaction>(), out endorsements, out rws)).Returns(true);
 
             // Signatures invalid.
-            validator.Setup(b => b.Validate(It.IsAny<IEnumerable<Endorsement.Endorsement>>(), It.IsAny<byte[]>())).Returns(false);
+            this.validator.Setup(b => b.Validate(It.IsAny<IEnumerable<Endorsement.Endorsement>>(), It.IsAny<byte[]>())).Returns(false);
 
-            var rule = new EndorsedContractTransactionValidationRule(builder.Object, validator.Object);
+            var rule = new EndorsedContractTransactionValidationRule(this.builder.Object, this.validator.Object);
 
             var tx = new Transaction();
             var ops = new List<byte>
@@ -127,8 +124,39 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             Assert.False(result.Item1);
             Assert.Equal(EndorsedContractTransactionValidationRule.EndorsementValidationErrorType.SignaturesInvalid, result.Item2);
 
-            builder.Verify(x => x.TryParseTransaction(It.IsAny<Transaction>(), out endorsements, out rws), Times.Once);
-            validator.Verify(x => x.Validate(It.IsAny<IEnumerable<Endorsement.Endorsement>>(), It.IsAny<byte[]>()), Times.Once);
+            this.builder.Verify(x => x.TryParseTransaction(It.IsAny<Transaction>(), out endorsements, out rws), Times.Once);
+            this.validator.Verify(x => x.Validate(It.IsAny<IEnumerable<Endorsement.Endorsement>>(), It.IsAny<byte[]>()), Times.Once);
+        }
+
+        [Fact]
+        public void Transaction_Good_Data_Is_Not_Malformed_Signatures_Valid()
+        {
+            IEnumerable<Endorsement.Endorsement> endorsements;
+            ReadWriteSet rws;
+
+            // Not malformed
+            this.builder.Setup(b => b.TryParseTransaction(It.IsAny<Transaction>(), out endorsements, out rws)).Returns(true);
+            
+            // Signatures valid.
+            this.validator.Setup(b => b.Validate(It.IsAny<IEnumerable<Endorsement.Endorsement>>(), It.IsAny<byte[]>())).Returns(true);
+
+            var rule = new EndorsedContractTransactionValidationRule(this.builder.Object, this.validator.Object);
+
+            var tx = new Transaction();
+            var ops = new List<byte>
+            {
+                (byte) OpcodeType.OP_READWRITE
+            };
+
+            tx.Outputs.Add(new TxOut(Money.Zero, new Script(ops)));
+
+            var result = rule.CheckTransaction(tx);
+
+            Assert.True(result.Item1);
+            Assert.Equal(EndorsedContractTransactionValidationRule.EndorsementValidationErrorType.None, result.Item2);
+
+            this.builder.Verify(x => x.TryParseTransaction(It.IsAny<Transaction>(), out endorsements, out rws), Times.Once);
+            this.validator.Verify(x => x.Validate(It.IsAny<IEnumerable<Endorsement.Endorsement>>(), It.IsAny<byte[]>()), Times.Once);
         }
     }
 }
