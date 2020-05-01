@@ -3,7 +3,6 @@ using NBitcoin;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
-using Stratis.SmartContracts.Core.Endorsement;
 using Xunit;
 
 namespace Stratis.Feature.PoA.Tokenless.Tests
@@ -16,11 +15,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var request = new ChannelCreationRequest()
             {
                 Name = "test",
-                EndorsementPolicy = new EndorsementPolicy
-                {
-                    Organisation = (Organisation) "Test",
-                    RequiredSignatures = 2
-                },
                 Endorsements = new List<Endorsement.Endorsement>()
                 {
                     new Endorsement.Endorsement(new byte[] { 0xAA }, new byte[] { 0xBB }),
