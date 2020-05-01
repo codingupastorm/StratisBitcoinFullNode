@@ -110,6 +110,7 @@ namespace Stratis.SmartContracts.Tests.Common
         {
             // Serialize the channel network and write the json to disk.
             ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, "channels", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
+            channelNetwork.Id = nodeIndex;
             channelNetwork.DefaultAPIPort += nodeIndex;
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
 
