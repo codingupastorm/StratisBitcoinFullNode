@@ -11,7 +11,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     public class EndorsementInfo
     {
         private readonly IOrganisationLookup organisationLookup;
-        private readonly IEndorsementValidator endorsementValidator;
+        private readonly IEndorsementSignatureValidator endorsementSignatureValidator;
         private readonly MofNPolicyValidator validator;
         private readonly Dictionary<string, SignedProposalResponse> signedProposals;
 
@@ -22,11 +22,11 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
         public EndorsementState State { get; private set; }
 
-        public EndorsementInfo(EndorsementPolicy policy, IOrganisationLookup organisationLookup, IEndorsementValidator endorsementValidator)
+        public EndorsementInfo(EndorsementPolicy policy, IOrganisationLookup organisationLookup, IEndorsementSignatureValidator endorsementSignatureValidator)
         {
             this.organisationLookup = organisationLookup;
             this.Policy = policy;
-            this.endorsementValidator = endorsementValidator;
+            this.endorsementSignatureValidator = endorsementSignatureValidator;
             this.validator = new MofNPolicyValidator(this.Policy.ToDictionary());
 
             // To prevent returning proposals that were signed correctly but do not match the policy,
@@ -38,7 +38,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         public bool AddSignature(X509Certificate certificate, SignedProposalResponse signedProposalResponse)
         {
             // Verify the signature matches the peer's certificate.
-            if (!this.endorsementValidator.Validate(signedProposalResponse.Endorsement, signedProposalResponse.ProposalResponse.ToBytes()))
+            if (!this.endorsementSignatureValidator.Validate(signedProposalResponse.Endorsement, signedProposalResponse.ProposalResponse.ToBytes()))
             {
                 return false;
             }

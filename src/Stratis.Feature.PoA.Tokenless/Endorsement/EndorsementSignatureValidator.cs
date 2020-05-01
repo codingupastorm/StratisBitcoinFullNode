@@ -11,7 +11,7 @@ using ByteArrayComparer = Stratis.Bitcoin.Utilities.ByteArrayComparer;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
-    public interface IEndorsementValidator
+    public interface IEndorsementSignatureValidator
     {
         bool Validate(IEnumerable<Endorsement> endorsements, byte[] data);
         bool Validate(Endorsement endorsement, byte[] data);
@@ -20,13 +20,13 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     /// <summary>
     /// Validates endorsement signatures against a payload.
     /// </summary>
-    public class EndorsementValidator : IEndorsementValidator
+    public class EndorsementSignatureSignatureValidator : IEndorsementSignatureValidator
     {
         private readonly ICertificatesManager certificatesManager;
         private readonly ICertificatePermissionsChecker permissionsChecker;
         private readonly ByteArrayComparer byteArrayComparer;
 
-        public EndorsementValidator(ICertificatesManager certificatesManager, ICertificatePermissionsChecker permissionsChecker)
+        public EndorsementSignatureSignatureValidator(ICertificatesManager certificatesManager, ICertificatePermissionsChecker permissionsChecker)
         {
             this.certificatesManager = certificatesManager;
             this.permissionsChecker = permissionsChecker;

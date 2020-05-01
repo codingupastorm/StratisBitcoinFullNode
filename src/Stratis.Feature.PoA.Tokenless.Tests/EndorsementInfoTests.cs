@@ -17,14 +17,14 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         [Fact]
         public void New_Endorsement_Has_State_Proposed()
         {
-            Assert.Equal(EndorsementState.Proposed, new EndorsementInfo(new EndorsementPolicy(), Mock.Of<IOrganisationLookup>(), Mock.Of<IEndorsementValidator>()).State);
+            Assert.Equal(EndorsementState.Proposed, new EndorsementInfo(new EndorsementPolicy(), Mock.Of<IOrganisationLookup>(), Mock.Of<IEndorsementSignatureValidator>()).State);
         }
 
         [Fact]
         public void Endorsement_Gets_Address_Org_From_Certificate()
         {
             var organisationLookup = new Mock<IOrganisationLookup>();
-            var endorsementValidator = new Mock<IEndorsementValidator>();
+            var endorsementValidator = new Mock<IEndorsementSignatureValidator>();
 
             var certParser = new X509CertificateParser();
             X509Certificate certificate = certParser.ReadCertificate(File.ReadAllBytes("Certificates/cert.crt"));
@@ -76,7 +76,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public void Endorsement_Gets_Address_Unapproved_Org_From_Transaction()
         {
             var organisationLookup = new Mock<IOrganisationLookup>();
-            var endorsementValidator = new Mock<IEndorsementValidator>();
+            var endorsementValidator = new Mock<IEndorsementSignatureValidator>();
 
             var certParser = new X509CertificateParser();
             X509Certificate certificate = certParser.ReadCertificate(File.ReadAllBytes("Certificates/cert.crt"));

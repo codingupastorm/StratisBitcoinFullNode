@@ -12,12 +12,12 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
     public class EndorsedContractTransactionValidationRuleTests
     {
         private readonly Mock<IEndorsedTransactionBuilder> builder;
-        private readonly Mock<IEndorsementValidator> validator;
+        private readonly Mock<IEndorsementSignatureValidator> validator;
 
         public EndorsedContractTransactionValidationRuleTests()
         {
             this.builder = new Mock<IEndorsedTransactionBuilder>();
-            this.validator = new Mock<IEndorsementValidator>();
+            this.validator = new Mock<IEndorsementSignatureValidator>();
         }
 
         [Fact]

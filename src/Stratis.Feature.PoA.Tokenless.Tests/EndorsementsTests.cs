@@ -9,12 +9,12 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
     public class EndorsementsTests
     {
         private readonly Mock<IOrganisationLookup> lookup;
-        private readonly Mock<IEndorsementValidator> endorsementValidator;
+        private readonly Mock<IEndorsementSignatureValidator> endorsementValidator;
 
         public EndorsementsTests()
         {
             this.lookup = new Mock<IOrganisationLookup>();
-            this.endorsementValidator = new Mock<IEndorsementValidator>();
+            this.endorsementValidator = new Mock<IEndorsementSignatureValidator>();
         }
 
         [Fact]

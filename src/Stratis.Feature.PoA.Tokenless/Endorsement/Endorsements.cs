@@ -22,13 +22,13 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     public class Endorsements : IEndorsements
     {
         private readonly IOrganisationLookup organisationLookup;
-        private readonly IEndorsementValidator endorsementValidator;
+        private readonly IEndorsementSignatureValidator endorsementSignatureValidator;
         private readonly Dictionary<uint256, EndorsementInfo> endorsements;
 
-        public Endorsements(IOrganisationLookup organisationLookup, IEndorsementValidator endorsementValidator)
+        public Endorsements(IOrganisationLookup organisationLookup, IEndorsementSignatureValidator endorsementSignatureValidator)
         {
             this.organisationLookup = organisationLookup;
-            this.endorsementValidator = endorsementValidator;
+            this.endorsementSignatureValidator = endorsementSignatureValidator;
             this.endorsements = new Dictionary<uint256, EndorsementInfo>();
         }
 
@@ -46,7 +46,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 return this.endorsements[proposalId];
             }
 
-            var info = new EndorsementInfo(endorsementPolicy, this.organisationLookup, this.endorsementValidator);
+            var info = new EndorsementInfo(endorsementPolicy, this.organisationLookup, this.endorsementSignatureValidator);
 
             this.endorsements[proposalId] = info;
 

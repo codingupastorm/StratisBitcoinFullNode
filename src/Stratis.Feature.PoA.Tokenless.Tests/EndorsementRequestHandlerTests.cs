@@ -97,7 +97,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var transientStore = new Mock<ITransientStore>();
             
             var organisationLookup = Mock.Of<IOrganisationLookup>();
-            var endorsementValidator = Mock.Of<IEndorsementValidator>();
+            var endorsementValidator = Mock.Of<IEndorsementSignatureValidator>();
 
             var endorsementRequestHandler = new EndorsementRequestHandler(validatorMock.Object,
                 signerMock.Object,
@@ -163,7 +163,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var transientStore = new Mock<ITransientStore>();
 
             var organisationLookup = Mock.Of<IOrganisationLookup>();
-            var endorsementValidator = Mock.Of<IEndorsementValidator>();
+            var endorsementValidator = Mock.Of<IEndorsementSignatureValidator>();
 
             var endorsementRequestHandler = new EndorsementRequestHandler(validatorMock.Object,
                 signerMock.Object,
