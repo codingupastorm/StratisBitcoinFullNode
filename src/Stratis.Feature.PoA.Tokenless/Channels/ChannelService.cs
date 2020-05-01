@@ -202,7 +202,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
                 ChannelNodeProcess channelNode = await StartTheProcessAsync(channelRootFolder, "-bootstrap=1", $"-channelname={SystemChannelName}", "-issystemchannelnode=true");
                 if (channelNode.Process.HasExited)
-                    throw new ChannelServiceException($"Failed to start system channel node as the processs exited early.");
+                    throw new ChannelServiceException($"Failed to start system channel node as the process exited early.");
 
                 lock (this.StartedChannelNodes)
                     this.StartedChannelNodes.Add(channelNode);

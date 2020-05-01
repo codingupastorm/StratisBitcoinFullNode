@@ -59,6 +59,8 @@ namespace CertificateAuthority
         public const string CreateContractPermissionOid = "1.5.3";
         public const string MiningPermissionOid = "1.5.4";
 
+        public const string ChannelCreatePermissionOid = "1.6.0";
+
         public const int CertificateValidityPeriodYears = 10;
         public const int CaCertificateValidityPeriodYears = 10;
 
@@ -66,6 +68,8 @@ namespace CertificateAuthority
         public const string CallContractPermission = "CallContract";
         public const string CreateContractPermission = "CreateContract";
         public const string MiningPermission = "Mine";
+
+        public const string ChannelCreatePermission = "ChannelCreate";
 
         public static List<string> ValidPermissions = new List<string>()
         {
@@ -239,7 +243,7 @@ namespace CertificateAuthority
 
             var transactionSigningPubKeyHashBytes = ExtractExtensionFromCsr(attributes, TransactionSigningPubKeyHashExtensionOid);
             byte[] blockSigningPubKeyBytes = ExtractExtensionFromCsr(attributes, BlockSigningPubKeyExtensionOid);
-            
+
             var infoModel = new CertificateInfoModel()
             {
                 Status = CertificateStatus.Good,
@@ -407,7 +411,9 @@ namespace CertificateAuthority
             if (subjectAlternativeNames != null && subjectAlternativeNames.Any())
                 AddSubjectAlternativeNames(certificateGenerator, subjectAlternativeNames);
 
-            AddPermissionsToCertificate(certificateGenerator, extensionData, permissions);
+            AddExtensionsToCertificate(certificateGenerator, extensionData);
+
+            AddPermissionsToCertificate(certificateGenerator, permissions);
 
             // The certificate is signed with the issuer's private key.
             ISignatureFactory signatureFactory = new Asn1SignatureFactory("SHA256WithECDSA", issuerKeyPair.Private, random);
@@ -493,7 +499,7 @@ namespace CertificateAuthority
             certificateGenerator.AddExtension(X509Extensions.SubjectKeyIdentifier.Id, false, subjectKeyIdentifierExtension);
         }
 
-        private static void AddPermissionsToCertificate(X509V3CertificateGenerator certificateGenerator, Dictionary<string, byte[]> extensionData, List<string> permissions)
+        private static void AddExtensionsToCertificate(X509V3CertificateGenerator certificateGenerator, Dictionary<string, byte[]> extensionData)
         {
             if (extensionData.TryGetValue(P2pkhExtensionOid, out byte[] oid141))
                 certificateGenerator.AddExtension(P2pkhExtensionOid, false, new DerOctetString(oid141));
@@ -503,7 +509,10 @@ namespace CertificateAuthority
 
             if (extensionData.TryGetValue(BlockSigningPubKeyExtensionOid, out byte[] oid143))
                 certificateGenerator.AddExtension(BlockSigningPubKeyExtensionOid, false, new DerOctetString(oid143));
+        }
 
+        private static void AddPermissionsToCertificate(X509V3CertificateGenerator certificateGenerator, List<string> permissions)
+        {
             if (permissions.Contains(SendPermission))
                 certificateGenerator.AddExtension(SendPermissionOid, false, new byte[] { 1 });
 
@@ -515,6 +524,9 @@ namespace CertificateAuthority
 
             if (permissions.Contains(MiningPermission))
                 certificateGenerator.AddExtension(MiningPermissionOid, false, new byte[] { 1 });
+
+            if (permissions.Contains(ChannelCreatePermission))
+                certificateGenerator.AddExtension(ChannelCreatePermissionOid, false, new byte[] { 1 });
         }
 
         public static string GetThumbprint(X509Certificate certificate)
@@ -524,10 +536,10 @@ namespace CertificateAuthority
             hash.BlockUpdate(certificateBytes, 0, certificateBytes.Length);
             byte[] result = new byte[hash.GetDigestSize()];
             hash.DoFinal(result, 0);
-            
+
             return BitConverter.ToString(result).Replace("-", string.Empty);
         }
-        
+
         public static X509Certificate2 ConvertCertificate(X509Certificate certificate, SecureRandom random)
         {
             // Now to convert the Bouncy Castle certificate to a .NET certificate.
@@ -556,7 +568,7 @@ namespace CertificateAuthority
         {
             if (this.caCertificate == null)
                 return null;
-            
+
             return new CertificateInfoModel()
             {
                 // TODO: Technically there is an address associated with the CA's pubkey, should we use it?
