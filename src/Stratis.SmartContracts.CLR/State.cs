@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using NBitcoin;
 using Stratis.SmartContracts.CLR.ContractLogging;
 using Stratis.SmartContracts.CLR.Serialization;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.State.AccountAbstractionLayer;
+using Stratis.SmartContracts.RuntimeObserver;
 
 namespace Stratis.SmartContracts.CLR
 {
@@ -47,6 +49,8 @@ namespace Stratis.SmartContracts.CLR
             this.Block = state.Block;
             this.TransactionHash = state.TransactionHash;
             this.smartContractStateFactory = state.smartContractStateFactory;
+            this.Version = state.Version;
+            this.TransientData = state.TransientData;
         }
 
         public State(ISmartContractStateFactory smartContractStateFactory,
@@ -54,7 +58,9 @@ namespace Stratis.SmartContracts.CLR
             IContractLogHolder contractLogHolder,
             List<TransferInfo> internalTransfers,
             IBlock block,
-            uint256 transactionHash)
+            uint256 transactionHash,
+            string version,
+            byte[] transientData)
         {
             this.ContractState = repository;
             this.LogHolder = contractLogHolder;
@@ -64,7 +70,11 @@ namespace Stratis.SmartContracts.CLR
             this.Block = block;
             this.TransactionHash = transactionHash;
             this.smartContractStateFactory = smartContractStateFactory;
+            this.Version = version;
+            this.TransientData = transientData;
         }
+
+        public string Version { get; }
         
         public uint256 TransactionHash { get; }
 
@@ -80,12 +90,15 @@ namespace Stratis.SmartContracts.CLR
 
         public IStateRepository ContractState { get; }
 
+        // TODO: Because of the way the state snapshots, this is going to be available in nested transactions!! Fix.
+        public byte[] TransientData { get; }
+
         /// <summary>
         /// Sets up a new <see cref="ISmartContractState"/> based on the current state.
         /// </summary>
-        public ISmartContractState CreateSmartContractState(IState state, RuntimeObserver.IGasMeter gasMeter, uint160 address, BaseMessage message, IStateRepository repository) 
+        public ISmartContractState CreateSmartContractState(IState state, ReadWriteSetBuilder readWriteSet, ReadWriteSetBuilder privateReadWriteSet, IGasMeter gasMeter, uint160 address, BaseMessage message, IStateRepository repository) 
         {
-            return this.smartContractStateFactory.Create(state, gasMeter, address, message, repository);
+            return this.smartContractStateFactory.Create(state, readWriteSet, privateReadWriteSet, gasMeter, address, message, repository);
         }
 
         /// <summary>

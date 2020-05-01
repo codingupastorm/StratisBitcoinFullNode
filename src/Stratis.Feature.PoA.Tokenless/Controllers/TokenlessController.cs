@@ -20,8 +20,11 @@ using Stratis.Bitcoin.Utilities.ModelStateErrors;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.Feature.PoA.Tokenless.Core;
+using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Feature.PoA.Tokenless.Payloads;
 using Stratis.Features.MemoryPool.Broadcasting;
+using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Compilation;
@@ -29,6 +32,7 @@ using Stratis.SmartContracts.CLR.Decompilation;
 using Stratis.SmartContracts.CLR.Local;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.RuntimeObserver;
@@ -52,8 +56,11 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         private readonly IReceiptRepository receiptRepository;
         private readonly CSharpContractDecompiler contractDecompiler;
         private readonly IContractPrimitiveSerializer primitiveSerializer;
+        private readonly ITokenlessBroadcaster tokenlessBroadcaster;
+        private readonly IEndorsements endorsements;
         private readonly ISerializer serializer;
         private readonly ILocalExecutor localExecutor;
+        private readonly ICertificatesManager certificatesManager;
         private readonly ILogger logger;
 
         public TokenlessController(
@@ -68,9 +75,12 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             IReceiptRepository receiptRepository,
             CSharpContractDecompiler contractDecompiler,
             IContractPrimitiveSerializer primitiveSerializer,
+            ITokenlessBroadcaster tokenlessBroadcaster,
+            IEndorsements endorsements,
             ISerializer serializer,
-            ILocalExecutor localExecutor)
-        {
+            ILocalExecutor localExecutor,
+            ICertificatesManager certificatesManager)
+            {
             this.coreComponent = coreComponent;
             this.tokenlessSigner = tokenlessSigner;
             this.tokenlessWalletManager = tokenlessWalletManager;
@@ -81,9 +91,12 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             this.stateRoot = stateRoot;
             this.receiptRepository = receiptRepository;
             this.contractDecompiler = contractDecompiler;
+            this.tokenlessBroadcaster = tokenlessBroadcaster;
+            this.endorsements = endorsements;
             this.primitiveSerializer = primitiveSerializer;
             this.serializer = serializer;
             this.localExecutor = localExecutor;
+            this.certificatesManager = certificatesManager;
             this.logger = coreComponent.LoggerFactory.CreateLogger(this.GetType());
         }
 
@@ -124,8 +137,15 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         {
             try
             {
+                // When sending off CREATE transactions, use this node's organisation and the default number of required sigs. Can be configable in future.
+                EndorsementPolicy policy = new EndorsementPolicy
+                {
+                    Organisation = (Organisation) this.certificatesManager.ClientCertificate.GetOrganisation(),
+                    RequiredSignatures = EndorsementPolicy.DefaultRequiredSignatures
+                };
+
                 var methodParameters = ExtractMethodParameters(model.Parameters);
-                var contractTxData = new ContractTxData(0, 0, (Gas)0, model.ContractCode, methodParameters);
+                var contractTxData = new ContractTxData(0, 0, (Gas)0, model.ContractCode, policy, methodParameters);
 
                 Transaction transaction = CreateAndSignTransaction(contractTxData);
 
@@ -177,6 +197,56 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             {
                 this.logger.LogError("Exception occurred: '{0}'", ex.ToString());
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, ex.Message, ex.ToString());
+            }
+        }
+
+        [Route("send-endorsement")]
+        [HttpPost]
+        public async Task<IActionResult> SendProposalAsync([FromBody] SendProposalModel model)
+        {
+            if (!this.coreComponent.ConnectionManager.ConnectedPeers.Any())
+            {
+                this.logger.LogTrace("(-)[NO_CONNECTED_PEERS]");
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.Forbidden, "Can't send endorsement request: sending endorsement request requires at least one connection!", string.Empty);
+            }
+
+            try
+            {
+                Transaction transaction = this.coreComponent.Network.CreateTransaction(model.TransactionHex);
+
+                // As it is an endorsement we assume this is a CALL transaction. TODO: Should this assumption be asserted?
+                // We can use the contract address to get the endorsement policy.
+
+                Result<ContractTxData> deserializationResult = this.callDataSerializer.Deserialize(transaction.Outputs.First().ScriptPubKey.ToBytes());
+                uint160 contractAddress = deserializationResult.Value.ContractAddress;
+                EndorsementPolicy policy = this.stateRoot.GetPolicy(contractAddress);
+
+                byte[] transientData = null;
+
+                if (!String.IsNullOrEmpty(model.TransientDataHex))
+                {
+                    transientData = model.TransientDataHex.HexToByteArray();
+                }
+
+                // Build message to send to other nodes
+                var message = new ProposalPayload(transaction, transientData);
+
+                this.endorsements.RecordEndorsement(transaction.GetHash(), policy);
+
+                // Broadcast message
+                await this.tokenlessBroadcaster.BroadcastToWholeOrganisationAsync(message, model.Organisation);
+
+                // Just let user know that it has been sent off. The endorsement and sending of the transaction will happen asynchronously.
+
+                return this.Json(new SendProposalResponseModel
+                {
+                    Message = "Transaction has been sent to endorsing node for execution."
+                });
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError("Exception occurred: {0}", e.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
             }
         }
 
@@ -240,7 +310,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             }
 
             uint160 addressNumeric = request.ContractAddress.ToUint160(this.coreComponent.Network);
-            byte[] storageValue = this.stateRoot.GetStorageValue(addressNumeric, Encoding.UTF8.GetBytes(request.StorageKey));
+            byte[] storageValue = this.stateRoot.GetStorageValue(addressNumeric, Encoding.UTF8.GetBytes(request.StorageKey)).Value;
 
             if (storageValue == null)
             {

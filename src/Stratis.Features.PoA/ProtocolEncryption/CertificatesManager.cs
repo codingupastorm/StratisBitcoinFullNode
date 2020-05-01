@@ -217,6 +217,11 @@ namespace Stratis.Features.PoA.ProtocolEncryption
             return caClient.GetCertificatePublicKeys(this.logger);
         }
 
+        public List<CertificateInfoModel> GetAllCertificates()
+        {
+            return this.GetClient().GetAllCertificates();
+        }
+
         /// <summary>
         /// Determines whether a certificate has been revoked by checking the sender (node)'s address.
         /// </summary>

@@ -40,8 +40,18 @@ namespace Stratis.SmartContracts.Core
         ulong BlockHeight { get; }
 
         /// <summary>
+        /// The index of the transaction in the block.
+        /// </summary>
+        ulong TxIndex { get; }
+
+        /// <summary>
         /// Time as set on transaction.
         /// </summary>
         uint Time { get; }
+
+        /// <summary>
+        /// Transient data that may be sent as part of a private data transaction. Will be null for normal transactions.
+        /// </summary>
+        byte[] TransientData { get; }
     }
 }

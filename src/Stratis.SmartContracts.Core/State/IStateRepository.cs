@@ -1,4 +1,5 @@
 ﻿using NBitcoin;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.State.AccountAbstractionLayer;
 
 namespace Stratis.SmartContracts.Core.State
@@ -16,8 +17,10 @@ namespace Stratis.SmartContracts.Core.State
         void SetCode(uint160 addr, byte[] code);
         byte[] GetCode(uint160 addr);
         byte[] GetCodeHash(uint160 addr);
-        void SetStorageValue(uint160 addr, byte[] key, byte[] value);
-        byte[] GetStorageValue(uint160 addr, byte[] key);
+        EndorsementPolicy GetPolicy(uint160 addr);
+        void SetPolicy(uint160 addr, EndorsementPolicy policy);
+        void SetStorageValue(uint160 addr, byte[] key, byte[] value, string version);
+        StorageValue GetStorageValue(uint160 addr, byte[] key);
         string GetContractType(uint160 addr);
         void SetContractType(uint160 addr, string type);
         IStateRepository StartTracking();

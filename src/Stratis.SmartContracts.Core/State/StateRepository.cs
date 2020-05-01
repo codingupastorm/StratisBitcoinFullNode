@@ -1,6 +1,7 @@
 ﻿using System;
 using NBitcoin;
 using Stratis.Patricia;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.State.AccountAbstractionLayer;
 
 namespace Stratis.SmartContracts.Core.State
@@ -81,17 +82,31 @@ namespace Stratis.SmartContracts.Core.State
             return accountState != null ? accountState.CodeHash : new byte[0]; // TODO: REPLACE THIS BYTE0 with something
         }
 
-        public void SetStorageValue(uint160 addr, byte[] key, byte[] value)
+        public void SetStorageValue(uint160 addr, byte[] key, byte[] value, string version)
         {
             this.GetOrCreateAccountState(addr);
             ISource<byte[], byte[]> contractStorage = this.storageCaches.Get(addr.ToBytes());
-            contractStorage.Put(key, value); // TODO: Check if 0
+
+            StorageValue versionedValue = new StorageValue(value, version);
+
+            contractStorage.Put(key, versionedValue.ToBytes()); // TODO: Check if 0
         }
 
-        public byte[] GetStorageValue(uint160 addr, byte[] key)
+        public StorageValue GetStorageValue(uint160 addr, byte[] key)
         {
             AccountState accountState = this.GetAccountState(addr);
-            return accountState == null ? null : this.storageCaches.Get(addr.ToBytes()).Get(key);
+
+            // Account doesn't exist.
+            if (accountState == null)
+                return StorageValue.Default;
+
+            byte[] storedBytes = this.storageCaches.Get(addr.ToBytes()).Get(key);
+
+            // Key doesn't exist.
+            if (storedBytes == null)
+                return StorageValue.Default;
+
+            return StorageValue.FromBytes(this.storageCaches.Get(addr.ToBytes()).Get(key));
         }
 
         public string GetContractType(uint160 addr)
@@ -104,6 +119,19 @@ namespace Stratis.SmartContracts.Core.State
         {
             AccountState accountState = this.GetOrCreateAccountState(addr);
             accountState.TypeName = type;
+            this.accountStateCache.Put(addr.ToBytes(), accountState);
+        }
+
+        public EndorsementPolicy GetPolicy(uint160 addr)
+        {
+            AccountState accountState = this.GetAccountState(addr);
+            return accountState?.Policy;
+        }
+
+        public void SetPolicy(uint160 addr, EndorsementPolicy policy)
+        {
+            AccountState accountState = this.GetOrCreateAccountState(addr);
+            accountState.Policy = policy;
             this.accountStateCache.Put(addr.ToBytes(), accountState);
         }
 

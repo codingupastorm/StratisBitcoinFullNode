@@ -10,9 +10,11 @@ using Stratis.SmartContracts.CLR.ILRewrite;
 using Stratis.SmartContracts.CLR.Loader;
 using Stratis.SmartContracts.CLR.Metering;
 using Stratis.SmartContracts.CLR.Serialization;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Networks;
 using Stratis.SmartContracts.RuntimeObserver;
+using Stratis.SmartContracts.Tokenless;
 using Xunit;
 
 namespace Stratis.SmartContracts.CLR.Tests
@@ -120,16 +122,19 @@ namespace Stratis.SmartContracts.CLR.Tests
             var persistentState = new TestPersistentState();
             var network = new SmartContractsRegTest();
             var serializer = new ContractPrimitiveSerializer(network);
-            this.state = new SmartContractState(
+            var meteredPersistenceStrategy = new MeteredPersistenceStrategy(this.repository, this.gasMeter,
+                new BasicKeyEncodingStrategy(), new ReadWriteSetBuilder(), "1.1");
+            this.state = new TokenlessSmartContractState(
                 new Block(1, this.TestAddress),
                 new Message(this.TestAddress, this.TestAddress, 0),
-                new PersistentState(new MeteredPersistenceStrategy(this.repository, this.gasMeter, new BasicKeyEncodingStrategy()),
-                    context.Serializer, this.TestAddress.ToUint160()),
+                new PersistentState(meteredPersistenceStrategy, context.Serializer, this.TestAddress.ToUint160()),
+                new PrivatePersistentState(context.Serializer, meteredPersistenceStrategy, this.TestAddress.ToUint160()), 
                 context.Serializer,
                 new ContractLogHolder(),
                 Mock.Of<IInternalTransactionExecutor>(),
                 new InternalHashHelper(),
-                () => 1000);
+                () => 1000,
+                null);
 
             this.contractInitializer = new ContractInitializer<SmartContract>();
 
