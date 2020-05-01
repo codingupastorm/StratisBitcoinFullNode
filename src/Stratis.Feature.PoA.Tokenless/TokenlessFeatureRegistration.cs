@@ -67,6 +67,7 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<IOrganisationLookup, OrganisationLookup>();
                         services.AddSingleton<IEndorsementSignatureValidator, EndorsementSignatureSignatureValidator>();
                         services.AddSingleton<IEndorsementPolicyValidator, EndorsementPolicyValidator>();
+                        services.AddSingleton<EndorsedContractTransactionValidationRule>(); // Shared logic implementation for mempool/consensus rule.
                         services.AddSingleton<IPrivateDataRetriever, PrivateDataRetriever>();
                         services.AddSingleton<ReadWriteSetPolicyValidator>();
 

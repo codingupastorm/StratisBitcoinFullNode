@@ -10,10 +10,10 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
     {
         private readonly EndorsedContractTransactionValidationRule rule;
 
-        public ValidateEndorsementsMempoolRule(IEndorsementSignatureValidator endorsementSignatureValidator, IEndorsedTransactionBuilder endorsedTransactionBuilder, IEndorsementPolicyValidator policyValidator, Network network, ITxMempool mempool, MempoolSettings settings, ChainIndexer chainIndexer, ILoggerFactory loggerFactory) 
+        public ValidateEndorsementsMempoolRule(EndorsedContractTransactionValidationRule rule, Network network, ITxMempool mempool, MempoolSettings settings, ChainIndexer chainIndexer, ILoggerFactory loggerFactory) 
             : base(network, mempool, settings, chainIndexer, loggerFactory)
         {
-            this.rule = new EndorsedContractTransactionValidationRule(endorsedTransactionBuilder, endorsementSignatureValidator, policyValidator);
+            this.rule = rule;
         }
 
         public override void CheckTransaction(MempoolValidationContext context)
