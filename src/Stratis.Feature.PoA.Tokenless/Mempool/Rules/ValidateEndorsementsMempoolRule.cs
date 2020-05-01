@@ -8,6 +8,7 @@ using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Interfaces;
+using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.ReadWrite;
 
 namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
@@ -36,9 +37,12 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
 
         public (bool, EndorsementValidationErrorType) CheckTransaction(Transaction transaction)
         {
+            if (transaction.Outputs.Count == 0)
+                return (false, EndorsementValidationErrorType.InvalidCall);
+
             // Check that this is a call contract transaction
             // For now, create contract transactions don't need endorsement.
-            if (!transaction.IsSmartContractExecTransaction())
+            if (!transaction.Outputs[0].ScriptPubKey.IsReadWriteSet())
             {
                 return (false, EndorsementValidationErrorType.InvalidCall);
             }
@@ -101,34 +105,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
 
                 context.State.Fail(new MempoolError(MempoolErrors.RejectMalformed, "contract-transaction-endorsement-signatures-invalid"), errorMessage).Throw();
             }
-        }
-    }
-
-    /// <summary>
-    /// Shared logic for checking endorsed transactions in mempool and consensus rules.
-    /// </summary>
-    public static class EndorsedTransactionChecker
-    {
-        public static bool TryGetEndorsements(Transaction transaction, out List<Endorsement.Endorsement> endorsement)
-        {
-
-            var endorsementBytes = txOut.ScriptPubKey.ToBytes();
-
-            try
-            {
-                endorsement = Endorsement.Endorsement.FromBytes(endorsementBytes);
-                return true;
-            }
-            catch
-            {
-                endorsement = null;
-                return false;
-            }
-        }
-        public static void CheckEndorsement(IEndorsementValidator validator, TxOut txOut)
-        {
-
-            //validator.Validate()
         }
     }
 }
