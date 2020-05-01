@@ -6,6 +6,6 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
     {
         public static ConsensusError DuplicateTransaction => new ConsensusError("duplicate-transaction", "transaction has already been seen in a previous block.");
 
-        public static ConsensusError InvalidChannelCreationRequestEndorsement => new ConsensusError("invalid-channel-creation-request-endorsements", "The provided endorsement signatures do not match the channel creation request data or endorsement policy.");
+        public static ConsensusError InvalidEndorsement => new ConsensusError("invalid-channel-creation-request-endorsements", "The provided endorsement signatures do not match the channel creation request data or endorsement policy.");
     }
 }

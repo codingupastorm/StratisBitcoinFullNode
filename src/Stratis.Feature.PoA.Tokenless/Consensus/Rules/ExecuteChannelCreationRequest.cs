@@ -4,7 +4,6 @@ using NBitcoin;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
-using Stratis.Feature.PoA.Tokenless.Endorsement;
 
 namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 {
