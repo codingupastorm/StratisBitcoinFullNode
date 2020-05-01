@@ -58,6 +58,7 @@ namespace CertificateAuthority
         public const string CallContractPermissionOid = "1.5.2";
         public const string CreateContractPermissionOid = "1.5.3";
         public const string MiningPermissionOid = "1.5.4";
+        public const string SystemChannelPermissionOid = "1.5.5";
 
         public const int CertificateValidityPeriodYears = 10;
         public const int CaCertificateValidityPeriodYears = 10;
@@ -66,13 +67,15 @@ namespace CertificateAuthority
         public const string CallContractPermission = "CallContract";
         public const string CreateContractPermission = "CreateContract";
         public const string MiningPermission = "Mine";
+        public const string SystemChannelPermission = "SystemChannel";
 
         public static List<string> ValidPermissions = new List<string>()
         {
             SendPermission,
             CallContractPermission,
             CreateContractPermission,
-            MiningPermission
+            MiningPermission,
+            SystemChannelPermission
         };
 
         public CaCertificatesManager(DataCacheLayer repository, Settings settings)
@@ -515,6 +518,9 @@ namespace CertificateAuthority
 
             if (permissions.Contains(MiningPermission))
                 certificateGenerator.AddExtension(MiningPermissionOid, false, new byte[] { 1 });
+
+            if (permissions.Contains(SystemChannelPermission))
+                certificateGenerator.AddExtension(SystemChannelPermissionOid, false, new byte[] { 1 });
         }
 
         public static string GetThumbprint(X509Certificate certificate)
