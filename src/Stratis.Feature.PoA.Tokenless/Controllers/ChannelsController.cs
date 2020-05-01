@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Threading.Tasks;
+using CertificateAuthority;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -22,6 +23,8 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
     [Route("api/[controller]")]
     public sealed class ChannelsController : Controller
     {
+        private readonly ICertificatesManager certificatesManager;
+        private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
         private readonly IChannelRepository channelRepository;
         private readonly ICoreComponent coreComponent;
         private readonly IBroadcasterManager broadcasterManager;
@@ -39,6 +42,8 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             ICoreComponent coreComponent
             )
         {
+            this.certificatesManager = certificatesManager;
+            this.certificatePermissionsChecker = certificatePermissionsChecker;
             this.broadcasterManager = broadcasterManager;
             this.channelRepository = channelRepository;
             this.coreComponent = coreComponent;
@@ -57,6 +62,10 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             this.logger.LogInformation($"Request to create channel '{request.Name}' for organisation '{request.Organisation}' received.");
 
             // TODO: Check that this node's certificate is allowed to create channels.
+            if (!this.certificatePermissionsChecker.CheckOwnCertificatePermission(CaCertificatesManager.ChannelCreatePermissionOid))
+            {
+                return Unauthorized("This peer does not have the permission to create a new channel.");
+            }
 
             try
             {
