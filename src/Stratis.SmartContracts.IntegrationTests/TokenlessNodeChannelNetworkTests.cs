@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
-using System.Text.Json;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
@@ -18,6 +17,7 @@ using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
+using Stratis.Features.Api;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;
 
@@ -192,14 +192,22 @@ namespace Stratis.SmartContracts.IntegrationTests
                 otherNode.Start();
 
                 // Get the marketing network's JSON.
-                IChannelRepository channelRepository = parentNode.FullNode.NodeService<IChannelRepository>();
-                ChannelDefinition channelDefinition = channelRepository.GetChannelDefinition("marketing");
+                string networkJson = $"{(new ApiSettings(parentNode.FullNode.Settings)).ApiUri}"
+                    .AppendPathSegment("api/channels/networkjson")
+                    .SetQueryParam("cn", "marketing")
+                    .GetStringAsync()
+                    .GetAwaiter().GetResult();
 
                 // Join the channel.
-                ChannelNetwork channelNetwork = JsonSerializer.Deserialize<ChannelNetwork>(channelDefinition.NetworkJson);
-                IChannelService channelService = otherNode.FullNode.NodeService<IChannelService>();
-                await channelService.JoinChannelAsync(channelNetwork);
+                var response = $"{(new ApiSettings(otherNode.FullNode.Settings)).ApiUri}"
+                    .AppendPathSegment("api/channels/join")
+                    .PostJsonAsync(new ChannelJoinRequest()
+                    {
+                        NetworkJson = networkJson
+                    })
+                    .GetAwaiter().GetResult();
 
+                IChannelService channelService = parentNode.FullNode.NodeService<IChannelService>();
                 Assert.Single(channelService.StartedChannelNodes);
             }
         }

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Net;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Newtonsoft.Json;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Utilities.JsonErrors;
 using Stratis.Bitcoin.Utilities.ModelStateErrors;
@@ -102,7 +102,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             try
             {
                 // Record channel membership (in normal node repo) and start up channel node.
-                ChannelNetwork network = JsonConvert.DeserializeObject<ChannelNetwork>(request.NetworkJson);
+                ChannelNetwork network = JsonSerializer.Deserialize<ChannelNetwork>(request.NetworkJson);
 
                 this.logger.LogInformation($"Request to join channel '{network.Name}' received.");
 
