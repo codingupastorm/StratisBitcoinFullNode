@@ -13,21 +13,22 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
     {
         private readonly IEndorsedTransactionBuilder endorsedTransactionBuilder;
         private readonly IEndorsementSignatureValidator signatureValidator;
-        private readonly IOrganisationLookup organisationLookup;
+        private readonly IEndorsementPolicyValidator policyValidator;
 
         public enum EndorsementValidationErrorType
         {
             None,
             InvalidCall,
             Malformed,
+            PolicyInvalid,
             SignaturesInvalid
         }
 
-        public EndorsedContractTransactionValidationRule(IEndorsedTransactionBuilder endorsedTransactionBuilder, IEndorsementSignatureValidator signatureValidator, IOrganisationLookup organisationLookup)
+        public EndorsedContractTransactionValidationRule(IEndorsedTransactionBuilder endorsedTransactionBuilder, IEndorsementSignatureValidator signatureValidator, IEndorsementPolicyValidator policyValidator)
         {
             this.endorsedTransactionBuilder = endorsedTransactionBuilder;
             this.signatureValidator = signatureValidator;
-            this.organisationLookup = organisationLookup;
+            this.policyValidator = policyValidator;
         }
 
         public (bool, EndorsementValidationErrorType) CheckTransaction(Transaction transaction)
@@ -42,9 +43,14 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
                 return (false, EndorsementValidationErrorType.InvalidCall);
             }
 
-            if (!this.endorsedTransactionBuilder.TryParseTransaction(transaction, out IEnumerable<Endorsement.Endorsement> endorsements, out ReadWriteSet _))
+            if (!this.endorsedTransactionBuilder.TryParseTransaction(transaction, out IEnumerable<Endorsement.Endorsement> endorsements, out ReadWriteSet rws))
             {
                 return (false, EndorsementValidationErrorType.Malformed);
+            }
+
+            if (!this.policyValidator.Validate(rws, endorsements))
+            {
+                return (false, EndorsementValidationErrorType.PolicyInvalid);
             }
 
             // Save a serialization roundtrip by getting the RWS bytes.

@@ -45,8 +45,25 @@ namespace Stratis.SmartContracts.Core.ReadWrite
             };
         }
 
-        // TODO: Don't be responsible for own serialization.
+        public uint160 ContractAddress
+        {
+            get
+            {
+                if (this.Writes?.Any() ?? false)
+                {
+                    return this.Writes.First().ContractAddress;
+                }
 
+                if (this.Reads?.Any() ?? false)
+                {
+                    return this.Reads.First().ContractAddress;
+                }
+
+                return null;
+            }
+        }
+
+        // TODO: Don't be responsible for own serialization.
         public static ReadWriteSet FromJson(string json)
         {
             return JsonConvert.DeserializeObject<ReadWriteSet>(json);
