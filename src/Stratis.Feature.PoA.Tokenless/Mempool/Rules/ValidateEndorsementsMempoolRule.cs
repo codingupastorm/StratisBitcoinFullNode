@@ -19,6 +19,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
         public override void CheckTransaction(MempoolValidationContext context)
         {
             (bool valid, EndorsedContractTransactionValidationRule.EndorsementValidationErrorType error) = this.rule.CheckTransaction(context.Transaction);
+            var errorType = EndorsedContractTransactionValidationRule.ErrorMessages[error];
 
             if (!valid && error == EndorsedContractTransactionValidationRule.EndorsementValidationErrorType.InvalidCall)
             {
@@ -31,7 +32,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
             {
                 var errorMessage = $"Transaction '{context.Transaction.GetHash()}' contained a contract transaction but one or more of its endorsements were malformed";
 
-                context.State.Fail(new MempoolError(MempoolErrors.RejectMalformed, "contract-transaction-endorsements-malformed"), errorMessage).Throw();
+                context.State.Fail(new MempoolError(MempoolErrors.RejectMalformed, errorType), errorMessage).Throw();
                 return;
             }
 
@@ -39,14 +40,14 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
             {
                 var errorMessage = $"Transaction '{context.Transaction.GetHash()}' contained a contract transaction but the endorsement policy was not satisfied";
 
-                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "contract-transaction-endorsement-policy-not-satisfied"), errorMessage).Throw();
+                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, errorType), errorMessage).Throw();
             }
 
             if (!valid && error == EndorsedContractTransactionValidationRule.EndorsementValidationErrorType.SignaturesInvalid)
             {
                 var errorMessage = $"Transaction '{context.Transaction.GetHash()}' contained a contract transaction but one or more of its endorsements contained invalid signatures";
 
-                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "contract-transaction-endorsement-signatures-invalid"), errorMessage).Throw();
+                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, errorType), errorMessage).Throw();
             }
         }
     }

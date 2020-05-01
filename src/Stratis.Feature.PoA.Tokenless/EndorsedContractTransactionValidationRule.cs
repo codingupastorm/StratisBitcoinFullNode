@@ -11,6 +11,15 @@ namespace Stratis.Feature.PoA.Tokenless
     /// </summary>
     public class EndorsedContractTransactionValidationRule
     {
+        public static Dictionary<EndorsementValidationErrorType, string> ErrorMessages = new Dictionary<EndorsementValidationErrorType, string>
+        {
+            { EndorsementValidationErrorType.None, "" },
+            { EndorsementValidationErrorType.InvalidCall, "contract-transaction-invalid-call" },
+            { EndorsementValidationErrorType.Malformed, "contract-transaction-endorsements-malformed" },
+            { EndorsementValidationErrorType.PolicyInvalid, "contract-transaction-endorsement-policy-not-satisfied" },
+            { EndorsementValidationErrorType.SignaturesInvalid, "contract-transaction-endorsement-signatures-invalid" }
+        };
+
         private readonly IEndorsedTransactionBuilder endorsedTransactionBuilder;
         private readonly IEndorsementSignatureValidator signatureValidator;
         private readonly IEndorsementPolicyValidator policyValidator;
