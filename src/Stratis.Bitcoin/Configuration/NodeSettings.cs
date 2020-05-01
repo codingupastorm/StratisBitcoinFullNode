@@ -65,6 +65,11 @@ namespace Stratis.Bitcoin.Configuration
         /// </summary>
         public string DataDirRoot { get; private set; }
 
+        /// <summary>
+        /// Flag that indicates whether or not the node is in debug logging mode.
+        /// </summary>
+        public bool DebugMode { get; private set; }
+
         /// <summary>The path to the Full Node's configuration file.
         /// This value is read-only and can only be set via the NodeSettings constructor's arguments.
         /// </summary>
@@ -180,6 +185,8 @@ namespace Stratis.Bitcoin.Configuration
                 // Sets the ConfigReader based on the arguments and the configuration file if it exists.
                 this.ReadConfigurationFile();
             }
+
+            this.DebugMode = this.ConfigReader.GetOrDefault("debug", false, this.Logger);
 
             // If the network is not known then derive it from the command line arguments.
             if (this.Network == null)
