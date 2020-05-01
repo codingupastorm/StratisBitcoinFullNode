@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
 using NBitcoin;
-using Newtonsoft.Json;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.SmartContracts.CLR;
 
@@ -28,7 +28,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         /// <inheritdoc/>
         public byte[] Serialize<T>(T request)
         {
-            var requestJson = JsonConvert.SerializeObject(request);
+            var requestJson = JsonSerializer.Serialize(request);
             var requestJsonBytes = Encoding.Unicode.GetBytes(requestJson);
 
             var requestBytes = new byte[OpcodeSize + requestJsonBytes.Length];
@@ -51,7 +51,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
                 var channelRequestBytes = bytes.Slice(OpcodeSize, (uint)(bytes.Length - OpcodeSize));
                 var jsonString = Encoding.Unicode.GetString(channelRequestBytes);
-                T request = JsonConvert.DeserializeObject<T>(jsonString);
+                T request = JsonSerializer.Deserialize<T>(jsonString);
                 return (request, null);
             }
             catch (Exception ex)
