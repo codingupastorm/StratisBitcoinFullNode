@@ -63,6 +63,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
             if (!this.certificatePermissionsChecker.CheckOwnCertificatePermission(CaCertificatesManager.ChannelCreatePermissionOid))
             {
+                this.logger.LogInformation("This peer does not have the permission to create a new channel.");
                 return Unauthorized("This peer does not have the permission to create a new channel.");
             }
 
