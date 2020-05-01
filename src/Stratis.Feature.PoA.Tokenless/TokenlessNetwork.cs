@@ -191,7 +191,8 @@ namespace Stratis.Feature.PoA.Tokenless
                 .Register<TokenlessBlockSizeRule>()
                 .Register<IsSmartContractWellFormedPartialValidationRule>()
                 .Register<OpReadWriteSetMustContainSignatures>()
-                .Register<SenderInputPartialValidationRule>();
+                .Register<SenderInputPartialValidationRule>()
+                .Register<EndorsedContractTransactionConsensusRule>();
 
             // IFullValidationConsensusRule
             consensus.ConsensusRules
