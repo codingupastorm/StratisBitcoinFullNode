@@ -9,8 +9,11 @@ using Stratis.Bitcoin.Utilities.JsonErrors;
 using Stratis.Bitcoin.Utilities.ModelStateErrors;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
+using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Core;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Features.MemoryPool.Broadcasting;
+using Stratis.Features.PoA.ProtocolEncryption;
 
 namespace Stratis.Feature.PoA.Tokenless.Controllers
 {
@@ -22,17 +25,25 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         private readonly IChannelRepository channelRepository;
         private readonly ICoreComponent coreComponent;
         private readonly IBroadcasterManager broadcasterManager;
+        private readonly ITokenlessKeyStoreManager tokenlessKeyStoreManager;
+        private readonly ITokenlessSigner tokenlessSigner;
         private readonly ILogger logger;
 
         public ChannelsController(
+            ICertificatesManager certificatesManager,
+            ICertificatePermissionsChecker certificatePermissionsChecker,
             IBroadcasterManager broadcasterManager,
             IChannelRepository channelRepository,
+            ITokenlessKeyStoreManager tokenlessKeyStoreManager,
+            ITokenlessSigner tokenlessSigner,
             ICoreComponent coreComponent
             )
         {
             this.broadcasterManager = broadcasterManager;
             this.channelRepository = channelRepository;
             this.coreComponent = coreComponent;
+            this.tokenlessKeyStoreManager = tokenlessKeyStoreManager;
+            this.tokenlessSigner = tokenlessSigner;
             this.logger = coreComponent.LoggerFactory.CreateLogger(this.GetType());
         }
 
@@ -45,12 +56,18 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
             this.logger.LogInformation($"Request to create channel '{request.Name}' for organisation '{request.Organisation}' received.");
 
+            // TODO: Check that this node's certificate is allowed to create channels.
+
             try
             {
                 var serializer = new ChannelRequestSerializer();
                 byte[] serialized = serializer.Serialize(request);
                 Transaction transaction = this.coreComponent.Network.CreateTransaction();
                 transaction.Outputs.Add(new TxOut(Money.Zero, new Script(serialized)));
+
+                Key key = this.tokenlessKeyStoreManager.LoadTransactionSigningKey();
+
+                this.tokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.coreComponent.Network));
 
                 this.logger.LogInformation($"Create channel request transaction created.");
                 await this.broadcasterManager.BroadcastTransactionAsync(transaction);
