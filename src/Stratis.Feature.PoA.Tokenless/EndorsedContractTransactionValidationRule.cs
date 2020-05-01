@@ -4,7 +4,7 @@ using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.ReadWrite;
 
-namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
+namespace Stratis.Feature.PoA.Tokenless
 {
     /// <summary>
     /// The logic for the endorsement validation rules.
