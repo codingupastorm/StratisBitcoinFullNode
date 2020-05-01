@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using NBitcoin;
-using Stratis.Bitcoin.Utilities;
+﻿using NBitcoin;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Xunit;
@@ -14,12 +12,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             var request = new ChannelCreationRequest()
             {
-                Name = "test",
-                Endorsements = new List<Endorsement.Endorsement>()
-                {
-                    new Endorsement.Endorsement(new byte[] { 0xAA }, new byte[] { 0xBB }),
-                    new Endorsement.Endorsement(new byte[] { 0xCC }, new byte[] { 0xD })
-                }
+                Name = "test"
             };
 
             var serializer = new ChannelRequestSerializer();
@@ -31,9 +24,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             (ChannelCreationRequest deserialized, _) = serializer.Deserialize<ChannelCreationRequest>(script);
             Assert.NotNull(deserialized);
             Assert.Equal("test", deserialized.Name);
-
-            // Round trip
-            Assert.True(new ByteArrayComparer().Equals(serialized, serializer.Serialize(deserialized)));
         }
 
         [Fact]

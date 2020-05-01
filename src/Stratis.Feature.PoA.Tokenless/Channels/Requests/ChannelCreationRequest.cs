@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels.Requests
@@ -15,9 +14,5 @@ namespace Stratis.Feature.PoA.Tokenless.Channels.Requests
         [JsonPropertyName("name")]
         [Required]
         public string Name { get; set; }
-
-        /// <summary> The endorser's signatures of this channel creation request. </summary>
-        [Required]
-        public List<Endorsement.Endorsement> Endorsements { get; set; }
     }
 }
