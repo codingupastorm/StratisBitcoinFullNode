@@ -61,7 +61,6 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
             this.logger.LogInformation($"Request to create channel '{request.Name}' for organisation '{request.Organisation}' received.");
 
-            // TODO: Check that this node's certificate is allowed to create channels.
             if (!this.certificatePermissionsChecker.CheckOwnCertificatePermission(CaCertificatesManager.ChannelCreatePermissionOid))
             {
                 return Unauthorized("This peer does not have the permission to create a new channel.");
