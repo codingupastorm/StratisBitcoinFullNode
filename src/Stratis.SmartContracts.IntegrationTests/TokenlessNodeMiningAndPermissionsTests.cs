@@ -43,7 +43,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CaClient client1 = TokenlessTestHelper.GetClient(server, new List<string>() { CaCertificatesManager.SendPermission });
+                CaClient client1 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server, new List<string>() { CaCertificatesManager.SendPermission });
 
                 CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
 
@@ -75,8 +75,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
 
                 // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CaClient client1 = TokenlessTestHelper.GetClient(server);
-                CaClient client2 = TokenlessTestHelper.GetClient(server);
+                CaClient client1 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
+                CaClient client2 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
 
                 CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
                 CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
@@ -120,9 +120,9 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
 
                 // Create 2 Tokenless nodes, each with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CaClient client1 = TokenlessTestHelper.GetClient(server);
-                CaClient client2 = TokenlessTestHelper.GetClient(server);
-                CaClient client3 = TokenlessTestHelper.GetClient(server);
+                CaClient client1 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
+                CaClient client2 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
+                CaClient client3 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
 
                 CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
                 CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
@@ -140,7 +140,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TokenlessTestHelper.WaitForNodeToSync(node1, node2, node3);
 
                 // Now add a 4th
-                CaClient client4 = TokenlessTestHelper.GetClient(server);
+                CaClient client4 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
 
                 CoreNode node4 = nodeBuilder.CreateTokenlessNode(this.network, 3, ac, client4);
                 node4.Start();
@@ -193,7 +193,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CaClient client1 = TokenlessTestHelper.GetClient(server);
+                CaClient client1 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
 
                 CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
 

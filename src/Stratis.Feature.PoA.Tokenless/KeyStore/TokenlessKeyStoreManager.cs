@@ -67,7 +67,7 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
         {
             this.logger.LogInformation($"Initializing the keystore; channel node is {this.channelSettings.IsChannelNode}");
             this.logger.LogInformation($"Initializing the keystore; system channel node is {this.channelSettings.IsSystemChannelNode}");
-            this.logger.LogInformation($"Initializing the keystore; infra node node is {this.channelSettings.IsInfraNode}");
+            this.logger.LogInformation($"Initializing the keystore; infra node is {this.channelSettings.IsInfraNode}");
 
             bool keyStoreOk = this.CheckKeyStore();
             bool blockSigningKeyFileOk = this.CheckBlockSigningKeyFile();

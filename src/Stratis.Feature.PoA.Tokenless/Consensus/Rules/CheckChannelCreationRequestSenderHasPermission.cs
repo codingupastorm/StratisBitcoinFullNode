@@ -49,6 +49,8 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
                 return;
             }
 
+            this.logger.LogDebug($"{transaction.GetHash()}' contains a channel creation request.");
+
             // Firstly we need to check that the transaction is in the correct format. Can we get the sender?
             GetSenderResult getSenderResult = this.tokenlessSigner.GetSender(transaction);
             if (!getSenderResult.Success)
@@ -58,8 +60,12 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             if (!this.tokenlessSigner.Verify(transaction))
                 new ConsensusError("error-signature-invalid", $"The signature for transaction {transaction.GetHash()} is invalid.").Throw();
 
+            this.logger.LogDebug($"{transaction.GetHash()}' contains a channel creation request with a valid signature.");
+
             if (!this.certificatePermissionsChecker.CheckSenderCertificateHasPermission(getSenderResult.Sender, CaCertificatesManager.ChannelCreatePermissionOid))
                 new ConsensusError("error-signature-invalid", $"The sender of this transaction does not have the '{CaCertificatesManager.ChannelCreatePermission}' permission.").Throw();
+
+            this.logger.LogDebug($"{transaction.GetHash()}' contains a channel creation request from a sender with a valid permission.");
         }
     }
 }
