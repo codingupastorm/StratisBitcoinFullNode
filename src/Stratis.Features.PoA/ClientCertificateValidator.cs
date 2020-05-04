@@ -4,6 +4,6 @@ namespace Stratis.Features.PoA
 {
     public interface IClientCertificateValidator
     {
-        public void ConfirmValid(X509Certificate certificate);
+        void ConfirmValid(X509Certificate certificate);
     }
 }
