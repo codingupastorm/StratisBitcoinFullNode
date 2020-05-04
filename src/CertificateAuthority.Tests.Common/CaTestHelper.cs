@@ -21,6 +21,7 @@ namespace CertificateAuthority.Tests.Common
         public static string BaseAddress = "http://localhost:5050";
         public const string CaMnemonic = "young shoe immense usual faculty edge habit misery swarm tape viable toddler";
         public const string CaMnemonicPassword = "node";
+        public const string TestOrganisation = "dummyOrganization";
 
         private static readonly Random random = new Random();
 
@@ -34,7 +35,7 @@ namespace CertificateAuthority.Tests.Common
         {
             if (organisation == null)
             {
-                organisation = "dummyOrganization";
+                organisation = TestOrganisation;
             }
 
             // Default to all permissions unless otherwise restricted.
