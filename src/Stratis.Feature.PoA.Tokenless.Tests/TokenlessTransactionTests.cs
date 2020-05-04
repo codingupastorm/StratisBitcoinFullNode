@@ -34,8 +34,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             string testDir = TestBase.GetTestDirectoryPath(this, callingMethod);
             var settings = new NodeSettings(network, args: new[] { $"datadir={testDir}", "password=test" });
             var membershipServices = new MembershipServicesDirectory(settings);
-            var revocationChecker = new RevocationChecker(membershipServices);
-            var certificatesManager = new CertificatesManager(settings.DataFolder, settings, settings.LoggerFactory, revocationChecker, network);
+            var certificatesManager = new CertificatesManager(settings.DataFolder, settings, settings.LoggerFactory, network, membershipServices);
             var channelSettings = new ChannelSettings(settings);
             var tokenlessWalletManager = new TokenlessKeyStoreManager(network, settings.DataFolder, channelSettings, new TokenlessKeyStoreSettings(settings), certificatesManager, settings.LoggerFactory);
             tokenlessWalletManager.Initialize();

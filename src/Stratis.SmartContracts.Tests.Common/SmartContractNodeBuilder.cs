@@ -168,8 +168,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
         private TokenlessKeyStoreManager InitializeNodeKeyStore(CoreNode node, Network network, NodeSettings settings)
         {
-            var revocationChecker = new RevocationChecker(new MembershipServicesDirectory(settings));
-            var certificatesManager = new CertificatesManager(settings.DataFolder, settings, settings.LoggerFactory, revocationChecker, network);
+            var certificatesManager = new CertificatesManager(settings.DataFolder, settings, settings.LoggerFactory, network, new MembershipServicesDirectory(settings));
             var keyStoreManager = new TokenlessKeyStoreManager(network, settings.DataFolder, new ChannelSettings(settings.ConfigReader), new TokenlessKeyStoreSettings(settings), certificatesManager, settings.LoggerFactory);
 
             keyStoreManager.Initialize();
