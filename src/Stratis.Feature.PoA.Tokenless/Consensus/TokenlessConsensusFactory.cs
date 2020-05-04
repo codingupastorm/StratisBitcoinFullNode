@@ -1,5 +1,5 @@
 ﻿using NBitcoin;
-using Stratis.Bitcoin.Features.SmartContracts.PoA;
+using Stratis.Features.SmartContracts.PoA;
 
 namespace Stratis.Feature.PoA.Tokenless.Consensus
 {

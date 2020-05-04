@@ -5,11 +5,11 @@ using NBitcoin.DataEncoders;
 using NBitcoin.Protocol;
 using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Features.MemoryPool.Rules;
-using Stratis.Bitcoin.Features.SmartContracts;
-using Stratis.Bitcoin.Features.SmartContracts.MempoolRules;
-using Stratis.Bitcoin.Features.SmartContracts.PoA.MempoolRules;
-using Stratis.Bitcoin.Features.SmartContracts.PoW;
-using Stratis.Bitcoin.Features.SmartContracts.Rules;
+using Stratis.Features.SmartContracts;
+using Stratis.Features.SmartContracts.MempoolRules;
+using Stratis.Features.SmartContracts.PoA.MempoolRules;
+using Stratis.Features.SmartContracts.PoW;
+using Stratis.Features.SmartContracts.Rules;
 using Stratis.SmartContracts.Networks.Policies;
 
 namespace Stratis.SmartContracts.Networks

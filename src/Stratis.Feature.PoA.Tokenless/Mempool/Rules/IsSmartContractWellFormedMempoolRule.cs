@@ -2,8 +2,8 @@
 using NBitcoin;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Features.SmartContracts;
-using Stratis.Bitcoin.Features.SmartContracts.Rules;
+using Stratis.Features.SmartContracts;
+using Stratis.Features.SmartContracts.Rules;
 using Stratis.SmartContracts.CLR;
 
 namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules

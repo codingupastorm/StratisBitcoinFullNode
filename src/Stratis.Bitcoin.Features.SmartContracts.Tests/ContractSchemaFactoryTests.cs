@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using Microsoft.OpenApi.Models;
-using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor;
+using Stratis.Features.SmartContracts.ReflectionExecutor;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.CLR.Loader;
@@ -78,7 +78,7 @@ public class DontDeploy : SmartContract
 
             // Maps the methods in a type to schemas.
             IDictionary<string, OpenApiSchema> mapped = mapper.Map(new ContractAssembly(assembly, typeof(SmartContract)).GetPublicMethods());
-            
+
             Assert.Equal("AcceptsBool", mapped["AcceptsBool"].Title);
             Assert.Equal("AcceptsByte", mapped["AcceptsByte"].Title);
             Assert.Equal("AcceptsByteArray", mapped["AcceptsByteArray"].Title);
@@ -103,7 +103,7 @@ public class DontDeploy : SmartContract
             var mapper = new ContractSchemaFactory();
 
             IDictionary<string, OpenApiSchema> mapped = mapper.Map(new ContractAssembly(assembly, typeof(SmartContract)));
-            
+
             Assert.Equal(11, mapped.Count);
             Assert.False(mapped.ContainsKey("SomeMethod"));
         }

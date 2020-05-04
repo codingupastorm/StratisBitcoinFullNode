@@ -3,7 +3,6 @@ using System.Linq;
 using CertificateAuthority;
 using CertificateAuthority.Models;
 using MembershipServices;
-using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Org.BouncyCastle.X509;
@@ -40,6 +39,14 @@ namespace Stratis.Feature.PoA.Tokenless
         /// <param name="permission">The permission we're checking for.</param>
         /// <returns>Whether or not they have the required permissions to send a transaction.</returns>
         bool CheckSenderCertificateHasPermission(uint160 address, TransactionSendingPermission permission);
+
+        /// <summary>
+        /// Determines whether a given sender has the right to be on a given channel.
+        /// </summary>
+        /// <param name="address">The sender that is trying to send a transaction.</param>
+        /// <param name="network">The channel we're checking on.</param>
+        /// <returns>Whether or not they are allowed to be on this channel.</returns>
+        bool CheckSenderCertificateIsPermittedOnChannel(uint160 address, ChannelNetwork network);
 
         /// <summary>
         /// Used to validate that the signature has been signed by the transaction signing pubkey corresponding to the given certificate.
@@ -89,6 +96,12 @@ namespace Stratis.Feature.PoA.Tokenless
             return ValidateCertificateHasPermission(certificate, permission);
         }
 
+        public bool CheckSenderCertificateIsPermittedOnChannel(uint160 address, ChannelNetwork network)
+        {
+            X509Certificate certificate = this.GetCertificate(address);
+            return ValidateCertificatePermittedOnChannel(certificate, network);
+        }
+
         /// <inheritdoc />
         public bool CheckSignature(string certificateThumbprint, ECDSASignature signature, PubKey pubKey, uint256 hash)
         {
@@ -128,6 +141,13 @@ namespace Stratis.Feature.PoA.Tokenless
         public static bool ValidateCertificateHasPermission(X509Certificate certificate, TransactionSendingPermission permission)
         {
             return ValidateCertificateHasPermission(certificate, permission.GetPermissionOid());
+        }
+
+        private static bool ValidateCertificatePermittedOnChannel(X509Certificate certificate, ChannelNetwork network)
+        {
+            // In future iterations we will add complexity around who is allowed on a channel here.
+
+            return certificate.GetOrganisation() == network.Organisation;
         }
 
         private static bool ValidateCertificateHasPermission(X509Certificate certificate, string permissionOid)
