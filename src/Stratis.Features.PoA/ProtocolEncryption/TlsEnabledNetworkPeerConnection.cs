@@ -92,7 +92,7 @@ namespace Stratis.Features.PoA.ProtocolEncryption
                 // If this is the system channel node then the client must have permission to connect.
                 byte[] systemChannelPermission = CertificatesManager.ExtractCertificateExtension(receivedCert, CaCertificatesManager.SystemChannelPermissionOid);
                 if (systemChannelPermission == null || systemChannelPermission.Length != 1 || systemChannelPermission[0] != 1)
-                    throw new OperationCanceledException("The client does not have system channel permission.");
+                    throw new OperationCanceledException($"The client does not have '{CaCertificatesManager.SystemChannelPermission}' permission.");
             }
 
             return this.stream;
