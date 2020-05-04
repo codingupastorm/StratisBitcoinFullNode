@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Payloads;
+using Stratis.Features.SmartContracts.Interfaces;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.State;
@@ -71,14 +71,14 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             }
 
             ChainedHeader tip = this.consensus.Tip;
-            uint blockHeight = (uint) tip.Height + 1;
+            uint blockHeight = (uint)tip.Height + 1;
 
             IStateRepositoryRoot stateSnapshot = this.stateRoot.GetSnapshotTo(((ISmartContractBlockHeader)tip.Header).HashStateRoot.ToBytes());
             IContractExecutor executor = this.executorFactory.CreateExecutor(stateSnapshot);
 
             GetSenderResult getSenderResult = this.senderRetriever.GetSender(request.ContractTransaction); // Because of rule checks in the validator, we assume this is always correct.
 
-            var executionContext = new ContractTransactionContext((ulong) blockHeight,TxIndexToUse,CoinbaseToUse, getSenderResult.Sender, request.ContractTransaction, request.TransientData);
+            var executionContext = new ContractTransactionContext((ulong)blockHeight, TxIndexToUse, CoinbaseToUse, getSenderResult.Sender, request.ContractTransaction, request.TransientData);
 
             IContractExecutionResult result = executor.Execute(executionContext);
 
@@ -103,7 +103,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             try
             {
                 // Send the result back.
-                EndorsementInfo info = this.endorsements.RecordEndorsement(proposalId, contractsPolicy);               
+                EndorsementInfo info = this.endorsements.RecordEndorsement(proposalId, contractsPolicy);
 
                 request.Peer.SendMessageAsync(payload).ConfigureAwait(false).GetAwaiter().GetResult();
             }

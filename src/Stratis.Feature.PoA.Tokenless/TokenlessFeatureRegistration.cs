@@ -8,7 +8,6 @@ using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.P2P.Peer;
@@ -28,6 +27,8 @@ using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Features.PoA;
 using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Features.PoA.Voting;
+using Stratis.Features.SmartContracts;
+using Stratis.Features.SmartContracts.Interfaces;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Store;
 

@@ -4,8 +4,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Features.SmartContracts.Models;
-using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
+using Stratis.Features.SmartContracts;
+using Stratis.Features.SmartContracts.Models;
+using Stratis.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.SmartContracts.Networks;
 using Xunit;
 
