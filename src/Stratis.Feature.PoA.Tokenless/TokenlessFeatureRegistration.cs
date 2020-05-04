@@ -133,6 +133,7 @@ namespace Stratis.Feature.PoA.Tokenless
                         {
                             ServiceDescriptor descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(INetworkPeerFactory));
                             services.Remove(descriptor);
+                            services.AddSingleton<IClientCertificateValidator, ClientCertificateValidator>();
                             services.AddSingleton<INetworkPeerFactory, TlsEnabledNetworkPeerFactory>();
                         }
 

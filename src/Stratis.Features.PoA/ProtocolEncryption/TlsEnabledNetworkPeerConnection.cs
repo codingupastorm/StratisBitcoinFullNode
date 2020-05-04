@@ -12,7 +12,6 @@ using Org.BouncyCastle.Security;
 using Org.BouncyCastle.Utilities;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.AsyncWork;
-using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
@@ -36,16 +35,16 @@ namespace Stratis.Features.PoA.ProtocolEncryption
 
         private TlsClientProtocol tlsClientProtocol;
 
-        private NodeSettings nodeSettings;
+        private IClientCertificateValidator clientCertificateValidator;
 
         public TlsEnabledNetworkPeerConnection(Network network, INetworkPeer peer, TcpClient client, int clientId, ProcessMessageAsync<IncomingMessage> processMessageAsync,
             IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, PayloadProvider payloadProvider, IAsyncProvider asyncProvider, ICertificatesManager certificateManager, 
-            bool isServer, NodeSettings nodeSettings)
+            bool isServer, IClientCertificateValidator clientCertificateValidator)
             : base(network, peer, client, clientId, processMessageAsync, dateTimeProvider, loggerFactory, payloadProvider, asyncProvider)
         {
             this.certificateManager = certificateManager;
             this.isServer = isServer;
-            this.nodeSettings = nodeSettings;
+            this.clientCertificateValidator = clientCertificateValidator;
         }
 
         public X509Certificate GetPeerCertificate()
@@ -87,12 +86,9 @@ namespace Stratis.Features.PoA.ProtocolEncryption
             if (!CaCertificatesManager.ValidateCertificateChain(this.certificateManager.AuthorityCertificate, this.peerCertificate))
                 return null;
 
-            if (this.isServer && this.nodeSettings.ConfigReader.GetOrDefault<bool>("issystemchannelnode", false))
+            if (this.isServer && this.clientCertificateValidator != null)
             {
-                // If this is the system channel node then the client must have permission to connect.
-                byte[] systemChannelPermission = CertificatesManager.ExtractCertificateExtension(receivedCert, CaCertificatesManager.SystemChannelPermissionOid);
-                if (systemChannelPermission == null || systemChannelPermission.Length != 1 || systemChannelPermission[0] != 1)
-                    throw new OperationCanceledException($"The client does not have '{CaCertificatesManager.SystemChannelPermission}' permission.");
+                this.clientCertificateValidator.ConfirmValid(receivedCert);
             }
 
             return this.stream;
