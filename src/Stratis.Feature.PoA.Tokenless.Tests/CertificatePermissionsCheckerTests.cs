@@ -3,6 +3,7 @@ using System.IO;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.Common;
 using HashLib;
+using MembershipServices;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
@@ -31,19 +32,12 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public void CheckSignature()
         {
             var transactionSigningKey = new Key();
+            
+            var mock = new Mock<IMembershipServicesDirectory>();
+            mock.Setup(m => m.GetCertificateForThumbprint(It.IsAny<string>())).Returns(new Mock<X509Certificate>().Object);
+            mock.Setup(m => m.ExtractCertificateExtensionFromOid(It.IsAny<X509Certificate>(), It.IsAny<string>())).Returns(transactionSigningKey.PubKey.Hash.ToBytes());
 
-            var certInfo = new CertificateInfoModel
-            {
-                Thumbprint = CaTestHelper.GenerateRandomString(20),
-                TransactionSigningPubKeyHash = transactionSigningKey.PubKey.Hash.ToBytes()
-            };
-
-            var certificates = new List<CertificateInfoModel> {certInfo};
-
-            var mock = new Mock<ICertificatesManager>();
-            mock.Setup(m => m.GetAllCertificates()).Returns(certificates);
-
-            var checker = new CertificatePermissionsChecker(null, mock.Object);
+            var checker = new CertificatePermissionsChecker(mock.Object, null);
 
             var data = RandomUtils.GetBytes(128);
 
@@ -51,7 +45,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var signature = transactionSigningKey.Sign(hash);
 
-            Assert.True(checker.CheckSignature(certInfo.Thumbprint, signature, transactionSigningKey.PubKey, hash));
+            Assert.True(checker.CheckSignature("mockThumbprint", signature, transactionSigningKey.PubKey, hash));
         }
     }
 }

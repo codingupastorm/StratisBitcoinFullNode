@@ -61,8 +61,7 @@ namespace Stratis.TokenlessD
                 // Only non-channel nodes will need to go through the key store initialization process.
                 if (!channelSettings.IsChannelNode)
                 {
-                    var revocationChecker = new RevocationChecker(new MembershipServicesDirectory(nodeSettings));
-                    var certificatesManager = new CertificatesManager(nodeSettings.DataFolder, nodeSettings, nodeSettings.LoggerFactory, revocationChecker, network);
+                    var certificatesManager = new CertificatesManager(nodeSettings.DataFolder, nodeSettings, nodeSettings.LoggerFactory, network, new MembershipServicesDirectory(nodeSettings));
                     var keyStoreManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, channelSettings, new TokenlessKeyStoreSettings(nodeSettings), certificatesManager, nodeSettings.LoggerFactory);
                     if (!keyStoreManager.Initialize())
                         return;
