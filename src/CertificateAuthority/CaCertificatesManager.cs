@@ -58,9 +58,10 @@ namespace CertificateAuthority
         public const string CallContractPermissionOid = "1.5.2";
         public const string CreateContractPermissionOid = "1.5.3";
         public const string MiningPermissionOid = "1.5.4";
-        public const string SystemChannelPermissionOid = "1.5.5";
+        
+        public const string SystemChannelPermissionOid = "1.6.0";
 
-        public const string ChannelCreatePermissionOid = "1.6.0";
+        public const string ChannelCreatePermissionOid = "1.6.1";
 
         public const int CertificateValidityPeriodYears = 10;
         public const int CaCertificateValidityPeriodYears = 10;
