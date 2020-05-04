@@ -1,5 +1,6 @@
 ﻿using NBitcoin;
 using Stratis.Feature.PoA.Tokenless.Consensus.Rules;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
 
@@ -34,11 +35,11 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
                 .Register<TokenlessCoinviewRule>();
         }
 
-        public static void CreateForSystemChannel(ChannelNetwork channelNetwork)
+        public static void CreateForSystemChannel(SystemChannelNetwork network)
         {
-            channelNetwork.Consensus.ConsensusRules = new ConsensusRules();
-            channelNetwork.Consensus.ConsensusRules.Register<CheckChannelCreationRequestSenderHasPermission>();
-            channelNetwork.Consensus.ConsensusRules.Register<ExecuteChannelCreationRequest>();
+            network.Consensus.ConsensusRules = new ConsensusRules();
+            network.Consensus.ConsensusRules.Register<CheckChannelCreationRequestSenderHasPermission>();
+            network.Consensus.ConsensusRules.Register<ExecuteChannelCreationRequest>();
         }
     }
 }

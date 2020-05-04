@@ -17,6 +17,7 @@ using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Controllers;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.PoA.Tests.Common;
 using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.Receipts;
@@ -32,7 +33,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         // This comes from CaTestHelper. 
         private const string OrganisationName = "dummyOrganization";
 
-        private TokenlessNetwork network;
+        private readonly TokenlessNetwork network;
 
         public EndorsementTests()
         {
@@ -79,7 +80,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 EndorsementPolicy policy = new EndorsementPolicy
                 {
-                    Organisation = (Organisation) node1.ClientCertificate.ToCertificate().GetOrganisation(),
+                    Organisation = (Organisation)node1.ClientCertificate.ToCertificate().GetOrganisation(),
                     RequiredSignatures = 1
                 };
 
@@ -95,13 +96,13 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Transaction callTransaction = TokenlessTestHelper.CreateContractCallTransaction(node1, createReceipt.NewContractAddress, node1.TransactionSigningPrivateKey, "CallMe");
 
                 var tokenlessController = node1.FullNode.NodeController<TokenlessController>();
-                JsonResult result = (JsonResult) await tokenlessController.SendProposalAsync(new SendProposalModel
+                JsonResult result = (JsonResult)await tokenlessController.SendProposalAsync(new SendProposalModel
                 {
                     TransactionHex = callTransaction.ToHex(),
                     Organisation = OrganisationName
                 });
 
-                var endorsementResponse = (SendProposalResponseModel) result.Value;
+                var endorsementResponse = (SendProposalResponseModel)result.Value;
                 Assert.Equal("Transaction has been sent to endorsing node for execution.", endorsementResponse.Message);
 
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().InfoAll().Count > 0);

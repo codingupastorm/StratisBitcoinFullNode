@@ -4,6 +4,7 @@ using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Feature.PoA.Tokenless.Channels;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.SmartContracts.Core.Util;
 
 namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules

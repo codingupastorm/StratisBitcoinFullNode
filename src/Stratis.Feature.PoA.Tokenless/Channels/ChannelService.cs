@@ -9,11 +9,13 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using Microsoft.Extensions.Logging;
+using NBitcoin;
 using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.PoA;
 using Stratis.Features.PoA.ProtocolEncryption;
 
@@ -229,7 +231,14 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             {
                 this.logger.LogInformation("Starting a system channel node.");
 
-                string channelRootFolder = PrepareNodeForStartup(SystemChannelName, SystemChannelId, SystemChannelOrganisation);
+                var channelRootFolder = $"{this.nodeSettings.DataFolder.RootPath}\\channels\\{SystemChannelName.ToLowerInvariant()}";
+                Directory.CreateDirectory(channelRootFolder);
+
+                // Copy the parent node's authority and client certificate to the channel node's root.
+                CopyCertificatesToChannelRoot(channelRootFolder);
+
+                // Copy the parent node's key store files to the channel node's root.
+                CopyKeyStoreToChannelRoot(channelRootFolder);
 
                 ChannelNodeProcess channelNode = await StartTheProcessAsync(channelRootFolder, "-bootstrap=1", $"-channelname={SystemChannelName}", "-issystemchannelnode=true");
                 if (channelNode.Process.HasExited)
@@ -273,7 +282,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
             if (channelNetwork == null)
             {
-                channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName.ToLowerInvariant(), rootFolderName, this.dateTimeProvider.GetAdjustedTimeAsUnixTimestamp());
+                channelNetwork = SystemChannelNetwork.CreateChannelNetwork(channelName.ToLowerInvariant(), rootFolderName, this.dateTimeProvider.GetAdjustedTimeAsUnixTimestamp());
                 channelNetwork.Id = channelId;
                 channelNetwork.Organisation = organisation;
                 channelNetwork.DefaultAPIPort = this.GetDefaultAPIPort(channelId);

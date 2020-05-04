@@ -6,12 +6,12 @@ using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Core.Serialization;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 
-namespace Stratis.Feature.PoA.Tokenless
+namespace Stratis.Feature.PoA.Tokenless.Networks
 {
     /// <summary>
     /// Serializable version of the <see cref="Network"/> class.
     /// </summary>
-    public sealed class ChannelNetwork : Network
+    public class ChannelNetwork : Network
     {
         public ChannelNetwork()
         {
@@ -37,7 +37,7 @@ namespace Stratis.Feature.PoA.Tokenless
         /// </summary>
         /// <param name="channelSettings">The string containing the Json.</param>
         /// <returns>A new instance of <see cref="ChannelNetwork"/>.</returns>
-        public static ChannelNetwork Construct(string channelDataFolder, string channelName, bool isSystemChannelNode)
+        public static ChannelNetwork Construct(string channelDataFolder, string channelName)
         {
             var json = File.ReadAllText($"{channelDataFolder}\\{channelName}_network.json");
 
@@ -45,16 +45,8 @@ namespace Stratis.Feature.PoA.Tokenless
             channelNetwork.Consensus.ConsensusFactory = new TokenlessConsensusFactory();
             channelNetwork.Consensus.HashGenesisBlock = channelNetwork.Genesis.GetHash();
 
-            if (isSystemChannelNode)
-            {
-                TokenlessConsensusRuleSet.CreateForSystemChannel(channelNetwork);
-                TokenlessMempoolRuleSet.CreateForSystemChannel(channelNetwork);
-            }
-            else
-            {
-                TokenlessConsensusRuleSet.Create(channelNetwork);
-                TokenlessMempoolRuleSet.Create(channelNetwork);
-            }
+            TokenlessConsensusRuleSet.Create(channelNetwork);
+            TokenlessMempoolRuleSet.Create(channelNetwork);
 
             return channelNetwork;
         }
