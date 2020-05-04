@@ -30,7 +30,8 @@ namespace Stratis.SmartContracts.Tests.Common
             this.TimeProvider = new EditableTimeProvider();
         }
 
-        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client, string agent = "TKL", bool isInfraNode = false, bool willStartChannels = false, bool initialRun = true)
+        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client, 
+            string agent = "TKL", bool isInfraNode = false, bool isSystemNode = false, bool willStartChannels = false, bool initialRun = true)
         {
             string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
 
@@ -44,6 +45,9 @@ namespace Stratis.SmartContracts.Tests.Common
 
             if (isInfraNode)
                 configParameters.Add("isinfranode", "True");
+
+            if (isSystemNode)
+                configParameters.Add("issystemchannelnode", "True");
 
             if (willStartChannels)
                 configParameters.Add("channelprocesspath", "..\\..\\..\\..\\Stratis.TokenlessD\\");
@@ -159,7 +163,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
         public CoreNode CreateInfraNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client)
         {
-            return CreateTokenlessNode(network, nodeIndex, authorityCertificate, client, "system", true, true);
+            return CreateTokenlessNode(network, nodeIndex, authorityCertificate, client, "system", isInfraNode: true, willStartChannels: true);
         }
 
         private TokenlessKeyStoreManager InitializeNodeKeyStore(CoreNode node, Network network, NodeSettings settings)
