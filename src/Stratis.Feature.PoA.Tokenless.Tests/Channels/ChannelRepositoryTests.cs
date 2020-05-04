@@ -21,6 +21,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
         {
             ChannelNetwork salesChannelNetwork = TokenlessNetwork.CreateChannelNetwork("sales", "salesfolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
             salesChannelNetwork.Id = 2;
+            salesChannelNetwork.Organisation = "Sales";
             salesChannelNetwork.DefaultAPIPort = 1;
             salesChannelNetwork.DefaultPort = 2;
             salesChannelNetwork.DefaultSignalRPort = 3;
@@ -28,6 +29,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
 
             ChannelNetwork marketingChannelNetwork = TokenlessNetwork.CreateChannelNetwork("marketing", "marketingfolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
             marketingChannelNetwork.Id = 3;
+            marketingChannelNetwork.Organisation = "Marketing";
             marketingChannelNetwork.DefaultAPIPort = 4;
             marketingChannelNetwork.DefaultPort = 5;
             marketingChannelNetwork.DefaultSignalRPort = 6;
@@ -46,6 +48,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
             {
                 Id = channelRepository.GetNextChannelId(),
                 Name = "sales",
+                Organisation = "Sales",
                 NetworkJson = salesNetworkJson
             };
             channelRepository.SaveChannelDefinition(salesChannel);
@@ -54,6 +57,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
             {
                 Id = channelRepository.GetNextChannelId(),
                 Name = "marketing",
+                Organisation = "Marketing",
                 NetworkJson = marketingNetworkJson
             }; 
             
@@ -63,16 +67,19 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
 
             Assert.Equal(2, channels["sales"].Id);
             Assert.Equal("sales", channels["sales"].Name);
+            Assert.Equal("Sales", channels["sales"].Organisation);
             Assert.Equal(salesNetworkJson, channels["sales"].NetworkJson);
 
             Assert.Equal(3, channels["marketing"].Id);
             Assert.Equal("marketing", channels["marketing"].Name);
+            Assert.Equal("Marketing", channels["marketing"].Organisation);
             Assert.Equal(marketingNetworkJson, channels["marketing"].NetworkJson);
 
             ChannelDefinition salesChannelDefinition = channelRepository.GetChannelDefinition("sales");
 
             Assert.Equal(2, salesChannelDefinition.Id);
             Assert.Equal("sales", salesChannelDefinition.Name);
+            Assert.Equal("Sales", salesChannelDefinition.Organisation);
             Assert.Equal(salesNetworkJson, salesChannelDefinition.NetworkJson);
         }
 
