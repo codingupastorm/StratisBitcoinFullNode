@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using CertificateAuthority;
 using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -46,7 +47,7 @@ namespace Stratis.Features.PoA.ProtocolEncryption
                 return;
             }
 
-            string certificateP2pkh = MembershipServicesDirectory.ExtractCertificateExtensionString(rawCert, "1.4.1");
+            string certificateP2pkh = MembershipServicesDirectory.ExtractCertificateExtensionString(rawCert, CaCertificatesManager.P2pkhExtensionOid);
 
             BitcoinAddress address;
 
