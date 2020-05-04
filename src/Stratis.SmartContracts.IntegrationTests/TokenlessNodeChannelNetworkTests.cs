@@ -239,11 +239,13 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var channelService = infraNode.FullNode.NodeService<IChannelService>();
                 Assert.True(channelService.StartedChannelNodes.Count == 1);
 
+                var org = infraNode.ClientCertificate.ToCertificate().GetOrganisation();
+
                 // Call the create channel API method on the system channel node.
                 var channelCreationRequest = new ChannelCreationRequest()
                 {
                     Name = "Sales",
-                    Organisation = "Stratis"
+                    Organisation = CaTestHelper.TestOrganisation
                 };
 
                 var response = await $"http://localhost:{channelService.GetDefaultAPIPort(ChannelService.SystemChannelId)}/api".AppendPathSegment("channels/create").PostJsonAsync(channelCreationRequest);
