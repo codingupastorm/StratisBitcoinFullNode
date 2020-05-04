@@ -111,6 +111,7 @@ namespace Stratis.SmartContracts.Tests.Common
             // Serialize the channel network and write the json to disk.
             ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, "channels", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
             channelNetwork.Id = nodeIndex;
+            channelNetwork.Organisation = CaTestHelper.TestOrganisation;
             channelNetwork.DefaultAPIPort += nodeIndex;
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
 
@@ -122,7 +123,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
             // Save the channel definition so that it can loaded on node start.
             IChannelRepository channelRepository = parentNode.FullNode.NodeService<IChannelRepository>();
-            channelRepository.SaveChannelDefinition(new ChannelDefinition() { Id = nodeIndex, Name = channelName, NetworkJson = serializedJson });
+            channelRepository.SaveChannelDefinition(new ChannelDefinition() { Id = nodeIndex, Name = channelName, Organisation = CaTestHelper.TestOrganisation, NetworkJson = serializedJson });
         }
 
         public CoreNode CreateChannelNode(CoreNode infraNode, string channelName, int nodeIndex)
