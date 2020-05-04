@@ -8,10 +8,11 @@ using NBitcoin;
 using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.SmartContracts;
-using Stratis.Bitcoin.Features.SmartContracts.Caching;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Features.Consensus.Rules.CommonRules;
+using Stratis.Features.SmartContracts;
+using Stratis.Features.SmartContracts.Caching;
+using Stratis.Features.SmartContracts.Interfaces;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.ReadWrite;
@@ -45,7 +46,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             ILoggerFactory loggerFactory,
             IReceiptRepository receiptRepository,
             IStateRepositoryRoot stateRepositoryRoot,
-            ITokenlessSigner tokenlessSigner, 
+            ITokenlessSigner tokenlessSigner,
             IReadWriteSetTransactionSerializer rwsSerializer,
             IReadWriteSetValidator rwsValidator,
             IPrivateDataRetriever privateDataRetriever)
@@ -220,7 +221,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             if (!getSenderResult.Success)
                 throw new ConsensusErrorException(new ConsensusError("sc-consensusvalidator-executecontracttransaction-sender", getSenderResult.Error));
 
-            ulong txIndex = (ulong) validationContext.BlockToValidate.Transactions.IndexOf(transaction);
+            ulong txIndex = (ulong)validationContext.BlockToValidate.Transactions.IndexOf(transaction);
             IContractTransactionContext transactionContext = new ContractTransactionContext(
                 (ulong)validationContext.ChainedHeaderToValidate.Height,
                 txIndex,

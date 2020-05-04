@@ -1,6 +1,6 @@
 ﻿using NBitcoin;
 using Newtonsoft.Json;
-using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor;
+using Stratis.Features.SmartContracts.ReflectionExecutor;
 using Stratis.SmartContracts.CLR.Local;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Networks;
@@ -43,7 +43,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             var execResult = new LocalExecutionResult
             {
                 ErrorMessage = new ContractErrorMessage("Error message"),
-                GasConsumed = (RuntimeObserver.Gas) 69,
+                GasConsumed = (RuntimeObserver.Gas)69,
                 Return = testAddress
             };
 
