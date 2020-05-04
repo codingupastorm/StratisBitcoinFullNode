@@ -136,6 +136,12 @@ namespace NBitcoin
         /// </summary>
         [JsonPropertyName("name")]
         public string Name { get; set; }
+        
+        /// <summary>
+        /// The name of the network.
+        /// </summary>
+        [JsonPropertyName("id")]
+        public int Id { get; set; }
 
         [JsonPropertyName("networktype")]
         public NetworkType NetworkType { get; set; }

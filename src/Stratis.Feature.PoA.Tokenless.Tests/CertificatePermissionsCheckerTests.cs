@@ -43,7 +43,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var mock = new Mock<ICertificatesManager>();
             mock.Setup(m => m.GetAllCertificates()).Returns(certificates);
 
-            var checker = new CertificatePermissionsChecker(null, mock.Object, new LoggerFactory());
+            var checker = new CertificatePermissionsChecker(null, mock.Object);
 
             var data = RandomUtils.GetBytes(128);
 
