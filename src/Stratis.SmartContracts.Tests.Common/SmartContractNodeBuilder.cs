@@ -162,7 +162,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
         public CoreNode CreateInfraNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client)
         {
-            return CreateTokenlessNode(network, nodeIndex, authorityCertificate, client, "system", true, true);
+            return CreateTokenlessNode(network, nodeIndex, authorityCertificate, client, "system", isInfraNode: true, willStartChannels: true);
         }
 
         private TokenlessKeyStoreManager InitializeNodeKeyStore(CoreNode node, Network network, NodeSettings settings)
