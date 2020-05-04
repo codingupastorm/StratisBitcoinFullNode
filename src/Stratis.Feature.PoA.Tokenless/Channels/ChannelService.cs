@@ -373,6 +373,12 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             var channelNodeProcess = new ChannelNodeProcess();
 
             // Create channel configuration file.
+            if (this.nodeSettings.DebugMode)
+            {
+                this.logger.LogInformation($"Starting daemon in debug mode.");
+                channelArgs = channelArgs.Concat(new[] { "-debug=1" }).ToArray();
+            }
+
             CreateChannelConfigurationFile(channelRootFolder, channelArgs.Concat(new[] { "-ischannelnode=true", $"-channelparentpipename={channelNodeProcess.PipeName}" }).ToArray());
 
             var startUpArgs = $"run --no-build -nowarn -conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
