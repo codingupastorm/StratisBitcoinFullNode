@@ -9,9 +9,9 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.PoA.ProtocolEncryption;
 
 namespace MembershipServices.Cli
