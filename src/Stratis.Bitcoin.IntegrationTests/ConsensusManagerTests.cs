@@ -7,8 +7,6 @@ using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Features.Miner.Interfaces;
-using Stratis.Features.Miner.Staking;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
@@ -172,53 +170,6 @@ namespace Stratis.Bitcoin.IntegrationTests
                 Assert.True(TestHelper.IsNodeSyncedAtHeight(syncer, 15));
                 Assert.True(TestHelper.IsNodeSyncedAtHeight(minerA, 15));
                 Assert.True(TestHelper.IsNodeSyncedAtHeight(minerB, 15));
-            }
-        }
-
-        [Fact]
-        public void CM_Fork_Occurs_Node_Gets_Disconnected_Due_To_InvalidStakeDepth()
-        {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                var network = new StratisConsensusOptionsOverrideTest();
-
-                // MinerA requires a physical wallet to stake with.
-                var minerA = builder.CreateStratisPosNode(network, "cm-2-minerA").OverrideDateTimeProvider().WithWallet().Start();
-                var minerB = builder.CreateStratisPosNode(network, "cm-2-minerB").OverrideDateTimeProvider().Start();
-
-                // MinerA mines to height 55.
-                TestHelper.MineBlocks(minerA, 55);
-
-                // Connect and sync minerA and minerB.
-                TestHelper.ConnectAndSync(minerA, minerB);
-
-                // Disconnect Miner A and B.
-                TestHelper.Disconnect(minerA, minerB);
-
-                // Miner A stakes a coin that increases the network height to 56.
-                var minter = minerA.FullNode.NodeService<IPosMinting>();
-                minter.Stake(new WalletSecret() { WalletName = "mywallet", WalletPassword = "password" });
-
-                Assert.True(TestHelper.IsNodeSyncedAtHeight(minerA, 56));
-
-                minter.StopStake();
-
-                // Update the network consensus options so that the GetStakeMinConfirmations returns a higher value
-                // to ensure that the InvalidStakeDepth exception can be thrown.
-                minerB.FullNode.Network.Consensus.Options = new ConsensusOptionsTest();
-
-                // Ensure the correct height before the connect.
-                Assert.True(TestHelper.IsNodeSyncedAtHeight(minerA, 56));
-                Assert.True(TestHelper.IsNodeSyncedAtHeight(minerB, 55));
-
-                // Connect minerA to minerB, this will cause an InvalidStakeDepth exception to be thrown on minerB.
-                TestHelper.ConnectNoCheck(minerA, minerB);
-
-                // Wait until minerA has disconnected minerB due to the InvalidStakeDepth exception.
-                TestBase.WaitLoop(() => !TestHelper.IsNodeConnectedTo(minerA, minerB));
-
-                Assert.True(TestHelper.IsNodeSyncedAtHeight(minerA, 56));
-                Assert.True(TestHelper.IsNodeSyncedAtHeight(minerB, 55));
             }
         }
 
