@@ -1,10 +1,9 @@
-﻿using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.SmartContracts;
-using Stratis.Bitcoin.Features.SmartContracts.Rules;
+using Stratis.Features.SmartContracts;
+using Stratis.Features.SmartContracts.Rules;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core;
 
@@ -18,19 +17,19 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             {
                 if (transaction.Outputs.Count == 0)
                     continue;
-                
+
                 var output = transaction.Outputs[0];
                 if (!output.ScriptPubKey.IsReadWriteSet())
                     continue;
 
                 // Must have 2 or more outputs if OP_RWS
-                if(transaction.Outputs.Count < 2)
+                if (transaction.Outputs.Count < 2)
                     new ConsensusError("badly-formed-rws", "An OP_READWRITE must be followed by an endorsement").Throw();
 
                 for (var i = 1; i < transaction.Outputs.Count; i++)
-                {  
+                {
                     // Validate endorsement format
-                    if(!ValidateEndorsement(transaction.Outputs[i].ScriptPubKey.ToBytes()))
+                    if (!ValidateEndorsement(transaction.Outputs[i].ScriptPubKey.ToBytes()))
                     {
                         new ConsensusError("badly-formed-endorsement", "Endorsement was not in the correct format.").Throw();
                     }

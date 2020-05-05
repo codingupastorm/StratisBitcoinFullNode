@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using Stratis.Features.SmartContracts;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Serialization;

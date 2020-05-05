@@ -35,12 +35,16 @@ namespace Stratis.Features.PoA.ProtocolEncryption
 
         private TlsClientProtocol tlsClientProtocol;
 
+        private IClientCertificateValidator clientCertificateValidator;
+
         public TlsEnabledNetworkPeerConnection(Network network, INetworkPeer peer, TcpClient client, int clientId, ProcessMessageAsync<IncomingMessage> processMessageAsync,
-            IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, PayloadProvider payloadProvider, IAsyncProvider asyncProvider, ICertificatesManager certificateManager, bool isServer)
+            IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, PayloadProvider payloadProvider, IAsyncProvider asyncProvider, ICertificatesManager certificateManager, 
+            bool isServer, IClientCertificateValidator clientCertificateValidator)
             : base(network, peer, client, clientId, processMessageAsync, dateTimeProvider, loggerFactory, payloadProvider, asyncProvider)
         {
             this.certificateManager = certificateManager;
             this.isServer = isServer;
+            this.clientCertificateValidator = clientCertificateValidator;
         }
 
         public X509Certificate GetPeerCertificate()
@@ -81,6 +85,11 @@ namespace Stratis.Features.PoA.ProtocolEncryption
 
             if (!CaCertificatesManager.ValidateCertificateChain(this.certificateManager.AuthorityCertificate, this.peerCertificate))
                 return null;
+
+            if (this.isServer && this.clientCertificateValidator != null)
+            {
+                this.clientCertificateValidator.ConfirmValid(receivedCert);
+            }
 
             return this.stream;
         }

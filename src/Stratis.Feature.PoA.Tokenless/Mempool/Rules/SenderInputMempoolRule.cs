@@ -1,9 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Stratis.Feature.PoA.Tokenless.Channels;
+using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Features.SmartContracts;
-using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Features.SmartContracts;
 using Stratis.SmartContracts.Core.Util;
 
 namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
@@ -40,6 +41,16 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
             // We also need to check that the sender given is indeed the one who signed the transaction.
             if (!this.tokenlessSigner.Verify(context.Transaction))
                 context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, $"The signature for transaction {context.Transaction.GetHash()} is invalid.")).Throw();
+
+            // If we're not on the OG network, then check that the sender is allowed to be on this network.
+            // TODO: Is this check for the current channel robust?
+            if (this.network is ChannelNetwork channelNetwork && channelNetwork.Id != ChannelService.SystemChannelId)
+            {
+                if (!this.certificatePermissionsChecker.CheckSenderCertificateIsPermittedOnChannel(getSenderResult.Sender, channelNetwork))
+                {
+                    context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "The sender of this transaction is not authorised to be on this channel.")).Throw();
+                }
+            }
 
             // Now that we have the sender address, lets get their certificate and check they have necessary permissions.
             if (!this.certificatePermissionsChecker.CheckSenderCertificateHasPermission(getSenderResult.Sender, TransactionSendingPermission.Send))

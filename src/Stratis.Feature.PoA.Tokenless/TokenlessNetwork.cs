@@ -5,7 +5,6 @@ using System.Text.Json.Serialization;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.PoA;
-using Stratis.Bitcoin.Features.SmartContracts.PoA;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Consensus.Rules;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
@@ -13,6 +12,7 @@ using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
 using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
+using Stratis.Features.SmartContracts.PoA;
 
 namespace Stratis.Feature.PoA.Tokenless
 {

@@ -27,17 +27,6 @@ namespace Stratis.Features.PoA.ProtocolEncryption
 
         bool LoadClientCertificate();
 
-        /// <summary>Creates an account on the Certificate Authority server.</summary>
-        /// <para>If no permissions are specified, then create the account with all.</para>
-        /// <returns>The id of the newly created account.</returns>
-        int CreateAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country, string[] requestedPermissions = null);
-
-        X509Certificate RequestNewCertificate(Key privateKey, PubKey transactionSigningPubKey, PubKey blockSigningPubKey);
-
-        bool IsCertificateRevokedByAddress(uint160 address);
-
         List<PubKey> GetCertificatePublicKeys();
-
-        List<CertificateInfoModel> GetAllCertificates();
     }
 }

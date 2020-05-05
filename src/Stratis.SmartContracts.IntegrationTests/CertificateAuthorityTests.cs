@@ -14,7 +14,6 @@ using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
-using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Features.PoA.Tests.Common;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;
@@ -230,8 +229,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                     node1.Start();
 
                     // Confirm that the certificate is revoked.
-                    IRevocationChecker revocationChecker = node1.FullNode.NodeService<IRevocationChecker>();
-                    TestBase.WaitLoop(() => revocationChecker.IsCertificateRevoked(revokedThumbprint));
+                    IMembershipServicesDirectory membershipServices = node1.FullNode.NodeService<IMembershipServicesDirectory>();
+                    TestBase.WaitLoop(() => membershipServices.IsCertificateRevoked(revokedThumbprint));
 
                     // Stop the node.
                     node1.FullNode.Dispose();
@@ -244,7 +243,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     node1.Start();
 
                     // Is the certificate stil revoked even though we are running without a CA?
-                    Assert.True(revocationChecker.IsCertificateRevoked(revokedThumbprint));
+                    Assert.True(membershipServices.IsCertificateRevoked(revokedThumbprint));
                 }
             }
         }

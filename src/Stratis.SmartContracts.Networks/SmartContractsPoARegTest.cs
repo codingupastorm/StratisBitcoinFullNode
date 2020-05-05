@@ -4,15 +4,15 @@ using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.PoA;
 using NBitcoin.Protocol;
-using Stratis.Bitcoin.Features.SmartContracts.MempoolRules;
-using Stratis.Bitcoin.Features.SmartContracts.PoA;
-using Stratis.Bitcoin.Features.SmartContracts.PoA.MempoolRules;
-using Stratis.Bitcoin.Features.SmartContracts.Rules;
 using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Features.MemoryPool.Rules;
 using Stratis.Features.PoA;
 using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
 using Stratis.Features.PoA.Voting.ConsensusRules;
+using Stratis.Features.SmartContracts.MempoolRules;
+using Stratis.Features.SmartContracts.PoA;
+using Stratis.Features.SmartContracts.PoA.MempoolRules;
+using Stratis.Features.SmartContracts.Rules;
 using Stratis.SmartContracts.Networks.Policies;
 
 namespace Stratis.SmartContracts.Networks

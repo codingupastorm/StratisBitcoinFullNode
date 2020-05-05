@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using MembershipServices;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
@@ -38,7 +39,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public readonly NodeSettings NodeSettings;
         public readonly TokenlessMempoolValidator MempoolValidator;
         public readonly ITokenlessSigner TokenlessSigner;
-        public readonly Mock<IRevocationChecker> RevocationChecker;
+        public readonly Mock<IMembershipServicesDirectory> MembershipServices;
         public readonly Mock<ICertificatesManager> CertificatesManager;
         private EndorsedContractTransactionValidationRule EndorsementRule;
 
@@ -64,12 +65,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             this.Mempool = new TokenlessMempool(this.BlockPolicyEstimator, this.LoggerFactory);
 
             // TODO: Ostensibly need to be able to test the revoked case too
-            this.RevocationChecker = new Mock<IRevocationChecker>();
-            this.RevocationChecker.Setup(c => c.IsCertificateRevoked(It.IsAny<string>())).Returns(false);
-
-            // TODO: Ostensibly need to be able to test the revoked case too
-            this.CertificatesManager = new Mock<ICertificatesManager>();
-            this.CertificatesManager.Setup(c => c.IsCertificateRevokedByAddress(It.IsAny<uint160>())).Returns(false);
+            this.MembershipServices = new Mock<IMembershipServicesDirectory>();
+            this.MembershipServices.Setup(c => c.IsCertificateRevoked(It.IsAny<string>())).Returns(false);
 
             this.MempoolRules = CreateMempoolRules();
             this.MempoolValidator = new TokenlessMempoolValidator(this.ChainIndexer, this.DateTimeProvider, this.LoggerFactory, this.Mempool, new MempoolSchedulerLock(), this.MempoolRules, this.MempoolSettings);

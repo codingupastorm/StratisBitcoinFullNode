@@ -3,7 +3,6 @@ using System.Linq;
 using CertificateAuthority;
 using CertificateAuthority.Models;
 using MembershipServices;
-using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Org.BouncyCastle.X509;
@@ -42,6 +41,14 @@ namespace Stratis.Feature.PoA.Tokenless
         bool CheckSenderCertificateHasPermission(uint160 address, TransactionSendingPermission permission);
 
         /// <summary>
+        /// Determines whether a given sender has the right to be on a given channel.
+        /// </summary>
+        /// <param name="address">The sender that is trying to send a transaction.</param>
+        /// <param name="network">The channel we're checking on.</param>
+        /// <returns>Whether or not they are allowed to be on this channel.</returns>
+        bool CheckSenderCertificateIsPermittedOnChannel(uint160 address, ChannelNetwork network);
+
+        /// <summary>
         /// Used to validate that the signature has been signed by the transaction signing pubkey corresponding to the given certificate.
         /// </summary>
         /// <param name="certificate"></param>
@@ -71,7 +78,7 @@ namespace Stratis.Feature.PoA.Tokenless
             if (this.certificatesManager.ClientCertificate == null)
                 return false;
 
-            byte[] permissionBytes = CertificatesManager.ExtractCertificateExtension(this.certificatesManager.ClientCertificate, oId);
+            byte[] permissionBytes = MembershipServicesDirectory.ExtractCertificateExtension(this.certificatesManager.ClientCertificate, oId);
             return permissionBytes != null;
         }
 
@@ -89,17 +96,25 @@ namespace Stratis.Feature.PoA.Tokenless
             return ValidateCertificateHasPermission(certificate, permission);
         }
 
+        public bool CheckSenderCertificateIsPermittedOnChannel(uint160 address, ChannelNetwork network)
+        {
+            X509Certificate certificate = this.GetCertificate(address);
+            return ValidateCertificatePermittedOnChannel(certificate, network);
+        }
+
         /// <inheritdoc />
         public bool CheckSignature(string certificateThumbprint, ECDSASignature signature, PubKey pubKey, uint256 hash)
         {
-            List<CertificateInfoModel> certificates = this.certificatesManager.GetAllCertificates();
+            X509Certificate cert = this.membershipServices.GetCertificateForThumbprint(certificateThumbprint);
 
-            CertificateInfoModel match = certificates.FirstOrDefault(c => c.Thumbprint == certificateThumbprint);
+            if (cert == null) return false;
 
-            if (match == null) return false;
+            byte[] transactionSigningPubKeyHash = this.membershipServices.ExtractCertificateExtensionFromOid(cert, CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid);
+
+            if (transactionSigningPubKeyHash == null) return false;
 
             // Verify the pubkey matches the hash.
-            if (new KeyId(match.TransactionSigningPubKeyHash) != pubKey.Hash)
+            if (new KeyId(transactionSigningPubKeyHash) != pubKey.Hash)
                 return false;
 
             return pubKey.Verify(hash, signature);
@@ -111,7 +126,7 @@ namespace Stratis.Feature.PoA.Tokenless
             if (this.certificatesManager?.ClientCertificate != null)
             {
                 // TODO: This value could be cached, or retrieved from the wallet?
-                byte[] myCertTransactionSigningHash = CertificatesManager.ExtractCertificateExtension(this.certificatesManager.ClientCertificate, CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid);
+                byte[] myCertTransactionSigningHash = MembershipServicesDirectory.ExtractCertificateExtension(this.certificatesManager.ClientCertificate, CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid);
                 var myCertAddress = new uint160(myCertTransactionSigningHash);
 
                 if (myCertAddress == address)
@@ -128,12 +143,19 @@ namespace Stratis.Feature.PoA.Tokenless
             return ValidateCertificateHasPermission(certificate, permission.GetPermissionOid());
         }
 
+        private static bool ValidateCertificatePermittedOnChannel(X509Certificate certificate, ChannelNetwork network)
+        {
+            // In future iterations we will add complexity around who is allowed on a channel here.
+
+            return certificate.GetOrganisation() == network.Organisation;
+        }
+
         private static bool ValidateCertificateHasPermission(X509Certificate certificate, string permissionOid)
         {
             if (certificate == null)
                 return false;
 
-            byte[] result = CertificatesManager.ExtractCertificateExtension(certificate, permissionOid);
+            byte[] result = MembershipServicesDirectory.ExtractCertificateExtension(certificate, permissionOid);
             return result != null && result[0] == 1;
         }
     }

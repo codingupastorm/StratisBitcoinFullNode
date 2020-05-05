@@ -5,8 +5,6 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.SmartContracts;
-using Stratis.Bitcoin.Features.SmartContracts.Caching;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Consensus;
@@ -14,6 +12,9 @@ using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
+using Stratis.Features.SmartContracts;
+using Stratis.Features.SmartContracts.Caching;
+using Stratis.Features.SmartContracts.Interfaces;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.ReadWrite;
@@ -290,7 +291,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         {
             GetSenderResult getSenderResult = this.tokenlessSigner.GetSender(mempoolEntry.Transaction);
 
-            ulong txIndex = (ulong) this.block.Transactions.Count; // Number ahead of us in block + the coinbase will give us our index.
+            ulong txIndex = (ulong)this.block.Transactions.Count; // Number ahead of us in block + the coinbase will give us our index.
             IContractTransactionContext transactionContext = new ContractTransactionContext(
                 (ulong)this.height,
                 txIndex,
@@ -318,7 +319,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
                 transactionContext.TxOutValue,
                 result.ReadWriteSet.GetReadWriteSet().ToJson(),
                 deserializedCallData.Value.IsCreateContract ? null : deserializedCallData.Value.MethodName,
-                 (ulong) this.height);
+                 (ulong)this.height);
 
             this.receipts.Add(receipt);
 
