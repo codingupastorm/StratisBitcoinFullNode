@@ -89,7 +89,7 @@ namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
 
             if (this.isServer && this.clientCertificateValidator != null)
             {
-                this.clientCertificateValidator.ConfirmValid(receivedCert);
+                this.clientCertificateValidator.ConfirmCertificatePermittedOnChannel(receivedCert);
             }
 
             return this.stream;
