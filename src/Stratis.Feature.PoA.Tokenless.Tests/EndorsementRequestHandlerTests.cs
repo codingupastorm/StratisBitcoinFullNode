@@ -4,11 +4,11 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.Payloads;
+using Stratis.Features.SmartContracts;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core;
@@ -34,7 +34,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         }
 
         [Fact]
-        public async Task ExecutionSucceedsAndTransactionIsSigned()
+        public async Task ExecutionSucceedsAndTransactionIsSignedAsync()
         {
             const int height = 16;
             uint160 sender = uint160.One;
@@ -95,9 +95,9 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 .Returns(Mock.Of<ILogger>());
 
             var transientStore = new Mock<ITransientStore>();
-            
-            var organisationLookup = Mock.Of<IOrganisationLookup>();
-            var permissionsChecker = Mock.Of<ICertificatePermissionsChecker>();
+
+            IOrganisationLookup organisationLookup = Mock.Of<IOrganisationLookup>();
+            ICertificatePermissionsChecker permissionsChecker = Mock.Of<ICertificatePermissionsChecker>();
 
             var endorsementRequestHandler = new EndorsementRequestHandler(validatorMock.Object,
                 signerMock.Object,
@@ -127,14 +127,14 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             Assert.True(await endorsementRequestHandler.ExecuteAndReturnProposalAsync(request));
 
-            executorMock.Verify(x=>x.Execute(It.Is<ContractTransactionContext>(y =>
-                y.TxIndex == 0 && y.BlockHeight == height + 1 && y.CoinbaseAddress == uint160.Zero && y.Sender == sender && y.TransactionHash == transaction.GetHash())));
+            executorMock.Verify(x => x.Execute(It.Is<ContractTransactionContext>(y =>
+                  y.TxIndex == 0 && y.BlockHeight == height + 1 && y.CoinbaseAddress == uint160.Zero && y.Sender == sender && y.TransactionHash == transaction.GetHash())));
 
             mockPeer.Verify(i => i.SendMessageAsync(It.IsAny<EndorsementPayload>(), It.IsAny<CancellationToken>()));
         }
 
         [Fact]
-        public async Task ValidationFailsReturnsFalse()
+        public async Task ValidationFailsReturnsFalseAsync()
         {
             var validatorMock = new Mock<IEndorsementRequestValidator>();
             validatorMock.Setup(x => x.ValidateRequest(It.IsAny<EndorsementRequest>()))
@@ -162,8 +162,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var transientStore = new Mock<ITransientStore>();
 
-            var organisationLookup = Mock.Of<IOrganisationLookup>();
-            var permissionsChecker = Mock.Of<ICertificatePermissionsChecker>();
+            IOrganisationLookup organisationLookup = Mock.Of<IOrganisationLookup>();
+            ICertificatePermissionsChecker permissionsChecker = Mock.Of<ICertificatePermissionsChecker>();
 
             var endorsementRequestHandler = new EndorsementRequestHandler(validatorMock.Object,
                 signerMock.Object,

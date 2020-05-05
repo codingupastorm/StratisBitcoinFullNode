@@ -78,7 +78,7 @@ namespace Stratis.Feature.PoA.Tokenless
             if (this.certificatesManager.ClientCertificate == null)
                 return false;
 
-            byte[] permissionBytes = CertificatesManager.ExtractCertificateExtension(this.certificatesManager.ClientCertificate, oId);
+            byte[] permissionBytes = MembershipServicesDirectory.ExtractCertificateExtension(this.certificatesManager.ClientCertificate, oId);
             return permissionBytes != null;
         }
 
@@ -105,14 +105,16 @@ namespace Stratis.Feature.PoA.Tokenless
         /// <inheritdoc />
         public bool CheckSignature(string certificateThumbprint, ECDSASignature signature, PubKey pubKey, uint256 hash)
         {
-            List<CertificateInfoModel> certificates = this.certificatesManager.GetAllCertificates();
+            X509Certificate cert = this.membershipServices.GetCertificateForThumbprint(certificateThumbprint);
 
-            CertificateInfoModel match = certificates.FirstOrDefault(c => c.Thumbprint == certificateThumbprint);
+            if (cert == null) return false;
 
-            if (match == null) return false;
+            byte[] transactionSigningPubKeyHash = this.membershipServices.ExtractCertificateExtensionFromOid(cert, CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid);
+
+            if (transactionSigningPubKeyHash == null) return false;
 
             // Verify the pubkey matches the hash.
-            if (new KeyId(match.TransactionSigningPubKeyHash) != pubKey.Hash)
+            if (new KeyId(transactionSigningPubKeyHash) != pubKey.Hash)
                 return false;
 
             return pubKey.Verify(hash, signature);
@@ -124,7 +126,7 @@ namespace Stratis.Feature.PoA.Tokenless
             if (this.certificatesManager?.ClientCertificate != null)
             {
                 // TODO: This value could be cached, or retrieved from the wallet?
-                byte[] myCertTransactionSigningHash = CertificatesManager.ExtractCertificateExtension(this.certificatesManager.ClientCertificate, CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid);
+                byte[] myCertTransactionSigningHash = MembershipServicesDirectory.ExtractCertificateExtension(this.certificatesManager.ClientCertificate, CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid);
                 var myCertAddress = new uint160(myCertTransactionSigningHash);
 
                 if (myCertAddress == address)
@@ -153,7 +155,7 @@ namespace Stratis.Feature.PoA.Tokenless
             if (certificate == null)
                 return false;
 
-            byte[] result = CertificatesManager.ExtractCertificateExtension(certificate, permissionOid);
+            byte[] result = MembershipServicesDirectory.ExtractCertificateExtension(certificate, permissionOid);
             return result != null && result[0] == 1;
         }
     }

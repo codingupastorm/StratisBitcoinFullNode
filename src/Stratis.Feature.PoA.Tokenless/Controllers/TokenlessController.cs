@@ -10,10 +10,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Newtonsoft.Json;
-using Stratis.Bitcoin.Features.SmartContracts;
-using Stratis.Bitcoin.Features.SmartContracts.Models;
-using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor;
-using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Utilities.JsonErrors;
 using Stratis.Bitcoin.Utilities.ModelStateErrors;
@@ -25,6 +21,11 @@ using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Payloads;
 using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.MemoryPool.Broadcasting;
+using Stratis.Features.SmartContracts;
+using Stratis.Features.SmartContracts.Interfaces;
+using Stratis.Features.SmartContracts.Models;
+using Stratis.Features.SmartContracts.ReflectionExecutor;
+using Stratis.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.SmartContracts;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Compilation;
@@ -80,7 +81,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             ISerializer serializer,
             ILocalExecutor localExecutor,
             ICertificatesManager certificatesManager)
-            {
+        {
             this.coreComponent = coreComponent;
             this.tokenlessSigner = tokenlessSigner;
             this.tokenlessWalletManager = tokenlessWalletManager;
@@ -140,7 +141,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                 // When sending off CREATE transactions, use this node's organisation and the default number of required sigs. Can be configable in future.
                 EndorsementPolicy policy = new EndorsementPolicy
                 {
-                    Organisation = (Organisation) this.certificatesManager.ClientCertificate.GetOrganisation(),
+                    Organisation = (Organisation)this.certificatesManager.ClientCertificate.GetOrganisation(),
                     RequiredSignatures = EndorsementPolicy.DefaultRequiredSignatures
                 };
 

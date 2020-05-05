@@ -56,7 +56,6 @@ namespace Stratis.Features.PoA
         private readonly IChainState chainState;
 
         private readonly IBlockStoreQueue blockStoreQueue;
-
         public PoAFeature(IFederationManager federationManager, PayloadProvider payloadProvider, IConnectionManager connectionManager, ChainIndexer chainIndexer,
             IInitialBlockDownloadState initialBlockDownloadState, IConsensusManager consensusManager, IPeerBanning peerBanning, ILoggerFactory loggerFactory,
             VotingManager votingManager, Network network, IWhitelistedHashesRepository whitelistedHashesRepository,

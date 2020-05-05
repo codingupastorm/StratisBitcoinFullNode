@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using CertificateAuthority;
+using CertificateAuthority.Models;
 using CommandLine;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -104,16 +105,17 @@ namespace MembershipServices.Cli
             var membershipServices = new MembershipServicesDirectory(nodeSettings);
             membershipServices.Initialize();
 
-            var revocationChecker = new RevocationChecker(membershipServices);
-            var certificatesManager = new CertificatesManager(nodeSettings.DataFolder, nodeSettings, loggerFactory, revocationChecker, network);
+            var certificatesManager = new CertificatesManager(nodeSettings.DataFolder, nodeSettings, loggerFactory, network, membershipServices);
             var keyStoreSettings = new TokenlessKeyStoreSettings(nodeSettings);
             var keyStoreManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, new ChannelSettings(nodeSettings.ConfigReader), keyStoreSettings, certificatesManager, loggerFactory);
             keyStoreManager.Initialize();
 
+            CaClient caClient;
+
             // First check if we have created an account on the CA already.
             if (string.IsNullOrWhiteSpace(options.CaAccountId))
             {
-                var caClient = new CaClient(new Uri(options.CaUrl), new HttpClient(), 0, options.CaPassword);
+                caClient = new CaClient(new Uri(options.CaUrl), new HttpClient(), 0, options.CaPassword);
 
                 int accountId = caClient.CreateAccount(options.CommonName,
                     options.OrganizationUnit,
@@ -130,6 +132,8 @@ namespace MembershipServices.Cli
                 return -1;
             }
 
+            caClient = new CaClient(new Uri(options.CaUrl), new HttpClient(), int.Parse(options.CaAccountId), options.CaPassword);
+
             Key privateKey = keyStoreManager.GetKey(keyStoreSettings.Password, TokenlessKeyStoreAccount.P2PCertificates);
 
             File.WriteAllText(Path.Combine(nodeSettings.DataFolder.RootPath, LocalMembershipServicesConfiguration.Keystore, "key.dat"), privateKey.GetBitcoinSecret(network).ToWif());
@@ -137,22 +141,30 @@ namespace MembershipServices.Cli
             PubKey transactionSigningPubKey = keyStoreManager.GetKey(keyStoreSettings.Password, TokenlessKeyStoreAccount.TransactionSigning).PubKey;
             PubKey blockSigningPubKey = keyStoreManager.GetKey(keyStoreSettings.Password, TokenlessKeyStoreAccount.BlockSigning).PubKey;
 
-            X509Certificate clientCert = certificatesManager.RequestNewCertificate(privateKey, transactionSigningPubKey, blockSigningPubKey);
+            PubKey pubKey = privateKey.PubKey;
+            BitcoinPubKeyAddress address = pubKey.GetAddress(network);
 
-            if (clientCert != null)
-            {
-                membershipServices.AddLocalMember(clientCert, MemberType.Self);
+            CertificateSigningRequestModel csrModel = caClient.GenerateCertificateSigningRequest(Convert.ToBase64String(pubKey.ToBytes()), address.ToString(), Convert.ToBase64String(transactionSigningPubKey.Hash.ToBytes()), Convert.ToBase64String(blockSigningPubKey.ToBytes()));
 
-                // We need the certificate to be available here as well for now.
-                membershipServices.AddLocalMember(clientCert, MemberType.NetworkPeer);
+            string signedCsr = CaCertificatesManager.SignCertificateSigningRequest(csrModel.CertificateSigningRequestContent, privateKey, "secp256k1");
 
-                // TODO: Temporary workaround until CertificatesManager is completely removed and merged into MSD
-                File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCert, privateKey, keyStoreSettings.Password));
+            CertificateInfoModel issuedCertificate = caClient.IssueCertificate(signedCsr);
 
-                return 0;
-            }
+            X509Certificate clientCert = issuedCertificate.ToCertificate();
 
-            return -1;
+            if (clientCert == null)
+                return -1;
+
+            membershipServices.AddLocalMember(clientCert, MemberType.Self);
+
+            // We need the certificate to be available here as well for now.
+            membershipServices.AddLocalMember(clientCert, MemberType.NetworkPeer);
+
+            // TODO: Temporary workaround until CertificatesManager is completely removed and merged into MSD
+            File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCert, privateKey, keyStoreSettings.Password));
+
+            return 0;
+
         }
 
         static int RunShowTemplate(ShowTemplateOptions options)

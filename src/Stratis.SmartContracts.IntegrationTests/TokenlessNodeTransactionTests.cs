@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.Features.SmartContracts.Models;
+using Stratis.Features.SmartContracts.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.P2P;

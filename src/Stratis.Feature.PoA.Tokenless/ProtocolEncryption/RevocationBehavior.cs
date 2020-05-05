@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using CertificateAuthority;
 using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -15,18 +16,18 @@ namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
     {
         private readonly Network network;
 
-        private readonly ILoggerFactory LoggerFactory;
+        private readonly ILoggerFactory loggerFactory;
 
-        private readonly IRevocationChecker RevocationChecker;
+        private readonly IMembershipServicesDirectory membershipServices;
 
         public RevocationBehavior(
             Network network,
             ILoggerFactory loggerFactory,
-            IRevocationChecker revocationChecker)
+            IMembershipServicesDirectory membershipServices)
         {
             this.network = network;
-            this.LoggerFactory = loggerFactory;
-            this.RevocationChecker = revocationChecker;
+            this.loggerFactory = loggerFactory;
+            this.membershipServices = membershipServices;
         }
 
         [NoTrace]
@@ -46,7 +47,7 @@ namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
                 return;
             }
 
-            string certificateP2pkh = CertificatesManager.ExtractCertificateExtensionString(rawCert, "1.4.1");
+            string certificateP2pkh = MembershipServicesDirectory.ExtractCertificateExtensionString(rawCert, CaCertificatesManager.P2pkhExtensionOid);
 
             BitcoinAddress address;
 
@@ -74,7 +75,7 @@ namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
             }
 
             // TODO: Apart from the existence of the P2PKH address in the certificate, do we need to verify it against anything?
-            bool revoked = this.RevocationChecker.IsCertificateRevoked(MembershipServicesDirectory.GetCertificateThumbprint(rawCert));
+            bool revoked = this.membershipServices.IsCertificateRevoked(MembershipServicesDirectory.GetCertificateThumbprint(rawCert));
 
             if (revoked)
                 peer.Disconnect("Peer certificate is revoked.");
@@ -95,7 +96,7 @@ namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
         [NoTrace]
         public override object Clone()
         {
-            return new RevocationBehavior(this.network, this.LoggerFactory, this.RevocationChecker);
+            return new RevocationBehavior(this.network, this.loggerFactory, this.membershipServices);
         }
     }
 }

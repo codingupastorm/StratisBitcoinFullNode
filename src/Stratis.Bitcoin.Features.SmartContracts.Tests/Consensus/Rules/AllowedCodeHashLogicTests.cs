@@ -1,8 +1,8 @@
 ﻿using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.SmartContracts.PoA;
-using Stratis.Bitcoin.Features.SmartContracts.PoA.Rules;
+using Stratis.Features.SmartContracts.PoA;
+using Stratis.Features.SmartContracts.PoA.Rules;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.Hashing;
@@ -32,7 +32,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Consensus.Rules
             this.hashingStrategy.Setup(h => h.Hash(code)).Returns(hash);
             this.hashChecker.Setup(h => h.CheckHashWhitelisted(hash)).Returns(true);
 
-            var tx = new ContractTxData(1, 1000, (Gas) 10000, code, new EndorsementPolicy());
+            var tx = new ContractTxData(1, 1000, (Gas)10000, code, new EndorsementPolicy());
 
             var sut = new AllowedCodeHashLogic(this.hashChecker.Object, this.hashingStrategy.Object);
 
