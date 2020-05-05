@@ -53,7 +53,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             if (transaction.Outputs.Count < 1)
                 return false;
 
-            var rwsBytes = transaction.Outputs[0].ScriptPubKey.ToBytes();
+            byte[] rwsBytes = ExtractRwsBytes(transaction);
 
             // This could be empty depending on the endorsement policy.
             var endorsementsBytes = transaction
@@ -73,6 +73,13 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             {
                 return false;
             }
+        }
+
+        public static byte[] ExtractRwsBytes(Transaction transaction)
+        {
+            var rwsBytes = TxReadWriteDataTemplate.Instance.ExtractScriptPubKeyParameters(transaction.Outputs[0].ScriptPubKey)
+                .FirstOrDefault();
+            return rwsBytes;
         }
 
         private static void AddEndorsements(Transaction transaction, IEnumerable<Endorsement> endorsements)
