@@ -14,7 +14,6 @@ using Stratis.Bitcoin.Utilities;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.Miner.Interfaces;
-using Stratis.Features.Wallet;
 
 [assembly: InternalsVisibleTo("Stratis.Features.Miner.Tests")]
 
@@ -146,7 +145,6 @@ namespace Stratis.Features.Miner
                 features
                     .AddFeature<MiningFeature>()
                     .DependOn<MempoolFeature>()
-                    .DependOn<BaseWalletFeature>()
                     .FeatureServices(services =>
                     {
                         services.AddSingleton<IPowMining, PowMining>();
