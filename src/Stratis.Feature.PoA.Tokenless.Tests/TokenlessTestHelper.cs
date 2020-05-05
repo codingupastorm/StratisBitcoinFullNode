@@ -85,7 +85,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 else if (ruleType == typeof(CreateTokenlessMempoolEntryRule))
                     yield return new CreateTokenlessMempoolEntryRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory);
                 else if (ruleType == typeof(CheckSenderCertificateIsNotRevoked))
-                    yield return new CheckSenderCertificateIsNotRevoked(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.CertificatesManager.Object, this.TokenlessSigner);
+                    yield return new CheckSenderCertificateIsNotRevoked(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.MembershipServices.Object, this.TokenlessSigner);
                 else if (ruleType == typeof(ValidateEndorsementsMempoolRule))
                     yield return new ValidateEndorsementsMempoolRule(this.EndorsementRule, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory);
                 else
