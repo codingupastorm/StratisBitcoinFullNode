@@ -70,7 +70,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
         public uint256 GetHash()
         {
-            return new uint256(HashFactory.Crypto.SHA3.CreateKeccak256().ComputeBytes(this.ToBytes()).GetBytes());
+            return this.ReadWriteSet.GetHash();
         }
     }
 }
