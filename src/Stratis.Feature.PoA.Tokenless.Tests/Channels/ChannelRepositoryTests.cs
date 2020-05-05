@@ -6,6 +6,7 @@ using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Xunit;
 
 namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
@@ -19,7 +20,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
         [Fact]
         public void CanPersistAndReadBackChannelDefinitions()
         {
-            ChannelNetwork salesChannelNetwork = TokenlessNetwork.CreateChannelNetwork("sales", "salesfolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
+            ChannelNetwork salesChannelNetwork = SystemChannelNetwork.CreateChannelNetwork("sales", "salesfolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
             salesChannelNetwork.Id = 2;
             salesChannelNetwork.Organisation = "Sales";
             salesChannelNetwork.DefaultAPIPort = 1;
@@ -27,7 +28,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
             salesChannelNetwork.DefaultSignalRPort = 3;
             var salesNetworkJson = JsonSerializer.Serialize(salesChannelNetwork);
 
-            ChannelNetwork marketingChannelNetwork = TokenlessNetwork.CreateChannelNetwork("marketing", "marketingfolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
+            ChannelNetwork marketingChannelNetwork = SystemChannelNetwork.CreateChannelNetwork("marketing", "marketingfolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
             marketingChannelNetwork.Id = 3;
             marketingChannelNetwork.Organisation = "Marketing";
             marketingChannelNetwork.DefaultAPIPort = 4;
@@ -59,8 +60,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
                 Name = "marketing",
                 Organisation = "Marketing",
                 NetworkJson = marketingNetworkJson
-            }; 
-            
+            };
+
             channelRepository.SaveChannelDefinition(marketingChannel);
 
             Dictionary<string, ChannelDefinition> channels = channelRepository.GetChannelDefinitions();

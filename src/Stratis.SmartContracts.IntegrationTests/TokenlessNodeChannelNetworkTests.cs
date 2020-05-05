@@ -17,6 +17,7 @@ using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.Api;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;
@@ -25,39 +26,6 @@ namespace Stratis.SmartContracts.IntegrationTests
 {
     public sealed class TokenlessNodeChannelNetworkTests
     {
-        /// <summary>
-        /// Proves that TokenlessD can start with a serialized version of the network.
-        /// </summary>
-        [Fact]
-        public void CanStartSystemChannelNode()
-        {
-            TestBase.GetTestRootFolder(out string testRootFolder);
-
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
-            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
-            {
-                var tokenlessNetwork = new TokenlessNetwork();
-
-                server.Start();
-
-                // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
-                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
-
-                // Get Authority Certificate.
-                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
-                CaClient client1 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
-
-                // Create the main tokenless node.
-                CoreNode tokenlessNode = nodeBuilder.CreateTokenlessNode(tokenlessNetwork, 0, ac, client1);
-                tokenlessNode.Start();
-
-                // Create and start the channel node.
-                CoreNode channelNode = nodeBuilder.CreateChannelNode(tokenlessNode, "system", 1);
-                channelNode.Start();
-            }
-        }
-
         [Fact]
         public void InfraNodeCanCreateAndStartSystemChannelNode()
         {
