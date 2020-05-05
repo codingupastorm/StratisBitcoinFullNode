@@ -1,11 +1,9 @@
-using System.Collections.Generic;
-using System.Linq;
 using CertificateAuthority;
-using CertificateAuthority.Models;
 using MembershipServices;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Org.BouncyCastle.X509;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 
 namespace Stratis.Feature.PoA.Tokenless

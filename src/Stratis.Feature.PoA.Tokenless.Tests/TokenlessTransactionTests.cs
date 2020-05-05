@@ -8,6 +8,7 @@ using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Util;

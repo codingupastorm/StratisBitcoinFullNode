@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using NBitcoin;
 using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
+using Stratis.Feature.PoA.Tokenless.Networks;
 
 namespace Stratis.Feature.PoA.Tokenless.Mempool
 {
@@ -19,9 +20,9 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
             };
         }
 
-        public static void CreateForSystemChannel(ChannelNetwork channelNetwork)
+        public static void CreateForSystemChannel(SystemChannelNetwork network)
         {
-            channelNetwork.Consensus.MempoolRules = new List<Type>
+            network.Consensus.MempoolRules = new List<Type>
             {
                 typeof(CreateTokenlessMempoolEntryRule),
                 typeof(IsChannelCreationRequestWellFormed)

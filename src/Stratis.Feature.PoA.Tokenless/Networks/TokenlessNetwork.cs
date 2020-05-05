@@ -6,15 +6,11 @@ using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.PoA;
 using Stratis.Feature.PoA.Tokenless.Consensus;
-using Stratis.Feature.PoA.Tokenless.Consensus.Rules;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Mempool;
-using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
-using Stratis.Features.Consensus.Rules.CommonRules;
-using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
 using Stratis.Features.SmartContracts.PoA;
 
-namespace Stratis.Feature.PoA.Tokenless
+namespace Stratis.Feature.PoA.Tokenless.Networks
 {
     public sealed class TokenlessNetwork : Network
     {
@@ -124,92 +120,6 @@ namespace Stratis.Feature.PoA.Tokenless
 
             TokenlessConsensusRuleSet.Create(this);
             TokenlessMempoolRuleSet.Create(this);
-        }
-
-        public static ChannelNetwork CreateChannelNetwork(string name, string rootFolderName, long genesisTime)
-        {
-            var tokenlessNetwork = new TokenlessNetwork();
-            Block genesisBlock = tokenlessNetwork.CreateGenesisBlock((TokenlessConsensusFactory)tokenlessNetwork.Consensus.ConsensusFactory, (uint)genesisTime, 0, 0, 0, name);
-
-            var channelNetwork = new ChannelNetwork()
-            {
-                Base58Prefixes = tokenlessNetwork.Base58Prefixes,
-                DefaultAPIPort = tokenlessNetwork.DefaultAPIPort,
-                DefaultBanTimeSeconds = tokenlessNetwork.DefaultBanTimeSeconds,
-                DefaultConfigFilename = tokenlessNetwork.DefaultConfigFilename,
-                DefaultEnableIpRangeFiltering = tokenlessNetwork.DefaultEnableIpRangeFiltering,
-                DefaultMaxInboundConnections = tokenlessNetwork.DefaultMaxInboundConnections,
-                DefaultMaxOutboundConnections = tokenlessNetwork.DefaultMaxOutboundConnections,
-                DefaultPort = tokenlessNetwork.DefaultPort,
-                DefaultSignalRPort = tokenlessNetwork.DefaultSignalRPort,
-                Magic = tokenlessNetwork.Magic,
-                MaxTimeOffsetSeconds = tokenlessNetwork.MaxTimeOffsetSeconds,
-                MaxTipAge = tokenlessNetwork.MaxTipAge,
-                Name = name,
-                NetworkType = NetworkType.Mainnet,
-                RootFolderName = rootFolderName
-            };
-
-            channelNetwork.Consensus = tokenlessNetwork.Consensus;
-
-            // TODO:TL Override the consensus options for now so that don't
-            // start any of the CA functionality on the system channel (for now).
-            channelNetwork.Consensus.Options = new PoAConsensusOptions
-                (
-                channelNetwork.Consensus.Options.MaxBlockBaseSize,
-                channelNetwork.Consensus.Options.MaxStandardVersion,
-                channelNetwork.Consensus.Options.MaxStandardTxWeight,
-                0,
-                0,
-                ((PoAConsensusOptions)channelNetwork.Consensus.Options).GenesisFederationMembers,
-                ((PoAConsensusOptions)channelNetwork.Consensus.Options).TargetSpacingSeconds,
-                true,
-                false,
-                false
-                );
-
-            channelNetwork.Genesis = genesisBlock;
-
-            return channelNetwork;
-        }
-
-        private void RegisterRules(IConsensus consensus)
-        {
-            // IHeaderValidationConsensusRules
-            consensus.ConsensusRules
-                .Register<HeaderTimeChecksPoARule>()
-                .Register<PoAHeaderDifficultyRule>()
-                .Register<TokenlessHeaderSignatureRule>();
-
-            // IIntegrityValidationConsensusRules
-            consensus.ConsensusRules
-                .Register<BlockMerkleRootRule>()
-                .Register<PoAIntegritySignatureRule>();
-
-            // IPartialValidationConsensusRules
-            consensus.ConsensusRules
-                .Register<TokenlessBlockSizeRule>()
-                .Register<IsSmartContractWellFormedPartialValidationRule>()
-                .Register<OpReadWriteSetMustContainSignatures>()
-                .Register<SenderInputPartialValidationRule>();
-
-            // IFullValidationConsensusRule
-            consensus.ConsensusRules
-                .Register<NoDuplicateTransactionExistOnChainRule>()
-                .Register<TokenlessCoinviewRule>();
-            // ------------------------------------------------------
-        }
-
-        private void RegisterMempoolRules(IConsensus consensus)
-        {
-            consensus.MempoolRules = new List<Type>()
-            {
-                typeof(CheckSenderCertificateIsNotRevoked),
-                typeof(NoDuplicateTransactionExistOnChainMempoolRule),
-                typeof(CreateTokenlessMempoolEntryRule),
-                typeof(IsSmartContractWellFormedMempoolRule),
-                typeof(SenderInputMempoolRule)
-            };
         }
 
         private Block CreateGenesisBlock(TokenlessConsensusFactory consensusFactory, uint time, uint nonce, uint bits, int version, string data = "")

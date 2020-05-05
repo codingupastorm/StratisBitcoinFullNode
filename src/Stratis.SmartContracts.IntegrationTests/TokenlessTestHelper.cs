@@ -14,8 +14,8 @@ using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Compilation;
@@ -155,17 +155,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                 File.WriteAllBytes(certificatePath, certificate.GetEncoded());
             }
         }
-
-        //public static string GetDataFolderName([CallerMemberName] string callingMethod = null)
-        //{
-        //    // Create a datafolder path for the CA settings to use
-        //    string hash = Guid.NewGuid().ToString("N").Substring(0, 7);
-        //    string numberedFolderName = string.Join(
-        //        ".",
-        //        new[] { hash }.Where(s => s != null));
-
-        //    return TestBase.CreateTestDir(callingMethod, numberedFolderName);
-        //}
 
         public static Transaction CreateContractCreateTransaction(CoreNode node, Key key, string contractFilename, EndorsementPolicy policy = null)
         {

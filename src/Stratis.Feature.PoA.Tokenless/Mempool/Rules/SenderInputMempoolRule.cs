@@ -2,6 +2,7 @@
 using NBitcoin;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Features.SmartContracts;

@@ -6,15 +6,16 @@ using NBitcoin;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Features.SmartContracts;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.Api;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
+using Stratis.Features.SmartContracts;
 using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.TokenlessD
@@ -36,16 +37,25 @@ namespace Stratis.TokenlessD
                 fileConfig.MergeInto(configReader);
 
                 NodeSettings nodeSettings = null;
+
                 var channelSettings = new ChannelSettings(configReader);
                 if (channelSettings.IsChannelNode)
                 {
-                    network = ChannelNetwork.Construct(dataDir, channelSettings.ChannelName, channelSettings.IsSystemChannelNode);
-                    nodeSettings = new NodeSettings(network, agent: "Channel", configReader: configReader);
+                    if (channelSettings.IsSystemChannelNode)
+                    {
+                        network = new SystemChannelNetwork();
+                        nodeSettings = new NodeSettings(network, agent: "Channel-System", configReader: configReader);
+                    }
+                    else
+                    {
+                        network = ChannelNetwork.Construct(dataDir, channelSettings.ChannelName);
+                        nodeSettings = new NodeSettings(network, agent: $"Channel-{channelSettings.ChannelName}", configReader: configReader);
+                    }
                 }
                 else
                 {
                     network = new TokenlessNetwork();
-                    nodeSettings = new NodeSettings(network, configReader: configReader);
+                    nodeSettings = new NodeSettings(network, agent: "Tokenless", configReader: configReader);
                 }
 
                 // Only non-channel nodes will need to go through the key store initialization process.

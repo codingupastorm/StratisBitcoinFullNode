@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using NLog;
-using Stratis.Feature.PoA.Tokenless;
+using Stratis.Feature.PoA.Tokenless.Networks;
 
 namespace CertificateAuthority.Tests.Common
 {

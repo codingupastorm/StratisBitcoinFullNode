@@ -5,18 +5,19 @@ using Stratis.Bitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Features.SmartContracts;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.Api;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.PoA.Tests.Common;
+using Stratis.Features.SmartContracts;
 using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.SmartContracts.Tests.Common
@@ -35,7 +36,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
         public override void BuildNode()
         {
-            var channelNetwork = ChannelNetwork.Construct(Path.Combine(this.DataFolder, "channels"), this.channelName, false);
+            var channelNetwork = ChannelNetwork.Construct(Path.Combine(this.DataFolder, "channels"), this.channelName);
 
             var settings = new NodeSettings(channelNetwork, args: new string[]
             {
