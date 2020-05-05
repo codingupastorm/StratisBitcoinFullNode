@@ -7,7 +7,7 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         [Fact]
         public void Getgeneralinfo_returns_json_starting_with_wallet_path()
         {
-            Given(a_proof_of_stake_node_with_api_enabled);
+            Given(a_proof_of_work_node_with_api_enabled);
             When(calling_general_info);
             Then(general_information_about_the_wallet_and_node_is_returned);
         }
@@ -15,7 +15,7 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         [Fact]
         public void CreateExtPubKeyOnlyWallet_creates_wallet_with_extra_flag()
         {
-            Given(a_proof_of_stake_node_with_api_enabled);
+            Given(a_proof_of_work_node_with_api_enabled);
             When(calling_recover_via_extpubkey_for_account_0);
             Then(a_wallet_is_created_without_private_key_for_account_0);
 
@@ -26,7 +26,7 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         [Fact]
         public void AddNewAccount_for_xpub_only_wallet_informs_user_to_create_new_wallet()
         {
-            Given(a_proof_of_stake_node_with_api_enabled);
+            Given(a_proof_of_work_node_with_api_enabled);
             Given(an_extpubkey_only_wallet_with_account_0);
             When(attempting_to_add_an_account);
             Then(it_is_rejected_as_forbidden);
@@ -152,15 +152,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
             Given(a_proof_of_work_node_with_api_enabled);
             When(calling_status);
             Then(status_information_is_returned);
-        }
-
-        [Fact]
-        public void Proof_of_stake_node_calls_generate_after_last_Pow_block_and_receives_error()
-        {
-            Given(a_proof_of_stake_node_with_api_enabled);
-            And(the_proof_of_stake_node_has_passed_LastPOWBlock);
-            When(calling_generate);
-            Then(a_method_not_allowed_error_is_returned);
         }
     }
 }

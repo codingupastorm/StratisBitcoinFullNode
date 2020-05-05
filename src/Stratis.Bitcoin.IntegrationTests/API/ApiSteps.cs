@@ -14,7 +14,6 @@ using NBitcoin;
 using Newtonsoft.Json.Linq;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Controllers.Models;
-using Stratis.Features.Api;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.TestNetworks;
@@ -22,8 +21,7 @@ using Stratis.Bitcoin.Models;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.TestFramework;
-using Stratis.Features.Miner.Controllers;
-using Stratis.Features.Miner.Interfaces;
+using Stratis.Features.Api;
 using Stratis.Features.Miner.Models;
 using Stratis.Features.Wallet;
 using Stratis.Features.Wallet.Controllers;
@@ -131,14 +129,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
 
             this.powNodeBuilder.Dispose();
             this.posNodeBuilder.Dispose();
-        }
-
-        private void a_proof_of_stake_node_with_api_enabled()
-        {
-            this.stratisPosApiNode = this.posNodeBuilder.CreateStratisPosNode(this.posNetwork).Start();
-
-            this.stratisPosApiNode.FullNode.NodeService<IPosMinting>(true).Should().NotBeNull();
-            this.apiUri = this.stratisPosApiNode.FullNode.NodeService<ApiSettings>().ApiUri;
         }
 
         private void the_proof_of_stake_node_has_passed_LastPOWBlock()
@@ -447,15 +437,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         {
             List<string> transactionList = JArray.Parse(this.responseText).ToObject<List<string>>();
             transactionList[0].Should().Be(this.transaction.GetHash().ToString());
-        }
-
-        private void staking_is_enabled_but_nothing_is_staked()
-        {
-            var miningRpcController = this.stratisPosApiNode.FullNode.NodeController<StakingRpcController>();
-            GetStakingInfoModel stakingInfo = miningRpcController.GetStakingInfo();
-            stakingInfo.Should().NotBeNull();
-            stakingInfo.Enabled.Should().BeTrue();
-            stakingInfo.Staking.Should().BeFalse();
         }
 
         private void the_transaction_hash_is_returned()
