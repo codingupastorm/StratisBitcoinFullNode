@@ -265,8 +265,8 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         private void calling_general_info()
         {
             // With these tests we still need to create the wallets outside of the builder
-            this.stratisPosApiNode.FullNode.WalletManager().CreateWallet(WalletPassword, WalletName, WalletPassphrase);
-            this.stratisPosApiNode.FullNode.WalletManager().SaveWallet(WalletName);
+            this.firstStratisPowApiNode.FullNode.WalletManager().CreateWallet(WalletPassword, WalletName, WalletPassphrase);
+            this.firstStratisPowApiNode.FullNode.WalletManager().SaveWallet(WalletName);
 
             this.send_api_get_request($"{GeneralInfoUri}?name={WalletName}");
         }

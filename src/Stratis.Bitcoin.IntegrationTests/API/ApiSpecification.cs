@@ -13,26 +13,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         }
 
         [Fact]
-        public void CreateExtPubKeyOnlyWallet_creates_wallet_with_extra_flag()
-        {
-            Given(a_proof_of_work_node_with_api_enabled);
-            When(calling_recover_via_extpubkey_for_account_0);
-            Then(a_wallet_is_created_without_private_key_for_account_0);
-
-            When(calling_recover_via_extpubkey_for_account_1);
-            Then(a_wallet_is_created_without_private_key_for_account_1);
-        }
-
-        [Fact]
-        public void AddNewAccount_for_xpub_only_wallet_informs_user_to_create_new_wallet()
-        {
-            Given(a_proof_of_work_node_with_api_enabled);
-            Given(an_extpubkey_only_wallet_with_account_0);
-            When(attempting_to_add_an_account);
-            Then(it_is_rejected_as_forbidden);
-        }
-
-        [Fact]
         public void Block_with_valid_hash_returns_transaction_block()
         {
             Given(two_connected_proof_of_work_nodes_with_api_enabled);
