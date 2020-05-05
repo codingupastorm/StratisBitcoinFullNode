@@ -77,7 +77,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task TokenlessSystenChannelNodesMineAnEmptyBlockAsync()
+        public async Task TokenlessSystemChannelNodesMineAnEmptyBlockAsync()
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 

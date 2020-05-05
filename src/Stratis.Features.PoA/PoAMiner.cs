@@ -146,15 +146,14 @@ namespace Stratis.Features.PoA
 
                     // Don't mine in IBD or if we aren't connected to any node (unless bootstrapping mode is enabled).
                     // Don't try to mine if we aren't a federation member.
-
-                    //For now we need to not look at the connected peers count until we are able to start more system channel nodes.
-                    // || !this.connectionManager.ConnectedPeers.Any()
+                    // Don't mine if there are no connected peers.
 
                     if ((
                         (this.ibdState.IsInitialBlockDownload())
                         && !this.settings.BootstrappingMode
                         )
                         || !this.federationManager.IsFederationMember
+                        || !this.connectionManager.ConnectedPeers.Any()
                         )
                     {
                         int attemptDelayMs = 30_000;
