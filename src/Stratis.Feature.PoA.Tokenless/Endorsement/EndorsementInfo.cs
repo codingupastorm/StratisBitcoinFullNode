@@ -38,7 +38,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         public bool AddSignature(X509Certificate certificate, SignedProposalResponse signedProposalResponse)
         {
             // Verify the signature matches the peer's certificate.
-            if (!this.endorsementSignatureValidator.Validate(signedProposalResponse.Endorsement, signedProposalResponse.ProposalResponse.ToBytes()))
+            if (!this.endorsementSignatureValidator.Validate(signedProposalResponse.Endorsement, signedProposalResponse.ProposalResponse.ReadWriteSet.ToJsonEncodedBytes()))
             {
                 return false;
             }
