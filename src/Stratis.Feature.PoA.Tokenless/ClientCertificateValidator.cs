@@ -16,6 +16,7 @@ namespace Stratis.Feature.PoA.Tokenless
         public ClientCertificateValidator(ChannelSettings channelSettings, Network network)
         {
             this.channelSettings = channelSettings;
+            this.network = network;
         }
 
         public void ConfirmCertificatePermittedOnChannel(X509Certificate certificate)
