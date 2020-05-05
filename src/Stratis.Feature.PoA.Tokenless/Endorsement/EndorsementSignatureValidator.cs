@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CertificateAuthority;
 using CertificateAuthority.Models;
+using MembershipServices;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Org.BouncyCastle.X509;
@@ -25,15 +26,13 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     /// </summary>
     public class EndorsementSignatureSignatureValidator : IEndorsementSignatureValidator
     {
-        private readonly ICertificatesManager certificatesManager;
+        private readonly IMembershipServicesDirectory membershipServices;
         private readonly ICertificatePermissionsChecker permissionsChecker;
-        private readonly ByteArrayComparer byteArrayComparer;
 
-        public EndorsementSignatureSignatureValidator(ICertificatesManager certificatesManager, ICertificatePermissionsChecker permissionsChecker)
+        public EndorsementSignatureSignatureValidator(IMembershipServicesDirectory membershipServices, ICertificatePermissionsChecker permissionsChecker)
         {
-            this.certificatesManager = certificatesManager;
+            this.membershipServices = membershipServices;
             this.permissionsChecker = permissionsChecker;
-            this.byteArrayComparer = new ByteArrayComparer();
         }
 
         public bool Validate(IEnumerable<Endorsement> endorsements, byte[] data)
@@ -44,12 +43,9 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         public bool Validate(Endorsement endorsement, byte[] data)
         {
             var pubKey = new PubKey(endorsement.PubKey);
+            X509Certificate cert = this.membershipServices.GetCertificateForTransactionSigningPubKeyHash(pubKey.Hash.ToBytes());
 
-            CertificateInfoModel certificateInfoModel = this.certificatesManager.GetAllCertificates()
-                .FirstOrDefault(c =>
-                    this.byteArrayComparer.Equals(c.TransactionSigningPubKeyHash, pubKey.Hash.ToBytes()));
-
-            if (certificateInfoModel == null)
+            if (cert == null)
             {
                 return false;
             }
@@ -58,7 +54,9 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
             var signature = new ECDSASignature(endorsement.Signature);
 
-            return this.permissionsChecker.CheckSignature(certificateInfoModel.Thumbprint, signature, pubKey, hash);
+            var thumbprint = CaCertificatesManager.GetThumbprint(cert);
+
+            return this.permissionsChecker.CheckSignature(thumbprint, signature, pubKey, hash);
         }
     }
 }
