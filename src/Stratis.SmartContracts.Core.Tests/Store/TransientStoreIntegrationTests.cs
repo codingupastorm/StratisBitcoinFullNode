@@ -80,6 +80,44 @@ namespace Stratis.SmartContracts.Core.Tests.Store
         }
 
         [Fact]
+        public void PurgeById_Success()
+        {
+            var recordsToAdd = 100;
+            var recordIdToPurge = new uint256(0); // Purge the bottom record so we can also check that the min block height changed
+
+            // Add some fake data
+            for (uint i = 0; i < recordsToAdd; i++)
+            {
+                this.store.Persist(new uint256(i), i, new TransientStorePrivateData(new byte[] { }));
+            }
+
+            Assert.Equal(0U, this.store.GetMinBlockHeight());
+
+            // Check that the values exist.
+            using (var tx = this.repo.CreateTransaction(KeyValueStoreTransactionMode.Read))
+            {
+                // n data + n index + 1 min block height
+                Assert.Equal(recordsToAdd * 2 + 1, tx.Count(TransientStore.Table));
+            }
+
+            // Attempt to purge the singular record.
+            this.store.Purge(recordIdToPurge);
+
+            var remainingRecords = recordsToAdd - 1;
+
+            using (var tx = this.repo.CreateTransaction(KeyValueStoreTransactionMode.Read))
+            {
+                Assert.Equal(remainingRecords * 2 + 1, tx.Count(TransientStore.Table));
+            }
+
+            var data = this.store.Get(recordIdToPurge);
+
+            Assert.Null(data.Data);
+            Assert.Equal(0U, data.BlockHeight);
+            Assert.Equal(1U, this.store.GetMinBlockHeight());
+        }
+
+        [Fact]
         public void GetAndSetPrivateData()
         {
             uint256 id = new uint256(123456);
