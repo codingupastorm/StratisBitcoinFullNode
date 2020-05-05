@@ -17,7 +17,7 @@ using Stratis.Bitcoin.Configuration;
 using TextFileConfiguration = Stratis.Bitcoin.Configuration.TextFileConfiguration;
 using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 
-namespace Stratis.Features.PoA.ProtocolEncryption
+namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
 {
     public sealed class CertificatesManager : ICertificatesManager
     {

@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using Org.BouncyCastle.X509;
-using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;

@@ -1,6 +1,6 @@
 ﻿using NBitcoin;
 
-namespace Stratis.Feature.PoA.Tokenless.Channels.Requests
+namespace Stratis.Feature.PoA.Tokenless.Channels
 {
     public sealed class ChannelMemberDefinition : IBitcoinSerializable
     {

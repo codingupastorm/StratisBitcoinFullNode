@@ -14,7 +14,7 @@ using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
-using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.PoA.Tests.Common;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;

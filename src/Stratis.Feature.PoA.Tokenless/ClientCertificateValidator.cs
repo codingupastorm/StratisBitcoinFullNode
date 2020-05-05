@@ -2,9 +2,10 @@
 using CertificateAuthority;
 using Org.BouncyCastle.X509;
 using Stratis.Feature.PoA.Tokenless.Channels;
-using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
+using Stratis.Features.PoA;
 
-namespace Stratis.Features.PoA
+namespace Stratis.Feature.PoA.Tokenless
 {
     public class ClientCertificateValidator : IClientCertificateValidator
     {

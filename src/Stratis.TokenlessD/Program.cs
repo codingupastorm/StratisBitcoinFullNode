@@ -11,10 +11,10 @@ using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.Api;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
-using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.TokenlessD

@@ -3,13 +3,10 @@ using System.IO;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.Common;
 using HashLib;
-using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
-using NBitcoin.Crypto;
-using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.X509;
-using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Xunit;
 using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 

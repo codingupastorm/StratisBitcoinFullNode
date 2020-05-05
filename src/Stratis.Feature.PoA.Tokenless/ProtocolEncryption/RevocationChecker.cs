@@ -2,7 +2,7 @@
 using MembershipServices;
 using Org.BouncyCastle.X509;
 
-namespace Stratis.Features.PoA.ProtocolEncryption
+namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
 {
     public interface IRevocationChecker : IDisposable
     {
