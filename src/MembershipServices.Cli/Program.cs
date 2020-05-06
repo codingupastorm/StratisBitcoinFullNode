@@ -258,6 +258,11 @@ namespace MembershipServices.Cli
                 membershipServices.AddLocalMember(cert.ToCertificate(), MemberType.NetworkPeer);
             }
 
+            foreach (string thumbprint in caClient.GetRevokedCertificates())
+            {
+                membershipServices.RevokeCertificate(thumbprint);
+            }
+
             return 0;
         }
 
