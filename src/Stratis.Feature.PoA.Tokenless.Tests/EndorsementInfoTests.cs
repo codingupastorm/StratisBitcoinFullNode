@@ -69,7 +69,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             Assert.True(endorsement.Validate());
             Assert.Equal(EndorsementState.Approved, endorsement.State);
 
-            endorsementValidator.Verify(p => p.Validate(proposalResponse.Endorsement, It.Is<byte[]>(v => proposalResponse.ProposalResponse.ToBytes().SequenceEqual(v))));
+            endorsementValidator.Verify(p => p.Validate(proposalResponse.Endorsement, It.Is<byte[]>(v => proposalResponse.ProposalResponse.ReadWriteSet.ToJsonEncodedBytes().SequenceEqual(v))));
 
             organisationLookup.Verify(l => l.FromCertificate(certificate), Times.Once);
         }
