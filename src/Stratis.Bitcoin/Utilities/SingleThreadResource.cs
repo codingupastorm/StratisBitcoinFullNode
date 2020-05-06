@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading;
 using Microsoft.Extensions.Logging;
 
-namespace Stratis.Bitcoin.Utilities
+namespace Stratis.Core.AsyncWork
 {
     /// <summary>
     /// Represents a resource that can only be held by one thread at a time.

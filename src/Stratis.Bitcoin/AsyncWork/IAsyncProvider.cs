@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Stratis.Bitcoin.Signals;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 
-namespace Stratis.Bitcoin.AsyncWork
+namespace Stratis.Core.AsyncWork
 {
     public interface IAsyncProvider
     {

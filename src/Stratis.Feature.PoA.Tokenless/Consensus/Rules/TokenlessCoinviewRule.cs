@@ -8,7 +8,7 @@ using NBitcoin;
 using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Features.SmartContracts;
 using Stratis.Features.SmartContracts.Caching;

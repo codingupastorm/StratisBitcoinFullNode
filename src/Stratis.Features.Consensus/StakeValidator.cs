@@ -8,7 +8,7 @@ using NBitcoin.BouncyCastle.Math;
 using NBitcoin.Crypto;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Features.Consensus.Interfaces;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 
 namespace Stratis.Features.Consensus
 {

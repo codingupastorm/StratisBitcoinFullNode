@@ -2,7 +2,7 @@
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
 
-namespace Stratis.Bitcoin.Utilities.JsonConverters
+namespace Stratis.Core.AsyncWork.JsonConverters
 {
     /// <summary>
     /// Converter used to convert a <see cref="byte[]"/> to and from hex-encoded JSON.

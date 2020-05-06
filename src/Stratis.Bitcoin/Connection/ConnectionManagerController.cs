@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Controllers;
 using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Utilities.Extensions;
-using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.AsyncWork.Extensions;
+using Stratis.Core.AsyncWork.JsonErrors;
 
 namespace Stratis.Bitcoin.Connection
 {

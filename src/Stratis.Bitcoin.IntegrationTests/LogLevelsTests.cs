@@ -17,7 +17,7 @@ using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Networks;
-using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Core.AsyncWork.JsonErrors;
 using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests

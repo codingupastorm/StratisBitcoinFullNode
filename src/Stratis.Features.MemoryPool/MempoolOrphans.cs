@@ -7,7 +7,7 @@ using NBitcoin;
 using Stratis.Bitcoin.EventBus.CoreEvents;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Signals;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Stratis.Features.MemoryPool.Interfaces;
 
 namespace Stratis.Features.MemoryPool

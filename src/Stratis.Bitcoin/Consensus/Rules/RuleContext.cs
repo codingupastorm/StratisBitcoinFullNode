@@ -1,6 +1,6 @@
 ﻿using System;
 using Stratis.Bitcoin.Base.Deployments;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 
 namespace Stratis.Bitcoin.Consensus.Rules
 {

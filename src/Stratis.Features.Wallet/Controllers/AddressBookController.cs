@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Stratis.Features.Wallet.Interfaces;
 using Stratis.Features.Wallet.Models;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Utilities.JsonErrors;
-using Stratis.Bitcoin.Utilities.ModelStateErrors;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.AsyncWork.JsonErrors;
+using Stratis.Core.AsyncWork.ModelStateErrors;
 
 namespace Stratis.Features.Wallet.Controllers
 {
