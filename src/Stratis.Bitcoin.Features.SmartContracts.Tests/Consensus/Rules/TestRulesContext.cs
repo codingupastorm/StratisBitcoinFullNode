@@ -11,6 +11,7 @@ using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Signals;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.Rules;
 using Stratis.Features.SmartContracts.Interfaces;
 using Stratis.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;

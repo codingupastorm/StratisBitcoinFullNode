@@ -24,6 +24,14 @@ using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
+using Stratis.Features.Consensus.CoinViews;
+using Stratis.Features.Consensus.Rules;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Fee;
+using Stratis.Features.MemoryPool.Interfaces;
+using Stratis.Features.MemoryPool.Rules;
+using Stratis.Features.Miner;
 using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests
