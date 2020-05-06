@@ -2,7 +2,7 @@
 using FluentAssertions;
 using NBitcoin;
 using Stratis.Bitcoin.Base.Deployments;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin.Tests.Common
 {

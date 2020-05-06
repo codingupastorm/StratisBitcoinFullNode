@@ -1,4 +1,4 @@
-﻿using Stratis.Core.AsyncWork;
+﻿using Stratis.Core.Utilities;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.Utilities

@@ -1,5 +1,5 @@
 ﻿using System;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 using Xunit;
 

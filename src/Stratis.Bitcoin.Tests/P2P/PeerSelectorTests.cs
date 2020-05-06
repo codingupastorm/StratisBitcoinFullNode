@@ -9,7 +9,7 @@ using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.Tests.Common.Logging;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 using Xunit;
 

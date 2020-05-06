@@ -10,14 +10,15 @@ using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Consensus.Validators;
-using Stratis.Features.Consensus.CoinViews;
-using Stratis.Features.Consensus.Rules;
-using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
+using Stratis.Features.Consensus.CoinViews;
+using Stratis.Features.Consensus.Rules;
+using Stratis.Features.Consensus.Rules.CommonRules;
 
 namespace Stratis.Bitcoin.Tests.Common
 {

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.Utilities
@@ -111,7 +111,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
                 };
 
                 executionEvent.Register(callback1Async);
-                
+
                 // We can register a second callback with same body, but it is different function.
                 executionEvent.Register(callback2Async);
 
