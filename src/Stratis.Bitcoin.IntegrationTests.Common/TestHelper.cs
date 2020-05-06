@@ -9,7 +9,7 @@ using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 using Stratis.Features.BlockStore;
 using Stratis.Features.Miner;
