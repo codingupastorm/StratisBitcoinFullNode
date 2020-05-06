@@ -11,7 +11,6 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
