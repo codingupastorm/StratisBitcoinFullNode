@@ -1,227 +1,23 @@
-﻿using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security;
-using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Mvc;
+﻿using System.Linq;
 using NBitcoin;
-using Stratis.Features.MemoryPool.Broadcasting;
-using Stratis.Features.Wallet;
-using Stratis.Features.Wallet.Controllers;
-using Stratis.Features.Wallet.Interfaces;
-using Stratis.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
-using Stratis.Bitcoin.Models;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Interfaces;
 using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests.Wallet
 {
     public class WalletTests
     {
-        private const string Password = "password";
-        private const string WalletName = "mywallet";
-        private const string Passphrase = "passphrase";
-        private const string Account = "account 0";
         private readonly Network network;
 
         public WalletTests()
         {
             this.network = new BitcoinRegTest();
-        }
-
-        [Fact]
-        public void WalletCanReceiveAndSendCorrectly()
-        {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                CoreNode stratisSender = builder.CreateStratisPowNode(this.network).WithWallet().Start();
-                CoreNode stratisReceiver = builder.CreateStratisPowNode(this.network).WithWallet().Start();
-
-                int maturity = (int)stratisSender.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity;
-                TestHelper.MineBlocks(stratisSender, maturity + 1 + 5);
-
-                // The mining should add coins to the wallet
-                long total = stratisSender.FullNode.WalletManager().GetSpendableTransactionsInWallet(WalletName).Sum(s => s.Transaction.Amount);
-                Assert.Equal(Money.COIN * 6 * 50, total);
-
-                // Sync both nodes
-                TestHelper.ConnectAndSync(stratisSender, stratisReceiver);
-
-                // Send coins to the receiver
-                HdAddress sendto = stratisReceiver.FullNode.WalletManager().GetUnusedAddress(new WalletAccountReference(WalletName, Account));
-                Transaction trx = stratisSender.FullNode.WalletTransactionHandler().BuildTransaction(CreateContext(stratisSender.FullNode.Network,
-                    new WalletAccountReference(WalletName, Account), Password, sendto.ScriptPubKey, Money.COIN * 100, FeeType.Medium, 101));
-
-                // Broadcast to the other node
-                stratisSender.FullNode.NodeController<WalletController>().SendTransaction(new SendTransactionRequest(trx.ToHex()));
-
-                // Wait for the transaction to arrive
-                TestBase.WaitLoop(() => stratisReceiver.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count > 0);
-                TestBase.WaitLoop(() => stratisReceiver.FullNode.WalletManager().GetSpendableTransactionsInWallet(WalletName).Any());
-
-                long receivetotal = stratisReceiver.FullNode.WalletManager().GetSpendableTransactionsInWallet(WalletName).Sum(s => s.Transaction.Amount);
-                Assert.Equal(Money.COIN * 100, receivetotal);
-
-                // Check that on the sending node, the Spendable Balance includes unconfirmed transactions.
-                // The transaction will have consumed 3 outputs, leaving us 3, and will also return us some as change.
-                // Change is always the First output because Shuffle is false!
-                Money expectedSenderSpendableBalance = Money.COIN * 3 * 50 + trx.Outputs.First().Value;
-                AccountBalance senderBalance = stratisSender.FullNode.WalletManager().GetBalances(WalletName).First();
-                Assert.Equal(expectedSenderSpendableBalance, senderBalance.SpendableAmount);
-
-                Assert.Null(stratisReceiver.FullNode.WalletManager().GetSpendableTransactionsInWallet(WalletName).First().Transaction.BlockHeight);
-
-                // Generate two new blocks so the transaction is confirmed
-                TestHelper.MineBlocks(stratisSender, 2);
-
-                // Wait for block repo for block sync to work
-                TestBase.WaitLoop(() => TestHelper.AreNodesSynced(stratisReceiver, stratisSender));
-
-                Assert.Equal(Money.Coins(100), stratisReceiver.FullNode.WalletManager().GetBalances(WalletName, Account).Single().AmountConfirmed);
-            }
-        }
-
-        [Fact]
-        public void WalletValidatesIncorrectPasswordAfterCorrectIsUsed()
-        {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                CoreNode stratisSender = builder.CreateStratisPowNode(this.network).WithWallet().Start();
-                CoreNode stratisReceiver = builder.CreateStratisPowNode(this.network).WithWallet().Start();
-
-                int maturity = (int)stratisSender.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity;
-                TestHelper.MineBlocks(stratisSender, maturity + 1 + 5);
-
-                // The mining should add coins to the wallet
-                long total = stratisSender.FullNode.WalletManager().GetSpendableTransactionsInWallet(WalletName).Sum(s => s.Transaction.Amount);
-                Assert.Equal(Money.COIN * 6 * 50, total);
-
-                // Sync both nodes
-                TestHelper.ConnectAndSync(stratisSender, stratisReceiver);
-
-                // Build a transaction using the correct password.
-                HdAddress sendto = stratisReceiver.FullNode.WalletManager().GetUnusedAddress(new WalletAccountReference(WalletName, Account));
-                Transaction trx = stratisSender.FullNode.WalletTransactionHandler().BuildTransaction(CreateContext(stratisSender.FullNode.Network,
-                    new WalletAccountReference(WalletName, Account), Password, sendto.ScriptPubKey, Money.COIN * 100, FeeType.Medium, 101));
-
-                // Build a transaction using an incorrect password. It should throw an exception.
-                SecurityException exception = Assert.Throws<SecurityException>(() =>
-                {
-                    Transaction trx2 = stratisSender.FullNode.WalletTransactionHandler().BuildTransaction(CreateContext(
-                        stratisSender.FullNode.Network,
-                        new WalletAccountReference(WalletName, Account), "Wrong", sendto.ScriptPubKey, Money.COIN * 100,
-                        FeeType.Medium, 101));
-                });
-
-                Assert.StartsWith("Invalid password", exception.Message);
-            }
-        }
-
-        [Fact]
-        public void BuildTransaction_From_ManyUtxos_EnoughFundsForFee()
-        {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                CoreNode node1 = builder.CreateStratisPowNode(this.network).WithWallet().Start();
-                CoreNode node2 = builder.CreateStratisPowNode(this.network).WithWallet().Start();
-
-                int maturity = (int)node1.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity;
-                TestHelper.MineBlocks(node1, maturity + 1 + 15);
-
-                int currentBestHeight = maturity + 1 + 15;
-
-                // The mining should add coins to the wallet.
-                long total = node1.FullNode.WalletManager().GetSpendableTransactionsInWallet(WalletName).Sum(s => s.Transaction.Amount);
-                Assert.Equal(Money.COIN * 16 * 50, total);
-
-                // Sync all nodes.
-                TestHelper.ConnectAndSync(node1, node2);
-
-                const int utxosToSend = 500;
-                const int howManyTimes = 8;
-
-                for (int i = 0; i < howManyTimes; i++)
-                {
-                    HdAddress sendto = node2.FullNode.WalletManager().GetUnusedAddress(new WalletAccountReference(WalletName, Account));
-                    SendManyUtxosTransaction(node1, sendto.ScriptPubKey, Money.FromUnit(907700, MoneyUnit.Satoshi), utxosToSend);
-                }
-
-                TestBase.WaitLoop(() => node1.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == howManyTimes);
-                TestHelper.MineBlocks(node1, 1);
-                TestHelper.WaitForNodeToSync(node1, node2);
-
-                var transactionsToSpend = node2.FullNode.WalletManager().GetSpendableTransactionsInWallet(WalletName);
-                Assert.Equal(utxosToSend * howManyTimes, transactionsToSpend.Count());
-
-                // Firstly, build a tx with value 1. Previously this would fail as the WalletTransactionHandler didn't pass enough UTXOs.
-                IActionResult result = node2.FullNode.NodeController<WalletController>().BuildTransaction(
-                    new BuildTransactionRequest
-                    {
-                        WalletName = WalletName,
-                        AccountName = "account 0",
-                        FeeAmount = "0.1",
-                        Password = Password,
-                        Recipients = new List<RecipientModel>
-                        {
-                            new RecipientModel
-                            {
-                                Amount = "1",
-                                DestinationAddress = node1.FullNode.WalletManager()
-                                    .GetUnusedAddress(new WalletAccountReference(WalletName, Account)).Address
-                            }
-                        }
-                    });
-
-                JsonResult jsonResult = (JsonResult)result;
-                Assert.NotNull(((WalletBuildTransactionModel)jsonResult.Value).TransactionId);
-            }
-        }
-
-        /// <summary>
-        /// Given_TheNodeHadAReorg_And_WalletTipIsBehindConsensusTip_When_ANewBlockArrives_Then_WalletCanRecover
-        /// </summary>
-        [Fact]
-        public void WalletTestsScenario3()
-        {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                CoreNode stratisSender = builder.CreateStratisPowNode(this.network).WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
-                CoreNode stratisReceiver = builder.CreateStratisPowNode(this.network).Start();
-                CoreNode stratisReorg = builder.CreateStratisPowNode(this.network).WithWallet().Start();
-
-                // Sync all nodes.
-                TestHelper.ConnectAndSync(stratisReceiver, stratisSender);
-                TestHelper.ConnectAndSync(stratisReceiver, stratisReorg);
-                TestHelper.ConnectAndSync(stratisSender, stratisReorg);
-
-                // Remove the reorg node.
-                TestHelper.Disconnect(stratisReceiver, stratisReorg);
-                TestHelper.Disconnect(stratisSender, stratisReorg);
-
-                // Create a reorg by mining on two different chains.
-                // Advance both chains, one chain is longer.
-                TestHelper.MineBlocks(stratisSender, 2);
-                TestHelper.MineBlocks(stratisReorg, 10);
-
-                // Connect the reorg chain.
-                TestHelper.ConnectAndSync(stratisReceiver, stratisReorg);
-                TestHelper.ConnectAndSync(stratisSender, stratisReorg);
-
-                // Wait for the chains to catch up.
-                TestBase.WaitLoop(() => TestHelper.AreNodesSynced(stratisReceiver, stratisSender));
-                TestBase.WaitLoop(() => TestHelper.AreNodesSynced(stratisReceiver, stratisReorg));
-                Assert.Equal(20, stratisReceiver.FullNode.ChainIndexer.Tip.Height);
-
-                TestHelper.MineBlocks(stratisSender, 5);
-
-                TestBase.WaitLoop(() => TestHelper.AreNodesSynced(stratisReceiver, stratisSender));
-                Assert.Equal(25, stratisReceiver.FullNode.ChainIndexer.Tip.Height);
-            }
         }
 
         /// <summary>
@@ -283,31 +79,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
             }
         }
 
-        [Fact(Skip = "Investigate PeerConnector shutdown timeout issue")]
-        public void WalletCanRecoverOnStartup()
-        {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                CoreNode stratisNodeSync = builder.CreateStratisPowNode(this.network).WithWallet().Start();
-
-                TestHelper.MineBlocks(stratisNodeSync, 10);
-
-                // Set the tip of best chain some blocks in the past
-                stratisNodeSync.FullNode.ChainIndexer.SetTip(stratisNodeSync.FullNode.ChainIndexer.GetHeader(stratisNodeSync.FullNode.ChainIndexer.Height - 5));
-
-                // Stop the node (it will persist the chain with the reset tip)
-                stratisNodeSync.FullNode.Dispose();
-
-                CoreNode newNodeInstance = builder.CloneStratisNode(stratisNodeSync);
-
-                // Load the node, this should hit the block store recover code
-                newNodeInstance.Start();
-
-                // Check that store recovered to be the same as the best chain.
-                Assert.Equal(newNodeInstance.FullNode.ChainIndexer.Tip.HashBlock, newNodeInstance.FullNode.WalletManager().WalletTipHash);
-            }
-        }
-
         public static TransactionBuildContext CreateContext(Network network, WalletAccountReference accountReference, string password,
             Script destinationScript, Money amount, FeeType feeType, int minConfirmations)
         {
@@ -319,49 +90,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Wallet
                 WalletPassword = password,
                 Recipients = new[] { new Recipient { Amount = amount, ScriptPubKey = destinationScript } }.ToList()
             };
-        }
-
-        /// <summary>
-        /// Copies the test wallet into data folder for node if it isn't already present.
-        /// </summary>
-        /// <param name="path">The path of the folder to move the wallet to.</param>
-        private void InitializeTestWallet(string path)
-        {
-            string testWalletPath = Path.Combine(path, "test.wallet.json");
-            if (!File.Exists(testWalletPath))
-                File.Copy("Data/test.wallet.json", testWalletPath);
-        }
-
-        private static Result<SendTransactionModel> SendManyUtxosTransaction(CoreNode node, Script scriptPubKey, Money amount, int utxos = 1)
-        {
-            Recipient[] recipients = new Recipient[utxos];
-            for (int i = 0; i < recipients.Length; i++)
-            {
-                recipients[i] = new Recipient { Amount = amount, ScriptPubKey = scriptPubKey };
-            }
-
-            var txBuildContext = new TransactionBuildContext(node.FullNode.Network)
-            {
-                AccountReference = new WalletAccountReference(WalletName, "account 0"),
-                MinConfirmations = 1,
-                FeeType = FeeType.Medium,
-                WalletPassword = Password,
-                Recipients = recipients.ToList()
-            };
-
-            Transaction trx = (node.FullNode.NodeService<IWalletTransactionHandler>() as IWalletTransactionHandler).BuildTransaction(txBuildContext);
-
-            // Broadcast to the other node.
-
-            IActionResult result = node.FullNode.NodeController<WalletController>().SendTransaction(new SendTransactionRequest(trx.ToHex()));
-            if (result is ErrorResult errorResult)
-            {
-                var errorResponse = (ErrorResponse)errorResult.Value;
-                return Result.Fail<SendTransactionModel>(errorResponse.Errors[0].Message);
-            }
-
-            JsonResult response = (JsonResult)result;
-            return Result.Ok((SendTransactionModel)response.Value);
         }
     }
 }

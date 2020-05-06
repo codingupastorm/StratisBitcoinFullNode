@@ -15,18 +15,8 @@ using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Features.Consensus.CoinViews;
-using Stratis.Features.Consensus.Rules;
-using Stratis.Features.MemoryPool;
-using Stratis.Features.MemoryPool.Broadcasting;
-using Stratis.Features.MemoryPool.Fee;
-using Stratis.Features.MemoryPool.Interfaces;
-using Stratis.Features.MemoryPool.Rules;
-using Stratis.Features.Miner;
-using Stratis.Features.Wallet;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.IntegrationTests.Wallet;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Networks;
@@ -35,6 +25,13 @@ using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.Consensus.CoinViews;
+using Stratis.Features.Consensus.Rules;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Fee;
+using Stratis.Features.MemoryPool.Interfaces;
+using Stratis.Features.MemoryPool.Rules;
+using Stratis.Features.Miner;
 using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests
@@ -694,47 +691,6 @@ namespace Stratis.Bitcoin.IntegrationTests
             context.ChainIndexer.SetTip(blockHeader);
 
             Assert.True(tx.IsFinal(context.ChainIndexer.Tip.GetMedianTimePast().AddMinutes(2), context.ChainIndexer.Tip.Height + 2)); // Locktime passes 2 min later
-        }
-
-        /// <summary>
-        /// Miner_PosNetwork_CreatePowTransaction_AheadOfFutureDrift_ShouldNotBeIncludedInBlock
-        /// </summary>
-        [Fact]
-        public void MinerTests_Scenario10()
-        {
-            var network = KnownNetworks.StratisRegTest;
-
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                CoreNode stratisMiner = builder.CreateStratisPosNode(network).WithWallet().Start();
-
-                int maturity = (int)network.Consensus.ConsensusMiningReward.CoinbaseMaturity;
-                TestHelper.MineBlocks(stratisMiner, maturity + 5);
-
-                // Send coins to the receiver
-                var context = WalletTests.CreateContext(network, new WalletAccountReference(WalletName, Account), Password, new Key().PubKey.GetAddress(network).ScriptPubKey, Money.COIN * 100, FeeType.Medium, 1);
-
-                Transaction trx = stratisMiner.FullNode.WalletTransactionHandler().BuildTransaction(context);
-
-                // This should make the mempool reject a POS trx.
-                trx.Time = Utils.DateTimeToUnixTime(Utils.UnixTimeToDateTime(trx.Time).AddMinutes(5));
-
-                // Sign trx again after changing the time property.
-                trx = context.TransactionBuilder.SignTransaction(trx);
-
-                var broadcaster = stratisMiner.FullNode.NodeService<IBroadcasterManager>();
-
-                broadcaster.BroadcastTransactionAsync(trx).GetAwaiter().GetResult();
-                var entry = broadcaster.GetTransaction(trx.GetHash());
-
-                Assert.Equal(State.ToBroadcast, entry.State);
-
-                Assert.NotNull(stratisMiner.FullNode.MempoolManager().GetTransaction(trx.GetHash()).Result);
-
-                TestHelper.MineBlocks(stratisMiner, 1);
-
-                Assert.NotNull(stratisMiner.FullNode.MempoolManager().GetTransaction(trx.GetHash()).Result);
-            }
         }
     }
 }
