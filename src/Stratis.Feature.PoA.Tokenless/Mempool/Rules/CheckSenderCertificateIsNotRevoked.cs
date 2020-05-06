@@ -1,10 +1,9 @@
 ﻿using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Interfaces;
-using Stratis.Feature.PoA.Tokenless.Consensus;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.SmartContracts.Core.Util;
 
 namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
