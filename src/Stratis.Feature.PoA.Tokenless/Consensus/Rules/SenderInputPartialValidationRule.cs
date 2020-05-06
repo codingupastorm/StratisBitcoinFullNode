@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.SmartContracts.Core.Util;
 
@@ -50,8 +49,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
                 new ConsensusError("error-signature-invalid", $"The signature for transaction {transaction.GetHash()} is invalid.").Throw();
 
             // If we're not on the OG network, then check that the sender is allowed to be on this network.
-            // TODO: Is this check for the current channel robust?
-            if (this.network is ChannelNetwork channelNetwork && channelNetwork.Id != ChannelService.SystemChannelId)
+            if (this.network is ChannelNetwork channelNetwork)
             {
                 if (!this.certificatePermissionsChecker.CheckSenderCertificateIsPermittedOnChannel(getSenderResult.Sender, channelNetwork))
                 {

@@ -30,7 +30,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             mock.Setup(m => m.GetCertificateForThumbprint(It.IsAny<string>())).Returns(new Mock<X509Certificate>().Object);
             mock.Setup(m => m.ExtractCertificateExtensionFromOid(It.IsAny<X509Certificate>(), It.IsAny<string>())).Returns(transactionSigningKey.PubKey.Hash.ToBytes());
 
-            var checker = new CertificatePermissionsChecker(mock.Object, null);
+            var checker = new CertificatePermissionsChecker(mock.Object, null, new ChannelAccessValidator());
 
             var data = RandomUtils.GetBytes(128);
 

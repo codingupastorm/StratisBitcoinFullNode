@@ -32,7 +32,7 @@ namespace Stratis.Feature.PoA.Tokenless
             }
 
             // If this is a created channel, check that the organisation matches.
-            if (this.network is ChannelNetwork channelNetwork && channelNetwork.Id != ChannelService.SystemChannelId)
+            if (this.network is ChannelNetwork channelNetwork)
             {
                 string certOrg = certificate.GetOrganisation();
 
