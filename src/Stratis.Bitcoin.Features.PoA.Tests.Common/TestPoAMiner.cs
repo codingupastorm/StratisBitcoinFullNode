@@ -10,6 +10,7 @@ using Stratis.Bitcoin.Consensus.Validators;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.PoA.Voting;

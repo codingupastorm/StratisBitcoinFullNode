@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 using NBitcoin.PoA;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Xunit;
 
