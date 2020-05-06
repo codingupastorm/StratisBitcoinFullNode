@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Stratis.Bitcoin.AsyncWork
+namespace Stratis.Core.AsyncWork
 {
     /// <summary>
     /// Interface that represents a disposable async delegate.

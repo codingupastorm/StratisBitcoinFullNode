@@ -9,7 +9,7 @@ using Stratis.Bitcoin.Signals;
 using Stratis.Core.AsyncWork;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.AsyncWork
+namespace Stratis.Core.AsyncWork
 {
     /// <summary>
     /// Provides functionality for creating and tracking asynchronous operations that happen in the background.

@@ -7,7 +7,6 @@ using FluentAssertions;
 using Moq;
 using NBitcoin;
 using NBitcoin.Policy;
-using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Interfaces;

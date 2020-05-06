@@ -2,7 +2,6 @@
 using System.Threading;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P;

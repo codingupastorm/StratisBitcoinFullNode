@@ -1,7 +1,6 @@
 ﻿using System.Net;
 using System.Threading;
 using Moq;
-using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
