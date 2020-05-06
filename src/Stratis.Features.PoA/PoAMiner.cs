@@ -146,14 +146,12 @@ namespace Stratis.Features.PoA
 
                     // Don't mine in IBD or if we aren't connected to any node (unless bootstrapping mode is enabled).
                     // Don't try to mine if we aren't a federation member.
-                    // Don't mine if there are no connected peers.
 
                     if ((
-                        (this.ibdState.IsInitialBlockDownload())
+                        (this.ibdState.IsInitialBlockDownload() || !this.connectionManager.ConnectedPeers.Any())
                         && !this.settings.BootstrappingMode
                         )
                         || !this.federationManager.IsFederationMember
-                        || !this.connectionManager.ConnectedPeers.Any()
                         )
                     {
                         int attemptDelayMs = 30_000;
