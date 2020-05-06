@@ -12,6 +12,7 @@ using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Fee;

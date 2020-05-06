@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Moq;
 using NBitcoin;
-using Newtonsoft.Json;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
-using Stratis.SmartContracts.CLR;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Util;

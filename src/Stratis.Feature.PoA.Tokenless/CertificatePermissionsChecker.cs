@@ -6,6 +6,7 @@ using MembershipServices;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Org.BouncyCastle.X509;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.PoA.ProtocolEncryption;
 
 namespace Stratis.Feature.PoA.Tokenless

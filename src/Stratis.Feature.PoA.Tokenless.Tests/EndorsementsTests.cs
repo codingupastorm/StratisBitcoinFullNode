@@ -1,6 +1,7 @@
 ﻿using Moq;
 using NBitcoin;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.SmartContracts.Core.Endorsement;
 using Xunit;
 
@@ -24,7 +25,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var proposalId = new uint256(RandomUtils.GetBytes(32));
 
-            var endorsementInfo = endorsements.RecordEndorsement(proposalId, new EndorsementPolicy());
+            EndorsementInfo endorsementInfo = endorsements.RecordEndorsement(proposalId, new EndorsementPolicy());
 
             Assert.Same(endorsementInfo, endorsements.GetEndorsement(proposalId));
         }
@@ -37,7 +38,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var proposalId = new uint256(RandomUtils.GetBytes(32));
 
-            var endorsementInfo = endorsements.RecordEndorsement(proposalId, new EndorsementPolicy());
+            EndorsementInfo endorsementInfo = endorsements.RecordEndorsement(proposalId, new EndorsementPolicy());
 
             Assert.Same(endorsementInfo, endorsements.RecordEndorsement(proposalId, new EndorsementPolicy()));
         }

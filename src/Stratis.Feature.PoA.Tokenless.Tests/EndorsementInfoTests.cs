@@ -6,6 +6,7 @@ using Moq;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Xunit;
@@ -62,13 +63,14 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             Assert.False(endorsement.Validate());
             Assert.Equal(EndorsementState.Proposed, endorsement.State);
-            
+
             Assert.True(endorsement.AddSignature(certificate, proposalResponse));
 
             Assert.True(endorsement.Validate());
             Assert.Equal(EndorsementState.Approved, endorsement.State);
 
             endorsementValidator.Verify(p => p.Validate(proposalResponse.Endorsement, It.Is<byte[]>(v => proposalResponse.ProposalResponse.ToBytes().SequenceEqual(v))));
+
             organisationLookup.Verify(l => l.FromCertificate(certificate), Times.Once);
         }
 
@@ -82,7 +84,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             X509Certificate certificate = certParser.ReadCertificate(File.ReadAllBytes("Certificates/cert.crt"));
 
             var unapprovedOrganisation = (Organisation)certificate.GetOrganisation();
-            var approvedOrganisation = (Organisation) "Approved";
+            var approvedOrganisation = (Organisation)"Approved";
             var senderAddress = "SENDER";
 
             // Rig the lookup to return what we want.
@@ -162,7 +164,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         [Fact]
         public void MofNPolicyValidator_Validates_Multiple_Signatures_One_Organisation_Correctly()
         {
-            var org = (Organisation) "Test";
+            var org = (Organisation)"Test";
             var policy = new EndorsementPolicy
             {
                 Organisation = org,
@@ -259,7 +261,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                         }
                     }
                 },
-                Endorsement = new Endorsement.Endorsement(new byte[] {0xAA, 0xAA, 0xAA}, new byte[] {0xBB, 0xBB, 0XBB}),
+                Endorsement = new Endorsement.Endorsement(new byte[] { 0xAA, 0xAA, 0xAA }, new byte[] { 0xBB, 0xBB, 0XBB }),
                 PrivateReadWriteSet = new ReadWriteSet
                 {
                     Reads = new List<ReadItem>
