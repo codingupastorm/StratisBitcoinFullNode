@@ -1,51 +1,59 @@
-﻿using CertificateAuthority;
+﻿using System.IO;
+using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
-using NBitcoin;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Features.SmartContracts;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.Api;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.PoA.Tests.Common;
+using Stratis.Features.SmartContracts;
 using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.SmartContracts.Tests.Common
 {
-    public sealed class TokenlessNodeRunner : NodeRunner
+    public sealed class ChannelNodeRunner : NodeRunner
     {
-        private readonly IDateTimeProvider timeProvider;
+        private readonly string channelName;
+        private readonly IDateTimeProvider dateTimeProvider;
 
-        public TokenlessNodeRunner(string dataDir, Network network, EditableTimeProvider timeProvider, string agent)
-            : base(dataDir, agent)
+        public ChannelNodeRunner(string channelName, string dataFolder, EditableTimeProvider timeProvider)
+            : base(dataFolder, null)
         {
-            this.Network = network;
-            this.timeProvider = timeProvider;
+            this.channelName = channelName;
+            this.dateTimeProvider = timeProvider;
         }
 
         public override void BuildNode()
         {
-            var settings = new NodeSettings(this.Network, agent: this.Agent, args: new string[] {
-                "-conf=poa.conf",
+            var channelNetwork = ChannelNetwork.Construct(Path.Combine(this.DataFolder, "channels"), this.channelName);
+
+            var settings = new NodeSettings(channelNetwork, args: new string[]
+            {
+                "-certificatepassword=test",
+                "-password=test",
+                "-conf=channel.conf",
                 "-datadir=" + this.DataFolder,
                 $"-{CertificatesManager.CaAccountIdKey}={Settings.AdminAccountId}",
                 $"-{CertificatesManager.CaPasswordKey}={CaTestHelper.AdminPassword}",
-                $"-{CertificatesManager.ClientCertificateConfigurationKey}=test"
+                $"-{CertificatesManager.ClientCertificateConfigurationKey}=test",
+                "-ischannelnode=true",
             });
 
             IFullNodeBuilder builder = new FullNodeBuilder()
                 .UseNodeSettings(settings)
                 .UseBlockStore()
-                .UseTokenlessPoaConsenus(this.Network)
+                .UseTokenlessPoaConsenus(channelNetwork)
                 .UseMempool()
                 .UseApi()
                 .UseTokenlessKeyStore()
@@ -55,7 +63,7 @@ namespace Stratis.SmartContracts.Tests.Common
                     options.UseSmartContractType<TokenlessSmartContract>();
                 })
                 .AsTokenlessNetwork()
-                .ReplaceTimeProvider(this.timeProvider)
+                .ReplaceTimeProvider(this.dateTimeProvider)
                 .MockIBD()
                 .AddTokenlessFastMiningCapability();
 

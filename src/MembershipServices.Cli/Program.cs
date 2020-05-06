@@ -13,7 +13,7 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;
-using Stratis.Features.PoA.ProtocolEncryption;
+using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 
 namespace MembershipServices.Cli
 {

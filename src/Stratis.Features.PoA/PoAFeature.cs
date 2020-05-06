@@ -1,6 +1,5 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using MembershipServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -21,7 +20,6 @@ using Stratis.Features.Consensus;
 using Stratis.Features.Consensus.CoinViews;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.PoA.Behaviors;
-using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Features.PoA.Voting;
 
 namespace Stratis.Features.PoA
@@ -58,13 +56,10 @@ namespace Stratis.Features.PoA
         private readonly IChainState chainState;
 
         private readonly IBlockStoreQueue blockStoreQueue;
-
-        private readonly ICertificatesManager certificatesManager;
-
         public PoAFeature(IFederationManager federationManager, PayloadProvider payloadProvider, IConnectionManager connectionManager, ChainIndexer chainIndexer,
             IInitialBlockDownloadState initialBlockDownloadState, IConsensusManager consensusManager, IPeerBanning peerBanning, ILoggerFactory loggerFactory,
             VotingManager votingManager, Network network, IWhitelistedHashesRepository whitelistedHashesRepository,
-            IdleFederationMembersKicker idleFederationMembersKicker, IChainState chainState, IBlockStoreQueue blockStoreQueue, ICertificatesManager certificatesManager)
+            IdleFederationMembersKicker idleFederationMembersKicker, IChainState chainState, IBlockStoreQueue blockStoreQueue)
         {
             this.federationManager = federationManager;
             this.connectionManager = connectionManager;
@@ -79,7 +74,6 @@ namespace Stratis.Features.PoA
             this.idleFederationMembersKicker = idleFederationMembersKicker;
             this.chainState = chainState;
             this.blockStoreQueue = blockStoreQueue;
-            this.certificatesManager = certificatesManager;
 
             payloadProvider.DiscoverPayloads(this.GetType().Assembly);
         }
@@ -104,11 +98,6 @@ namespace Stratis.Features.PoA
 
                 if (options.AutoKickIdleMembers)
                     this.idleFederationMembersKicker.Initialize();
-            }
-
-            if (options.EnablePermissionedMembership)
-            {
-                this.certificatesManager.Initialize();
             }
         }
 
@@ -194,20 +183,6 @@ namespace Stratis.Features.PoA
                         services.AddSingleton<IPollResultExecutor, PollResultExecutor>();
                         services.AddSingleton<IWhitelistedHashesRepository, WhitelistedHashesRepository>();
                         services.AddSingleton<IdleFederationMembersKicker>();
-
-                        // Permissioned membership.
-                        // TODO: PoA shouldn't actually require the MSD. Perhaps remove TLS support from PoA entirely?
-                        services.AddSingleton<IMembershipServicesDirectory, MembershipServicesDirectory>();
-                        services.AddSingleton<ICertificatesManager, CertificatesManager>();
-
-                        var options = (PoAConsensusOptions)network.Consensus.Options;
-
-                        if (options.EnablePermissionedMembership)
-                        {
-                            ServiceDescriptor descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(INetworkPeerFactory));
-                            services.Remove(descriptor);
-                            services.AddSingleton<INetworkPeerFactory, TlsEnabledNetworkPeerFactory>();
-                        }
                     });
             });
 

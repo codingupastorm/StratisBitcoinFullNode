@@ -10,7 +10,7 @@ using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using TracerAttributes;
 
-namespace Stratis.Features.PoA.ProtocolEncryption
+namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
 {
     public class RevocationBehavior : NetworkPeerBehavior
     {

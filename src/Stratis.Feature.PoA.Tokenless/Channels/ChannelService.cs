@@ -16,8 +16,8 @@ using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;
+using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.PoA;
-using Stratis.Features.PoA.ProtocolEncryption;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels
 {

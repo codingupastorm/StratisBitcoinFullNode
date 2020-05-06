@@ -15,8 +15,8 @@ using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;
+using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.MemoryPool.Broadcasting;
-using Stratis.Features.PoA.ProtocolEncryption;
 
 namespace Stratis.Feature.PoA.Tokenless.Controllers
 {

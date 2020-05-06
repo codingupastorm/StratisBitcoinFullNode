@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Bitcoin.Utilities;
 using Stratis.Feature.PoA.Tokenless.Payloads;
-using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
