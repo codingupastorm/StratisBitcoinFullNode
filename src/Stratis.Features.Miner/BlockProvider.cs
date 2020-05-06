@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
-using Stratis.Features.MemoryPool;
 using Stratis.Bitcoin.Mining;
+using Stratis.Features.MemoryPool;
 
 namespace Stratis.Features.Miner
 {

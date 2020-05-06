@@ -7,6 +7,7 @@ using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Feature.PoA.Tokenless.Payloads;
 using Stratis.Features.SmartContracts;
 using Stratis.SmartContracts.CLR;

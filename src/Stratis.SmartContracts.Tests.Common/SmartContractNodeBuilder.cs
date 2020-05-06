@@ -6,15 +6,14 @@ using CertificateAuthority.Models;
 using CertificateAuthority.Tests.Common;
 using MembershipServices;
 using NBitcoin;
-using NBitcoin.Networks;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Utilities;
-using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Features.PoA.Tests.Common;
 using Xunit;
@@ -30,7 +29,7 @@ namespace Stratis.SmartContracts.Tests.Common
             this.TimeProvider = new EditableTimeProvider();
         }
 
-        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client, 
+        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client,
             string agent = "TKL", bool isInfraNode = false, bool isSystemNode = false, bool willStartChannels = false, bool initialRun = true)
         {
             string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
@@ -113,7 +112,7 @@ namespace Stratis.SmartContracts.Tests.Common
         public void CreateChannel(CoreNode parentNode, string channelName, int nodeIndex)
         {
             // Serialize the channel network and write the json to disk.
-            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, "channels", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
+            ChannelNetwork channelNetwork = SystemChannelNetwork.CreateChannelNetwork(channelName, "channels", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
             channelNetwork.Id = nodeIndex;
             channelNetwork.Organisation = CaTestHelper.TestOrganisation;
             channelNetwork.DefaultAPIPort += nodeIndex;
@@ -128,37 +127,6 @@ namespace Stratis.SmartContracts.Tests.Common
             // Save the channel definition so that it can loaded on node start.
             IChannelRepository channelRepository = parentNode.FullNode.NodeService<IChannelRepository>();
             channelRepository.SaveChannelDefinition(new ChannelDefinition() { Id = nodeIndex, Name = channelName, Organisation = CaTestHelper.TestOrganisation, NetworkJson = serializedJson });
-        }
-
-        public CoreNode CreateChannelNode(CoreNode infraNode, string channelName, int nodeIndex)
-        {
-            // Serialize the channel network and write the json to disk.
-            ChannelNetwork channelNetwork = TokenlessNetwork.CreateChannelNetwork(channelName, "channels", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
-            channelNetwork.DefaultAPIPort += nodeIndex;
-            var serializedJson = JsonSerializer.Serialize(channelNetwork);
-
-            var nodeRootFolder = Path.Combine(this.rootFolder, nodeIndex.ToString());
-            var channelRootFolder = Path.Combine(nodeRootFolder, channelNetwork.RootFolderName);
-            Directory.CreateDirectory(channelRootFolder);
-
-            var serializedNetworkFileName = $"{channelRootFolder}\\{channelName}_network.json";
-            File.WriteAllText(serializedNetworkFileName, serializedJson);
-
-            // Create the channel node runner.
-            CoreNode channelNode = this.CreateNode(new ChannelNodeRunner(channelName, nodeRootFolder, this.TimeProvider), "channel.conf");
-
-            // Initialize the channel nodes's data folder etc.
-            string[] args = new string[] { "-datadir=" + nodeRootFolder, };
-            using (var nodeSettings = new NodeSettings(channelNetwork, args: args))
-            {
-                // Copy the parent node's authority and client certificate to the channel node's root.
-                File.Copy(Path.Combine(infraNode.FullNode.Settings.DataDir, CertificatesManager.AuthorityCertificateName), Path.Combine(nodeSettings.DataDir, CertificatesManager.AuthorityCertificateName));
-                File.Copy(Path.Combine(infraNode.FullNode.Settings.DataDir, CertificatesManager.ClientCertificateName), Path.Combine(nodeSettings.DataDir, CertificatesManager.ClientCertificateName));
-
-                NetworkRegistration.Clear();
-            }
-
-            return channelNode;
         }
 
         public CoreNode CreateInfraNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client)
