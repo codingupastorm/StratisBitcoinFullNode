@@ -8,7 +8,7 @@ using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Core.AsyncWork;
-using Stratis.Core.AsyncWork.JsonErrors;
+using Stratis.Core.Utilities.JsonErrors;
 using Stratis.Features.Notifications.Controllers;
 using Xunit;
 

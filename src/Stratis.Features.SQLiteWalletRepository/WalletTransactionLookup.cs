@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using NBitcoin;
-using Stratis.Features.Wallet.Interfaces;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Features.SQLiteWalletRepository.External;
 using Stratis.Features.SQLiteWalletRepository.Tables;
+using Stratis.Features.Wallet.Interfaces;
 
 namespace Stratis.Features.SQLiteWalletRepository
 {

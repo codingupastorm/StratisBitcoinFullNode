@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Stratis.Core.AsyncWork.JsonErrors
+namespace Stratis.Core.Utilities.JsonErrors
 {
     public class ErrorResponse
     {

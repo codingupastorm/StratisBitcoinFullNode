@@ -2,7 +2,7 @@
 using System.Text;
 using NBitcoin;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     /// <summary>
     /// Information about a previous state of the coinview that contains all information

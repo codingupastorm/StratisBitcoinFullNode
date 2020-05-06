@@ -14,6 +14,7 @@ using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.Endorsement;

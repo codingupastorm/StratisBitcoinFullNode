@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Features.SQLiteWalletRepository
 {

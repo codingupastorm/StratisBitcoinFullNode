@@ -21,8 +21,9 @@ using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Core.AsyncWork;
-using Stratis.Core.AsyncWork.JsonErrors;
-using Stratis.Core.AsyncWork.ModelStateErrors;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.JsonErrors;
+using Stratis.Core.Utilities.ModelStateErrors;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 using LogLevel = NLog.LogLevel;
 

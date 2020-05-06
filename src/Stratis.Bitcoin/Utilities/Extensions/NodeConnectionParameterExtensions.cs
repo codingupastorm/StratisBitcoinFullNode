@@ -2,7 +2,7 @@
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
 
-namespace Stratis.Core.AsyncWork.Extensions
+namespace Stratis.Core.Utilities.Extensions
 {
     public static class NodeConnectionParameterExtensions
     {

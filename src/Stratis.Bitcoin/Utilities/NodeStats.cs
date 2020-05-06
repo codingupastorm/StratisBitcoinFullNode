@@ -6,9 +6,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin;
+using Stratis.Core.Utilities.Extensions;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     public interface INodeStats
     {

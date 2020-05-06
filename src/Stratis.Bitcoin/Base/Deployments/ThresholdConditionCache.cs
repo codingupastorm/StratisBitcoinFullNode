@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
 using Stratis.Bitcoin.Base.Deployments.Models;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using TracerAttributes;
 
 namespace Stratis.Bitcoin.Base.Deployments

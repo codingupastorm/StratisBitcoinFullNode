@@ -5,7 +5,7 @@ using System.Text;
 using DBreeze.Utils;
 using NBitcoin;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     public interface IRepositorySerializer
     {

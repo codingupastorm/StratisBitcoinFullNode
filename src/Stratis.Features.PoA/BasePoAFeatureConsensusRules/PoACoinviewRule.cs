@@ -2,7 +2,7 @@
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using TracerAttributes;
 
 namespace Stratis.Features.PoA.BasePoAFeatureConsensusRules

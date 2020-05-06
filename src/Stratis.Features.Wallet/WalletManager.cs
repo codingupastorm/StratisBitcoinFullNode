@@ -9,11 +9,12 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.BuilderExtensions;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Features.MemoryPool.Broadcasting;
-using Stratis.Features.Wallet.Interfaces;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Core.AsyncWork;
-using Stratis.Core.AsyncWork.Extensions;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.Extensions;
+using Stratis.Features.MemoryPool.Broadcasting;
+using Stratis.Features.Wallet.Interfaces;
 using TracerAttributes;
 
 [assembly: InternalsVisibleTo("Stratis.Features.Wallet.Tests")]

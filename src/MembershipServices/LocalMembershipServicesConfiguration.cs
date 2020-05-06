@@ -5,7 +5,7 @@ using System.IO;
 using CertificateAuthority;
 using NBitcoin;
 using Org.BouncyCastle.X509;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 
 namespace MembershipServices
 {
@@ -169,7 +169,7 @@ namespace MembershipServices
         public void RevokeCertificate(string thumbprint)
         {
             this.revokedCertificateThumbprints.Add(thumbprint);
-            
+
             // We don't actually need to store the certificate, only a record of its thumbprint.
             FileStream file = File.Create(Path.Combine(this.baseDir, Crls, thumbprint));
             file.Flush();
@@ -190,7 +190,7 @@ namespace MembershipServices
             Directory.CreateDirectory(Path.Combine(this.baseDir, AdminCerts));
             Directory.CreateDirectory(Path.Combine(this.baseDir, CaCerts));
             Directory.CreateDirectory(Path.Combine(this.baseDir, IntermediateCerts));
-            
+
             Directory.CreateDirectory(Path.Combine(this.baseDir, Crls));
 
             foreach (string fileName in Directory.GetFiles(Path.Combine(this.baseDir, Crls)))
@@ -200,7 +200,7 @@ namespace MembershipServices
 
             Directory.CreateDirectory(Path.Combine(this.baseDir, Keystore));
             Directory.CreateDirectory(Path.Combine(this.baseDir, SignCerts));
-            
+
             // There will probably only be one certificate in this folder, but nevertheless, load it into the lookups.
             foreach (string fileName in Directory.GetFiles(Path.Combine(this.baseDir, SignCerts)))
             {

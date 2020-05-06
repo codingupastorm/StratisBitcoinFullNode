@@ -2,8 +2,8 @@ using System;
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Stratis.Core.AsyncWork;
-using Stratis.Core.AsyncWork.JsonErrors;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.JsonErrors;
 
 namespace Stratis.Features.SignalR.Controllers
 {

@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;

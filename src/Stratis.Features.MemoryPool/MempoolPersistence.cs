@@ -5,8 +5,8 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool.Interfaces;
-using Stratis.Core.AsyncWork;
 
 namespace Stratis.Features.MemoryPool
 {

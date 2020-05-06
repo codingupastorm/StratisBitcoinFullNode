@@ -1,6 +1,6 @@
 ﻿using System.Timers;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     /// <summary>
     /// Extension methods for the <see cref="Timer"/> class.

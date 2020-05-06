@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using TracerAttributes;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     /// <summary>
     /// Replacement for the <see cref="System.Diagnostics.Stopwatch"/> class that allows the caller

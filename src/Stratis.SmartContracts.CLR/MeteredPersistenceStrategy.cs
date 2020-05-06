@@ -1,5 +1,5 @@
 using NBitcoin;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
 

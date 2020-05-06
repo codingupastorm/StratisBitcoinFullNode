@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Signals;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using TracerAttributes;
 
 namespace Stratis.Core.AsyncWork

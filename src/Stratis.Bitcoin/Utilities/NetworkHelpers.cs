@@ -2,7 +2,7 @@
 using NBitcoin;
 using NBitcoin.Networks;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     /// <summary>
     /// Contains a collection of helpers methods.

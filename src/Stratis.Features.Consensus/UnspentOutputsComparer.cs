@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Features.Consensus
 {

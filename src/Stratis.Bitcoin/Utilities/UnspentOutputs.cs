@@ -3,7 +3,7 @@ using System.Text;
 using NBitcoin;
 using NBitcoin.BitcoinCore;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     public class UnspentOutputs : IBitcoinSerializable
     {

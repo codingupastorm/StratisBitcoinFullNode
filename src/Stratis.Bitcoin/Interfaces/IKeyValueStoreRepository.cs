@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Stratis.Bitcoin.KeyValueStore;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin.Interfaces
 {

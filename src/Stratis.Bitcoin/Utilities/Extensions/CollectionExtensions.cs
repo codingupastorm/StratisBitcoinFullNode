@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace Stratis.Core.AsyncWork.Extensions
+namespace Stratis.Core.Utilities.Extensions
 {
     /// <summary>
     /// Extension methods for collections.

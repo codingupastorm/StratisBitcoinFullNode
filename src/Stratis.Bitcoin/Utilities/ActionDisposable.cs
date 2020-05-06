@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     /// <summary>
     /// Helper class that is used for implementation of custom lock primitives.

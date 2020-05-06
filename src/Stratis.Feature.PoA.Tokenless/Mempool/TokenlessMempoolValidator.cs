@@ -6,7 +6,7 @@ using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Interfaces;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Feature.PoA.Tokenless.Mempool
 {

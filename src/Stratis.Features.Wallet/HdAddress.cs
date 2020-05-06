@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
 using Newtonsoft.Json;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.JsonConverters;
 using Stratis.Features.Wallet.Interfaces;
-using Stratis.Core.AsyncWork;
-using Stratis.Core.AsyncWork.JsonConverters;
 using TracerAttributes;
 
 namespace Stratis.Features.Wallet
@@ -120,7 +120,7 @@ namespace Stratis.Features.Wallet
         [JsonConstructor]
         public HdAddress(ICollection<TransactionData> transactions = null)
         {
-            this.Transactions = (transactions == null ) ? new TransactionCollection(this) : new TransactionCollection(this, transactions);
+            this.Transactions = (transactions == null) ? new TransactionCollection(this) : new TransactionCollection(this, transactions);
         }
 
         /// <summary>

@@ -6,7 +6,7 @@ using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Core.AsyncWork;
-using Stratis.Core.AsyncWork.Extensions;
+using Stratis.Core.Utilities.Extensions;
 using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
 using Xunit;
 
