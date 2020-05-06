@@ -49,6 +49,7 @@ namespace Stratis.Feature.PoA.Tokenless
                     {
                         services.AddSingleton<IChannelService, ChannelService>();
                         services.AddSingleton<ChannelSettings>();
+                        services.AddSingleton<IChannelAccessValidator, ChannelAccessValidator>();
                         services.Replace(ServiceDescriptor.Singleton<ITxMempool, TokenlessMempool>());
                         services.Replace(ServiceDescriptor.Singleton<IMempoolValidator, TokenlessMempoolValidator>());
                         services.AddSingleton<BlockDefinition, TokenlessBlockDefinition>();
