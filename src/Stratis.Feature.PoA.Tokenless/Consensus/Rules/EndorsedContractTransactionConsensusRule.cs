@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
@@ -8,6 +10,14 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
     public class EndorsedContractTransactionConsensusRule : PartialValidationConsensusRule
     {
         private readonly EndorsedContractTransactionValidationRule rule;
+
+        public static Dictionary<EndorsedContractTransactionValidationRule.EndorsementValidationErrorType, string> ErrorMessages = new Dictionary<EndorsedContractTransactionValidationRule.EndorsementValidationErrorType, string>
+        {
+            { EndorsedContractTransactionValidationRule.EndorsementValidationErrorType.InvalidCall, "" },
+            { EndorsedContractTransactionValidationRule.EndorsementValidationErrorType.Malformed, "malformed endorsements" },
+            { EndorsedContractTransactionValidationRule.EndorsementValidationErrorType.PolicyInvalid, "endorsement policy not satisfied" },
+            { EndorsedContractTransactionValidationRule.EndorsementValidationErrorType.SignaturesInvalid, "endorsement policy signatures invalid" }
+        };
 
         public EndorsedContractTransactionConsensusRule(EndorsedContractTransactionValidationRule rule)
         {
@@ -20,28 +30,16 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             {
                 (bool valid, EndorsedContractTransactionValidationRule.EndorsementValidationErrorType error) = this.rule.CheckTransaction(transaction);
 
-                var errorType = EndorsedContractTransactionValidationRule.ErrorMessages[error];
-
-                if (!valid && error == EndorsedContractTransactionValidationRule.EndorsementValidationErrorType.InvalidCall)
+                if (valid || error == EndorsedContractTransactionValidationRule.EndorsementValidationErrorType.InvalidCall)
                 {
                     // No further validation needed.
                     continue;
                 }
 
-                if (!valid && error == EndorsedContractTransactionValidationRule.EndorsementValidationErrorType.Malformed)
-                {
-                    new ConsensusError(errorType, "malformed endorsements").Throw();
-                }
+                var errorType = EndorsedContractTransactionValidationRule.ErrorMessages[error];
+                var errorMessage = ErrorMessages[error];
 
-                if (!valid && error == EndorsedContractTransactionValidationRule.EndorsementValidationErrorType.PolicyInvalid)
-                {
-                    new ConsensusError(errorType, "endorsement policy not satisfied").Throw();
-                }
-
-                if (!valid && error == EndorsedContractTransactionValidationRule.EndorsementValidationErrorType.SignaturesInvalid)
-                {
-                    new ConsensusError(errorType, "endorsement policy signatures invalid").Throw();
-                }
+                new ConsensusError(errorType, errorMessage).Throw();
             }
 
             return Task.CompletedTask;
