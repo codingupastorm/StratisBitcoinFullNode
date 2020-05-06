@@ -19,12 +19,12 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     /// <summary>
     /// Validates endorsement signatures against a payload.
     /// </summary>
-    public class EndorsementSignatureSignatureValidator : IEndorsementSignatureValidator
+    public class EndorsementSignatureValidator : IEndorsementSignatureValidator
     {
         private readonly IMembershipServicesDirectory membershipServices;
         private readonly ICertificatePermissionsChecker permissionsChecker;
 
-        public EndorsementSignatureSignatureValidator(IMembershipServicesDirectory membershipServices, ICertificatePermissionsChecker permissionsChecker)
+        public EndorsementSignatureValidator(IMembershipServicesDirectory membershipServices, ICertificatePermissionsChecker permissionsChecker)
         {
             this.membershipServices = membershipServices;
             this.permissionsChecker = permissionsChecker;
