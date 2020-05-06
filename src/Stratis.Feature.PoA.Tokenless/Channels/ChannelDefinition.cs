@@ -1,6 +1,6 @@
 ﻿using NBitcoin;
 
-namespace Stratis.Feature.PoA.Tokenless.Channels.Requests
+namespace Stratis.Feature.PoA.Tokenless.Channels
 {
     /// <summary> A persistable class that stores a serialized version of the channel network.</summary>
     public sealed class ChannelDefinition : IBitcoinSerializable

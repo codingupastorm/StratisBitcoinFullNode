@@ -19,10 +19,10 @@ using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.BlockStore;
 using Stratis.Features.PoA;
 using Stratis.Features.PoA.Behaviors;
-using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Features.PoA.Voting;
 using Stratis.SmartContracts.Core.Store;
 

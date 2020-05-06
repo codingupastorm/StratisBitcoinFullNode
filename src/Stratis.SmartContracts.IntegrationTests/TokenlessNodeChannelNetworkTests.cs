@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -225,6 +226,20 @@ namespace Stratis.SmartContracts.IntegrationTests
                     var mempoolResponse = $"http://localhost:{channelService.GetDefaultAPIPort(ChannelService.SystemChannelId)}/api".AppendPathSegment("mempool/getrawmempool").GetJsonAsync<List<string>>().GetAwaiter().GetResult();
                     return mempoolResponse.Count == 1;
                 }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(2).TotalMilliseconds);
+
+                // Create second system node.
+                CaClient client2 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 1, ac, client2, isSystemNode: true);
+                var certificates = new List<X509Certificate>() { node2.ClientCertificate.ToCertificate() };
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, network.RootFolderName, network.Name));
+                node2.Start();
+
+                // Connect the existing node to it.
+                var response2 = $"http://localhost:{channelService.GetDefaultAPIPort(ChannelService.SystemChannelId)}/api"
+                    .AppendPathSegment("connectionmanager/addnode")
+                    .SetQueryParam("endpoint", $"127.0.0.1:{node2.ProtocolPort}")
+                    .SetQueryParam("command", "add")
+                    .GetAsync().GetAwaiter().GetResult();
 
                 // Wait until the block has been mined on the system channel node.
                 TestBase.WaitLoop(() =>

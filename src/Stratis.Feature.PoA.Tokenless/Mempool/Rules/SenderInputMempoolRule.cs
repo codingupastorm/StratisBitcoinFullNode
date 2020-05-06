@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.MemoryPool;
@@ -44,8 +43,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
                 context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, $"The signature for transaction {context.Transaction.GetHash()} is invalid.")).Throw();
 
             // If we're not on the OG network, then check that the sender is allowed to be on this network.
-            // TODO: Is this check for the current channel robust?
-            if (this.network is ChannelNetwork channelNetwork && channelNetwork.Id != ChannelService.SystemChannelId)
+            if (this.network is ChannelNetwork channelNetwork)
             {
                 if (!this.certificatePermissionsChecker.CheckSenderCertificateIsPermittedOnChannel(getSenderResult.Sender, channelNetwork))
                 {

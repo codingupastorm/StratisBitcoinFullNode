@@ -16,8 +16,9 @@ using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.PoA;
 
-namespace Stratis.Features.PoA.ProtocolEncryption
+namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
 {
     public class TlsEnabledNetworkPeerConnection : NetworkPeerConnection
     {
@@ -88,7 +89,7 @@ namespace Stratis.Features.PoA.ProtocolEncryption
 
             if (this.isServer && this.clientCertificateValidator != null)
             {
-                this.clientCertificateValidator.ConfirmValid(receivedCert);
+                this.clientCertificateValidator.ConfirmCertificatePermittedOnChannel(receivedCert);
             }
 
             return this.stream;
@@ -132,7 +133,7 @@ namespace Stratis.Features.PoA.ProtocolEncryption
             var cert = new Certificate(new X509CertificateStructure[] { this.certificate.CertificateStructure });
             var sigAlg = new SignatureAndHashAlgorithm(HashAlgorithm.sha256, SignatureAlgorithm.ecdsa);
 
-            return new DefaultTlsSignerCredentials(this.mContext, cert, privateKey, sigAlg);
+            return new DefaultTlsSignerCredentials(this.mContext, cert, this.privateKey, sigAlg);
         }
     }
 
@@ -166,7 +167,7 @@ namespace Stratis.Features.PoA.ProtocolEncryption
 
         public override TlsAuthentication GetAuthentication()
         {
-            this.Authentication = new CustomTlsAuthentication(mContext, this.certificate, this.privateKey);
+            this.Authentication = new CustomTlsAuthentication(this.mContext, this.certificate, this.privateKey);
 
             return this.Authentication;
         }
@@ -175,7 +176,7 @@ namespace Stratis.Features.PoA.ProtocolEncryption
         {
             base.NotifyHandshakeComplete();
 
-            TlsSession newSession = mContext.ResumableSession;
+            TlsSession newSession = this.mContext.ResumableSession;
 
             if (newSession == null)
                 return;

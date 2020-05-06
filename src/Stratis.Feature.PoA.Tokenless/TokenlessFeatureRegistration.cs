@@ -19,13 +19,13 @@ using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mining;
+using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.Consensus;
 using Stratis.Features.Consensus.CoinViews;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Features.PoA;
-using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Features.PoA.Voting;
 using Stratis.Features.SmartContracts;
 using Stratis.Features.SmartContracts.Interfaces;
@@ -49,6 +49,7 @@ namespace Stratis.Feature.PoA.Tokenless
                     {
                         services.AddSingleton<IChannelService, ChannelService>();
                         services.AddSingleton<ChannelSettings>();
+                        services.AddSingleton<IChannelAccessValidator, ChannelAccessValidator>();
                         services.Replace(ServiceDescriptor.Singleton<ITxMempool, TokenlessMempool>());
                         services.Replace(ServiceDescriptor.Singleton<IMempoolValidator, TokenlessMempoolValidator>());
                         services.AddSingleton<BlockDefinition, TokenlessBlockDefinition>();

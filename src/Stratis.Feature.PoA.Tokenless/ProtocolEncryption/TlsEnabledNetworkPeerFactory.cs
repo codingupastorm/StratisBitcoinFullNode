@@ -10,8 +10,9 @@ using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Features.PoA;
 
-namespace Stratis.Features.PoA.ProtocolEncryption
+namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
 {
     public class TlsEnabledNetworkPeerFactory : NetworkPeerFactory
     {

@@ -11,10 +11,10 @@ using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;
+using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.Api;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
-using Stratis.Features.PoA.ProtocolEncryption;
 using Stratis.Features.SmartContracts;
 using Stratis.SmartContracts.Tokenless;
 
