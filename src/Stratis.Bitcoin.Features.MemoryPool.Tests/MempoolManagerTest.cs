@@ -5,10 +5,10 @@ using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Consensus;
+using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool.Fee;
 using Stratis.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Tests.Common;
-using Stratis.Core.AsyncWork;
 using Xunit;
 
 namespace Stratis.Features.MemoryPool.Tests

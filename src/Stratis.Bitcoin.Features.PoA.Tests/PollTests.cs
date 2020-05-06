@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using NBitcoin;
+using Stratis.Core.Utilities;
 using Stratis.Features.PoA.Voting;
-using Stratis.Core.AsyncWork;
 using Xunit;
 
 namespace Stratis.Features.PoA.Tests

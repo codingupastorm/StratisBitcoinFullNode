@@ -3,7 +3,7 @@ using System.Linq;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Features.PoA.Tests.Common;
 using Stratis.Features.PoA.Voting;
 using Xunit;
