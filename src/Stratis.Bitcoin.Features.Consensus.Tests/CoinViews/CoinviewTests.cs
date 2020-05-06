@@ -12,7 +12,7 @@ using Stratis.Features.Consensus.CoinViews;
 using Stratis.Features.Consensus.ProvenBlockHeaders;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Xunit;
 
 namespace Stratis.Features.Consensus.Tests.CoinViews

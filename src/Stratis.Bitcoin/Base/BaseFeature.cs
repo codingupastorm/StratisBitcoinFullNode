@@ -7,7 +7,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Rules;
-using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.BlockPulling;
 using Stratis.Bitcoin.Builder;
@@ -26,7 +25,7 @@ using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Signals;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 
 [assembly: InternalsVisibleTo("Stratis.Bitcoin.Tests")]
 [assembly: InternalsVisibleTo("Stratis.Bitcoin.Tests.Common")]

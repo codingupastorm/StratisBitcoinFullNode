@@ -6,7 +6,7 @@ using Stratis.Bitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Mining;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Stratis.Features.MemoryPool.Interfaces;
 
 namespace Stratis.Features.MemoryPool

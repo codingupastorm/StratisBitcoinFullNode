@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 
 namespace Stratis.Bitcoin.Tests.Utilities
 {

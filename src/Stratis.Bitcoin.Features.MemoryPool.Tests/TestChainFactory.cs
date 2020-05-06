@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.Configuration;
@@ -24,7 +23,7 @@ using Stratis.Features.PoA;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Xunit;
 
 namespace Stratis.Features.MemoryPool.Tests

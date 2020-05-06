@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Net;
 using Newtonsoft.Json;
-using Stratis.Bitcoin.Utilities.Extensions;
-using Stratis.Bitcoin.Utilities.JsonConverters;
+using Stratis.Core.AsyncWork.Extensions;
+using Stratis.Core.AsyncWork.JsonConverters;
 
 namespace Stratis.Bitcoin.P2P
 {

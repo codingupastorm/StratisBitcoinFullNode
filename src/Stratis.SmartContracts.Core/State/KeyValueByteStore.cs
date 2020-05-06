@@ -4,7 +4,7 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Bitcoin.KeyValueStoreLevelDB;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Stratis.Patricia;
 
 namespace Stratis.SmartContracts.Core.State

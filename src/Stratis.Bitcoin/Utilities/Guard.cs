@@ -1,7 +1,7 @@
 ﻿using System;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.Utilities
+namespace Stratis.Core.AsyncWork
 {
     /// <summary>
     /// Collection of guard methods.

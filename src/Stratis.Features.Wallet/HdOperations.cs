@@ -1,6 +1,6 @@
 ﻿using System;
 using NBitcoin;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using TracerAttributes;
 
 namespace Stratis.Features.Wallet

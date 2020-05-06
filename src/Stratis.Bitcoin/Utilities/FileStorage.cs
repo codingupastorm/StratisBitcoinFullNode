@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 
-namespace Stratis.Bitcoin.Utilities
+namespace Stratis.Core.AsyncWork
 {
     public class FileStorageOption
     {

@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using System.Timers;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 
 namespace Stratis.Features.Api
 {

@@ -5,8 +5,7 @@ using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Features.Wallet;
-using Stratis.Features.Wallet.Interfaces;
+using Stratis.Core.AsyncWork.JsonErrors;
 using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests.Wallet

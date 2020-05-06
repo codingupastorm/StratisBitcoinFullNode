@@ -1,8 +1,8 @@
 ﻿using System;
-using Stratis.Bitcoin.Utilities.Extensions;
+using Stratis.Core.AsyncWork.Extensions;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.Utilities
+namespace Stratis.Core.AsyncWork
 {
     /// <summary>
     /// Providing date time functionality.

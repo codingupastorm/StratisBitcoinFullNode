@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace Stratis.Bitcoin.Utilities
+namespace Stratis.Core.AsyncWork
 {
     public enum RetryStrategyType
     {

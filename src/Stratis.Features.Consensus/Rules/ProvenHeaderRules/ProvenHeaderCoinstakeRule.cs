@@ -2,7 +2,7 @@
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Features.Consensus.Interfaces;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 
 namespace Stratis.Features.Consensus.Rules.ProvenHeaderRules
 {

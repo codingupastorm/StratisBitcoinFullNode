@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Newtonsoft.Json;
 
-namespace Stratis.Bitcoin.Utilities.JsonErrors
+namespace Stratis.Core.AsyncWork.JsonErrors
 {
     public class ErrorResponse
     {

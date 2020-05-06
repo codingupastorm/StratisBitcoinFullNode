@@ -8,7 +8,7 @@ using System.Threading;
 using FluentAssertions;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.Common

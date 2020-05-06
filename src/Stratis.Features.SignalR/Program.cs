@@ -4,7 +4,7 @@ using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Stratis.Bitcoin;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 
 namespace Stratis.Features.SignalR
 {

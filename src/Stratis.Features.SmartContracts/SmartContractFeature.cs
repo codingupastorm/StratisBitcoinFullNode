@@ -10,7 +10,7 @@ using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Features.SmartContracts.Caching;
 using Stratis.Features.SmartContracts.Interfaces;

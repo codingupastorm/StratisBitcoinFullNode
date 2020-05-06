@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Net;
-using Stratis.Bitcoin.Utilities.Extensions;
+using Stratis.Core.AsyncWork.Extensions;
 
-namespace Stratis.Bitcoin.Utilities
+namespace Stratis.Core.AsyncWork
 {
     public class IPEndPointComparer : IEqualityComparer<IPEndPoint>
     {

@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using NBitcoin;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 
 namespace Stratis.SmartContracts.Core
 {

@@ -13,7 +13,7 @@ using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Xunit;
 
 namespace Stratis.Features.Consensus.Tests.ProvenBlockHeaders

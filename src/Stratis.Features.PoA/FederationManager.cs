@@ -6,7 +6,7 @@ using NBitcoin;
 using NBitcoin.PoA;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Signals;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Stratis.Features.PoA.Events;
 
 namespace Stratis.Features.PoA

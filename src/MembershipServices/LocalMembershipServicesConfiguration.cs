@@ -5,7 +5,7 @@ using System.IO;
 using CertificateAuthority;
 using NBitcoin;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 
 namespace MembershipServices
 {
@@ -175,7 +175,8 @@ namespace MembershipServices
             file.Flush();
             file.Dispose();
 
-            // TODO: Delete from the local MSD folders and mappings too?
+            // TODO: Delete from the other mappings & the local MSD folder(s)
+            this.mapThumbprints.TryRemove(thumbprint, out _);
         }
 
         public bool IsCertificateRevoked(string thumbprint)

@@ -2,7 +2,7 @@
 using System.Threading;
 using ConcurrentCollections;
 using NBitcoin;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Stratis.Features.SQLiteWalletRepository.Tables;
 
 namespace Stratis.Features.SQLiteWalletRepository

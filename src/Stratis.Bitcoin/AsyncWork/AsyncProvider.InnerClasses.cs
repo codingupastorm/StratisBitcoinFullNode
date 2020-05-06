@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace Stratis.Bitcoin.AsyncWork
+namespace Stratis.Core.AsyncWork
 {
     public partial class AsyncProvider : IAsyncProvider
     {
@@ -18,7 +18,7 @@ namespace Stratis.Bitcoin.AsyncWork
         /// <summary>
         /// Class that holds the status of running or faulted async delegate created by the BackgroundWorkProvider
         /// </summary>
-        /// <seealso cref="Stratis.Bitcoin.AsyncWork.AsyncProvider.IAsyncTaskInfoSetter" />
+        /// <seealso cref="IAsyncTaskInfoSetter" />
         internal class AsyncTaskInfo : IAsyncTaskInfoSetter
         {
             internal enum AsyncTaskType
@@ -57,7 +57,7 @@ namespace Stratis.Bitcoin.AsyncWork
             /// Initializes a new instance of the <see cref="AsyncTaskInfo"/> class.
             /// </summary>
             /// <param name="friendlyName">Friendly name of the async delegate.</param>
-            /// <param name="isDelegateWorker">if set to <c>true</c> the information represents an <see cref="IAsyncDelegateDequeuer"/>, otherwise an <see cref="IAsyncLoop"/>.</param>
+            /// <param name="isDelegateWorker">if set to <c>true</c> the information represents an <see cref="IAsyncDelegateDequeuer{T}"/>, otherwise an <see cref="IAsyncLoop"/>.</param>
             public AsyncTaskInfo(string friendlyName, AsyncTaskType type)
             {
                 this.FriendlyName = friendlyName;

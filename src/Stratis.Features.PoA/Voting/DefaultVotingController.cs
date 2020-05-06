@@ -7,9 +7,9 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.PoA;
 using Stratis.Bitcoin.Controllers.Models;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Utilities.JsonErrors;
-using Stratis.Bitcoin.Utilities.ModelStateErrors;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.AsyncWork.JsonErrors;
+using Stratis.Core.AsyncWork.ModelStateErrors;
 
 namespace Stratis.Features.PoA.Voting
 {

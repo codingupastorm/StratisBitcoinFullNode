@@ -3,7 +3,7 @@ using NBitcoin;
 using NBitcoin.Crypto;
 using NBitcoin.OpenAsset;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities.JsonConverters;
+using Stratis.Core.AsyncWork.JsonConverters;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.Utilities

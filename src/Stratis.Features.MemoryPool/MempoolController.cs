@@ -6,8 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Controllers;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.AsyncWork.JsonErrors;
 
 namespace Stratis.Features.MemoryPool
 {

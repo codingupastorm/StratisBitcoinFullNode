@@ -5,8 +5,8 @@ using System.Net;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Utilities.Extensions;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.AsyncWork.Extensions;
 
 namespace Stratis.Bitcoin.Configuration.Settings
 {

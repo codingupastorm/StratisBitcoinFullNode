@@ -16,7 +16,7 @@ using Stratis.Features.Consensus;
 using Stratis.Features.Consensus.CoinViews;
 using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Xunit;
 using static NBitcoin.Transaction;
 
