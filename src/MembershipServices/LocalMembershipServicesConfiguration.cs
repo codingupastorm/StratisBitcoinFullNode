@@ -11,8 +11,6 @@ namespace MembershipServices
 {
     public class LocalMembershipServicesConfiguration
     {
-        // TODO: Share pieces of local and channel config from a base class? Are they going to be similar enough?
-
         public string baseDir { get; set; }
 
         private readonly Network network;
@@ -105,7 +103,7 @@ namespace MembershipServices
 
                 this.PutCertificateIntoMappings(certificate);
             }
-            catch (Exception e)
+            catch
             {
                 return false;
             }
@@ -175,8 +173,9 @@ namespace MembershipServices
             file.Flush();
             file.Dispose();
 
-            // TODO: Delete from the other mappings & the local MSD folder(s)
-            this.mapThumbprints.TryRemove(thumbprint, out _);
+            X509Certificate certificate = this.GetCertificateByThumbprint(thumbprint);
+
+            this.RemoveCertificate(certificate, MemberType.NetworkPeer);
         }
 
         public bool IsCertificateRevoked(string thumbprint)
@@ -210,6 +209,10 @@ namespace MembershipServices
 
                     X509Certificate certificate = parser.ReadCertificate(File.ReadAllBytes(fileName));
 
+                    // TODO: Maybe the certificate should actually be deleted from disk here if it is known to be revoked
+                    if (this.revokedCertificateThumbprints.Contains(MembershipServicesDirectory.GetCertificateThumbprint(certificate)))
+                        continue;
+
                     this.PutCertificateIntoMappings(certificate);
                 }
                 catch (Exception e)
@@ -227,6 +230,10 @@ namespace MembershipServices
                     var parser = new X509CertificateParser();
 
                     X509Certificate certificate = parser.ReadCertificate(File.ReadAllBytes(fileName));
+
+                    // TODO: Maybe the certificate should actually be deleted from disk here if it is known to be revoked
+                    if (this.revokedCertificateThumbprints.Contains(MembershipServicesDirectory.GetCertificateThumbprint(certificate)))
+                        continue;
 
                     this.PutCertificateIntoMappings(certificate);
                 }
