@@ -4,9 +4,9 @@ using System.Linq;
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Core.AsyncWork.JsonErrors;
 
-namespace Stratis.Bitcoin.Utilities.ModelStateErrors
+namespace Stratis.Core.AsyncWork.ModelStateErrors
 {
     public static class ModelStateErrors
     {

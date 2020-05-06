@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Threading;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using TracerAttributes;
 
 namespace Stratis.Features.MemoryPool

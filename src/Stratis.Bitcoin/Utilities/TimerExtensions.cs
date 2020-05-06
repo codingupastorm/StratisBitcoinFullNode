@@ -1,6 +1,6 @@
 ﻿using System.Timers;
 
-namespace Stratis.Bitcoin.Utilities
+namespace Stratis.Core.AsyncWork
 {
     /// <summary>
     /// Extension methods for the <see cref="Timer"/> class.

@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using TracerAttributes;
 
 namespace Stratis.Bitcoin.P2P.Protocol.Behaviors

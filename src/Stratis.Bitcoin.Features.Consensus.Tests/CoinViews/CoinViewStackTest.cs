@@ -5,7 +5,7 @@ using System.Threading;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Xunit;
 
 namespace Stratis.Features.Consensus.Tests.CoinViews

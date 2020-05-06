@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using CertificateAuthority;
@@ -122,6 +121,11 @@ namespace MembershipServices
         public X509Certificate GetCertificateForTransactionSigningPubKeyHash(byte[] transactionSigningPubKeyHash)
         {
             return this.localMembershipServices.GetCertificateByTransactionSigningPubKeyHash(transactionSigningPubKeyHash);
+        }
+
+        public void RevokeCertificate(string thumbprint)
+        {
+            this.localMembershipServices.RevokeCertificate(thumbprint);
         }
 
         // TODO: Perhaps move revocation checking into a sub-component of the MSD to keep the top level cleaner.

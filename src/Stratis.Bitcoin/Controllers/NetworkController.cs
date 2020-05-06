@@ -9,8 +9,8 @@ using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.Utilities.Extensions;
-using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Core.AsyncWork.Extensions;
+using Stratis.Core.AsyncWork.JsonErrors;
 
 namespace Stratis.Bitcoin.Controllers
 {

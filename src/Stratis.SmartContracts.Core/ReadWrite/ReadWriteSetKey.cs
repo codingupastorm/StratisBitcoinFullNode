@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using NBitcoin;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 
 namespace Stratis.SmartContracts.Core.ReadWrite
 {

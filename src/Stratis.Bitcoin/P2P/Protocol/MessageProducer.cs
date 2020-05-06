@@ -1,6 +1,6 @@
 ﻿using System;
 using ConcurrentCollections;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 
 namespace Stratis.Bitcoin.P2P.Protocol
 {

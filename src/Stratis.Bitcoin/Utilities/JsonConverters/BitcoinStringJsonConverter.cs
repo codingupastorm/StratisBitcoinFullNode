@@ -3,7 +3,7 @@ using System.Reflection;
 using NBitcoin;
 using Newtonsoft.Json;
 
-namespace Stratis.Bitcoin.Utilities.JsonConverters
+namespace Stratis.Core.AsyncWork.JsonConverters
 {
     /// <summary>
     /// Converter used to convert an object implementing <see cref="IBitcoinString"/> to and from JSON.

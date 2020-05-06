@@ -1,5 +1,5 @@
 ﻿using System;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using TracerAttributes;
 
 namespace Stratis.Bitcoin.Consensus.PerformanceCounters.ConsensusManager

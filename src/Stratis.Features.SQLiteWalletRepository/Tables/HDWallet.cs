@@ -2,7 +2,7 @@
 using System.Linq;
 using NBitcoin;
 using SQLite;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Stratis.Features.SQLiteWalletRepository.Extensions;
 
 namespace Stratis.Features.SQLiteWalletRepository.Tables

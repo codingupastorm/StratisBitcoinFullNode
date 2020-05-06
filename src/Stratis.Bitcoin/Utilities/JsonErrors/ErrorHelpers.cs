@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Net;
 
-namespace Stratis.Bitcoin.Utilities.JsonErrors
+namespace Stratis.Core.AsyncWork.JsonErrors
 {
     public static class ErrorHelpers
     {

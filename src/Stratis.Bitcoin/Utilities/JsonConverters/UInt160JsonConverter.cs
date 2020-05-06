@@ -3,7 +3,7 @@ using System.IO;
 using NBitcoin;
 using Newtonsoft.Json;
 
-namespace Stratis.Bitcoin.Utilities.JsonConverters
+namespace Stratis.Core.AsyncWork.JsonConverters
 {
     /// <summary>
     /// Converter used to convert a <see cref="uint160"/> to and from JSON.

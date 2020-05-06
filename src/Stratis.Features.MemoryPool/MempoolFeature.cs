@@ -11,7 +11,7 @@ using Stratis.Bitcoin.Connection;
 using Stratis.Features.MemoryPool.Fee;
 using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using TracerAttributes;
 
 [assembly: InternalsVisibleTo("Stratis.Features.MemoryPool.Tests")]
