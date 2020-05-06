@@ -175,7 +175,8 @@ namespace MembershipServices
             file.Flush();
             file.Dispose();
 
-            // TODO: Delete from the local MSD folders and mappings too?
+            // TODO: Delete from the other mappings & the local MSD folder(s)
+            this.mapThumbprints.TryRemove(thumbprint, out _);
         }
 
         public bool IsCertificateRevoked(string thumbprint)
