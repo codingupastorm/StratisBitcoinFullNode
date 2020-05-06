@@ -23,7 +23,7 @@ using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.RuntimeObserver;
 using Xunit;
 
-namespace Stratis.SmartContracts.IntegrationTests
+namespace Stratis.SmartContracts.Tests.Common
 {
     /// <summary>
     /// Provides test helper methods that would otherwise fail on tokenless nodes because of dependencies missing.
@@ -108,7 +108,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         /// <summary>
         /// Creates a new account against the supplied running CA from scratch, and returns the client for it.
         /// </summary>
-        public static CaClient GetClientAndCreateAdminAccount(IWebHost server, List<string> requestedPermissions = null, string organisation = null)
+        public static CaClient GetClientAndCreateAccount(IWebHost server, List<string> requestedPermissions = null, string organisation = null)
         {
             var httpClient = new HttpClient();
             CredentialsModel credentials = CaTestHelper.CreateAccount(server, AccountAccessFlags.AdminAccess, permissions: requestedPermissions, organisation: organisation);

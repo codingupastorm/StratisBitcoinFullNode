@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
+using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
@@ -36,6 +37,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         internal readonly NodeRunner runner;
 
         public int ApiPort => int.Parse(this.ConfigParameters["apiport"]);
+        public int SystemChannelApiPort => int.Parse(this.ConfigParameters["systemchannelapiport"]);
 
         public BitcoinSecret MinerSecret { get; private set; }
 
@@ -78,6 +80,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         List<Action> startActions = new List<Action>();
         List<Action> runActions = new List<Action>();
 
+        public X509Certificate AuthorityCertificate { get; set; }
         public Key ClientCertificatePrivateKey { get; set; }
         public Key TransactionSigningPrivateKey { get; set; }
 
