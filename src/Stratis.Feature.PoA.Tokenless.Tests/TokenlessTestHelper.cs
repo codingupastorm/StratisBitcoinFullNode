@@ -11,7 +11,6 @@ using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
 using Stratis.Feature.PoA.Tokenless.Networks;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Fee;
@@ -39,7 +38,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public readonly TokenlessMempoolValidator MempoolValidator;
         public readonly ITokenlessSigner TokenlessSigner;
         public readonly Mock<IMembershipServicesDirectory> MembershipServices;
-        public readonly Mock<ICertificatesManager> CertificatesManager;
 
         public TokenlessTestHelper()
         {

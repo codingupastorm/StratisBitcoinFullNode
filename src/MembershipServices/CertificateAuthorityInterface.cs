@@ -4,18 +4,16 @@ using System.IO;
 using System.Net.Http;
 using System.Security.Authentication;
 using CertificateAuthority;
-using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
 using TextFileConfiguration = Stratis.Bitcoin.Configuration.TextFileConfiguration;
-using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 
-namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
+namespace MembershipServices
 {
-    public sealed class CertificatesManager : ICertificatesManager
+    public class CertificateAuthorityInterface
     {
         /// <summary>Name of authority .crt certificate that is supposed to be found in application folder.</summary>
         /// <remarks>This certificate is automatically copied during the build.</remarks>
@@ -39,23 +37,6 @@ namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
         /// <summary>The base url to be used to query the CA.</summary>
         public const string CaBaseUrlKey = "caurl";
 
-        /// <inheritdoc/>
-        public X509Certificate AuthorityCertificate { get; private set; }
-
-        /// <inheritdoc/>
-        public X509Certificate ClientCertificate { get; private set; }
-
-        /// <inheritdoc/>
-        public AsymmetricKeyParameter ClientCertificatePrivateKey { get; private set; }
-
-        private readonly DataFolder dataFolder;
-
-        private readonly ILogger logger;
-
-        private readonly Network network;
-
-        private readonly TextFileConfiguration configuration;
-
         private readonly string caUrl;
 
         private string caPassword;
@@ -64,35 +45,40 @@ namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
 
         private string clientCertificatePassword;
 
-        private readonly IMembershipServicesDirectory membershipServices;
+        private readonly NodeSettings nodeSettings;
 
-        public CertificatesManager(DataFolder dataFolder, NodeSettings nodeSettings, ILoggerFactory loggerFactory, Network network, IMembershipServicesDirectory membershipServices)
+        private readonly ILogger logger;
+
+        private readonly TextFileConfiguration configuration;
+
+        public CertificateAuthorityInterface(NodeSettings nodeSettings, ILoggerFactory loggerFactory)
         {
-            this.dataFolder = dataFolder;
-            this.configuration = nodeSettings.ConfigReader;
-            this.network = network;
-            this.membershipServices = membershipServices;
+            this.nodeSettings = nodeSettings;
 
-            this.caUrl = this.configuration.GetOrDefault(CaBaseUrlKey, CaBaseUrl);
+            this.configuration = nodeSettings.ConfigReader;
 
             this.logger = loggerFactory.CreateLogger(GetType().FullName);
+
+            this.caUrl = this.configuration.GetOrDefault(CaBaseUrlKey, CaBaseUrl);
         }
 
-        /// <inheritdoc/>
-        public void Initialize()
+        private CaClient GetClient()
         {
-            this.LoadAuthorityCertificate();
-            this.LoadClientCertificate();
+            var httpClient = new HttpClient();
+
+            return new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
         }
 
-        public bool HaveAccount()
+        public List<PubKey> GetCertificatePublicKeys()
         {
-            return this.caAccountId != 0 && !string.IsNullOrEmpty(this.caPassword);
+            CaClient caClient = this.GetClient();
+            return caClient.GetCertificatePublicKeys(this.logger);
         }
 
-        public bool LoadAuthorityCertificate(bool requireAccountId = true)
+        public X509Certificate LoadAuthorityCertificate(bool requireAccountId = true)
         {
-            string acPath = Path.Combine(this.dataFolder.RootPath, AuthorityCertificateName);
+            // TODO: This file should actually be in the CaCerts folder, adjust the test helper accordingly and amend
+            string acPath = Path.Combine(this.nodeSettings.DataFolder.RootPath, AuthorityCertificateName);
 
             if (!File.Exists(acPath))
             {
@@ -118,14 +104,15 @@ namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
 
             var certParser = new X509CertificateParser();
 
-            this.AuthorityCertificate = certParser.ReadCertificate(File.ReadAllBytes(acPath));
-
-            return true;
+            return certParser.ReadCertificate(File.ReadAllBytes(acPath));
         }
 
-        public bool LoadClientCertificate()
+        public (X509Certificate clientCertificate, AsymmetricKeyParameter clientCertificatePrivateKey) LoadClientCertificate(X509Certificate authorityCertificate)
         {
-            string clientCertPath = Path.Combine(this.dataFolder.RootPath, ClientCertificateName);
+            X509Certificate clientCert = null;
+            AsymmetricKeyParameter clientKey = null;
+
+            string clientCertPath = Path.Combine(this.nodeSettings.DataFolder.RootPath, ClientCertificateName);
 
             if (!File.Exists(clientCertPath))
             {
@@ -143,42 +130,35 @@ namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
 
             try
             {
-                (this.ClientCertificate, this.ClientCertificatePrivateKey) = CaCertificatesManager.LoadPfx(File.ReadAllBytes(clientCertPath), this.clientCertificatePassword);
+                (clientCert, clientKey) = CaCertificatesManager.LoadPfx(File.ReadAllBytes(clientCertPath), this.clientCertificatePassword);
             }
             catch (IOException)
             {
             }
 
-            if (this.ClientCertificate == null)
+            if ((clientCert == null) || (clientKey == null))
             {
                 this.logger.LogError("(-)[WRONG_PASSWORD]");
                 throw new AuthenticationException($"Client certificate wasn't loaded. Usually this happens when provided password is incorrect.");
             }
 
-            bool clientCertValid = this.membershipServices.IsSignedByAuthorityCertificate(this.ClientCertificate, this.AuthorityCertificate);
+            bool clientCertValid = MembershipServicesDirectory.IsSignedByAuthorityCertificate(clientCert, authorityCertificate);
 
             if (!clientCertValid)
                 throw new CertificateConfigurationException("Provided client certificate isn't valid or isn't signed by the authority certificate!");
 
-            bool revoked = this.membershipServices.IsCertificateRevoked(CaCertificatesManager.GetThumbprint(this.ClientCertificate));
+            // TODO: Check revocation one level up instead
+            //bool revoked = this.membershipServices.IsCertificateRevoked(CaCertificatesManager.GetThumbprint(this.ClientCertificate));
 
-            if (revoked)
-                throw new CertificateConfigurationException("Provided client certificate was revoked!");
+            //if (revoked)
+            //    throw new CertificateConfigurationException("Provided client certificate was revoked!");
 
-            return true;
+            return (clientCert, clientKey);
         }
 
-        public CaClient GetClient()
+        public bool HaveAccount()
         {
-            var httpClient = new HttpClient();
-
-            return new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
-        }
-        
-        public List<PubKey> GetCertificatePublicKeys()
-        {
-            CaClient caClient = this.GetClient();
-            return caClient.GetCertificatePublicKeys(this.logger);
+            return this.caAccountId != 0 && !string.IsNullOrEmpty(this.caPassword);
         }
     }
 

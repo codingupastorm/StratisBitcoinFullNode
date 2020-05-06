@@ -15,7 +15,6 @@ using Stratis.Core.AsyncWork;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.PoA.Tests.Common;
 using Xunit;
 
@@ -121,8 +120,8 @@ namespace Stratis.SmartContracts.Tests.Common
 
                 if (authorityCertificate != null && node.ClientCertificate != null)
                 {
-                    File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificatesManager.AuthorityCertificateName), authorityCertificate.GetEncoded());
-                    File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(x509, node.ClientCertificatePrivateKey, "test"));
+                    File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificateAuthorityInterface.AuthorityCertificateName), authorityCertificate.GetEncoded());
+                    File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificateAuthorityInterface.ClientCertificateName), CaCertificatesManager.CreatePfx(x509, node.ClientCertificatePrivateKey, "test"));
 
                     // Put certificate into applicable local MSD folder
                     Directory.CreateDirectory(Path.Combine(settings.DataDir, LocalMembershipServicesConfiguration.SignCerts));
@@ -182,8 +181,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
         private TokenlessKeyStoreManager InitializeNodeKeyStore(CoreNode node, Network network, NodeSettings settings)
         {
-            var certificatesManager = new CertificatesManager(settings.DataFolder, settings, settings.LoggerFactory, network, new MembershipServicesDirectory(settings));
-            var keyStoreManager = new TokenlessKeyStoreManager(network, settings.DataFolder, new ChannelSettings(settings.ConfigReader), new TokenlessKeyStoreSettings(settings), certificatesManager, settings.LoggerFactory);
+            var keyStoreManager = new TokenlessKeyStoreManager(network, settings.DataFolder, new ChannelSettings(settings.ConfigReader), new TokenlessKeyStoreSettings(settings), new MembershipServicesDirectory(settings, settings.LoggerFactory), settings.LoggerFactory);
 
             keyStoreManager.Initialize();
 

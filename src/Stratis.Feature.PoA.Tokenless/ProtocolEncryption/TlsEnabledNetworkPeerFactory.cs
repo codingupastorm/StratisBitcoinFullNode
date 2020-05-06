@@ -1,5 +1,6 @@
 ﻿using System.Net.Sockets;
 using System.Threading;
+using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration.Settings;
@@ -15,14 +16,14 @@ namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
 {
     public class TlsEnabledNetworkPeerFactory : NetworkPeerFactory
     {
-        private readonly ICertificatesManager certManager;
+        private readonly IMembershipServicesDirectory membershipServices;
         private readonly IClientCertificateValidator clientCertificateValidator;
 
         public TlsEnabledNetworkPeerFactory(Network network, IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, PayloadProvider payloadProvider, ISelfEndpointTracker selfEndpointTracker,
-            IInitialBlockDownloadState initialBlockDownloadState, ConnectionManagerSettings connectionManagerSettings, IAsyncProvider asyncProvider, ICertificatesManager certManager, IPeerAddressManager peerAddressManager, IClientCertificateValidator clientCertificateValidator = null)
+            IInitialBlockDownloadState initialBlockDownloadState, ConnectionManagerSettings connectionManagerSettings, IAsyncProvider asyncProvider, IPeerAddressManager peerAddressManager, IMembershipServicesDirectory membershipServices, IClientCertificateValidator clientCertificateValidator = null)
             : base(network, dateTimeProvider, loggerFactory, payloadProvider, selfEndpointTracker, initialBlockDownloadState, connectionManagerSettings, asyncProvider, peerAddressManager)
         {
-            this.certManager = certManager;
+            this.membershipServices = membershipServices;
             this.clientCertificateValidator = clientCertificateValidator;
         }
 
@@ -33,7 +34,7 @@ namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
             Guard.NotNull(processMessageAsync, nameof(processMessageAsync));
         
             int id = Interlocked.Increment(ref this.lastClientId);
-            return new TlsEnabledNetworkPeerConnection(this.network, peer, client, id, processMessageAsync, this.dateTimeProvider, this.loggerFactory, this.payloadProvider, this.asyncProvider, this.certManager, isServer, this.clientCertificateValidator);
+            return new TlsEnabledNetworkPeerConnection(this.network, peer, client, id, processMessageAsync, this.dateTimeProvider, this.loggerFactory, this.payloadProvider, this.asyncProvider, this.membershipServices, isServer, this.clientCertificateValidator);
         }
     }
 }

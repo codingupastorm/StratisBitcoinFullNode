@@ -16,11 +16,6 @@ namespace MembershipServices
         private readonly Network network;
 
         /// <summary>
-        /// Configures the supported Organizational Units and identity classifications.
-        /// </summary>
-        public const string ConfigurationFilename = "config.yaml";
-
-        /// <summary>
         /// Subfolder holding certificate files each corresponding to an administrator certificate.
         /// </summary>
         public const string AdminCerts = "admincerts";

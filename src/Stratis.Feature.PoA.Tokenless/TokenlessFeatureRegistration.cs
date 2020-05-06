@@ -121,7 +121,6 @@ namespace Stratis.Feature.PoA.Tokenless
 
                         // Permissioned membership.
                         services.AddSingleton<IMembershipServicesDirectory, MembershipServicesDirectory>();
-                        services.AddSingleton<ICertificatesManager, CertificatesManager>();
                         services.AddSingleton<ICertificatePermissionsChecker, CertificatePermissionsChecker>();
 
                         // Channels

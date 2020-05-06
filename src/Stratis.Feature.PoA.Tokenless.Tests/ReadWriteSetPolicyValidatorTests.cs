@@ -1,6 +1,6 @@
-﻿using Moq;
+﻿using MembershipServices;
+using Moq;
 using NBitcoin;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
@@ -30,7 +30,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             rwsBuilder.AddWriteItem(new ReadWriteSetKey(addr, new byte[] { 0xAA }), new byte[] {0XBB}, true);
             
-            var validator = new ReadWriteSetPolicyValidator(Mock.Of<ICertificatesManager>(), sr.Object);
+            var validator = new ReadWriteSetPolicyValidator(Mock.Of<IMembershipServicesDirectory>(), sr.Object);
             
             Assert.True(validator.OrganisationCanAccessPrivateData(org, rwsBuilder.GetReadWriteSet()));
         }
@@ -55,7 +55,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             rwsBuilder.AddWriteItem(new ReadWriteSetKey(addr, new byte[] { 0xAA }), new byte[] { 0XBB }, true);
 
-            var validator = new ReadWriteSetPolicyValidator(Mock.Of<ICertificatesManager>(), sr.Object);
+            var validator = new ReadWriteSetPolicyValidator(Mock.Of<IMembershipServicesDirectory>(), sr.Object);
 
             Assert.False(validator.OrganisationCanAccessPrivateData(disallowedOrg, rwsBuilder.GetReadWriteSet()));
         }
@@ -75,7 +75,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             rwsBuilder.AddWriteItem(new ReadWriteSetKey(addr, new byte[] { 0xAA }), new byte[] { 0XBB }, true);
 
-            var validator = new ReadWriteSetPolicyValidator(Mock.Of<ICertificatesManager>(), sr.Object);
+            var validator = new ReadWriteSetPolicyValidator(Mock.Of<IMembershipServicesDirectory>(), sr.Object);
 
             Assert.False(validator.OrganisationCanAccessPrivateData(org, rwsBuilder.GetReadWriteSet()));
         }

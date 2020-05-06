@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MembershipServices;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.P2P.Peer;
@@ -30,7 +31,7 @@ namespace Stratis.Feature.PoA.Tokenless
     {
         private readonly IConnectionManager connectionManager;
 
-        private readonly ICertificatesManager certificatesManager;
+        private readonly IMembershipServicesDirectory membershipServices;
 
         /// <summary>
         /// A list of all peers and their client certificate.
@@ -38,10 +39,10 @@ namespace Stratis.Feature.PoA.Tokenless
         private List<(INetworkPeer Peer, X509Certificate Certificate)> PeersWithCerts => 
             this.connectionManager.ConnectedPeers.Select(x => (x, (x.Connection as TlsEnabledNetworkPeerConnection).GetPeerCertificate())).ToList();
 
-        public TokenlessBroadcaster(IConnectionManager connectionManager, ICertificatesManager certificatesManager)
+        public TokenlessBroadcaster(IConnectionManager connectionManager, IMembershipServicesDirectory membershipServices)
         {
             this.connectionManager = connectionManager;
-            this.certificatesManager = certificatesManager;
+            this.membershipServices = membershipServices;
         }
 
         /// <inheritdoc />
@@ -61,7 +62,7 @@ namespace Stratis.Feature.PoA.Tokenless
         {
             if (organisation == null)
             {
-                organisation = this.certificatesManager.ClientCertificate.GetOrganisation();
+                organisation = this.membershipServices.ClientCertificate.GetOrganisation();
             }
 
             IEnumerable<(INetworkPeer Peer, X509Certificate Certificate)> peers = this.GetPeersForOrganisation(organisation);

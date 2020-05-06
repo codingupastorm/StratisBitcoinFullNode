@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
+using MembershipServices;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
@@ -44,9 +45,9 @@ namespace Stratis.SmartContracts.Tests.Common
                 "-password=test",
                 "-conf=channel.conf",
                 "-datadir=" + this.DataFolder,
-                $"-{CertificatesManager.CaAccountIdKey}={Settings.AdminAccountId}",
-                $"-{CertificatesManager.CaPasswordKey}={CaTestHelper.AdminPassword}",
-                $"-{CertificatesManager.ClientCertificateConfigurationKey}=test",
+                $"-{CertificateAuthorityInterface.CaAccountIdKey}={Settings.AdminAccountId}",
+                $"-{CertificateAuthorityInterface.CaPasswordKey}={CaTestHelper.AdminPassword}",
+                $"-{CertificateAuthorityInterface.ClientCertificateConfigurationKey}=test",
                 "-ischannelnode=true",
             });
 

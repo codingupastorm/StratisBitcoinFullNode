@@ -48,7 +48,7 @@ namespace CertificateAuthority
 
         public bool InitializeCertificateAuthority(string mnemonic, string mnemonicPassword, Network network)
         {
-            // Happy to not use RequestFromCA method for now because this is a more specialised method, might need different logic at some point.
+            // TODO: Happy to not use RequestFromCA method for now because this is a more specialised method, might need different logic at some point.
 
             var mnemonicModel = new InitializeCertificateAuthorityModel(mnemonic, mnemonicPassword, network.Consensus.CoinType, this.password);
 

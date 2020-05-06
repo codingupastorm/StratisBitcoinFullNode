@@ -1,11 +1,11 @@
 ﻿using System;
 using System.IO;
+using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Core.AsyncWork;
 using Stratis.Feature.PoA.Tokenless.Channels;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.PoA;
 
 namespace Stratis.Feature.PoA.Tokenless.KeyStore
@@ -48,12 +48,12 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
         private readonly FileStorage<TokenlessKeyStore> fileStorage;
         private readonly ChannelSettings channelSettings;
         private readonly TokenlessKeyStoreSettings keyStoreSettings;
-        private readonly ICertificatesManager certificatesManager;
+        private readonly IMembershipServicesDirectory membershipServices;
         private readonly ILogger logger;
 
-        public TokenlessKeyStoreManager(Network network, DataFolder dataFolder, ChannelSettings channelSettings, TokenlessKeyStoreSettings keyStoreSettings, ICertificatesManager certificatesManager, ILoggerFactory loggerFactory)
+        public TokenlessKeyStoreManager(Network network, DataFolder dataFolder, ChannelSettings channelSettings, TokenlessKeyStoreSettings keyStoreSettings, IMembershipServicesDirectory membershipServices, ILoggerFactory loggerFactory)
         {
-            this.certificatesManager = certificatesManager;
+            this.membershipServices = membershipServices;
             this.channelSettings = channelSettings;
             this.dataFolder = dataFolder;
             this.keyStoreSettings = keyStoreSettings;
@@ -248,10 +248,10 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
 
             try
             {
-                caOk = this.certificatesManager.LoadAuthorityCertificate(false);
+                caOk = this.membershipServices.AuthorityCertificate != null;
                 this.logger.LogInformation($"Authority certificate loaded.");
 
-                clientOk = this.certificatesManager.LoadClientCertificate();
+                clientOk = this.membershipServices.ClientCertificate != null;
                 this.logger.LogInformation($"Client certificate loaded.");
             }
             catch (CertificateConfigurationException certEx)
@@ -267,18 +267,18 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
             if (clientOk && !this.keyStoreSettings.GenerateCertificate)
                 return true;
 
-            if (!CheckPassword(CertificatesManager.ClientCertificateName))
+            if (!CheckPassword(CertificateAuthorityInterface.ClientCertificateName))
                 return false;
 
             // First check if we have created an account on the CA already.
-            if (!this.certificatesManager.HaveAccount())
+            if (!this.membershipServices.CertificateAuthorityInterface.HaveAccount())
             {
                 this.logger.LogError($"Please create an account on the certificate authority and generate the node's certificate with the MembershipServices.Cli utility.");
 
                 return false;
             }
 
-            if (this.certificatesManager.ClientCertificate == null)
+            if (this.membershipServices.ClientCertificate == null)
             {
                 this.logger.LogError($"Please generate the node's certificate with the MembershipServices.Cli utility.");
 

@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
+using MembershipServices;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -61,7 +62,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         private readonly IEndorsements endorsements;
         private readonly ISerializer serializer;
         private readonly ILocalExecutor localExecutor;
-        private readonly ICertificatesManager certificatesManager;
+        private readonly IMembershipServicesDirectory membershipServices;
         private readonly ILogger logger;
 
         public TokenlessController(
@@ -80,7 +81,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             IEndorsements endorsements,
             ISerializer serializer,
             ILocalExecutor localExecutor,
-            ICertificatesManager certificatesManager)
+            IMembershipServicesDirectory membershipServices)
         {
             this.coreComponent = coreComponent;
             this.tokenlessSigner = tokenlessSigner;
@@ -97,7 +98,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             this.primitiveSerializer = primitiveSerializer;
             this.serializer = serializer;
             this.localExecutor = localExecutor;
-            this.certificatesManager = certificatesManager;
+            this.membershipServices = membershipServices;
             this.logger = coreComponent.LoggerFactory.CreateLogger(this.GetType());
         }
 
@@ -141,7 +142,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                 // When sending off CREATE transactions, use this node's organisation and the default number of required sigs. Can be configable in future.
                 EndorsementPolicy policy = new EndorsementPolicy
                 {
-                    Organisation = (Organisation)this.certificatesManager.ClientCertificate.GetOrganisation(),
+                    Organisation = (Organisation)this.membershipServices.ClientCertificate.GetOrganisation(),
                     RequiredSignatures = EndorsementPolicy.DefaultRequiredSignatures
                 };
 
