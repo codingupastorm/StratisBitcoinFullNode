@@ -19,7 +19,7 @@ using Stratis.Features.MemoryPool.Fee;
 using Stratis.Features.MemoryPool.Rules;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Xunit;
 
 namespace Stratis.Features.MemoryPool.Tests

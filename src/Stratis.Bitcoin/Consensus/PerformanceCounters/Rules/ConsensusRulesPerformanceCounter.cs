@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using NBitcoin.Rules;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using TracerAttributes;
 
 namespace Stratis.Bitcoin.Consensus.PerformanceCounters.Rules

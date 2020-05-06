@@ -21,7 +21,7 @@ using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Stratis.Features.BlockStore;
 using Stratis.Features.Consensus.CoinViews;
 using Stratis.Features.Consensus.Rules;

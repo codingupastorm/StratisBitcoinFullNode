@@ -2,7 +2,7 @@
 using System.IO;
 using NBitcoin;
 using Stratis.Features.PoA.Voting;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Xunit;
 
 namespace Stratis.Features.PoA.Tests

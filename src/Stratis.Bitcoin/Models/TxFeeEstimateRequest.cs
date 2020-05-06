@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using Stratis.Bitcoin.Utilities.ValidationAttributes;
+using Stratis.Core.AsyncWork.ValidationAttributes;
 using Stratis.Bitcoin.Validations;
 
 namespace Stratis.Bitcoin.Models

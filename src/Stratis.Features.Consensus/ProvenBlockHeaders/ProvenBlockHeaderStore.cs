@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using TracerAttributes;
 
 namespace Stratis.Features.Consensus.ProvenBlockHeaders

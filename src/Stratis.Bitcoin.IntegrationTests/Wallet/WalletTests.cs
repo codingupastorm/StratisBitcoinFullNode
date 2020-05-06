@@ -16,7 +16,7 @@ using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
 using Stratis.Bitcoin.Models;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Core.AsyncWork.JsonErrors;
 using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests.Wallet

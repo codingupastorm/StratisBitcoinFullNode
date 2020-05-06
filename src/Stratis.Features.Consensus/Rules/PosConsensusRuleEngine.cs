@@ -10,7 +10,7 @@ using Stratis.Features.Consensus.CoinViews;
 using Stratis.Features.Consensus.Interfaces;
 using Stratis.Features.Consensus.ProvenBlockHeaders;
 using Stratis.Features.Consensus.Rules.CommonRules;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using TracerAttributes;
 
 namespace Stratis.Features.Consensus.Rules

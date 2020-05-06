@@ -19,7 +19,7 @@ using Stratis.Bitcoin.IntegrationTests.Common.TestNetworks;
 using Stratis.Bitcoin.Models;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Core.AsyncWork.JsonErrors;
 using Stratis.Features.BlockStore.Models;
 using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.Features.Wallet;

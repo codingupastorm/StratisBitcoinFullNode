@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Stratis.Bitcoin.Utilities.Extensions
+namespace Stratis.Core.AsyncWork.Extensions
 {
     /// <summary>
     /// Provides a set of extension methods for the <see cref="DateTime"/> class.

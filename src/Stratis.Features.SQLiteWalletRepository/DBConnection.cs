@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using SQLite;
 using Stratis.Features.Wallet;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Stratis.Features.SQLiteWalletRepository.Commands;
 using Stratis.Features.SQLiteWalletRepository.Tables;
 

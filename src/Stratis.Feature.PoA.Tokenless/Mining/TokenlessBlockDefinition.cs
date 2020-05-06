@@ -6,7 +6,7 @@ using NBitcoin;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Mining;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Features.MemoryPool;
