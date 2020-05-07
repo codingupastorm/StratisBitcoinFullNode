@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Reflection;
 using NBitcoin;
-using Stratis.Bitcoin.Base;
+using Stratis.Core.Base;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Features.Consensus.CoinViews;
 using Stratis.Features.MemoryPool;

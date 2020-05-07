@@ -1,4 +1,4 @@
-﻿using Stratis.Bitcoin.Base;
+﻿using Stratis.Core.Base;
 using Stratis.Bitcoin.Interfaces;
 
 namespace Stratis.Features.BlockStore

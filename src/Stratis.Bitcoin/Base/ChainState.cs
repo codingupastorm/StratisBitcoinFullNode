@@ -1,6 +1,6 @@
 using NBitcoin;
 
-namespace Stratis.Bitcoin.Base
+namespace Stratis.Core.Base
 {
     /// <summary>
     /// Chain state holds various information related to the status of the chain and its validation.

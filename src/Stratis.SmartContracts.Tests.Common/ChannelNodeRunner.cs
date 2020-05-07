@@ -2,7 +2,7 @@
 using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
 using Stratis.Bitcoin;
-using Stratis.Bitcoin.Base;
+using Stratis.Core.Base;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.IntegrationTests.Common;

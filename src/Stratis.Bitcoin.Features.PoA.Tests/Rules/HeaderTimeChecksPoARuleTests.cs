@@ -1,8 +1,8 @@
 ﻿using System;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Base.Deployments;
+using Stratis.Core.Base;
+using Stratis.Core.Base.Deployments;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Core.Utilities;

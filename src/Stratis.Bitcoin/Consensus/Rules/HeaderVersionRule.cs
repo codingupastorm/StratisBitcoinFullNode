@@ -1,5 +1,5 @@
 ﻿using NBitcoin;
-using Stratis.Bitcoin.Base.Deployments;
+using Stratis.Core.Base.Deployments;
 
 namespace Stratis.Bitcoin.Consensus.Rules
 {
