@@ -11,11 +11,12 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Features.Consensus.Interfaces;
-using Stratis.Features.Consensus.ProvenBlockHeaders;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
+using Stratis.Features.Consensus.Interfaces;
+using Stratis.Features.Consensus.ProvenBlockHeaders;
 
 namespace Stratis.Features.Consensus.Tests.Rules
 {

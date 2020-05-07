@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     public static class RetryStrategy
     {

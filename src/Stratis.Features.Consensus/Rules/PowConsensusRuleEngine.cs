@@ -6,9 +6,10 @@ using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.CoinViews;
 using Stratis.Features.Consensus.Rules.CommonRules;
-using Stratis.Core.AsyncWork;
 using TracerAttributes;
 
 namespace Stratis.Features.Consensus.Rules

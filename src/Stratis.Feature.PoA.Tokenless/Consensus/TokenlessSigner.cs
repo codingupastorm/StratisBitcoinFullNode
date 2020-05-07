@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NBitcoin;
-using Stratis.Core.AsyncWork;
-using Stratis.Core.AsyncWork.Extensions;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.Extensions;
 using Stratis.SmartContracts.Core.Util;
 
 namespace Stratis.Feature.PoA.Tokenless.Consensus

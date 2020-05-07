@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using NBitcoin;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 
 namespace Stratis.SmartContracts.Core.Receipts
 {
@@ -24,7 +24,7 @@ namespace Stratis.SmartContracts.Core.Receipts
         {
             using (IKeyValueStoreTransaction t = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite, TableName))
             {
-                foreach(Receipt receipt in receipts)
+                foreach (Receipt receipt in receipts)
                 {
                     t.Insert<uint256, byte[]>(TableName, receipt.TransactionHash, receipt.ToStorageBytesRlp());
                 }
@@ -47,7 +47,7 @@ namespace Stratis.SmartContracts.Core.Receipts
             List<Receipt> ret = new List<Receipt>();
             using (IKeyValueStoreTransaction t = this.keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                foreach(uint256 hash in hashes)
+                foreach (uint256 hash in hashes)
                 {
                     ret.Add(this.GetReceipt(t, hash));
                 }

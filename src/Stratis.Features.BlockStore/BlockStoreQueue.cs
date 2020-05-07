@@ -10,7 +10,8 @@ using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Primitives;
 using Stratis.Core.AsyncWork;
-using Stratis.Core.AsyncWork.Extensions;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.Extensions;
 using TracerAttributes;
 
 namespace Stratis.Features.BlockStore

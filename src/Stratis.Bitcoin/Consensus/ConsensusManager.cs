@@ -18,8 +18,8 @@ using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Signals;
-using Stratis.Core.AsyncWork;
-using Stratis.Core.AsyncWork.Extensions;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.Extensions;
 using TracerAttributes;
 
 namespace Stratis.Bitcoin.Consensus

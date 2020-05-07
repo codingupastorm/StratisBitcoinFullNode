@@ -1,5 +1,5 @@
 ﻿using NBitcoin;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin.Base.Deployments
 {

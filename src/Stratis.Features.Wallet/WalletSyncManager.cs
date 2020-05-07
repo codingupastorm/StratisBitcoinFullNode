@@ -9,6 +9,7 @@ using Stratis.Bitcoin.EventBus.CoreEvents;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Signals;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.Wallet.Interfaces;

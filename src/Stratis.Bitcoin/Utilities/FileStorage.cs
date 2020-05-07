@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     public class FileStorageOption
     {

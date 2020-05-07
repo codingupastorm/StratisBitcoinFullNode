@@ -9,8 +9,8 @@ using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool.Interfaces;
-using Stratis.Core.AsyncWork;
 
 namespace Stratis.Features.MemoryPool
 {

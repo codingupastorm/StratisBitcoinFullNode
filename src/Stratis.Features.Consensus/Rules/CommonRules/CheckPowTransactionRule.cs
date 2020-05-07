@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Core.Utilities.Extensions;
 
 namespace Stratis.Features.Consensus.Rules.CommonRules
 {

@@ -6,9 +6,9 @@ using NBitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Core.AsyncWork;
-using Stratis.Core.AsyncWork.JsonErrors;
-using Stratis.Core.AsyncWork.ModelStateErrors;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.JsonErrors;
+using Stratis.Core.Utilities.ModelStateErrors;
 using Stratis.Features.BlockStore.Models;
 
 namespace Stratis.Features.BlockStore.Controllers

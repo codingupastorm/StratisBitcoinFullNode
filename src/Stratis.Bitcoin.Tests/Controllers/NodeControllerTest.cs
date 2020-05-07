@@ -20,7 +20,8 @@ using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Tests.Wallet.Common;
 using Stratis.Core.AsyncWork;
-using Stratis.Core.AsyncWork.JsonErrors;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.JsonErrors;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.Controllers
@@ -204,7 +205,7 @@ namespace Stratis.Bitcoin.Tests.Controllers
                 .Verifiable();
             this.controller = new NodeController(this.chainIndexer, this.chainState.Object,
                 this.connectionManager.Object, this.dateTimeProvider.Object, this.fullNode.Object,
-                this.LoggerFactory.Object, this.nodeSettings, this.network, this.asyncProvider.Object, this.selfEndpointTracker.Object, this.blockStore.Object, this.getUnspentTransaction.Object,this.pooledGetUnspentTransaction.Object, this.pooledTransaction.Object);
+                this.LoggerFactory.Object, this.nodeSettings, this.network, this.asyncProvider.Object, this.selfEndpointTracker.Object, this.blockStore.Object, this.getUnspentTransaction.Object, this.pooledGetUnspentTransaction.Object, this.pooledTransaction.Object);
             string txid = txId.ToString();
             bool verbose = false;
 
@@ -395,7 +396,7 @@ namespace Stratis.Bitcoin.Tests.Controllers
             var txId = new uint256(1243124);
             this.controller = new NodeController(this.chainIndexer, this.chainState.Object,
                 this.connectionManager.Object, this.dateTimeProvider.Object, this.fullNode.Object,
-                this.LoggerFactory.Object, this.nodeSettings, this.network, this.asyncProvider.Object, this.selfEndpointTracker.Object, this.blockStore.Object, this.getUnspentTransaction.Object,this.pooledGetUnspentTransaction.Object, this.pooledTransaction.Object);
+                this.LoggerFactory.Object, this.nodeSettings, this.network, this.asyncProvider.Object, this.selfEndpointTracker.Object, this.blockStore.Object, this.getUnspentTransaction.Object, this.pooledGetUnspentTransaction.Object, this.pooledTransaction.Object);
             string txid = txId.ToString();
             uint vout = 0;
             bool includeMemPool = false;
@@ -431,7 +432,7 @@ namespace Stratis.Bitcoin.Tests.Controllers
             var txId = new uint256(1243124);
             this.controller = new NodeController(this.chainIndexer, this.chainState.Object,
                 this.connectionManager.Object, this.dateTimeProvider.Object, this.fullNode.Object,
-                this.LoggerFactory.Object, this.nodeSettings, this.network, this.asyncProvider.Object, this.selfEndpointTracker.Object, this.blockStore.Object, this.getUnspentTransaction.Object,this.pooledGetUnspentTransaction.Object, this.pooledTransaction.Object);
+                this.LoggerFactory.Object, this.nodeSettings, this.network, this.asyncProvider.Object, this.selfEndpointTracker.Object, this.blockStore.Object, this.getUnspentTransaction.Object, this.pooledGetUnspentTransaction.Object, this.pooledTransaction.Object);
             string txid = txId.ToString();
             uint vout = 0;
             bool includeMemPool = true;
@@ -452,7 +453,7 @@ namespace Stratis.Bitcoin.Tests.Controllers
                 .Verifiable();
             this.controller = new NodeController(this.chainIndexer, this.chainState.Object,
                 this.connectionManager.Object, this.dateTimeProvider.Object, this.fullNode.Object,
-                this.LoggerFactory.Object, this.nodeSettings, this.network, this.asyncProvider.Object, this.selfEndpointTracker.Object, this.blockStore.Object, this.getUnspentTransaction.Object,this.pooledGetUnspentTransaction.Object, this.pooledTransaction.Object);
+                this.LoggerFactory.Object, this.nodeSettings, this.network, this.asyncProvider.Object, this.selfEndpointTracker.Object, this.blockStore.Object, this.getUnspentTransaction.Object, this.pooledGetUnspentTransaction.Object, this.pooledTransaction.Object);
             string txid = txId.ToString();
             uint vout = 0;
             bool includeMemPool = false;

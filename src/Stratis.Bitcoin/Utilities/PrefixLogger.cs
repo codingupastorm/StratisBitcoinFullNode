@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using TracerAttributes;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     /// <summary>
     /// Logger that prefixes every log with specified string.

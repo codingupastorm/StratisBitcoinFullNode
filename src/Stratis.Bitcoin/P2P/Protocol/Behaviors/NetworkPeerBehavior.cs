@@ -1,6 +1,6 @@
 ﻿using System;
 using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using TracerAttributes;
 
 namespace Stratis.Bitcoin.P2P.Protocol.Behaviors

@@ -5,7 +5,7 @@ using System.Linq;
 using NBitcoin;
 using Newtonsoft.Json;
 using Stratis.Features.Wallet.Interfaces;
-using Stratis.Core.AsyncWork.JsonConverters;
+using Stratis.Core.Utilities.JsonConverters;
 
 namespace Stratis.Features.Wallet
 {

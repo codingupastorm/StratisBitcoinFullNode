@@ -2,7 +2,7 @@
 using NBitcoin;
 using Newtonsoft.Json;
 
-namespace Stratis.Core.AsyncWork.JsonConverters
+namespace Stratis.Core.Utilities.JsonConverters
 {
     /// <summary>
     /// Converter used to convert <see cref="Network"/> to and from JSON.

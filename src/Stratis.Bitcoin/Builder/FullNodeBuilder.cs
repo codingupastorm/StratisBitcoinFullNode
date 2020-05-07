@@ -8,7 +8,7 @@ using NBitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin.Builder
 {

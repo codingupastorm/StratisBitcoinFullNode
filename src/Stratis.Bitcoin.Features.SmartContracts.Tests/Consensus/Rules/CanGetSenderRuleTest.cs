@@ -13,6 +13,7 @@ using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.Rules;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Interfaces;

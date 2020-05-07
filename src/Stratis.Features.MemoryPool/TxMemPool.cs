@@ -5,10 +5,10 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Consensus;
+using Stratis.Bitcoin.Signals;
+using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool.Fee;
 using Stratis.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Signals;
-using Stratis.Core.AsyncWork;
 
 namespace Stratis.Features.MemoryPool
 {

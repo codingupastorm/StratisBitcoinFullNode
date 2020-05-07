@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.Utilities
@@ -59,7 +59,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             // Initialize with limit of 200.
             var calculator = new AverageCalculator(200);
             Assert.Equal(200, calculator.GetMaxSamples());
-            
+
             // Add 10,20,30
             for (int i = 0; i < 3; i++)
                 calculator.AddSample(this.samples[i]);
@@ -83,10 +83,10 @@ namespace Stratis.Bitcoin.Tests.Utilities
             foreach (int sample in this.samples)
                 calculator.AddSample(sample);
 
-            List<int> lastFive = this.samples.Skip(this.samples.Length - 5).ToList(); 
-            
+            List<int> lastFive = this.samples.Skip(this.samples.Length - 5).ToList();
+
             calculator.SetMaxSamples(5);
-            
+
             Assert.Equal(5, calculator.GetMaxSamples());
             Assert.True(this.DoubleEqual(lastFive.Average(), calculator.Average));
         }

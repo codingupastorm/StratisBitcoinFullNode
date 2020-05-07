@@ -13,6 +13,7 @@ using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Signals;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Features.BlockStore
 {

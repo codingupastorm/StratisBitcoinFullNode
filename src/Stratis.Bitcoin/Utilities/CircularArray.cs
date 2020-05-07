@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     /// <summary>
     /// Generic circular array is a fixed length array which stores collection

@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     /// <summary>
     /// An async reader writer lock for concurrent and exclusive work.

@@ -11,7 +11,7 @@ using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Broadcasting;

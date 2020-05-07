@@ -12,11 +12,11 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Utilities;
 using Stratis.Features.Consensus;
 using Stratis.Features.Consensus.CoinViews;
 using Stratis.Features.Consensus.Rules.CommonRules;
-using Stratis.Bitcoin.Tests.Common;
-using Stratis.Core.AsyncWork;
 using Xunit;
 using static NBitcoin.Transaction;
 

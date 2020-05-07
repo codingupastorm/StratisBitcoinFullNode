@@ -6,7 +6,7 @@ using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
@@ -57,7 +57,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             this.CertificatePermissionsChecker.Setup(c => c.CheckSenderCertificateHasPermission(It.IsAny<uint160>(), It.IsAny<TransactionSendingPermission>())).Returns(true);
 
             this.ChainIndexer = new ChainIndexer(this.Network);
-            this.DateTimeProvider = Stratis.Core.AsyncWork.DateTimeProvider.Default;
+            this.DateTimeProvider = Stratis.Core.Utilities.DateTimeProvider.Default;
             this.MempoolSettings = new MempoolSettings(this.NodeSettings) { MempoolExpiry = Features.MemoryPool.MempoolValidator.DefaultMempoolExpiry };
             this.TokenlessSigner = new TokenlessSigner(this.Network, new SenderRetriever());
             this.EndorsementRule = new EndorsedContractTransactionValidationRule(Mock.Of<IEndorsedTransactionBuilder>(), Mock.Of<IEndorsementSignatureValidator>(), Mock.Of<IEndorsementPolicyValidator>());

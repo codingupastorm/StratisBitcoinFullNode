@@ -1,7 +1,7 @@
 ﻿using System;
 using TracerAttributes;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     /// <summary>
     /// Collection of guard methods.

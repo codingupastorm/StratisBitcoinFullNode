@@ -5,8 +5,8 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Policy;
+using Stratis.Core.Utilities;
 using Stratis.Features.Wallet.Interfaces;
-using Stratis.Core.AsyncWork;
 
 namespace Stratis.Features.Wallet
 {

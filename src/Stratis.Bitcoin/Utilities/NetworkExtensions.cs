@@ -1,6 +1,6 @@
 ﻿using NBitcoin;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     /// <summary>
     /// Extension methods for NBitcoin's Network class.

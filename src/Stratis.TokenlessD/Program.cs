@@ -6,7 +6,7 @@ using NBitcoin;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;

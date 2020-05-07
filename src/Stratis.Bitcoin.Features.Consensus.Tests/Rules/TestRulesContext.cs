@@ -14,6 +14,7 @@ using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Signals;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.CoinViews;
 using Stratis.Features.Consensus.Interfaces;
 using Stratis.Features.Consensus.ProvenBlockHeaders;

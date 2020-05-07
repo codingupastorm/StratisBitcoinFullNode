@@ -4,7 +4,7 @@ using System.Threading;
 using NBitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.Base

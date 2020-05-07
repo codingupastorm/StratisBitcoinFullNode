@@ -6,8 +6,8 @@ using System.Net;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Core.AsyncWork;
-using Stratis.Core.AsyncWork.Extensions;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.Extensions;
 
 namespace Stratis.Bitcoin.P2P
 {

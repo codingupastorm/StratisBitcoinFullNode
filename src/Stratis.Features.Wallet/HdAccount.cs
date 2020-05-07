@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
 using Newtonsoft.Json;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.JsonConverters;
 using Stratis.Features.Wallet.Interfaces;
-using Stratis.Core.AsyncWork;
-using Stratis.Core.AsyncWork.JsonConverters;
 
 namespace Stratis.Features.Wallet
 {
@@ -168,7 +168,8 @@ namespace Stratis.Features.Wallet
         /// A path to the account as defined in BIP44.
         /// </summary>
         [JsonProperty(PropertyName = "hdPath")]
-        public string HdPath {
+        public string HdPath
+        {
             get
             {
                 return (this.WalletAccounts != null) ? $"{this.WalletAccounts.HdPath}/{this.Index}'" : this.hdPath;

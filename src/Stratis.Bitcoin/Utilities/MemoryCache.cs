@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     /// <summary>
     /// Memory cache that implements the Least Recently Used (LRU) policy.

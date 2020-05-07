@@ -13,6 +13,7 @@ using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Tests.Wallet.Common;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Features.BlockStore;
 using Stratis.Features.Wallet.Interfaces;
 using Xunit;

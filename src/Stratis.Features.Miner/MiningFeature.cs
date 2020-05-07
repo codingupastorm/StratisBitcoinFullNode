@@ -10,7 +10,7 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Mining;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.Miner.Interfaces;

@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.Utilities
@@ -30,7 +30,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             Task mreAwaitingTask = manualResetEvent.WaitAsync();
             await mreAwaitingTask;
 
-            stopwatch.Stop(); 
+            stopwatch.Stop();
 
             Assert.True(stopwatch.ElapsedMilliseconds >= 500, $"Elapsed: {stopwatch.ElapsedMilliseconds}");
             Assert.True(mreAwaitingTask.IsCompletedSuccessfully, "Task was not completed successfully.");

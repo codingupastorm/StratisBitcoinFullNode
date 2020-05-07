@@ -6,6 +6,7 @@ using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin.Tests.Common.Logging
 {

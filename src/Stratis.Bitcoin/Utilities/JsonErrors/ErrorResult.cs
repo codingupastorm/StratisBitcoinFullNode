@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace Stratis.Core.AsyncWork.JsonErrors
+namespace Stratis.Core.Utilities.JsonErrors
 {
     public class ErrorResult : ObjectResult
     {

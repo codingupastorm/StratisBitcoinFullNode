@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-namespace Stratis.Core.AsyncWork.JsonConverters
+namespace Stratis.Core.Utilities.JsonConverters
 {
     public class JsonObjectException : Exception
     {

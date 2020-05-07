@@ -19,6 +19,7 @@ using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.Behaviors;
 using Xunit;
 

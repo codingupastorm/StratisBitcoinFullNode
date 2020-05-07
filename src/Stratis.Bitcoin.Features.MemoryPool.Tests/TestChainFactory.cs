@@ -11,6 +11,11 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Bitcoin.Mining;
+using Stratis.Bitcoin.Signals;
+using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Features.Consensus;
 using Stratis.Features.Consensus.CoinViews;
 using Stratis.Features.Consensus.ProvenBlockHeaders;
@@ -20,10 +25,6 @@ using Stratis.Features.MemoryPool.Fee;
 using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Features.MemoryPool.Rules;
 using Stratis.Features.PoA;
-using Stratis.Bitcoin.Mining;
-using Stratis.Bitcoin.Signals;
-using Stratis.Bitcoin.Tests.Common;
-using Stratis.Core.AsyncWork;
 using Xunit;
 
 namespace Stratis.Features.MemoryPool.Tests

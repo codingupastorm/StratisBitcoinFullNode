@@ -1,8 +1,8 @@
 ﻿using System;
-using Stratis.Core.AsyncWork.Extensions;
+using Stratis.Core.Utilities.Extensions;
 using TracerAttributes;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     /// <summary>
     /// Providing date time functionality.

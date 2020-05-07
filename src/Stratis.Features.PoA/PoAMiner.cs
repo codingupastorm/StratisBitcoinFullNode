@@ -13,6 +13,7 @@ using Stratis.Bitcoin.Consensus.Validators;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.PoA.Voting;
 using TracerAttributes;

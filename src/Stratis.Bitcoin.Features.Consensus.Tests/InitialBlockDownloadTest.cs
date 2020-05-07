@@ -7,7 +7,7 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Xunit;
 
 namespace Stratis.Features.Consensus.Tests
@@ -72,7 +72,7 @@ namespace Stratis.Features.Consensus.Tests
             blockHeader.Bits = new Target(new uint256(uint.MaxValue));
 
             // Block has a time sufficiently in the past that it can't be the tip.
-            blockHeader.Time = ((uint) DateTimeOffset.Now.ToUnixTimeSeconds()) - (uint) this.network.MaxTipAge - 1;
+            blockHeader.Time = ((uint)DateTimeOffset.Now.ToUnixTimeSeconds()) - (uint)this.network.MaxTipAge - 1;
 
             this.chainState.ConsensusTip = new ChainedHeader(blockHeader, uint256.Zero, this.checkpoints.GetLastCheckpointHeight() + 1);
             var blockDownloadState = new InitialBlockDownloadState(this.chainState, this.network, this.consensusSettings, this.checkpoints, this.loggerFactory.Object, DateTimeProvider.Default);
