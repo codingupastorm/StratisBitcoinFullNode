@@ -221,7 +221,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                     node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server, initialRun: false);
                     node1.Start();
 
-                    // Is the certificate stil revoked even though we are running without a CA?
+                    // Is the certificate still revoked even though we are running without a CA?
+                    membershipServices = node1.FullNode.NodeService<IMembershipServicesDirectory>();
                     Assert.True(membershipServices.IsCertificateRevoked(revokedThumbprint));
                 }
             }

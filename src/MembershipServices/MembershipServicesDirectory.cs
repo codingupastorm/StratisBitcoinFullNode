@@ -70,6 +70,7 @@ namespace MembershipServices
 
         public MembershipServicesDirectory(NodeSettings nodeSettings, ILoggerFactory loggerFactory)
         {
+            this.nodeSettings = nodeSettings;
             this.configuration = nodeSettings.ConfigReader;
 
             this.logger = loggerFactory.CreateLogger(GetType().FullName);
@@ -95,13 +96,26 @@ namespace MembershipServices
             this.CertificateAuthorityInterface = new CertificateAuthorityInterface(this.nodeSettings, loggerFactory);
 
             this.AuthorityCertificate = this.CertificateAuthorityInterface.LoadAuthorityCertificate();
-            (this.ClientCertificate, this.ClientCertificatePrivateKey) = this.CertificateAuthorityInterface.LoadClientCertificate(this.AuthorityCertificate);
         }
         
         public void Initialize()
         {
+            (this.ClientCertificate, this.ClientCertificatePrivateKey) = this.CertificateAuthorityInterface.LoadClientCertificate(this.AuthorityCertificate);
+
+            if (this.ClientCertificate == null)
+            {
+                this.logger.LogError($"Please generate the node's certificate with the MembershipServices.Cli utility.");
+
+                throw new CertificateConfigurationException($"Please generate the node's certificate with the MembershipServices.Cli utility.");
+            }
+
             // We attempt to set up the folder structure regardless of whether it has been done already.
             this.localMembershipServices.InitializeFolderStructure();
+
+            bool revoked = this.IsCertificateRevoked(CaCertificatesManager.GetThumbprint(this.ClientCertificate));
+
+            if (revoked)
+                throw new CertificateConfigurationException("Provided client certificate was revoked!");
         }
 
         /// <inheritdoc />

@@ -24,6 +24,9 @@ namespace Stratis.SmartContracts.Tests.Common
     {
         private int lastSystemChannelNodePort;
 
+        // This does not have to be re-retrieved from the CA for every node.
+        private X509Certificate authorityCertificate;
+
         public EditableTimeProvider TimeProvider { get; }
 
         public SmartContractNodeBuilder(string rootFolder) : base(rootFolder)
@@ -101,6 +104,11 @@ namespace Stratis.SmartContracts.Tests.Common
             {
                 var dataFolderRootPath = Path.Combine(dataFolder, network.RootFolderName, network.Name);
 
+                if (this.authorityCertificate == null)
+                    this.authorityCertificate = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
+
+                File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificateAuthorityInterface.AuthorityCertificateName), this.authorityCertificate.GetEncoded());
+
                 TokenlessKeyStoreManager keyStoreManager = InitializeNodeKeyStore(node, network, settings);
 
                 BitcoinPubKeyAddress address = node.ClientCertificatePrivateKey.PubKey.GetAddress(network);
@@ -109,18 +117,17 @@ namespace Stratis.SmartContracts.Tests.Common
                 if (!initialRun)
                     return node;
 
-                X509Certificate authorityCertificate = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
-                node.AuthorityCertificate = authorityCertificate;
+                node.AuthorityCertificate = this.authorityCertificate;
 
                 CaClient client = TokenlessTestHelper.GetClientAndCreateAccount(server, requestedPermissions: permissions, organisation: organisation);
 
                 (X509Certificate x509, CertificateInfoModel CertificateInfo) = IssueCertificate(client, node.ClientCertificatePrivateKey, node.TransactionSigningPrivateKey.PubKey, address, miningKey.PubKey);
+
                 node.ClientCertificate = CertificateInfo;
                 Assert.NotNull(node.ClientCertificate);
 
-                if (authorityCertificate != null && node.ClientCertificate != null)
+                if (this.authorityCertificate != null && node.ClientCertificate != null)
                 {
-                    File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificateAuthorityInterface.AuthorityCertificateName), authorityCertificate.GetEncoded());
                     File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificateAuthorityInterface.ClientCertificateName), CaCertificatesManager.CreatePfx(x509, node.ClientCertificatePrivateKey, "test"));
 
                     // Put certificate into applicable local MSD folder
@@ -181,7 +188,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
         private TokenlessKeyStoreManager InitializeNodeKeyStore(CoreNode node, Network network, NodeSettings settings)
         {
-            var keyStoreManager = new TokenlessKeyStoreManager(network, settings.DataFolder, new ChannelSettings(settings.ConfigReader), new TokenlessKeyStoreSettings(settings), new MembershipServicesDirectory(settings, settings.LoggerFactory), settings.LoggerFactory);
+            var keyStoreManager = new TokenlessKeyStoreManager(network, settings.DataFolder, new ChannelSettings(settings.ConfigReader), new TokenlessKeyStoreSettings(settings), settings.LoggerFactory);
 
             keyStoreManager.Initialize();
 

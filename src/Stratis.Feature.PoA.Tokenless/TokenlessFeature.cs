@@ -125,7 +125,6 @@ namespace Stratis.Feature.PoA.Tokenless
             if (options.EnablePermissionedMembership)
             {
                 this.membershipServices.Initialize();
-                // We do not need to initialize the CertificatesManager here like it would have been in the regular PoA feature, because the TokenlessWalletManager is now responsible for ensuring a client certificate is created instead.
             }
 
             if (options.VotingEnabled)

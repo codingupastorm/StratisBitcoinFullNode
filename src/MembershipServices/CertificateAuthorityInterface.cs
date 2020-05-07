@@ -60,6 +60,22 @@ namespace MembershipServices
             this.logger = loggerFactory.CreateLogger(GetType().FullName);
 
             this.caUrl = this.configuration.GetOrDefault(CaBaseUrlKey, CaBaseUrl);
+
+            this.caPassword = this.configuration.GetOrDefault<string>(CaPasswordKey, null);
+
+            if (this.caPassword == null)
+            {
+                this.logger.LogTrace("(-)[NO_PASSWORD]");
+                throw new CertificateConfigurationException($"You have to provide a password for the node's certificate authority account! Use '{CaPasswordKey}' configuration key to provide a password.");
+            }
+
+            this.caAccountId = this.configuration.GetOrDefault<int>(CaAccountIdKey, 0);
+
+            if (this.caAccountId == 0)
+            {
+                this.logger.LogTrace("(-)[NO_ACCOUNT_ID]");
+                throw new CertificateConfigurationException($"You have to provide an account ID for the node's certificate authority account! Use '{CaAccountIdKey}' configuration key to provide an account id.");
+            }
         }
 
         private CaClient GetClient()
@@ -75,7 +91,7 @@ namespace MembershipServices
             return caClient.GetCertificatePublicKeys(this.logger);
         }
 
-        public X509Certificate LoadAuthorityCertificate(bool requireAccountId = true)
+        public X509Certificate LoadAuthorityCertificate()
         {
             // TODO: This file should actually be in the CaCerts folder, adjust the test helper accordingly and amend
             string acPath = Path.Combine(this.nodeSettings.DataFolder.RootPath, AuthorityCertificateName);
@@ -84,22 +100,6 @@ namespace MembershipServices
             {
                 this.logger.LogTrace("(-)[AC_NOT_FOUND]:{0}='{1}'", nameof(acPath), acPath);
                 throw new CertificateConfigurationException($"Authority certificate not located at '{acPath}'. Make sure you place '{AuthorityCertificateName}' in the node's root directory.");
-            }
-
-            this.caPassword = this.configuration.GetOrDefault<string>(CaPasswordKey, null);
-
-            if (this.caPassword == null)
-            {
-                this.logger.LogTrace("(-)[NO_PASSWORD]");
-                throw new CertificateConfigurationException($"You have to provide a password for the certificate authority! Use '{CaPasswordKey}' configuration key to provide a password.");
-            }
-
-            this.caAccountId = this.configuration.GetOrDefault<int>(CaAccountIdKey, 0);
-
-            if (requireAccountId && this.caAccountId == 0)
-            {
-                this.logger.LogTrace("(-)[NO_ACCOUNT_ID]");
-                throw new CertificateConfigurationException($"You have to provide an account ID for the certificate authority! Use '{CaAccountIdKey}' configuration key to provide an account id.");
             }
 
             var certParser = new X509CertificateParser();
@@ -147,18 +147,7 @@ namespace MembershipServices
             if (!clientCertValid)
                 throw new CertificateConfigurationException("Provided client certificate isn't valid or isn't signed by the authority certificate!");
 
-            // TODO: Check revocation one level up instead
-            //bool revoked = this.membershipServices.IsCertificateRevoked(CaCertificatesManager.GetThumbprint(this.ClientCertificate));
-
-            //if (revoked)
-            //    throw new CertificateConfigurationException("Provided client certificate was revoked!");
-
             return (clientCert, clientKey);
-        }
-
-        public bool HaveAccount()
-        {
-            return this.caAccountId != 0 && !string.IsNullOrEmpty(this.caPassword);
         }
     }
 

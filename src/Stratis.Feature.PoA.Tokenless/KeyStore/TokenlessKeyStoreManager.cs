@@ -48,12 +48,10 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
         private readonly FileStorage<TokenlessKeyStore> fileStorage;
         private readonly ChannelSettings channelSettings;
         private readonly TokenlessKeyStoreSettings keyStoreSettings;
-        private readonly IMembershipServicesDirectory membershipServices;
         private readonly ILogger logger;
 
-        public TokenlessKeyStoreManager(Network network, DataFolder dataFolder, ChannelSettings channelSettings, TokenlessKeyStoreSettings keyStoreSettings, IMembershipServicesDirectory membershipServices, ILoggerFactory loggerFactory)
+        public TokenlessKeyStoreManager(Network network, DataFolder dataFolder, ChannelSettings channelSettings, TokenlessKeyStoreSettings keyStoreSettings, ILoggerFactory loggerFactory)
         {
-            this.membershipServices = membershipServices;
             this.channelSettings = channelSettings;
             this.dataFolder = dataFolder;
             this.keyStoreSettings = keyStoreSettings;
@@ -72,9 +70,8 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
             bool keyStoreOk = this.CheckKeyStore();
             bool blockSigningKeyFileOk = this.CheckBlockSigningKeyFile();
             bool transactionKeyFileOk = this.CheckTransactionSigningKeyFile();
-            bool certificateOk = this.CheckCertificate();
 
-            if (keyStoreOk && blockSigningKeyFileOk && transactionKeyFileOk && certificateOk)
+            if (keyStoreOk && blockSigningKeyFileOk && transactionKeyFileOk)
                 return true;
 
             this.logger.LogError($"Restart the daemon.");
@@ -236,53 +233,6 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
                 // Only stop the node if this node is not a channel node.
                 if (!this.channelSettings.IsChannelNode)
                     return false;
-            }
-
-            return true;
-        }
-
-        private bool CheckCertificate()
-        {
-            bool caOk = false;
-            bool clientOk = false;
-
-            try
-            {
-                caOk = this.membershipServices.AuthorityCertificate != null;
-                this.logger.LogInformation($"Authority certificate loaded.");
-
-                clientOk = this.membershipServices.ClientCertificate != null;
-                this.logger.LogInformation($"Client certificate loaded.");
-            }
-            catch (CertificateConfigurationException certEx)
-            {
-                if (!caOk)
-                {
-                    Console.WriteLine(certEx.Message);
-
-                    return false;
-                }
-            }
-
-            if (clientOk && !this.keyStoreSettings.GenerateCertificate)
-                return true;
-
-            if (!CheckPassword(CertificateAuthorityInterface.ClientCertificateName))
-                return false;
-
-            // First check if we have created an account on the CA already.
-            if (!this.membershipServices.CertificateAuthorityInterface.HaveAccount())
-            {
-                this.logger.LogError($"Please create an account on the certificate authority and generate the node's certificate with the MembershipServices.Cli utility.");
-
-                return false;
-            }
-
-            if (this.membershipServices.ClientCertificate == null)
-            {
-                this.logger.LogError($"Please generate the node's certificate with the MembershipServices.Cli utility.");
-
-                return false;
             }
 
             return true;
