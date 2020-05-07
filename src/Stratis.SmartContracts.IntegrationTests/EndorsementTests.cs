@@ -212,6 +212,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
                 TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node3.DataFolder, this.network.RootFolderName, this.network.Name));
 
                 EndorsementPolicy policy = new EndorsementPolicy
                 {

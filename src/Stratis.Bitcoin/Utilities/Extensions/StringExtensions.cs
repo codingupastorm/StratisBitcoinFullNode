@@ -1,6 +1,6 @@
 ﻿using System.Security;
 
-namespace Stratis.Core.AsyncWork.Extensions
+namespace Stratis.Core.Utilities.Extensions
 {
     public static class StringExtensions
     {

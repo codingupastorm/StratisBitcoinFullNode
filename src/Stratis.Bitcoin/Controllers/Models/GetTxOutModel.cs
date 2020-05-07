@@ -1,7 +1,7 @@
 ﻿using NBitcoin;
 using Newtonsoft.Json;
-using Stratis.Core.AsyncWork;
-using Stratis.Core.AsyncWork.JsonConverters;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.JsonConverters;
 
 namespace Stratis.Bitcoin.Controllers.Models
 {

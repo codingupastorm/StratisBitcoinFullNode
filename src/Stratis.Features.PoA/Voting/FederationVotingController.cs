@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.PoA;
-using Stratis.Core.AsyncWork;
-using Stratis.Core.AsyncWork.JsonErrors;
-using Stratis.Core.AsyncWork.ModelStateErrors;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.JsonErrors;
+using Stratis.Core.Utilities.ModelStateErrors;
 
 namespace Stratis.Features.PoA.Voting
 {

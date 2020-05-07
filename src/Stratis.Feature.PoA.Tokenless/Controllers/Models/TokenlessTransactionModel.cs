@@ -1,6 +1,6 @@
 ﻿using NBitcoin;
 using Newtonsoft.Json;
-using Stratis.Core.AsyncWork.JsonConverters;
+using Stratis.Core.Utilities.JsonConverters;
 
 namespace Stratis.Feature.PoA.Tokenless.Controllers.Models
 {

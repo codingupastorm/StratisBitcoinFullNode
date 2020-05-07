@@ -5,7 +5,7 @@ using NBitcoin;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
 
-namespace Stratis.Core.AsyncWork.JsonConverters
+namespace Stratis.Core.Utilities.JsonConverters
 {
     /// <summary>
     /// Converter used to convert an object implementing <see cref="IBitcoinSerializable"/> to and from JSON.

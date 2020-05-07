@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     /// <summary>Calculates average value of last N added samples every time new sample is added.</summary>
     /// <remarks>

@@ -2,7 +2,7 @@
 using System.Linq;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using TracerAttributes;
 
 namespace Stratis.Bitcoin.Consensus

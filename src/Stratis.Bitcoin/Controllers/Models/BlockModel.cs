@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using NBitcoin;
 using Newtonsoft.Json;
+using Stratis.Core.Utilities.Extensions;
 
 namespace Stratis.Bitcoin.Controllers.Models
 {

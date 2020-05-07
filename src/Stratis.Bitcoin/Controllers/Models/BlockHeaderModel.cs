@@ -2,7 +2,7 @@
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
 using Stratis.Bitcoin.Controllers.Converters;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin.Controllers.Models
 {

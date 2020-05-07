@@ -2,7 +2,7 @@
 using ConcurrentCollections;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Core.AsyncWork.Extensions;
+using Stratis.Core.Utilities.Extensions;
 using TracerAttributes;
 
 namespace Stratis.Bitcoin.P2P

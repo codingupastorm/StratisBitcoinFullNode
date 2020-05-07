@@ -11,6 +11,8 @@ using Stratis.Bitcoin.EventBus.CoreEvents;
 using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.Extensions;
 
 namespace Stratis.Bitcoin.P2P.Peer
 {

@@ -26,6 +26,7 @@ using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Signals;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 
 [assembly: InternalsVisibleTo("Stratis.Bitcoin.Tests")]
 [assembly: InternalsVisibleTo("Stratis.Bitcoin.Tests.Common")]
@@ -113,7 +114,6 @@ namespace Stratis.Bitcoin.Base
         private readonly IConsensusRuleEngine consensusRules;
         private readonly IBlockPuller blockPuller;
         private readonly IBlockStore blockStore;
-        private readonly ITipsManager tipsManager;
         private readonly IKeyValueRepository keyValueRepo;
 
         /// <inheritdoc cref="IFinalizedBlockInfoRepository"/>
@@ -165,7 +165,6 @@ namespace Stratis.Bitcoin.Base
             this.provenBlockHeaderStore = provenBlockHeaderStore;
             this.partialValidator = partialValidator;
             this.peerBanning = Guard.NotNull(peerBanning, nameof(peerBanning));
-            this.tipsManager = Guard.NotNull(tipsManager, nameof(tipsManager));
             this.keyValueRepo = Guard.NotNull(keyValueRepo, nameof(keyValueRepo));
 
             this.peerAddressManager = Guard.NotNull(peerAddressManager, nameof(peerAddressManager));

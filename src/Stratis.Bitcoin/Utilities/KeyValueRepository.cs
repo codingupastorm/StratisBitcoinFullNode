@@ -4,9 +4,9 @@ using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStoreLevelDB;
-using Stratis.Core.AsyncWork.JsonConverters;
+using Stratis.Core.Utilities.JsonConverters;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     public interface IKeyValueRepositoryStore : IKeyValueStore
     {

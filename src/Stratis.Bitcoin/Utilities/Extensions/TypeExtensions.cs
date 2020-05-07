@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Stratis.Core.AsyncWork.Extensions
+namespace Stratis.Core.Utilities.Extensions
 {
     public static class TypeExtensions
     {

@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.Utilities
@@ -16,7 +16,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
         public ParallelAsyncTest()
         {
             this.testCollection = new List<int>();
-            for (int i=0; i < 100; ++i)
+            for (int i = 0; i < 100; ++i)
                 this.testCollection.Add(i);
 
             this.itemProcessingDelayMs = 50;

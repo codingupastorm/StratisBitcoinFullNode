@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     public enum RetryStrategyType
     {

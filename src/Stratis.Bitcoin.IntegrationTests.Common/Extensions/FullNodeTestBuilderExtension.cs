@@ -5,7 +5,7 @@ using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common
 {

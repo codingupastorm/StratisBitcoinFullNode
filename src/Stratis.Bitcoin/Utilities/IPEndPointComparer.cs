@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Net;
-using Stratis.Core.AsyncWork.Extensions;
+using Stratis.Core.Utilities.Extensions;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     public class IPEndPointComparer : IEqualityComparer<IPEndPoint>
     {

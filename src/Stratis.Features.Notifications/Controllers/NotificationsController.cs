@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using Stratis.Features.Notifications.Interfaces;
-using Stratis.Core.AsyncWork.JsonErrors;
+using Stratis.Core.Utilities.JsonErrors;
 
 namespace Stratis.Features.Notifications.Controllers
 {

@@ -1,6 +1,6 @@
 ﻿using NBitcoin;
 
-namespace Stratis.Core.AsyncWork
+namespace Stratis.Core.Utilities
 {
     /// <summary>Pair of block hash and block height.</summary>
     public class HashHeightPair : IBitcoinSerializable

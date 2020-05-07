@@ -6,7 +6,7 @@ using NBitcoin;
 using Stratis.Bitcoin;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
@@ -61,7 +61,7 @@ namespace Stratis.TokenlessD
                 // Only non-channel nodes will need to go through the key store initialization process.
                 if (!channelSettings.IsChannelNode)
                 {
-                    var keyStoreManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, channelSettings, new TokenlessKeyStoreSettings(nodeSettings), new MembershipServicesDirectory(nodeSettings, nodeSettings.LoggerFactory), nodeSettings.LoggerFactory);
+                    var keyStoreManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, channelSettings, new TokenlessKeyStoreSettings(nodeSettings), nodeSettings.LoggerFactory);
                     if (!keyStoreManager.Initialize())
                         return;
                 }

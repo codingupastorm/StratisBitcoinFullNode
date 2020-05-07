@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Core.AsyncWork;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStoreLevelDB;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels
 {
@@ -12,7 +12,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
     public class ChannelKeyValueStore : KeyValueStoreLevelDB, IChannelKeyValueStore
     {
-        public ChannelKeyValueStore(IRepositorySerializer repositorySerializer, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
+        public ChannelKeyValueStore(IRepositorySerializer repositorySerializer, DataFolder dataFolder, ILoggerFactory loggerFactory)
             : base(dataFolder.ChannelsPath, loggerFactory, repositorySerializer)
         {
         }

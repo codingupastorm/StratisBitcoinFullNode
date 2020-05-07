@@ -119,12 +119,9 @@ namespace MembershipServices.Cli
             var network = new TokenlessNetwork();
             var nodeSettings = new NodeSettings(network, args: new[] { $"-datadir={options.DataDir}", $"-password={options.Password}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" });
             var loggerFactory = new LoggerFactory();
-
-            var membershipServices = new MembershipServicesDirectory(nodeSettings, loggerFactory);
-            membershipServices.Initialize();
-
+            
             var keyStoreSettings = new TokenlessKeyStoreSettings(nodeSettings);
-            var keyStoreManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, new ChannelSettings(nodeSettings.ConfigReader), keyStoreSettings, membershipServices, loggerFactory);
+            var keyStoreManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, new ChannelSettings(nodeSettings.ConfigReader), keyStoreSettings, loggerFactory);
             keyStoreManager.Initialize();
 
             CaClient caClient;
@@ -172,13 +169,16 @@ namespace MembershipServices.Cli
             if (clientCert == null)
                 return -1;
 
+            // TODO: Temporary workaround until CertificatesManager is completely removed and merged into MSD
+            File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificateAuthorityInterface.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCert, privateKey, keyStoreSettings.Password));
+
+            var membershipServices = new MembershipServicesDirectory(nodeSettings, loggerFactory);
+            membershipServices.Initialize();
+
             membershipServices.AddLocalMember(clientCert, MemberType.Self);
 
             // We need the certificate to be available here as well for now.
             membershipServices.AddLocalMember(clientCert, MemberType.NetworkPeer);
-
-            // TODO: Temporary workaround until CertificatesManager is completely removed and merged into MSD
-            File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificateAuthorityInterface.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCert, privateKey, keyStoreSettings.Password));
 
             return 0;
         }

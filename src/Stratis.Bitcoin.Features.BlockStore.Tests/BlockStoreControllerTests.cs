@@ -10,7 +10,7 @@ using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Wallet.Common;
-using Stratis.Core.AsyncWork.JsonErrors;
+using Stratis.Core.Utilities.JsonErrors;
 using Stratis.Features.BlockStore.Controllers;
 using Stratis.Features.BlockStore.Models;
 using Xunit;

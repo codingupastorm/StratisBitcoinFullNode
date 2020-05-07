@@ -42,7 +42,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         {
             Key key = this.tokenlessWalletManager.LoadTransactionSigningKey();
 
-            uint256 hash = response.GetHash();
+            uint256 hash = response.ReadWriteSet.GetHash();
 
             var ecdsaSignature = key.Sign(hash);
 

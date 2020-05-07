@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Net;
 
-namespace Stratis.Core.AsyncWork.JsonErrors
+namespace Stratis.Core.Utilities.JsonErrors
 {
     public static class ErrorHelpers
     {

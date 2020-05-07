@@ -1,6 +1,6 @@
 ﻿using System;
-using Stratis.Core.AsyncWork;
-using Stratis.Core.AsyncWork.Extensions;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.Extensions;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.Utilities

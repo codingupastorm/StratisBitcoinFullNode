@@ -3,9 +3,8 @@ using System.Text.Json;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Tests.Common.Logging;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels;
-using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Xunit;
 
@@ -40,7 +39,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
             var dataFolder = new DataFolder(dataFolderPath);
 
             var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
-            var keyValueStore = new ChannelKeyValueStore(repositorySerializer, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
+            var keyValueStore = new ChannelKeyValueStore(repositorySerializer, dataFolder, this.LoggerFactory.Object);
 
             var channelRepository = new ChannelRepository(this.LoggerFactory.Object, keyValueStore);
             channelRepository.Initialize();
@@ -91,7 +90,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
             var dataFolder = new DataFolder(dataFolderPath);
 
             var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
-            var keyValueStore = new ChannelKeyValueStore(repositorySerializer, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
+            var keyValueStore = new ChannelKeyValueStore(repositorySerializer, dataFolder, this.LoggerFactory.Object);
 
             var channelRepository = new ChannelRepository(this.LoggerFactory.Object, keyValueStore);
 

@@ -25,6 +25,7 @@ using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Features.Wallet;
 using Stratis.Features.Wallet.Interfaces;
 
@@ -184,25 +185,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         {
             this.builderWithDummyWallet = true;
             this.builderWithWallet = false;
-            return this;
-        }
-
-        /// <summary>
-        /// Adds a wallet to this node with defaulted parameters.
-        /// </summary>
-        /// <param name="walletPassword">Wallet password defaulted to "password".</param>
-        /// <param name="walletName">Wallet name defaulted to "mywallet".</param>
-        /// <param name="walletPassphrase">Wallet passphrase defaulted to "passphrase".</param>
-        /// <param name="walletMnemonic">Optional wallet mnemonic.</param>
-        /// <returns>This node.</returns>
-        public CoreNode WithWallet(string walletPassword = "password", string walletName = "mywallet", string walletPassphrase = "passphrase", string walletMnemonic = null)
-        {
-            this.builderWithDummyWallet = false;
-            this.builderWithWallet = true;
-            this.builderWalletName = walletName;
-            this.builderWalletPassphrase = walletPassphrase;
-            this.builderWalletPassword = walletPassword;
-            this.builderWalletMnemonic = walletMnemonic;
             return this;
         }
 

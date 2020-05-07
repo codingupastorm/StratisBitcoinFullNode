@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using System.Timers;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Features.Api
 {
