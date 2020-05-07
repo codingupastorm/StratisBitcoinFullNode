@@ -8,6 +8,8 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Core.AsyncWork;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Feature.PoA.Tokenless.Endorsement;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
 using Stratis.Feature.PoA.Tokenless.Networks;
@@ -40,6 +42,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public readonly ITokenlessSigner TokenlessSigner;
         public readonly Mock<IMembershipServicesDirectory> MembershipServices;
         public readonly Mock<ICertificatesManager> CertificatesManager;
+        private EndorsedContractTransactionValidationRule EndorsementRule;
 
         public TokenlessTestHelper()
         {
@@ -57,6 +60,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             this.DateTimeProvider = Stratis.Core.AsyncWork.DateTimeProvider.Default;
             this.MempoolSettings = new MempoolSettings(this.NodeSettings) { MempoolExpiry = Features.MemoryPool.MempoolValidator.DefaultMempoolExpiry };
             this.TokenlessSigner = new TokenlessSigner(this.Network, new SenderRetriever());
+            this.EndorsementRule = new EndorsedContractTransactionValidationRule(Mock.Of<IEndorsedTransactionBuilder>(), Mock.Of<IEndorsementSignatureValidator>(), Mock.Of<IEndorsementPolicyValidator>());
 
             this.BlockPolicyEstimator = new BlockPolicyEstimator(this.MempoolSettings, this.LoggerFactory, this.NodeSettings);
             this.Mempool = new TokenlessMempool(this.BlockPolicyEstimator, this.LoggerFactory);
@@ -83,6 +87,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                     yield return new CreateTokenlessMempoolEntryRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory);
                 else if (ruleType == typeof(CheckSenderCertificateIsNotRevoked))
                     yield return new CheckSenderCertificateIsNotRevoked(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.MembershipServices.Object, this.TokenlessSigner);
+                else if (ruleType == typeof(ValidateEndorsementsMempoolRule))
+                    yield return new ValidateEndorsementsMempoolRule(this.EndorsementRule, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory);
                 else
                     throw new NotImplementedException($"No constructor is defined for '{ruleType.Name}'.");
             }

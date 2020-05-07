@@ -10,20 +10,18 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
     public class EndorsementsTests
     {
         private readonly Mock<IOrganisationLookup> lookup;
-        private readonly Mock<ICertificatePermissionsChecker> permissionsChecker;
-        private readonly TokenlessNetwork network;
+        private readonly Mock<IEndorsementSignatureValidator> endorsementValidator;
 
         public EndorsementsTests()
         {
             this.lookup = new Mock<IOrganisationLookup>();
-            this.permissionsChecker = new Mock<ICertificatePermissionsChecker>();
-            this.network = new TokenlessNetwork();
+            this.endorsementValidator = new Mock<IEndorsementSignatureValidator>();
         }
 
         [Fact]
         public void Can_Record_Endorsement()
         {
-            var endorsements = new Endorsements(this.lookup.Object, this.permissionsChecker.Object, this.network);
+            var endorsements = new Endorsements(this.lookup.Object, this.endorsementValidator.Object);
 
             var proposalId = new uint256(RandomUtils.GetBytes(32));
 
@@ -36,7 +34,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public void Record_Same_ProposalId_ReturnsExisting()
         {
             // Covers the scenario where we receive a proposal response for which an endorsement (from another endorser) has already been recorded.
-            var endorsements = new Endorsements(this.lookup.Object, this.permissionsChecker.Object, this.network);
+            var endorsements = new Endorsements(this.lookup.Object, this.endorsementValidator.Object);
 
             var proposalId = new uint256(RandomUtils.GetBytes(32));
 

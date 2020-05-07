@@ -1,18 +1,17 @@
 using System.Collections.Generic;
 using System.Linq;
-using CertificateAuthority;
-using NBitcoin;
-using NBitcoin.Crypto;
 using Org.BouncyCastle.X509;
 using Stratis.SmartContracts.Core.Endorsement;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
+    /// <summary>
+    /// Combines signature validation with m-of-n validation for proposal responses.
+    /// </summary>
     public class EndorsementInfo
     {
         private readonly IOrganisationLookup organisationLookup;
-        private readonly ICertificatePermissionsChecker permissionsChecker;
-        private readonly Network network;
+        private readonly IEndorsementSignatureValidator endorsementSignatureValidator;
         private readonly MofNPolicyValidator validator;
         private readonly Dictionary<string, SignedProposalResponse> signedProposals;
 
@@ -23,12 +22,11 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
         public EndorsementState State { get; private set; }
 
-        public EndorsementInfo(EndorsementPolicy policy, IOrganisationLookup organisationLookup, ICertificatePermissionsChecker permissionsChecker, Network network)
+        public EndorsementInfo(EndorsementPolicy policy, IOrganisationLookup organisationLookup, IEndorsementSignatureValidator endorsementSignatureValidator)
         {
             this.organisationLookup = organisationLookup;
-            this.permissionsChecker = permissionsChecker;
-            this.network = network;
             this.Policy = policy;
+            this.endorsementSignatureValidator = endorsementSignatureValidator;
             this.validator = new MofNPolicyValidator(this.Policy.ToDictionary());
 
             // To prevent returning proposals that were signed correctly but do not match the policy,
@@ -40,17 +38,12 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         public bool AddSignature(X509Certificate certificate, SignedProposalResponse signedProposalResponse)
         {
             // Verify the signature matches the peer's certificate.
-            var signature = new ECDSASignature(signedProposalResponse.Endorsement.Signature);
-            var pubKey = new PubKey(signedProposalResponse.Endorsement.PubKey);
-
-            var signatureValid = this.permissionsChecker.CheckSignature(CaCertificatesManager.GetThumbprint(certificate), signature, pubKey, signedProposalResponse.ProposalResponse.GetHash());
-
-            if (!signatureValid)
+            if (!this.endorsementSignatureValidator.Validate(signedProposalResponse.Endorsement, signedProposalResponse.ProposalResponse.ReadWriteSet.ToJsonEncodedBytes()))
             {
                 return false;
             }
 
-            // Add the signature org + address to the policy state.
+            //// Add the signature org + address to the policy state.
             (Organisation org, string sender) = this.organisationLookup.FromCertificate(certificate);
 
             AddSignature(org, sender);
@@ -69,7 +62,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 .ToList();
         }
 
-        public void AddSignature(Organisation org, string address)
+        private void AddSignature(Organisation org, string address)
         {
             this.validator.AddSignature(org, address);
 

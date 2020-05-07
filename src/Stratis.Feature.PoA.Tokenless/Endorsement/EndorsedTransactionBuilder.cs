@@ -10,6 +10,9 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     public interface IEndorsedTransactionBuilder
     {
         Transaction Build(IReadOnlyList<SignedProposalResponse> proposalResponses);
+
+        bool TryParseTransaction(Transaction transaction, out IEnumerable<Endorsement> endorsements,
+            out ReadWriteSet rws);
     }
 
     /// <summary>
@@ -39,6 +42,44 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.endorsementSigner.Sign(transaction);
 
             return transaction;
+        }
+
+        public bool TryParseTransaction(Transaction transaction, out IEnumerable<Endorsement> endorsements, out ReadWriteSet rws)
+        {
+            endorsements = null;
+            rws = null;
+
+            // First output is the rws
+            if (transaction.Outputs.Count < 1)
+                return false;
+
+            byte[] rwsBytes = ExtractRwsBytes(transaction);
+
+            // This could be empty depending on the endorsement policy.
+            var endorsementsBytes = transaction
+                .Outputs
+                .Skip(1)
+                .Where(s => s.ScriptPubKey != null)
+                .Select(s => s.ScriptPubKey.ToBytes())
+                .ToList();
+
+            try
+            {
+                rws = ReadWriteSet.FromJsonEncodedBytes(rwsBytes);
+                endorsements = endorsementsBytes.Select(Endorsement.FromBytes);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static byte[] ExtractRwsBytes(Transaction transaction)
+        {
+            var rwsBytes = TxReadWriteDataTemplate.Instance.ExtractScriptPubKeyParameters(transaction.Outputs[0].ScriptPubKey)
+                .FirstOrDefault();
+            return rwsBytes;
         }
 
         private static void AddEndorsements(Transaction transaction, IEnumerable<Endorsement> endorsements)

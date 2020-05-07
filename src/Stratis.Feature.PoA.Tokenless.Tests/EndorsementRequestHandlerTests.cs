@@ -96,9 +96,9 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 .Returns(Mock.Of<ILogger>());
 
             var transientStore = new Mock<ITransientStore>();
-
-            IOrganisationLookup organisationLookup = Mock.Of<IOrganisationLookup>();
-            ICertificatePermissionsChecker permissionsChecker = Mock.Of<ICertificatePermissionsChecker>();
+            
+            var organisationLookup = Mock.Of<IOrganisationLookup>();
+            var endorsementValidator = Mock.Of<IEndorsementSignatureValidator>();
 
             var endorsementRequestHandler = new EndorsementRequestHandler(validatorMock.Object,
                 signerMock.Object,
@@ -107,7 +107,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 consensusManagerMock.Object,
                 stateRootMock.Object,
                 readWriteSetTransactionSerializerMock.Object,
-                new Endorsements(organisationLookup, permissionsChecker, this.network),
+                new Endorsements(organisationLookup, endorsementValidator),
                 transientStore.Object,
                 tokenlessBroadcasterMock.Object,
                 loggerFactoryMock.Object
@@ -163,8 +163,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var transientStore = new Mock<ITransientStore>();
 
-            IOrganisationLookup organisationLookup = Mock.Of<IOrganisationLookup>();
-            ICertificatePermissionsChecker permissionsChecker = Mock.Of<ICertificatePermissionsChecker>();
+            var organisationLookup = Mock.Of<IOrganisationLookup>();
+            var endorsementValidator = Mock.Of<IEndorsementSignatureValidator>();
 
             var endorsementRequestHandler = new EndorsementRequestHandler(validatorMock.Object,
                 signerMock.Object,
@@ -173,7 +173,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 consensusManagerMock.Object,
                 stateRootMock.Object,
                 readWriteSetTransactionSerializerMock.Object,
-                new Endorsements(organisationLookup, permissionsChecker, this.network),
+                new Endorsements(organisationLookup, endorsementValidator),
                 transientStore.Object,
                 tokenlessBroadcasterMock.Object,
                 loggerFactoryMock.Object
