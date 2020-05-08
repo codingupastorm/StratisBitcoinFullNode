@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using MembershipServices;
 using NBitcoin;
 using Stratis.Bitcoin;
 using Stratis.Core.Builder;
@@ -11,7 +10,6 @@ using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.Api;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;

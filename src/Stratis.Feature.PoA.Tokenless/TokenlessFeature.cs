@@ -48,7 +48,6 @@ namespace Stratis.Feature.PoA.Tokenless
 
         public TokenlessFeature(
             ChannelSettings channelSettings,
-            ICertificatesManager certificatesManager,
             ICertificatePermissionsChecker certificatePermissionsChecker,
             VotingManager votingManager,
             ICoreComponent coreComponent,

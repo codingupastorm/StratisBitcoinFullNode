@@ -59,10 +59,10 @@ namespace MembershipServices
 
         private readonly ILogger logger;
 
-        private readonly TextFileConfiguration configuration;
+        private readonly Stratis.Core.Configuration.TextFileConfiguration configuration;
 
         private readonly LocalMembershipServicesConfiguration localMembershipServices;
-        
+
         // A mapping of channel identifiers to their corresponding membership services configuration.
         // As channels do not really exist yet, the identifier format is yet to be defined.
         private readonly Dictionary<string, ChannelMembershipServicesConfiguration> channelMembershipServices;
@@ -96,7 +96,7 @@ namespace MembershipServices
 
             this.AuthorityCertificate = this.CertificateAuthorityInterface.LoadAuthorityCertificate();
         }
-        
+
         public void Initialize()
         {
             (this.ClientCertificate, this.ClientCertificatePrivateKey) = this.CertificateAuthorityInterface.LoadClientCertificate(this.AuthorityCertificate);
