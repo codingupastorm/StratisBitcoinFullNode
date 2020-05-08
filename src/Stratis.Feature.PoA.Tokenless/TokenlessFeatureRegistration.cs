@@ -6,7 +6,7 @@ using NBitcoin;
 using NBitcoin.PoA;
 using Stratis.Core.Base;
 using Stratis.Core.Builder;
-using Stratis.Bitcoin.Configuration.Logging;
+using Stratis.Core.Configuration.Logging;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;

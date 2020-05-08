@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using Stratis.Core.Base;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;
 

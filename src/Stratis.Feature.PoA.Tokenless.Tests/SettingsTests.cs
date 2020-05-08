@@ -1,5 +1,5 @@
-﻿using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Configuration.Settings;
+﻿using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Settings;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Xunit;
 

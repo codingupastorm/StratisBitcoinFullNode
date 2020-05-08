@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Base.Deployments;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool;

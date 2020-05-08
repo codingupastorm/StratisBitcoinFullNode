@@ -10,7 +10,7 @@ using NBitcoin;
 using Stratis.Bitcoin;
 using Stratis.Core.Builder;
 using Stratis.Core.Builder.Feature;
-using Stratis.Bitcoin.Configuration.Logging;
+using Stratis.Core.Configuration.Logging;
 
 namespace Stratis.Features.SignalR
 {

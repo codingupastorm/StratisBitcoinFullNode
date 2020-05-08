@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels;

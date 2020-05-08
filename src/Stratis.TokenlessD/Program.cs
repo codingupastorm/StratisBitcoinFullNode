@@ -5,7 +5,7 @@ using MembershipServices;
 using NBitcoin;
 using Stratis.Bitcoin;
 using Stratis.Core.Builder;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Channels;

@@ -1,6 +1,6 @@
 ﻿using NBitcoin;
 using Stratis.Core.Base;
-using Stratis.Bitcoin.Configuration.Settings;
+using Stratis.Core.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Interfaces;
 

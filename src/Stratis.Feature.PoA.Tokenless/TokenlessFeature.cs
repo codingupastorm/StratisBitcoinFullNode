@@ -7,18 +7,16 @@ using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.PoA;
-using Stratis.Core.Builder.Feature;
-using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Builder.Feature;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
-using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.BlockStore;
 using Stratis.Features.PoA;
@@ -31,7 +29,6 @@ namespace Stratis.Feature.PoA.Tokenless
     public sealed class TokenlessFeature : FullNodeFeature
     {
         private readonly ICoreComponent coreComponent;
-        private readonly IBlockRepository blockRepository;
         private readonly ChannelSettings channelSettings;
         private readonly ICertificatesManager certificatesManager;
         private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
@@ -40,23 +37,19 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly IEndorsementRequestHandler requestHandler;
         private readonly IEndorsementSuccessHandler successHandler;
         private readonly IPoAMiner miner;
-        private readonly NodeSettings nodeSettings;
         private readonly IAsyncProvider asyncProvider;
         private readonly INodeLifetime nodeLifetime;
         private readonly ITransientStore transientStore;
         private readonly IPrivateDataStore privateDataStore;
-        private readonly IPrivateDataRetriever privateDataRetriever;
         private readonly ILogger logger;
         private readonly IMembershipServicesDirectory membershipServices;
         private IAsyncLoop caPubKeysLoop;
-        private readonly TokenlessKeyStoreSettings tokenlessKeyStoreSettings;
         private readonly IChannelService channelService;
         private readonly ReadWriteSetPolicyValidator rwsPolicyValidator;
 
         public TokenlessFeature(
             ChannelSettings channelSettings,
             ICertificatesManager certificatesManager,
-            IBlockRepository blockRepository,
             ICertificatePermissionsChecker certificatePermissionsChecker,
             VotingManager votingManager,
             ICoreComponent coreComponent,
@@ -66,19 +59,15 @@ namespace Stratis.Feature.PoA.Tokenless
             IPoAMiner miner,
             PayloadProvider payloadProvider,
             StoreSettings storeSettings,
-            NodeSettings nodeSettings,
-            TokenlessKeyStoreSettings tokenlessKeyStoreSettings,
             IAsyncProvider asyncProvider,
             INodeLifetime nodeLifetime,
             ILoggerFactory loggerFactory,
             IMembershipServicesDirectory membershipServices,
             ITransientStore transientStore,
             IPrivateDataStore privateDataStore,
-            IPrivateDataRetriever privateDataRetriever,
             IChannelService channelService,
             ReadWriteSetPolicyValidator rwsPolicyValidator)
         {
-            this.blockRepository = blockRepository;
             this.channelSettings = channelSettings;
             this.certificatesManager = certificatesManager;
             this.certificatePermissionsChecker = certificatePermissionsChecker;
@@ -88,13 +77,10 @@ namespace Stratis.Feature.PoA.Tokenless
             this.requestHandler = requestHandler;
             this.successHandler = successHandler;
             this.miner = miner;
-            this.nodeSettings = nodeSettings;
-            this.tokenlessKeyStoreSettings = tokenlessKeyStoreSettings;
             this.asyncProvider = asyncProvider;
             this.nodeLifetime = nodeLifetime;
             this.transientStore = transientStore;
             this.privateDataStore = privateDataStore;
-            this.privateDataRetriever = privateDataRetriever;
             this.caPubKeysLoop = null;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.membershipServices = membershipServices;

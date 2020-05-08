@@ -9,7 +9,7 @@ using MembershipServices;
 using Microsoft.AspNetCore.Hosting;
 using NBitcoin;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Stratis.Core.Utilities;

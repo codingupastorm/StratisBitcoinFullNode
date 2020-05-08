@@ -10,7 +10,7 @@ using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 using X509Extension = System.Security.Cryptography.X509Certificates.X509Extension;
 

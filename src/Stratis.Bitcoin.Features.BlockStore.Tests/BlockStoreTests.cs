@@ -7,7 +7,7 @@ using Moq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Stratis.Core.Base;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Signals;
