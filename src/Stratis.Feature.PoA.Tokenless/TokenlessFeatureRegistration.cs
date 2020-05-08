@@ -11,6 +11,7 @@ using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Controllers;

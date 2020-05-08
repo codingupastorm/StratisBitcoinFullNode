@@ -1,7 +1,7 @@
 ﻿using Org.BouncyCastle.X509;
 using Stratis.Feature.PoA.Tokenless.Networks;
 
-namespace Stratis.Feature.PoA.Tokenless
+namespace Stratis.Feature.PoA.Tokenless.AccessControl
 {
     public interface IChannelAccessValidator
     {

@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using Org.BouncyCastle.X509;
+using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Xunit;
 
