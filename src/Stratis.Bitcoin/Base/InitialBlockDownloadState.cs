@@ -5,7 +5,7 @@ using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Base
+namespace Stratis.Core.Base
 {
     /// <summary>
     /// Provides IBD (Initial Block Download) state.

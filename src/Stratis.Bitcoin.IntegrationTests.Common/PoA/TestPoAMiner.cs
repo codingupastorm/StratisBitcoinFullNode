@@ -13,9 +13,10 @@ using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Features.MemoryPool;
+using Stratis.Features.PoA;
 using Stratis.Features.PoA.Voting;
 
-namespace Stratis.Features.PoA.Tests.Common
+namespace Stratis.Bitcoin.IntegrationTests.Common.PoA
 {
     public class TestPoAMiner : PoAMiner
     {

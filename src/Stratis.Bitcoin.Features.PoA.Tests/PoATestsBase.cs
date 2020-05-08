@@ -5,8 +5,8 @@ using Moq;
 using NBitcoin;
 using NBitcoin.PoA;
 using Stratis.Bitcoin;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Base.Deployments;
+using Stratis.Core.Base;
+using Stratis.Core.Base.Deployments;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
@@ -16,7 +16,6 @@ using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
-using Stratis.Features.PoA.Tests.Common;
 using Stratis.Features.PoA.Voting;
 
 namespace Stratis.Features.PoA.Tests
@@ -46,7 +45,7 @@ namespace Stratis.Features.PoA.Tests
         {
             this.loggerFactory = new LoggerFactory();
             this.signals = new Signals(this.loggerFactory, null);
-            this.network = network == null ? new TestPoANetwork2() : network;
+            this.network = network ?? new TestPoANetwork2();
             this.consensusOptions = this.network.ConsensusOptions;
             this.repositorySerializer = new RepositorySerializer(this.network.Consensus.ConsensusFactory);
 

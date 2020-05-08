@@ -13,7 +13,7 @@ using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.Base
+namespace Stratis.Core.Base
 {
     /// <summary>
     /// Methods related to network peers time synchronization feature.

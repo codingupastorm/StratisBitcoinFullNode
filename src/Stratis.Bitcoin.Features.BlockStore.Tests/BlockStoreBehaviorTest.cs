@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Base;
+using Stratis.Core.Base;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common;

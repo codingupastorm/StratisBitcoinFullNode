@@ -7,7 +7,7 @@ using NBitcoin;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Base
+namespace Stratis.Core.Base
 {
     public interface IChainRepository : IDisposable
     {

@@ -2,8 +2,9 @@
 using NBitcoin;
 using NBitcoin.PoA;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Features.PoA;
 
-namespace Stratis.Features.PoA.Tests.Common
+namespace Stratis.Bitcoin.IntegrationTests.Common.PoA
 {
     public class TestPoANetwork : PoANetwork
     {

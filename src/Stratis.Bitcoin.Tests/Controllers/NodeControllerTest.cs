@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using Stratis.Bitcoin.Base;
+using Stratis.Core.Base;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Controllers;
