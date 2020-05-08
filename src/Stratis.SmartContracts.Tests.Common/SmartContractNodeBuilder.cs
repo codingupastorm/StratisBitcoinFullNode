@@ -11,12 +11,12 @@ using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
-using Stratis.Features.PoA.Tests.Common;
 using Xunit;
 
 namespace Stratis.SmartContracts.Tests.Common
