@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Moq;
-using Stratis.Bitcoin.Builder;
-using Stratis.Bitcoin.Builder.Feature;
+using Stratis.Core.Builder;
+using Stratis.Core.Builder.Feature;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.Builder

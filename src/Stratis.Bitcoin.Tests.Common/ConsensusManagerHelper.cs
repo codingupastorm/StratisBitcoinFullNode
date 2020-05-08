@@ -3,7 +3,7 @@ using Moq;
 using NBitcoin;
 using Stratis.Core.Base;
 using Stratis.Core.Base.Deployments;
-using Stratis.Bitcoin.BlockPulling;
+using Stratis.Core.BlockPulling;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Connection;

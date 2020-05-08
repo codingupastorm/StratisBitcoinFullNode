@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Stratis.Bitcoin.Builder;
-using Stratis.Bitcoin.Builder.Feature;
+using Stratis.Core.Builder;
+using Stratis.Core.Builder.Feature;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Features.Consensus;
 using Stratis.Bitcoin.Tests.Common;

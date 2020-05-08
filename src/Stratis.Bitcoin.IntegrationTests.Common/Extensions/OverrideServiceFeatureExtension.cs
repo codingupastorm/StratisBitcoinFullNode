@@ -2,8 +2,8 @@
 using System.Linq;
 using Microsoft.Extensions.DependencyInjection;
 using Stratis.Core.Base;
-using Stratis.Bitcoin.Builder;
-using Stratis.Bitcoin.Builder.Feature;
+using Stratis.Core.Builder;
+using Stratis.Core.Builder.Feature;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common
 {

@@ -1,10 +1,11 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
-using Stratis.Bitcoin.Builder.Feature;
+using Stratis.Bitcoin;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Builder.Feature;
 
-namespace Stratis.Bitcoin.Builder
+namespace Stratis.Core.Builder
 {
     /// <summary>
     /// Full node builder allows constructing a full node using specific components.

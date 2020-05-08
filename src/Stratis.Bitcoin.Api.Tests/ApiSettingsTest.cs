@@ -1,7 +1,7 @@
 ﻿using System;
 using FluentAssertions;
 using NBitcoin;
-using Stratis.Bitcoin.Builder;
+using Stratis.Core.Builder;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Features.Api;
 using Stratis.Features.Consensus;

@@ -9,7 +9,7 @@ using NBitcoin;
 using NBitcoin.Networks;
 using NBitcoin.Protocol;
 using NLog.Extensions.Logging;
-using Stratis.Bitcoin.Builder.Feature;
+using Stratis.Core.Builder.Feature;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Core.Utilities;

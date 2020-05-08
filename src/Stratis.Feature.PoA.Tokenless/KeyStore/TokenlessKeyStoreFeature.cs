@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Bitcoin.Builder.Feature;
+using Stratis.Core.Builder.Feature;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Feature.PoA.Tokenless.KeyStore

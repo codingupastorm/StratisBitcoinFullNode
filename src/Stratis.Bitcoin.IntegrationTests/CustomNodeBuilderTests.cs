@@ -3,7 +3,7 @@ using System.IO;
 using FluentAssertions;
 using NBitcoin;
 using NBitcoin.Protocol;
-using Stratis.Bitcoin.Builder;
+using Stratis.Core.Builder;
 using Stratis.Features.Api;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
