@@ -1,7 +1,7 @@
 ﻿using NBitcoin;
 using NBitcoin.Protocol;
 using Stratis.Core.Base;
-using Stratis.Bitcoin.Builder;
+using Stratis.Core.Builder;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Features.Api;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;

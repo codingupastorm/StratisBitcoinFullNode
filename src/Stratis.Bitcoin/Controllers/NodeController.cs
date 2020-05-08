@@ -12,7 +12,7 @@ using NLog.Config;
 using NLog.Targets;
 using NLog.Targets.Wrappers;
 using Stratis.Core.Base;
-using Stratis.Bitcoin.Builder.Feature;
+using Stratis.Core.Builder.Feature;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Consensus;

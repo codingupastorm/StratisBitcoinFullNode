@@ -5,12 +5,13 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Core.Base;
-using Stratis.Bitcoin.Builder.Feature;
+using Stratis.Bitcoin;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Base;
+using Stratis.Core.Builder.Feature;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Builder
+namespace Stratis.Core.Builder
 {
     /// <summary>
     /// Exception thrown by FullNodeBuilder.Build.

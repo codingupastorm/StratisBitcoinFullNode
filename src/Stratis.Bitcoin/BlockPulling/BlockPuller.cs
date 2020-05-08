@@ -13,7 +13,7 @@ using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Core.Utilities;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.BlockPulling
+namespace Stratis.Core.BlockPulling
 {
     /// <summary>
     /// Thread-safe block puller which allows downloading blocks from all chains that the node is aware of.

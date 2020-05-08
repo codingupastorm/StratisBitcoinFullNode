@@ -1,6 +1,6 @@
 ﻿using System;
 using Microsoft.AspNetCore.Hosting;
-using Stratis.Bitcoin.Builder;
+using Stratis.Core.Builder;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using MembershipServices;
 using NBitcoin;
 using Stratis.Bitcoin;
-using Stratis.Bitcoin.Builder;
+using Stratis.Core.Builder;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless;

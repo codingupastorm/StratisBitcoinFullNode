@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Stratis.Bitcoin.Builder;
-using Stratis.Bitcoin.Builder.Feature;
+using Stratis.Core.Builder;
+using Stratis.Core.Builder.Feature;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.Builder.Feature
