@@ -4,8 +4,8 @@ using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Utilities;
+using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
-using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Xunit;
 
@@ -22,7 +22,13 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
         {
             ChannelNetwork salesChannelNetwork = SystemChannelNetwork.CreateChannelNetwork("sales", "salesfolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
             salesChannelNetwork.Id = 2;
-            salesChannelNetwork.Organisation = "Sales";
+            salesChannelNetwork.AccessList = new AccessControlList
+            {
+                Organisations = new List<string>
+                {
+                    "Sales"
+                }
+            };
             salesChannelNetwork.DefaultAPIPort = 1;
             salesChannelNetwork.DefaultPort = 2;
             salesChannelNetwork.DefaultSignalRPort = 3;
@@ -30,7 +36,13 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
 
             ChannelNetwork marketingChannelNetwork = SystemChannelNetwork.CreateChannelNetwork("marketing", "marketingfolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
             marketingChannelNetwork.Id = 3;
-            marketingChannelNetwork.Organisation = "Marketing";
+            marketingChannelNetwork.AccessList = new AccessControlList
+            {
+                Organisations = new List<string>
+                {
+                    "Marketing"
+                }
+            };
             marketingChannelNetwork.DefaultAPIPort = 4;
             marketingChannelNetwork.DefaultPort = 5;
             marketingChannelNetwork.DefaultSignalRPort = 6;
@@ -49,7 +61,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
             {
                 Id = channelRepository.GetNextChannelId(),
                 Name = "sales",
-                Organisation = "Sales",
+                AccessListJson = salesChannelNetwork.AccessList.ToJson(),
                 NetworkJson = salesNetworkJson
             };
             channelRepository.SaveChannelDefinition(salesChannel);
@@ -58,7 +70,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
             {
                 Id = channelRepository.GetNextChannelId(),
                 Name = "marketing",
-                Organisation = "Marketing",
+                AccessListJson = marketingChannelNetwork.AccessList.ToJson(),
                 NetworkJson = marketingNetworkJson
             };
 
@@ -68,19 +80,19 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
 
             Assert.Equal(2, channels["sales"].Id);
             Assert.Equal("sales", channels["sales"].Name);
-            Assert.Equal("Sales", channels["sales"].Organisation);
+            Assert.Contains("Sales", channels["sales"].AccessListJson);
             Assert.Equal(salesNetworkJson, channels["sales"].NetworkJson);
 
             Assert.Equal(3, channels["marketing"].Id);
             Assert.Equal("marketing", channels["marketing"].Name);
-            Assert.Equal("Marketing", channels["marketing"].Organisation);
+            Assert.Contains("Marketing", channels["marketing"].AccessListJson);
             Assert.Equal(marketingNetworkJson, channels["marketing"].NetworkJson);
 
             ChannelDefinition salesChannelDefinition = channelRepository.GetChannelDefinition("sales");
 
             Assert.Equal(2, salesChannelDefinition.Id);
             Assert.Equal("sales", salesChannelDefinition.Name);
-            Assert.Equal("Sales", salesChannelDefinition.Organisation);
+            Assert.Contains("Sales", salesChannelDefinition.AccessListJson);
             Assert.Equal(salesNetworkJson, salesChannelDefinition.NetworkJson);
         }
 

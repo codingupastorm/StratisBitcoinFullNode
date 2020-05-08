@@ -64,7 +64,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             if (!this.ModelState.IsValid)
                 return ModelStateErrors.BuildErrorResponse(this.ModelState);
 
-            this.logger.LogInformation($"Request to create channel '{request.Name}' for organisation '{request.Organisation}' received.");
+            this.logger.LogInformation($"Request to create channel '{request.Name}' received.");
 
             if (!this.certificatePermissionsChecker.CheckOwnCertificatePermission(CaCertificatesManager.ChannelCreatePermissionOid))
             {

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using Org.BouncyCastle.X509;
 using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Networks;
@@ -20,16 +21,29 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             var certParser = new X509CertificateParser();
             X509Certificate cert = certParser.ReadCertificate(File.ReadAllBytes("Certificates/cert.crt"));
+
             string organisation = cert.GetOrganisation();
 
             var channelNetwork1 = new ChannelNetwork
             {
-                Organisation = organisation
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        organisation
+                    }
+                }
             };
 
             var channelNetwork2 = new ChannelNetwork
             {
-                Organisation = "SomeOrganisation2"
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        "SomeOrganisation2"
+                    }
+                }
             };
 
             Assert.True(this.channelAccessValidator.ValidateCertificateIsPermittedOnChannel(cert, channelNetwork1));
