@@ -17,6 +17,12 @@ namespace Stratis.Feature.PoA.Tokenless.AccessControl
         [JsonPropertyName("thumbprints")]
         public List<string> Thumbprints { get; set; }
 
+        public AccessControlList()
+        {
+            this.Organisations = new List<string>();
+            this.Thumbprints = new List<string>();
+        }
+
         #region Serialization
 
         // TODO: Don't be responsible for own serialization.
