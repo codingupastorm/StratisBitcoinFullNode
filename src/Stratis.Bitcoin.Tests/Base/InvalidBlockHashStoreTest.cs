@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using NBitcoin;
-using Stratis.Bitcoin.Base;
+using Stratis.Core.Base;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Utilities;
 using Xunit;

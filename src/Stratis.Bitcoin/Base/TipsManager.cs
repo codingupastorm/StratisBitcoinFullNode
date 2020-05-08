@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Base
+namespace Stratis.Core.Base
 {
     /// <summary>Interface that every tip provider that uses <see cref="ITipsManager"/> should implement.</summary>
     public interface ITipProvider

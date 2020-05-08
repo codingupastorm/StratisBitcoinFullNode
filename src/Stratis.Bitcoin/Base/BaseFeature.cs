@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Rules;
-using Stratis.Bitcoin.Base.Deployments;
+using Stratis.Bitcoin;
 using Stratis.Bitcoin.BlockPulling;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Builder.Feature;
@@ -26,6 +26,7 @@ using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Signals;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Base.Deployments;
 using Stratis.Core.Utilities;
 
 [assembly: InternalsVisibleTo("Stratis.Bitcoin.Tests")]
@@ -34,7 +35,7 @@ using Stratis.Core.Utilities;
 [assembly: InternalsVisibleTo("Stratis.Features.Consensus.Tests")]
 [assembly: InternalsVisibleTo("Stratis.Bitcoin.IntegrationTests")]
 
-namespace Stratis.Bitcoin.Base
+namespace Stratis.Core.Base
 {
     /// <summary>
     /// Base node services, these are the services a node has to have.
@@ -377,7 +378,7 @@ namespace Stratis.Bitcoin.Base
                     services.AddSingleton<INodeLifetime, NodeLifetime>();
                     services.AddSingleton<IPeerBanning, PeerBanning>();
                     services.AddSingleton<FullNodeFeatureExecutor>();
-                    services.AddSingleton<ISignals, Signals.Signals>();
+                    services.AddSingleton<ISignals, Signals>();
                     services.AddSingleton<ISubscriptionErrorHandler, DefaultSubscriptionErrorHandler>();
                     services.AddSingleton<FullNode>().AddSingleton((provider) => { return provider.GetService<FullNode>() as IFullNode; });
                     services.AddSingleton(new ChainIndexer(fullNodeBuilder.Network));
