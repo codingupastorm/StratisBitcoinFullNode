@@ -177,17 +177,17 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
                 // Remove node 2.
                 TestHelper.Disconnect(nodeSync, node2);
 
-                // Mine some more with node 1
-                await node1.MineBlocksAsync(maxReorgLength);
-                TestBase.WaitLoop(() => node1.FullNode.GetBlockStoreTip().Height == maxReorgLength * 2);
+                // Mine a shorter chain with node 1.
+                await node1.MineBlocksAsync(maxReorgLength - 1);
+                TestBase.WaitLoop(() => node1.FullNode.GetBlockStoreTip().Height == maxReorgLength * 2 - 1);
 
-                // Wait for node 1 to sync
+                // Wait for node 1 to sync.
                 TestBase.WaitLoop(() => node1.FullNode.GetBlockStoreTip().HashBlock == nodeSync.FullNode.GetBlockStoreTip().HashBlock);
 
                 // Remove node 1.
                 TestHelper.Disconnect(nodeSync, node1);
 
-                // Mine a higher chain with node 2.
+                // Mine a longer chain with node 2.
                 await node2.MineBlocksAsync(maxReorgLength);
                 TestBase.WaitLoop(() => node2.FullNode.GetBlockStoreTip().Height == maxReorgLength * 2);
 
