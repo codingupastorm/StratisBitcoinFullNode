@@ -7,7 +7,6 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Features.PoA.Tests.Common;
 using Xunit;
 
 namespace Stratis.Features.PoA.Tests
