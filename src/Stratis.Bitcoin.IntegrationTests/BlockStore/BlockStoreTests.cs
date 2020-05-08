@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CertificateAuthority;
@@ -163,8 +164,9 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
                 CoreNode nodeSync = nodeBuilder.CreateTokenlessNode(network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
-                await nodeSync.MineBlocksAsync(10);
-                TestBase.WaitLoop(() => nodeSync.FullNode.GetBlockStoreTip().Height == 10);
+                int maxReorgLength = (int)Math.Min(10, nodeSync.FullNode.ChainBehaviorState.MaxReorgLength);
+                await nodeSync.MineBlocksAsync(maxReorgLength);
+                TestBase.WaitLoop(() => nodeSync.FullNode.GetBlockStoreTip().Height == maxReorgLength);
 
                 CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
                 CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
@@ -176,8 +178,8 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
                 TestHelper.Disconnect(nodeSync, node2);
 
                 // Mine some more with node 1
-                await node1.MineBlocksAsync(10);
-                TestBase.WaitLoop(() => node1.FullNode.GetBlockStoreTip().Height == 20);
+                await node1.MineBlocksAsync(maxReorgLength);
+                TestBase.WaitLoop(() => node1.FullNode.GetBlockStoreTip().Height == maxReorgLength * 2);
 
                 // Wait for node 1 to sync
                 TestBase.WaitLoop(() => node1.FullNode.GetBlockStoreTip().HashBlock == nodeSync.FullNode.GetBlockStoreTip().HashBlock);
@@ -186,13 +188,13 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
                 TestHelper.Disconnect(nodeSync, node1);
 
                 // Mine a higher chain with node 2.
-                await node2.MineBlocksAsync(20);
-                TestBase.WaitLoop(() => node2.FullNode.GetBlockStoreTip().Height == 30);
+                await node2.MineBlocksAsync(maxReorgLength);
+                TestBase.WaitLoop(() => node2.FullNode.GetBlockStoreTip().Height == maxReorgLength * 2);
 
                 // Add node 2.
                 TestHelper.Connect(nodeSync, node2);
 
-                // Node2 should be synced.
+                // Node 2 should be synced.
                 // TODO: Why is this not syncing?
                 TestBase.WaitLoop(() => TestHelper.AreNodesSynced(node2, nodeSync));
             }
