@@ -5,8 +5,10 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using CertificateAuthority;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Org.BouncyCastle.Asn1.X509;
+using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
@@ -42,7 +44,22 @@ namespace MembershipServices
 
     public class MembershipServicesDirectory : IMembershipServicesDirectory
     {
+        /// <inheritdoc/>
+        public X509Certificate AuthorityCertificate { get; private set; }
+
+        /// <inheritdoc/>
+        public X509Certificate ClientCertificate { get; private set; }
+
+        /// <inheritdoc/>
+        public AsymmetricKeyParameter ClientCertificatePrivateKey { get; private set; }
+
+        public CertificateAuthorityInterface CertificateAuthorityInterface { get; }
+
         private readonly NodeSettings nodeSettings;
+
+        private readonly ILogger logger;
+
+        private readonly TextFileConfiguration configuration;
 
         private readonly LocalMembershipServicesConfiguration localMembershipServices;
         
@@ -50,9 +67,12 @@ namespace MembershipServices
         // As channels do not really exist yet, the identifier format is yet to be defined.
         private readonly Dictionary<string, ChannelMembershipServicesConfiguration> channelMembershipServices;
 
-        public MembershipServicesDirectory(NodeSettings nodeSettings)
+        public MembershipServicesDirectory(NodeSettings nodeSettings, ILoggerFactory loggerFactory)
         {
             this.nodeSettings = nodeSettings;
+            this.configuration = nodeSettings.ConfigReader;
+
+            this.logger = loggerFactory.CreateLogger(GetType().FullName);
 
             // Two types of providers needed:
             // 1. Local
@@ -71,12 +91,30 @@ namespace MembershipServices
             // Instantiated on the file system of every node in the channel (similar to local version, but there can be multiple providers for a channel) and kept synchronized via consensus.
 
             this.channelMembershipServices = new Dictionary<string, ChannelMembershipServicesConfiguration>();
+
+            this.CertificateAuthorityInterface = new CertificateAuthorityInterface(this.nodeSettings, loggerFactory);
+
+            this.AuthorityCertificate = this.CertificateAuthorityInterface.LoadAuthorityCertificate();
         }
         
         public void Initialize()
         {
+            (this.ClientCertificate, this.ClientCertificatePrivateKey) = this.CertificateAuthorityInterface.LoadClientCertificate(this.AuthorityCertificate);
+
+            if (this.ClientCertificate == null)
+            {
+                this.logger.LogError($"Please generate the node's certificate with the MembershipServices.Cli utility.");
+
+                throw new CertificateConfigurationException($"Please generate the node's certificate with the MembershipServices.Cli utility.");
+            }
+
             // We attempt to set up the folder structure regardless of whether it has been done already.
             this.localMembershipServices.InitializeFolderStructure();
+
+            bool revoked = this.IsCertificateRevoked(CaCertificatesManager.GetThumbprint(this.ClientCertificate));
+
+            if (revoked)
+                throw new CertificateConfigurationException("Provided client certificate was revoked!");
         }
 
         /// <inheritdoc />
@@ -100,9 +138,12 @@ namespace MembershipServices
             throw new NotImplementedException();
         }
 
-        public bool IsSignedByAuthorityCertificate(X509Certificate certificateToValidate, X509Certificate authorityCertificate)
+        /// <summary>
+        /// Checks if given certificate is signed by the authority certificate.
+        /// </summary>
+        /// <exception cref="Exception">Thrown in case authority chain build failed.</exception>
+        public static bool IsSignedByAuthorityCertificate(X509Certificate certificateToValidate, X509Certificate authorityCertificate)
         {
-            // TODO: Validate authority certificate against one of the known authorities in the MSD?
             return CaCertificatesManager.ValidateCertificateChain(authorityCertificate, certificateToValidate);
         }
 
@@ -150,6 +191,12 @@ namespace MembershipServices
         public bool IsCertificateRevokedByAddress(uint160 address)
         {
             return this.IsCertificateRevokedByTransactionSigningKeyHash(address.ToBytes());
+        }
+
+        public List<PubKey> GetCertificatePublicKeys()
+        {
+            // TODO: Have the option to return this from the local MSD instead so that a CA connection isn't necessary for federation membership synchronization
+            return this.CertificateAuthorityInterface.GetCertificatePublicKeys();
         }
 
         public static string GetCertificateThumbprint(X509Certificate certificate)

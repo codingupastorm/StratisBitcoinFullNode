@@ -30,7 +30,6 @@ namespace Stratis.Feature.PoA.Tokenless
     {
         private readonly ICoreComponent coreComponent;
         private readonly ChannelSettings channelSettings;
-        private readonly ICertificatesManager certificatesManager;
         private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
         private readonly VotingManager votingManager;
         private readonly IFederationManager federationManager;
@@ -69,7 +68,6 @@ namespace Stratis.Feature.PoA.Tokenless
             ReadWriteSetPolicyValidator rwsPolicyValidator)
         {
             this.channelSettings = channelSettings;
-            this.certificatesManager = certificatesManager;
             this.certificatePermissionsChecker = certificatePermissionsChecker;
             this.votingManager = votingManager;
             this.coreComponent = coreComponent;
@@ -115,7 +113,6 @@ namespace Stratis.Feature.PoA.Tokenless
             if (options.EnablePermissionedMembership)
             {
                 this.membershipServices.Initialize();
-                // We do not need to initialize the CertificatesManager here like it would have been in the regular PoA feature, because the TokenlessWalletManager is now responsible for ensuring a client certificate is created instead.
             }
 
             if (options.VotingEnabled)
@@ -162,7 +159,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 return;
             }
 
-            List<PubKey> allowedMembers = this.certificatesManager.GetCertificatePublicKeys();
+            List<PubKey> allowedMembers = this.membershipServices.GetCertificatePublicKeys();
             List<IFederationMember> currentMembers = this.federationManager.GetFederationMembers();
 
             // Check for differences and kick members without valid certificates.                

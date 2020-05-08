@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Text;
+using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Configuration;
@@ -29,6 +30,7 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
         // CA certificate related settings.
 
         public bool CaAdminPassword { get; set; }
+
         public bool GenerateCertificate { get; set; }
 
         public string CertPath { get; set; }
@@ -69,7 +71,7 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
             this.RootPath = nodeSettings.DataFolder.RootPath;
 
             this.GenerateCertificate = config.GetOrDefault<bool>("generatecertificate", false, this.logger);
-            this.CertPath = Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.ClientCertificateName);
+            this.CertPath = Path.Combine(nodeSettings.DataFolder.RootPath, CertificateAuthorityInterface.ClientCertificateName);
 
             this.Name = config.GetOrDefault<string>("certificatename", "", this.logger);
             this.OrganizationUnit = config.GetOrDefault<string>("certificateorganizationunit", "", this.logger);

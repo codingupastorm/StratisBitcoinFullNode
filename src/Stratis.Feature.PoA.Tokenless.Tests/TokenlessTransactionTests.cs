@@ -9,7 +9,6 @@ using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Util;
 using Xunit;
@@ -34,10 +33,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             string testDir = TestBase.GetTestDirectoryPath(this, callingMethod);
             var settings = new NodeSettings(network, args: new[] { $"datadir={testDir}", "password=test" });
-            var membershipServices = new MembershipServicesDirectory(settings);
-            var certificatesManager = new CertificatesManager(settings.DataFolder, settings, settings.LoggerFactory, network, membershipServices);
             var channelSettings = new ChannelSettings(settings);
-            var tokenlessWalletManager = new TokenlessKeyStoreManager(network, settings.DataFolder, channelSettings, new TokenlessKeyStoreSettings(settings), certificatesManager, settings.LoggerFactory);
+            var tokenlessWalletManager = new TokenlessKeyStoreManager(network, settings.DataFolder, channelSettings, new TokenlessKeyStoreSettings(settings), settings.LoggerFactory);
             tokenlessWalletManager.Initialize();
             var signer = new TokenlessSigner(network, new SenderRetriever());
             var endorsementSigner = new EndorsementSigner(network, signer, tokenlessWalletManager);
