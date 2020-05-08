@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Net;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Configuration.Settings;
+using Stratis.Core.Configuration.Settings;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Core.Utilities;

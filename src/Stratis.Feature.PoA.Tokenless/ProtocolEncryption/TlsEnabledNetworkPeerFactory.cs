@@ -3,7 +3,7 @@ using System.Threading;
 using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration.Settings;
+using Stratis.Core.Configuration.Settings;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;

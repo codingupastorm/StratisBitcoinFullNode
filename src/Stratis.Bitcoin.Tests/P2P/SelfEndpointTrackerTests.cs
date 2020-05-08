@@ -1,8 +1,9 @@
 ﻿using System.Net;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.P2P;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Logging;
+using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Utilities.Extensions;
 using Xunit;
 
@@ -18,7 +19,7 @@ namespace Stratis.Bitcoin.Tests.P2P
         {
             this.extendedLoggerFactory = new ExtendedLoggerFactory();
             this.selfEndpointTracker = new SelfEndpointTracker(this.extendedLoggerFactory,
-                new Configuration.Settings.ConnectionManagerSettings(NodeSettings.Default(new StratisRegTest())));
+                new ConnectionManagerSettings(NodeSettings.Default(new StratisRegTest())));
         }
 
         [Fact]

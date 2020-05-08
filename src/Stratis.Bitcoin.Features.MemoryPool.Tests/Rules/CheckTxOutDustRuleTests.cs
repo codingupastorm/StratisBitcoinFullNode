@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Configuration.Logging;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Logging;
 using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Features.MemoryPool.Rules;
 using Stratis.Bitcoin.Networks;

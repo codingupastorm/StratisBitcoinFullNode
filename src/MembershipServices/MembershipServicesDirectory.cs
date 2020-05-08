@@ -12,8 +12,7 @@ using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.Crypto.Digests;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.Configuration;
-using TextFileConfiguration = Stratis.Bitcoin.Configuration.TextFileConfiguration;
+using Stratis.Core.Configuration;
 using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 using X509Extension = System.Security.Cryptography.X509Certificates.X509Extension;
 
@@ -60,10 +59,10 @@ namespace MembershipServices
 
         private readonly ILogger logger;
 
-        private readonly TextFileConfiguration configuration;
+        private readonly Stratis.Core.Configuration.TextFileConfiguration configuration;
 
         private readonly LocalMembershipServicesConfiguration localMembershipServices;
-        
+
         // A mapping of channel identifiers to their corresponding membership services configuration.
         // As channels do not really exist yet, the identifier format is yet to be defined.
         private readonly Dictionary<string, ChannelMembershipServicesConfiguration> channelMembershipServices;
@@ -97,7 +96,7 @@ namespace MembershipServices
 
             this.AuthorityCertificate = this.CertificateAuthorityInterface.LoadAuthorityCertificate();
         }
-        
+
         public void Initialize()
         {
             (this.ClientCertificate, this.ClientCertificatePrivateKey) = this.CertificateAuthorityInterface.LoadClientCertificate(this.AuthorityCertificate);

@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Runtime.CompilerServices;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Features.PoA;

@@ -1,5 +1,5 @@
 ﻿using Stratis.Core.Builder;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Core.Utilities;
 using Stratis.Features.Api;

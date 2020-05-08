@@ -9,7 +9,7 @@ using CommandLine;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;

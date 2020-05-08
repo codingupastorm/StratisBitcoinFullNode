@@ -24,7 +24,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         public bool ClientCanAccessPrivateData(ReadWriteSet readWriteSet)
         {
-            return this.OrganisationCanAccessPrivateData((Organisation) this.membershipServices.ClientCertificate.GetOrganisation(), readWriteSet);
+            return this.OrganisationCanAccessPrivateData((Organisation)this.membershipServices.ClientCertificate.GetOrganisation(), readWriteSet);
         }
 
         public bool OrganisationCanAccessPrivateData(Organisation organisation, ReadWriteSet readWriteSet)
@@ -43,7 +43,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         public bool OrganisationCanAccessPrivateData(X509Certificate certificate, ReadWriteSet readWriteSet)
         {
-            return this.OrganisationCanAccessPrivateData((Organisation) certificate.GetOrganisation(), readWriteSet);
+            return this.OrganisationCanAccessPrivateData((Organisation)certificate.GetOrganisation(), readWriteSet);
         }
     }
 }

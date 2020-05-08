@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration.Settings;
+using Stratis.Core.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Core.Utilities;

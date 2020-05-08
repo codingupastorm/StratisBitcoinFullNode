@@ -36,7 +36,7 @@ namespace Stratis.Feature.PoA.Tokenless
         /// <summary>
         /// A list of all peers and their client certificate.
         /// </summary>
-        private List<(INetworkPeer Peer, X509Certificate Certificate)> PeersWithCerts => 
+        private List<(INetworkPeer Peer, X509Certificate Certificate)> PeersWithCerts =>
             this.connectionManager.ConnectedPeers.Select(x => (x, (x.Connection as TlsEnabledNetworkPeerConnection).GetPeerCertificate())).ToList();
 
         public TokenlessBroadcaster(IConnectionManager connectionManager, IMembershipServicesDirectory membershipServices)
@@ -69,7 +69,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
             // TODO: Error handling. What if we don't have any peers in the same organisation?
 
-            Parallel.ForEach<INetworkPeer>(peers.Select(x=>x.Peer), async (INetworkPeer peer) => await SendMessageToPeerAsync(peer, payload));
+            Parallel.ForEach<INetworkPeer>(peers.Select(x => x.Peer), async (INetworkPeer peer) => await SendMessageToPeerAsync(peer, payload));
         }
 
         private async Task SendMessageToPeerAsync(INetworkPeer peer, Payload payload)

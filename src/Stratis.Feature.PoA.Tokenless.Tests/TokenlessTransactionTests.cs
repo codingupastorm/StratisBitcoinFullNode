@@ -2,7 +2,7 @@
 using System.Text;
 using MembershipServices;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Consensus;

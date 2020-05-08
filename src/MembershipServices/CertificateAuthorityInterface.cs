@@ -8,8 +8,9 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.Configuration;
-using TextFileConfiguration = Stratis.Bitcoin.Configuration.TextFileConfiguration;
+using Stratis.Core.Configuration;
+using TextFileConfiguration = Stratis.Core.Configuration.TextFileConfiguration;
+using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 
 namespace MembershipServices
 {

@@ -10,11 +10,11 @@ using NBitcoin.Networks;
 using NBitcoin.Protocol;
 using NLog.Extensions.Logging;
 using Stratis.Core.Builder.Feature;
-using Stratis.Bitcoin.Configuration.Logging;
-using Stratis.Bitcoin.Configuration.Settings;
+using Stratis.Core.Configuration.Logging;
+using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Configuration
+namespace Stratis.Core.Configuration
 {
     internal static class NormalizeDirectorySeparatorExt
     {

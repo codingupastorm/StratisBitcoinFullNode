@@ -3,7 +3,7 @@ using System.IO;
 using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Features.PoA;

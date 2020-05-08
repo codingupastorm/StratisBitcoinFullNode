@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.IO.Compression;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
 using Stratis.Bitcoin.NodeStorage;
 using Stratis.Bitcoin.Tests.Common;

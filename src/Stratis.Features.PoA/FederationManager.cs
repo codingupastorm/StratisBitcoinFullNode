@@ -4,7 +4,7 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.PoA;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Signals;
 using Stratis.Core.Utilities;
 using Stratis.Features.PoA.Events;

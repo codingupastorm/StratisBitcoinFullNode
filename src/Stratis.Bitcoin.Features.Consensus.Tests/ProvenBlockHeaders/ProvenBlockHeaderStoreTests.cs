@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;

@@ -5,7 +5,7 @@ using MembershipServices;
 using Stratis.Bitcoin;
 using Stratis.Core.Base;
 using Stratis.Core.Builder;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;

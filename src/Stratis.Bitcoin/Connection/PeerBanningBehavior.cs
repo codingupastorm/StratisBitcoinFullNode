@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using TracerAttributes;

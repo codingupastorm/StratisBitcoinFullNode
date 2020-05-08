@@ -7,7 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using FluentAssertions;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Core.Utilities;
 using Xunit;
 

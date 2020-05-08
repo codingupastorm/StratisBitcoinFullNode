@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Protocol;
-using Stratis.Bitcoin.Configuration.Settings;
+using Stratis.Core.Configuration.Settings;
 using Stratis.Bitcoin.EventBus.CoreEvents;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Signals;
