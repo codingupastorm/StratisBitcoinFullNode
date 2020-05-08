@@ -8,15 +8,14 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using CertificateAuthority;
+using MembershipServices;
 using Microsoft.Extensions.Logging;
-using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.PoA;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels
@@ -341,14 +340,14 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         private void CopyCertificatesToChannelRoot(string channelRootFolder)
         {
             // If the certificates already exist, do nothing.
-            var authorityCertificatePath = Path.Combine(channelRootFolder, CertificatesManager.AuthorityCertificateName);
+            var authorityCertificatePath = Path.Combine(channelRootFolder, CertificateAuthorityInterface.AuthorityCertificateName);
             if (!File.Exists(authorityCertificatePath))
-                File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificatesManager.AuthorityCertificateName), authorityCertificatePath);
+                File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificateAuthorityInterface.AuthorityCertificateName), authorityCertificatePath);
 
             // If the certificates already exist, do nothing.
-            var clientCertificatePath = Path.Combine(channelRootFolder, CertificatesManager.ClientCertificateName);
+            var clientCertificatePath = Path.Combine(channelRootFolder, CertificateAuthorityInterface.ClientCertificateName);
             if (!File.Exists(clientCertificatePath))
-                File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificatesManager.ClientCertificateName), clientCertificatePath);
+                File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificateAuthorityInterface.ClientCertificateName), clientCertificatePath);
         }
 
         private void CopyKeyStoreToChannelRoot(string channelRootFolder)
@@ -373,11 +372,11 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             var args = new StringBuilder();
             args.AppendLine($"-certificatepassword=test");
             args.AppendLine($"-password=test");
-            args.AppendLine($"-{CertificatesManager.CaBaseUrlKey}={CertificatesManager.CaBaseUrl}");
-            args.AppendLine($"-{CertificatesManager.CaAccountIdKey}={Settings.AdminAccountId}");
-            args.AppendLine($"-{CertificatesManager.CaPasswordKey}={this.nodeSettings.ConfigReader.GetOrDefault(CertificatesManager.CaPasswordKey, "")} ");
-            args.AppendLine($"-{CertificatesManager.ClientCertificateConfigurationKey}=test");
-            args.AppendLine($"-agent{CertificatesManager.ClientCertificateConfigurationKey}=test");
+            args.AppendLine($"-{CertificateAuthorityInterface.CaBaseUrlKey}={CertificateAuthorityInterface.CaBaseUrl}");
+            args.AppendLine($"-{CertificateAuthorityInterface.CaAccountIdKey}={Settings.AdminAccountId}");
+            args.AppendLine($"-{CertificateAuthorityInterface.CaPasswordKey}={this.nodeSettings.ConfigReader.GetOrDefault(CertificateAuthorityInterface.CaPasswordKey, "")} ");
+            args.AppendLine($"-{CertificateAuthorityInterface.ClientCertificateConfigurationKey}=test");
+            args.AppendLine($"-agent{CertificateAuthorityInterface.ClientCertificateConfigurationKey}=test");
 
             // Append any channel specific arguments.
             foreach (var channelArg in channelArgs)

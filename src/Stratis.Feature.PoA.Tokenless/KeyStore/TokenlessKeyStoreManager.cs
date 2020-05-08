@@ -1,11 +1,11 @@
 ﻿using System;
 using System.IO;
+using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.PoA;
 
 namespace Stratis.Feature.PoA.Tokenless.KeyStore
@@ -48,12 +48,10 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
         private readonly FileStorage<TokenlessKeyStore> fileStorage;
         private readonly ChannelSettings channelSettings;
         private readonly TokenlessKeyStoreSettings keyStoreSettings;
-        private readonly ICertificatesManager certificatesManager;
         private readonly ILogger logger;
 
-        public TokenlessKeyStoreManager(Network network, DataFolder dataFolder, ChannelSettings channelSettings, TokenlessKeyStoreSettings keyStoreSettings, ICertificatesManager certificatesManager, ILoggerFactory loggerFactory)
+        public TokenlessKeyStoreManager(Network network, DataFolder dataFolder, ChannelSettings channelSettings, TokenlessKeyStoreSettings keyStoreSettings, ILoggerFactory loggerFactory)
         {
-            this.certificatesManager = certificatesManager;
             this.channelSettings = channelSettings;
             this.dataFolder = dataFolder;
             this.keyStoreSettings = keyStoreSettings;
@@ -72,9 +70,8 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
             bool keyStoreOk = this.CheckKeyStore();
             bool blockSigningKeyFileOk = this.CheckBlockSigningKeyFile();
             bool transactionKeyFileOk = this.CheckTransactionSigningKeyFile();
-            bool certificateOk = this.CheckCertificate();
 
-            if (keyStoreOk && blockSigningKeyFileOk && transactionKeyFileOk && certificateOk)
+            if (keyStoreOk && blockSigningKeyFileOk && transactionKeyFileOk)
                 return true;
 
             this.logger.LogError($"Restart the daemon.");
@@ -236,53 +233,6 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
                 // Only stop the node if this node is not a channel node.
                 if (!this.channelSettings.IsChannelNode)
                     return false;
-            }
-
-            return true;
-        }
-
-        private bool CheckCertificate()
-        {
-            bool caOk = false;
-            bool clientOk = false;
-
-            try
-            {
-                caOk = this.certificatesManager.LoadAuthorityCertificate(false);
-                this.logger.LogInformation($"Authority certificate loaded.");
-
-                clientOk = this.certificatesManager.LoadClientCertificate();
-                this.logger.LogInformation($"Client certificate loaded.");
-            }
-            catch (CertificateConfigurationException certEx)
-            {
-                if (!caOk)
-                {
-                    Console.WriteLine(certEx.Message);
-
-                    return false;
-                }
-            }
-
-            if (clientOk && !this.keyStoreSettings.GenerateCertificate)
-                return true;
-
-            if (!CheckPassword(CertificatesManager.ClientCertificateName))
-                return false;
-
-            // First check if we have created an account on the CA already.
-            if (!this.certificatesManager.HaveAccount())
-            {
-                this.logger.LogError($"Please create an account on the certificate authority and generate the node's certificate with the MembershipServices.Cli utility.");
-
-                return false;
-            }
-
-            if (this.certificatesManager.ClientCertificate == null)
-            {
-                this.logger.LogError($"Please generate the node's certificate with the MembershipServices.Cli utility.");
-
-                return false;
             }
 
             return true;

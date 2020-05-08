@@ -15,7 +15,6 @@ using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.MemoryPool.Broadcasting;
 
 namespace Stratis.Feature.PoA.Tokenless.Controllers
@@ -25,7 +24,6 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
     [Route("api/[controller]")]
     public sealed class ChannelsController : Controller
     {
-        private readonly ICertificatesManager certificatesManager;
         private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
         private readonly IChannelRepository channelRepository;
         private readonly ICoreComponent coreComponent;
@@ -36,7 +34,6 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         private readonly ILogger logger;
 
         public ChannelsController(
-            ICertificatesManager certificatesManager,
             ICertificatePermissionsChecker certificatePermissionsChecker,
             IBroadcasterManager broadcasterManager,
             IChannelRepository channelRepository,
@@ -46,7 +43,6 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             IChannelService channelService
             )
         {
-            this.certificatesManager = certificatesManager;
             this.certificatePermissionsChecker = certificatePermissionsChecker;
             this.broadcasterManager = broadcasterManager;
             this.channelRepository = channelRepository;
