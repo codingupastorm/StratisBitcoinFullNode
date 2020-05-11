@@ -174,6 +174,8 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
                 // Sync both nodes
                 TestHelper.ConnectAndSync(nodeSync, node1, node2);
 
+                // All nodes should be at height of maxReorgLength now.
+
                 // Remove node 2.
                 TestHelper.Disconnect(nodeSync, node2);
 
@@ -181,17 +183,21 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
                 await node1.MineBlocksAsync(maxReorgLength - 1);
                 TestBase.WaitLoop(() => node1.FullNode.GetBlockStoreTip().Height == maxReorgLength * 2 - 1);
 
-                // Wait for node 1 to sync.
+                // Wait for nodeSync to align with node1.
                 TestBase.WaitLoop(() => node1.FullNode.GetBlockStoreTip().HashBlock == nodeSync.FullNode.GetBlockStoreTip().HashBlock);
 
-                // Remove node 1.
+                // Both node1 and nodeSync should be at height of maxReorgLength * 2 - 1 now.
+
+                // Disconnect all nodes.
                 TestHelper.Disconnect(nodeSync, node1);
+                TestHelper.Disconnect(nodeSync, node2);
 
                 // Mine a longer chain with node 2.
                 await node2.MineBlocksAsync(maxReorgLength);
                 TestBase.WaitLoop(() => node2.FullNode.GetBlockStoreTip().Height == maxReorgLength * 2);
 
-                // Add node 2.
+                // Reconnect all nodes.
+                TestHelper.Connect(nodeSync, node1);
                 TestHelper.Connect(nodeSync, node2);
 
                 // Node 2 should be synced.
