@@ -84,45 +84,6 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
             }
         }
 
-        [Fact]
-        public async Task BlockBroadcastInvAsync()
-        {
-            var network = new TokenlessNetwork();
-
-            TestBase.GetTestRootFolder(out string testRootFolder);
-
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
-            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
-            {
-                server.Start();
-
-                // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
-                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
-
-                // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode nodeSync = nodeBuilder.CreateTokenlessNode(network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
-
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
-
-                // Sync both nodes
-                TestHelper.ConnectAndSync(node1, nodeSync);
-                TestHelper.ConnectAndSync(node2, nodeSync);
-
-                // Set node2 to use inv (not headers).
-                node2.FullNode.ConnectionManager.ConnectedPeers.First().Behavior<BlockStoreBehavior>().PreferHeaders = false;
-
-                // Generate two new blocks.
-                await nodeSync.MineBlocksAsync(2);
-                TestBase.WaitLoop(() => nodeSync.FullNode.GetBlockStoreTip().Height == 2);
-
-                // Wait for the other nodes to pick up the newly generated blocks
-                TestBase.WaitLoop(() => TestHelper.AreNodesSynced(node1, nodeSync));
-                TestBase.WaitLoop(() => TestHelper.AreNodesSynced(node2, nodeSync));
-            }
-        }
-
         [Fact(Skip = "Investigate PeerConnector shutdown timeout issue")]
         public void BlockStoreCanRecoverOnStartup()
         {
