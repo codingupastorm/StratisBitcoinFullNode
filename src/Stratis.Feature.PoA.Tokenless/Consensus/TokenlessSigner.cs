@@ -56,18 +56,31 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
         public GetSenderResult GetSender(Transaction transaction)
         {
             if (transaction.Inputs.Count != 1)
-                return GetSenderResult.CreateFailure("Transaction must be in prescribed format: Inputs does not equal 1.");
+                return GetSenderResult.CreateFailure($"Unable to determine the sender for transaction '{transaction.GetHash()}': Inputs does not equal 1.");
 
             Script senderScript = transaction.Inputs.First().ScriptSig;
             IList<Op> ops = senderScript.ToOps();
 
             if (ops.Count != InputOpsLength)
-                return GetSenderResult.CreateFailure("Transaction input must be in prescribed format: Invalid Ops Count.");
+                return GetSenderResult.CreateFailure($"Unable to determine the sender for transaction '{transaction.GetHash()}': Invalid Ops Count.");
 
             Op[] senderOps = new Op[5];
             Array.Copy(ops.ToArray(), SenderScriptStartOpIndex, senderOps, 0, 5);
 
             return this.senderRetriever.GetAddressFromScript(new Script(senderOps));
+        }
+
+        /// <inheritdoc />
+        public GetSenderResult GetSenderAndVerify(Transaction transaction)
+        {
+            GetSenderResult result = GetSender(transaction);
+            if (result.Success)
+            {
+                if (!Verify(transaction))
+                    return GetSenderResult.CreateFailure($"The signature for transaction {transaction.GetHash()} is invalid.");
+            }
+
+            return result;
         }
 
         /// <inheritdoc />
