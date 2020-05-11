@@ -146,9 +146,9 @@ namespace Stratis.SmartContracts.Tests.Common
         /// <summary>
         /// This creates a standard (normal) node on the <see cref="TokenlessNetwork"/> that is also apart of other channels.
         /// </summary>
-        public CoreNode CreateTokenlessNodeWithChannels(TokenlessNetwork network, int nodeIndex, IWebHost server, bool initialRun = true)
+        public CoreNode CreateTokenlessNodeWithChannels(TokenlessNetwork network, int nodeIndex, IWebHost server, bool initialRun = true, string organisation = null)
         {
-            return CreateCoreNode(network, nodeIndex, server, "tokenless", false, false, true, initialRun);
+            return CreateCoreNode(network, nodeIndex, server, "tokenless", false, false, true, initialRun, organisation: organisation);
         }
 
         /// <summary>
@@ -161,18 +161,23 @@ namespace Stratis.SmartContracts.Tests.Common
             return node;
         }
 
-        public void CreateChannel(CoreNode parentNode, string channelName, int nodeIndex)
+        public void CreateChannel(CoreNode parentNode, string channelName, int nodeIndex, AccessControlList acl = null)
         {
+            if (acl == null)
+            {
+                acl = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        CaTestHelper.TestOrganisation
+                    }
+                };
+            }
+
             // Serialize the channel network and write the json to disk.
             ChannelNetwork channelNetwork = SystemChannelNetwork.CreateChannelNetwork(channelName, "channels", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
             channelNetwork.Id = nodeIndex;
-            channelNetwork.AccessList = new AccessControlList
-            {
-                Organisations = new List<string>
-                {
-                    CaTestHelper.TestOrganisation
-                }
-            };
+            channelNetwork.AccessList = acl;
             channelNetwork.DefaultAPIPort += nodeIndex;
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
 

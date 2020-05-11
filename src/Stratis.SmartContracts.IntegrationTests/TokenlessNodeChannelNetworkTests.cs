@@ -138,8 +138,17 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CoreNode parentNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server);
                 parentNode.Start();
 
+                string anotherOrg = "AnotherOrganisation";
+
                 // Create a channel for the identity to be apart of.
-                nodeBuilder.CreateChannel(parentNode, "marketing", 2);
+                nodeBuilder.CreateChannel(parentNode, "marketing", 2, new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        CaTestHelper.TestOrganisation,
+                        anotherOrg
+                    }
+                });
                 parentNode.Restart();
 
                 // Create another node.
@@ -162,8 +171,24 @@ namespace Stratis.SmartContracts.IntegrationTests
                     })
                     .GetAwaiter().GetResult();
 
-                IChannelService channelService = parentNode.FullNode.NodeService<IChannelService>();
+                IChannelService channelService = otherNode.FullNode.NodeService<IChannelService>();
                 Assert.Single(channelService.StartedChannelNodes);
+
+                // Start a node from an allowed organisation and ensure it can join too.
+                // Create another node.
+                CoreNode otherNode2 = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 2, server, organisation: anotherOrg);
+                otherNode2.Start();
+
+                var otherNode2Response = $"{(new ApiSettings(otherNode2.FullNode.Settings)).ApiUri}"
+                    .AppendPathSegment("api/channels/join")
+                    .PostJsonAsync(new ChannelJoinRequest()
+                    {
+                        NetworkJson = networkJson
+                    })
+                    .GetAwaiter().GetResult();
+
+                IChannelService otherNode2ChannelService = otherNode2.FullNode.NodeService<IChannelService>();
+                Assert.Single(otherNode2ChannelService.StartedChannelNodes);
             }
         }
 
