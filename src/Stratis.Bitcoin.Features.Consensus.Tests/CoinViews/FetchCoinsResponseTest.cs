@@ -1,6 +1,6 @@
 ﻿using NBitcoin;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 using Xunit;
 
 namespace Stratis.Features.Consensus.Tests.CoinViews

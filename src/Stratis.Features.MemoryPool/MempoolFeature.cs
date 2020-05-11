@@ -8,10 +8,10 @@ using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Builder.Feature;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Connection;
+using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool.Fee;
 using Stratis.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.Utilities;
 using TracerAttributes;
 
 [assembly: InternalsVisibleTo("Stratis.Features.MemoryPool.Tests")]

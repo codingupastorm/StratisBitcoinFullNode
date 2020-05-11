@@ -10,6 +10,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         public readonly bool IsInfraNode;
         public readonly bool IsSystemChannelNode;
         public readonly string ProcessPath;
+        public readonly int SystemChannelApiPort;
 
         public ChannelSettings(NodeSettings nodeSettings)
         {
@@ -19,6 +20,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.IsInfraNode = nodeSettings.ConfigReader.GetOrDefault<bool>("isinfranode", false);
             this.IsSystemChannelNode = nodeSettings.ConfigReader.GetOrDefault<bool>("issystemchannelnode", false);
             this.ProcessPath = nodeSettings.ConfigReader.GetOrDefault("channelprocesspath", "");
+            this.SystemChannelApiPort = nodeSettings.ConfigReader.GetOrDefault("systemchannelapiport", 0);
         }
 
         public ChannelSettings(TextFileConfiguration fileConfiguration)

@@ -8,7 +8,7 @@ using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
-using Stratis.Bitcoin.Utilities.Extensions;
+using Stratis.Core.Utilities.Extensions;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.Connection

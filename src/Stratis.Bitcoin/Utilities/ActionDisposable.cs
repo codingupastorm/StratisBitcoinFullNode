@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Stratis.Bitcoin.Utilities
+namespace Stratis.Core.Utilities
 {
     /// <summary>
     /// Helper class that is used for implementation of custom lock primitives.

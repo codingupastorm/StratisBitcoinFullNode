@@ -90,6 +90,25 @@ namespace MembershipServices.Cli
             public string Type { get; set; }
         }
 
+        [Verb("sync", HelpText = "Synchronize local MSD with the specified CA.")]
+        class SyncOptions
+        {
+            [Option("datadir", Required = true, HelpText = "The location of the underlying node's root folder.")]
+            public string DataDir { get; set; }
+
+            [Option("caurl", Required = false, Default = "https://localhost:5001", HelpText = "The URL of the certificate authority to synchronize with.")]
+            public string CaUrl { get; set; }
+
+            [Option("caaccountid", Required = true, HelpText = "The account ID of the CA user.")]
+            public string CaAccountId { get; set; }
+
+            [Option("capassword", Required = true, HelpText = "The account password of the CA user.")]
+            public string CaPassword { get; set; }
+
+            [Option("password", Required = true, HelpText = "The password for the node's keystore.")]
+            public string Password { get; set; }
+        }
+
         static int RunHelp(HelpOptions options)
         {
             return 0;
@@ -164,7 +183,6 @@ namespace MembershipServices.Cli
             File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCert, privateKey, keyStoreSettings.Password));
 
             return 0;
-
         }
 
         static int RunShowTemplate(ShowTemplateOptions options)
@@ -224,16 +242,41 @@ namespace MembershipServices.Cli
             return 0;
         }
 
+        static int RunSync(SyncOptions options)
+        {
+            // TODO: Move this logic into a reusable method
+            var network = new TokenlessNetwork();
+            var nodeSettings = new NodeSettings(network, args: new[] { $"-datadir={options.DataDir}", $"-password={options.Password}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" });
+
+            var membershipServices = new MembershipServicesDirectory(nodeSettings);
+            membershipServices.Initialize();
+
+            var caClient = new CaClient(new Uri(options.CaUrl), new HttpClient(), int.Parse(options.CaAccountId), options.CaPassword);
+
+            foreach (var cert in caClient.GetAllCertificates())
+            {
+                membershipServices.AddLocalMember(cert.ToCertificate(), MemberType.NetworkPeer);
+            }
+
+            foreach (string thumbprint in caClient.GetRevokedCertificates())
+            {
+                membershipServices.RevokeCertificate(thumbprint);
+            }
+
+            return 0;
+        }
+
         public static void Main(string[] args)
         {
             // https://hyperledger-fabric.readthedocs.io/en/release-2.0/commands/cryptogen.html
-            Parser.Default.ParseArguments<HelpOptions, GenerateOptions, ShowTemplateOptions, VersionOptions, ExtendOptions>(args)
+            Parser.Default.ParseArguments<HelpOptions, GenerateOptions, ShowTemplateOptions, VersionOptions, ExtendOptions, SyncOptions>(args)
                 .MapResult(
                     (HelpOptions opts) => RunHelp(opts),
                     (GenerateOptions opts) => RunGenerate(opts),
                     (ShowTemplateOptions opts) => RunShowTemplate(opts),
                     (VersionOptions opts) => RunVersion(opts),
                     (ExtendOptions opts) => RunExtend(opts),
+                    (SyncOptions opts) => RunSync(opts),
                     errs => 1);
         }
     }

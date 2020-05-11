@@ -10,7 +10,7 @@ using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus.PerformanceCounters.Rules;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 using TracerAttributes;
 
 namespace Stratis.Bitcoin.Consensus

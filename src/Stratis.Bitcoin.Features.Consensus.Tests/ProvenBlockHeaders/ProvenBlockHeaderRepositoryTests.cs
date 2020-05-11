@@ -6,11 +6,11 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Features.Consensus.ProvenBlockHeaders;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
+using Stratis.Features.Consensus.ProvenBlockHeaders;
 using Xunit;
 
 namespace Stratis.Features.Consensus.Tests.ProvenBlockHeaders

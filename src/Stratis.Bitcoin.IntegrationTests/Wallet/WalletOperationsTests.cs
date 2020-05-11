@@ -14,7 +14,7 @@ using Newtonsoft.Json;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Models;
 using Stratis.Bitcoin.Networks;
-using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Core.Utilities.JsonErrors;
 using Stratis.Features.Wallet;
 using Stratis.Features.Wallet.Interfaces;
 using Stratis.Features.Wallet.Models;

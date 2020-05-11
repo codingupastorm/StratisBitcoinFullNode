@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin.Configuration.Settings
 {

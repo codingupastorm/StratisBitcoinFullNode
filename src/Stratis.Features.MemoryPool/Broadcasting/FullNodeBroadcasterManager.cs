@@ -2,8 +2,8 @@
 using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Bitcoin.Connection;
+using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Features.MemoryPool.Broadcasting
 {

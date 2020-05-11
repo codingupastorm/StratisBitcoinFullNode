@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using DBreeze.Utils;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStoreLevelDB;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 
 namespace Stratis.SmartContracts.Core.Store
 {
@@ -109,7 +107,7 @@ namespace Stratis.SmartContracts.Core.Store
 
     public class PrivateDataKeyValueStore : KeyValueStoreLevelDB, IPrivateDataKeyValueStore
     {
-        public PrivateDataKeyValueStore(DataFolder dataFolder, ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer) 
+        public PrivateDataKeyValueStore(DataFolder dataFolder, ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer)
             : base(dataFolder.PrivateDataStorePath, loggerFactory, repositorySerializer)
         {
         }

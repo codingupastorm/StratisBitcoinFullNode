@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Features.Wallet
 {

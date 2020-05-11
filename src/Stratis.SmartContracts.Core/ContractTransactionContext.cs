@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using NBitcoin;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 
 namespace Stratis.SmartContracts.Core
 {
@@ -41,7 +41,7 @@ namespace Stratis.SmartContracts.Core
         /// <inheritdoc />
         public uint Nvout
         {
-            get { return (uint) this.transaction.Outputs.IndexOf(this.contractTxOut); }
+            get { return (uint)this.transaction.Outputs.IndexOf(this.contractTxOut); }
         }
 
         /// <inheritdoc />

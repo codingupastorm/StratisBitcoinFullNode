@@ -8,11 +8,11 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Features.Consensus.CoinViews;
-using Stratis.Features.Consensus.ProvenBlockHeaders;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
+using Stratis.Features.Consensus.CoinViews;
+using Stratis.Features.Consensus.ProvenBlockHeaders;
 using Xunit;
 
 namespace Stratis.Features.Consensus.Tests.CoinViews

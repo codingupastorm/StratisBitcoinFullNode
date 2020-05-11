@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Stratis.Bitcoin.Utilities.Extensions
+namespace Stratis.Core.Utilities.Extensions
 {
     /// <summary>
     /// Extension methods for Version class.

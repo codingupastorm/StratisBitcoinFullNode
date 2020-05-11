@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using NBitcoin;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin.Base
 {

@@ -2,9 +2,8 @@
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Bitcoin.KeyValueStoreLevelDB;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 using Stratis.Patricia;
 
 namespace Stratis.SmartContracts.Core.State
@@ -86,7 +85,7 @@ namespace Stratis.SmartContracts.Core.State
         private bool mustDispose;
 
         public ContractStateKeyValueStore(DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, RepositorySerializer repositorySerializer)
-            : base(new ContractStateTableStore(dataFolder.SmartContractStatePath, loggerFactory, dateTimeProvider, repositorySerializer), "state"){ this.mustDispose = true; }
+            : base(new ContractStateTableStore(dataFolder.SmartContractStatePath, loggerFactory, dateTimeProvider, repositorySerializer), "state") { this.mustDispose = true; }
 
         public void Dispose()
         {

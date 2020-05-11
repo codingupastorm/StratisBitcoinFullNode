@@ -2,11 +2,11 @@
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Mining;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.Extensions;
 using Stratis.Features.MemoryPool.Interfaces;
 
 namespace Stratis.Features.MemoryPool

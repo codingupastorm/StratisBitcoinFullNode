@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Features.MemoryPool
 {

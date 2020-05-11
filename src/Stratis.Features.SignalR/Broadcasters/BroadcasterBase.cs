@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.AsyncWork;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Features.SignalR.Broadcasters
 {

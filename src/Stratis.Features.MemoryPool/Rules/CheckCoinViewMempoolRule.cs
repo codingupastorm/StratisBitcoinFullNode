@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Features.MemoryPool.Rules
 {

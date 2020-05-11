@@ -4,7 +4,7 @@ using System.Net;
 using NBitcoin;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.Utilities.Extensions
+namespace Stratis.Core.Utilities.Extensions
 {
     public static class IPExtensions
     {

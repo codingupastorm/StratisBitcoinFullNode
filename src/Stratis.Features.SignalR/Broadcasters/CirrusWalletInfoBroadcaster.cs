@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Connection;
-using Stratis.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Consensus;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
+using Stratis.Features.Wallet.Interfaces;
 
 namespace Stratis.Features.SignalR.Broadcasters
 {

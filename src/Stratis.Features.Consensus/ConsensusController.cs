@@ -9,8 +9,8 @@ using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.Base.Deployments.Models;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Controllers;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.JsonErrors;
 
 namespace Stratis.Features.Consensus
 {

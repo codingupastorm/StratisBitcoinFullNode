@@ -8,7 +8,7 @@ using NBitcoin;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStoreLevelDB;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 
 namespace Stratis.SmartContracts.Core.Store
 {
@@ -22,7 +22,7 @@ namespace Stratis.SmartContracts.Core.Store
     /// </summary>
     public class TransientKeyValueStore : KeyValueStoreLevelDB, ITransientKeyValueStore
     {
-        public TransientKeyValueStore(DataFolder dataFolder, ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer) 
+        public TransientKeyValueStore(DataFolder dataFolder, ILoggerFactory loggerFactory, IRepositorySerializer repositorySerializer)
             : base(dataFolder.TransientStorePath, loggerFactory, repositorySerializer)
         {
         }
@@ -69,7 +69,7 @@ namespace Stratis.SmartContracts.Core.Store
                 }
 
                 tx.Insert(Table, key, data.ToBytes());
-                tx.Insert(Table, compositePurgeIndexKey, new byte[] {});
+                tx.Insert(Table, compositePurgeIndexKey, new byte[] { });
                 tx.Commit();
             }
         }
@@ -125,7 +125,7 @@ namespace Stratis.SmartContracts.Core.Store
                 var purgeKeyStart = TransientStoreQueryParams.CreateTxIdRangeStartKey(txId);
                 var purgeKeyEnd = TransientStoreQueryParams.CreateTxIdRangeEndKey(txId);
 
-                var values = tx.SelectForward<byte[], byte[]>(Table, purgeKeyStart, purgeKeyEnd, true, includeLastKey: false, keysOnly:true);
+                var values = tx.SelectForward<byte[], byte[]>(Table, purgeKeyStart, purgeKeyEnd, true, includeLastKey: false, keysOnly: true);
 
                 // We can safely expect only a single value here due to the range query start key being the same as the end key.
                 var record = values.FirstOrDefault();
@@ -167,7 +167,7 @@ namespace Stratis.SmartContracts.Core.Store
 
             (byte[], byte[]) minKey = values.FirstOrDefault();
 
-            if(minKey.Item1 != null)
+            if (minKey.Item1 != null)
             {
                 (uint256 txId, Guid uuid, uint keyBlockHeight) explode = TransientStoreQueryParams.SplitCompositeKeyOfPurgeIndexByHeight(minKey.Item1);
 
@@ -235,7 +235,7 @@ namespace Stratis.SmartContracts.Core.Store
 
     public static class TransientStoreQueryParams
     {
-        public static byte[] CompositeKeySeparator = {0x00};
+        public static byte[] CompositeKeySeparator = { 0x00 };
         public static byte[] PurgeIndexByHeightPrefix = BitConverter.GetBytes('H').Take(1).Reverse().ToArray();
         public static byte[] PrivateReadWriteSetPrefix = BitConverter.GetBytes('P').Take(1).Reverse().ToArray();
 
@@ -339,7 +339,7 @@ namespace Stratis.SmartContracts.Core.Store
         {
             var txIdBytes = key.Take(32).ToArray();
             var guidBytes = key.Skip(32 + CompositeKeySeparator.Length).Take(16).Reverse().ToArray();
-            var heightBytes = key.Skip(32 + 16 + 2*CompositeKeySeparator.Length).Take(sizeof(uint)).Reverse().ToArray();
+            var heightBytes = key.Skip(32 + 16 + 2 * CompositeKeySeparator.Length).Take(sizeof(uint)).Reverse().ToArray();
 
             return (new uint256(txIdBytes), new Guid(guidBytes), BitConverter.ToUInt32(heightBytes));
         }
@@ -470,7 +470,7 @@ namespace Stratis.SmartContracts.Core.Store
         public byte[] ToBytes()
         {
             var blockHeight = BitConverter.GetBytes(this.BlockHeight);
-            var separator = new byte[] {0x00};
+            var separator = new byte[] { 0x00 };
 
             var result = new byte[this.PurgeHeightPrefix.Length + blockHeight.Length + separator.Length];
             Array.Copy(this.PurgeHeightPrefix, result, this.PurgeHeightPrefix.Length);

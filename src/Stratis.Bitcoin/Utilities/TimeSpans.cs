@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Stratis.Bitcoin.Utilities
+namespace Stratis.Core.Utilities
 {
     /// <summary>
     /// Commonly used time spans.

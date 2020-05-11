@@ -1,15 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using CertificateAuthority;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.Common;
 using MembershipServices;
+using Microsoft.AspNetCore.Hosting;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
+using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;
@@ -21,15 +24,29 @@ namespace Stratis.SmartContracts.Tests.Common
 {
     public class SmartContractNodeBuilder : NodeBuilder
     {
+        private int lastSystemChannelNodePort;
+
         public EditableTimeProvider TimeProvider { get; }
 
         public SmartContractNodeBuilder(string rootFolder) : base(rootFolder)
         {
+            // We have to override them so that the channel daemons can use 30002 and up.
+            this.lastSystemChannelNodePort = new SystemChannelNetwork().DefaultAPIPort + 100;
             this.TimeProvider = new EditableTimeProvider();
         }
 
-        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client,
-            string agent = "TKL", bool isInfraNode = false, bool isSystemNode = false, bool willStartChannels = false, bool initialRun = true)
+        private CoreNode CreateCoreNode(
+            TokenlessNetwork network,
+            int nodeIndex,
+            IWebHost server,
+            string agent,
+            bool isInfraNode,
+            bool isSystemNode,
+            bool willStartChannels,
+            bool initialRun,
+            int? apiPortOverride = null,
+            string organisation = null,
+            List<string> permissions = null)
         {
             string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
 
@@ -42,7 +59,12 @@ namespace Stratis.SmartContracts.Tests.Common
             };
 
             if (isInfraNode)
+            {
                 configParameters.Add("isinfranode", "True");
+
+                if (apiPortOverride != null)
+                    configParameters.Add("systemchannelapiport", apiPortOverride.ToString());
+            }
 
             if (isSystemNode)
                 configParameters.Add("issystemchannelnode", "True");
@@ -89,6 +111,11 @@ namespace Stratis.SmartContracts.Tests.Common
                 if (!initialRun)
                     return node;
 
+                X509Certificate authorityCertificate = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
+                node.AuthorityCertificate = authorityCertificate;
+
+                CaClient client = TokenlessTestHelper.GetClientAndCreateAccount(server, requestedPermissions: permissions, organisation: organisation);
+
                 (X509Certificate x509, CertificateInfoModel CertificateInfo) = IssueCertificate(client, node.ClientCertificatePrivateKey, node.TransactionSigningPrivateKey.PubKey, address, miningKey.PubKey);
                 node.ClientCertificate = CertificateInfo;
                 Assert.NotNull(node.ClientCertificate);
@@ -108,12 +135,44 @@ namespace Stratis.SmartContracts.Tests.Common
             }
         }
 
+        /// <summary>
+        /// This creates a standard (normal) node on the <see cref="TokenlessNetwork"/>.
+        /// </summary>
+        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, IWebHost server, string organisation = null, bool initialRun = true, List<string> permissions = null)
+        {
+            return CreateCoreNode(network, nodeIndex, server, "tokenless", false, false, false, initialRun, organisation: organisation, permissions: permissions);
+        }
+
+        /// <summary>
+        /// This creates a standard (normal) node on the <see cref="TokenlessNetwork"/> that is also apart of other channels.
+        /// </summary>
+        public CoreNode CreateTokenlessNodeWithChannels(TokenlessNetwork network, int nodeIndex, IWebHost server, bool initialRun = true)
+        {
+            return CreateCoreNode(network, nodeIndex, server, "tokenless", false, false, true, initialRun);
+        }
+
+        /// <summary>
+        /// This creates a "infra" node on the <see cref="TokenlessNetwork"/> which will start a system channel node internally.
+        /// </summary>
+        public CoreNode CreateInfraNode(TokenlessNetwork network, int nodeIndex, IWebHost server)
+        {
+            CoreNode node = CreateCoreNode(network, nodeIndex, server, "infra", true, false, true, true, this.lastSystemChannelNodePort);
+            this.lastSystemChannelNodePort += 1;
+            return node;
+        }
+
         public void CreateChannel(CoreNode parentNode, string channelName, int nodeIndex)
         {
             // Serialize the channel network and write the json to disk.
             ChannelNetwork channelNetwork = SystemChannelNetwork.CreateChannelNetwork(channelName, "channels", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
             channelNetwork.Id = nodeIndex;
-            channelNetwork.Organisation = CaTestHelper.TestOrganisation;
+            channelNetwork.AccessList = new AccessControlList
+            {
+                Organisations = new List<string>
+                {
+                    CaTestHelper.TestOrganisation
+                }
+            };
             channelNetwork.DefaultAPIPort += nodeIndex;
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
 
@@ -125,12 +184,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
             // Save the channel definition so that it can loaded on node start.
             IChannelRepository channelRepository = parentNode.FullNode.NodeService<IChannelRepository>();
-            channelRepository.SaveChannelDefinition(new ChannelDefinition() { Id = nodeIndex, Name = channelName, Organisation = CaTestHelper.TestOrganisation, NetworkJson = serializedJson });
-        }
-
-        public CoreNode CreateInfraNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client)
-        {
-            return CreateTokenlessNode(network, nodeIndex, authorityCertificate, client, "system", isInfraNode: true, willStartChannels: true);
+            channelRepository.SaveChannelDefinition(new ChannelDefinition() { Id = nodeIndex, Name = channelName, AccessListJson = channelNetwork.AccessList.ToJson(), NetworkJson = serializedJson });
         }
 
         private TokenlessKeyStoreManager InitializeNodeKeyStore(CoreNode node, Network network, NodeSettings settings)

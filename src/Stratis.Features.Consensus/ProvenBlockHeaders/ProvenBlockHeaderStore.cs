@@ -5,9 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Features.Consensus.CoinViews;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
+using Stratis.Features.Consensus.CoinViews;
 using TracerAttributes;
 
 namespace Stratis.Features.Consensus.ProvenBlockHeaders

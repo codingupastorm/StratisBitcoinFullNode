@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 using CertificateAuthority;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
@@ -240,7 +240,11 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 // Copy the parent node's key store files to the channel node's root.
                 CopyKeyStoreToChannelRoot(channelRootFolder);
 
-                ChannelNodeProcess channelNode = await StartTheProcessAsync(channelRootFolder, "-bootstrap=1", $"-channelname={SystemChannelName}", "-issystemchannelnode=true");
+                var args = new string[] { "-bootstrap=1", $"-channelname={SystemChannelName}", "-issystemchannelnode=true" };
+                if (this.channelSettings.SystemChannelApiPort != 0)
+                    args = args.Concat(new string[] { $"-apiport={this.channelSettings.SystemChannelApiPort}" }).ToArray();
+
+                ChannelNodeProcess channelNode = await StartTheProcessAsync(channelRootFolder, args);
                 if (channelNode.Process.HasExited)
                     throw new ChannelServiceException($"Failed to start system channel node as the process exited early.");
 

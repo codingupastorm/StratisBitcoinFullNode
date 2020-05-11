@@ -6,9 +6,9 @@ using Moq;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Stratis.Bitcoin.Consensus;
-using Stratis.Features.Consensus.Rules.ProvenHeaderRules;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
+using Stratis.Features.Consensus.Rules.ProvenHeaderRules;
 using Xunit;
 using uint256 = NBitcoin.uint256;
 

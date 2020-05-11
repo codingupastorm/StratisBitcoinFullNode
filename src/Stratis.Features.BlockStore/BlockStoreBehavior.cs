@@ -13,7 +13,7 @@ using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Primitives;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 using TracerAttributes;
 
 namespace Stratis.Features.BlockStore

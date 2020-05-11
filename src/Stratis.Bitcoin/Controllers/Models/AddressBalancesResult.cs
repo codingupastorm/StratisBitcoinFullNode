@@ -2,7 +2,7 @@
 using LiteDB;
 using NBitcoin;
 using Newtonsoft.Json;
-using Stratis.Bitcoin.Utilities.JsonConverters;
+using Stratis.Core.Utilities.JsonConverters;
 
 namespace Stratis.Bitcoin.Controllers.Models
 {

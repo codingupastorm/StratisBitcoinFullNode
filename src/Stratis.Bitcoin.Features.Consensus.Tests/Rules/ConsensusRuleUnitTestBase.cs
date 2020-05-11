@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
 using NBitcoin.Crypto;
-using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Base.Deployments;
 using Stratis.Bitcoin.BlockPulling;
@@ -12,11 +11,12 @@ using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Features.Consensus.Interfaces;
-using Stratis.Features.Consensus.ProvenBlockHeaders;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
+using Stratis.Features.Consensus.Interfaces;
+using Stratis.Features.Consensus.ProvenBlockHeaders;
 
 namespace Stratis.Features.Consensus.Tests.Rules
 {

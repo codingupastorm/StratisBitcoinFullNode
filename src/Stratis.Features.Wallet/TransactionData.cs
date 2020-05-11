@@ -1,7 +1,7 @@
 ﻿using System;
 using NBitcoin;
 using Newtonsoft.Json;
-using Stratis.Bitcoin.Utilities.JsonConverters;
+using Stratis.Core.Utilities.JsonConverters;
 using TracerAttributes;
 
 namespace Stratis.Features.Wallet

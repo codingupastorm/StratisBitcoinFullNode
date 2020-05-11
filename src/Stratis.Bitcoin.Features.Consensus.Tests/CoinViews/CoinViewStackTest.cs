@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Utilities;
 using Xunit;
 
 namespace Stratis.Features.Consensus.Tests.CoinViews

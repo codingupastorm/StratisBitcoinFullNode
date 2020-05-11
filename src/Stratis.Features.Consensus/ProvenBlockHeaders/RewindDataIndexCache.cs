@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
 using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Features.Consensus.ProvenBlockHeaders
 {
@@ -80,7 +80,7 @@ namespace Stratis.Features.Consensus.ProvenBlockHeaders
             {
                 for (int outputIndex = 0; outputIndex < unspent.Outputs.Length; outputIndex++)
                 {
-                    var key = new OutPoint(unspent.TransactionId,outputIndex);
+                    var key = new OutPoint(unspent.TransactionId, outputIndex);
                     this.items[key] = rewindHeight;
                 }
             }

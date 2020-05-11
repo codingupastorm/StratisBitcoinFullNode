@@ -4,7 +4,7 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 using Stratis.SmartContracts.Core.Receipts;
 using Xunit;
 

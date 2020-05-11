@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.AsyncWork;
+using Stratis.Core.AsyncWork;
 
 namespace Stratis.Bitcoin.P2P.Peer
 {

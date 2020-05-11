@@ -11,11 +11,11 @@ using Org.BouncyCastle.Crypto.Tls;
 using Org.BouncyCastle.Security;
 using Org.BouncyCastle.Utilities;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Features.PoA;
 
 namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
@@ -39,7 +39,7 @@ namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
         private IClientCertificateValidator clientCertificateValidator;
 
         public TlsEnabledNetworkPeerConnection(Network network, INetworkPeer peer, TcpClient client, int clientId, ProcessMessageAsync<IncomingMessage> processMessageAsync,
-            IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, PayloadProvider payloadProvider, IAsyncProvider asyncProvider, ICertificatesManager certificateManager, 
+            IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, PayloadProvider payloadProvider, IAsyncProvider asyncProvider, ICertificatesManager certificateManager,
             bool isServer, IClientCertificateValidator clientCertificateValidator)
             : base(network, peer, client, clientId, processMessageAsync, dateTimeProvider, loggerFactory, payloadProvider, asyncProvider)
         {

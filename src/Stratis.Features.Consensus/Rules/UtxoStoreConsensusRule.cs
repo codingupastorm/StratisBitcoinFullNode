@@ -1,6 +1,6 @@
 ﻿using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Features.Consensus.Rules
 {

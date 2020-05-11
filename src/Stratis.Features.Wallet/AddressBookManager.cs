@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Utilities;
 using Stratis.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Utilities;
 
 namespace Stratis.Features.Wallet
 {

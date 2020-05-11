@@ -1,6 +1,6 @@
 ﻿using System;
 using NBitcoin;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 using TracerAttributes;
 
 namespace Stratis.Feature.PoA.Tokenless.KeyStore

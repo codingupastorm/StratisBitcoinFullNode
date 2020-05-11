@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.AsyncWork;
 using Stratis.Bitcoin.Connection;
+using Stratis.Bitcoin.Consensus;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Features.SignalR.Events;
 using Stratis.Features.Wallet;
 using Stratis.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Utilities;
 using Stratis.Features.Wallet.Models;
-using Stratis.Bitcoin.Consensus;
 
 namespace Stratis.Features.SignalR.Broadcasters
 {
@@ -59,7 +59,7 @@ namespace Stratis.Features.SignalR.Broadcasters
 
                         var accountBalanceModel = new AccountBalanceModel
                         {
-                            CoinType = (CoinType) wallet.Network.Consensus.CoinType,
+                            CoinType = (CoinType)wallet.Network.Consensus.CoinType,
                             Name = account.Name,
                             HdPath = account.HdPath,
                             AmountConfirmed = balance.AmountConfirmed,

@@ -7,7 +7,7 @@ using DBreeze.Utils;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStore;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin.KeyValueStoreDBreeze
 {

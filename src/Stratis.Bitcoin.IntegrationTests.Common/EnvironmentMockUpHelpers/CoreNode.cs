@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.AsyncWork;
+using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.Configuration.Logging;
 using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
@@ -24,7 +24,8 @@ using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
 using Stratis.Features.Wallet;
 using Stratis.Features.Wallet.Interfaces;
 
@@ -37,6 +38,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         internal readonly NodeRunner runner;
 
         public int ApiPort => int.Parse(this.ConfigParameters["apiport"]);
+        public int SystemChannelApiPort => int.Parse(this.ConfigParameters["systemchannelapiport"]);
 
         public BitcoinSecret MinerSecret { get; private set; }
 
@@ -79,6 +81,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         List<Action> startActions = new List<Action>();
         List<Action> runActions = new List<Action>();
 
+        public X509Certificate AuthorityCertificate { get; set; }
         public Key ClientCertificatePrivateKey { get; set; }
         public Key TransactionSigningPrivateKey { get; set; }
 
@@ -182,25 +185,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         {
             this.builderWithDummyWallet = true;
             this.builderWithWallet = false;
-            return this;
-        }
-
-        /// <summary>
-        /// Adds a wallet to this node with defaulted parameters.
-        /// </summary>
-        /// <param name="walletPassword">Wallet password defaulted to "password".</param>
-        /// <param name="walletName">Wallet name defaulted to "mywallet".</param>
-        /// <param name="walletPassphrase">Wallet passphrase defaulted to "passphrase".</param>
-        /// <param name="walletMnemonic">Optional wallet mnemonic.</param>
-        /// <returns>This node.</returns>
-        public CoreNode WithWallet(string walletPassword = "password", string walletName = "mywallet", string walletPassphrase = "passphrase", string walletMnemonic = null)
-        {
-            this.builderWithDummyWallet = false;
-            this.builderWithWallet = true;
-            this.builderWalletName = walletName;
-            this.builderWalletPassphrase = walletPassphrase;
-            this.builderWalletPassword = walletPassword;
-            this.builderWalletMnemonic = walletMnemonic;
             return this;
         }
 

@@ -2,8 +2,8 @@
 using Stratis.Bitcoin.EventBus;
 using Stratis.Bitcoin.EventBus.CoreEvents;
 using Stratis.Bitcoin.Signals;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Utilities.Extensions;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.Extensions;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 {
@@ -26,7 +26,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         public GenerateCoinsFastDateTimeProvider(ISignals signals)
         {
-            this.blockConnectedSubscription =  signals.Subscribe<BlockConnected>(this.OnBlockConnected);
+            this.blockConnectedSubscription = signals.Subscribe<BlockConnected>(this.OnBlockConnected);
         }
 
         public long GetTime()

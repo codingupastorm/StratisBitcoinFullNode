@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
 using Flurl;
 using Flurl.Http;
@@ -15,7 +14,7 @@ using Stratis.Bitcoin;
 using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Feature.PoA.Tokenless;
+using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.Networks;
@@ -45,12 +44,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var client = TokenlessTestHelper.GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
-                // Get Authority Certificate.
-                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
-                CaClient client1 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
-
                 // Create and start the main "infra" tokenless node which will internally start the "system channel node".
-                CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, ac, client1);
+                CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, server);
                 infraNode.Start();
 
                 var channelService = infraNode.FullNode.NodeService<IChannelService>();
@@ -89,12 +84,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var client = TokenlessTestHelper.GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
 
-                // Get Authority Certificate.
-                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
-                CaClient client1 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
-
                 // Create and start the parent node.
-                CoreNode parentNode = nodeBuilder.CreateTokenlessNode(tokenlessNetwork, 0, ac, client1, willStartChannels: true);
+                CoreNode parentNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server);
                 parentNode.Start();
 
                 // Create 5 channels for the identity to be apart of.
@@ -143,12 +134,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var client = TokenlessTestHelper.GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
 
-                // Get Authority Certificate.
-                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
-
                 // Create and start the parent node.
-                CaClient client1 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
-                CoreNode parentNode = nodeBuilder.CreateTokenlessNode(tokenlessNetwork, 0, ac, client1, willStartChannels: true);
+                CoreNode parentNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server);
                 parentNode.Start();
 
                 // Create a channel for the identity to be apart of.
@@ -156,8 +143,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 parentNode.Restart();
 
                 // Create another node.
-                CaClient client2 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
-                CoreNode otherNode = nodeBuilder.CreateTokenlessNode(tokenlessNetwork, 1, ac, client2, willStartChannels: true);
+                CoreNode otherNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 1, server);
                 otherNode.Start();
 
                 // Get the marketing network's JSON.
@@ -197,71 +183,67 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var client = TokenlessTestHelper.GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
-                // Get Authority Certificate.
-                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
-                CaClient client1 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
-
                 // Create and start the main "infra" tokenless node which will internally start the "system channel node".
-                CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, ac, client1);
-                infraNode.Start();
+                CoreNode infraNode1 = nodeBuilder.CreateInfraNode(network, 0, server);
+                infraNode1.Start();
 
-                var channelService = infraNode.FullNode.NodeService<IChannelService>();
+                var channelService = infraNode1.FullNode.NodeService<IChannelService>();
                 Assert.True(channelService.StartedChannelNodes.Count == 1);
 
-                var org = infraNode.ClientCertificate.ToCertificate().GetOrganisation();
+                // Create second system node.
+                CoreNode infraNode2 = nodeBuilder.CreateInfraNode(network, 1, server);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(new List<X509Certificate>() { infraNode2.ClientCertificate.ToCertificate() }, Path.Combine(infraNode2.DataFolder, network.RootFolderName, network.Name));
+                infraNode2.Start();
+
+                // Connect the existing node to it.
+                await $"http://localhost:{infraNode1.SystemChannelApiPort}/api"
+                    .AppendPathSegment("connectionmanager/addnode")
+                    .SetQueryParam("endpoint", $"127.0.0.1:{infraNode2.ProtocolPort}")
+                    .SetQueryParam("command", "add").GetAsync();
+
+                // Wait until the first system channel node's tip has advanced beyond bootstrap mode.
+                // This proves that the system channel nodes connected.
+                TestBase.WaitLoop(() =>
+                {
+                    try
+                    {
+                        var nodeStatus = $"http://localhost:{infraNode1.SystemChannelApiPort}/api".AppendPathSegment("node/status").GetJsonAsync<NodeStatusModel>().GetAwaiter().GetResult();
+                        return nodeStatus.ConsensusHeight == 2;
+                    }
+                    catch (Exception) { }
+
+                    return false;
+                }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(2).TotalMilliseconds, waitTimeSeconds: 120);
 
                 // Call the create channel API method on the system channel node.
                 var channelCreationRequest = new ChannelCreationRequest()
                 {
                     Name = "Sales",
-                    Organisation = CaTestHelper.TestOrganisation
+                    AccessList = new AccessControlList
+                    {
+                        Organisations = new List<string>
+                        {
+                            CaTestHelper.TestOrganisation
+                        }
+                    }
                 };
 
-                var response = await $"http://localhost:{channelService.GetDefaultAPIPort(ChannelService.SystemChannelId)}/api".AppendPathSegment("channels/create").PostJsonAsync(channelCreationRequest);
+                var response = await $"http://localhost:{infraNode1.SystemChannelApiPort}/api".AppendPathSegment("channels/create").PostJsonAsync(channelCreationRequest);
                 Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-                // Wait until the transaction has arrived in the system channel node's mempool.
+                // Wait until the transaction has arrived in the first system channel node's mempool.
                 TestBase.WaitLoop(() =>
                 {
-                    var mempoolResponse = $"http://localhost:{channelService.GetDefaultAPIPort(ChannelService.SystemChannelId)}/api".AppendPathSegment("mempool/getrawmempool").GetJsonAsync<List<string>>().GetAwaiter().GetResult();
+                    var mempoolResponse = $"http://localhost:{infraNode1.SystemChannelApiPort}/api".AppendPathSegment("mempool/getrawmempool").GetJsonAsync<List<string>>().GetAwaiter().GetResult();
                     return mempoolResponse.Count == 1;
                 }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(2).TotalMilliseconds);
-
-                // Create second system node.
-                CaClient client2 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 1, ac, client2, isSystemNode: true);
-                var certificates = new List<X509Certificate>() { node2.ClientCertificate.ToCertificate() };
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, network.RootFolderName, network.Name));
-                node2.Start();
-
-                // Connect the existing node to it.
-                var response2 = $"http://localhost:{channelService.GetDefaultAPIPort(ChannelService.SystemChannelId)}/api"
-                    .AppendPathSegment("connectionmanager/addnode")
-                    .SetQueryParam("endpoint", $"127.0.0.1:{node2.ProtocolPort}")
-                    .SetQueryParam("command", "add")
-                    .GetAsync().GetAwaiter().GetResult();
-
-                // Wait until the block has been mined on the system channel node.
-                TestBase.WaitLoop(() =>
-                {
-                    try
-                    {
-                        var nodeStatus = $"http://localhost:{channelService.GetDefaultAPIPort(ChannelService.SystemChannelId)}/api".AppendPathSegment("node/status").GetJsonAsync<NodeStatusModel>().GetAwaiter().GetResult();
-                        return nodeStatus.ConsensusHeight == 2;
-                    }
-                    catch (Exception)
-                    {
-                    }
-
-                    return false;
-                }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(2).TotalMilliseconds, waitTimeSeconds: 120);
 
                 // Wait until the "sales" channel has been created and the node is running.
                 TestBase.WaitLoop(() =>
                 {
                     try
                     {
-                        dynamic channelNetwork = $"http://localhost:{channelService.GetDefaultAPIPort(ChannelService.SystemChannelId)}/api"
+                        dynamic channelNetwork = $"http://localhost:{infraNode1.SystemChannelApiPort}/api"
                             .AppendPathSegment("channels/networkjson")
                             .SetQueryParam("cn", "Sales")
                             .GetJsonAsync()

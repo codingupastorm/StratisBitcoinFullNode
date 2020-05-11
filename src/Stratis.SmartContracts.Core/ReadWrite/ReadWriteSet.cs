@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using HashLib;
 using NBitcoin;
@@ -45,8 +46,25 @@ namespace Stratis.SmartContracts.Core.ReadWrite
             };
         }
 
-        // TODO: Don't be responsible for own serialization.
+        public uint160 ContractAddress
+        {
+            get
+            {
+                if (this.Writes?.Any() ?? false)
+                {
+                    return this.Writes.First().ContractAddress;
+                }
 
+                if (this.Reads?.Any() ?? false)
+                {
+                    return this.Reads.First().ContractAddress;
+                }
+
+                return null;
+            }
+        }
+
+        // TODO: Don't be responsible for own serialization.
         public static ReadWriteSet FromJson(string json)
         {
             return JsonConvert.DeserializeObject<ReadWriteSet>(json);
@@ -69,7 +87,7 @@ namespace Stratis.SmartContracts.Core.ReadWrite
 
         public uint256 GetHash()
         {
-            return new uint256(HashFactory.Crypto.SHA3.CreateKeccak256().ComputeBytes(this.ToJsonEncodedBytes()).GetBytes());
+            return new uint256(HashHelper.Keccak256(this.ToJsonEncodedBytes()));
         }
     }
 

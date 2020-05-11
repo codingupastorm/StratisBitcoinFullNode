@@ -7,7 +7,7 @@ using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using Newtonsoft.Json.Linq;
-using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Core.Utilities.JsonErrors;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.Features.SmartContracts.Models;
 using Stratis.SmartContracts.CLR;

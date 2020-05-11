@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Features.Consensus
 {

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections;
+using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Features.MemoryPool;
 using Xunit;

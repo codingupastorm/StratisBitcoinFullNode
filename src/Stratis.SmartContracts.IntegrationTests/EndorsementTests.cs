@@ -4,7 +4,6 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -41,7 +40,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task EndorseCallTransaction()
+        public async Task EndorseCallTransactionAsync()
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
             IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder(testRootFolder);
@@ -55,14 +54,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var client = TokenlessTestHelper.GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
-                // Get Authority Certificate.
-                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
-
-                CaClient client1 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
-                CaClient client2 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
-
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server);
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
 
@@ -116,7 +109,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task CallTransaction_MultipleSignatures()
+        public async Task CallTransaction_MultipleSignaturesAsync()
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
             IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder(testRootFolder);
@@ -130,21 +123,14 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var client = TokenlessTestHelper.GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
-                // Get Authority Certificate.
-                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
-
-                CaClient client1 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
-                CaClient client2 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
-                CaClient client3 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
-
                 // Proposer
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
 
                 // Endorser 1
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server);
 
                 // Endorser 2
-                CoreNode node3 = nodeBuilder.CreateTokenlessNode(this.network, 2, ac, client3);
+                CoreNode node3 = nodeBuilder.CreateTokenlessNode(this.network, 2, server);
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate(), node3.ClientCertificate.ToCertificate() };
 
@@ -202,7 +188,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task PrivateDataTransaction()
+        public async Task PrivateDataTransactionAsync()
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
             IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder(testRootFolder);
@@ -216,23 +202,17 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var client = TokenlessTestHelper.GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
-                // Get Authority Certificate.
-                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
-
-                CaClient client1 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
-                CaClient client2 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
-                CaClient client3 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server, organisation: "Organisation2");
-
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server);
 
                 // From a different organisation.
-                CoreNode node3 = nodeBuilder.CreateTokenlessNode(this.network, 2, ac, client3);
+                CoreNode node3 = nodeBuilder.CreateTokenlessNode(this.network, 2, server, organisation: "Organisation2");
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate(), node3.ClientCertificate.ToCertificate() };
 
                 TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
                 TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node3.DataFolder, this.network.RootFolderName, this.network.Name));
 
                 EndorsementPolicy policy = new EndorsementPolicy
                 {
@@ -307,7 +287,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public async Task InvalidTransactionNotIncludedInBlock()
+        public async Task InvalidTransactionNotIncludedInBlockAsync()
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
             IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder(testRootFolder);
@@ -321,14 +301,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var client = TokenlessTestHelper.GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
-                // Get Authority Certificate.
-                X509Certificate ac = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
-
-                CaClient client1 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
-                CaClient client2 = TokenlessTestHelper.GetClientAndCreateAdminAccount(server);
-
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, ac, client1);
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, ac, client2);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server);
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
 

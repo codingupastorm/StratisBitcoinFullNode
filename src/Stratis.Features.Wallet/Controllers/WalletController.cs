@@ -10,14 +10,14 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.Controllers.Models;
+using Stratis.Bitcoin.Models;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.JsonErrors;
+using Stratis.Core.Utilities.ModelStateErrors;
 using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.Features.Wallet.Helpers;
 using Stratis.Features.Wallet.Interfaces;
 using Stratis.Features.Wallet.Models;
-using Stratis.Bitcoin.Models;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Utilities.JsonErrors;
-using Stratis.Bitcoin.Utilities.ModelStateErrors;
 
 namespace Stratis.Features.Wallet.Controllers
 {

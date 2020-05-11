@@ -1,9 +1,9 @@
 ﻿using System.IO;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Utilities;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStoreLevelDB;
+using Stratis.Core.Utilities;
 
 namespace Stratis.SmartContracts.Core.Receipts
 {

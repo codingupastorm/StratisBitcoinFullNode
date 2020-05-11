@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
 using Newtonsoft.Json;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.JsonConverters;
 using Stratis.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Utilities.JsonConverters;
 using TracerAttributes;
 
 namespace Stratis.Features.Wallet
@@ -25,7 +25,7 @@ namespace Stratis.Features.Wallet
         public static Func<HdAccount, bool> NormalAccounts = a => a.Index < SpecialPurposeAccountIndexesStart;
 
         [JsonIgnore]
-        public IWalletRepository WalletRepository { get; private set;}
+        public IWalletRepository WalletRepository { get; private set; }
 
         [JsonIgnore]
         internal IWalletManager WalletManager { get; set; }
@@ -50,7 +50,8 @@ namespace Stratis.Features.Wallet
             : this()
         {
             this.Network = network;
-            this.AccountsRoot.Add(new AccountRoot(this) {
+            this.AccountsRoot.Add(new AccountRoot(this)
+            {
                 CoinType = (CoinType)network.Consensus.CoinType
             });
         }

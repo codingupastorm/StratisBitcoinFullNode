@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Linq;
 
-namespace Stratis.Bitcoin.Utilities.Extensions
+namespace Stratis.Core.Utilities.Extensions
 {
     /// <summary>
     /// Extension methods for command line arguments.

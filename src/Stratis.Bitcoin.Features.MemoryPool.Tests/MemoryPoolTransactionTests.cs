@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Features.MemoryPool.Fee;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
+using Stratis.Features.MemoryPool.Fee;
 using Xunit;
 
 namespace Stratis.Features.MemoryPool.Tests

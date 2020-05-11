@@ -8,10 +8,10 @@ using Flurl;
 using Flurl.Http;
 using NBitcoin;
 using Newtonsoft.Json;
-using Stratis.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Networks;
-using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Core.Utilities.JsonErrors;
+using Stratis.Features.Wallet.Models;
 using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests.Wallet

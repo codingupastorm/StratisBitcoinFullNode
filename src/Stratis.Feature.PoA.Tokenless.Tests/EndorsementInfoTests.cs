@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using CertificateAuthority;
 using Moq;
 using NBitcoin;
-using NBitcoin.Crypto;
 using Org.BouncyCastle.X509;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.Networks;
@@ -20,15 +18,14 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         [Fact]
         public void New_Endorsement_Has_State_Proposed()
         {
-            Assert.Equal(EndorsementState.Proposed, new EndorsementInfo(new EndorsementPolicy(), Mock.Of<IOrganisationLookup>(), Mock.Of<ICertificatePermissionsChecker>(), new TokenlessNetwork()).State);
+            Assert.Equal(EndorsementState.Proposed, new EndorsementInfo(new EndorsementPolicy(), Mock.Of<IOrganisationLookup>(), Mock.Of<IEndorsementSignatureValidator>()).State);
         }
 
         [Fact]
         public void Endorsement_Gets_Address_Org_From_Certificate()
         {
             var organisationLookup = new Mock<IOrganisationLookup>();
-            var permissionsChecker = new Mock<ICertificatePermissionsChecker>();
-            var network = new TokenlessNetwork();
+            var endorsementValidator = new Mock<IEndorsementSignatureValidator>();
 
             var certParser = new X509CertificateParser();
             X509Certificate certificate = certParser.ReadCertificate(File.ReadAllBytes("Certificates/cert.crt"));
@@ -41,9 +38,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 .Setup(l => l.FromCertificate(It.IsAny<X509Certificate>()))
                 .Returns((organisation, senderAddress));
 
-            permissionsChecker
-                .Setup(p => p.CheckSignature(It.IsAny<string>(), It.IsAny<ECDSASignature>(),
-                    It.IsAny<PubKey>(), It.IsAny<uint256>()))
+            endorsementValidator.Setup(e => e.Validate(It.IsAny<Endorsement.Endorsement>(), It.IsAny<byte[]>()))
                 .Returns(true);
 
             // Basic policy that only requires 1 sig from organisation.
@@ -56,7 +51,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var key = new Key();
             var signature = key.Sign(new uint256()); // Some random sig
 
-            var endorsement = new EndorsementInfo(basicPolicy, organisationLookup.Object, permissionsChecker.Object, network);
+            var endorsement = new EndorsementInfo(basicPolicy, organisationLookup.Object, endorsementValidator.Object);
             var proposalResponse = new SignedProposalResponse
             {
                 ProposalResponse = new ProposalResponse
@@ -74,8 +69,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             Assert.True(endorsement.Validate());
             Assert.Equal(EndorsementState.Approved, endorsement.State);
 
-            permissionsChecker.Verify(p =>
-                p.CheckSignature(CaCertificatesManager.GetThumbprint(certificate), It.Is<ECDSASignature>(x => x.ToDER().SequenceEqual(signature.ToDER())), key.PubKey, proposalResponse.ProposalResponse.GetHash()));
+            endorsementValidator.Verify(p => p.Validate(proposalResponse.Endorsement, It.Is<byte[]>(v => proposalResponse.ProposalResponse.ReadWriteSet.ToJsonEncodedBytes().SequenceEqual(v))));
+
             organisationLookup.Verify(l => l.FromCertificate(certificate), Times.Once);
         }
 
@@ -83,8 +78,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public void Endorsement_Gets_Address_Unapproved_Org_From_Transaction()
         {
             var organisationLookup = new Mock<IOrganisationLookup>();
-            var permissionsChecker = new Mock<ICertificatePermissionsChecker>();
-            var network = new TokenlessNetwork();
+            var endorsementValidator = new Mock<IEndorsementSignatureValidator>();
 
             var certParser = new X509CertificateParser();
             X509Certificate certificate = certParser.ReadCertificate(File.ReadAllBytes("Certificates/cert.crt"));
@@ -98,9 +92,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 .Setup(l => l.FromCertificate(It.IsAny<X509Certificate>()))
                 .Returns((unapprovedOrganisation, senderAddress));
 
-            permissionsChecker
-                .Setup(p => p.CheckSignature(It.IsAny<string>(), It.IsAny<ECDSASignature>(),
-                    It.IsAny<PubKey>(), It.IsAny<uint256>()))
+            endorsementValidator.Setup(e => e.Validate(It.IsAny<Endorsement.Endorsement>(), It.IsAny<byte[]>()))
                 .Returns(true);
 
             // Basic policy that only requires 1 sig from organisation.
@@ -113,7 +105,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var key = new Key();
             var signature = key.Sign(new uint256()); // Some random sig
 
-            var endorsement = new EndorsementInfo(basicPolicy, organisationLookup.Object, permissionsChecker.Object, network);
+            var endorsement = new EndorsementInfo(basicPolicy, organisationLookup.Object, endorsementValidator.Object);
             var proposalResponse = new SignedProposalResponse
             {
                 ProposalResponse = new ProposalResponse
@@ -133,8 +125,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             Assert.False(endorsement.Validate());
             Assert.Equal(EndorsementState.Proposed, endorsement.State);
 
-            permissionsChecker.Verify(p =>
-                p.CheckSignature(CaCertificatesManager.GetThumbprint(certificate), It.Is<ECDSASignature>(x => x.ToDER().SequenceEqual(signature.ToDER())), key.PubKey, proposalResponse.ProposalResponse.GetHash()));
+            endorsementValidator.Verify(p => p.Validate(proposalResponse.Endorsement, proposalResponse.ProposalResponse.ToBytes()), Times.Never);
             organisationLookup.Verify(l => l.FromCertificate(certificate), Times.Once);
         }
 

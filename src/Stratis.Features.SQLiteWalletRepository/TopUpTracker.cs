@@ -1,8 +1,8 @@
 ﻿using NBitcoin;
-using Stratis.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 using Stratis.Features.SQLiteWalletRepository.External;
 using Stratis.Features.SQLiteWalletRepository.Tables;
+using Stratis.Features.Wallet.Interfaces;
 
 namespace Stratis.Features.SQLiteWalletRepository
 {
@@ -11,7 +11,7 @@ namespace Stratis.Features.SQLiteWalletRepository
     /// </summary>
     internal class TopUpTracker : ITopUpTracker
     {
-        public int WalletId {get; private set; }
+        public int WalletId { get; private set; }
         public int AccountIndex { get; private set; }
         public int AddressType { get; private set; }
         public int AddressCount { get; internal set; }

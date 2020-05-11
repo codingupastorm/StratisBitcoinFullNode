@@ -462,7 +462,7 @@ namespace Stratis.Bitcoin.IntegrationTests
                 var network = new StratisRegTest();
 
                 // MinerA requires a physical wallet to stake with.
-                var minerA = builder.CreateStratisPosNode(network, "minerA").WithWallet().Start();
+                var minerA = builder.CreateStratisPosNode(network, "minerA").WithDummyWallet().Start();
                 var minerB = builder.CreateStratisPosNode(network, "minerB").Start();
                 var minerC = builder.CreateStratisPosNode(network, "minerC").Start();
 

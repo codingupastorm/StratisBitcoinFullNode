@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Features.MemoryPool
 {
@@ -92,7 +92,7 @@ namespace Stratis.Features.MemoryPool
             builder.AppendLine($"-mempoolreplacement=<0 or 1>  Enable transaction replacement in the memory pool.");
             builder.AppendLine($"-maxorphantx=<kB>         Maximum number of orphan transactions kept in memory. Defaults to { MempoolOrphans.DefaultMaxOrphanTransactions }.");
             builder.AppendLine($"-whitelistrelay=<0 or 1>  Enable to accept relayed transactions received from whitelisted peers even when not relaying transactions. Defaults to { DefaultWhiteListRelay }.");
-            builder.AppendLine($"-acceptnonstdtxn=<0 or 1> Accept non-standard transactions. Default {(!(network.IsTest())?1:0)}.");
+            builder.AppendLine($"-acceptnonstdtxn=<0 or 1> Accept non-standard transactions. Default {(!(network.IsTest()) ? 1 : 0)}.");
 
             NodeSettings.Default(network).Logger.LogInformation(builder.ToString());
         }
@@ -109,8 +109,8 @@ namespace Stratis.Features.MemoryPool
             builder.AppendLine($"#maxmempool={ MempoolValidator.DefaultMaxMempoolSize }");
             builder.AppendLine($"#Maximum number of hours to keep transactions in the mempool. Defaults to { MempoolValidator.DefaultMempoolExpiry }.");
             builder.AppendLine($"#mempoolexpiry={ MempoolValidator.DefaultMempoolExpiry }");
-            builder.AppendLine($"#Enable high priority for relaying free or low-fee transactions. Defaults to { (MempoolValidator.DefaultRelaypriority?1:0) }.");
-            builder.AppendLine($"#relaypriority={ (MempoolValidator.DefaultRelaypriority?1:0) }");
+            builder.AppendLine($"#Enable high priority for relaying free or low-fee transactions. Defaults to { (MempoolValidator.DefaultRelaypriority ? 1 : 0) }.");
+            builder.AppendLine($"#relaypriority={ (MempoolValidator.DefaultRelaypriority ? 1 : 0) }");
             builder.AppendLine($"#Maximum number of ancestors of a transaction in mempool (including itself). Defaults to { MempoolValidator.DefaultAncestorLimit }.");
             builder.AppendLine($"#limitancestorcount={ MempoolValidator.DefaultAncestorLimit }");
             builder.AppendLine($"#Maximal size in kB of ancestors of a transaction in mempool (including itself). Defaults to { MempoolValidator.DefaultAncestorSizeLimit }.");
@@ -123,10 +123,10 @@ namespace Stratis.Features.MemoryPool
             builder.AppendLine($"#mempoolreplacement=0");
             builder.AppendLine($"#Maximum number of orphan transactions kept in memory. Defaults to { MempoolOrphans.DefaultMaxOrphanTransactions }.");
             builder.AppendLine($"#maxorphantx={ MempoolOrphans.DefaultMaxOrphanTransactions }");
-            builder.AppendLine($"#Enable to accept relayed transactions received from whitelisted peers even when not relaying transactions. Defaults to { (DefaultWhiteListRelay?1:0) }.");
-            builder.AppendLine($"#whitelistrelay={ (DefaultWhiteListRelay?1:0) }");
-            builder.AppendLine($"#Accept non-standard transactions. Default {(!(network.IsTest())?1:0)}.");
-            builder.AppendLine($"#acceptnonstdtxn={(!(network.IsTest())?1:0)}");
+            builder.AppendLine($"#Enable to accept relayed transactions received from whitelisted peers even when not relaying transactions. Defaults to { (DefaultWhiteListRelay ? 1 : 0) }.");
+            builder.AppendLine($"#whitelistrelay={ (DefaultWhiteListRelay ? 1 : 0) }");
+            builder.AppendLine($"#Accept non-standard transactions. Default {(!(network.IsTest()) ? 1 : 0)}.");
+            builder.AppendLine($"#acceptnonstdtxn={(!(network.IsTest()) ? 1 : 0)}");
         }
     }
 }

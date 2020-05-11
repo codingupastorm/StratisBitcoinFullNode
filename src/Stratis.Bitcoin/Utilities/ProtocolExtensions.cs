@@ -2,7 +2,7 @@
 using System.Linq;
 using Stratis.Bitcoin.P2P.Peer;
 
-namespace Stratis.Bitcoin.Utilities
+namespace Stratis.Core.Utilities
 {
     /// <summary>
     /// Extension methods related to the network protocol.

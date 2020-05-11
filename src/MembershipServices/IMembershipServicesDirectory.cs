@@ -13,6 +13,8 @@ namespace MembershipServices
 
         X509Certificate GetCertificateForTransactionSigningPubKeyHash(byte[] transactionSigningPubKeyHash);
 
+        void RevokeCertificate(string thumbprint);
+
         bool IsCertificateRevoked(string thumbprint);
 
         /// <summary>
