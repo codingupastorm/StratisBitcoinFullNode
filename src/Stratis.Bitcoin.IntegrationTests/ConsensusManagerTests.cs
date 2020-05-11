@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using Stratis.Core.Base;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.IntegrationTests.Common;

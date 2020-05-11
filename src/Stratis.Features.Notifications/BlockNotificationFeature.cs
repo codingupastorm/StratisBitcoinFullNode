@@ -6,7 +6,7 @@ using NBitcoin;
 using Stratis.Core.Base;
 using Stratis.Core.Builder;
 using Stratis.Core.Builder.Feature;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Features.Notifications.Controllers;
 using Stratis.Features.Notifications.Interfaces;

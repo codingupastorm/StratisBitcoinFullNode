@@ -82,7 +82,7 @@ namespace Stratis.Core.Configuration.Logging
             // { "libevent", "" },
             // { "lock", "" },
             // { "mempoolrej", "" },
-            { "net", $"{nameof(Stratis)}.{nameof(Bitcoin)}.{nameof(Bitcoin.Connection)}.*" },
+            { "net", $"{nameof(Stratis)}.{nameof(Bitcoin)}.{nameof(Core.Connection)}.*" },
             // { "proxy", "" },
             // { "prune", "" },
             // { "rand", "" },

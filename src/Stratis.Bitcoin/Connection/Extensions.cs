@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Stratis.Bitcoin.Connection
+namespace Stratis.Core.Connection
 {
     public static class Extensions
     {

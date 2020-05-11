@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Settings;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Connection;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;

@@ -2,12 +2,12 @@
 using System.Linq;
 using System.Net;
 using Microsoft.Extensions.Logging;
-using Stratis.Core.Configuration.Settings;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Connection
+namespace Stratis.Core.Connection
 {
     /// <summary>
     /// Contract for network peer banning provider.

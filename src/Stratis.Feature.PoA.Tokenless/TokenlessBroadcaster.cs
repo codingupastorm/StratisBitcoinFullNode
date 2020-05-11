@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using MembershipServices;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Connection;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;

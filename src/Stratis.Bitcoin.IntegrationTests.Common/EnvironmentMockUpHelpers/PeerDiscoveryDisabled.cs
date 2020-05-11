@@ -1,4 +1,4 @@
-﻿using Stratis.Bitcoin.Connection;
+﻿using Stratis.Core.Connection;
 using Stratis.Bitcoin.P2P;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers

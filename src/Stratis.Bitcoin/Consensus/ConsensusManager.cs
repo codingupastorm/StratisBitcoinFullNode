@@ -9,7 +9,7 @@ using Stratis.Core.Base;
 using Stratis.Core.BlockPulling;
 using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Configuration.Settings;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Connection;
 using Stratis.Bitcoin.Consensus.PerformanceCounters.ConsensusManager;
 using Stratis.Bitcoin.Consensus.ValidationResults;
 using Stratis.Bitcoin.Consensus.Validators;

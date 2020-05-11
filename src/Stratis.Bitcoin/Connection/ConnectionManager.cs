@@ -8,19 +8,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Core.Configuration;
-using Stratis.Core.Configuration.Logging;
-using Stratis.Core.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Logging;
+using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 
-namespace Stratis.Bitcoin.Connection
+namespace Stratis.Core.Connection
 {
     public sealed class ConnectionManager : IConnectionManager
     {

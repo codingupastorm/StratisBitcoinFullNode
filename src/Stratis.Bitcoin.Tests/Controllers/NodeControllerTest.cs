@@ -10,7 +10,7 @@ using NBitcoin;
 using NBitcoin.DataEncoders;
 using Stratis.Core.Base;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Connection;
 using Stratis.Bitcoin.Controllers;
 using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.Interfaces;

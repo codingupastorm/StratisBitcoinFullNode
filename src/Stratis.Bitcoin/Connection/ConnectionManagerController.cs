@@ -10,7 +10,7 @@ using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 using Stratis.Core.Utilities.JsonErrors;
 
-namespace Stratis.Bitcoin.Connection
+namespace Stratis.Core.Connection
 {
     /// <summary>
     /// A <see cref="FeatureController"/> that implements API and RPC methods for the connection manager.
