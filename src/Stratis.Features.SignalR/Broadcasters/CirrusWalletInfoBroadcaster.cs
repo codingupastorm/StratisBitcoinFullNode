@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;

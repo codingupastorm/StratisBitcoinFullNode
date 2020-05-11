@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Newtonsoft.Json;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Connection;
 using Stratis.Features.SmartContracts.Interfaces;
 using Stratis.Features.SmartContracts.Models;
 using Stratis.Bitcoin.Interfaces;

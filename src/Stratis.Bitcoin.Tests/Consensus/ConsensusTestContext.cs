@@ -13,7 +13,7 @@ using Stratis.Core.Base.Deployments;
 using Stratis.Core.BlockPulling;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Settings;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Bitcoin.Consensus.Validators;

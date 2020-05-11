@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Stratis.Core.Builder;
 using Stratis.Core.Builder.Feature;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Connection;
 using Stratis.Features.Notifications.Controllers;
 
 namespace Stratis.Features.Notifications

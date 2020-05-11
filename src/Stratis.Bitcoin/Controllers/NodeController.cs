@@ -14,7 +14,7 @@ using NLog.Targets.Wrappers;
 using Stratis.Core.Base;
 using Stratis.Core.Builder.Feature;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.Interfaces;
