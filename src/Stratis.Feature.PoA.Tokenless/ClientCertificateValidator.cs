@@ -3,6 +3,7 @@ using CertificateAuthority;
 using MembershipServices;
 using NBitcoin;
 using Org.BouncyCastle.X509;
+using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.PoA;
@@ -13,11 +14,13 @@ namespace Stratis.Feature.PoA.Tokenless
     {
         private readonly ChannelSettings channelSettings;
         private readonly Network network;
+        private readonly IChannelAccessValidator channelAccessValidator;
 
-        public ClientCertificateValidator(ChannelSettings channelSettings, Network network)
+        public ClientCertificateValidator(ChannelSettings channelSettings, Network network, IChannelAccessValidator channelAccessValidator)
         {
             this.channelSettings = channelSettings;
             this.network = network;
+            this.channelAccessValidator = channelAccessValidator;
         }
 
         public void ConfirmCertificatePermittedOnChannel(X509Certificate certificate)
@@ -31,13 +34,11 @@ namespace Stratis.Feature.PoA.Tokenless
                     throw new OperationCanceledException($"The client does not have '{CaCertificatesManager.SystemChannelPermission}' permission.");
             }
 
-            // If this is a created channel, check that the organisation matches.
+            // If this is a created channel, check that the client is allowed to be on there.
             if (this.network is ChannelNetwork channelNetwork)
             {
-                string certOrg = certificate.GetOrganisation();
-
-                if (certOrg != channelNetwork.Organisation)
-                    throw new OperationCanceledException($"The client is from the organisation '{certOrg}'. Channel requires '{channelNetwork.Organisation}'.");
+                if (!this.channelAccessValidator.ValidateCertificateIsPermittedOnChannel(certificate, channelNetwork))
+                    throw new OperationCanceledException($"The client is not permitted on this channel.");
             }
 
         }

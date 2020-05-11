@@ -13,6 +13,7 @@ using Stratis.Core.Configuration;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Stratis.Core.Utilities;
+using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;
@@ -152,9 +153,9 @@ namespace Stratis.SmartContracts.Tests.Common
         /// <summary>
         /// This creates a standard (normal) node on the <see cref="TokenlessNetwork"/> that is also apart of other channels.
         /// </summary>
-        public CoreNode CreateTokenlessNodeWithChannels(TokenlessNetwork network, int nodeIndex, IWebHost server, bool initialRun = true)
+        public CoreNode CreateTokenlessNodeWithChannels(TokenlessNetwork network, int nodeIndex, IWebHost server, bool initialRun = true, string organisation = null)
         {
-            return CreateCoreNode(network, nodeIndex, server, "tokenless", false, false, true, initialRun);
+            return CreateCoreNode(network, nodeIndex, server, "tokenless", false, false, true, initialRun, organisation: organisation);
         }
 
         /// <summary>
@@ -167,12 +168,23 @@ namespace Stratis.SmartContracts.Tests.Common
             return node;
         }
 
-        public void CreateChannel(CoreNode parentNode, string channelName, int nodeIndex)
+        public void CreateChannel(CoreNode parentNode, string channelName, int nodeIndex, AccessControlList acl = null)
         {
+            if (acl == null)
+            {
+                acl = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        CaTestHelper.TestOrganisation
+                    }
+                };
+            }
+
             // Serialize the channel network and write the json to disk.
             ChannelNetwork channelNetwork = SystemChannelNetwork.CreateChannelNetwork(channelName, "channels", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
             channelNetwork.Id = nodeIndex;
-            channelNetwork.Organisation = CaTestHelper.TestOrganisation;
+            channelNetwork.AccessList = acl;
             channelNetwork.DefaultAPIPort += nodeIndex;
             var serializedJson = JsonSerializer.Serialize(channelNetwork);
 
@@ -184,7 +196,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
             // Save the channel definition so that it can loaded on node start.
             IChannelRepository channelRepository = parentNode.FullNode.NodeService<IChannelRepository>();
-            channelRepository.SaveChannelDefinition(new ChannelDefinition() { Id = nodeIndex, Name = channelName, Organisation = CaTestHelper.TestOrganisation, NetworkJson = serializedJson });
+            channelRepository.SaveChannelDefinition(new ChannelDefinition() { Id = nodeIndex, Name = channelName, AccessListJson = channelNetwork.AccessList.ToJson(), NetworkJson = serializedJson });
         }
 
         private TokenlessKeyStoreManager InitializeNodeKeyStore(CoreNode node, Network network, NodeSettings settings)
