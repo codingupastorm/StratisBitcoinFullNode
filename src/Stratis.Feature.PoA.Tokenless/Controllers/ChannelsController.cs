@@ -70,19 +70,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
             try
             {
-                var serializer = new ChannelRequestSerializer();
-                byte[] serialized = serializer.Serialize(request);
-                Transaction transaction = this.coreComponent.Network.CreateTransaction();
-                transaction.Outputs.Add(new TxOut(Money.Zero, new Script(serialized)));
-
-                Key key = this.tokenlessKeyStoreManager.LoadTransactionSigningKey();
-
-                this.tokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.coreComponent.Network));
-
-                this.logger.LogInformation($"Create channel request transaction created.");
-                await this.broadcasterManager.BroadcastTransactionAsync(transaction);
-                this.logger.LogInformation($"Create channel request transaction broadcasted.");
-
+                await CreateChannelTransactionAsync(request);
                 return Ok();
             }
             catch (Exception ex)
@@ -90,6 +78,50 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                 this.logger.LogError("Exception occurred: {0}", ex.ToString());
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, ex.Message, ex.ToString());
             }
+        }
+
+        [Route("update")]
+        [HttpPost]
+        public async Task<IActionResult> UpdateChannelAsync([FromBody] ChannelUpdateRequest request)
+        {
+            if (!this.ModelState.IsValid)
+                return ModelStateErrors.BuildErrorResponse(this.ModelState);
+
+            this.logger.LogInformation($"Request to update channel '{request.Name}' received.");
+
+            if (!this.certificatePermissionsChecker.CheckOwnCertificatePermission(CaCertificatesManager.ChannelCreatePermissionOid))
+            {
+                var message = $"This peer does not have the permission to update channel '{request.Name}'.";
+                this.logger.LogInformation(message);
+                return Unauthorized(message);
+            }
+
+            try
+            {
+                await CreateChannelTransactionAsync(request);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError("Exception occurred: {0}", ex.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, ex.Message, ex.ToString());
+            }
+        }
+
+        private async Task CreateChannelTransactionAsync<T>(T request)
+        {
+            var serializer = new ChannelRequestSerializer();
+            byte[] serialized = serializer.Serialize(request);
+            Transaction transaction = this.coreComponent.Network.CreateTransaction();
+            transaction.Outputs.Add(new TxOut(Money.Zero, new Script(serialized)));
+
+            Key key = this.tokenlessKeyStoreManager.LoadTransactionSigningKey();
+
+            this.tokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.coreComponent.Network));
+
+            this.logger.LogInformation($"Transaction containing a '{typeof(T).Name}' created.");
+            await this.broadcasterManager.BroadcastTransactionAsync(transaction);
+            this.logger.LogInformation($"Transaction containing a '{typeof(T).Name}' broadcasted.");
         }
 
         [Route("networkjson")]
@@ -142,5 +174,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, ex.Message, ex.ToString());
             }
         }
+
+
     }
 }

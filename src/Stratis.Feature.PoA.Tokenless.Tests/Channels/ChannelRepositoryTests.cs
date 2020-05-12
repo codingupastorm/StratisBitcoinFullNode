@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using NBitcoin;
-using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Tests.Common.Logging;
+using Stratis.Core.Configuration;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
@@ -22,7 +23,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
         {
             ChannelNetwork salesChannelNetwork = SystemChannelNetwork.CreateChannelNetwork("sales", "salesfolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
             salesChannelNetwork.Id = 2;
-            salesChannelNetwork.AccessList = new AccessControlList
+            salesChannelNetwork.InitialAccessList = new AccessControlList
             {
                 Organisations = new List<string>
                 {
@@ -36,7 +37,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
 
             ChannelNetwork marketingChannelNetwork = SystemChannelNetwork.CreateChannelNetwork("marketing", "marketingfolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
             marketingChannelNetwork.Id = 3;
-            marketingChannelNetwork.AccessList = new AccessControlList
+            marketingChannelNetwork.InitialAccessList = new AccessControlList
             {
                 Organisations = new List<string>
                 {
@@ -61,7 +62,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
             {
                 Id = channelRepository.GetNextChannelId(),
                 Name = "sales",
-                AccessListJson = salesChannelNetwork.AccessList.ToJson(),
+                AccessList = salesChannelNetwork.InitialAccessList,
                 NetworkJson = salesNetworkJson
             };
             channelRepository.SaveChannelDefinition(salesChannel);
@@ -70,7 +71,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
             {
                 Id = channelRepository.GetNextChannelId(),
                 Name = "marketing",
-                AccessListJson = marketingChannelNetwork.AccessList.ToJson(),
+                AccessList = marketingChannelNetwork.InitialAccessList,
                 NetworkJson = marketingNetworkJson
             };
 
@@ -80,19 +81,19 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
 
             Assert.Equal(2, channels["sales"].Id);
             Assert.Equal("sales", channels["sales"].Name);
-            Assert.Contains("Sales", channels["sales"].AccessListJson);
+            Assert.Contains("Sales", channels["sales"].AccessList.Organisations);
             Assert.Equal(salesNetworkJson, channels["sales"].NetworkJson);
 
             Assert.Equal(3, channels["marketing"].Id);
             Assert.Equal("marketing", channels["marketing"].Name);
-            Assert.Contains("Marketing", channels["marketing"].AccessListJson);
+            Assert.Contains("Marketing", channels["marketing"].AccessList.Organisations);
             Assert.Equal(marketingNetworkJson, channels["marketing"].NetworkJson);
 
             ChannelDefinition salesChannelDefinition = channelRepository.GetChannelDefinition("sales");
 
             Assert.Equal(2, salesChannelDefinition.Id);
             Assert.Equal("sales", salesChannelDefinition.Name);
-            Assert.Contains("Sales", salesChannelDefinition.AccessListJson);
+            Assert.Contains("Sales", salesChannelDefinition.AccessList.Organisations);
             Assert.Equal(salesNetworkJson, salesChannelDefinition.NetworkJson);
         }
 
@@ -133,6 +134,44 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
             Assert.Equal("name1", dict[member1].ChannelName);
             Assert.Equal(member2, dict[member2].MemberPublicKey);
             Assert.Equal("name1", dict[member2].ChannelName);
+        }
+
+        [Fact]
+        public void CanReplaceChannelDefinitions()
+        {
+            var dataFolderPath = CreateTestDir(this);
+            var dataFolder = new DataFolder(dataFolderPath);
+
+            var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
+            var keyValueStore = new ChannelKeyValueStore(repositorySerializer, dataFolder, this.LoggerFactory.Object);
+
+            var channelRepository = new ChannelRepository(this.LoggerFactory.Object, keyValueStore);
+
+            channelRepository.Initialize();
+
+            var salesChannel = new ChannelDefinition()
+            {
+                Id = channelRepository.GetNextChannelId(),
+                Name = "sales",
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        "Organisation1"
+                    }
+                },
+                NetworkJson = "Something"
+            };
+            channelRepository.SaveChannelDefinition(salesChannel);
+
+            // Pretend a new amendment came in.
+            salesChannel.AccessList.Organisations.Add("Organisation2");
+
+            channelRepository.SaveChannelDefinition(salesChannel);
+
+            Dictionary<string, ChannelDefinition> allChannels = channelRepository.GetChannelDefinitions();
+
+            Assert.Equal(2, allChannels.Values.First().AccessList.Organisations.Count);
         }
     }
 }

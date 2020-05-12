@@ -26,7 +26,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var channelNetwork1 = new ChannelNetwork
             {
-                AccessList = new AccessControlList
+                InitialAccessList = new AccessControlList
                 {
                     Organisations = new List<string>
                     {
@@ -37,7 +37,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var channelNetwork2 = new ChannelNetwork
             {
-                AccessList = new AccessControlList
+                InitialAccessList = new AccessControlList
                 {
                     Organisations = new List<string>
                     {

@@ -28,10 +28,10 @@ namespace Stratis.Feature.PoA.Tokenless.Networks
         public override Block Genesis { get; set; }
 
         /// <summary>
-        /// For our MVP, the Organisation acts as an access list for the network. Everyone in an organisation can access the channel.
+        /// The list of organisations and members allowed on the channel at the channel's inception.
         /// </summary>
-        [JsonPropertyName("accessList")]
-        public AccessControlList AccessList { get; set; }
+        [JsonPropertyName("initialAccessList")]
+        public AccessControlList InitialAccessList { get; set; }
 
         /// <summary>
         /// Deserializes the given json string to a new instance of <see cref="ChannelNetwork"/>.

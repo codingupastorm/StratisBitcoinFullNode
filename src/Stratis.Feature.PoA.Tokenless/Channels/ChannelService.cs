@@ -11,8 +11,8 @@ using CertificateAuthority;
 using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Core.Configuration;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Configuration;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
@@ -177,7 +177,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             // Record channel membership (in normal node repo) and start up channel node.
             this.logger.LogInformation($"Joining and starting a node on channel '{network.Name}'.");
 
-            string channelRootFolder = PrepareChannelNodeForStartup(network.Name, network.Id, network.AccessList, network);
+            string channelRootFolder = PrepareChannelNodeForStartup(network.Name, network.Id, network.InitialAccessList, network);
 
             ChannelNodeProcess channelNode = await StartTheProcessAsync(channelRootFolder, $"-channelname={network.Name}");
             if (channelNode.Process.HasExited)
@@ -205,9 +205,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                     this.logger.LogInformation($"Restarting a node on channel '{channel.Name}'.");
 
                     int channelNodeId = channel.Id;
-                    AccessControlList acl = AccessControlList.FromJson(channel.AccessListJson);
 
-                    string channelRootFolder = PrepareChannelNodeForStartup(channel.Name, channelNodeId, acl);
+                    string channelRootFolder = PrepareChannelNodeForStartup(channel.Name, channelNodeId, channel.AccessList);
 
                     ChannelNodeProcess channelNode = await StartTheProcessAsync(channelRootFolder, $"-channelname={channel.Name}");
                     if (channelNode.Process.HasExited)
@@ -296,7 +295,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             {
                 channelNetwork = SystemChannelNetwork.CreateChannelNetwork(channelName.ToLowerInvariant(), rootFolderName, this.dateTimeProvider.GetAdjustedTimeAsUnixTimestamp());
                 channelNetwork.Id = channelId;
-                channelNetwork.AccessList = accessList;
+                channelNetwork.InitialAccessList = accessList;
                 channelNetwork.DefaultAPIPort = this.GetDefaultAPIPort(channelId);
                 channelNetwork.DefaultPort = this.GetDefaulPort(channelId);
                 channelNetwork.DefaultSignalRPort = this.GetDefaultSignalRPort(channelId);
@@ -316,7 +315,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 Id = channelId,
                 Name = channelName,
                 NetworkJson = serializedJson,
-                AccessListJson = accessList.ToJson()
+                AccessList = accessList
             };
 
             this.channelRepository.SaveChannelDefinition(channelDefinition);

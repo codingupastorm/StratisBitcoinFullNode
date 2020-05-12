@@ -11,16 +11,16 @@ using Stratis.SmartContracts.Core.Util;
 namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
 {
     /// <summary>
-    /// Ensures that a channel creation request is well formed before passing it to consensus.
+    /// Ensures that a channel update request is well formed before passing it to consensus.
     /// </summary>
-    public sealed class IsChannelCreationRequestWellFormed : MempoolRule
+    public sealed class IsChannelUpdateRequestWellFormed : MempoolRule
     {
         private readonly ChannelSettings channelSettings;
         private readonly IChannelRequestSerializer channelRequestSerializer;
         private readonly ITokenlessSigner tokenlessSigner;
         private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
 
-        public IsChannelCreationRequestWellFormed(
+        public IsChannelUpdateRequestWellFormed(
             Network network,
             ITxMempool mempool,
             MempoolSettings settings,
@@ -51,20 +51,20 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
             Transaction transaction = context.Transaction;
 
             // If the TxOut is null then this transaction does not contain any channel update execution code.
-            TxOut txOut = transaction.TryGetChannelCreationRequestTxOut();
+            TxOut txOut = transaction.TryGetChannelUpdateRequestTxOut();
             if (txOut == null)
             {
-                this.logger.LogDebug($"{transaction.GetHash()}' does not contain a channel creation request.");
+                this.logger.LogDebug($"{transaction.GetHash()}' does not contain a channel update request.");
                 return;
             }
 
-            (ChannelCreationRequest channelCreationRequest, string message) = this.channelRequestSerializer.Deserialize<ChannelCreationRequest>(txOut.ScriptPubKey);
-            if (channelCreationRequest == null)
+            (ChannelUpdateRequest request, string message) = this.channelRequestSerializer.Deserialize<ChannelUpdateRequest>(txOut.ScriptPubKey);
+            if (request == null)
             {
-                var errorMessage = $"Transaction '{transaction.GetHash()}' contained a channel creation request but its contents was malformed: {message}";
+                var errorMessage = $"Transaction '{transaction.GetHash()}' contained a channel update request but its contents was malformed: {message}";
 
                 this.logger.LogDebug(errorMessage);
-                context.State.Fail(new MempoolError(MempoolErrors.RejectMalformed, "channel-creation-request-malformed"), errorMessage).Throw();
+                context.State.Fail(new MempoolError(MempoolErrors.RejectMalformed, "channel-update-request-malformed"), errorMessage).Throw();
             }
 
             // We need to check that the transaction is in the correct format (can we get the sender?)
@@ -73,20 +73,20 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
             if (!getSenderAndVerifyResult.Success)
             {
                 this.logger.LogDebug(getSenderAndVerifyResult.Error);
-                context.State.Fail(new MempoolError(MempoolErrors.RejectMalformed, "channel-creation-request-malformed"), getSenderAndVerifyResult.Error).Throw();
+                context.State.Fail(new MempoolError(MempoolErrors.RejectMalformed, "channel-update-request-malformed"), getSenderAndVerifyResult.Error).Throw();
             }
 
-            this.logger.LogDebug($"{transaction.GetHash()}' contains a channel creation request with a valid signature.");
+            this.logger.LogDebug($"{transaction.GetHash()}' contains a channel update request with a valid signature.");
 
             if (!this.certificatePermissionsChecker.CheckSenderCertificateHasPermission(getSenderAndVerifyResult.Sender, CaCertificatesManager.ChannelCreatePermissionOid))
             {
                 var errorMessage = $"The sender of this transaction does not have the '{CaCertificatesManager.ChannelCreatePermission}' permission.";
 
                 this.logger.LogDebug(errorMessage);
-                context.State.Fail(new MempoolError(MempoolErrors.RejectMalformed, "channel-creation-request-malformed"), errorMessage).Throw();
+                context.State.Fail(new MempoolError(MempoolErrors.RejectMalformed, "channel-update-request-malformed"), errorMessage).Throw();
             }
 
-            this.logger.LogDebug($"{transaction.GetHash()}' contains a channel creation request from a sender with a valid permission.");
+            this.logger.LogDebug($"{transaction.GetHash()}' contains a channel update request from a sender with a valid permission.");
         }
     }
 }
