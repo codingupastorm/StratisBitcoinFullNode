@@ -1,6 +1,6 @@
 ﻿using System.Linq;
+using MembershipServices;
 using Org.BouncyCastle.X509;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
@@ -13,18 +13,18 @@ namespace Stratis.Feature.PoA.Tokenless
     /// </summary>
     public class ReadWriteSetPolicyValidator
     {
-        private readonly ICertificatesManager certificatesManager;
+        private readonly IMembershipServicesDirectory membershipServices;
         private readonly IStateRepository stateRepository;
 
-        public ReadWriteSetPolicyValidator(ICertificatesManager certificatesManager, IStateRepositoryRoot stateRepository)
+        public ReadWriteSetPolicyValidator(IMembershipServicesDirectory membershipServices, IStateRepositoryRoot stateRepository)
         {
-            this.certificatesManager = certificatesManager;
+            this.membershipServices = membershipServices;
             this.stateRepository = stateRepository;
         }
 
         public bool ClientCanAccessPrivateData(ReadWriteSet readWriteSet)
         {
-            return this.OrganisationCanAccessPrivateData((Organisation) this.certificatesManager.ClientCertificate.GetOrganisation(), readWriteSet);
+            return this.OrganisationCanAccessPrivateData((Organisation)this.membershipServices.ClientCertificate.GetOrganisation(), readWriteSet);
         }
 
         public bool OrganisationCanAccessPrivateData(Organisation organisation, ReadWriteSet readWriteSet)
@@ -43,7 +43,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         public bool OrganisationCanAccessPrivateData(X509Certificate certificate, ReadWriteSet readWriteSet)
         {
-            return this.OrganisationCanAccessPrivateData((Organisation) certificate.GetOrganisation(), readWriteSet);
+            return this.OrganisationCanAccessPrivateData((Organisation)certificate.GetOrganisation(), readWriteSet);
         }
     }
 }

@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using NBitcoin;
 using NBitcoin.Protocol;
 using NLog;
-using Stratis.Bitcoin.Builder;
+using Stratis.Core.Builder;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Features.Api;

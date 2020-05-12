@@ -17,7 +17,7 @@ namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
         [Fact]
         public async Task RunAsync_DoesNotHaveBIP113Flag_TransactionNotFinal_ThrowsBadTransactionNonFinalConsensusErrorExceptionAsync()
         {
-            this.ruleContext.Flags = new Bitcoin.Base.Deployments.DeploymentFlags();
+            this.ruleContext.Flags = new Core.Base.Deployments.DeploymentFlags();
 
             Block block = this.network.CreateBlock();
             Transaction transaction = this.network.CreateTransaction();
@@ -41,7 +41,7 @@ namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
         [Fact]
         public async Task RunAsync_HasBIP113Flag_TransactionNotFinal_ThrowsBadTransactionNonFinalConsensusErrorExceptionAsync()
         {
-            this.ruleContext.Flags = new Bitcoin.Base.Deployments.DeploymentFlags() { LockTimeFlags = Transaction.LockTimeFlags.MedianTimePast };
+            this.ruleContext.Flags = new Core.Base.Deployments.DeploymentFlags() { LockTimeFlags = Transaction.LockTimeFlags.MedianTimePast };
             this.ruleContext.Time = new DateTimeOffset(new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc));
 
             Block block = this.network.CreateBlock();
@@ -64,7 +64,7 @@ namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
         [Fact]
         public async Task RunAsync_DoesNotHaveBIP113Flag_TransactionFinal_DoesNotThrowExceptionAsync()
         {
-            this.ruleContext.Flags = new Bitcoin.Base.Deployments.DeploymentFlags();
+            this.ruleContext.Flags = new Core.Base.Deployments.DeploymentFlags();
 
             Block block = this.network.CreateBlock();
             Transaction transaction = this.network.CreateTransaction();
@@ -84,7 +84,7 @@ namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
         [Fact]
         public async Task RunAsync_HasBIP113Flag_TransactionFinal_DoesNotThrowExceptionAsync()
         {
-            this.ruleContext.Flags = new Bitcoin.Base.Deployments.DeploymentFlags() { LockTimeFlags = Transaction.LockTimeFlags.MedianTimePast };
+            this.ruleContext.Flags = new Core.Base.Deployments.DeploymentFlags() { LockTimeFlags = Transaction.LockTimeFlags.MedianTimePast };
             this.ruleContext.Time = new DateTimeOffset(new DateTime(2018, 1, 1, 0, 0, 0, DateTimeKind.Utc));
 
             Block block = this.network.CreateBlock();

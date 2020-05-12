@@ -5,11 +5,12 @@ using NBitcoin.Crypto;
 using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Features.PoA.Tests.Common;
+using Stratis.Bitcoin.IntegrationTests.Common.PoA;
+using Stratis.Features.PoA;
 using Stratis.Features.PoA.Voting;
 using Xunit;
 
-namespace Stratis.Features.PoA.IntegrationTests
+namespace Stratis.Bitcoin.IntegrationTests.PoA
 {
     public class VotingAndMiningTests : IDisposable
     {

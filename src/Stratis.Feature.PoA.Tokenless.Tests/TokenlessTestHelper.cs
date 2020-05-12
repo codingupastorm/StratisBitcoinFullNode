@@ -4,8 +4,8 @@ using MembershipServices;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Configuration.Logging;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
@@ -13,7 +13,6 @@ using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
 using Stratis.Feature.PoA.Tokenless.Networks;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Fee;
@@ -41,7 +40,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public readonly TokenlessMempoolValidator MempoolValidator;
         public readonly ITokenlessSigner TokenlessSigner;
         public readonly Mock<IMembershipServicesDirectory> MembershipServices;
-        public readonly Mock<ICertificatesManager> CertificatesManager;
         private EndorsedContractTransactionValidationRule EndorsementRule;
 
         public TokenlessTestHelper()

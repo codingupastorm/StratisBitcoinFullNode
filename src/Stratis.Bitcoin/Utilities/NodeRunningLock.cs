@@ -1,5 +1,5 @@
 ﻿using System.IO;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 
 namespace Stratis.Core.Utilities
 {

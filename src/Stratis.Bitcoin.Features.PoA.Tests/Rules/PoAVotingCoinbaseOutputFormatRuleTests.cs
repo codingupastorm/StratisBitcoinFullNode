@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration.Logging;
+using Stratis.Core.Configuration.Logging;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Rules;
 using Stratis.Features.PoA.Voting;

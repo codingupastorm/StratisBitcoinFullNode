@@ -2,11 +2,11 @@
 using System.Text;
 using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Base.Deployments;
-using Stratis.Bitcoin.Builder.Feature;
-using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Base;
+using Stratis.Core.Base.Deployments;
+using Stratis.Core.Builder.Feature;
+using Stratis.Core.Configuration.Settings;
+using Stratis.Core.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 

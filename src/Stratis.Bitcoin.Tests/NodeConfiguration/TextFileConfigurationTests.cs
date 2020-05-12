@@ -1,4 +1,4 @@
-﻿using Stratis.Bitcoin.Configuration;
+﻿using Stratis.Core.Configuration;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.NodeConfiguration

@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Core.Utilities;
 

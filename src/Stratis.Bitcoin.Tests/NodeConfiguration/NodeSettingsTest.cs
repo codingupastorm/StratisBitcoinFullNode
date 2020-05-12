@@ -1,6 +1,6 @@
 ﻿using System.IO;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Configuration.Settings;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Settings;
 using Stratis.Features.Api;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;

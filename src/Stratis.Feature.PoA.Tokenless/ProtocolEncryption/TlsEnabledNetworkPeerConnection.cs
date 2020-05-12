@@ -3,6 +3,7 @@ using System.Collections;
 using System.IO;
 using System.Net.Sockets;
 using CertificateAuthority;
+using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Org.BouncyCastle.Asn1.X509;
@@ -22,7 +23,7 @@ namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
 {
     public class TlsEnabledNetworkPeerConnection : NetworkPeerConnection
     {
-        private readonly ICertificatesManager certificateManager;
+        private readonly IMembershipServicesDirectory membershipServices;
 
         private X509Certificate peerCertificate;
 
@@ -36,14 +37,14 @@ namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
 
         private TlsClientProtocol tlsClientProtocol;
 
-        private IClientCertificateValidator clientCertificateValidator;
+        private readonly IClientCertificateValidator clientCertificateValidator;
 
         public TlsEnabledNetworkPeerConnection(Network network, INetworkPeer peer, TcpClient client, int clientId, ProcessMessageAsync<IncomingMessage> processMessageAsync,
-            IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, PayloadProvider payloadProvider, IAsyncProvider asyncProvider, ICertificatesManager certificateManager,
+            IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, PayloadProvider payloadProvider, IAsyncProvider asyncProvider, IMembershipServicesDirectory membershipServices, 
             bool isServer, IClientCertificateValidator clientCertificateValidator)
             : base(network, peer, client, clientId, processMessageAsync, dateTimeProvider, loggerFactory, payloadProvider, asyncProvider)
         {
-            this.certificateManager = certificateManager;
+            this.membershipServices = membershipServices;
             this.isServer = isServer;
             this.clientCertificateValidator = clientCertificateValidator;
         }
@@ -60,14 +61,14 @@ namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
 
             this.stream = this.tcpClient.GetStream();
 
-            if (this.certificateManager.ClientCertificate == null || this.certificateManager.ClientCertificatePrivateKey == null)
+            if (this.membershipServices.ClientCertificate == null || this.membershipServices.ClientCertificatePrivateKey == null)
                 throw new OperationCanceledException("The client certificate has not been loaded yet.");
 
             X509Certificate receivedCert;
             if (this.isServer)
             {
                 // We call it a 'client certificate' but for peers connecting to us, we are the server and thus use our client certificate as the server's certificate.
-                this.tlsServer = new CustomTlsServer(this.certificateManager.ClientCertificate, this.certificateManager.ClientCertificatePrivateKey);
+                this.tlsServer = new CustomTlsServer(this.membershipServices.ClientCertificate, this.membershipServices.ClientCertificatePrivateKey);
                 this.tlsServerProtocol = new TlsServerProtocol(this.stream, new SecureRandom());
                 this.tlsServerProtocol.Accept(this.tlsServer);
                 receivedCert = this.tlsServer.ReceivedCertificate;
@@ -75,7 +76,7 @@ namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
             }
             else
             {
-                this.tlsClient = new CustomTlsClient(null, this.certificateManager.ClientCertificate, this.certificateManager.ClientCertificatePrivateKey);
+                this.tlsClient = new CustomTlsClient(null, this.membershipServices.ClientCertificate, this.membershipServices.ClientCertificatePrivateKey);
                 this.tlsClientProtocol = new TlsClientProtocol(this.stream, new SecureRandom());
                 this.tlsClientProtocol.Connect(this.tlsClient);
                 receivedCert = this.tlsClient.Authentication.ReceivedCertificate;
@@ -84,7 +85,7 @@ namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
 
             this.peerCertificate = receivedCert;
 
-            if (!CaCertificatesManager.ValidateCertificateChain(this.certificateManager.AuthorityCertificate, this.peerCertificate))
+            if (!CaCertificatesManager.ValidateCertificateChain(this.membershipServices.AuthorityCertificate, this.peerCertificate))
                 return null;
 
             if (this.isServer && this.clientCertificateValidator != null)

@@ -6,14 +6,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Base;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Core.Utilities;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.BlockPulling
+namespace Stratis.Core.BlockPulling
 {
     /// <summary>
     /// Thread-safe block puller which allows downloading blocks from all chains that the node is aware of.

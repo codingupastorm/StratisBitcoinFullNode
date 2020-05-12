@@ -15,7 +15,6 @@ using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.MemoryPool.Broadcasting;
 
 namespace Stratis.Feature.PoA.Tokenless.Controllers
@@ -25,7 +24,6 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
     [Route("api/[controller]")]
     public sealed class ChannelsController : Controller
     {
-        private readonly ICertificatesManager certificatesManager;
         private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
         private readonly IChannelRepository channelRepository;
         private readonly ICoreComponent coreComponent;
@@ -36,7 +34,6 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         private readonly ILogger logger;
 
         public ChannelsController(
-            ICertificatesManager certificatesManager,
             ICertificatePermissionsChecker certificatePermissionsChecker,
             IBroadcasterManager broadcasterManager,
             IChannelRepository channelRepository,
@@ -46,7 +43,6 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             IChannelService channelService
             )
         {
-            this.certificatesManager = certificatesManager;
             this.certificatePermissionsChecker = certificatePermissionsChecker;
             this.broadcasterManager = broadcasterManager;
             this.channelRepository = channelRepository;
@@ -64,7 +60,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             if (!this.ModelState.IsValid)
                 return ModelStateErrors.BuildErrorResponse(this.ModelState);
 
-            this.logger.LogInformation($"Request to create channel '{request.Name}' for organisation '{request.Organisation}' received.");
+            this.logger.LogInformation($"Request to create channel '{request.Name}' received.");
 
             if (!this.certificatePermissionsChecker.CheckOwnCertificatePermission(CaCertificatesManager.ChannelCreatePermissionOid))
             {
@@ -130,6 +126,9 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             {
                 // Record channel membership (in normal node repo) and start up channel node.
                 ChannelNetwork network = JsonSerializer.Deserialize<ChannelNetwork>(request.NetworkJson);
+
+                // Note that we don't check if we are allowed to join the network.
+                // The network's AccessControlList may have changed from what it was in the initial json, to allow us to join.
 
                 this.logger.LogInformation($"Request to join channel '{network.Name}' received.");
 

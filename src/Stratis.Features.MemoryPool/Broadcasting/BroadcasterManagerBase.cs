@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using ConcurrentCollections;
 using NBitcoin;
-using Stratis.Bitcoin.Connection;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Core.Connection;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Features.MemoryPool.Broadcasting

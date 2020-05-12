@@ -10,10 +10,11 @@ using NLog.Config;
 using NLog.Extensions.Logging;
 using NLog.Targets;
 using NLog.Targets.Wrappers;
-using Stratis.Bitcoin.Configuration.Settings;
+using Stratis.Bitcoin;
+using Stratis.Core.Configuration.Settings;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
-namespace Stratis.Bitcoin.Configuration.Logging
+namespace Stratis.Core.Configuration.Logging
 {
     /// <summary>
     /// An extension of the <see cref="LoggerFactory"/> that allows access to some internal components.
@@ -81,7 +82,7 @@ namespace Stratis.Bitcoin.Configuration.Logging
             // { "libevent", "" },
             // { "lock", "" },
             // { "mempoolrej", "" },
-            { "net", $"{nameof(Stratis)}.{nameof(Bitcoin)}.{nameof(Connection)}.*" },
+            { "net", $"{nameof(Stratis)}.{nameof(Bitcoin)}.{nameof(Core.Connection)}.*" },
             // { "proxy", "" },
             // { "prune", "" },
             // { "rand", "" },

@@ -9,11 +9,10 @@ using CommandLine;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 
 namespace MembershipServices.Cli
 {
@@ -120,13 +119,9 @@ namespace MembershipServices.Cli
             var network = new TokenlessNetwork();
             var nodeSettings = new NodeSettings(network, args: new[] { $"-datadir={options.DataDir}", $"-password={options.Password}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" });
             var loggerFactory = new LoggerFactory();
-
-            var membershipServices = new MembershipServicesDirectory(nodeSettings);
-            membershipServices.Initialize();
-
-            var certificatesManager = new CertificatesManager(nodeSettings.DataFolder, nodeSettings, loggerFactory, network, membershipServices);
+            
             var keyStoreSettings = new TokenlessKeyStoreSettings(nodeSettings);
-            var keyStoreManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, new ChannelSettings(nodeSettings.ConfigReader), keyStoreSettings, certificatesManager, loggerFactory);
+            var keyStoreManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, new ChannelSettings(nodeSettings.ConfigReader), keyStoreSettings, loggerFactory);
             keyStoreManager.Initialize();
 
             CaClient caClient;
@@ -174,13 +169,16 @@ namespace MembershipServices.Cli
             if (clientCert == null)
                 return -1;
 
+            // TODO: Temporary workaround until CertificatesManager is completely removed and merged into MSD
+            File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificateAuthorityInterface.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCert, privateKey, keyStoreSettings.Password));
+
+            var membershipServices = new MembershipServicesDirectory(nodeSettings, loggerFactory);
+            membershipServices.Initialize();
+
             membershipServices.AddLocalMember(clientCert, MemberType.Self);
 
             // We need the certificate to be available here as well for now.
             membershipServices.AddLocalMember(clientCert, MemberType.NetworkPeer);
-
-            // TODO: Temporary workaround until CertificatesManager is completely removed and merged into MSD
-            File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCert, privateKey, keyStoreSettings.Password));
 
             return 0;
         }
@@ -199,8 +197,9 @@ namespace MembershipServices.Cli
         {
             var network = new TokenlessNetwork();
             var nodeSettings = new NodeSettings(network);
+            var loggerFactory = new LoggerFactory();
 
-            var membershipServices = new MembershipServicesDirectory(nodeSettings);
+            var membershipServices = new MembershipServicesDirectory(nodeSettings, loggerFactory);
             membershipServices.Initialize();
 
             MemberType memberType;
@@ -247,8 +246,9 @@ namespace MembershipServices.Cli
             // TODO: Move this logic into a reusable method
             var network = new TokenlessNetwork();
             var nodeSettings = new NodeSettings(network, args: new[] { $"-datadir={options.DataDir}", $"-password={options.Password}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" });
+            var loggerFactory = new LoggerFactory();
 
-            var membershipServices = new MembershipServicesDirectory(nodeSettings);
+            var membershipServices = new MembershipServicesDirectory(nodeSettings, loggerFactory);
             membershipServices.Initialize();
 
             var caClient = new CaClient(new Uri(options.CaUrl), new HttpClient(), int.Parse(options.CaAccountId), options.CaPassword);

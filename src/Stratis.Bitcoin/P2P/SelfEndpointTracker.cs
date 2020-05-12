@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using ConcurrentCollections;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Configuration.Settings;
+using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Utilities.Extensions;
 using TracerAttributes;
 

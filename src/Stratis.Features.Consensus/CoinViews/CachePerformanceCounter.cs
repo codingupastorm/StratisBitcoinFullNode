@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Threading;
-using Stratis.Bitcoin.Configuration.Logging;
+using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Utilities;
 using TracerAttributes;
 

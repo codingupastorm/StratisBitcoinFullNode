@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Consensus.Validators;
 using Stratis.Bitcoin.Interfaces;
@@ -13,9 +13,10 @@ using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Features.MemoryPool;
+using Stratis.Features.PoA;
 using Stratis.Features.PoA.Voting;
 
-namespace Stratis.Features.PoA.Tests.Common
+namespace Stratis.Bitcoin.IntegrationTests.Common.PoA
 {
     public class TestPoAMiner : PoAMiner
     {

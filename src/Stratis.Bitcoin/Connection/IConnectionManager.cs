@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Configuration.Settings;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Settings;
 
-namespace Stratis.Bitcoin.Connection
+namespace Stratis.Core.Connection
 {
     public interface IConnectionManager : IDisposable
     {

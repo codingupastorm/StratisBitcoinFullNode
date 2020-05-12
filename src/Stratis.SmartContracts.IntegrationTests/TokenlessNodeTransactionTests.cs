@@ -10,13 +10,13 @@ using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless.Controllers;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.PoA;
-using Stratis.Features.PoA.Tests.Common;
 using Stratis.Features.PoA.Voting;
 using Stratis.Features.SmartContracts.Models;
 using Stratis.SmartContracts.CLR;
@@ -595,7 +595,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact(Skip = "This is useful locally to test the Swagger UI for Pure methods.")]
-        public async Task SwaggerRendersPureMethods()
+        public async Task SwaggerRendersPureMethodsAsync()
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 

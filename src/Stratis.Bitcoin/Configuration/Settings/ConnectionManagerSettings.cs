@@ -8,7 +8,7 @@ using NBitcoin;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 
-namespace Stratis.Bitcoin.Configuration.Settings
+namespace Stratis.Core.Configuration.Settings
 {
     /// <summary>
     /// Configuration related to incoming and outgoing connections.

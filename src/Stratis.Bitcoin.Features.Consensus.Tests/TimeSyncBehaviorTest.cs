@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Base;
+using Stratis.Core.Base;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
