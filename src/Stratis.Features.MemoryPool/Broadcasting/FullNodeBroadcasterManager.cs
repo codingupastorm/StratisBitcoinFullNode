@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Connection;
 using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool.Interfaces;
 

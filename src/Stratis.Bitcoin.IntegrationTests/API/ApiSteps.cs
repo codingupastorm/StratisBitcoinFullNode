@@ -8,7 +8,7 @@ using FluentAssertions;
 using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using NBitcoin;
 using Newtonsoft.Json.Linq;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Connection;
 using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
@@ -207,7 +207,7 @@ namespace Stratis.Bitcoin.IntegrationTests.API
             statusResponse.DataDirectoryPath.Should().Be(statusNode.Settings.DataDir);
 
             List<string> featuresNamespaces = statusResponse.FeaturesData.Select(f => f.Namespace).ToList();
-            featuresNamespaces.Should().Contain("Stratis.Bitcoin.Base.BaseFeature");
+            featuresNamespaces.Should().Contain("Stratis.Core.Base.BaseFeature");
             featuresNamespaces.Should().Contain("Stratis.Features.Api.ApiFeature");
             featuresNamespaces.Should().Contain("Stratis.Features.BlockStore.BlockStoreFeature");
             featuresNamespaces.Should().Contain("Stratis.Features.Consensus.PowConsensusFeature");

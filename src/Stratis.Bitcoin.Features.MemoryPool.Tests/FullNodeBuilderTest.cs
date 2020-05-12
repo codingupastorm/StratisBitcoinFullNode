@@ -2,10 +2,10 @@
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using Stratis.Bitcoin;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Builder;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Base;
+using Stratis.Core.Builder;
+using Stratis.Core.Configuration;
+using Stratis.Core.Connection;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Features.BlockStore;

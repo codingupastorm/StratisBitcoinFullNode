@@ -3,8 +3,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
-using Stratis.Bitcoin.Builder;
-using Stratis.Bitcoin.Builder.Feature;
+using Stratis.Core.Builder;
+using Stratis.Core.Builder.Feature;
 using Stratis.Features.Wallet.Interfaces;
 
 namespace Stratis.Features.SQLiteWalletRepository

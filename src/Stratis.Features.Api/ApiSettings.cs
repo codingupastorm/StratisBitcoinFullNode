@@ -3,7 +3,7 @@ using System.Text;
 using System.Timers;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Features.Api

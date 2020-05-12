@@ -7,7 +7,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     {
         private int id;
         private string name;
-        private string organisation;
+        private string accessListJson;
         private string networkJson;
 
         /// <summary> The name of the channel.</summary>
@@ -16,11 +16,11 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         /// <summary> The id of the channel.</summary>
         public int Id { get { return this.id; } set { this.id = value; } }
 
-        /// <summary>Who can access the channel. Will be replaced with an access list with time.</summary>
-        public string Organisation
+        /// <summary>Who can access the channel..</summary>
+        public string AccessListJson
         {
-            get { return this.organisation; }
-            set { this.organisation = value; }
+            get { return this.accessListJson; }
+            set { this.accessListJson = value; }
         }
 
         /// <summary> The serialized version of the channel network.</summary>
@@ -32,7 +32,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             s.ReadWrite(ref this.id);
             s.ReadWrite(ref this.name);
             s.ReadWrite(ref this.networkJson);
-            s.ReadWrite(ref this.organisation);
+            s.ReadWrite(ref this.accessListJson);
         }
     }
 }

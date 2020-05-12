@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Base.Deployments;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Base.Deployments;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool;

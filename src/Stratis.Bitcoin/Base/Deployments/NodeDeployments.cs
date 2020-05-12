@@ -1,7 +1,7 @@
 ﻿using NBitcoin;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Base.Deployments
+namespace Stratis.Core.Base.Deployments
 {
     public class NodeDeployments
     {

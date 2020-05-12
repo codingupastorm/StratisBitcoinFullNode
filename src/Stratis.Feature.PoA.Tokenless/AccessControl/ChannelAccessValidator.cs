@@ -1,7 +1,8 @@
-﻿using Org.BouncyCastle.X509;
+﻿using CertificateAuthority;
+using Org.BouncyCastle.X509;
 using Stratis.Feature.PoA.Tokenless.Networks;
 
-namespace Stratis.Feature.PoA.Tokenless
+namespace Stratis.Feature.PoA.Tokenless.AccessControl
 {
     public interface IChannelAccessValidator
     {
@@ -13,8 +14,14 @@ namespace Stratis.Feature.PoA.Tokenless
         public bool ValidateCertificateIsPermittedOnChannel(X509Certificate certificate, ChannelNetwork network)
         {
             // In future iterations we will add complexity around who is allowed on a channel here.
+            string organisation = certificate.GetOrganisation();
 
-            return certificate.GetOrganisation() == network.Organisation;
+            if (network.AccessList.Organisations.Contains(organisation))
+                return true;
+
+            string thumbprint = CaCertificatesManager.GetThumbprint(certificate);
+
+            return network.AccessList.Thumbprints.Contains(thumbprint);
         }
     }
 }

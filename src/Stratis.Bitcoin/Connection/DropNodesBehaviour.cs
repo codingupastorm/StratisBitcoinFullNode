@@ -11,7 +11,7 @@ using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Core.Utilities;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.Connection
+namespace Stratis.Core.Connection
 {
     /// <summary>
     /// If the light wallet is only connected to nodes behind

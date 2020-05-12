@@ -1,10 +1,10 @@
 ﻿using System.Net;
 using System.Threading;
 using Moq;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Configuration.Logging;
-using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Logging;
+using Stratis.Core.Configuration.Settings;
+using Stratis.Core.Connection;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;

@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Xunit;
 
 namespace Stratis.Features.PoA.Tests

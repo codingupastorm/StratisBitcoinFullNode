@@ -3,8 +3,8 @@ using MembershipServices;
 using NBitcoin;
 using NBitcoin.Crypto;
 using Org.BouncyCastle.X509;
+using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Networks;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -59,16 +59,13 @@ namespace Stratis.Feature.PoA.Tokenless
     public sealed class CertificatePermissionsChecker : ICertificatePermissionsChecker
     {
         private readonly IMembershipServicesDirectory membershipServices;
-        private readonly ICertificatesManager certificatesManager;
         private readonly IChannelAccessValidator channelAccessValidator;
 
         public CertificatePermissionsChecker(
             IMembershipServicesDirectory membershipServices,
-            ICertificatesManager certificatesManager, 
             IChannelAccessValidator channelAccessValidator)
         {
             this.membershipServices = membershipServices;
-            this.certificatesManager = certificatesManager;
             this.channelAccessValidator = channelAccessValidator;
         }
 
@@ -76,10 +73,10 @@ namespace Stratis.Feature.PoA.Tokenless
         public bool CheckOwnCertificatePermission(string oId)
         {
             // We don't have our own certificate so return false as the required permission cannot be determined.
-            if (this.certificatesManager.ClientCertificate == null)
+            if (this.membershipServices.ClientCertificate == null)
                 return false;
 
-            byte[] permissionBytes = MembershipServicesDirectory.ExtractCertificateExtension(this.certificatesManager.ClientCertificate, oId);
+            byte[] permissionBytes = MembershipServicesDirectory.ExtractCertificateExtension(this.membershipServices.ClientCertificate, oId);
             return permissionBytes != null;
         }
 
@@ -124,15 +121,15 @@ namespace Stratis.Feature.PoA.Tokenless
         private X509Certificate GetCertificate(uint160 address)
         {
             // The certificate might be our own. If so, just return that one, no need to get from the cache or query CA.
-            if (this.certificatesManager?.ClientCertificate != null)
+            if (this.membershipServices?.ClientCertificate != null)
             {
                 // TODO: This value could be cached, or retrieved from the wallet?
-                byte[] myCertTransactionSigningHash = MembershipServicesDirectory.ExtractCertificateExtension(this.certificatesManager.ClientCertificate, CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid);
+                byte[] myCertTransactionSigningHash = MembershipServicesDirectory.ExtractCertificateExtension(this.membershipServices.ClientCertificate, CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid);
                 var myCertAddress = new uint160(myCertTransactionSigningHash);
 
                 if (myCertAddress == address)
                 {
-                    return this.certificatesManager.ClientCertificate;
+                    return this.membershipServices.ClientCertificate;
                 }
             }
 

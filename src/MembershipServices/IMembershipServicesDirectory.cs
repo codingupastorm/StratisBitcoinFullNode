@@ -1,10 +1,24 @@
+using System;
+using System.Collections.Generic;
 using NBitcoin;
+using Org.BouncyCastle.Crypto;
 using Org.BouncyCastle.X509;
 
 namespace MembershipServices
 {
     public interface IMembershipServicesDirectory
     {
+        /// <summary>Root certificate of the certificate authority for the current network.</summary>
+        X509Certificate AuthorityCertificate { get; }
+
+        /// <summary>Client certificate that is used to establish connections with other peers.</summary>
+        X509Certificate ClientCertificate { get; }
+
+        /// <summary>The private key associated with the loaded client certificate. Intended to be used for TLS communication only.</summary>
+        AsymmetricKeyParameter ClientCertificatePrivateKey { get; }
+
+        CertificateAuthorityInterface CertificateAuthorityInterface { get; }
+
         void Initialize();
 
         X509Certificate GetCertificateForThumbprint(string thumbprint);
@@ -12,6 +26,8 @@ namespace MembershipServices
         X509Certificate GetCertificateForAddress(uint160 address);
 
         X509Certificate GetCertificateForTransactionSigningPubKeyHash(byte[] transactionSigningPubKeyHash);
+
+        List<PubKey> GetCertificatePublicKeys();
 
         void RevokeCertificate(string thumbprint);
 
@@ -50,12 +66,6 @@ namespace MembershipServices
         bool AddChannelMember(X509Certificate memberCertificate, string channelId, MemberType memberType);
 
         bool RemoveChannelMember(X509Certificate memberCertificate, string channelId, MemberType memberType);
-
-        /// <summary>
-        /// Checks if given certificate is signed by the authority certificate.
-        /// </summary>
-        /// <exception cref="Exception">Thrown in case authority chain build failed.</exception>
-        bool IsSignedByAuthorityCertificate(X509Certificate certificateToValidate, X509Certificate authorityCertificate);
 
         byte[] ExtractCertificateExtensionFromOid(X509Certificate certificate, string oid);
     }

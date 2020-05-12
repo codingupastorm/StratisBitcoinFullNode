@@ -1,10 +1,10 @@
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Configuration;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
+using Stratis.Core.Configuration;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.Connection
+namespace Stratis.Core.Connection
 {
     /// <summary>
     /// A behaviour that will manage the lifetime of peers.

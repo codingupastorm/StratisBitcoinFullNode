@@ -1,21 +1,21 @@
 ﻿using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
+using MembershipServices;
 using NBitcoin;
 using Stratis.Bitcoin;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Builder;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Base;
+using Stratis.Core.Builder;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.P2P;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.Api;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
-using Stratis.Features.PoA.Tests.Common;
 using Stratis.Features.SmartContracts;
 using Stratis.SmartContracts.Tokenless;
 
@@ -37,9 +37,9 @@ namespace Stratis.SmartContracts.Tests.Common
             var settings = new NodeSettings(this.Network, agent: this.Agent, args: new string[] {
                 "-conf=poa.conf",
                 "-datadir=" + this.DataFolder,
-                $"-{CertificatesManager.CaAccountIdKey}={Settings.AdminAccountId}",
-                $"-{CertificatesManager.CaPasswordKey}={CaTestHelper.AdminPassword}",
-                $"-{CertificatesManager.ClientCertificateConfigurationKey}=test"
+                $"-{CertificateAuthorityInterface.CaAccountIdKey}={Settings.AdminAccountId}",
+                $"-{CertificateAuthorityInterface.CaPasswordKey}={CaTestHelper.AdminPassword}",
+                $"-{CertificateAuthorityInterface.ClientCertificateConfigurationKey}=test"
             });
 
             IFullNodeBuilder builder = new FullNodeBuilder()

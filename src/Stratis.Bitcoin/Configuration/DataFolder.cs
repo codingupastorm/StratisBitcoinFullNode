@@ -3,7 +3,7 @@ using System.Net;
 using NBitcoin;
 using Stratis.Bitcoin.P2P;
 
-namespace Stratis.Bitcoin.Configuration
+namespace Stratis.Core.Configuration
 {
     /// <summary>
     /// Contains path locations to folders and files on disk.

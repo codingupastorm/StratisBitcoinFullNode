@@ -11,7 +11,7 @@ using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Core.Utilities;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.BlockPulling
+namespace Stratis.Core.BlockPulling
 {
     /// <summary>
     /// Relation of the node's puller to a network peer node.

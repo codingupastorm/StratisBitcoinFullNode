@@ -4,13 +4,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NBitcoin;
 using NBitcoin.PoA;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Builder;
-using Stratis.Bitcoin.Configuration.Logging;
+using Stratis.Core.Base;
+using Stratis.Core.Builder;
+using Stratis.Core.Configuration.Logging;
 using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Controllers;
@@ -124,7 +125,6 @@ namespace Stratis.Feature.PoA.Tokenless
 
                         // Permissioned membership.
                         services.AddSingleton<IMembershipServicesDirectory, MembershipServicesDirectory>();
-                        services.AddSingleton<ICertificatesManager, CertificatesManager>();
                         services.AddSingleton<ICertificatePermissionsChecker, CertificatePermissionsChecker>();
 
                         // Channels

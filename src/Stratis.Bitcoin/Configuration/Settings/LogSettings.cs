@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Stratis.Bitcoin.Configuration.Settings
+namespace Stratis.Core.Configuration.Settings
 {
     /// <summary>
     /// Configuration related to logging.

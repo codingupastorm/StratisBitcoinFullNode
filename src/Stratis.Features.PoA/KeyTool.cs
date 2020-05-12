@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 
 namespace Stratis.Features.PoA
 {

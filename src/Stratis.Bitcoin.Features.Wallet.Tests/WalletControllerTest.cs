@@ -7,7 +7,7 @@ using System.Security;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Connection;
 using Stratis.Bitcoin.Models;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Tests.Common;

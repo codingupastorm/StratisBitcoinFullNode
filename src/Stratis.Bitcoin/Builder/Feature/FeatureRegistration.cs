@@ -5,7 +5,7 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Builder.Feature
+namespace Stratis.Core.Builder.Feature
 {
     /// <summary>
     /// Defines methods for a representation of registered features of the FullNode.

@@ -14,6 +14,7 @@ using Stratis.Bitcoin;
 using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.Networks;
@@ -137,8 +138,17 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CoreNode parentNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server);
                 parentNode.Start();
 
+                string anotherOrg = "AnotherOrganisation";
+
                 // Create a channel for the identity to be apart of.
-                nodeBuilder.CreateChannel(parentNode, "marketing", 2);
+                nodeBuilder.CreateChannel(parentNode, "marketing", 2, new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        CaTestHelper.TestOrganisation,
+                        anotherOrg
+                    }
+                });
                 parentNode.Restart();
 
                 // Create another node.
@@ -161,8 +171,24 @@ namespace Stratis.SmartContracts.IntegrationTests
                     })
                     .GetAwaiter().GetResult();
 
-                IChannelService channelService = parentNode.FullNode.NodeService<IChannelService>();
+                IChannelService channelService = otherNode.FullNode.NodeService<IChannelService>();
                 Assert.Single(channelService.StartedChannelNodes);
+
+                // Start a node from an allowed organisation and ensure it can join too.
+                // Create another node.
+                CoreNode otherNode2 = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 2, server, organisation: anotherOrg);
+                otherNode2.Start();
+
+                var otherNode2Response = $"{(new ApiSettings(otherNode2.FullNode.Settings)).ApiUri}"
+                    .AppendPathSegment("api/channels/join")
+                    .PostJsonAsync(new ChannelJoinRequest()
+                    {
+                        NetworkJson = networkJson
+                    })
+                    .GetAwaiter().GetResult();
+
+                IChannelService otherNode2ChannelService = otherNode2.FullNode.NodeService<IChannelService>();
+                Assert.Single(otherNode2ChannelService.StartedChannelNodes);
             }
         }
 
@@ -218,7 +244,13 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var channelCreationRequest = new ChannelCreationRequest()
                 {
                     Name = "Sales",
-                    Organisation = CaTestHelper.TestOrganisation
+                    AccessList = new AccessControlList
+                    {
+                        Organisations = new List<string>
+                        {
+                            CaTestHelper.TestOrganisation
+                        }
+                    }
                 };
 
                 var response = await $"http://localhost:{infraNode1.SystemChannelApiPort}/api".AppendPathSegment("channels/create").PostJsonAsync(channelCreationRequest);

@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Moq;
-using Stratis.Bitcoin.BlockPulling;
-using Stratis.Bitcoin.Configuration.Logging;
+using Stratis.Core.BlockPulling;
+using Stratis.Core.Configuration.Logging;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Core.Utilities;
 using Xunit;

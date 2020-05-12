@@ -1,4 +1,4 @@
-﻿using Stratis.Bitcoin.Configuration;
+﻿using Stratis.Core.Configuration;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels
 {

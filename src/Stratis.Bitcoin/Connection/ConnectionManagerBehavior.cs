@@ -8,7 +8,7 @@ using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.Connection
+namespace Stratis.Core.Connection
 {
     public interface IConnectionManagerBehavior : INetworkPeerBehavior
     {
