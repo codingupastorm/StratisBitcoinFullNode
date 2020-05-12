@@ -162,7 +162,6 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
                 TestHelper.Connect(nodeSync, node2);
 
                 // Node 2 should be synced.
-                // TODO: Why is this not syncing?
                 TestBase.WaitLoop(() => TestHelper.AreNodesSynced(node2, nodeSync));
             }
         }
