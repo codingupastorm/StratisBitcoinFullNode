@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Features.Consensus.Rules.CommonRules;
 using Xunit;
 

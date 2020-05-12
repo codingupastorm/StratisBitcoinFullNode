@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Core.Consensus;
+using Stratis.Core.Consensus.Rules;
 using Stratis.SmartContracts.Core;
 
 namespace Stratis.Features.SmartContracts.Rules

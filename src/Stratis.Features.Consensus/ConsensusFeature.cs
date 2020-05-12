@@ -7,7 +7,7 @@ using Stratis.Core.Base.Deployments;
 using Stratis.Core.Builder.Feature;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Connection;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 
 [assembly: InternalsVisibleTo("Stratis.Features.Miner.Tests")]

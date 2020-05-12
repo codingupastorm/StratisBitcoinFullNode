@@ -1,5 +1,5 @@
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Features.SmartContracts.Interfaces;
 using Stratis.SmartContracts.CLR;
 

@@ -2,7 +2,7 @@
 using System.Linq;
 using NBitcoin;
 using Stratis.Core.Configuration.Logging;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Features.PoA.Voting;
 using Xunit;
 

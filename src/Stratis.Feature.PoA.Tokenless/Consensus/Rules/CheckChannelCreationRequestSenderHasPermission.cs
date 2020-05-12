@@ -3,8 +3,8 @@ using System.Threading.Tasks;
 using CertificateAuthority;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Core.Consensus;
+using Stratis.Core.Consensus.Rules;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.SmartContracts.Core.Util;
 

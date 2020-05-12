@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Core.Consensus.Rules;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Features.Consensus.Rules.ProvenHeaderRules
@@ -11,7 +11,7 @@ namespace Stratis.Features.Consensus.Rules.ProvenHeaderRules
     /// <remarks>
     /// We assume that in case normal headers are provided instead of proven headers we should ignore validation.
     /// This should be allowed by the behaviors only for whitelisted nodes.</remarks>
-    /// <seealso cref="Stratis.Bitcoin.Consensus.Rules.HeaderValidationConsensusRule" />
+    /// <seealso cref="Stratis.Core.Consensus.Rules.HeaderValidationConsensusRule" />
     public abstract class ProvenHeaderRuleBase : HeaderValidationConsensusRule
     {
         /// <summary>Allow access to the POS parent.</summary>

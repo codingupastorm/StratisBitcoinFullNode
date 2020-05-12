@@ -7,7 +7,7 @@ using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.PoA;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;

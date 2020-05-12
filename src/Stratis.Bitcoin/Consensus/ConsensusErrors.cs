@@ -1,4 +1,4 @@
-﻿namespace Stratis.Bitcoin.Consensus
+﻿namespace Stratis.Core.Consensus
 {
     /// <summary>
     /// A class that holds consensus errors.

@@ -1,4 +1,4 @@
-﻿namespace Stratis.Bitcoin.Consensus
+﻿namespace Stratis.Core.Consensus
 {
     /// <summary>
     /// Interface of coin views that are internally based on other, lower level, implementations of coin view.

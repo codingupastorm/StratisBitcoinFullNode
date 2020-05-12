@@ -8,7 +8,7 @@ using NBitcoin.Policy;
 using Stratis.Core.Builder;
 using Stratis.Core.Builder.Feature;
 using Stratis.Core.Configuration.Logging;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool.Interfaces;

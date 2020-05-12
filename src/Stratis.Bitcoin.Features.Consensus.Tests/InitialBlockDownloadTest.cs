@@ -5,7 +5,7 @@ using NBitcoin;
 using Stratis.Core.Base;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Settings;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Utilities;
 using Xunit;

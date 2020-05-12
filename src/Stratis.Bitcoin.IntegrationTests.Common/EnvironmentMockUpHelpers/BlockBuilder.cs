@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers

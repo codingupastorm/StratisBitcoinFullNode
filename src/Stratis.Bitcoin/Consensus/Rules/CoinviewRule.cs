@@ -5,7 +5,7 @@ using NBitcoin;
 using Stratis.Core.Base.Deployments;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Consensus.Rules
+namespace Stratis.Core.Consensus.Rules
 {
     /// <summary>
     /// The proof of work coinview update rules. Validates the UTXO set is correctly spent and creating new outputs.

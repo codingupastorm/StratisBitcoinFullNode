@@ -2,7 +2,7 @@
 using Stratis.Core.Utilities;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.Consensus.PerformanceCounters.ConsensusManager
+namespace Stratis.Core.Consensus.PerformanceCounters.ConsensusManager
 {
     public class ConsensusManagerPerformanceCounter
     {

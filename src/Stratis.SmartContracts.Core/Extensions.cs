@@ -1,6 +1,6 @@
 ﻿using System;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Core.Utilities;
 
 namespace Stratis.SmartContracts.Core

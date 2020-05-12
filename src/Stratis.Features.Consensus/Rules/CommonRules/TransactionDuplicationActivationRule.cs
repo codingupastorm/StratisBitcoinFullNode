@@ -2,8 +2,8 @@
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Base.Deployments;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Core.Consensus;
+using Stratis.Core.Consensus.Rules;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Features.Consensus.Rules.CommonRules

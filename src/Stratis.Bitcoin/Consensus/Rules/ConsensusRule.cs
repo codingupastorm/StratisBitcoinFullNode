@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin.Rules;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.Consensus.Rules
+namespace Stratis.Core.Consensus.Rules
 {
     public class ConsensusRulesContainer
     {

@@ -5,7 +5,7 @@ using FluentAssertions;
 using Moq;
 using NBitcoin;
 using NBitcoin.Crypto;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.Rules.ProvenHeaderRules;

@@ -4,7 +4,7 @@ using NBitcoin;
 using Stratis.Core.Base;
 using Stratis.Core.Configuration;
 using Stratis.Core.Connection;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 
 namespace Stratis.Bitcoin.Controllers
 {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Fee;
 using Stratis.Features.MemoryPool.Interfaces;

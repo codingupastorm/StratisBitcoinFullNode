@@ -7,7 +7,7 @@ using NBitcoin;
 using Stratis.Core.Base;
 using Stratis.Core.Base.Deployments;
 using Stratis.Core.Base.Deployments.Models;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Controllers;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.JsonErrors;

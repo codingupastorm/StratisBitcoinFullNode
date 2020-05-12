@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Base.Deployments;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Features.Consensus.CoinViews;
 
 namespace Stratis.Features.Consensus

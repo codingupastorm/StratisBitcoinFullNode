@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using FluentAssertions;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Core.Consensus.Rules;
 using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Features.Consensus.Rules.ProvenHeaderRules;
 using Stratis.Bitcoin.Networks;

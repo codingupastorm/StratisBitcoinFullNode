@@ -7,8 +7,8 @@ using NBitcoin;
 using NBitcoin.Protocol;
 using Stratis.Core.Base.Deployments;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Core.Consensus;
+using Stratis.Core.Consensus.Rules;
 using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool.Interfaces;
 

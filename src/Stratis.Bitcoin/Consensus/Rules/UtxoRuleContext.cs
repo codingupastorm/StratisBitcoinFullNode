@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Stratis.Bitcoin.Consensus.Rules
+namespace Stratis.Core.Consensus.Rules
 {
     public abstract class UtxoRuleContext : RuleContext
     {

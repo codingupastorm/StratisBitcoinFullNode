@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using NBitcoin;
 using NBitcoin.PoA;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Features.PoA
