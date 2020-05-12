@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using NBitcoin;
 using Stratis.Bitcoin.Tests.Common.Logging;
@@ -133,6 +134,44 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
             Assert.Equal("name1", dict[member1].ChannelName);
             Assert.Equal(member2, dict[member2].MemberPublicKey);
             Assert.Equal("name1", dict[member2].ChannelName);
+        }
+
+        [Fact]
+        public void CanReplaceChannelDefinitions()
+        {
+            var dataFolderPath = CreateTestDir(this);
+            var dataFolder = new DataFolder(dataFolderPath);
+
+            var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
+            var keyValueStore = new ChannelKeyValueStore(repositorySerializer, dataFolder, this.LoggerFactory.Object);
+
+            var channelRepository = new ChannelRepository(this.LoggerFactory.Object, keyValueStore);
+
+            channelRepository.Initialize();
+
+            var salesChannel = new ChannelDefinition()
+            {
+                Id = channelRepository.GetNextChannelId(),
+                Name = "sales",
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        "Organisation1"
+                    }
+                },
+                NetworkJson = "Something"
+            };
+            channelRepository.SaveChannelDefinition(salesChannel);
+
+            // Pretend a new amendment came in.
+            salesChannel.AccessList.Organisations.Add("Organisation2");
+
+            channelRepository.SaveChannelDefinition(salesChannel);
+
+            Dictionary<string, ChannelDefinition> allChannels = channelRepository.GetChannelDefinitions();
+
+            Assert.Equal(2, allChannels.Values.First().AccessList.Organisations.Count);
         }
     }
 }
