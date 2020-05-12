@@ -48,10 +48,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common
                     return false;
             }
 
-            if ((node1.FullNode.WalletManager().ContainsWallets) && (node2.FullNode.WalletManager().ContainsWallets))
-                if (node1.FullNode.WalletManager().WalletTipHash != node2.FullNode.WalletManager().WalletTipHash)
-                    return false;
-
             return true;
         }
 
@@ -80,10 +76,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common
                 if (node1.FullNode.MempoolManager().InfoAll().Count != node2.FullNode.MempoolManager().InfoAll().Count)
                     return (false, "[NODE1_MEMPOOL_COUNT_NOT_EQUAL_NODE2_MEMPOOL_COUNT]");
             }
-
-            if ((node1.FullNode.WalletManager().ContainsWallets) && (node2.FullNode.WalletManager().ContainsWallets))
-                if (node1.FullNode.WalletManager().WalletTipHash != node2.FullNode.WalletManager().WalletTipHash)
-                    return (false, "[WALLET_TIP_HASH_DOESNOT_MATCH]");
 
             return (true, string.Empty);
         }

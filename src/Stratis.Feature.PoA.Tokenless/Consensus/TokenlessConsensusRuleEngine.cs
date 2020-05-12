@@ -47,9 +47,14 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
             return new PowRuleContext(validationContext, this.DateTimeProvider.GetTimeOffset());
         }
 
-        public override Task<RewindState> RewindAsync()
+        public async override Task<RewindState> RewindAsync()
         {
-            throw new NotImplementedException();
+            // TODO: Do whatever else is required here.
+
+            return new RewindState()
+            {
+                BlockHash = base.ChainIndexer.Tip.Previous.HashBlock
+            };
         }
     }
 }
