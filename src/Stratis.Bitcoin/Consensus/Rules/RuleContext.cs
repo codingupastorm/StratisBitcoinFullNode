@@ -2,7 +2,7 @@
 using Stratis.Core.Base.Deployments;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Consensus.Rules
+namespace Stratis.Core.Consensus.Rules
 {
     /// <summary>
     /// Context that contains variety of information regarding blocks validation and execution.

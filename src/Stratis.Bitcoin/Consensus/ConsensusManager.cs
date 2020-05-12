@@ -5,24 +5,25 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Core.Base;
-using Stratis.Core.BlockPulling;
-using Stratis.Core.Configuration.Logging;
-using Stratis.Core.Configuration.Settings;
-using Stratis.Core.Connection;
-using Stratis.Bitcoin.Consensus.PerformanceCounters.ConsensusManager;
-using Stratis.Bitcoin.Consensus.ValidationResults;
-using Stratis.Bitcoin.Consensus.Validators;
+using Stratis.Bitcoin;
 using Stratis.Bitcoin.EventBus.CoreEvents;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Signals;
+using Stratis.Core.Base;
+using Stratis.Core.BlockPulling;
+using Stratis.Core.Configuration.Logging;
+using Stratis.Core.Configuration.Settings;
+using Stratis.Core.Connection;
+using Stratis.Core.Consensus.PerformanceCounters.ConsensusManager;
+using Stratis.Core.Consensus.ValidationResults;
+using Stratis.Core.Consensus.Validators;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.Consensus
+namespace Stratis.Core.Consensus
 {
     /// <inheritdoc cref="IConsensusManager"/>
     public class ConsensusManager : IConsensusManager

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using NBitcoin;
 using NBitcoin.Crypto;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;

@@ -1,9 +1,9 @@
 ﻿using System;
 using NBitcoin;
-using Stratis.Core.Configuration.Settings;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Core.Configuration.Settings;
 
-namespace Stratis.Bitcoin.Consensus
+namespace Stratis.Core.Consensus
 {
     /// <summary>
     /// A context that is used by consensus that is required for validation, in case validation failed the <see cref="ValidationContext.Error"/> property will be set.

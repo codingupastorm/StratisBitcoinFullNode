@@ -11,7 +11,7 @@ using Stratis.Core.Base;
 using Stratis.Core.Builder;
 using Stratis.Core.Configuration;
 using Stratis.Core.Connection;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;

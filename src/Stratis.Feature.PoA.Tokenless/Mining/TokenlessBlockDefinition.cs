@@ -3,7 +3,7 @@ using System.Linq;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Mining;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;

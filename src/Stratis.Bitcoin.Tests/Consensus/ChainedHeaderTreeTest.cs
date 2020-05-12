@@ -4,7 +4,7 @@ using System.Linq;
 using FluentAssertions;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Primitives;
 using Stratis.Core.Utilities;
 using Xunit;

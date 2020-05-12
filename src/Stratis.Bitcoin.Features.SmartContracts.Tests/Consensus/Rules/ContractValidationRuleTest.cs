@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Core.Utilities;
 using Stratis.Features.Consensus;
 using Stratis.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;

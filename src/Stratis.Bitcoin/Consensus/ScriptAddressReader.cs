@@ -1,7 +1,7 @@
 ﻿using NBitcoin;
 using Stratis.Bitcoin.Interfaces;
 
-namespace Stratis.Bitcoin.Consensus
+namespace Stratis.Core.Consensus
 {
     /// <inheritdoc cref="IScriptAddressReader"/>
     public class ScriptAddressReader : IScriptAddressReader

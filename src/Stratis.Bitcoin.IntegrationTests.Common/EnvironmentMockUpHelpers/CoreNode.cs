@@ -13,7 +13,7 @@ using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Configuration.Settings;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.EventBus;
 using Stratis.Bitcoin.EventBus.CoreEvents;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;

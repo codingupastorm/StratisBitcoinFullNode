@@ -5,7 +5,7 @@ using System.Text;
 using NBitcoin.Rules;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.Consensus.PerformanceCounters.Rules
+namespace Stratis.Core.Consensus.PerformanceCounters.Rules
 {
     /// <summary>Snapshot of rule's performance.</summary>
     [NoTrace]
