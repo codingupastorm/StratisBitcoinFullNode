@@ -108,11 +108,11 @@ namespace Stratis.SmartContracts.Tests.Common
         /// <summary>
         /// Creates a new account against the supplied running CA from scratch, and returns the client for it.
         /// </summary>
-        public static CaClient GetClientAndCreateAccount(IWebHost server, List<string> requestedPermissions = null, string organisation = null, Uri baseApiUri = null)
+        public static CaClient GetClientAndCreateAccount(IWebHost server, List<string> requestedPermissions = null, string organisation = null, string caBaseAddress = null)
         {
             var httpClient = new HttpClient();
             CredentialsModel credentials = CaTestHelper.CreateAccount(server, AccountAccessFlags.AdminAccess, permissions: requestedPermissions, organisation: organisation);
-            return new CaClient(baseApiUri ?? new Uri(CaTestHelper.BaseAddress), httpClient, credentials.AccountId, credentials.Password);
+            return new CaClient(new Uri(caBaseAddress ?? CaTestHelper.BaseAddress), httpClient, credentials.AccountId, credentials.Password);
         }
 
         /// <summary>

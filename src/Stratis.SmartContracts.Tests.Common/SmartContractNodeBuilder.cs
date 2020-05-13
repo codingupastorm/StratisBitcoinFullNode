@@ -121,7 +121,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
                 node.AuthorityCertificate = this.authorityCertificate;
 
-                CaClient client = TokenlessTestHelper.GetClientAndCreateAccount(server, requestedPermissions: permissions, organisation: organisation, baseApiUri: new Uri(caBaseAddress));
+                CaClient client = TokenlessTestHelper.GetClientAndCreateAccount(server, requestedPermissions: permissions, organisation: organisation, caBaseAddress: caBaseAddress);
 
                 (X509Certificate x509, CertificateInfoModel CertificateInfo) = IssueCertificate(client, node.ClientCertificatePrivateKey, node.TransactionSigningPrivateKey.PubKey, address, miningKey.PubKey);
 
