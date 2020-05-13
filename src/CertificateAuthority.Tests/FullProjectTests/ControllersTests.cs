@@ -86,6 +86,20 @@ namespace CertificateAuthority.Tests.FullProjectTests
             CreateServer();
 
             string result = CaTestHelper.GetValue<string>(this.helpersController.GetSha256("test"));
+
+            Assert.False(string.IsNullOrWhiteSpace(result));
+        }
+
+        [Fact]
+        public void TestGetAllAccessLevels()
+        {
+            CreateServer();
+
+            CredentialsModel credentials1 = this.GetPrivilegedAccount();
+
+            Dictionary<string, string> result = CaTestHelper.GetValue<Dictionary<string, string>>(this.helpersController.GetAllAccessLevels(credentials1));
+
+            Assert.True(result.Count == DataHelper.AllAccessFlags.Count);
         }
 
         [Fact]
