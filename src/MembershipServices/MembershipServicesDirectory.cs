@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -85,7 +86,7 @@ namespace MembershipServices
             // https://github.com/hyperledger/fabric/blob/master/docs/source/msp.rst
             // https://github.com/hyperledger/fabric-sdk-go/blob/master/internal/github.com/hyperledger/fabric/msp/msp.go
 
-            this.localMembershipServices = new LocalMembershipServicesConfiguration(this.nodeSettings.DataDir, this.nodeSettings.Network);
+            this.localMembershipServices = new LocalMembershipServicesConfiguration(Path.Combine(this.nodeSettings.DataDir, this.nodeSettings.Network.RootFolderName, this.nodeSettings.Network.Name), this.nodeSettings.Network);
 
             // Channel - defines administrative and participatory rights at the channel level. Defined in a channel configuration JSON (in the HL design).
             // Instantiated on the file system of every node in the channel (similar to local version, but there can be multiple providers for a channel) and kept synchronized via consensus.
@@ -109,7 +110,8 @@ namespace MembershipServices
             }
 
             // We attempt to set up the folder structure regardless of whether it has been done already.
-            this.localMembershipServices.InitializeFolderStructure();
+            LocalMembershipServicesConfiguration.InitializeFolderStructure(Path.Combine(this.nodeSettings.DataDir, this.nodeSettings.Network.RootFolderName, this.nodeSettings.Network.Name));
+            this.localMembershipServices.InitializeExistingCertificates();
 
             bool revoked = this.IsCertificateRevoked(CaCertificatesManager.GetThumbprint(this.ClientCertificate));
 

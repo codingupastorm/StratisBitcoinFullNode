@@ -149,7 +149,8 @@ namespace MembershipServices.Cli
             caClient = new CaClient(new Uri(options.CaUrl), new HttpClient(), int.Parse(options.CaAccountId), options.CaPassword);
 
             Key privateKey = keyStoreManager.GetKey(keyStoreSettings.Password, TokenlessKeyStoreAccount.P2PCertificates);
-
+            
+            LocalMembershipServicesConfiguration.InitializeFolderStructure(Path.Combine(options.DataDir, network.RootFolderName, network.Name));
             File.WriteAllText(Path.Combine(nodeSettings.DataFolder.RootPath, LocalMembershipServicesConfiguration.Keystore, "key.dat"), privateKey.GetBitcoinSecret(network).ToWif());
 
             PubKey transactionSigningPubKey = keyStoreManager.GetKey(keyStoreSettings.Password, TokenlessKeyStoreAccount.TransactionSigning).PubKey;
@@ -169,7 +170,6 @@ namespace MembershipServices.Cli
             if (clientCert == null)
                 return -1;
 
-            // TODO: Temporary workaround until CertificatesManager is completely removed and merged into MSD
             File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificateAuthorityInterface.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCert, privateKey, keyStoreSettings.Password));
 
             var membershipServices = new MembershipServicesDirectory(nodeSettings, loggerFactory);
