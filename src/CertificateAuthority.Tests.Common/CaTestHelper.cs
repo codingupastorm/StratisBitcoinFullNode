@@ -80,11 +80,11 @@ namespace CertificateAuthority.Tests.Common
             certificatesController.InitializeCertificateAuthority(model);
         }
 
-        public static IWebHostBuilder CreateWebHostBuilder(string dataFolderName)
+        public static IWebHostBuilder CreateWebHostBuilder(string dataFolderName, string caBaseAddress = null)
         {
             // Initialize settings
             var settings = new Settings();
-            settings.Initialize(new string[] { $"-datadir={dataFolderName}", $"-serverurls={BaseAddress}" });
+            settings.Initialize(new string[] { $"-datadir={dataFolderName}", $"-serverurls={caBaseAddress ?? BaseAddress}" });
 
             // Create the log folder
             string logFolder = Path.Combine(settings.DataDirectory, "Logs");

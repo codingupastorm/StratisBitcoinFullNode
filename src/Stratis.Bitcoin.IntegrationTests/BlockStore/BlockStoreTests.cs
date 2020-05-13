@@ -26,6 +26,7 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
         private readonly ILoggerFactory loggerFactory;
         private readonly Network network;
         private readonly RepositorySerializer repositorySerializer;
+        private readonly string caBaseAddress;
 
         public BlockStoreTests()
         {
@@ -33,6 +34,8 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 
             this.network = new BitcoinRegTest();
             this.repositorySerializer = new RepositorySerializer(this.network.Consensus.ConsensusFactory);
+            int caPort = 5000 + (new Random().Next(1000));
+            this.caBaseAddress = $"http://localhost:{caPort}";
         }
 
         [Fact]
@@ -114,23 +117,23 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 
             TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder, this.caBaseAddress).Build())
             using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(this.caBaseAddress);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode nodeSync = nodeBuilder.CreateTokenlessNode(network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+                CoreNode nodeSync = nodeBuilder.CreateTokenlessNode(network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }, caBaseAddress: this.caBaseAddress).Start();
                 int maxReorgLength = (int)Math.Min(10, nodeSync.FullNode.ChainBehaviorState.MaxReorgLength);
                 await nodeSync.MineBlocksAsync(maxReorgLength);
                 TestBase.WaitLoop(() => nodeSync.FullNode.GetBlockStoreTip().Height == maxReorgLength);
 
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }, caBaseAddress: this.caBaseAddress).Start();
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }, caBaseAddress: this.caBaseAddress).Start();
 
                 // Sync both nodes
                 TestHelper.ConnectAndSync(nodeSync, node1, node2);
@@ -173,17 +176,17 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 
             TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder, this.caBaseAddress).Build())
             using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(this.caBaseAddress);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }, caBaseAddress: this.caBaseAddress).Start();
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }, caBaseAddress: this.caBaseAddress).Start();
 
                 // Mine some blocks with node2
                 await node2.MineBlocksAsync(10);
