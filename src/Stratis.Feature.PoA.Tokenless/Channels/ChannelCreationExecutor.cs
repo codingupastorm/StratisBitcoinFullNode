@@ -4,10 +4,9 @@ using NBitcoin;
 using Stratis.Bitcoin.EventBus;
 using Stratis.Bitcoin.EventBus.CoreEvents;
 using Stratis.Bitcoin.Signals;
-using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 
-namespace Stratis.Feature.PoA.Tokenless
+namespace Stratis.Feature.PoA.Tokenless.Channels
 {
     public interface IChannelCreationExecutor
     {
