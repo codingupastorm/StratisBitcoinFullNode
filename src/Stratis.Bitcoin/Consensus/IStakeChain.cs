@@ -1,6 +1,6 @@
 ﻿using NBitcoin;
 
-namespace Stratis.Bitcoin.Consensus
+namespace Stratis.Core.Consensus
 {
     /// <summary>
     /// An interface to read and write PoS information from store.

@@ -3,7 +3,7 @@ using System.Linq;
 using NBitcoin;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Consensus
+namespace Stratis.Core.Consensus
 {
     public class UnspentOutputSet
     {

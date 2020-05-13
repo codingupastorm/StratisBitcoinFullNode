@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.CoinViews;
 using Xunit;

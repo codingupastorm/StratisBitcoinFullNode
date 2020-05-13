@@ -8,12 +8,12 @@ using NBitcoin;
 using Stratis.Core.Base;
 using Stratis.Core.Base.Deployments;
 using Stratis.Core.Configuration.Settings;
-using Stratis.Bitcoin.Consensus.PerformanceCounters.Rules;
-using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Core.Consensus.PerformanceCounters.Rules;
+using Stratis.Core.Consensus.Rules;
 using Stratis.Core.Utilities;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.Consensus
+namespace Stratis.Core.Consensus
 {
     /// <inheritdoc />
     public abstract class ConsensusRuleEngine : IConsensusRuleEngine

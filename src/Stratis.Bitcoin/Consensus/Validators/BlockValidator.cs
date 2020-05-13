@@ -6,7 +6,7 @@ using NBitcoin;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Consensus.Validators
+namespace Stratis.Core.Consensus.Validators
 {
     /// <summary>
     /// A callback that is invoked when <see cref="IPartialValidator.StartPartialValidation"/> completes validation of a block.

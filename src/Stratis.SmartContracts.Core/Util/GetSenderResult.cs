@@ -22,6 +22,8 @@ namespace Stratis.SmartContracts.Core.Util
 
         public string Error { get; }
 
+        public bool VerificationResult { get; set; }
+
         public static GetSenderResult CreateSuccess(uint160 address)
         {
             return new GetSenderResult(address);

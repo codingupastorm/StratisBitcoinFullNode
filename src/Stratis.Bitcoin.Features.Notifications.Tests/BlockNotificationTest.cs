@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
 using Stratis.Bitcoin.AsyncWork;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.EventBus.CoreEvents;
 using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Signals;

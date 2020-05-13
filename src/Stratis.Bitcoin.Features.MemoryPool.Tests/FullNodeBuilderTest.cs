@@ -6,7 +6,7 @@ using Stratis.Core.Base;
 using Stratis.Core.Builder;
 using Stratis.Core.Configuration;
 using Stratis.Core.Connection;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Features.BlockStore;
 using Stratis.Features.Consensus;

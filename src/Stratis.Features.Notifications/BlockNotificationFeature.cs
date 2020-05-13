@@ -7,7 +7,7 @@ using Stratis.Core.Base;
 using Stratis.Core.Builder;
 using Stratis.Core.Builder.Feature;
 using Stratis.Core.Connection;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Features.Notifications.Controllers;
 using Stratis.Features.Notifications.Interfaces;
 using Stratis.Bitcoin.P2P.Peer;

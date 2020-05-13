@@ -3,7 +3,7 @@ using System.Threading;
 using NBitcoin;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Consensus
+namespace Stratis.Core.Consensus
 {
     /// <summary>
     /// Database of UTXOs.

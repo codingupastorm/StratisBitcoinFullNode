@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Consensus.Rules;
@@ -8,16 +9,16 @@ using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 {
     /// <summary>
-    /// Executes a channel creation request if the transaction contains it.
+    /// Executes a channel update request if the transaction contains it.
     /// </summary>
-    public sealed class ExecuteChannelCreationRequest : FullValidationConsensusRule
+    public sealed class ExecuteChannelUpdateRequest : FullValidationConsensusRule
     {
         private readonly ChannelSettings channelSettings;
         private readonly IChannelService channelService;
         private readonly IChannelRequestSerializer channelRequestSerializer;
         private readonly ILogger<ExecuteChannelCreationRequest> logger;
 
-        public ExecuteChannelCreationRequest(
+        public ExecuteChannelUpdateRequest(
             ChannelSettings channelSettings,
             ILoggerFactory loggerFactory,
             IChannelService channelService,
@@ -42,18 +43,19 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             foreach (Transaction transaction in context.ValidationContext.BlockToValidate.Transactions)
             {
                 // If the TxOut is null then this transaction does not contain any channel update execution code.
-                TxOut txOut = transaction.TryGetChannelCreationRequestTxOut();
+                TxOut txOut = transaction.TryGetChannelUpdateRequestTxOut();
                 if (txOut == null)
                 {
-                    this.logger.LogDebug($"{transaction.GetHash()}' does not contain a channel creation request.");
+                    this.logger.LogDebug($"{transaction.GetHash()}' does not contain a channel update request.");
                     continue;
                 }
 
-                (ChannelCreationRequest channelCreationRequest, string message) = this.channelRequestSerializer.Deserialize<ChannelCreationRequest>(txOut.ScriptPubKey);
-                if (channelCreationRequest != null)
+                (ChannelUpdateRequest request, string message) = this.channelRequestSerializer.Deserialize<ChannelUpdateRequest>(txOut.ScriptPubKey);
+                if (request != null)
                 {
-                    this.logger.LogDebug("Transaction '{0}' contains a request to create channel '{1}'.", transaction.GetHash(), channelCreationRequest.Name);
-                    await this.channelService.CreateAndStartChannelNodeAsync(channelCreationRequest);
+                    this.logger.LogDebug("Transaction '{0}' contains a request to update channel '{1}'.", transaction.GetHash(), request.Name);
+
+                    // TODO: Implement update to channel definitions etc.
                 }
             }
         }

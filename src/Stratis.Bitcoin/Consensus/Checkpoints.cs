@@ -5,7 +5,7 @@ using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Utilities;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.Consensus
+namespace Stratis.Core.Consensus
 {
     /// <summary>
     /// Interface of block header hash checkpoint provider.

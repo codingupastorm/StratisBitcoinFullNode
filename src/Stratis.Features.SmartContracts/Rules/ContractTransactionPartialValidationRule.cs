@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Core.Consensus.Rules;
 using Stratis.Features.SmartContracts.Interfaces;
 using Stratis.SmartContracts.CLR;
 

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using NBitcoin;
 using NBitcoin.Protocol;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Utilities;

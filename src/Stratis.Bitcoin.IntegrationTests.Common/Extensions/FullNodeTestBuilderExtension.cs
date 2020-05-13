@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Stratis.Core.Builder;
 using Stratis.Core.Builder.Feature;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Core.Utilities;

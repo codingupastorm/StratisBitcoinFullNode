@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using NBitcoin;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Core.Consensus;
+using Stratis.Core.Consensus.Rules;
 using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
 using Xunit;
 

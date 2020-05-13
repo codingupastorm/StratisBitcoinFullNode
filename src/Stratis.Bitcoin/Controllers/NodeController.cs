@@ -15,7 +15,7 @@ using Stratis.Core.Base;
 using Stratis.Core.Builder.Feature;
 using Stratis.Core.Configuration;
 using Stratis.Core.Connection;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P;

@@ -13,15 +13,16 @@ namespace Stratis.Feature.PoA.Tokenless.AccessControl
     {
         public bool ValidateCertificateIsPermittedOnChannel(X509Certificate certificate, ChannelNetwork network)
         {
-            // In future iterations we will add complexity around who is allowed on a channel here.
+            // TODO: Get the up-to-date list of who is allowed on a channel, not use the initial one
+
             string organisation = certificate.GetOrganisation();
 
-            if (network.AccessList.Organisations.Contains(organisation))
+            if (network.InitialAccessList.Organisations.Contains(organisation))
                 return true;
 
             string thumbprint = CaCertificatesManager.GetThumbprint(certificate);
 
-            return network.AccessList.Thumbprints.Contains(thumbprint);
+            return network.InitialAccessList.Thumbprints.Contains(thumbprint);
         }
     }
 }

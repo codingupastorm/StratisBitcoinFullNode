@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.PoA;
 using Stratis.Core.Base;
-using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Core.Consensus.Rules;
 using Stratis.Features.PoA.Voting;
 
 namespace Stratis.Features.PoA.BasePoAFeatureConsensusRules

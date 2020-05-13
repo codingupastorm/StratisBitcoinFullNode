@@ -1,4 +1,4 @@
-﻿using Stratis.Bitcoin.Consensus.Rules;
+﻿using Stratis.Core.Consensus.Rules;
 using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.CoinViews;
 

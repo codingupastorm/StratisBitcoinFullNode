@@ -1,7 +1,7 @@
 ﻿using NBitcoin;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Consensus
+namespace Stratis.Core.Consensus
 {
     /// <summary>
     /// Return value of <see cref="CoinView.FetchCoinsAsync(uint256[])"/>,
