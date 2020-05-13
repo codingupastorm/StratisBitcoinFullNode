@@ -7,12 +7,12 @@ using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.PoA;
-using Stratis.Core.Consensus;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Builder.Feature;
+using Stratis.Core.Consensus;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Core;
@@ -44,6 +44,7 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly IMembershipServicesDirectory membershipServices;
         private IAsyncLoop caPubKeysLoop;
         private readonly IChannelService channelService;
+        private readonly IChannelUpdateExecutor channelUpdateExecutor;
         private readonly ReadWriteSetPolicyValidator rwsPolicyValidator;
 
         public TokenlessFeature(
@@ -64,6 +65,7 @@ namespace Stratis.Feature.PoA.Tokenless
             ITransientStore transientStore,
             IPrivateDataStore privateDataStore,
             IChannelService channelService,
+            IChannelUpdateExecutor channelUpdateExecutor,
             ReadWriteSetPolicyValidator rwsPolicyValidator)
         {
             this.channelSettings = channelSettings;
@@ -83,6 +85,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.membershipServices = membershipServices;
             this.channelService = channelService;
             this.rwsPolicyValidator = rwsPolicyValidator;
+            this.channelUpdateExecutor = channelUpdateExecutor;
 
             // TODO-TL: Is there a better place to do this?
             storeSettings.TxIndex = true;
@@ -147,6 +150,8 @@ namespace Stratis.Feature.PoA.Tokenless
 
             // Restart any channels that were created previously or that this nodes belong to.
             await this.channelService.RestartChannelNodesAsync();
+
+            this.channelUpdateExecutor.Initialize();
         }
 
         private void SynchronizeMembers()
