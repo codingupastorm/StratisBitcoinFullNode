@@ -40,9 +40,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
         {
             network.Consensus.ConsensusRules = new ConsensusRules();
             network.Consensus.ConsensusRules.Register<CheckChannelCreationRequestSenderHasPermission>();
-            //TODO: Add update permission rule?
             network.Consensus.ConsensusRules.Register<ExecuteChannelCreationRequest>();
-            network.Consensus.ConsensusRules.Register<ExecuteChannelUpdateRequest>();
         }
     }
 }

@@ -4,13 +4,13 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NBitcoin;
 using NBitcoin.PoA;
+using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.Mining;
+using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Core.Base;
 using Stratis.Core.Builder;
 using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Consensus;
-using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.Mining;
-using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Consensus;
@@ -49,6 +49,7 @@ namespace Stratis.Feature.PoA.Tokenless
                     .FeatureServices(services =>
                     {
                         services.AddSingleton<IChannelService, ChannelService>();
+                        services.AddSingleton<IChannelUpdateExecutor, ChannelUpdateExecutor>();
                         services.AddSingleton<ChannelSettings>();
                         services.AddSingleton<IChannelAccessValidator, ChannelAccessValidator>();
                         services.Replace(ServiceDescriptor.Singleton<ITxMempool, TokenlessMempool>());

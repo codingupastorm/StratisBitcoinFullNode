@@ -1,37 +1,55 @@
-﻿
-using System.Threading.Tasks;
+﻿using System;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Core.Consensus.Rules;
+using Stratis.Bitcoin.EventBus;
+using Stratis.Bitcoin.EventBus.CoreEvents;
+using Stratis.Bitcoin.Signals;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 
-namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
+namespace Stratis.Feature.PoA.Tokenless
 {
+
+    public interface IChannelUpdateExecutor
+    {
+        void Initialize();
+    }
+
     /// <summary>
     /// Executes a channel update request if the transaction contains it.
     /// </summary>
-    public sealed class ExecuteChannelUpdateRequest : FullValidationConsensusRule
+    public sealed class ChannelUpdateExecutor : IChannelUpdateExecutor
     {
         private readonly ChannelSettings channelSettings;
         private readonly IChannelService channelService;
         private readonly IChannelRequestSerializer channelRequestSerializer;
-        private readonly ILogger<ExecuteChannelCreationRequest> logger;
+        private readonly ILogger<ChannelUpdateExecutor> logger;
+        private readonly ISignals signals;
 
-        public ExecuteChannelUpdateRequest(
+        private SubscriptionToken blockConnectedSubscription;
+
+        public ChannelUpdateExecutor(
             ChannelSettings channelSettings,
             ILoggerFactory loggerFactory,
             IChannelService channelService,
-            IChannelRequestSerializer channelRequestSerializer)
+            IChannelRequestSerializer channelRequestSerializer,
+            ISignals signals)
         {
             this.channelSettings = channelSettings;
             this.channelService = channelService;
             this.channelRequestSerializer = channelRequestSerializer;
-            this.logger = loggerFactory.CreateLogger<ExecuteChannelCreationRequest>();
+            this.signals = signals;
+            this.logger = loggerFactory.CreateLogger<ChannelUpdateExecutor>();
         }
 
+        public void Initialize()
+        {
+            this.blockConnectedSubscription = this.signals.Subscribe<BlockConnected>(this.OnBlockConnected);
+        }
+
+
         /// <inheritdoc/>
-        public override async Task RunAsync(RuleContext context)
+        private void OnBlockConnected(BlockConnected blockConnectedEvent)
         {
             // This rule is only applicable if this node is a system channel node.
             if (!this.channelSettings.IsSystemChannelNode)
@@ -40,7 +58,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
                 return;
             }
 
-            foreach (Transaction transaction in context.ValidationContext.BlockToValidate.Transactions)
+            foreach (Transaction transaction in blockConnectedEvent.ConnectedBlock.Block.Transactions)
             {
                 // If the TxOut is null then this transaction does not contain any channel update execution code.
                 TxOut txOut = transaction.TryGetChannelUpdateRequestTxOut();
@@ -55,7 +73,15 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
                 {
                     this.logger.LogDebug("Transaction '{0}' contains a request to update channel '{1}'.", transaction.GetHash(), request.Name);
 
-                    // TODO: Implement update to channel definitions etc.
+                    // Get channel membership
+
+                    // Remove any members from the Remove pile
+
+                    // Add any members from the Add pile
+
+                    // Save channel membership
+
+                    throw new NotImplementedException("See comments above.");
                 }
             }
         }
