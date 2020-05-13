@@ -29,6 +29,7 @@ namespace Stratis.Feature.PoA.Tokenless
     public sealed class TokenlessFeature : FullNodeFeature
     {
         private readonly ICoreComponent coreComponent;
+
         private readonly ChannelSettings channelSettings;
         private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
         private readonly VotingManager votingManager;
@@ -37,13 +38,13 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly IEndorsementSuccessHandler successHandler;
         private readonly IPoAMiner miner;
         private readonly IAsyncProvider asyncProvider;
-        private readonly INodeLifetime nodeLifetime;
         private readonly ITransientStore transientStore;
         private readonly IPrivateDataStore privateDataStore;
         private readonly ILogger logger;
         private readonly IMembershipServicesDirectory membershipServices;
         private IAsyncLoop caPubKeysLoop;
         private readonly IChannelService channelService;
+        private readonly IChannelCreationExecutor channelCreationExecutor;
         private readonly IChannelUpdateExecutor channelUpdateExecutor;
         private readonly ReadWriteSetPolicyValidator rwsPolicyValidator;
 
@@ -59,12 +60,11 @@ namespace Stratis.Feature.PoA.Tokenless
             PayloadProvider payloadProvider,
             StoreSettings storeSettings,
             IAsyncProvider asyncProvider,
-            INodeLifetime nodeLifetime,
-            ILoggerFactory loggerFactory,
             IMembershipServicesDirectory membershipServices,
             ITransientStore transientStore,
             IPrivateDataStore privateDataStore,
             IChannelService channelService,
+            IChannelCreationExecutor channelCreationExecutor,
             IChannelUpdateExecutor channelUpdateExecutor,
             ReadWriteSetPolicyValidator rwsPolicyValidator)
         {
@@ -77,14 +77,14 @@ namespace Stratis.Feature.PoA.Tokenless
             this.successHandler = successHandler;
             this.miner = miner;
             this.asyncProvider = asyncProvider;
-            this.nodeLifetime = nodeLifetime;
             this.transientStore = transientStore;
             this.privateDataStore = privateDataStore;
-            this.caPubKeysLoop = null;
-            this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
+            this.logger = this.coreComponent.LoggerFactory.CreateLogger(this.GetType().FullName);
             this.membershipServices = membershipServices;
             this.channelService = channelService;
             this.rwsPolicyValidator = rwsPolicyValidator;
+
+            this.channelCreationExecutor = channelCreationExecutor;
             this.channelUpdateExecutor = channelUpdateExecutor;
 
             // TODO-TL: Is there a better place to do this?
@@ -138,7 +138,7 @@ namespace Stratis.Feature.PoA.Tokenless
                     this.logger.LogWarning("Could not synchronize members, contacting the CA Server failed:", e.Message);
                 }
             },
-            this.nodeLifetime.ApplicationStopping,
+            this.coreComponent.NodeLifetime.ApplicationStopping,
             repeatEvery: TimeSpan.FromSeconds(10),
             startAfter: TimeSpan.FromSeconds(30));
 
@@ -148,10 +148,14 @@ namespace Stratis.Feature.PoA.Tokenless
             if (this.channelSettings.IsInfraNode)
                 await this.channelService.StartSystemChannelNodeAsync();
 
+            if (this.channelSettings.IsSystemChannelNode)
+            {
+                this.channelCreationExecutor.Initialize();
+                this.channelUpdateExecutor.Initialize();
+            }
+
             // Restart any channels that were created previously or that this nodes belong to.
             await this.channelService.RestartChannelNodesAsync();
-
-            this.channelUpdateExecutor.Initialize();
         }
 
         private void SynchronizeMembers()
