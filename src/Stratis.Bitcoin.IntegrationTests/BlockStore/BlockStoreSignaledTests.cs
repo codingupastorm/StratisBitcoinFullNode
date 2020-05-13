@@ -21,6 +21,8 @@ using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.BlockStore;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;
+using Stratis.Bitcoin.IntegrationTests.Common.PoA;
+using Stratis.Features.PoA.Payloads;
 
 namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 {
@@ -89,18 +91,22 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
             using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (var builder = SmartContractNodeBuilder.Create(testRootFolder))
             {
+                server.Start();
+
                 // Start + Initialize CA.
                 var client = TokenlessTestHelper.GetAdminClient();
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
                 CoreNode nodeSync = builder.CreateTokenlessNode(network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
-                CoreNode node1 = builder.CreateTokenlessNode(network, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
 
-/*
-                CoreNode nodeSync = builder.CreateStratisPowNode(this.network, "bss-1-stratisNodeSync").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
-                CoreNode node1 = builder.CreateStratisPowNode(this.network, "bss-1-stratisNode1").Start();
-*/
+                // Mine some blocks.
+                int maxReorgLength = (int)Math.Min(10, nodeSync.FullNode.ChainBehaviorState.MaxReorgLength);
+                nodeSync.MineBlocksAsync(maxReorgLength).GetAwaiter().GetResult();
+                TestBase.WaitLoop(() => nodeSync.FullNode.GetBlockStoreTip().Height == maxReorgLength);
+
+                CoreNode node1 = builder.CreateTokenlessNode(network, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission }).Start();
+
                 // Change the second node's list of default behaviours include the test behaviour in it.
                 // We leave the other behaviors alone for this test because we want to see what messages the node gets under normal operation.
                 IConnectionManager node1ConnectionManager = node1.FullNode.NodeService<IConnectionManager>();
@@ -116,11 +122,11 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 
                 HashSet<uint256> advertised = new HashSet<uint256>();
 
-                // Check to see that all blocks got advertised to node1 via the "headers" payload.
-                foreach (IncomingMessage message in testBehavior.receivedMessageTracker["headers"])
+                // Check to see that all blocks got advertised to node1 via the "poahdr" payload.
+                foreach (IncomingMessage message in testBehavior.receivedMessageTracker["poahdr"])
                 {
-                    if (message.Message.Payload is HeadersPayload)
-                        foreach (BlockHeader header in ((HeadersPayload)message.Message.Payload).Headers)
+                    if (message.Message.Payload is PoAHeadersPayload)
+                        foreach (BlockHeader header in ((PoAHeadersPayload)message.Message.Payload).Headers)
                             advertised.Add(header.GetHash());
                 }
 
