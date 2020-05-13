@@ -69,19 +69,16 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
         }
     }
 
-    public class BlockStoreSignaledTests
+    public class BlockStoreSignaledTests : CaTester
     {
         protected readonly ILoggerFactory loggerFactory;
         private readonly Network network;
-        private readonly string caBaseAddress;
 
         public BlockStoreSignaledTests()
         {
             this.loggerFactory = new LoggerFactory();
 
             this.network = new BitcoinRegTest();
-            int caPort = 5000 + (new Random().Next(1000));
-            this.caBaseAddress = $"http://localhost:{caPort}";
         }
 
         [Fact]

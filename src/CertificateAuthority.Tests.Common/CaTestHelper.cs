@@ -15,6 +15,17 @@ using Stratis.Feature.PoA.Tokenless.Networks;
 
 namespace CertificateAuthority.Tests.Common
 {
+    public class CaTester
+    {
+        protected int caPort;
+        protected string caBaseAddress => $"http://localhost:{this.caPort}";
+
+        public CaTester()
+        {
+            this.caPort = 5000 + (new Random().Next(1000));
+        }
+    }
+
     public static class CaTestHelper
     {
         public const string AdminPassword = "4815162342";

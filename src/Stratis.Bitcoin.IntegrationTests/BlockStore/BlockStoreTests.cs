@@ -21,21 +21,18 @@ using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 {
-    public class BlockStoreTests
+    public class BlockStoreTests : CaTester
     {
         private readonly ILoggerFactory loggerFactory;
         private readonly Network network;
         private readonly RepositorySerializer repositorySerializer;
-        private readonly string caBaseAddress;
 
-        public BlockStoreTests()
+        public BlockStoreTests() : base()
         {
             this.loggerFactory = new LoggerFactory();
 
             this.network = new BitcoinRegTest();
             this.repositorySerializer = new RepositorySerializer(this.network.Consensus.ConsensusFactory);
-            int caPort = 5000 + (new Random().Next(1000));
-            this.caBaseAddress = $"http://localhost:{caPort}";
         }
 
         [Fact]
