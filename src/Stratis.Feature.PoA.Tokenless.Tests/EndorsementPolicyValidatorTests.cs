@@ -17,11 +17,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         [Fact]
         public void Valid_Policy_With_One_Invalid_Signature_Succeeds()
         {
-            // Problem is that we perform signature validation independently from policy validation
-            // This means that we could have a policy that has been satisfied, but if there are more than the 
-            // required number of signatures and one is invalid, validation will fail
-            // To fix, the signature validation should happen at the same time as the policy validation, ie.
-            // we only add valid signatures to the policy
             var membershipServices = new Mock<IMembershipServicesDirectory>();
             var organisationLookup = new Mock<IOrganisationLookup>();
             var stateRoot = new Mock<IStateRepositoryRoot>();
