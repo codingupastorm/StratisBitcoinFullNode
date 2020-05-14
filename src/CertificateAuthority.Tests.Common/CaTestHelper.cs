@@ -20,6 +20,8 @@ namespace CertificateAuthority.Tests.Common
         protected int caPort;
         protected string caBaseAddress => $"http://localhost:{this.caPort}";
 
+        public string CABaseAddress => this.caBaseAddress;
+
         public CaTester()
         {
             this.caPort = 5000 + (new Random().Next(1000));
