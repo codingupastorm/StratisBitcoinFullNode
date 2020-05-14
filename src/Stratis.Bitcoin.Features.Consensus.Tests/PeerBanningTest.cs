@@ -6,19 +6,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Configuration.Logging;
-using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Logging;
+using Stratis.Core.Configuration.Settings;
+using Stratis.Core.Connection;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests
+namespace Stratis.Features.Consensus.Tests
 {
     public class PeerBanningTest : TestBase
     {
@@ -246,7 +246,6 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             var dataFolder = CreateDataFolder(this);
 
             var loggerFactory = new ExtendedLoggerFactory();
-            loggerFactory.AddConsoleWithFilters();
 
             var ipAddress = IPAddress.Parse("::ffff:192.168.0.1");
             var endpoint = new IPEndPoint(ipAddress, 80);
@@ -279,7 +278,6 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             var dataFolder = CreateDataFolder(this);
 
             var loggerFactory = new ExtendedLoggerFactory();
-            loggerFactory.AddConsoleWithFilters();
 
             var ipAddress = IPAddress.Parse("::ffff:192.168.0.1");
             var endpoint = new IPEndPoint(ipAddress, 80);
@@ -323,7 +321,6 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             var dataFolder = CreateDataFolder(this);
 
             var loggerFactory = new ExtendedLoggerFactory();
-            loggerFactory.AddConsoleWithFilters();
 
             var ipAddress80 = IPAddress.Parse("::ffff:192.168.0.1");
             var endpoint80 = new IPEndPoint(ipAddress80, 80);
@@ -366,7 +363,6 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             DataFolder dataFolder = CreateDataFolder(this);
 
             var loggerFactory = new ExtendedLoggerFactory();
-            loggerFactory.AddConsoleWithFilters();
 
             IPAddress ipAddress = IPAddress.Parse("::ffff:192.168.0.1");
             var endpoint = new IPEndPoint(ipAddress, 80);
@@ -403,7 +399,6 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             DataFolder dataFolder = CreateDataFolder(this);
 
             var loggerFactory = new ExtendedLoggerFactory();
-            loggerFactory.AddConsoleWithFilters();
 
             IPAddress ipAddress = IPAddress.Parse("::ffff:192.168.0.1");
             var endpoint = new IPEndPoint(ipAddress, 80);

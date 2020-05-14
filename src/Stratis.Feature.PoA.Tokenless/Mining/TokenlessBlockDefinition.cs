@@ -3,21 +3,21 @@ using System.Linq;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Features.Miner;
-using Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules;
-using Stratis.Bitcoin.Features.SmartContracts;
-using Stratis.Bitcoin.Features.SmartContracts.Caching;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Mining;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.Extensions;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Features.Consensus.Rules.CommonRules;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Interfaces;
+using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
+using Stratis.Features.SmartContracts;
+using Stratis.Features.SmartContracts.Caching;
+using Stratis.Features.SmartContracts.Interfaces;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Util;
@@ -26,7 +26,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
 {
     public sealed class TokenlessBlockDefinition : BlockDefinition
     {
-        private readonly ICoinView coinView;
         private readonly IContractExecutorFactory executorFactory;
         private readonly ILogger logger;
         private readonly List<Receipt> receipts;
@@ -34,32 +33,40 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         private readonly IBlockExecutionResultCache executionCache;
         private readonly ICallDataSerializer callDataSerializer;
         private IStateRepositoryRoot stateSnapshot;
+        private readonly IReadWriteSetTransactionSerializer rwsSerializer;
+        private readonly IReadWriteSetValidator rwsValidator;
         private readonly ITokenlessSigner tokenlessSigner;
+        private readonly ITxMempool mempool;
+        private readonly MempoolSchedulerLock mempoolLock;
 
         public TokenlessBlockDefinition(
             IBlockBufferGenerator blockBufferGenerator,
-            ICoinView coinView,
             IConsensusManager consensusManager,
             IDateTimeProvider dateTimeProvider,
             IContractExecutorFactory executorFactory,
             ILoggerFactory loggerFactory,
             ITxMempool mempool,
             MempoolSchedulerLock mempoolLock,
-            MinerSettings minerSettings,
+            IMinerSettings minerSettings,
             Network network,
             ITokenlessSigner tokenlessSigner,
             IStateRepositoryRoot stateRoot,
             IBlockExecutionResultCache executionCache,
+            IReadWriteSetTransactionSerializer readWriteSerializer,
+            IReadWriteSetValidator rwsValidator,
             ICallDataSerializer callDataSerializer)
             : base(consensusManager, dateTimeProvider, loggerFactory, mempool, mempoolLock, minerSettings, network)
         {
-            this.coinView = coinView;
             this.executorFactory = executorFactory;
             this.logger = loggerFactory.CreateLogger(this.GetType());
             this.stateRoot = stateRoot;
             this.callDataSerializer = callDataSerializer;
             this.tokenlessSigner = tokenlessSigner;
             this.executionCache = executionCache;
+            this.rwsSerializer = readWriteSerializer;
+            this.rwsValidator = rwsValidator;
+            this.mempool = mempool;
+            this.mempoolLock = mempoolLock;
             this.receipts = new List<Receipt>();
 
             // When building smart contract blocks, we will be generating and adding both transactions to the block and txouts to the coinbase. 
@@ -73,6 +80,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         public override BlockTemplate Build(ChainedHeader chainTip, Script scriptPubKey)
         {
             this.ChainTip = chainTip;
+            this.height = chainTip.Height + 1;
 
             this.stateSnapshot = this.stateRoot.GetSnapshotTo(((ISmartContractBlockHeader)this.ConsensusManager.Tip.Header).HashStateRoot.ToBytes());
             this.receipts.Clear();
@@ -83,6 +91,9 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
 
             this.MedianTimePast = Utils.DateTimeToUnixTime(this.ChainTip.GetMedianTimePast());
             this.LockTimeCutoff = MempoolValidator.StandardLocktimeVerifyFlags.HasFlag(Transaction.LockTimeFlags.MedianTimePast) ? this.MedianTimePast : this.BlockTemplate.Block.Header.Time;
+
+            // Coinbase gets added first.
+            this.block.Transactions.Add(CreateTokenlessCoinbase());
 
             this.AddTransactions(out int _, out int _);
 
@@ -95,6 +106,19 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             this.executionCache.StoreExecutionResult(this.BlockTemplate.Block.GetHash(), cacheModel);
 
             return this.BlockTemplate;
+        }
+
+        /// <summary>
+        /// Creates a coinbase without any significant data. Will be used for voting if necessary.
+        /// </summary>
+        private Transaction CreateTokenlessCoinbase()
+        {
+            Transaction tx = this.Network.CreateTransaction();
+            tx.Time = (uint)this.DateTimeProvider.GetAdjustedTimeAsUnixTimestamp();
+            // We need these 2 for IsCoinBase to return true.
+            tx.AddInput(TxIn.CreateCoinbase(this.ChainTip.Height + 1));
+            tx.AddOutput(Money.Zero, new Script());
+            return tx;
         }
 
         /// <inheritdoc/>
@@ -113,8 +137,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             packagesSelected = 0;
             descendentsUpdated = 0;
 
-            // TODO-TL: Implement new ordering by time.
-            var entriesToAdd = this.MempoolLock.ReadAsync(() => this.Mempool.MapTx.AncestorScore).ConfigureAwait(false).GetAwaiter().GetResult().ToList();
+            var entriesToAdd = this.MempoolLock.ReadAsync(() => this.Mempool.MapTx.EntryTime).ConfigureAwait(false).GetAwaiter().GetResult().ToList();
 
             foreach (TxMempoolEntry entryToAdd in entriesToAdd)
             {
@@ -164,6 +187,23 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         /// <inheritdoc/>
         public override void AddToBlock(TxMempoolEntry entry)
         {
+            if (entry.Transaction.Outputs.First().ScriptPubKey.IsReadWriteSet())
+            {
+                bool valid = this.ExecuteReadWriteTransaction(entry.Transaction);
+
+                if (!valid)
+                {
+                    // Remove the dud transaction from the mempool, and return early so we don't include the transaction in this block.
+
+                    this.mempoolLock.WriteAsync(() =>
+                    {
+                        this.mempool.RemoveRecursive(entry.Transaction);
+                    }).ConfigureAwait(false).GetAwaiter().GetResult();
+
+                    return;
+                }
+            }
+
             TxOut smartContractTxOut = entry.Transaction.TryGetSmartContractTxOut();
             if (smartContractTxOut == null)
                 this.logger.LogDebug("Transaction {0} does not contain smart contract information.", entry.Transaction.GetHash());
@@ -217,6 +257,31 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
             scHeader.LogsBloom = logsBloom;
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="transaction"></param>
+        /// <returns></returns>
+        private bool ExecuteReadWriteTransaction(Transaction transaction)
+        {
+            // Apply RWS to the state repository.
+            ReadWriteSet rws = this.rwsSerializer.GetReadWriteSet(transaction);
+
+            if (!this.rwsValidator.IsReadWriteSetValid(this.stateSnapshot, rws))
+            {
+                return false;
+            }
+
+            int txIndex = this.block.Transactions.Count;
+
+            string version = $"{this.height}.{txIndex}";
+
+            this.rwsValidator.ApplyReadWriteSet(this.stateSnapshot, rws, version);
+
+            return true;
+        }
+
         /// <summary>
         /// Execute the contract and add all relevant fees and refunds to the block.
         /// </summary>
@@ -225,8 +290,17 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
         private IContractExecutionResult ExecuteSmartContract(TxMempoolEntry mempoolEntry)
         {
             GetSenderResult getSenderResult = this.tokenlessSigner.GetSender(mempoolEntry.Transaction);
-            IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)this.height, new uint160(0), Money.Zero, getSenderResult.Sender, mempoolEntry.Transaction);
-            IContractExecutor executor = this.executorFactory.CreateExecutor(this.stateSnapshot, transactionContext);
+
+            ulong txIndex = (ulong)this.block.Transactions.Count; // Number ahead of us in block + the coinbase will give us our index.
+            IContractTransactionContext transactionContext = new ContractTransactionContext(
+                (ulong)this.height,
+                txIndex,
+                new uint160(0),
+                getSenderResult.Sender,
+                mempoolEntry.Transaction,
+                null); // Contracts executed inside blocks will have no transient data.
+
+            IContractExecutor executor = this.executorFactory.CreateExecutor(this.stateSnapshot);
             IContractExecutionResult result = executor.Execute(transactionContext);
             Result<ContractTxData> deserializedCallData = this.callDataSerializer.Deserialize(transactionContext.Data);
 
@@ -243,7 +317,9 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
                 result.ErrorMessage,
                 deserializedCallData.Value.GasPrice,
                 transactionContext.TxOutValue,
-                deserializedCallData.Value.IsCreateContract ? null : deserializedCallData.Value.MethodName);
+                result.ReadWriteSet.GetReadWriteSet().ToJson(),
+                deserializedCallData.Value.IsCreateContract ? null : deserializedCallData.Value.MethodName,
+                 (ulong)this.height);
 
             this.receipts.Add(receipt);
 

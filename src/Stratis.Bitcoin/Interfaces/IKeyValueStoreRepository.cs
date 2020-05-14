@@ -1,19 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using Stratis.Bitcoin.KeyValueStore;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin.Interfaces
 {
     /// <summary>
     /// Represents a glue-layer containing the basic methods that all key-value databases should support.
     /// </summary>
-    public interface IKeyValueStoreRepository : IDisposable
+    public interface IKeyValueStoreRepository : IKeyValueStore, IDisposable
     {
-        /// <summary>
-        /// Initialize the underlying database / glue-layer.
-        /// </summary>
-        /// <param name="rootPath">The location of the key-value store.</param>
-        void Init(string rootPath);
+        byte[] Serialize<T>(T obj);
+
+        T Deserialize<T>(byte[] objBytes);
+
+        IRepositorySerializer RepositorySerializer { get; }
+
+        Dictionary<string, KeyValueStoreTable> Tables { get; }
 
         /// <summary>
         /// Request the underlying database to start a transaction.
@@ -49,9 +52,14 @@ namespace Stratis.Bitcoin.Interfaces
         /// <param name="keyValueStoreTransaction">The transaction.</param>
         /// <param name="keyValueStoreTable">The table to read.</param>
         /// <param name="keysOnly">Set to <c>true</c> if values are optional.</param>
-        /// <param name="backwards">Set to <c>true</c> to iterate backwards.</param>
+        /// <param name="sortOrder">The sort order.</param>
+        /// <param name="firstKey">The lowest key to include in the result.</param>
+        /// <param name="lastKey">The highest key to include in the result.</param>
+        /// <param name="includeFirstKey">Omits the first key from the result if set.</param>
+        /// <param name="includeLastKey">Omits the last key from the result if set.</param>
         /// <returns>The keys and values as byte arrays.</returns>
-        IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable keyValueStoreTable, bool keysOnly = false, bool backwards = false);
+        IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTable keyValueStoreTable, bool keysOnly = false, SortOrder sortOrder = SortOrder.Ascending,
+            byte[] firstKey = null, byte[] lastKey = null, bool includeFirstKey = true, bool includeLastKey = true);
 
         /// <summary>
         /// A call-back indicating that the transaction is starting.

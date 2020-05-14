@@ -1,7 +1,7 @@
 ﻿using System.IO;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 
-namespace Stratis.Bitcoin.Utilities
+namespace Stratis.Core.Utilities
 {
     /// <summary>
     /// Class that prevents another instance of the node to run in the same data folder

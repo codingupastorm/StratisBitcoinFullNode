@@ -1,11 +1,9 @@
 ﻿using System.IO;
 using Microsoft.Extensions.Logging;
-using NBitcoin;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Bitcoin.KeyValueStoreLevelDB;
+using Stratis.Core.Utilities;
 
 namespace Stratis.SmartContracts.Core.Receipts
 {
@@ -13,10 +11,10 @@ namespace Stratis.SmartContracts.Core.Receipts
     {
     }
 
-    public class PersistentReceiptKVStore : KeyValueStore<KeyValueStoreLevelDB>, IReceiptKVStore
+    public class PersistentReceiptKVStore : KeyValueStoreLevelDB, IReceiptKVStore
     {
         public PersistentReceiptKVStore(IRepositorySerializer repositorySerializer, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
-            : base(Path.Combine(dataFolder.SmartContractStatePath, PersistentReceiptRepository.TableName), loggerFactory, dateTimeProvider, repositorySerializer)
+            : base(Path.Combine(dataFolder.SmartContractStatePath, PersistentReceiptRepository.TableName), loggerFactory, repositorySerializer)
         {
         }
     }

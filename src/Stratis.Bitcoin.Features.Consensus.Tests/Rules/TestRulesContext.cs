@@ -6,23 +6,22 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Rules;
-using Stratis.Bitcoin.AsyncWork;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Base.Deployments;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Configuration.Logging;
-using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.Consensus.Interfaces;
-using Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders;
-using Stratis.Bitcoin.Features.Consensus.Rules;
+using Stratis.Core.Base;
+using Stratis.Core.Base.Deployments;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Settings;
+using Stratis.Core.Consensus;
+using Stratis.Core.Consensus.Rules;
 using Stratis.Bitcoin.Signals;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
+using Stratis.Features.Consensus.CoinViews;
+using Stratis.Features.Consensus.Interfaces;
+using Stratis.Features.Consensus.ProvenBlockHeaders;
+using Stratis.Features.Consensus.Rules;
 using Xunit.Sdk;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests.Rules
+namespace Stratis.Features.Consensus.Tests.Rules
 {
     /// <summary>
     /// Concrete instance of the test chain.
@@ -115,6 +114,16 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.Rules
             return this.RuleContext ?? new PowRuleContext();
         }
 
+        public override void ConsensusSpecificTxChecks(Transaction tx)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void ConsensusSpecificRequiredTxChecks(Transaction tx)
+        {
+            throw new NotImplementedException();
+        }
+
         public override uint256 GetBlockHash()
         {
             throw new NotImplementedException();
@@ -165,7 +174,6 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.Rules
 
             testRulesContext.NodeSettings = new NodeSettings(network, args: new[] { $"-datadir={dataDir}" });
             testRulesContext.LoggerFactory = testRulesContext.NodeSettings.LoggerFactory;
-            testRulesContext.LoggerFactory.AddConsoleWithFilters();
             testRulesContext.DateTimeProvider = DateTimeProvider.Default;
             network.Consensus.Options = new ConsensusOptions();
 
@@ -173,7 +181,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.Rules
             testRulesContext.Checkpoints = new Checkpoints();
             testRulesContext.ChainIndexer = new ChainIndexer(network);
             testRulesContext.ChainState = new ChainState();
-            testRulesContext.Signals = new Signals.Signals(testRulesContext.LoggerFactory, null);
+            testRulesContext.Signals = new Signals(testRulesContext.LoggerFactory, null);
             testRulesContext.AsyncProvider = new AsyncProvider(testRulesContext.LoggerFactory, testRulesContext.Signals, new NodeLifetime());
 
             var deployments = new NodeDeployments(testRulesContext.Network, testRulesContext.ChainIndexer);

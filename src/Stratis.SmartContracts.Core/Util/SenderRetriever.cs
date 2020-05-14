@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Consensus;
+using Stratis.Core.Utilities;
+using Stratis.Features.MemoryPool;
 
 namespace Stratis.SmartContracts.Core.Util
 {
@@ -12,7 +12,7 @@ namespace Stratis.SmartContracts.Core.Util
         public const string InvalidOutputIndex = "Invalid index given for PrevOut.";
         public const string OutputAlreadySpent = "Output has already been spent.";
         public const string OutputsNotInCoinView = "Unspent outputs to smart contract transaction are not present in coinview.";
-        public const string UnableToGetSender ="Unable to get the sender of the transaction from previous transactions and null coinview.";
+        public const string UnableToGetSender = "Unable to get the sender of the transaction from previous transactions and null coinview.";
 
 
         /// <inheritdoc />

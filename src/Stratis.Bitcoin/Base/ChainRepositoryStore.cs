@@ -1,19 +1,19 @@
 ﻿using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.KeyValueStore;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Bitcoin.KeyValueStoreLevelDB;
+using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Base
+namespace Stratis.Core.Base
 {
     public interface IChainRepositoryStore : IKeyValueStore
     {
     }
 
-    public class ChainRepositoryStore : KeyValueStore<KeyValueStoreLevelDB.KeyValueStoreLevelDB>, IChainRepositoryStore
+    public class ChainRepositoryStore : KeyValueStoreLevelDB, IChainRepositoryStore
     {
         public ChainRepositoryStore(IRepositorySerializer repositorySerializer, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
-            : base(dataFolder.ChainPath, loggerFactory, dateTimeProvider, repositorySerializer)
+            : base(dataFolder.ChainPath, loggerFactory, repositorySerializer)
         {
         }
     }

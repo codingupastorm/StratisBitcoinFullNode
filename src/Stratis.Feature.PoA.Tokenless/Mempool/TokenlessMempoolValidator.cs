@@ -3,12 +3,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Consensus;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Interfaces;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Feature.PoA.Tokenless.Mempool
 {
@@ -18,7 +16,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
     public class TokenlessMempoolValidator : IMempoolValidator
     {
         private readonly ChainIndexer chainIndexer;
-        private readonly ICoinView coinView;
         private readonly IDateTimeProvider dateTimeProvider;
         private readonly ILogger logger;
         private readonly ITxMempool mempool;
@@ -38,7 +35,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
 
         public TokenlessMempoolValidator(
             ChainIndexer chainIndexer,
-            ICoinView coinView,
             IDateTimeProvider dateTimeProvider,
             ILoggerFactory loggerFactory,
             ITxMempool memPool,
@@ -47,7 +43,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
             MempoolSettings mempoolSettings)
         {
             this.chainIndexer = chainIndexer;
-            this.coinView = coinView;
             this.dateTimeProvider = dateTimeProvider;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.mempool = memPool;
@@ -99,7 +94,8 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
         /// <inheritdoc />
         public Task SanityCheck()
         {
-            return this.mempoolLock.ReadAsync(() => this.mempool.Check(this.coinView));
+            // Not applicable in a tokenless network.
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -113,14 +109,9 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
 
             this.PreMempoolChecks(context);
 
-            // Create the MemPoolCoinView and load relevant utxoset
-            context.View = new MempoolCoinView(this.coinView, this.mempool, this.mempoolLock, this);
-
             // Adding to the mem pool can only be done sequentially so use the sequential scheduler for that.
             await this.mempoolLock.WriteAsync(() =>
             {
-                context.View.LoadViewLocked(context.Transaction);
-
                 // If the transaction already exists in the mempool,
                 // we only record the state but do not throw an exception.
                 // This is because the caller will check if the state is invalid

@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 using Stratis.Features.SQLiteWalletRepository.External;
 using Stratis.Features.SQLiteWalletRepository.Tables;
+using Stratis.Features.Wallet.Interfaces;
 
 namespace Stratis.Features.SQLiteWalletRepository
 {
@@ -22,7 +22,7 @@ namespace Stratis.Features.SQLiteWalletRepository
         internal WalletAddressLookup(DBConnection conn, int? walletId) :
             // Create a bigger hash table if its shared.
             // TODO: Make this configurable.
-            base(conn.Repository.DatabasePerWallet? 20 : 26)
+            base(conn.Repository.DatabasePerWallet ? 20 : 26)
         {
             this.conn = conn;
             this.walletId = walletId;

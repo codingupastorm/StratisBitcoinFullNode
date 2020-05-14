@@ -1,9 +1,9 @@
 ﻿using System;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
+using Stratis.Features.Consensus.CoinViews;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests.CoinViews
+namespace Stratis.Features.Consensus.Tests.CoinViews
 {
     public class CachePerformanceCounterTest
     {

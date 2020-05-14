@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Base;
+using Stratis.Core.Connection;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Feature.PoA.Tokenless.Core
 {

@@ -5,15 +5,15 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
+using Stratis.Features.Consensus.ProvenBlockHeaders;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
+namespace Stratis.Features.Consensus.Tests.ProvenBlockHeaders
 {
     public class ProvenBlockHeaderRepositoryTests : LogsTestBase
     {
@@ -171,8 +171,11 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
             }
         }
 
+        /// <summary>
+        /// PutAsync_Add_Ten_ProvenBlockHeaders_Dispose_On_Initialise_Repo_TipHeight_Should_Be_At_Last_Saved_TipAsync
+        /// </summary>
         [Fact]
-        public async Task PutAsync_Add_Ten_ProvenBlockHeaders_Dispose_On_Initialise_Repo_TipHeight_Should_Be_At_Last_Saved_TipAsync()
+        public async Task ProvenBlockHeaderRepositoryTest_Scenario6_Async()
         {
             string folder = CreateTestDir(this);
 

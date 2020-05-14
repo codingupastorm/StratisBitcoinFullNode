@@ -1,10 +1,10 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
+using Stratis.Core.Consensus;
+using Stratis.Core.Consensus.Rules;
+using Stratis.Core.Utilities.Extensions;
+using Stratis.Features.Consensus.Rules.CommonRules;
 
 namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 {

@@ -1,19 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using FluentAssertions;
 using Moq;
 using NBitcoin;
 using NBitcoin.BitcoinCore;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
+using Stratis.Features.Consensus.ProvenBlockHeaders;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests.CoinViews
+namespace Stratis.Features.Consensus.Tests.CoinViews
 {
     public class RewindDataIndexCacheTest : LogsTestBase
     {
@@ -70,7 +70,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.CoinViews
 
             rewindDataIndexCache.Initialize(20, coinViewMock.Object);
 
-            rewindDataIndexCache.Save(new Dictionary<OutPoint, int>() { { new OutPoint(new uint256(21),0 ), 21}});
+            rewindDataIndexCache.Save(new Dictionary<OutPoint, int>() { { new OutPoint(new uint256(21), 0), 21 } });
             var items = rewindDataIndexCache.GetMemberValue("items") as ConcurrentDictionary<OutPoint, int>;
 
             items.Should().HaveCount(23);

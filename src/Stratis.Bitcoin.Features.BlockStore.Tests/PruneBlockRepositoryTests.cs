@@ -1,9 +1,10 @@
 ﻿using System.Linq;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.BlockStore.Pruning;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common.Logging;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
+using Stratis.Features.BlockStore;
+using Stratis.Features.BlockStore.Pruning;
 using Xunit;
 
 namespace Stratis.Bitcoin.Features.BlockStore.Tests
@@ -26,7 +27,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
             var keyValueStore = new BlockKeyValueStore(repositorySerializer, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
-            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore);
+            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore, repositorySerializer);
 
             blockRepository.PutBlocks(new HashHeightPair(posBlocks.Last().GetHash(), 50), posBlocks);
 
@@ -35,7 +36,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
                 AmountOfBlocksToKeep = 10
             };
 
-            var prunedBlockRepository = new PrunedBlockRepository(blockRepository, repositorySerializer, this.LoggerFactory.Object, storeSettings);
+            var prunedBlockRepository = new PrunedBlockRepository(blockRepository, this.LoggerFactory.Object, storeSettings);
             prunedBlockRepository.Initialize();
             prunedBlockRepository.PruneAndCompactDatabase(chainedHeaderTip.GetAncestor(50), this.Network, true);
 
@@ -58,7 +59,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
             var keyValueStore = new BlockKeyValueStore(repositorySerializer, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
-            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore);
+            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore, repositorySerializer);
 
             blockRepository.PutBlocks(new HashHeightPair(posBlocks.Take(100).Last().GetHash(), 100), posBlocks.Take(100).ToList());
 
@@ -67,7 +68,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
                 AmountOfBlocksToKeep = 50
             };
 
-            var prunedBlockRepository = new PrunedBlockRepository(blockRepository, repositorySerializer, this.LoggerFactory.Object, storeSettings);
+            var prunedBlockRepository = new PrunedBlockRepository(blockRepository, this.LoggerFactory.Object, storeSettings);
             prunedBlockRepository.Initialize();
 
             // The first prune will delete blocks from 50 to 0.
@@ -99,7 +100,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
             var keyValueStore = new BlockKeyValueStore(repositorySerializer, dataFolder, this.LoggerFactory.Object, DateTimeProvider.Default);
 
-            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore);
+            var blockRepository = new BlockRepository(this.Network, this.LoggerFactory.Object, keyValueStore, repositorySerializer);
 
             blockRepository.PutBlocks(new HashHeightPair(posBlocks.Last().GetHash(), 50), posBlocks);
 
@@ -108,7 +109,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
                 AmountOfBlocksToKeep = 10
             };
 
-            var prunedBlockRepository = new PrunedBlockRepository(blockRepository, repositorySerializer, this.LoggerFactory.Object, storeSettings);
+            var prunedBlockRepository = new PrunedBlockRepository(blockRepository, this.LoggerFactory.Object, storeSettings);
             prunedBlockRepository.Initialize();
 
             // Delete blocks 30 to 0 from the repo, this would have been done by the service before shutdown was initiated.

@@ -1,28 +1,34 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Builder;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.Consensus;
+using Stratis.Bitcoin;
+using Stratis.Core.Base;
+using Stratis.Core.Builder;
+using Stratis.Core.Configuration;
+using Stratis.Core.Connection;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Features.BlockStore;
+using Stratis.Features.Consensus;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.MemoryPool.Tests
+namespace Stratis.Features.MemoryPool.Tests
 {
-    public class FullNodeBuilderTest
+    public class FullNodeBuilderTest : TestBase
     {
+        public FullNodeBuilderTest() : base(KnownNetworks.TestNet)
+        {
+        }
+
         [Fact]
         public void CanHaveAllFullnodeServicesTest()
         {
             // This test is put in the mempool feature because the
             // mempool requires all the features to be a fullnode.
 
-            var nodeSettings = new NodeSettings(KnownNetworks.TestNet, args: new string[] {
-                $"-datadir=Stratis.Bitcoin.Features.MemoryPool.Tests/TestData/FullNodeBuilderTest/CanHaveAllServicesTest" });
+            string dataDir = GetTestDirectoryPath(this);
+
+            var nodeSettings = new NodeSettings(this.Network, args: new string[] { $"-datadir={dataDir}" });
 
             var fullNodeBuilder = new FullNodeBuilder(nodeSettings);
             IFullNode fullNode = fullNodeBuilder

@@ -1,8 +1,8 @@
 ﻿using System.Net;
 using ConcurrentCollections;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Bitcoin.Utilities.Extensions;
+using Stratis.Core.Configuration.Settings;
+using Stratis.Core.Utilities.Extensions;
 using TracerAttributes;
 
 namespace Stratis.Bitcoin.P2P
@@ -48,14 +48,14 @@ namespace Stratis.Bitcoin.P2P
         /// <inheritdoc/>
         public void Add(IPEndPoint ipEndPoint)
         {
-            this.knownSelfEndpoints.Add(ipEndPoint);
+            this.knownSelfEndpoints.Add(ipEndPoint.MapToIpv6());
         }
 
         /// <inheritdoc/>
         [NoTrace]
         public bool IsSelf(IPEndPoint ipEndPoint)
         {
-            return this.knownSelfEndpoints.Contains(ipEndPoint);
+            return this.knownSelfEndpoints.Contains(ipEndPoint.MapToIpv6());
         }
 
         /// <inheritdoc/>

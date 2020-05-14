@@ -19,7 +19,6 @@ namespace Stratis.Bitcoin.Networks
             this.DefaultPort = 18444;
             this.DefaultMaxOutboundConnections = 8;
             this.DefaultMaxInboundConnections = 117;
-            this.DefaultRPCPort = 18332;
             this.DefaultAPIPort = 38220;
             this.CoinTicker = "TBTC";
             this.DefaultBanTimeSeconds = 60 * 60 * 24; // 24 Hours
@@ -46,8 +45,30 @@ namespace Stratis.Bitcoin.Networks
             var bip9Deployments = new BitcoinBIP9Deployments
             {
                 [BitcoinBIP9Deployments.TestDummy] = new BIP9DeploymentsParameters("TestDummy", 28, 0, 999999999, BIP9DeploymentsParameters.DefaultRegTestThreshold),
-                [BitcoinBIP9Deployments.CSV] = new BIP9DeploymentsParameters("CSV",0, 0, 999999999, BIP9DeploymentsParameters.DefaultRegTestThreshold),
+                [BitcoinBIP9Deployments.CSV] = new BIP9DeploymentsParameters("CSV", 0, 0, 999999999, BIP9DeploymentsParameters.DefaultRegTestThreshold),
                 [BitcoinBIP9Deployments.Segwit] = new BIP9DeploymentsParameters("Segwit", 1, BIP9DeploymentsParameters.AlwaysActive, 999999999, BIP9DeploymentsParameters.AlwaysActive)
+            };
+
+            var consensusProofOfWork = new ConsensusProofOfWork()
+            {
+                CoinbaseMaturity = 100,
+                IsProofOfStake = false,
+                LastPOWBlock = default,
+                MaxMoney = 21000000 * Money.COIN,
+                MinerConfirmationWindow = 144,
+                PosNoRetargeting = false,
+                PowAllowMinDifficultyBlocks = true,
+                PowLimit = new Target(new uint256("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")),
+                PowNoRetargeting = true,
+                PowTargetSpacing = TimeSpan.FromSeconds(10 * 60),
+                PowTargetTimespan = TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks,
+                PremineHeight = 0,
+                PremineReward = Money.Zero,
+                ProofOfStakeLimit = null,
+                ProofOfStakeLimitV2 = null,
+                ProofOfStakeReward = Money.Zero,
+                ProofOfWorkReward = Money.Coins(50),
+                SubsidyHalvingInterval = 150,
             };
 
             this.Consensus = new NBitcoin.Consensus(
@@ -55,33 +76,13 @@ namespace Stratis.Bitcoin.Networks
                 consensusOptions: new ConsensusOptions(), // Default - set to Bitcoin params.
                 coinType: 0,
                 hashGenesisBlock: genesisBlock.GetHash(),
-                subsidyHalvingInterval: 150,
-                majorityEnforceBlockUpgrade: 750,
-                majorityRejectBlockOutdated: 950,
-                majorityWindow: 1000,
                 buriedDeployments: buriedDeployments,
                 bip9Deployments: bip9Deployments,
                 bip34Hash: new uint256(),
-                minerConfirmationWindow: 144,
                 maxReorgLength: 0,
                 defaultAssumeValid: null, // turn off assumevalid for regtest.
-                maxMoney: 21000000 * Money.COIN,
-                coinbaseMaturity: 100,
-                premineHeight: 0,
-                premineReward: Money.Zero,
-                proofOfWorkReward: Money.Coins(50),
-                powTargetTimespan: TimeSpan.FromSeconds(14 * 24 * 60 * 60), // two weeks
-                powTargetSpacing: TimeSpan.FromSeconds(10 * 60),
-                powAllowMinDifficultyBlocks: true,
-                posNoRetargeting: false,
-                powNoRetargeting: true,
-                powLimit: new Target(new uint256("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff")),
                 minimumChainWork: uint256.Zero,
-                isProofOfStake: false,
-                lastPowBlock: default(int),
-                proofOfStakeLimit: null,
-                proofOfStakeLimitV2: null,
-                proofOfStakeReward: Money.Zero
+                consensusProofOfWork: consensusProofOfWork
             );
 
             this.Base58Prefixes[(int)Base58Type.PUBKEY_ADDRESS] = new byte[] { (111) };

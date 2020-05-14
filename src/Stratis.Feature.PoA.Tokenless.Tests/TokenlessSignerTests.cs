@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using NBitcoin;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core.Util;
 using Xunit;

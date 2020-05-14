@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common.Logging;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
+using Stratis.Features.BlockStore;
 using Xunit;
 
 namespace Stratis.Bitcoin.Features.BlockStore.Tests
@@ -645,7 +646,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
 
         private IBlockRepository SetupRepository(Network main)
         {
-            var repository = new BlockRepository(main, this.LoggerFactory.Object, this.keyValueStore);
+            var repository = new BlockRepository(main, this.LoggerFactory.Object, this.keyValueStore, this.RepositorySerializer);
             repository.Initialize();
 
             return repository;

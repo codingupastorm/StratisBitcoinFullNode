@@ -1,7 +1,7 @@
 ﻿using NBitcoin;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Base;
+using Stratis.Core.Configuration.Settings;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Interfaces;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Broadcasting;
+using Stratis.Features.Wallet;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
@@ -51,7 +51,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
 
                 stratisNodeSync.Broadcast(tx);
 
-                TestBase.WaitLoop(() => stratisNodeSync.CreateRPCClient().GetRawMempool().Length == 1);
+                TestBase.WaitLoop(() => stratisNodeSync.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 1);
             }
         }
 
@@ -77,10 +77,10 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
 
                 stratisNodeSync.Broadcast(parentTx);
                 // wiat for the trx to enter the pool
-                TestBase.WaitLoop(() => stratisNodeSync.CreateRPCClient().GetRawMempool().Length == 1);
+                TestBase.WaitLoop(() => stratisNodeSync.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 1);
                 // mine the transactions in the mempool
                 TestHelper.GenerateBlockManually(stratisNodeSync, stratisNodeSync.FullNode.MempoolManager().InfoAllAsync().Result.Select(s => s.Trx).ToList());
-                TestBase.WaitLoop(() => stratisNodeSync.CreateRPCClient().GetRawMempool().Length == 0);
+                TestBase.WaitLoop(() => stratisNodeSync.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 0);
 
                 //create a new trx spending both outputs
                 Transaction tx = stratisNodeSync.FullNode.Network.CreateTransaction();
@@ -90,7 +90,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 Transaction signed = new TransactionBuilder(stratisNodeSync.FullNode.Network).AddKeys(dest1, dest2).AddCoins(parentTx.Outputs.AsCoins()).SignTransaction(tx);
 
                 stratisNodeSync.Broadcast(signed);
-                TestBase.WaitLoop(() => stratisNodeSync.CreateRPCClient().GetRawMempool().Length == 1);
+                TestBase.WaitLoop(() => stratisNodeSync.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 1);
             }
         }
 
@@ -124,7 +124,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                     stratisNodeSync.Broadcast(transaction);
                 });
 
-                TestBase.WaitLoop(() => stratisNodeSync.CreateRPCClient().GetRawMempool().Length == 100);
+                TestBase.WaitLoop(() => stratisNodeSync.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 100);
             }
         }
 
@@ -232,7 +232,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 stratisNodeSync.Broadcast(tx);
                 TestBase.WaitLoop(() => stratisNodeSync.FullNode.NodeService<MempoolOrphans>().OrphansList().Count == 0);
                 // wait for orphan to get in the pool
-                TestBase.WaitLoop(() => stratisNodeSync.CreateRPCClient().GetRawMempool().Length == 2);
+                TestBase.WaitLoop(() => stratisNodeSync.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 2);
             }
         }
 
@@ -274,23 +274,23 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 });
 
                 // wait for all nodes to have all trx
-                TestBase.WaitLoop(() => stratisNodeSync.CreateRPCClient().GetRawMempool().Length == 5);
+                TestBase.WaitLoop(() => stratisNodeSync.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 5);
 
                 // the full node should be connected to both nodes
                 Assert.True(stratisNodeSync.FullNode.ConnectionManager.ConnectedPeers.Count() >= 2);
 
-                TestBase.WaitLoop(() => stratisNode1.CreateRPCClient().GetRawMempool().Length == 5);
-                TestBase.WaitLoop(() => stratisNode2.CreateRPCClient().GetRawMempool().Length == 5);
+                TestBase.WaitLoop(() => stratisNode1.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 5);
+                TestBase.WaitLoop(() => stratisNode2.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 5);
 
                 // mine the transactions in the mempool
                 TestHelper.MineBlocks(stratisNodeSync, 1);
-                TestBase.WaitLoop(() => stratisNodeSync.CreateRPCClient().GetRawMempool().Length == 0);
+                TestBase.WaitLoop(() => stratisNodeSync.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 0);
 
                 // wait for block and mempool to change
-                TestBase.WaitLoop(() => stratisNode1.CreateRPCClient().GetBestBlockHash() == stratisNodeSync.CreateRPCClient().GetBestBlockHash());
-                TestBase.WaitLoop(() => stratisNode2.CreateRPCClient().GetBestBlockHash() == stratisNodeSync.CreateRPCClient().GetBestBlockHash());
-                TestBase.WaitLoop(() => stratisNode1.CreateRPCClient().GetRawMempool().Length == 0);
-                TestBase.WaitLoop(() => stratisNode2.CreateRPCClient().GetRawMempool().Length == 0);
+                TestBase.WaitLoop(() => stratisNode1.FullNode.ConsensusManager().Tip.HashBlock == stratisNodeSync.FullNode.ConsensusManager().Tip.HashBlock);
+                TestBase.WaitLoop(() => stratisNode2.FullNode.ConsensusManager().Tip.HashBlock == stratisNodeSync.FullNode.ConsensusManager().Tip.HashBlock);
+                TestBase.WaitLoop(() => stratisNode1.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 0);
+                TestBase.WaitLoop(() => stratisNode2.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 0);
             }
         }
 
@@ -417,7 +417,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
 
                 broadcaster.BroadcastTransactionAsync(trx);
 
-                TestBase.WaitLoop(() => stratisSender.CreateRPCClient().GetRawMempool().Length == 1);
+                TestBase.WaitLoop(() => stratisSender.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 1);
             }
         }
 

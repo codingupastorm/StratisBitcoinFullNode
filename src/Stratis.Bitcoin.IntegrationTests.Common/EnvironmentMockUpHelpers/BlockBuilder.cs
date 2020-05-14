@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Consensus;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 {
@@ -72,7 +72,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
                 var coinbase = this.coreNode.FullNode.Network.CreateTransaction();
                 coinbase.Time = (uint)dateTimeProvider.GetAdjustedTimeAsUnixTimestamp();
                 coinbase.AddInput(TxIn.CreateCoinbase(chainTip.Height + 1));
-                coinbase.AddOutput(new TxOut(this.coreNode.FullNode.Network.Consensus.ProofOfWorkReward, this.coreNode.MinerSecret.GetAddress()));
+                coinbase.AddOutput(new TxOut(this.coreNode.FullNode.Network.Consensus.ConsensusMiningReward.ProofOfWorkReward, this.coreNode.MinerSecret.GetAddress()));
                 block.AddTransaction(coinbase);
 
                 // Check to see whether or not the block should be invalid.

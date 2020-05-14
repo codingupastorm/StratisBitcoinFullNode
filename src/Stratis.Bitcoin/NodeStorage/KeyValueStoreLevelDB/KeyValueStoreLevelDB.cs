@@ -1,16 +1,18 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using LevelDB;
+using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.KeyValueStore;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin.KeyValueStoreLevelDB
 {
-    public class KeyValueStoreLevelDB : KeyValueStoreRepository
+    public class KeyValueStoreLevelDB : IKeyValueStoreRepository
     {
         internal class KeyValueStoreLDBTransaction : KeyValueStoreTransaction
         {
@@ -47,18 +49,30 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
         internal DB Storage { get; private set; }
 
         private int nextTablePrefix;
-        private SingleThreadResource transactionLock;
-        private ByteArrayComparer byteArrayComparer;
+        private readonly SingleThreadResource transactionLock;
+        private readonly ByteArrayComparer byteArrayComparer;
 
-        public KeyValueStoreLevelDB(KeyValueStore.KeyValueStore keyValueStore) : base(keyValueStore)
+        public KeyValueStoreLevelDB(string rootPath, ILoggerFactory loggerFactory,
+            IRepositorySerializer repositorySerializer)
         {
-            var logger = keyValueStore.LoggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
+            var logger = loggerFactory.CreateLogger(nameof(KeyValueStoreLevelDB));
 
             this.transactionLock = new SingleThreadResource($"{nameof(this.transactionLock)}", logger);
             this.byteArrayComparer = new ByteArrayComparer();
+            this.RepositorySerializer = repositorySerializer;
+            this.Tables = new Dictionary<string, KeyValueStoreTable>();
+            this.Init(rootPath);
         }
 
-        public override void Init(string rootPath)
+        public IRepositorySerializer RepositorySerializer { get; }
+
+        public Dictionary<string, KeyValueStoreTable> Tables { get; }
+
+        /// <summary>
+        /// Initialize the underlying database / glue-layer.
+        /// </summary>
+        /// <param name="rootPath">The location of the key-value store.</param>
+        private void Init(string rootPath)
         {
             var options = new Options()
             {
@@ -68,7 +82,15 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             this.Close();
 
             Directory.CreateDirectory(rootPath);
-            this.Storage = new DB(options, rootPath);
+
+            try
+            {
+                this.Storage = new DB(options, rootPath);
+            }
+            catch (Exception err)
+            {
+                throw new Exception($"An error occurred while attempting to open the LevelDB database at '{rootPath}': {err.Message}'", err);
+            }
 
             Guard.NotNull(this.Storage, nameof(this.Storage));
 
@@ -78,6 +100,9 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
                 byte[] tableNameBytes = this.Storage.Get(new byte[] { 0, (byte)this.nextTablePrefix });
                 if (tableNameBytes == null)
                     break;
+
+                if (this.nextTablePrefix == 0xff)
+                    throw new Exception($"Too many tables");
 
                 string tableName = Encoding.ASCII.GetString(tableNameBytes);
                 this.Tables[tableName] = new KeyValueStoreLDBTable()
@@ -89,20 +114,24 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             }
         }
 
-        public override int Count(KeyValueStoreTransaction tran, KeyValueStoreTable table)
+        public int Count(KeyValueStoreTransaction tran, KeyValueStoreTable table)
         {
             using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).ReadOptions))
             {
                 int count = 0;
 
-                iterator.SeekToFirst();
+                byte keyPrefix = ((KeyValueStoreLDBTable)table).KeyPrefix;
+
+                iterator.Seek(new[] { keyPrefix });
 
                 while (iterator.IsValid())
                 {
                     byte[] keyBytes = iterator.Key();
 
-                    if (keyBytes[0] == ((KeyValueStoreLDBTable)table).KeyPrefix)
-                        count++;
+                    if (keyBytes[0] != keyPrefix)
+                        break;
+
+                    count++;
 
                     iterator.Next();
                 }
@@ -111,7 +140,7 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             }
         }
 
-        public override bool[] Exists(KeyValueStoreTransaction tran, KeyValueStoreTable table, byte[][] keys)
+        public bool[] Exists(KeyValueStoreTransaction tran, KeyValueStoreTable table, byte[][] keys)
         {
             using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).ReadOptions))
             {
@@ -133,7 +162,7 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             }
         }
 
-        public override byte[][] Get(KeyValueStoreTransaction tran, KeyValueStoreTable table, byte[][] keys)
+        public byte[][] Get(KeyValueStoreTransaction tran, KeyValueStoreTable table, byte[][] keys)
         {
             var keyBytes = keys.Select(key => new byte[] { ((KeyValueStoreLDBTable)table).KeyPrefix }.Concat(key).ToArray()).ToArray();
             (byte[] k, int n)[] orderedKeys = keyBytes.Select((k, n) => (k, n)).OrderBy(t => t.k, new ByteArrayComparer()).ToArray();
@@ -149,34 +178,124 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             return res;
         }
 
-        public override IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction tran, KeyValueStoreTable table, bool keysOnly = false, bool backwards = false)
+        public IEnumerable<(byte[], byte[])> GetAll(KeyValueStoreTransaction tran, KeyValueStoreTable table, bool keysOnly = false, SortOrder sortOrder = SortOrder.Ascending,
+            byte[] firstKey = null, byte[] lastKey = null, bool includeFirstKey = true, bool includeLastKey = true)
         {
             using (Iterator iterator = this.Storage.CreateIterator(((KeyValueStoreLDBTransaction)tran).ReadOptions))
             {
-                if (backwards)
-                    iterator.SeekToLast();
-                else
-                    iterator.SeekToFirst();
+                byte keyPrefix = ((KeyValueStoreLDBTable)table).KeyPrefix;
+                byte[] firstKeyBytes = (firstKey == null) ? null : new[] { keyPrefix }.Concat(firstKey).ToArray();
+                byte[] lastKeyBytes = (lastKey == null) ? null : new[] { keyPrefix }.Concat(lastKey).ToArray();
+                bool done = false;
+                Func<byte[], bool> breakLoop;
+                Action next;
+
+                if (sortOrder == SortOrder.Descending)
+                {
+                    if (lastKeyBytes == null)
+                    {
+                        // If no last key was provided then seek to the last record with this prefix
+                        // by first seeking to the first record with the next prefix...
+                        iterator.Seek(new[] { (byte)(keyPrefix + 1) });
+
+                        // ...then back up to the previous value if the iterator is still valid.
+                        if (iterator.IsValid())
+                            iterator.Prev();
+                        else
+                            // If the iterator is invalid then there were no records with greater prefixes.
+                            // In this case we can simply seek to the last record.
+                            iterator.SeekToLast();
+                    }
+                    else
+                    {
+                        // Seek to the last key if it was provided.
+                        iterator.Seek(lastKeyBytes);
+
+                        // If it won't be returned, and is current/found, then move to the previous value.
+                        if (!includeLastKey && iterator.IsValid() && this.byteArrayComparer.Equals(iterator.Key(), lastKeyBytes))
+                            iterator.Prev();
+                    }
+
+                    breakLoop = (firstKeyBytes == null) ? (Func<byte[], bool>)null : (keyBytes) =>
+                    {
+                        int compareResult = this.byteArrayComparer.Compare(keyBytes, firstKeyBytes);
+                        if (compareResult <= 0)
+                        {
+                            // If this is the first key and its not included or we've overshot the range then stop without yielding a value.
+                            if (!includeFirstKey || compareResult < 0)
+                                return true;
+
+                            // Stop after yielding the value.
+                            done = true;
+                        }
+
+                        // Keep going.
+                        return false;
+                    };
+
+                    next = () => iterator.Prev();
+                }
+                else /* Ascending */
+                {
+                    if (firstKeyBytes == null)
+                    {
+                        // If no first key was provided then use the key prefix to find the first value.
+                        iterator.Seek(new[] { keyPrefix });
+                    }
+                    else
+                    {
+                        // Seek to the first key if it was provided.
+                        iterator.Seek(firstKeyBytes);
+
+                        // If it won't be returned, and is current/found, then move to the next value.
+                        if (!includeFirstKey && iterator.IsValid() && this.byteArrayComparer.Equals(iterator.Key(), firstKeyBytes))
+                            iterator.Next();
+                    }
+
+                    breakLoop = (lastKeyBytes == null) ? (Func<byte[], bool>)null : (keyBytes) =>
+                    {
+                        int compareResult = this.byteArrayComparer.Compare(keyBytes, lastKeyBytes);
+                        if (compareResult >= 0)
+                        {
+                            // If this is the last key and its not included or we've overshot the range then stop without yielding a value.
+                            if (!includeLastKey || compareResult > 0)
+                                return true;
+
+                            // Stop after yielding the value.
+                            done = true;
+                        }
+
+                        // Keep going.
+                        return false;
+                    };
+
+                    next = () => iterator.Next();
+                }
 
                 while (iterator.IsValid())
                 {
                     byte[] keyBytes = iterator.Key();
 
-                    if (keyBytes[0] == ((KeyValueStoreLDBTable)table).KeyPrefix)
-                        yield return (keyBytes.Skip(1).ToArray(), keysOnly ? null : iterator.Value());
+                    if (keyBytes[0] != keyPrefix || (breakLoop != null && breakLoop(keyBytes)))
+                        break;
 
-                    if (backwards)
-                        iterator.Prev();
-                    else
-                        iterator.Next();
+                    yield return (keyBytes.Skip(1).ToArray(), keysOnly ? null : iterator.Value());
+
+                    if (done)
+                        break;
+
+                    next();
                 }
             }
         }
 
-        public override KeyValueStoreTable GetTable(string tableName)
+        public KeyValueStoreTable GetTable(string tableName)
         {
             if (!this.Tables.TryGetValue(tableName, out KeyValueStoreTable table))
             {
+                if (this.nextTablePrefix >= 0xfe)
+                    throw new Exception($"Too many tables");
+
                 table = new KeyValueStoreLDBTable()
                 {
                     Repository = this,
@@ -192,12 +311,12 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             return table;
         }
 
-        public override KeyValueStoreTransaction CreateKeyValueStoreTransaction(KeyValueStoreTransactionMode mode, params string[] tables)
+        public KeyValueStoreTransaction CreateKeyValueStoreTransaction(KeyValueStoreTransactionMode mode, params string[] tables)
         {
             return new KeyValueStoreLDBTransaction(this, mode, tables);
         }
 
-        public override void OnBeginTransaction(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTransactionMode mode)
+        public void OnBeginTransaction(KeyValueStoreTransaction keyValueStoreTransaction, KeyValueStoreTransactionMode mode)
         {
             if (mode == KeyValueStoreTransactionMode.ReadWrite)
             {
@@ -205,7 +324,7 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             }
         }
 
-        public override void OnCommit(KeyValueStoreTransaction keyValueStoreTransaction)
+        public void OnCommit(KeyValueStoreTransaction keyValueStoreTransaction)
         {
             try
             {
@@ -251,15 +370,50 @@ namespace Stratis.Bitcoin.KeyValueStoreLevelDB
             }
         }
 
-        public override void OnRollback(KeyValueStoreTransaction keyValueStoreTransaction)
+        public void OnRollback(KeyValueStoreTransaction keyValueStoreTransaction)
         {
             this.transactionLock.Release();
         }
 
-        public override void Close()
+        public void Close()
         {
             this.Storage?.Dispose();
             this.Storage = null;
+        }
+
+        public string[] GetTables()
+        {
+            return this.Tables.Select(t => t.Value.TableName).ToArray();
+        }
+
+        public IKeyValueStoreTransaction CreateTransaction(KeyValueStoreTransactionMode mode, params string[] tables)
+        {
+            return this.CreateKeyValueStoreTransaction(mode, tables);
+        }
+
+        // Public implementation of Dispose pattern callable by consumers.
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>Protected implementation of Dispose pattern.</summary>
+        /// <param name="disposing">Indicates whether disposing.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+                this.Close();
+        }
+
+        public byte[] Serialize<T>(T obj)
+        {
+            return this.RepositorySerializer.Serialize(obj);
+        }
+
+        public T Deserialize<T>(byte[] objBytes)
+        {
+            return this.RepositorySerializer.Deserialize<T>(objBytes);
         }
     }
 }

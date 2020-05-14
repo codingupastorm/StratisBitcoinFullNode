@@ -4,7 +4,7 @@ using System.Text;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 using Stratis.SmartContracts.Core.Receipts;
 using Xunit;
 
@@ -41,7 +41,7 @@ namespace Stratis.SmartContracts.Core.Tests.Receipts
             };
             var log2 = new Log(new uint160(12345), topics2, data2);
 
-            var receipt = new Receipt(new uint256(1234), 12345, new Log[] { log1, log2 }, new uint256(12345), new uint160(25), new uint160(24), new uint160(23), true, "SomeResult", "SomeExceptionString", 54321, 1_000_000, "TestMethodName", 123456) { BlockHash = new uint256(1234) };
+            var receipt = new Receipt(new uint256(1234), 12345, new Log[] { log1, log2 }, new uint256(12345), new uint160(25), new uint160(24), new uint160(23), true, "SomeResult", "SomeExceptionString", 54321, 1_000_000, "RWS", "TestMethodName", 123456) { BlockHash = new uint256(1234) };
             this.db.Store(new Receipt[] { receipt });
             Receipt retrievedReceipt = this.db.Retrieve(receipt.TransactionHash);
             ReceiptSerializationTest.TestStorageReceiptEquality(receipt, retrievedReceipt);
@@ -50,7 +50,7 @@ namespace Stratis.SmartContracts.Core.Tests.Receipts
         [Fact]
         public void Store_Receipt_With_Null_Optionals()
         {
-            var receipt = new Receipt(new uint256(1234), 12345, new Log[] { }, new uint256(12345), new uint160(25), new uint160(24), new uint160(23), true, "SomeResult", "SomeExceptionString", 54321, 1_000_000, null, null) { BlockHash = new uint256(1234) };
+            var receipt = new Receipt(new uint256(1234), 12345, new Log[] { }, new uint256(12345), new uint160(25), new uint160(24), new uint160(23), true, "SomeResult", "SomeExceptionString", 54321, 1_000_000, "RWS", null, null) { BlockHash = new uint256(1234) };
             this.db.Store(new Receipt[] { receipt });
             Receipt retrievedReceipt = this.db.Retrieve(receipt.TransactionHash);
             ReceiptSerializationTest.TestStorageReceiptEquality(receipt, retrievedReceipt);

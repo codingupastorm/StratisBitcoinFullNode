@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.Collections.Generic;
+using System.Linq;
+using Microsoft.AspNetCore.Http;
 
 namespace CertificateAuthority.Models
 {
     public class CredentialsModelWithTargetId : CredentialsModel
     {
-        /// <summary>Id of an account you want to get information for.</summary>
+        /// <summary>Id of an account you want to configure or otherwise interact with.</summary>
         public int TargetAccountId { get; set; }
 
         public CredentialsModelWithTargetId(int targetAccountId, int accountId, string password) : base(accountId, password)
@@ -18,25 +20,52 @@ namespace CertificateAuthority.Models
     }
 
     #region Models for AccountsController
-    public class CreateAccount : CredentialsModel
+
+    public class CreateAccountModel
     {
-        /// <summary>Account name for a new account. Can't be a a nickname that is already taken.</summary>
-        public string NewAccountName { get; set; }
+        /// <summary>Account name for the new account. Can't be a a name that is already taken.
+        /// This will also be used as the common name (CN) field of the requested certificate.</summary>
+        public string CommonName { get; set; }
 
         /// <summary>Sha256 hash of new account's password.</summary>
         public string NewAccountPasswordHash { get; set; }
 
-        /// <summary>Access level flag for a new account.</summary>
-        public int NewAccountAccess { get; set; }
+        /// <summary>Access level flags requested for the new account.</summary>
+        public int RequestedAccountAccess { get; set; }
 
-        public CreateAccount(string newAccountName, string newAccountPasswordHash, int newAccountAccess, int accountId, string password) : base(accountId, password)
+        public string OrganizationUnit { get; set; }
+
+        public string Organization { get; set; }
+
+        public string Locality { get; set; }
+
+        public string StateOrProvince { get; set; }
+
+        public string EmailAddress { get; set; }
+
+        public string Country { get; set; }
+
+        /// <summary>
+        /// A list of the OIDs for the permissions desired by the requester.
+        /// These can also be separately granted by the administrator prior to certificate generation.
+        /// </summary>
+        public List<Permission> RequestedPermissions { get; set; }
+
+        public CreateAccountModel(string commonName, string newAccountPasswordHash, int requestedAccountAccess, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country, List<string> requestedPermissions)
         {
-            this.NewAccountName = newAccountName;
+            this.CommonName = commonName;
             this.NewAccountPasswordHash = newAccountPasswordHash;
-            this.NewAccountAccess = newAccountAccess;
+            this.RequestedAccountAccess = requestedAccountAccess;
+            this.OrganizationUnit = organizationUnit;
+            this.Organization = organization;
+            this.Locality = locality;
+            this.StateOrProvince = stateOrProvince;
+            this.EmailAddress = emailAddress;
+            this.Country = country;
+            this.RequestedPermissions = requestedPermissions.Select(p => new Permission() { Name = p }).ToList();
         }
 
-        public CreateAccount()
+        public CreateAccountModel()
         {
         }
     }
@@ -55,9 +84,28 @@ namespace CertificateAuthority.Models
         {
         }
     }
+
+    public sealed class ChangeAccountPasswordModel : CredentialsModel
+    {
+        /// <summary>The new password to use.</summary>
+        public string NewPassword { get; set; }
+
+        /// <summary>The account which password will be changed.</summary>
+        public int TargetAccountId { get; set; }
+
+        public ChangeAccountPasswordModel(int accountId, int targetAccountId, string password, string newPassword) : base(accountId, password)
+        {
+            this.NewPassword = newPassword;
+            this.TargetAccountId = targetAccountId;
+        }
+
+        public ChangeAccountPasswordModel() { }
+    }
+
     #endregion
 
     #region Models for CertificatesController
+
     public class CredentialsModelWithThumbprintModel : CredentialsModel
     {
         /// <summary>Certificate's thumbprint.</summary>
@@ -88,22 +136,17 @@ namespace CertificateAuthority.Models
         }
     }
 
-    public class CredentialsModelWithMnemonicModel : CredentialsModel
+    public class CredentialsModelWithPubKeyHashModel : CredentialsModel
     {
-        /// <summary>Mnemonic words used to derive certificate authority's private key.</summary>
-        public string Mnemonic { get; set; }
+        /// <summary>Certificate's transaction signing pubkey hash, stored in extension OID 1.4.2.</summary>
+        public string PubKeyHash { get; set; }
 
-        /// <summary>Password to be used with the mnemonic words, used to derive certificate authority's private key.
-        /// This is a separate password to the actual user account to allow the user account password to be changed without affecting the CA.</summary>
-        public string MnemonicPassword { get; set; }
-
-        public CredentialsModelWithMnemonicModel(string mnemonic, string mnemonicPassword, int accountId, string password) : base(accountId, password)
+        public CredentialsModelWithPubKeyHashModel(string pubKeyHash, int accountId, string password) : base(accountId, password)
         {
-            this.Mnemonic = mnemonic;
-            this.MnemonicPassword = mnemonicPassword;
+            this.PubKeyHash = pubKeyHash;
         }
 
-        public CredentialsModelWithMnemonicModel()
+        public CredentialsModelWithPubKeyHashModel()
         {
         }
     }
@@ -112,12 +155,19 @@ namespace CertificateAuthority.Models
     {
         public string Address { get; set; }
 
+        // We need to transmit this pubkey so that the CSR template can be generated by the CA. It does not get used after that.
         public string PubKey { get; set; }
 
-        public GenerateCertificateSigningRequestModel(string address, string pubKey, int accountId, string password) : base(accountId, password)
+        public string BlockSigningPubKey { get; set; }
+
+        public string TransactionSigningPubKeyHash { get; set; }
+
+        public GenerateCertificateSigningRequestModel(string address, string pubKey, string transactionSigningPubKeyHash, string blockSigningPubKey, int accountId, string password) : base(accountId, password)
         {
             this.Address = address;
             this.PubKey = pubKey;
+            this.TransactionSigningPubKeyHash = transactionSigningPubKeyHash;
+            this.BlockSigningPubKey = blockSigningPubKey;
         }
 
         public GenerateCertificateSigningRequestModel()

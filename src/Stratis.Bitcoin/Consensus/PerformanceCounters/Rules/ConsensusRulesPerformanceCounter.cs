@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NBitcoin.Rules;
-using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Consensus.Rules;
+using Stratis.Core.Utilities;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.Consensus.PerformanceCounters.Rules
+namespace Stratis.Core.Consensus.PerformanceCounters.Rules
 {
     /// <summary>Measures rules average execution time.</summary>
     [NoTrace]

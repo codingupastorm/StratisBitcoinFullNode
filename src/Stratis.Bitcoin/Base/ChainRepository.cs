@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Base
+namespace Stratis.Core.Base
 {
     public interface IChainRepository : IDisposable
     {
@@ -52,7 +52,7 @@ namespace Stratis.Bitcoin.Base
 
                     Guard.Assert(previousHeader.GetHash() == genesisHeader.HashBlock); // can't swap networks
 
-                    foreach ((int key, BlockHeader blockHeader) in transaction.SelectForward<int, BlockHeader>("Chain").Skip(1))
+                    foreach ((int key, BlockHeader blockHeader) in transaction.SelectAll<int, BlockHeader>("Chain").Skip(1))
                     {
                         if ((tip != null) && (previousHeader.HashPrevBlock != tip.HashBlock))
                             break;

@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Utilities.Extensions;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.Extensions;
 using Stratis.SmartContracts.Core.Util;
 
 namespace Stratis.Feature.PoA.Tokenless.Consensus
@@ -44,7 +44,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
                 .AddCoins(dummyTx.Outputs.AsCoins());
             builder.SignTransactionInPlace(transaction);
 
-            // A bit of Bitcoin Script magic. Use OP_CODESEPARATOR to ensure the signature is still valid, but allow us to append to the input.
+            // A bit of Bitcoin Script magic. Use OP_CODESEPARATOR to ensure the signature is still valid, but allow us to append to the input.	
             byte[] finalisedInputScript = transaction.Inputs[0].ScriptSig.ToBytes()
                 .Concat(new byte[] { (byte)OpcodeType.OP_CODESEPARATOR })
                 .Concat(senderScript.ToBytes()).ToArray();
@@ -56,18 +56,31 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
         public GetSenderResult GetSender(Transaction transaction)
         {
             if (transaction.Inputs.Count != 1)
-                return GetSenderResult.CreateFailure("Transaction must be in prescribed format with 1 input.");
+                return GetSenderResult.CreateFailure($"Unable to determine the sender for transaction '{transaction.GetHash()}': Inputs does not equal 1.");
 
             Script senderScript = transaction.Inputs.First().ScriptSig;
             IList<Op> ops = senderScript.ToOps();
 
             if (ops.Count != InputOpsLength)
-                return GetSenderResult.CreateFailure("Transaction input must be in prescribed format.");
+                return GetSenderResult.CreateFailure($"Unable to determine the sender for transaction '{transaction.GetHash()}': Invalid Ops Count.");
 
             Op[] senderOps = new Op[5];
             Array.Copy(ops.ToArray(), SenderScriptStartOpIndex, senderOps, 0, 5);
 
             return this.senderRetriever.GetAddressFromScript(new Script(senderOps));
+        }
+
+        /// <inheritdoc />
+        public GetSenderResult GetSenderAndVerify(Transaction transaction)
+        {
+            GetSenderResult result = GetSender(transaction);
+            if (result.Success)
+            {
+                if (!Verify(transaction))
+                    return GetSenderResult.CreateFailure($"The signature for transaction {transaction.GetHash()} is invalid.");
+            }
+
+            return result;
         }
 
         /// <inheritdoc />

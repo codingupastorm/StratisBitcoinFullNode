@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration.Logging;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Logging;
 using Stratis.Patricia;
 using Stratis.SmartContracts.CLR.Caching;
 using Stratis.SmartContracts.CLR.Compilation;
@@ -8,6 +9,7 @@ using Stratis.SmartContracts.CLR.Loader;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.CLR.Validation;
 using Stratis.SmartContracts.Core.State;
+using Stratis.SmartContracts.Core.Store;
 using Stratis.SmartContracts.Networks;
 
 namespace Stratis.SmartContracts.CLR.Tests
@@ -23,7 +25,7 @@ namespace Stratis.SmartContracts.CLR.Tests
         public ILoggerFactory LoggerFactory { get; }
         public StateRepositoryRoot State { get; }
         public SmartContractValidator Validator { get; }
-        public IAddressGenerator AddressGenerator {get;}
+        public IAddressGenerator AddressGenerator { get; }
         public ContractAssemblyLoader<SmartContract> AssemblyLoader { get; }
         public IContractModuleDefinitionReader ModuleDefinitionReader { get; }
         public IContractPrimitiveSerializer ContractPrimitiveSerializer { get; }
@@ -33,13 +35,13 @@ namespace Stratis.SmartContracts.CLR.Tests
         public ISmartContractStateFactory SmartContractStateFactory { get; }
         public StateProcessor StateProcessor { get; }
         public Serializer Serializer { get; }
+        public IPrivateDataStore PrivateDataStore { get; }
 
         public ContractExecutorTestContext()
         {
             this.Network = new SmartContractsRegTest();
             this.KeyEncodingStrategy = BasicKeyEncodingStrategy.Default;
             this.LoggerFactory = new ExtendedLoggerFactory();
-            this.LoggerFactory.AddConsoleWithFilters();
             this.State = new StateRepositoryRoot(new NoDeleteSource<byte[], byte[]>(new MemoryDictionarySource()));
             this.ContractPrimitiveSerializer = new ContractPrimitiveSerializer(this.Network);
             this.Serializer = new Serializer(this.ContractPrimitiveSerializer);
@@ -51,8 +53,9 @@ namespace Stratis.SmartContracts.CLR.Tests
             this.ContractCache = new ContractAssemblyCache();
             this.Vm = new ReflectionVirtualMachine(this.Validator, this.LoggerFactory, this.AssemblyLoader, this.ModuleDefinitionReader, this.ContractCache, contractInitializer);
             this.StateProcessor = new StateProcessor(this.Vm, this.AddressGenerator);
-            this.InternalTxExecutorFactory = new InternalExecutorFactory(this.LoggerFactory, this.StateProcessor);
-            this.SmartContractStateFactory = new SmartContractStateFactory(this.ContractPrimitiveSerializer, this.InternalTxExecutorFactory, this.Serializer);
+            this.InternalTxExecutorFactory = new InternalExecutorFactory(this.StateProcessor);
+            this.PrivateDataStore = new InMemoryPrivateDataStore();
+            this.SmartContractStateFactory = new SmartContractStateFactory(this.ContractPrimitiveSerializer, this.InternalTxExecutorFactory, this.PrivateDataStore, this.Serializer);
         }
     }
 }

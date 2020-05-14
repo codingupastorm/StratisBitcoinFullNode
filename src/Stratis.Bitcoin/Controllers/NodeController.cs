@@ -11,22 +11,21 @@ using NLog;
 using NLog.Config;
 using NLog.Targets;
 using NLog.Targets.Wrappers;
-using Stratis.Bitcoin.AsyncWork;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Builder.Feature;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Base;
+using Stratis.Core.Builder.Feature;
+using Stratis.Core.Configuration;
+using Stratis.Core.Connection;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Utilities.JsonErrors;
-using Stratis.Bitcoin.Utilities.ModelStateErrors;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.JsonErrors;
+using Stratis.Core.Utilities.ModelStateErrors;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 using LogLevel = NLog.LogLevel;
-using Target = NBitcoin.Target;
 
 namespace Stratis.Bitcoin.Controllers
 {
@@ -35,6 +34,7 @@ namespace Stratis.Bitcoin.Controllers
     /// </summary>
     [ApiVersion("1")]
     [Route("api/[controller]")]
+    [ApiController]
     public class NodeController : Controller
     {
         /// <summary>Full Node.</summary>
@@ -57,9 +57,6 @@ namespace Stratis.Bitcoin.Controllers
 
         /// <summary>Thread safe access to the best chain of block headers from genesis.</summary>
         private readonly ChainIndexer chainIndexer;
-
-        /// <summary>An interface implementation used to retrieve the network's difficulty target.</summary>
-        private readonly INetworkDifficulty networkDifficulty;
 
         /// <summary>An interface implementaiton used to retrieve a pooled transaction.</summary>
         private readonly IPooledTransaction pooledTransaction;
@@ -94,7 +91,6 @@ namespace Stratis.Bitcoin.Controllers
             ISelfEndpointTracker selfEndpointTracker,
             IBlockStore blockStore = null,
             IGetUnspentTransaction getUnspentTransaction = null,
-            INetworkDifficulty networkDifficulty = null,
             IPooledGetUnspentTransaction pooledGetUnspentTransaction = null,
             IPooledTransaction pooledTransaction = null)
         {
@@ -122,7 +118,6 @@ namespace Stratis.Bitcoin.Controllers
 
             this.blockStore = blockStore;
             this.getUnspentTransaction = getUnspentTransaction;
-            this.networkDifficulty = networkDifficulty;
             this.pooledGetUnspentTransaction = pooledGetUnspentTransaction;
             this.pooledTransaction = pooledTransaction;
         }
@@ -131,17 +126,16 @@ namespace Stratis.Bitcoin.Controllers
         /// Gets general information about this full node including the version,
         /// protocol version, network name, coin ticker, and consensus height.
         /// </summary>
-        /// <returns>A <see cref="StatusModel"/> with information about the node.</returns>
+        /// <returns>A <see cref="NodeStatusModel"/> with information about the node.</returns>
         [HttpGet]
         [Route("status")]
         public IActionResult Status()
         {
             // Output has been merged with RPC's GetInfo() since they provided similar functionality.
-            var model = new StatusModel
+            var model = new NodeStatusModel
             {
                 Version = this.fullNode.Version?.ToString() ?? "0",
                 ProtocolVersion = (uint)(this.nodeSettings.ProtocolVersion),
-                Difficulty = GetNetworkDifficulty(this.networkDifficulty)?.Difficulty ?? 0,
                 Agent = this.connectionManager.ConnectionSettings.Agent,
                 ExternalAddress = this.selfEndpointTracker.MyExternalAddress.Address.ToString(),
                 ProcessId = Process.GetCurrentProcess().Id,
@@ -149,7 +143,6 @@ namespace Stratis.Bitcoin.Controllers
                 ConsensusHeight = this.chainState.ConsensusTip?.Height,
                 DataDirectoryPath = this.nodeSettings.DataDir,
                 Testnet = this.network.IsTest(),
-                RelayFee = this.nodeSettings.MinRelayTxFeeRate?.FeePerK?.ToUnit(MoneyUnit.BTC) ?? 0,
                 RunningTime = this.dateTimeProvider.GetUtcNow() - this.fullNode.StartTime,
                 CoinTicker = this.network.CoinTicker,
                 State = this.fullNode.State.ToString()
@@ -605,16 +598,6 @@ namespace Stratis.Bitcoin.Controllers
             }
 
             return block;
-        }
-
-        /// <summary>
-        /// Retrieves the difficulty target of the full node's network.
-        /// </summary>
-        /// <param name="networkDifficulty">The network difficulty interface.</param>
-        /// <returns>A network difficulty <see cref="NBitcoin.Target"/>. Returns <c>null</c> if fails.</returns>
-        internal static Target GetNetworkDifficulty(INetworkDifficulty networkDifficulty = null)
-        {
-            return networkDifficulty?.GetNetworkDifficulty();
         }
     }
 }

@@ -1,8 +1,7 @@
 ﻿using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.SmartContracts.Rules;
+using Stratis.Core.Consensus;
+using Stratis.Features.SmartContracts.Rules;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Networks;
 using Xunit;
@@ -38,7 +37,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Consensus.Rules
 
             var state = new Mock<IStateRepositoryRoot>();
             state.Setup(x => x.GetAccountState(contractAddress)).Returns(new AccountState()); // not null
-            
+
             Transaction transaction = this.network.CreateTransaction();
             transaction.Outputs.Add(new TxOut(100, PayToPubkeyHashTemplate.Instance.GenerateScriptPubKey(new KeyId(contractAddress))));
             Assert.Throws<ConsensusErrorException>(() => P2PKHNotContractRule.CheckTransaction(state.Object, transaction));

@@ -6,19 +6,19 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.AsyncWork;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Tests.Wallet.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
+using Stratis.Features.BlockStore;
+using Stratis.Features.Wallet.Interfaces;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Wallet.Tests
+namespace Stratis.Features.Wallet.Tests
 {
     public class WalletSyncManagerTest : LogsTestBase
     {
@@ -61,19 +61,21 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             this.blockStore = new Mock<IBlockStore>();
             this.nodeLifetime = new Mock<INodeLifetime>();
             this.walletRepository = Mock.Get(((WalletManager)this.walletManager.Object).WalletRepository);
-            this.signals = new Signals.Signals(new LoggerFactory(), null);
+            this.signals = new Signals(new LoggerFactory(), null);
             this.asyncProvider = new AsyncProvider(new LoggerFactory(), this.signals, this.nodeLifetime.Object);
             this.walletSyncManager = new WalletSyncManager(this.LoggerFactory.Object, this.walletManager.Object, this.chainIndexer, this.Network,
                 this.blockStore.Object, this.storeSettings, this.signals, this.asyncProvider, this.nodeLifetime.Object);
             this.walletName = "test";
             this.walletTip = this.chainIndexer.Tip;
 
-            this.walletRepository.Setup(w => w.GetWalletNames()).Returns(() => {
+            this.walletRepository.Setup(w => w.GetWalletNames()).Returns(() =>
+            {
                 return (this.walletName == null) ? new List<string> { } : new List<string> { this.walletName };
             });
 
             // Mock wallet repository's 'RewindWallet'.
-            this.walletRepository.Setup(r => r.RewindWallet(It.IsAny<string>(), It.IsAny<ChainedHeader>())).Returns((string name, ChainedHeader chainedHeader) => {
+            this.walletRepository.Setup(r => r.RewindWallet(It.IsAny<string>(), It.IsAny<ChainedHeader>())).Returns((string name, ChainedHeader chainedHeader) =>
+            {
                 this.walletTip = (chainedHeader == null) ? null : this.walletTip.FindFork(chainedHeader);
                 return (true, new List<(uint256, DateTimeOffset)>());
             });

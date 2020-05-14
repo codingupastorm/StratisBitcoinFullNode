@@ -6,16 +6,14 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using NBitcoin;
 using NBitcoin.Protocol;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.ColdStaking;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
+using Stratis.Core.Configuration;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Utilities;
+using Stratis.Features.BlockStore;
+using Stratis.Features.Wallet;
+using Stratis.Features.Wallet.Interfaces;
 using Xunit;
 
 namespace Stratis.Features.SQLiteWalletRepository.Tests
@@ -30,7 +28,7 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
         }
 
         public TempDataFolder([CallerFilePath] string classOrFileName = "", [CallerMemberName] string callingMethod = "")
-            : base(TestBase.AssureEmptyDir(TestBase.GetTestDirectoryPath(Path.Combine(ClassNameFromFileName(classOrFileName), callingMethod))))
+            : base(TestBase.AssureEmptyDir(TestBase.GetTestDirectoryPath(Path.Combine(ClassNameFromFileName(classOrFileName), callingMethod))).FullName)
         {
             try
             {
@@ -53,26 +51,6 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
         }
     }
 
-    public class ColdStakingDestinationReader : ScriptDestinationReader, IScriptDestinationReader
-    {
-        public ColdStakingDestinationReader(IScriptAddressReader scriptAddressReader) : base(scriptAddressReader)
-        {
-        }
-
-        public override IEnumerable<TxDestination> GetDestinationFromScriptPubKey(Network network, Script redeemScript)
-        {
-            if (ColdStakingScriptTemplate.Instance.ExtractScriptPubKeyParameters(redeemScript, out KeyId hotPubKeyHash, out KeyId coldPubKeyHash))
-            {
-                yield return hotPubKeyHash;
-                yield return coldPubKeyHash;
-            }
-            else
-            {
-                base.GetDestinationFromScriptPubKey(network, redeemScript);
-            }
-        }
-    }
-
     public class BlockBase
     {
         public NodeSettings NodeSettings { get; private set; }
@@ -88,16 +66,17 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
             // Set up block store.
             this.NodeSettings = new NodeSettings(network, args: new[] { $"-datadir={dataDir}" }, protocolVersion: ProtocolVersion.ALT_PROTOCOL_VERSION);
 
-            var keyValueStore = new BlockKeyValueStore(new RepositorySerializer(network.Consensus.ConsensusFactory), new DataFolder(dataDir), this.NodeSettings.LoggerFactory, DateTimeProvider.Default);
+            var repositorySerializer = new RepositorySerializer(network.Consensus.ConsensusFactory);
+            var keyValueStore = new BlockKeyValueStore(repositorySerializer, new DataFolder(dataDir), this.NodeSettings.LoggerFactory, DateTimeProvider.Default);
 
-            this.BlockRepo = new BlockRepository(network, this.NodeSettings.LoggerFactory, keyValueStore);
+            this.BlockRepo = new BlockRepository(network, this.NodeSettings.LoggerFactory, keyValueStore, repositorySerializer);
             this.BlockRepo.Initialize();
 
             var prevBlock = new Dictionary<uint256, uint256>();
 
             using (IKeyValueStoreTransaction transaction = this.BlockRepo.KeyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
-                foreach ((uint256 hashThis, Block block) in transaction.SelectForward<uint256, Block>("Block"))
+                foreach ((uint256 hashThis, Block block) in transaction.SelectAll<uint256, Block>("Block"))
                 {
                     uint256 hashPrev = block.Header.HashPrevBlock;
                     prevBlock[hashThis] = hashPrev;
@@ -190,7 +169,7 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
                 {
                     var nodeSettings = new NodeSettings(this.network, args: new[] { $"-datadir={dataFolder.RootPath}" }, protocolVersion: ProtocolVersion.ALT_PROTOCOL_VERSION);
 
-                    var repo = new SQLiteWalletRepository(nodeSettings.LoggerFactory, dataFolder, this.network, DateTimeProvider.Default, new ColdStakingDestinationReader(new ScriptAddressReader()));
+                    var repo = new SQLiteWalletRepository(nodeSettings.LoggerFactory, dataFolder, this.network, DateTimeProvider.Default, new ScriptDestinationReader(new ScriptAddressReader()));
                     repo.WriteMetricsToFile = true;
                     repo.Initialize(this.dbPerWallet);
 
@@ -333,7 +312,7 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
                     Assert.Equal(Money.COIN * 9, (long)outputs2[0].Transaction.Amount);
 
                     // Check the wallet history.
-                    Wallet wallet = repo.GetWallet(account.WalletName);
+                    Stratis.Features.Wallet.Wallet wallet = repo.GetWallet(account.WalletName);
                     HdAccount hdAccount = repo.GetAccounts(wallet, account.AccountName).First();
                     AccountHistory accountHistory = repo.GetHistory(hdAccount);
                     List<FlatHistory> history = accountHistory.History.ToList();
@@ -441,7 +420,7 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
         private void LoadWallet(BlockBase blockBase, SQLiteWalletRepository repo, string walletName)
         {
             // Bypasses IsExtPubKey wallet check.
-            Wallet wallet = new FileStorage<Wallet>(blockBase.NodeSettings.DataFolder.WalletPath).LoadByFileName($"{walletName}.wallet.json");
+            Stratis.Features.Wallet.Wallet wallet = new FileStorage<Stratis.Features.Wallet.Wallet>(blockBase.NodeSettings.DataFolder.WalletPath).LoadByFileName($"{walletName}.wallet.json");
 
             // Create a new empty wallet in the repository.
             byte[] chainCode = wallet.ChainCode;
@@ -466,8 +445,7 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
                 var blockBase = new BlockBase(network, this.dataDir);
 
                 // Initialize the repo.
-                network.StandardScriptsRegistry.RegisterStandardScriptTemplate(ColdStakingScriptTemplate.Instance);
-                var repo = new SQLiteWalletRepository(blockBase.NodeSettings.LoggerFactory, dataFolder, network, DateTimeProvider.Default, new ColdStakingDestinationReader(new ScriptAddressReader()));
+                var repo = new SQLiteWalletRepository(blockBase.NodeSettings.LoggerFactory, dataFolder, network, DateTimeProvider.Default, new ScriptDestinationReader(new ScriptAddressReader()));
                 repo.WriteMetricsToFile = true;
                 blockBase.Metrics = repo.Metrics;
                 repo.Initialize(this.dbPerWallet);
@@ -486,7 +464,7 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
                 // Now verify the DB against the JSON wallet(s).
                 foreach (string walletName in walletNames)
                 {
-                    Wallet wallet = new FileStorage<Wallet>(blockBase.NodeSettings.DataFolder.WalletPath).LoadByFileName($"{walletName}.wallet.json");
+                    Stratis.Features.Wallet.Wallet wallet = new FileStorage<Stratis.Features.Wallet.Wallet>(blockBase.NodeSettings.DataFolder.WalletPath).LoadByFileName($"{walletName}.wallet.json");
 
                     foreach (HdAccount hdAccount in wallet.GetAccounts())
                     {
@@ -708,8 +686,7 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
                 var blockBase = new BlockBase(network, this.dataDir);
 
                 // Initialize the repo.
-                network.StandardScriptsRegistry.RegisterStandardScriptTemplate(ColdStakingScriptTemplate.Instance);
-                var repo = new SQLiteWalletRepository(blockBase.NodeSettings.LoggerFactory, dataFolder, network, DateTimeProvider.Default, new ColdStakingDestinationReader(new ScriptAddressReader()));
+                var repo = new SQLiteWalletRepository(blockBase.NodeSettings.LoggerFactory, dataFolder, network, DateTimeProvider.Default, new ScriptDestinationReader(new ScriptAddressReader()));
                 repo.WriteMetricsToFile = true;
                 blockBase.Metrics = repo.Metrics;
                 repo.Initialize(this.dbPerWallet);

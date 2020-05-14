@@ -2,9 +2,8 @@
 using System.Net;
 using NBitcoin;
 using Stratis.Bitcoin.P2P;
-using Stratis.Bitcoin.Utilities;
 
-namespace Stratis.Bitcoin.Configuration
+namespace Stratis.Core.Configuration
 {
     /// <summary>
     /// Contains path locations to folders and files on disk.
@@ -28,6 +27,7 @@ namespace Stratis.Bitcoin.Configuration
             this.ChainPath = Path.Combine(path, "chain");
             this.KeyValueRepositoryPath = Path.Combine(path, "common");
             this.BlockPath = Path.Combine(path, "blocks");
+            this.ChannelsPath = Path.Combine(path, "channels");
             this.PollsPath = Path.Combine(path, "polls");
             this.IndexPath = Path.Combine(path, "index");
             this.RpcCookieFile = Path.Combine(path, ".cookie");
@@ -37,6 +37,8 @@ namespace Stratis.Bitcoin.Configuration
             this.DnsMasterFilePath = path;
             this.SmartContractStatePath = Path.Combine(path, "contracts");
             this.ProvenBlockHeaderPath = Path.Combine(path, "provenheaders");
+            this.TransientStorePath = Path.Combine(path, "transient");
+            this.PrivateDataStorePath = Path.Combine(path, "private");
             this.RootPath = path;
         }
 
@@ -63,6 +65,9 @@ namespace Stratis.Bitcoin.Configuration
         /// <summary>Path to the folder with block repository database files.</summary>
         /// <seealso cref="Features.BlockStore.BlockRepository.BlockRepository"/>
         public string BlockPath { get; internal set; }
+
+        /// <summary>Path to the folder with the channel data.</summary>
+        public string ChannelsPath { get; internal set; }
 
         /// <summary>Path to the folder with polls.</summary>
         public string PollsPath { get; internal set; }
@@ -95,5 +100,11 @@ namespace Stratis.Bitcoin.Configuration
 
         /// <summary>Path to Stratis applications</summary>
         public string ApplicationsPath { get; internal set; }
+
+        /// <summary>Path to the transient store.</summary>
+        public string TransientStorePath { get; }
+
+        /// <summary>Path to the private data store.</summary>
+        public string PrivateDataStorePath { get; }
     }
 }

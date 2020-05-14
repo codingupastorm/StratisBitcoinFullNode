@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace Stratis.Bitcoin.Utilities.Extensions
+namespace Stratis.Core.Utilities.Extensions
 {
     public static class ThreadingExtensions
     {

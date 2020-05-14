@@ -4,26 +4,23 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.AsyncWork;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Base.Deployments;
-using Stratis.Bitcoin.Configuration.Logging;
-using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.Consensus.Rules;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.Miner;
-using Stratis.Bitcoin.Features.SmartContracts;
-using Stratis.Bitcoin.Features.SmartContracts.Caching;
+using Stratis.Core.Base;
+using Stratis.Core.Base.Deployments;
+using Stratis.Core.Configuration.Logging;
+using Stratis.Core.Configuration.Settings;
+using Stratis.Core.Consensus;
+using Stratis.Core.Consensus.Rules;
 using Stratis.Bitcoin.Mining;
-using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
+using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mining;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.SmartContracts;
+using Stratis.Features.SmartContracts.Caching;
 using Stratis.Patricia;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Caching;
@@ -31,7 +28,10 @@ using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.CLR.Loader;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.CLR.Validation;
+using Stratis.SmartContracts.Core.Endorsement;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
+using Stratis.SmartContracts.Core.Store;
 using Stratis.SmartContracts.RuntimeObserver;
 using Stratis.SmartContracts.Tokenless;
 using Xunit;
@@ -42,7 +42,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
     {
         private readonly TokenlessTestHelper helper;
 
-        private readonly CachedCoinView cachedCoinView;
         private readonly ConsensusSettings consensusSettings;
 
         private StateRepositoryRoot stateRoot;
@@ -58,7 +57,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         private Serializer serializer;
         private SmartContractStateFactory smartContractStateFactory;
         private StateFactory stateFactory;
-        private BasicKeyEncodingStrategy keyEncodingStrategy;
         private string folder;
 
         private TokenlessReflectionExecutorFactory executorFactory;
@@ -69,11 +67,13 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         private MempoolSchedulerLock mempoolLock;
         private ConsensusRuleEngine consensusRules;
 
+        private IReadWriteSetTransactionSerializer rwsSerializer;
+        private IReadWriteSetValidator rwsValidator;
+
         public MiningTests()
         {
             this.helper = new TokenlessTestHelper();
             this.consensusSettings = new ConsensusSettings(this.helper.NodeSettings);
-            this.cachedCoinView = new CachedCoinView(this.helper.InMemoryCoinView, this.helper.DateTimeProvider, this.helper.LoggerFactory, new NodeStats(this.helper.DateTimeProvider, this.helper.LoggerFactory), this.consensusSettings);
         }
 
         [Fact]
@@ -89,7 +89,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/TokenlessExample.cs");
             Assert.True(compilationResult.Success);
 
-            var contractTxData = new ContractTxData(0, 0, (Gas)0, compilationResult.Compilation);
+            var contractTxData = new ContractTxData(0, 0, (Gas)0, compilationResult.Compilation, new EndorsementPolicy());
             byte[] outputScript = this.helper.CallDataSerializer.Serialize(contractTxData);
             transaction.Outputs.Add(new TxOut(Money.Zero, new Script(outputScript)));
 
@@ -101,7 +101,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             Assert.Single(this.helper.Mempool.MapTx);
 
             BlockTemplate block = blockDefinition.Build(this.helper.ChainIndexer.Tip, null);
-            Assert.Single(block.Block.Transactions);
+            Assert.Equal(2, block.Block.Transactions.Count);
 
             BlockExecutionResultModel result = this.executionCache.GetExecutionResult(block.Block.GetHash());
             Assert.NotNull(result);
@@ -111,7 +111,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             uint160 contractAddress = this.AddressGenerator.GenerateAddress(transaction.GetHash(), 0);
             Assert.NotNull(result.MutatedStateRepository.GetCode(contractAddress));
 
-            byte[] senderValue = result.MutatedStateRepository.GetStorageValue(contractAddress, Encoding.UTF8.GetBytes("Sender"));
+            byte[] senderValue = result.MutatedStateRepository.GetStorageValue(contractAddress, Encoding.UTF8.GetBytes("Sender")).Value;
             byte[] expectedSenderValue = key.PubKey.GetAddress(this.helper.Network).ToString().ToUint160(this.helper.Network).ToBytes();
             Assert.Equal(expectedSenderValue, senderValue);
         }
@@ -121,26 +121,38 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             await InitializeAsync();
 
-            TokenlessMempoolValidator mempoolValidator = CreateTokenlessMempoolValidator();
-            Transaction transaction = this.helper.Network.CreateTransaction();
-
-            var key = new Key();
-            this.helper.TokenlessSigner.InsertSignedTxIn(transaction, key.GetBitcoinSecret(this.helper.Network));
-
             var mempoolValidationState = new MempoolValidationState(false);
-            await mempoolValidator.AcceptToMemoryPool(mempoolValidationState, transaction);
-            Assert.Single(this.helper.Mempool.MapTx);
+            TokenlessMempoolValidator mempoolValidator = CreateTokenlessMempoolValidator();
+            var key = new Key();
+
+            // Transaction One
+            Transaction transactionOne = this.helper.Network.CreateTransaction();
+            transactionOne.Outputs.Add(new TxOut(Money.Zero, Script.Empty));
+            this.helper.TokenlessSigner.InsertSignedTxIn(transactionOne, key.GetBitcoinSecret(this.helper.Network));
+            await mempoolValidator.AcceptToMemoryPool(mempoolValidationState, transactionOne);
+            TestBase.WaitLoop(() => { return this.helper.Mempool.MapTx.Count == 1; });
+
+            await Task.Delay(1000); // Small delay so that the transaction has different time.
+
+            // Transaction Two
+            Transaction transactionTwo = this.helper.Network.CreateTransaction();
+            transactionTwo.Outputs.Add(new TxOut(Money.Zero, Script.Empty));
+            this.helper.TokenlessSigner.InsertSignedTxIn(transactionTwo, key.GetBitcoinSecret(this.helper.Network));
+            await mempoolValidator.AcceptToMemoryPool(mempoolValidationState, transactionTwo);
+            TestBase.WaitLoop(() => { return this.helper.Mempool.MapTx.Count == 2; });
 
             BlockDefinition blockDefinition = CreateBlockDefinition();
             BlockTemplate block = blockDefinition.Build(this.helper.ChainIndexer.Tip, null);
-            Assert.Single(block.Block.Transactions);
+            Assert.Equal(3, block.Block.Transactions.Count);
+
+            // Ensure that the transaction one was added before transaction two.
+            Assert.True(block.Block.Transactions[1].Time < block.Block.Transactions[2].Time);
         }
 
         private TokenlessMempoolValidator CreateTokenlessMempoolValidator()
         {
             return new TokenlessMempoolValidator(
                 this.helper.ChainIndexer,
-                this.cachedCoinView,
                 this.helper.DateTimeProvider,
                 this.helper.LoggerFactory,
                 this.helper.Mempool,
@@ -151,20 +163,30 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
         private BlockDefinition CreateBlockDefinition()
         {
+            uint blockMaxSize = this.helper.Network.Consensus.Options.MaxBlockSerializedSize;
+            uint blockMaxWeight = this.helper.Network.Consensus.Options.MaxBlockWeight;
+
+            BlockDefinitionOptions blockDefinitionOptions = new BlockDefinitionOptions(blockMaxWeight, blockMaxSize).RestrictForNetwork(this.helper.Network);
+
+            var minerSettings = new Mock<IMinerSettings>();
+            minerSettings.Setup(c => c.BlockDefinitionOptions)
+                .Returns(blockDefinitionOptions);
+
             return new TokenlessBlockDefinition(
                 new BlockBufferGenerator(),
-                this.cachedCoinView,
                 this.consensusManager,
                 this.helper.DateTimeProvider,
                 this.executorFactory,
                 new ExtendedLoggerFactory(),
                 this.helper.Mempool,
                 this.mempoolLock,
-                new MinerSettings(this.helper.NodeSettings),
+                minerSettings.Object,
                 this.helper.Network,
                 this.helper.TokenlessSigner,
                 this.stateRoot,
                 this.executionCache,
+                this.rwsSerializer,
+                this.rwsValidator,
                 this.helper.CallDataSerializer);
         }
 
@@ -177,7 +199,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             InitializeConsensusRules();
 
-            this.consensusManager = ConsensusManagerHelper.CreateConsensusManager(this.helper.Network, chainState: this.chainState, inMemoryCoinView: this.helper.InMemoryCoinView, chainIndexer: this.helper.ChainIndexer, consensusRules: this.consensusRules);
+            this.consensusManager = ConsensusManagerHelper.CreateConsensusManager(this.helper.Network, chainState: this.chainState, chainIndexer: this.helper.ChainIndexer, consensusRules: this.consensusRules);
             await this.consensusManager.InitializeAsync(this.helper.ChainIndexer.Tip);
             this.mempoolLock = new MempoolSchedulerLock();
 
@@ -188,28 +210,25 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             var consensusRulesContainer = new ConsensusRulesContainer();
 
-            this.consensusRules = new PowConsensusRuleEngine(
-                    this.helper.Network,
-                    this.helper.LoggerFactory,
-                    DateTimeProvider.Default,
+            this.consensusRules = new TokenlessConsensusRuleEngine(
                     this.helper.ChainIndexer,
-                    new NodeDeployments(this.helper.Network, this.helper.ChainIndexer),
-                    this.consensusSettings,
-                    new Checkpoints(),
-                    this.cachedCoinView,
                     this.chainState,
+                    new Checkpoints(),
+                    consensusRulesContainer,
+                    this.consensusSettings,
+                    DateTimeProvider.Default,
                     new InvalidBlockHashStore(this.helper.DateTimeProvider),
-                    new NodeStats(this.helper.DateTimeProvider, this.helper.LoggerFactory),
-                    new AsyncProvider(this.helper.LoggerFactory, new Signals(this.helper.LoggerFactory, null), new NodeLifetime()),
-                    consensusRulesContainer)
+                    this.helper.LoggerFactory,
+                    this.helper.Network,
+                    new NodeDeployments(this.helper.Network, this.helper.ChainIndexer),
+                    new NodeStats(this.helper.DateTimeProvider, this.helper.LoggerFactory))
                 .SetupRulesEngineParent();
         }
 
         private void InitializeSmartContractComponents([CallerMemberName] string callingMethod = "")
         {
-            this.keyEncodingStrategy = BasicKeyEncodingStrategy.Default;
+            this.folder = TestBase.AssureEmptyDir(Path.Combine(AppContext.BaseDirectory, "TestCase", callingMethod)).FullName;
 
-            this.folder = TestBase.AssureEmptyDir(Path.Combine(AppContext.BaseDirectory, "TestCase", callingMethod));
             var engine = new ContractStateTableStore(Path.Combine(this.folder, "contracts"), this.helper.LoggerFactory, this.helper.DateTimeProvider, new RepositorySerializer(this.helper.Network.Consensus.ConsensusFactory));
             var byteStore = new KeyValueByteStore(engine, "ContractState1");
             byteStore.Empty();
@@ -227,14 +246,17 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             this.reflectionVirtualMachine = new ReflectionVirtualMachine(this.validator, this.helper.LoggerFactory, this.assemblyLoader, this.moduleDefinitionReader, this.contractCache, contractInitializer);
             this.stateProcessor = new StateProcessor(this.reflectionVirtualMachine, this.AddressGenerator);
-            this.internalTxExecutorFactory = new InternalExecutorFactory(this.helper.LoggerFactory, this.stateProcessor);
+            this.internalTxExecutorFactory = new InternalExecutorFactory(this.stateProcessor);
             this.primitiveSerializer = new ContractPrimitiveSerializer(this.helper.Network);
             this.serializer = new Serializer(this.primitiveSerializer);
-            this.smartContractStateFactory = new SmartContractStateFactory(this.primitiveSerializer, this.internalTxExecutorFactory, this.serializer);
+            this.smartContractStateFactory = new SmartContractStateFactory(this.primitiveSerializer, this.internalTxExecutorFactory, new InMemoryPrivateDataStore(), this.serializer);
             this.stateFactory = new StateFactory(this.smartContractStateFactory);
             this.executorFactory = new TokenlessReflectionExecutorFactory(this.helper.CallDataSerializer, this.stateFactory, this.stateProcessor, this.primitiveSerializer);
 
             this.executionCache = new BlockExecutionResultCache();
+
+            this.rwsValidator = new ReadWriteSetValidator();
+            this.rwsSerializer = new ReadWriteSetTransactionSerializer(this.helper.Network, null);
         }
     }
 }

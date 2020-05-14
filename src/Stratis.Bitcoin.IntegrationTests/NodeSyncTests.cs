@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using NBitcoin;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
@@ -14,12 +13,10 @@ namespace Stratis.Bitcoin.IntegrationTests
     public class NodeSyncTests
     {
         private readonly Network powNetwork;
-        private readonly Network posNetwork;
 
         public NodeSyncTests()
         {
             this.powNetwork = new BitcoinRegTest();
-            this.posNetwork = new StratisRegTest();
         }
 
         public class StratisRegTestMaxReorg : StratisRegTest
@@ -34,69 +31,7 @@ namespace Stratis.Bitcoin.IntegrationTests
         }
 
         [Fact]
-        public void Pow_CanStratisSyncFromCore()
-        {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                CoreNode stratisNode = builder.CreateStratisPowNode(this.powNetwork).Start();
-                CoreNode coreNode = builder.CreateBitcoinCoreNode().Start();
-
-                Block tip = coreNode.FindBlock(10).Last();
-                TestHelper.ConnectAndSync(stratisNode, coreNode);
-
-                TestHelper.Disconnect(stratisNode, coreNode);
-
-                coreNode.FindBlock(10).Last();
-                TestHelper.ConnectAndSync(coreNode, stratisNode);
-            }
-        }
-
-        [Fact]
-        public void Pow_CanStratisSyncFromStratis()
-        {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                CoreNode stratisNode = builder.CreateStratisPowNode(this.powNetwork).Start();
-                CoreNode stratisNodeSync = builder.CreateStratisPowNode(this.powNetwork).Start();
-                CoreNode coreCreateNode = builder.CreateBitcoinCoreNode().Start();
-
-                // first seed a core node with blocks and sync them to a stratis node
-                // and wait till the stratis node is fully synced
-                Block tip = coreCreateNode.FindBlock(5).Last();
-                TestHelper.ConnectAndSync(stratisNode, coreCreateNode);
-
-                TestBase.WaitLoop(() => stratisNode.FullNode.ConsensusManager().Tip.Block.GetHash() == tip.GetHash());
-
-                // Add a new stratis node which will download
-                // the blocks using the GetData payload
-                TestHelper.ConnectAndSync(stratisNodeSync, stratisNode);
-                TestBase.WaitLoop(() => stratisNodeSync.FullNode.ConsensusManager().Tip.Block.GetHash() == tip.GetHash());
-            }
-        }
-
-        [Fact]
-        public void Pow_CanCoreSyncFromStratis()
-        {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                CoreNode stratisNode = builder.CreateStratisPowNode(this.powNetwork).Start();
-                CoreNode coreNodeSync = builder.CreateBitcoinCoreNode().Start();
-                CoreNode coreCreateNode = builder.CreateBitcoinCoreNode().Start();
-
-                // first seed a core node with blocks and sync them to a stratis node
-                // and wait till the stratis node is fully synced
-                Block tip = coreCreateNode.FindBlock(5).Last();
-                TestHelper.ConnectAndSync(stratisNode, coreCreateNode);
-                TestBase.WaitLoop(() => stratisNode.FullNode.ConsensusManager().Tip.Block.GetHash() == tip.GetHash());
-
-                // add a new stratis node which will download
-                // the blocks using the GetData payload
-                TestHelper.ConnectAndSync(coreNodeSync, stratisNode);
-            }
-        }
-
-        [Fact]
-        public void Pos_Given_NodesAreSynced_When_ABigReorgHappens_Then_TheReorgIsIgnored()
+        public void PosNodesAreSyncedBigReorgHappensReorgIsIgnored()
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {

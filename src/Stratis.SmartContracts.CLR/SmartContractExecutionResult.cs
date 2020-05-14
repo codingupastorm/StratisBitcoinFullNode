@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using NBitcoin;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Receipts;
 
 namespace Stratis.SmartContracts.CLR
@@ -39,6 +40,12 @@ namespace Stratis.SmartContracts.CLR
 
         /// <inheritdoc />
         public IList<Log> Logs { get; set; }
+
+        /// <inheritdoc />
+        public ReadWriteSetBuilder ReadWriteSet { get; set; }
+
+        /// <inheritdoc />
+        public ReadWriteSetBuilder PrivateReadWriteSet { get; set; }
 
         public SmartContractExecutionResult()
         {

@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
 using NBitcoin.BouncyCastle.Math;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.PoA.BasePoAFeatureConsensusRules;
+using Stratis.Core.Consensus;
+using Stratis.Core.Consensus.Rules;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.PoA.Tests.Rules
+namespace Stratis.Features.PoA.Tests.Rules
 {
     public class PoAHeaderDifficultyRuleTests : PoATestsBase
     {

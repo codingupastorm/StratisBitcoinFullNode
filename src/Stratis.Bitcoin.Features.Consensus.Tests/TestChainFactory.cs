@@ -5,33 +5,34 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.AsyncWork;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Base.Deployments;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Consensus.Validators;
-using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.MemoryPool.Fee;
-using Stratis.Bitcoin.Features.Miner;
+using Stratis.Bitcoin;
+using Stratis.Core.Base;
+using Stratis.Core.Base.Deployments;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Settings;
+using Stratis.Core.Connection;
+using Stratis.Core.Consensus;
+using Stratis.Core.Consensus.Rules;
+using Stratis.Core.Consensus.Validators;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Mining;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
+using Stratis.Features.BlockStore;
+using Stratis.Features.Consensus.CoinViews;
+using Stratis.Features.Consensus.Rules;
+using Stratis.Features.Consensus.Rules.CommonRules;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Fee;
+using Stratis.Features.PoA;
 using Xunit;
 using Xunit.Sdk;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests
+namespace Stratis.Features.Consensus.Tests
 {
     /// <summary>
     /// Concrete instance of the test chain.
@@ -105,11 +106,10 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             testChainContext.LoggerFactory = testChainContext.NodeSettings.LoggerFactory;
             testChainContext.DateTimeProvider = DateTimeProvider.Default;
 
-            testChainContext.Signals = new Signals.Signals(testChainContext.NodeSettings.LoggerFactory, null);
+            testChainContext.Signals = new Signals(testChainContext.NodeSettings.LoggerFactory, null);
             testChainContext.AsyncProvider = new AsyncProvider(testChainContext.NodeSettings.LoggerFactory, testChainContext.Signals, new Mock<INodeLifetime>().Object);
 
             network.Consensus.Options = new ConsensusOptions();
-            //new FullNodeBuilderConsensusExtension.PowConsensusRulesRegistration().RegisterRules(network.Consensus);
 
             var consensusSettings = new ConsensusSettings(testChainContext.NodeSettings);
             testChainContext.Checkpoints = new Checkpoints();
@@ -120,7 +120,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             var inMemoryCoinView = new InMemoryCoinView(testChainContext.ChainIndexer.Tip.HashBlock);
             var cachedCoinView = new CachedCoinView(inMemoryCoinView, DateTimeProvider.Default, testChainContext.LoggerFactory, new NodeStats(testChainContext.DateTimeProvider, testChainContext.LoggerFactory), new ConsensusSettings(testChainContext.NodeSettings));
 
-            var dataFolder = new DataFolder(TestBase.AssureEmptyDir(dataDir));
+            var dataFolder = new DataFolder(TestBase.AssureEmptyDir(dataDir).FullName);
             testChainContext.PeerAddressManager =
                 mockPeerAddressManager == null ?
                     new PeerAddressManager(DateTimeProvider.Default, dataFolder, testChainContext.LoggerFactory, new SelfEndpointTracker(testChainContext.LoggerFactory, testChainContext.ConnectionSettings))
@@ -146,9 +146,10 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
             testChainContext.PartialValidator = new PartialValidator(testChainContext.AsyncProvider, testChainContext.ConsensusRules, testChainContext.LoggerFactory);
             testChainContext.FullValidator = new FullValidator(testChainContext.ConsensusRules, testChainContext.LoggerFactory);
 
-            var keyValueStore = new BlockKeyValueStore(new RepositorySerializer(testChainContext.Network.Consensus.ConsensusFactory), dataFolder, testChainContext.LoggerFactory, DateTimeProvider.Default);
+            var repositorySerializer = new RepositorySerializer(testChainContext.Network.Consensus.ConsensusFactory);
+            var keyValueStore = new BlockKeyValueStore(repositorySerializer, dataFolder, testChainContext.LoggerFactory, DateTimeProvider.Default);
 
-            var blockRepository = new BlockRepository(testChainContext.Network, testChainContext.LoggerFactory, keyValueStore);
+            var blockRepository = new BlockRepository(testChainContext.Network, testChainContext.LoggerFactory, keyValueStore, repositorySerializer);
 
             var blockStoreFlushCondition = new BlockStoreQueueFlushCondition(testChainContext.ChainState, testChainContext.InitialBlockDownloadState);
 
@@ -217,9 +218,17 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests
         private static BlockTemplate CreateBlockTemplate(TestChainContext testChainContext, Script scriptPubKey,
             TxMempool mempool, MempoolSchedulerLock mempoolLock)
         {
-            PowBlockDefinition blockAssembler = new PowBlockDefinition(testChainContext.Consensus,
+            uint blockMaxSize = testChainContext.Network.Consensus.Options.MaxBlockSerializedSize;
+            uint blockMaxWeight = testChainContext.Network.Consensus.Options.MaxBlockWeight;
+            var blockDefinitionOptions = new BlockDefinitionOptions(blockMaxWeight, blockMaxSize).RestrictForNetwork(testChainContext.Network);
+
+            var minerSettings = new Mock<IMinerSettings>();
+            minerSettings.Setup((c) => c.BlockDefinitionOptions)
+                .Returns(blockDefinitionOptions);
+
+            var blockAssembler = new PoABlockDefinition(testChainContext.Consensus,
                 testChainContext.DateTimeProvider, testChainContext.LoggerFactory as LoggerFactory, mempool, mempoolLock,
-                new MinerSettings(testChainContext.NodeSettings), testChainContext.Network, testChainContext.ConsensusRules);
+                testChainContext.Network, minerSettings.Object);
 
             BlockTemplate newBlock = blockAssembler.Build(testChainContext.ChainIndexer.Tip, scriptPubKey);
 

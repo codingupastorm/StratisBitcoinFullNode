@@ -5,17 +5,17 @@ using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Base.Deployments;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
-using Stratis.Bitcoin.Features.SmartContracts;
-using Stratis.Bitcoin.Features.SmartContracts.Caching;
-using Stratis.Bitcoin.Features.SmartContracts.Rules;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Base.Deployments;
+using Stratis.Core.Consensus;
+using Stratis.Core.Consensus.Rules;
+using Stratis.Core.Utilities;
+using Stratis.Features.Consensus.Rules.CommonRules;
+using Stratis.Features.SmartContracts;
+using Stratis.Features.SmartContracts.Caching;
+using Stratis.Features.SmartContracts.Interfaces;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Util;
@@ -31,9 +31,13 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
         private readonly ILogger logger;
         private IStateRepositoryRoot mutableStateRepository;
         private readonly IList<Receipt> receipts;
+        private readonly List<uint256> privateDataRwsHashes;
         private readonly IReceiptRepository receiptRepository;
         private readonly IStateRepositoryRoot stateRepositoryRoot;
         private readonly ITokenlessSigner tokenlessSigner;
+        private readonly IReadWriteSetTransactionSerializer rwsSerializer;
+        private readonly IReadWriteSetValidator rwsValidator;
+        private readonly IPrivateDataRetriever privateDataRetriever;
 
         public TokenlessCoinviewRule(
             ICallDataSerializer callDataSerializer,
@@ -42,17 +46,23 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             ILoggerFactory loggerFactory,
             IReceiptRepository receiptRepository,
             IStateRepositoryRoot stateRepositoryRoot,
-            ITokenlessSigner tokenlessSigner)
+            ITokenlessSigner tokenlessSigner,
+            IReadWriteSetTransactionSerializer rwsSerializer,
+            IReadWriteSetValidator rwsValidator,
+            IPrivateDataRetriever privateDataRetriever)
         {
             this.callDataSerializer = callDataSerializer;
             this.executorFactory = executorFactory;
             this.executionCache = executionCache;
             this.receipts = new List<Receipt>();
+            this.privateDataRwsHashes = new List<uint256>();
             this.receiptRepository = receiptRepository;
             this.stateRepositoryRoot = stateRepositoryRoot;
             this.tokenlessSigner = tokenlessSigner;
-
-            this.logger = loggerFactory.CreateLogger<SmartContractCoinViewRuleLogic>();
+            this.rwsSerializer = rwsSerializer;
+            this.rwsValidator = rwsValidator;
+            this.privateDataRetriever = privateDataRetriever;
+            this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
         /// <inheritdoc />
@@ -67,15 +77,19 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             this.logger.LogDebug("Block to validate '{0}'.", context.ValidationContext.BlockToValidate.GetHash());
 
             this.receipts.Clear();
+            this.privateDataRwsHashes.Clear();
 
             this.DetermineIfResultIsAlreadyCached(context);
-            this.ProcessTransactions(context);
+            await this.ProcessTransactionsAsync(context);
             this.CompareAndValidateStateRoot(context);
             this.ValidateAndStoreReceipts(context);
             this.ValidateLogsBloom(context);
 
             // Push to underlying database
             this.mutableStateRepository.Commit();
+
+            // Move the private data to the "actual" private state database.
+            this.privateDataRetriever.MoveDataFromTransientToPrivateStore(this.privateDataRwsHashes);
 
             // Update the globally injected state so all services receive the updates.
             this.stateRepositoryRoot.SyncToRoot(this.mutableStateRepository.Root);
@@ -120,7 +134,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
                 SmartContractConsensusErrors.UnequalStateRoots.Throw();
         }
 
-        private void ProcessTransactions(RuleContext context)
+        private async Task ProcessTransactionsAsync(RuleContext context)
         {
             if (context.SkipValidation)
                 return;
@@ -131,11 +145,17 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
                 return;
             }
 
-            foreach (Transaction transaction in context.ValidationContext.BlockToValidate.Transactions)
+            foreach (Transaction transaction in context.ValidationContext.BlockToValidate.Transactions.Where(x => !x.IsCoinBase))
             {
                 this.logger.LogDebug("Processing transaction '{0}'.", transaction.GetHash());
 
                 this.ValidateSubmittedTransaction(transaction);
+
+                if (transaction.Outputs.First().ScriptPubKey.IsReadWriteSet())
+                {
+                    await this.ExecuteReadWriteTransactionAsync(context.ValidationContext, transaction);
+                    continue;
+                }
 
                 TxOut smartContractTxOut = transaction.Outputs.FirstOrDefault(txOut => SmartContractScript.IsSmartContractExec(txOut.ScriptPubKey));
                 if (smartContractTxOut == null)
@@ -146,6 +166,33 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 
                 this.ExecuteContractTransaction(context.ValidationContext, transaction);
             }
+        }
+
+        private async Task ExecuteReadWriteTransactionAsync(ValidationContext validationContext, Transaction transaction)
+        {
+            // Apply RWS to the state repository.
+            ReadWriteSet rws = this.rwsSerializer.GetReadWriteSet(transaction);
+
+            if (!this.rwsValidator.IsReadWriteSetValid(this.mutableStateRepository, rws))
+            {
+                SmartContractConsensusErrors.InvalidReadWriteSet.Throw();
+            }
+
+            int blockHeight = validationContext.ChainedHeaderToValidate.Height;
+            int txIndex = validationContext.BlockToValidate.Transactions.IndexOf(transaction);
+
+            string version = $"{blockHeight}.{txIndex}"; // TODO: Componentise retrieving version?
+
+            if (rws.Writes.Any(x => x.IsPrivateData))
+            {
+                if (await this.privateDataRetriever.WaitForPrivateDataIfRequired(rws))
+                {
+                    // If we did get the private data, as it is applicable to us, add the private data RWS to be committed on block commit.
+                    this.privateDataRwsHashes.Add(rws.GetHash());
+                }
+            }
+
+            this.rwsValidator.ApplyReadWriteSet(this.mutableStateRepository, rws, version);
         }
 
         /// <summary>
@@ -174,8 +221,16 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             if (!getSenderResult.Success)
                 throw new ConsensusErrorException(new ConsensusError("sc-consensusvalidator-executecontracttransaction-sender", getSenderResult.Error));
 
-            IContractTransactionContext transactionContext = new ContractTransactionContext((ulong)validationContext.ChainedHeaderToValidate.Height, new uint160(0), 0, getSenderResult.Sender, transaction);
-            IContractExecutor executor = this.executorFactory.CreateExecutor(this.mutableStateRepository, transactionContext);
+            ulong txIndex = (ulong)validationContext.BlockToValidate.Transactions.IndexOf(transaction);
+            IContractTransactionContext transactionContext = new ContractTransactionContext(
+                (ulong)validationContext.ChainedHeaderToValidate.Height,
+                txIndex,
+                new uint160(0),
+                getSenderResult.Sender,
+                transaction,
+                null); // Contracts executed inside blocks will never have transient data. 
+
+            IContractExecutor executor = this.executorFactory.CreateExecutor(this.mutableStateRepository);
             Result<ContractTxData> deserializedCallData = this.callDataSerializer.Deserialize(transactionContext.Data);
             IContractExecutionResult result = executor.Execute(transactionContext);
 
@@ -192,6 +247,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
                 result.ErrorMessage,
                 deserializedCallData.Value.GasPrice,
                 transactionContext.TxOutValue,
+                result.ReadWriteSet.GetReadWriteSet().ToJson(),
                 deserializedCallData.Value.IsCreateContract ? null : deserializedCallData.Value.MethodName,
                 transactionContext.BlockHeight)
             {
@@ -232,15 +288,6 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 
             if (logsBloom != smartContractBlockHeader.LogsBloom)
                 SmartContractConsensusErrors.UnequalLogsBloom.Throw();
-        }
-
-        public bool CheckInput(TxOut txout, TxIn input)
-        {
-            if (txout.ScriptPubKey.IsSmartContractExec() || txout.ScriptPubKey.IsSmartContractInternalCall())
-                return input.ScriptSig.IsSmartContractSpend();
-
-            // TODO-TL: Do we need to check the new TxIn signature?
-            return true;
         }
 
         /// <inheritdoc/>

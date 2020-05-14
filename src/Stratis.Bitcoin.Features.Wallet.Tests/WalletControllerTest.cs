@@ -7,20 +7,21 @@ using System.Security;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Features.Wallet.Broadcasting;
-using Stratis.Bitcoin.Features.Wallet.Controllers;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Features.Wallet.Models;
+using Stratis.Core.Connection;
+using Stratis.Bitcoin.Models;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Tests.Wallet.Common;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.JsonErrors;
+using Stratis.Features.MemoryPool.Broadcasting;
+using Stratis.Features.Wallet.Controllers;
+using Stratis.Features.Wallet.Interfaces;
+using Stratis.Features.Wallet.Models;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Wallet.Tests
+namespace Stratis.Features.Wallet.Tests
 {
     public class WalletControllerTest : LogsTestBase
     {
@@ -43,7 +44,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             string[] resultingWords = (viewResult.Value as string).Split(' ');
 
             Assert.Equal(12, resultingWords.Length);
-            
+
             foreach (string word in resultingWords)
             {
                 int index = -1;
@@ -1338,7 +1339,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             var viewResult = Assert.IsType<OkResult>(result);
             mockWalletSyncManager.Verify();
             Assert.NotNull(viewResult);
-            Assert.NotNull(viewResult.StatusCode == (int)HttpStatusCode.OK);
+            Assert.True(viewResult.StatusCode == (int)HttpStatusCode.OK);
         }
 
         [Fact]
@@ -1364,7 +1365,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             var viewResult = Assert.IsType<OkResult>(result);
             mockWalletSyncManager.Verify();
             Assert.NotNull(viewResult);
-            Assert.NotNull(viewResult.StatusCode == (int)HttpStatusCode.OK);
+            Assert.True(viewResult.StatusCode == (int)HttpStatusCode.OK);
         }
 
         [Fact]
@@ -1440,7 +1441,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             HdAddress accountAddress = WalletTestsHelpers.CreateAddress(true);
             account.InternalAddresses.Add(accountAddress);
 
-            var addressBalance = new AddressBalance { Address = accountAddress.Address, AmountConfirmed = new Money(75000), AmountUnconfirmed = new Money(500000), SpendableAmount = new Money(75000)};
+            var addressBalance = new AddressBalance { Address = accountAddress.Address, AmountConfirmed = new Money(75000), AmountUnconfirmed = new Money(500000), SpendableAmount = new Money(75000) };
 
             var mockWalletManager = new Mock<IWalletManager>();
             mockWalletManager.Setup(w => w.GetAddressBalance(accountAddress.Address)).Returns(addressBalance);
@@ -1746,6 +1747,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             controller.ModelState.AddModelError("WalletName", "A walletname is required.");
             IActionResult result = controller.BuildTransaction(new BuildTransactionRequest
             {
+                AccountName = WalletManager.DefaultAccount,
                 WalletName = ""
             });
 
@@ -1808,7 +1810,7 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
             IActionResult result = controller.SendTransaction(new SendTransactionRequest(transactionHex));
 
             var viewResult = Assert.IsType<JsonResult>(result);
-            var model = viewResult.Value as WalletSendTransactionModel;
+            var model = viewResult.Value as SendTransactionModel;
             Assert.NotNull(model);
             Assert.Equal(new uint256("96b4f0c2f0aa2cecd43fa66b5e3227c56afd8791e18fcc572d9625ee05d6741c"), model.TransactionId);
             Assert.Equal("1GkjeiT7Y6RdPPL3p3nUME9DLJchhLNCsJ", model.Outputs.First().Address);
@@ -1861,10 +1863,9 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
         [Fact]
         public void ListWalletFilesWithExistingWalletFilesReturnsWalletFileModel()
         {
-            string walletPath = "walletPath";
             var walletManager = new Mock<IWalletManager>();
             walletManager.Setup(m => m.GetWalletsNames())
-                .Returns( new[] { "wallet1.wallet.json", "wallet2.wallet.json" });
+                .Returns(new[] { "wallet1.wallet.json", "wallet2.wallet.json" });
 
             walletManager.Setup(m => m.GetWalletFileExtension()).Returns("wallet.json");
 
@@ -1884,7 +1885,6 @@ namespace Stratis.Bitcoin.Features.Wallet.Tests
         [Fact]
         public void ListWalletFilesWithoutExistingWalletFilesReturnsWalletFileModel()
         {
-            string walletPath = "walletPath";
             var walletManager = new Mock<IWalletManager>();
             walletManager.Setup(m => m.GetWalletsNames())
                 .Returns(Enumerable.Empty<string>());

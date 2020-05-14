@@ -5,15 +5,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Base;
+using Stratis.Core.Base;
 using Stratis.Bitcoin.Controllers.Models;
-using Stratis.Bitcoin.Features.BlockStore.AddressIndexing;
-using Stratis.Bitcoin.Features.BlockStore.Controllers;
-using Stratis.Bitcoin.Features.BlockStore.Models;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Wallet.Common;
-using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Core.Utilities.JsonErrors;
+using Stratis.Features.BlockStore.Controllers;
+using Stratis.Features.BlockStore.Models;
 using Xunit;
 
 namespace Stratis.Bitcoin.Features.BlockStore.Tests
@@ -161,7 +160,6 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var logger = new Mock<ILoggerFactory>();
             var store = new Mock<IBlockStore>();
             var chainState = new Mock<IChainState>();
-            var addressIndexer = new Mock<IAddressIndexer>();
 
             ChainIndexer chainIndexer = WalletTestsHelpers.GenerateChainWithHeight(3, KnownNetworks.StratisTest);
 
@@ -170,7 +168,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             chainState.Setup(c => c.ConsensusTip)
                 .Returns(chainIndexer.GetHeader(2));
 
-            var controller = new BlockStoreController(KnownNetworks.StratisTest, logger.Object, store.Object, chainState.Object, chainIndexer, addressIndexer.Object);
+            var controller = new BlockStoreController(KnownNetworks.StratisTest, logger.Object, store.Object, chainState.Object, chainIndexer);
 
             var json = (JsonResult)controller.GetBlockCount();
             int result = int.Parse(json.Value.ToString());
@@ -183,7 +181,6 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var logger = new Mock<ILoggerFactory>();
             var store = new Mock<IBlockStore>();
             var chainState = new Mock<IChainState>();
-            var addressIndexer = new Mock<IAddressIndexer>();
 
             logger.Setup(l => l.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>);
 
@@ -192,7 +189,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             chain.Setup(c => c.GetHeader(It.IsAny<uint256>())).Returns(new ChainedHeader(block.Header, block.Header.GetHash(), 1));
             chain.Setup(x => x.Tip).Returns(new ChainedHeader(block.Header, block.Header.GetHash(), 1));
 
-            var controller = new BlockStoreController(KnownNetworks.StratisTest, logger.Object, store.Object, chainState.Object, chain.Object, addressIndexer.Object);
+            var controller = new BlockStoreController(KnownNetworks.StratisTest, logger.Object, store.Object, chainState.Object, chain.Object);
 
             return (store, controller);
         }

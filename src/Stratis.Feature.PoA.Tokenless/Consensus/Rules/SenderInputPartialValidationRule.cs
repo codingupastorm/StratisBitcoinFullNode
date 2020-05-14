@@ -1,7 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Core.Consensus;
+using Stratis.Core.Consensus.Rules;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.SmartContracts.Core.Util;
 
 namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
@@ -13,18 +15,21 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
     {
         private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
         private readonly ITokenlessSigner tokenlessSigner;
+        private readonly Network network;
 
         public SenderInputPartialValidationRule(
             ICertificatePermissionsChecker certificatePermissionsChecker,
-            ITokenlessSigner tokenlessSigner)
+            ITokenlessSigner tokenlessSigner,
+            Network network)
         {
             this.certificatePermissionsChecker = certificatePermissionsChecker;
             this.tokenlessSigner = tokenlessSigner;
+            this.network = network;
         }
 
         public override Task RunAsync(RuleContext context)
         {
-            foreach (Transaction transaction in context.ValidationContext.BlockToValidate.Transactions)
+            foreach (Transaction transaction in context.ValidationContext.BlockToValidate.Transactions.Where(x => !x.IsCoinBase))
             {
                 this.ValidateTransaction(transaction);
             }
@@ -41,11 +46,18 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
 
             // We also need to check that the sender given is indeed the one who signed the transaction.
             if (!this.tokenlessSigner.Verify(transaction))
-                new ConsensusError("error-signature-invalid", $"The signature for transaction {transaction.GetHash()} is invalid.");
+                new ConsensusError("error-signature-invalid", $"The signature for transaction {transaction.GetHash()} is invalid.").Throw();
 
-            // Now that we have the sender address, lets get their certificate.
-            // Note that we can do for other permissions too. Contract permissions etc.
+            // If we're not on the OG network, then check that the sender is allowed to be on this network.
+            if (this.network is ChannelNetwork channelNetwork)
+            {
+                if (!this.certificatePermissionsChecker.CheckSenderCertificateIsPermittedOnChannel(getSenderResult.Sender, channelNetwork))
+                {
+                    new ConsensusError("error-illegal-sender", $"The sender of this transaction {transaction.GetHash()} isn't permitted on this network.").Throw();
+                }
+            }
 
+            // TODO: This is missing things that the SenderInputMempoolRule has
         }
     }
 }

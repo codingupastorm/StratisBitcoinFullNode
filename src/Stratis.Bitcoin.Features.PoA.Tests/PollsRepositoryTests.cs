@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Linq;
-using Stratis.Bitcoin.Configuration.Logging;
-using Stratis.Bitcoin.Features.PoA.Voting;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Logging;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
+using Stratis.Features.PoA.Voting;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.PoA.Tests
+namespace Stratis.Features.PoA.Tests
 {
     public class PollsRepositoryTests
     {
@@ -16,7 +17,9 @@ namespace Stratis.Bitcoin.Features.PoA.Tests
         {
             string dir = TestBase.CreateTestDir(this);
 
-            this.repository = new PollsRepository(dir, new ExtendedLoggerFactory(), new RepositorySerializer(new TestPoANetwork().Consensus.ConsensusFactory));
+            var loggerFactory = new ExtendedLoggerFactory();
+
+            this.repository = new PollsRepository(loggerFactory, new PollsKeyValueStore(new RepositorySerializer(new TestPoANetwork2().Consensus.ConsensusFactory), new DataFolder(dir), loggerFactory, DateTimeProvider.Default));
             this.repository.Initialize();
         }
 
@@ -28,7 +31,7 @@ namespace Stratis.Bitcoin.Features.PoA.Tests
             this.repository.AddPolls(new Poll() { Id = 0 });
             this.repository.AddPolls(new Poll() { Id = 1 });
             this.repository.AddPolls(new Poll() { Id = 2 });
-            Assert.Throws<ArgumentException>(() => this.repository.AddPolls(new Poll() {Id = 5}));
+            Assert.Throws<ArgumentException>(() => this.repository.AddPolls(new Poll() { Id = 5 }));
             this.repository.AddPolls(new Poll() { Id = 3 });
 
             Assert.Equal(3, this.repository.GetHighestPollId());
@@ -74,7 +77,7 @@ namespace Stratis.Bitcoin.Features.PoA.Tests
         [Fact]
         public void CanUpdatePolls()
         {
-            var poll = new Poll() {Id = 0, VotingData = new VotingData() {Key = VoteKey.AddFederationMember}};
+            var poll = new Poll() { Id = 0, VotingData = new VotingData() { Key = VoteKey.AddFederationMember } };
             this.repository.AddPolls(poll);
 
             poll.VotingData.Key = VoteKey.KickFederationMember;

@@ -17,6 +17,11 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
         GetSenderResult GetSender(Transaction transaction);
 
         /// <summary>
+        /// Tries to get the sender and if successful, tries to verify the signature.
+        /// </summary>
+        GetSenderResult GetSenderAndVerify(Transaction transaction);
+
+        /// <summary>
         /// Verifies the transaction is signed correctly according to the Tokenless rules.
         /// </summary>
         bool Verify(Transaction transaction);

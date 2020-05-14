@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Features.PoA.Voting;
-using Stratis.Bitcoin.Features.SmartContracts.PoA;
+using Stratis.Features.PoA.Voting;
+using Stratis.Features.SmartContracts.PoA;
 using Xunit;
 
 namespace Stratis.Bitcoin.Features.SmartContracts.Tests

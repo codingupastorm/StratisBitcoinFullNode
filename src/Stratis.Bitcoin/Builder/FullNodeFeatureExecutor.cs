@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Builder.Feature;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Bitcoin;
+using Stratis.Core.Builder.Feature;
+using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Builder
+namespace Stratis.Core.Builder
 {
     /// <summary>
     /// Starts and stops all features registered with a full node.

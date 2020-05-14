@@ -10,34 +10,49 @@ using NLog.Config;
 using NLog.Extensions.Logging;
 using NLog.Targets;
 using NLog.Targets.Wrappers;
-using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Bitcoin.Utilities;
-using TracerAttributes;
+using Stratis.Bitcoin;
+using Stratis.Core.Configuration.Settings;
+using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
-namespace Stratis.Bitcoin.Configuration.Logging
+namespace Stratis.Core.Configuration.Logging
 {
     /// <summary>
     /// An extension of the <see cref="LoggerFactory"/> that allows access to some internal components.
     /// </summary>
     public class ExtendedLoggerFactory : LoggerFactory
     {
-        private const string NLogConfigFileName = "NLog.config";
-
         /// <summary>Configuration of console logger.</summary>
-        public ConsoleLoggerSettings ConsoleSettings { get; set; }
+        public ILoggingBuilder ConsoleSettings { get; set; }
 
         /// <summary>Provider of console logger.</summary>
         public ConsoleLoggerProvider ConsoleLoggerProvider { get; set; }
 
-        /// <summary>Loads the NLog.config file from the <see cref="DataFolder"/>, if it exists.</summary>
-        public void LoadNLogConfiguration(DataFolder dataFolder)
+        public static ILoggerFactory Create()
         {
-            if (dataFolder == null)
-                return;
+            return ExtendedLoggerFactory.Create(builder =>
+            {
+                builder.AddFilter("Default", LogLevel.Information)
+                    .AddFilter("System", LogLevel.Warning)
+                    .AddFilter("Microsoft", LogLevel.Warning)
+                    .AddFilter("Microsoft.AspNetCore", LogLevel.Error)
+                    .AddConsole();
+            }
+            );
+        }
 
-            string configPath = Path.Combine(dataFolder.RootPath, NLogConfigFileName);
-            if (File.Exists(configPath))
-                this.ConfigureNLog(configPath);
+        /// <summary>Loads the NLog.config file from the <see cref="DataFolder"/>, if it exists.</summary>
+        public static ILoggerFactory Create(LogSettings settings)
+        {
+            return ExtendedLoggerFactory.Create(builder =>
+            {
+                LoggingConfiguration.ConfigureConsoleFilters(builder, settings);
+                builder.AddFilter("Default", LogLevel.Information)
+                    .AddFilter("System", LogLevel.Warning)
+                    .AddFilter("Microsoft", LogLevel.Warning)
+                    .AddFilter("Microsoft.AspNetCore", LogLevel.Error)
+                    .AddConsole();
+            }
+            );
         }
     }
 
@@ -48,6 +63,8 @@ namespace Stratis.Bitcoin.Configuration.Logging
     {
         /// <summary>Width of a column for pretty console/log outputs.</summary>
         public const int ColumnLength = 24;
+
+        private const string NLogConfigFileName = "NLog.config";
 
         /// <summary>Currently used node's log settings.</summary>
         private static LogSettings logSettings;
@@ -65,7 +82,7 @@ namespace Stratis.Bitcoin.Configuration.Logging
             // { "libevent", "" },
             // { "lock", "" },
             // { "mempoolrej", "" },
-            { "net", $"{nameof(Stratis)}.{nameof(Bitcoin)}.{nameof(Connection)}.*" },
+            { "net", $"{nameof(Stratis)}.{nameof(Bitcoin)}.{nameof(Core.Connection)}.*" },
             // { "proxy", "" },
             // { "prune", "" },
             // { "rand", "" },
@@ -106,6 +123,17 @@ namespace Stratis.Bitcoin.Configuration.Logging
 
             // Installs handler to be called when NLog's configuration file is changed on disk.
             LogManager.ConfigurationReloaded += NLogConfigurationReloaded;
+        }
+
+        /// <summary>Loads the NLog.config file from the <see cref="DataFolder"/>, if it exists.</summary>
+        public static void LoadNLogConfiguration(this ILoggerFactory loggerFactory, DataFolder dataFolder)
+        {
+            if (dataFolder == null)
+                return;
+
+            string configPath = Path.Combine(dataFolder.RootPath, NLogConfigFileName);
+            if (File.Exists(configPath))
+                loggerFactory.ConfigureNLog(configPath);
         }
 
         /// <summary>
@@ -221,36 +249,9 @@ namespace Stratis.Bitcoin.Configuration.Logging
         /// <summary>
         /// Configure the console logger and set it to filter logs not related to the fullnode.
         /// </summary>
-        /// <param name="loggerFactory">The logger factory to add the console logger.</param>
-        public static void AddConsoleWithFilters(this ILoggerFactory loggerFactory)
-        {
-            var consoleLoggerSettings = new ConsoleLoggerSettings
-            {
-                Switches =
-                {
-                    {"Default", Microsoft.Extensions.Logging.LogLevel.Information},
-                    {"System", Microsoft.Extensions.Logging.LogLevel.Warning},
-                    {"Microsoft", Microsoft.Extensions.Logging.LogLevel.Warning},
-                    {"Microsoft.AspNetCore", Microsoft.Extensions.Logging.LogLevel.Error}
-                }
-            };
-
-            var consoleLoggerProvider = new ConsoleLoggerProvider(consoleLoggerSettings);
-            loggerFactory.AddProvider(consoleLoggerProvider);
-
-            var extendedLoggerFactory = loggerFactory as ExtendedLoggerFactory;
-            Guard.NotNull(extendedLoggerFactory, nameof(extendedLoggerFactory));
-            extendedLoggerFactory.ConsoleLoggerProvider = consoleLoggerProvider;
-            extendedLoggerFactory.ConsoleSettings = consoleLoggerSettings;
-        }
-
-        /// <summary>
-        /// Configure the console logger and set it to filter logs not related to the fullnode.
-        /// </summary>
-        /// <param name="loggerFactory">Not used.</param>
-        /// <param name="consoleLoggerSettings">Console settings to filter.</param>
+        /// <param name="builder">Logging builder.</param>
         /// <param name="settings">Settings that hold potential debug arguments, if null no debug arguments will be loaded."/></param>
-        public static void ConfigureConsoleFilters(this ILoggerFactory loggerFactory, ConsoleLoggerSettings consoleLoggerSettings, LogSettings settings)
+        public static void ConfigureConsoleFilters(ILoggingBuilder builder, LogSettings settings)
         {
             if (settings != null)
             {
@@ -259,7 +260,9 @@ namespace Stratis.Bitcoin.Configuration.Logging
                     if (settings.DebugArgs[0] == "1")
                     {
                         // Increase all logging to Debug.
-                        consoleLoggerSettings.Switches.Add($"{nameof(Stratis)}.{nameof(Bitcoin)}", Microsoft.Extensions.Logging.LogLevel.Debug);
+                        builder.AddFilter($"{nameof(Stratis)}.{nameof(Bitcoin)}", LogLevel.Debug);
+                        builder.AddFilter($"{nameof(Stratis)}.Feature", LogLevel.Debug);
+                        builder.AddFilter($"{nameof(Stratis)}.Features", LogLevel.Debug);
                     }
                     else
                     {
@@ -279,40 +282,13 @@ namespace Stratis.Bitcoin.Configuration.Logging
                                 if (!usedCategories.Contains(category))
                                 {
                                     usedCategories.Add(category);
-                                    consoleLoggerSettings.Switches.Add(category.TrimEnd('*').TrimEnd('.'), Microsoft.Extensions.Logging.LogLevel.Debug);
+                                    builder.AddFilter(category.TrimEnd('*').TrimEnd('.'), LogLevel.Debug);
                                 }
                             }
                         }
                     }
                 }
             }
-
-            consoleLoggerSettings.Reload();
-        }
-
-        /// <summary>
-        /// Obtains configuration of the console logger.
-        /// </summary>
-        /// <param name="loggerFactory">Logger factory interface being extended.</param>
-        /// <returns>Console logger settings.</returns>
-        public static ConsoleLoggerSettings GetConsoleSettings(this ILoggerFactory loggerFactory)
-        {
-            var extendedLoggerFactory = loggerFactory as ExtendedLoggerFactory;
-            Guard.NotNull(extendedLoggerFactory, nameof(extendedLoggerFactory));
-            return extendedLoggerFactory.ConsoleSettings;
-        }
-
-        /// <summary>
-        /// Obtains configuration of the console logger provider.
-        /// </summary>
-        /// <param name="loggerFactory">Logger factory interface being extended.</param>
-        /// <returns>Console logger provider.</returns>
-        [NoTrace]
-        public static ConsoleLoggerProvider GetConsoleLoggerProvider(this ILoggerFactory loggerFactory)
-        {
-            var extendedLoggerFactory = loggerFactory as ExtendedLoggerFactory;
-            Guard.NotNull(extendedLoggerFactory, nameof(extendedLoggerFactory));
-            return extendedLoggerFactory.ConsoleLoggerProvider;
         }
     }
 }

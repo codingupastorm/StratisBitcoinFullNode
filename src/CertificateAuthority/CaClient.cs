@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using CertificateAuthority.Models;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Newtonsoft.Json;
 
@@ -14,11 +16,14 @@ namespace CertificateAuthority
         private const string GetCaCertificateEndpoint = "api/certificates/get_ca_certificate";
         private const string GetAllCertificatesEndpoint = "api/certificates/get_all_certificates";
         private const string GetRevokedCertificatesEndpoint = "api/certificates/get_revoked_certificates";
-        private const string GetCertificateForAddressEndpoint = "api/certificates/get_certificate_for_address";
+        private const string GetCertificateForPubKeyHashEndpoint = "api/certificates/get_certificate_for_pubkey_hash";
         private const string GetCertificateStatusEndpoint = "api/certificates/get_certificate_status";
         private const string GenerateCertificateSigningRequestEndpoint = "api/certificates/generate_certificate_signing_request";
         private const string IssueCertificateEndpoint = "api/certificates/issue_certificate_using_request_string";
         private const string GetCertificatePublicKeysEndpoint = "api/certificates/get_certificate_public_keys";
+        private const string RevokeCertificateEndpoint = "api/certificates/revoke_certificate";
+
+        private const string CreateAccountEndpoint = "api/accounts/create";
 
         private const string JsonContentType = "application/json";
         private readonly Uri baseApiUrl;
@@ -41,9 +46,11 @@ namespace CertificateAuthority
             this.password = password;
         }
 
-        public bool InitializeCertificateAuthority(string mnemonic, string mnemonicPassword)
+        public bool InitializeCertificateAuthority(string mnemonic, string mnemonicPassword, Network network)
         {
-            var mnemonicModel = new CredentialsModelWithMnemonicModel(mnemonic, mnemonicPassword, this.accountId, this.password);
+            // TODO: Happy to not use RequestFromCA method for now because this is a more specialised method, might need different logic at some point.
+
+            var mnemonicModel = new InitializeCertificateAuthorityModel(mnemonic, mnemonicPassword, network.Consensus.CoinType, this.password);
 
             HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{InitializeCertificateAuthorityEndpoint}", mnemonicModel).GetAwaiter().GetResult();
 
@@ -62,13 +69,25 @@ namespace CertificateAuthority
                 Password = this.password
             };
 
-            HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{GetCaCertificateEndpoint}", credentialsModel).GetAwaiter().GetResult();
+            return this.RequestFromCA<CertificateInfoModel>(GetCaCertificateEndpoint, credentialsModel);
+        }
 
-            string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+        public int CreateAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country, string[] requestedPermissions = null)
+        {
+            string passwordHash = DataHelper.ComputeSha256Hash(this.password);
 
-            CertificateInfoModel caCert = JsonConvert.DeserializeObject<CertificateInfoModel>(responseString);
+            var createAccountModel = new CreateAccountModel(name,
+                passwordHash,
+                (int)(AccountAccessFlags.IssueCertificates | AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.AccessAnyCertificate),
+                organizationUnit,
+                organization,
+                locality,
+                stateOrProvince,
+                emailAddress,
+                country,
+                requestedPermissions.ToList());
 
-            return caCert;
+            return this.RequestFromCA<int>(CreateAccountEndpoint, createAccountModel);
         }
 
         public List<CertificateInfoModel> GetAllCertificates()
@@ -79,16 +98,10 @@ namespace CertificateAuthority
                 Password = this.password
             };
 
-            HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{GetAllCertificatesEndpoint}", credentialsModel).GetAwaiter().GetResult();
-
-            string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-
-            List<CertificateInfoModel> certList = JsonConvert.DeserializeObject<List<CertificateInfoModel>>(responseString);
-
-            return certList;
+            return this.RequestFromCA<List<CertificateInfoModel>>(GetAllCertificatesEndpoint, credentialsModel);
         }
 
-        public List<PubKey> GetCertificatePublicKeys()
+        public List<PubKey> GetCertificatePublicKeys(ILogger logger = null)
         {
             var credentialsModel = new CredentialsModel()
             {
@@ -96,13 +109,9 @@ namespace CertificateAuthority
                 Password = this.password
             };
 
-            HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{GetCertificatePublicKeysEndpoint}", credentialsModel).GetAwaiter().GetResult();
+            List<string> pubKeyList = this.RequestFromCA<List<string>>(GetCertificatePublicKeysEndpoint, credentialsModel, logger);
 
-            string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-
-            List<PubKey> pubKeyList = JsonConvert.DeserializeObject<List<PubKey>>(responseString);
-
-            return pubKeyList;
+            return pubKeyList.Select(x => new PubKey(x)).ToList();
         }
 
         public List<string> GetRevokedCertificates()
@@ -113,31 +122,19 @@ namespace CertificateAuthority
                 Password = this.password
             };
 
-            HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{GetRevokedCertificatesEndpoint}", credentialsModel).GetAwaiter().GetResult();
-
-            string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-
-            List<string> revokedCertList = JsonConvert.DeserializeObject<List<string>>(responseString);
-
-            return revokedCertList;
+            return this.RequestFromCA<List<string>>(GetRevokedCertificatesEndpoint, credentialsModel);
         }
 
-        public CertificateInfoModel GetCertificateForAddress(string address)
+        public CertificateInfoModel GetCertificateForTransactionSigningPubKeyHash(string base64PubKeyHash)
         {
-            var addressModel = new CredentialsModelWithAddressModel()
+            var pubKeyModel = new CredentialsModelWithPubKeyHashModel()
             {
                 AccountId = this.accountId,
-                Address = address,
+                PubKeyHash = base64PubKeyHash,
                 Password = this.password
             };
 
-            HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{GetCertificateForAddressEndpoint}", addressModel).GetAwaiter().GetResult();
-
-            string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-
-            CertificateInfoModel cert = JsonConvert.DeserializeObject<CertificateInfoModel>(responseString);
-
-            return cert;
+            return this.RequestFromCA<CertificateInfoModel>(GetCertificateForPubKeyHashEndpoint, pubKeyModel);
         }
 
         public string GetCertificateStatus(string thumbprint)
@@ -149,35 +146,26 @@ namespace CertificateAuthority
                 Password = this.password
             };
 
-            HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{GetCertificateStatusEndpoint}", thumbprintModel).GetAwaiter().GetResult();
-
-            string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-
-            string status = JsonConvert.DeserializeObject<string>(responseString);
-
-            return status;
+            return this.RequestFromCA<string>(GetCertificateStatusEndpoint, thumbprintModel);
         }
 
         /// <param name="pubKey">The public key for the P2PKH address, in base64 format.</param>
         /// <param name="address">The P2PKH base58 address string.</param>
-        /// <returns></returns>
-        public CertificateSigningRequestModel GenerateCertificateSigningRequest(string pubKey, string address)
+        /// <param name="transactionSigningPubKeyHash">The pubkey hash of the transaction signing key.</param>
+        /// <param name="blockSigningPubKey">The pubkey of the block signing key.</param>
+        public CertificateSigningRequestModel GenerateCertificateSigningRequest(string pubKey, string address, string transactionSigningPubKeyHash, string blockSigningPubKey)
         {
             var generateCsrModel = new GenerateCertificateSigningRequestModel()
             {
                 AccountId = this.accountId,
                 Address = address,
                 Password = this.password,
-                PubKey = pubKey
+                PubKey = pubKey,
+                TransactionSigningPubKeyHash = transactionSigningPubKeyHash,
+                BlockSigningPubKey = blockSigningPubKey
             };
 
-            HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{GenerateCertificateSigningRequestEndpoint}", generateCsrModel).GetAwaiter().GetResult();
-
-            string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-
-            CertificateSigningRequestModel csrModel = JsonConvert.DeserializeObject<CertificateSigningRequestModel>(responseString);
-
-            return csrModel;
+            return this.RequestFromCA<CertificateSigningRequestModel>(GenerateCertificateSigningRequestEndpoint, generateCsrModel);
         }
 
         public CertificateInfoModel IssueCertificate(string signedCsr)
@@ -189,13 +177,62 @@ namespace CertificateAuthority
                 Password = this.password
             };
 
-            HttpResponseMessage response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{IssueCertificateEndpoint}", issueCertModel).GetAwaiter().GetResult();
+            return this.RequestFromCA<CertificateInfoModel>(IssueCertificateEndpoint, issueCertModel);
+        }
+
+        /// <summary>
+        /// Revokes a certificate by thumbprint.
+        /// </summary>
+        /// <param name="thumbprint">The thumbprint of the certificate to revoke.</param>
+        /// <returns><c>True</c> if successfully revoked.</returns>
+        public bool RevokeCertificate(string thumbprint)
+        {
+            var model = new CredentialsModelWithThumbprintModel()
+            {
+                AccountId = this.accountId,
+                Password = this.password,
+                Thumbprint = thumbprint
+            };
+
+            return this.RequestFromCA<bool>(RevokeCertificateEndpoint, model);
+        }
+
+        /// <summary>
+        /// We use this method because it has some semblance of error handling.
+        /// Avoids errors that otherwise look like serialization problems (i.e. when response.Content is not the json object we are expecting)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="endpoint"></param>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        private T RequestFromCA<T>(string endpoint, object model, ILogger logger = null)
+        {
+            HttpResponseMessage response;
+
+            try
+            {
+                if (logger != null)
+                    logger.LogDebug($"Calling {this.baseApiUrl}{endpoint}");
+
+                response = this.httpClient.PostAsJsonAsync($"{this.baseApiUrl}{endpoint}", model).GetAwaiter().GetResult();
+            }
+            catch (HttpRequestException exception)
+            {
+                throw new CaClientException($"Failed to connect to the CA: '{exception.Message}'");
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                string errorMessage = $"Failed to connect to the CA, response Code: {response.StatusCode}.";
+
+                if (response.Content != null)
+                    errorMessage += $" Message: {response.Content.ReadAsStringAsync().GetAwaiter().GetResult()}";
+
+                throw new CaClientException(errorMessage);
+            }
 
             string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-
-            CertificateInfoModel certificateInfoModel = JsonConvert.DeserializeObject<CertificateInfoModel>(responseString);
-
-            return certificateInfoModel;
+            return JsonConvert.DeserializeObject<T>(responseString);
         }
     }
 }

@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using NBitcoin;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Consensus;
+using Stratis.Core.Utilities;
+using Stratis.Features.Consensus.CoinViews;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests.CoinViews
+namespace Stratis.Features.Consensus.Tests.CoinViews
 {
     public class CoinViewStackTest
     {

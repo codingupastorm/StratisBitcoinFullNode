@@ -1,8 +1,10 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Feature.PoA.Tokenless.Networks;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Interfaces;
+using Stratis.Features.SmartContracts;
 using Stratis.SmartContracts.Core.Util;
 
 namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
@@ -12,8 +14,8 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
     /// </summary>
     public sealed class SenderInputMempoolRule : MempoolRule
     {
-        private readonly ITokenlessSigner tokenlessSigner;
         private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
+        private readonly ITokenlessSigner tokenlessSigner;
 
         public SenderInputMempoolRule(
             Network network,
@@ -25,8 +27,8 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
             ICertificatePermissionsChecker certificatePermissionsChecker)
             : base(network, mempool, settings, chainIndexer, loggerFactory)
         {
-            this.tokenlessSigner = tokenlessSigner;
             this.certificatePermissionsChecker = certificatePermissionsChecker;
+            this.tokenlessSigner = tokenlessSigner;
         }
 
         public override void CheckTransaction(MempoolValidationContext context)
@@ -38,12 +40,31 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
 
             // We also need to check that the sender given is indeed the one who signed the transaction.
             if (!this.tokenlessSigner.Verify(context.Transaction))
-                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, $"The signature for transaction {context.Transaction.GetHash()} is invalid."));
+                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, $"The signature for transaction {context.Transaction.GetHash()} is invalid.")).Throw();
+
+            // If we're not on the OG network, then check that the sender is allowed to be on this network.
+            if (this.network is ChannelNetwork channelNetwork)
+            {
+                if (!this.certificatePermissionsChecker.CheckSenderCertificateIsPermittedOnChannel(getSenderResult.Sender, channelNetwork))
+                {
+                    context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "The sender of this transaction is not authorised to be on this channel.")).Throw();
+                }
+            }
 
             // Now that we have the sender address, lets get their certificate and check they have necessary permissions.
-            if (!this.certificatePermissionsChecker.CheckSenderCertificateHasPermission(getSenderResult.Sender)) 
-                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "The sender of this transaction is not authorised by the CA to send transactions."));
+            if (!this.certificatePermissionsChecker.CheckSenderCertificateHasPermission(getSenderResult.Sender, TransactionSendingPermission.Send))
+                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, "The sender of this transaction is not authorised by the CA to send transactions.")).Throw();
 
+            // Not a smart contract, no further validation to do.
+            if (!context.Transaction.IsSmartContractExecTransaction())
+                return;
+
+            TransactionSendingPermission permission = context.Transaction.IsSmartContractCreateTransaction()
+                ? TransactionSendingPermission.CreateContract
+                : TransactionSendingPermission.CallContract;
+
+            if (!this.certificatePermissionsChecker.CheckSenderCertificateHasPermission(getSenderResult.Sender, permission))
+                context.State.Fail(new MempoolError(MempoolErrors.RejectInvalid, $"The sender of this transaction does not have the {permission.ToString()} permission.")).Throw();
         }
     }
 }

@@ -5,14 +5,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.AsyncWork;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Configuration.Logging;
-using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.Consensus.Behaviors;
+using Stratis.Core.Base;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Logging;
+using Stratis.Core.Configuration.Settings;
+using Stratis.Core.Connection;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.P2P.Peer;
@@ -20,10 +18,12 @@ using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common.Logging;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
+using Stratis.Features.Consensus.Behaviors;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
+namespace Stratis.Features.Consensus.Tests.ProvenBlockHeaders
 {
     public sealed class ProvenHeaderConsenusManagerBehaviorTests : LogsTestBase
     {
@@ -42,12 +42,12 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.ProvenBlockHeaders
             this.chainState = new Mock<IChainState>().Object;
             this.checkpoints = new Mock<ICheckpoints>().Object;
             this.connectionManagerSettings = new ConnectionManagerSettings(NodeSettings.Default(this.Network));
-            this.extendedLoggerFactory = new ExtendedLoggerFactory(); this.extendedLoggerFactory.AddConsoleWithFilters();
+            this.extendedLoggerFactory = new ExtendedLoggerFactory();
             this.initialBlockDownloadState = new Mock<IInitialBlockDownloadState>().Object;
             this.peerBanning = new Mock<IPeerBanning>().Object;
             this.provenBlockHeaderStore = new Mock<IProvenBlockHeaderStore>().Object;
 
-            this.signals = new Signals.Signals(this.extendedLoggerFactory, null);
+            this.signals = new Signals(this.extendedLoggerFactory, null);
             this.asyncProvider = new AsyncProvider(this.extendedLoggerFactory, this.signals, new Mock<INodeLifetime>().Object);
         }
 

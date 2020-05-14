@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus.Rules;
+using Stratis.Core.Consensus.Rules;
 
-namespace Stratis.Bitcoin.Consensus
+namespace Stratis.Core.Consensus
 {
     /// <summary>
     /// An engine that enforce the execution and validation of consensus rule.
@@ -76,5 +76,17 @@ namespace Stratis.Bitcoin.Consensus
         /// <param name="block">The block that is going to be validated.</param>
         /// <returns>Context that contains validation result related information.</returns>
         Task<ValidationContext> FullValidationAsync(ChainedHeader header, Block block);
+
+        /// <summary>
+        /// Performs consensus-specific transaction checks.
+        /// </summary>
+        /// <param name="tx">The transaction to check.</param>
+        void ConsensusSpecificTxChecks(Transaction tx);
+
+        /// <summary>
+        /// Performs consensus-specific transaction checks that would not be satisfied by non-standard transactions.
+        /// </summary>
+        /// <param name="tx">The transaction to check.</param>
+        void ConsensusSpecificRequiredTxChecks(Transaction tx);
     }
 }

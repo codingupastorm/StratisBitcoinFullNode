@@ -1,18 +1,17 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Bitcoin.KeyValueStoreLevelDB;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 using Stratis.Patricia;
 
 namespace Stratis.SmartContracts.Core.State
 {
-    public class ContractStateTableStore : KeyValueStore<KeyValueStoreLevelDB>
+    public class ContractStateTableStore : KeyValueStoreLevelDB
     {
         public ContractStateTableStore(string rootFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, IRepositorySerializer repositorySerializer)
-            : base(rootFolder, loggerFactory, dateTimeProvider, repositorySerializer)
+            : base(rootFolder, loggerFactory, repositorySerializer)
         {
         }
     }
@@ -22,7 +21,7 @@ namespace Stratis.SmartContracts.Core.State
     /// </summary>
     public class KeyValueByteStore : ISource<byte[], byte[]>
     {
-        private IKeyValueStore keyValueStore;
+        protected IKeyValueStore keyValueStore;
         private string table;
 
         public KeyValueByteStore(IKeyValueStore keyValueStore, string table)
@@ -81,9 +80,17 @@ namespace Stratis.SmartContracts.Core.State
     /// <summary>
     /// Used for dependency injection. A contract state specific implementation of the above class.
     /// </summary>
-    public class ContractStateKeyValueStore : KeyValueByteStore
+    public class ContractStateKeyValueStore : KeyValueByteStore, IDisposable
     {
+        private bool mustDispose;
+
         public ContractStateKeyValueStore(DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, RepositorySerializer repositorySerializer)
-            : base(new ContractStateTableStore(dataFolder.SmartContractStatePath, loggerFactory, dateTimeProvider, repositorySerializer), "state") { }
+            : base(new ContractStateTableStore(dataFolder.SmartContractStatePath, loggerFactory, dateTimeProvider, repositorySerializer), "state") { this.mustDispose = true; }
+
+        public void Dispose()
+        {
+            if (this.mustDispose)
+                this.keyValueStore.Dispose();
+        }
     }
 }

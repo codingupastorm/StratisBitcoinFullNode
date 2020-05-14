@@ -1,20 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
+using MembershipServices;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Configuration.Logging;
-using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.MemoryPool.Fee;
-using Stratis.Bitcoin.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Logging;
+using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Feature.PoA.Tokenless.Endorsement;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
+using Stratis.Feature.PoA.Tokenless.Networks;
+using Stratis.Features.BlockStore;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.MemoryPool.Fee;
+using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core.Util;
@@ -28,7 +30,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public readonly ICallDataSerializer CallDataSerializer;
         public readonly ChainIndexer ChainIndexer;
         private readonly Mock<ICertificatePermissionsChecker> CertificatePermissionsChecker;
-        public readonly InMemoryCoinView InMemoryCoinView;
         public readonly IDateTimeProvider DateTimeProvider;
         public readonly ILoggerFactory LoggerFactory;
         public readonly ITxMempool Mempool;
@@ -38,30 +39,36 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public readonly NodeSettings NodeSettings;
         public readonly TokenlessMempoolValidator MempoolValidator;
         public readonly ITokenlessSigner TokenlessSigner;
+        public readonly Mock<IMembershipServicesDirectory> MembershipServices;
+        private EndorsedContractTransactionValidationRule EndorsementRule;
 
         public TokenlessTestHelper()
         {
             this.Network = new TokenlessNetwork();
             this.NodeSettings = NodeSettings.Default(this.Network);
             this.LoggerFactory = new ExtendedLoggerFactory();
-            this.LoggerFactory.AddConsoleWithFilters();
 
             this.blockRepository = new Mock<IBlockRepository>().Object;
             this.CallDataSerializer = new NoGasCallDataSerializer(new ContractPrimitiveSerializer(this.Network));
 
             this.CertificatePermissionsChecker = new Mock<ICertificatePermissionsChecker>();
-            this.CertificatePermissionsChecker.Setup(c => c.CheckSenderCertificateHasPermission(It.IsAny<uint160>())).Returns(true);
+            this.CertificatePermissionsChecker.Setup(c => c.CheckSenderCertificateHasPermission(It.IsAny<uint160>(), It.IsAny<TransactionSendingPermission>())).Returns(true);
 
             this.ChainIndexer = new ChainIndexer(this.Network);
-            this.InMemoryCoinView = new InMemoryCoinView(this.Network.GenesisHash);
-            this.DateTimeProvider = Bitcoin.Utilities.DateTimeProvider.Default;
-            this.MempoolSettings = new MempoolSettings(this.NodeSettings) { MempoolExpiry = Bitcoin.Features.MemoryPool.MempoolValidator.DefaultMempoolExpiry };
+            this.DateTimeProvider = Stratis.Core.Utilities.DateTimeProvider.Default;
+            this.MempoolSettings = new MempoolSettings(this.NodeSettings) { MempoolExpiry = Features.MemoryPool.MempoolValidator.DefaultMempoolExpiry };
             this.TokenlessSigner = new TokenlessSigner(this.Network, new SenderRetriever());
+            this.EndorsementRule = new EndorsedContractTransactionValidationRule(Mock.Of<IEndorsedTransactionBuilder>(), Mock.Of<IEndorsementSignatureValidator>(), Mock.Of<IEndorsementPolicyValidator>());
 
             this.BlockPolicyEstimator = new BlockPolicyEstimator(this.MempoolSettings, this.LoggerFactory, this.NodeSettings);
-            this.Mempool = new TokenlessMempool(this.BlockPolicyEstimator, this.LoggerFactory, this.NodeSettings);
+            this.Mempool = new TokenlessMempool(this.BlockPolicyEstimator, this.LoggerFactory);
+
+            // TODO: Ostensibly need to be able to test the revoked case too
+            this.MembershipServices = new Mock<IMembershipServicesDirectory>();
+            this.MembershipServices.Setup(c => c.IsCertificateRevoked(It.IsAny<string>())).Returns(false);
+
             this.MempoolRules = CreateMempoolRules();
-            this.MempoolValidator = new TokenlessMempoolValidator(this.ChainIndexer, this.InMemoryCoinView, this.DateTimeProvider, this.LoggerFactory, this.Mempool, new MempoolSchedulerLock(), this.MempoolRules, this.MempoolSettings);
+            this.MempoolValidator = new TokenlessMempoolValidator(this.ChainIndexer, this.DateTimeProvider, this.LoggerFactory, this.Mempool, new MempoolSchedulerLock(), this.MempoolRules, this.MempoolSettings);
         }
 
         public IEnumerable<IMempoolRule> CreateMempoolRules()
@@ -76,6 +83,10 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                     yield return new SenderInputMempoolRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.TokenlessSigner, this.CertificatePermissionsChecker.Object);
                 else if (ruleType == typeof(CreateTokenlessMempoolEntryRule))
                     yield return new CreateTokenlessMempoolEntryRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory);
+                else if (ruleType == typeof(CheckSenderCertificateIsNotRevoked))
+                    yield return new CheckSenderCertificateIsNotRevoked(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.MembershipServices.Object, this.TokenlessSigner);
+                else if (ruleType == typeof(ValidateEndorsementsMempoolRule))
+                    yield return new ValidateEndorsementsMempoolRule(this.EndorsementRule, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory);
                 else
                     throw new NotImplementedException($"No constructor is defined for '{ruleType.Name}'.");
             }

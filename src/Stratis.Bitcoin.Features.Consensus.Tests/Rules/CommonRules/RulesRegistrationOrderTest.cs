@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using FluentAssertions;
 using NBitcoin;
-using NBitcoin.Rules;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
-using Stratis.Bitcoin.Features.Consensus.Rules.ProvenHeaderRules;
+using Stratis.Core.Consensus.Rules;
+using Stratis.Features.Consensus.Rules.CommonRules;
+using Stratis.Features.Consensus.Rules.ProvenHeaderRules;
 using Stratis.Bitcoin.Networks;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests.Rules.CommonRules
+namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
 {
     public class ConsensusRulesRegistrationTest
     {

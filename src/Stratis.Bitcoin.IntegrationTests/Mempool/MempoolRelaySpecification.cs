@@ -6,7 +6,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
     public partial class MempoolRelaySpecification : BddSpecification
     {
         [Fact]
-        public void create_transaction_and_broadcast_to_whitelisted_nodes_SHOULD_get_propagated_to_third_peer()
+        public void TXPropogatedToWhitelistedNodesGetsTo3rdPeer()
         {
             Given(nodeA_nodeB_and_nodeC);
             And(nodeA_mines_coins_that_are_spendable);
@@ -17,7 +17,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
         }
 
         [Fact]
-        public void create_transaction_and_broadcast_to_NON_whitelisted_nodes_SHOULD_get_propagated_to_third_peer()
+        public void TXPropogatedToNONWhitelistedNodesGetsTo3rdPeer()
         {
             Given(nodeA_nodeB_and_nodeC);
             And(nodeA_mines_coins_that_are_spendable);

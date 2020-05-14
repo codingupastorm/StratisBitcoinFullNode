@@ -1,23 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
 using NBitcoin.Protocol;
-using Stratis.Bitcoin.BlockPulling;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Configuration.Logging;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Logging;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Sidechains.Networks;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.BlockPulling
@@ -54,7 +48,7 @@ namespace Stratis.Bitcoin.Tests.BlockPulling
 
             return networkPeer.Object;
         }
-        
+
         private void Disconnected(Mock<INetworkPeer> peer, string reason, Exception exception)
         {
             peer.SetupGet(n => n.State).Returns(NetworkPeerState.Offline);
@@ -76,7 +70,6 @@ namespace Stratis.Bitcoin.Tests.BlockPulling
 
             // Create behaviour using the test wraper which exposes protected properties and methods
             ExtendedLoggerFactory loggerFactory = new ExtendedLoggerFactory();
-            loggerFactory.AddConsoleWithFilters();
             EnforcePeerVersionCheckBehaviorWrapper behavior = new EnforcePeerVersionCheckBehaviorWrapper(chain, nodeSettings, this.Network, loggerFactory);
 
             // Intentionally set Peer Version to 0 as its value it shouldn't be used anythere in the test.
@@ -120,7 +113,6 @@ namespace Stratis.Bitcoin.Tests.BlockPulling
 
             // Create behaviour using the test wraper which exposes protected properties and methods
             ExtendedLoggerFactory loggerFactory = new ExtendedLoggerFactory();
-            loggerFactory.AddConsoleWithFilters();
             EnforcePeerVersionCheckBehaviorWrapper behavior = new EnforcePeerVersionCheckBehaviorWrapper(chain, nodeSettings, this.Network, loggerFactory);
 
             // Intentionally set Peer Version to 0 as its value it shouldn't be used anythere in the test.

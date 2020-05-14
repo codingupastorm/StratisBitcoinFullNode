@@ -7,17 +7,16 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Rules;
-using Stratis.Bitcoin.AsyncWork;
-using Stratis.Bitcoin.Base.Deployments;
-using Stratis.Bitcoin.BlockPulling;
-using Stratis.Bitcoin.Builder;
-using Stratis.Bitcoin.Builder.Feature;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Consensus.Validators;
+using Stratis.Bitcoin;
+using Stratis.Core.BlockPulling;
+using Stratis.Core.Builder;
+using Stratis.Core.Builder.Feature;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Settings;
+using Stratis.Core.Connection;
+using Stratis.Core.Consensus;
+using Stratis.Core.Consensus.Rules;
+using Stratis.Core.Consensus.Validators;
 using Stratis.Bitcoin.Controllers;
 using Stratis.Bitcoin.EventBus;
 using Stratis.Bitcoin.Interfaces;
@@ -26,15 +25,17 @@ using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Signals;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Base.Deployments;
+using Stratis.Core.Utilities;
 
 [assembly: InternalsVisibleTo("Stratis.Bitcoin.Tests")]
 [assembly: InternalsVisibleTo("Stratis.Bitcoin.Tests.Common")]
 [assembly: InternalsVisibleTo("Stratis.Bitcoin.IntegrationTests.Common")]
-[assembly: InternalsVisibleTo("Stratis.Bitcoin.Features.Consensus.Tests")]
+[assembly: InternalsVisibleTo("Stratis.Features.Consensus.Tests")]
 [assembly: InternalsVisibleTo("Stratis.Bitcoin.IntegrationTests")]
 
-namespace Stratis.Bitcoin.Base
+namespace Stratis.Core.Base
 {
     /// <summary>
     /// Base node services, these are the services a node has to have.
@@ -114,7 +115,6 @@ namespace Stratis.Bitcoin.Base
         private readonly IConsensusRuleEngine consensusRules;
         private readonly IBlockPuller blockPuller;
         private readonly IBlockStore blockStore;
-        private readonly ITipsManager tipsManager;
         private readonly IKeyValueRepository keyValueRepo;
 
         /// <inheritdoc cref="IFinalizedBlockInfoRepository"/>
@@ -166,7 +166,6 @@ namespace Stratis.Bitcoin.Base
             this.provenBlockHeaderStore = provenBlockHeaderStore;
             this.partialValidator = partialValidator;
             this.peerBanning = Guard.NotNull(peerBanning, nameof(peerBanning));
-            this.tipsManager = Guard.NotNull(tipsManager, nameof(tipsManager));
             this.keyValueRepo = Guard.NotNull(keyValueRepo, nameof(keyValueRepo));
 
             this.peerAddressManager = Guard.NotNull(peerAddressManager, nameof(peerAddressManager));
@@ -379,7 +378,7 @@ namespace Stratis.Bitcoin.Base
                     services.AddSingleton<INodeLifetime, NodeLifetime>();
                     services.AddSingleton<IPeerBanning, PeerBanning>();
                     services.AddSingleton<FullNodeFeatureExecutor>();
-                    services.AddSingleton<ISignals, Signals.Signals>();
+                    services.AddSingleton<ISignals, Signals>();
                     services.AddSingleton<ISubscriptionErrorHandler, DefaultSubscriptionErrorHandler>();
                     services.AddSingleton<FullNode>().AddSingleton((provider) => { return provider.GetService<FullNode>() as IFullNode; });
                     services.AddSingleton(new ChainIndexer(fullNodeBuilder.Network));

@@ -1,131 +1,233 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Runtime.CompilerServices;
+using System.Text.Json;
 using CertificateAuthority;
 using CertificateAuthority.Models;
+using CertificateAuthority.Tests.Common;
+using MembershipServices;
+using Microsoft.AspNetCore.Hosting;
 using NBitcoin;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.PoA;
-using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
-using Stratis.Bitcoin.Features.PoA.ProtocolEncryption;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.Tests.Common;
-using Stratis.Feature.PoA.Tokenless;
-using Stratis.Feature.PoA.Tokenless.Wallet;
-using Stratis.SmartContracts.Networks;
+using Stratis.Bitcoin.IntegrationTests.Common.PoA;
+using Stratis.Core.Configuration;
+using Stratis.Core.Utilities;
+using Stratis.Feature.PoA.Tokenless.AccessControl;
+using Stratis.Feature.PoA.Tokenless.Channels;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Xunit;
 
 namespace Stratis.SmartContracts.Tests.Common
 {
     public class SmartContractNodeBuilder : NodeBuilder
     {
+        private int lastSystemChannelNodePort;
+
+        // This does not have to be re-retrieved from the CA for every node.
+        private X509Certificate authorityCertificate;
+
         public EditableTimeProvider TimeProvider { get; }
 
         public SmartContractNodeBuilder(string rootFolder) : base(rootFolder)
         {
+            // We have to override them so that the channel daemons can use 30002 and up.
+            this.lastSystemChannelNodePort = new SystemChannelNetwork().DefaultAPIPort + 100;
             this.TimeProvider = new EditableTimeProvider();
         }
 
-        public CoreNode CreateSmartContractPoANode(SmartContractsPoARegTest network, int nodeIndex)
+        private CoreNode CreateCoreNode(
+            TokenlessNetwork network,
+            int nodeIndex,
+            IWebHost server,
+            string agent,
+            bool isInfraNode,
+            bool isSystemNode,
+            bool willStartChannels,
+            bool initialRun,
+            int? apiPortOverride = null,
+            string organisation = null,
+            List<string> permissions = null)
         {
-            string dataFolder = this.GetNextDataFolderName();
+            string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
 
-            CoreNode node = this.CreateNode(new SmartContractPoARunner(dataFolder, network, this.TimeProvider), "poa.conf");
-
-            var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder });
-
-            var tool = new KeyTool(settings.DataFolder);
-            tool.SavePrivateKey(network.FederationKeys[nodeIndex], KeyType.FederationKey);
-
-            return node;
-        }
-
-        public (CoreNode, Key) CreateFullTokenlessNode(TokenlessNetwork network, int nodeIndex, X509Certificate authorityCertificate, CaClient client)
-        {
-            string dataFolder = this.GetNextDataFolderName();
+            string commonName = CaTestHelper.GenerateRandomString();
 
             var configParameters = new NodeConfigParameters()
             {
-                { "caurl" , "http://localhost:5050" }
+                { "caurl" , CaTestHelper.BaseAddress },
+                { "debug" , "1" },
             };
 
-            CoreNode node = this.CreateNode(new FullTokenlessRunner(dataFolder, network, this.TimeProvider), "poa.conf", configParameters: configParameters);
-
-            Mnemonic[] mnemonics = {
-                    new Mnemonic("lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom"),
-                    new Mnemonic("idle power swim wash diesel blouse photo among eager reward govern menu"),
-                    new Mnemonic("high neither night category fly wasp inner kitchen phone current skate hair") };
-
-            using (var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder, "-password=test", $"-mnemonic={ mnemonics[nodeIndex] }", "-certificatepassword=test" }))
+            if (isInfraNode)
             {
-                var walletManager = new TokenlessWalletManager(network, settings.DataFolder, new TokenlessWalletSettings(settings));
-                walletManager.Initialize();
+                configParameters.Add("isinfranode", "True");
 
-                var tool = new KeyTool(settings.DataFolder);
-                tool.SavePrivateKey(network.FederationKeys[nodeIndex], KeyType.FederationKey);
+                if (apiPortOverride != null)
+                    configParameters.Add("systemchannelapiport", apiPortOverride.ToString());
+            }
 
-                Key clientCertificatePrivateKey = walletManager.GetExtKey("test", TokenlessWalletAccount.TransactionSigning).PrivateKey;
-                PubKey pubKey = clientCertificatePrivateKey.PubKey;
-                BitcoinPubKeyAddress address = pubKey.GetAddress(network);
-                X509Certificate clientCertificate = IssueCertificate(client, clientCertificatePrivateKey, pubKey, address);
+            if (isSystemNode)
+                configParameters.Add("issystemchannelnode", "True");
 
-                Assert.NotNull(clientCertificate);
+            if (willStartChannels)
+                configParameters.Add("channelprocesspath", "..\\..\\..\\..\\Stratis.TokenlessD\\");
 
-                if (authorityCertificate != null && clientCertificate != null)
+            CoreNode node = this.CreateNode(new TokenlessNodeRunner(dataFolder, network, this.TimeProvider, agent), "poa.conf", configParameters: configParameters);
+
+            Mnemonic mnemonic = nodeIndex < 3
+                ? TokenlessNetwork.Mnemonics[nodeIndex]
+                : new Mnemonic(Wordlist.English, WordCount.Twelve);
+
+            string[] args = initialRun ?
+                new string[] {
+                    "-conf=poa.conf",
+                    "-datadir=" + dataFolder,
+                    "-password=test",
+                    $"-mnemonic={ mnemonic }",
+                    "-certificatepassword=test",
+                    "-certificatename=" + commonName,
+                    "-certificateorganizationunit=IntegrationTests",
+                    "-certificateorganization=Stratis",
+                    "-certificatelocality=TestLocality",
+                    "-certificatestateorprovince=TestProvince",
+                    "-certificateemailaddress=" + commonName + "@example.com",
+                    "-certificatecountry=UK"
+                } : new string[]
                 {
-                    File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.AuthorityCertificateName), authorityCertificate.GetEncoded());
-                    File.WriteAllBytes(Path.Combine(settings.DataFolder.RootPath, CertificatesManager.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCertificate, clientCertificatePrivateKey, "test"));
+                    "-conf=poa.conf",
+                    "-datadir=" + dataFolder,
+                    "-certificatepassword=test"
+                };
+
+            using (var settings = new NodeSettings(network, args: args))
+            {
+                var dataFolderRootPath = Path.Combine(dataFolder, network.RootFolderName, network.Name);
+
+                if (this.authorityCertificate == null)
+                    this.authorityCertificate = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
+
+                File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificateAuthorityInterface.AuthorityCertificateName), this.authorityCertificate.GetEncoded());
+
+                TokenlessKeyStoreManager keyStoreManager = InitializeNodeKeyStore(node, network, settings);
+
+                BitcoinPubKeyAddress address = node.ClientCertificatePrivateKey.PubKey.GetAddress(network);
+                Key miningKey = keyStoreManager.GetKey("test", TokenlessKeyStoreAccount.BlockSigning);
+
+                if (!initialRun)
+                    return node;
+
+                node.AuthorityCertificate = this.authorityCertificate;
+
+                CaClient client = TokenlessTestHelper.GetClientAndCreateAccount(server, requestedPermissions: permissions, organisation: organisation);
+
+                (X509Certificate x509, CertificateInfoModel CertificateInfo) = IssueCertificate(client, node.ClientCertificatePrivateKey, node.TransactionSigningPrivateKey.PubKey, address, miningKey.PubKey);
+
+                node.ClientCertificate = CertificateInfo;
+                Assert.NotNull(node.ClientCertificate);
+
+                if (this.authorityCertificate != null && node.ClientCertificate != null)
+                {
+                    File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificateAuthorityInterface.ClientCertificateName), CaCertificatesManager.CreatePfx(x509, node.ClientCertificatePrivateKey, "test"));
+
+                    // Put certificate into applicable local MSD folder
+                    Directory.CreateDirectory(Path.Combine(settings.DataDir, LocalMembershipServicesConfiguration.SignCerts));
+                    var ownCertificatePath = Path.Combine(settings.DataDir, LocalMembershipServicesConfiguration.SignCerts, MembershipServicesDirectory.GetCertificateThumbprint(x509));
+                    File.WriteAllBytes(ownCertificatePath, x509.GetEncoded());
                 }
 
-                return (node, clientCertificatePrivateKey);
+                return node;
             }
         }
-        private X509Certificate IssueCertificate(CaClient client, Key privKey, PubKey pubKey, BitcoinPubKeyAddress address)
+
+        /// <summary>
+        /// This creates a standard (normal) node on the <see cref="TokenlessNetwork"/>.
+        /// </summary>
+        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, IWebHost server, string organisation = null, bool initialRun = true, List<string> permissions = null)
         {
-            CertificateSigningRequestModel response = client.GenerateCertificateSigningRequest(Convert.ToBase64String(pubKey.ToBytes()), address.ToString());
-
-            string signedCsr = CaCertificatesManager.SignCertificateSigningRequest(response.CertificateSigningRequestContent, privKey);
-
-            CertificateInfoModel certInfo = client.IssueCertificate(signedCsr);
-
-            Assert.NotNull(certInfo);
-            Assert.Equal(address.ToString(), certInfo.Address);
-
-            var certParser = new X509CertificateParser();
-
-            return certParser.ReadCertificate(Convert.FromBase64String(certInfo.CertificateContentDer));
+            return CreateCoreNode(network, nodeIndex, server, "tokenless", false, false, false, initialRun, organisation: organisation, permissions: permissions);
         }
 
-        public CoreNode CreateWhitelistedContractPoANode(SmartContractsPoAWhitelistRegTest network, int nodeIndex)
+        /// <summary>
+        /// This creates a standard (normal) node on the <see cref="TokenlessNetwork"/> that is also apart of other channels.
+        /// </summary>
+        public CoreNode CreateTokenlessNodeWithChannels(TokenlessNetwork network, int nodeIndex, IWebHost server, bool initialRun = true, string organisation = null)
         {
-            string dataFolder = this.GetNextDataFolderName();
+            return CreateCoreNode(network, nodeIndex, server, "tokenless", false, false, true, initialRun, organisation: organisation);
+        }
 
-            CoreNode node = this.CreateNode(new WhitelistedContractPoARunner(dataFolder, network, this.TimeProvider), "poa.conf");
-            var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder });
-
-            var tool = new KeyTool(settings.DataFolder);
-            tool.SavePrivateKey(network.FederationKeys[nodeIndex], KeyType.FederationKey);
+        /// <summary>
+        /// This creates a "infra" node on the <see cref="TokenlessNetwork"/> which will start a system channel node internally.
+        /// </summary>
+        public CoreNode CreateInfraNode(TokenlessNetwork network, int nodeIndex, IWebHost server)
+        {
+            CoreNode node = CreateCoreNode(network, nodeIndex, server, "infra", true, false, true, true, this.lastSystemChannelNodePort);
+            this.lastSystemChannelNodePort += 1;
             return node;
         }
 
-        public CoreNode CreateSmartContractPowNode()
+        public void CreateChannel(CoreNode parentNode, string channelName, int nodeIndex, AccessControlList acl = null)
         {
-            Network network = new SmartContractsRegTest();
-            return CreateNode(new StratisSmartContractNode(this.GetNextDataFolderName(), network), "stratis.conf");
+            if (acl == null)
+            {
+                acl = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        CaTestHelper.TestOrganisation
+                    }
+                };
+            }
+
+            // Serialize the channel network and write the json to disk.
+            ChannelNetwork channelNetwork = SystemChannelNetwork.CreateChannelNetwork(channelName, "channels", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
+            channelNetwork.Id = nodeIndex;
+            channelNetwork.InitialAccessList = acl;
+            channelNetwork.DefaultAPIPort += nodeIndex;
+            var serializedJson = JsonSerializer.Serialize(channelNetwork);
+
+            var channelRootFolder = Path.Combine(parentNode.FullNode.Settings.DataDir, channelNetwork.RootFolderName, channelName);
+            Directory.CreateDirectory(channelRootFolder);
+
+            var serializedNetworkFileName = $"{channelRootFolder}\\{channelName}_network.json";
+            File.WriteAllText(serializedNetworkFileName, serializedJson);
+
+            // Save the channel definition so that it can loaded on node start.
+            IChannelRepository channelRepository = parentNode.FullNode.NodeService<IChannelRepository>();
+            channelRepository.SaveChannelDefinition(new ChannelDefinition() { Id = nodeIndex, Name = channelName, AccessList = channelNetwork.InitialAccessList, NetworkJson = serializedJson });
         }
 
-        public CoreNode CreateSmartContractPosNode()
+        private TokenlessKeyStoreManager InitializeNodeKeyStore(CoreNode node, Network network, NodeSettings settings)
         {
-            Network network = new SmartContractPosRegTest();
-            return CreateNode(new StratisSmartContractPosNode(this.GetNextDataFolderName(), network), "stratis.conf");
+            var keyStoreManager = new TokenlessKeyStoreManager(network, settings.DataFolder, new ChannelSettings(settings.ConfigReader), new TokenlessKeyStoreSettings(settings), settings.LoggerFactory);
+
+            keyStoreManager.Initialize();
+
+            node.ClientCertificatePrivateKey = keyStoreManager.GetKey("test", TokenlessKeyStoreAccount.P2PCertificates);
+            node.TransactionSigningPrivateKey = keyStoreManager.GetKey("test", TokenlessKeyStoreAccount.TransactionSigning);
+
+            return keyStoreManager;
         }
 
-        public static SmartContractNodeBuilder Create(object caller, [CallerMemberName] string callingMethod = null)
+        private (X509Certificate, CertificateInfoModel) IssueCertificate(CaClient client, Key privKey, PubKey transactionSigningPubKey, BitcoinPubKeyAddress address, PubKey blockSigningPubKey)
         {
-            string testFolderPath = TestBase.CreateTestDir(caller, callingMethod);
+            CertificateSigningRequestModel response = client.GenerateCertificateSigningRequest(Convert.ToBase64String(privKey.PubKey.ToBytes()), address.ToString(), Convert.ToBase64String(transactionSigningPubKey.Hash.ToBytes()), Convert.ToBase64String(blockSigningPubKey.ToBytes()));
+
+            string signedCsr = CaCertificatesManager.SignCertificateSigningRequest(response.CertificateSigningRequestContent, privKey);
+
+            CertificateInfoModel certificateInfo = client.IssueCertificate(signedCsr);
+
+            Assert.NotNull(certificateInfo);
+            Assert.Equal(address.ToString(), certificateInfo.Address);
+
+            return (certificateInfo.ToCertificate(), certificateInfo);
+        }
+
+        public static SmartContractNodeBuilder Create(string testRootFolder)
+        {
+            string testFolderPath = Path.Combine(testRootFolder, "node");
             var builder = new SmartContractNodeBuilder(testFolderPath);
-            builder.WithLogsDisabled();
             return builder;
         }
     }

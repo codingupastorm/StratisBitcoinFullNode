@@ -1,16 +1,19 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
+using NBitcoin;
 using Stratis.Bitcoin;
-using Stratis.Bitcoin.Builder;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.Api;
-using Stratis.Bitcoin.Features.BlockStore;
-using Stratis.Bitcoin.Features.MemoryPool;
-using Stratis.Bitcoin.Features.RPC;
-using Stratis.Bitcoin.Features.SmartContracts;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Builder;
+using Stratis.Core.Configuration;
+using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless;
-using Stratis.Feature.PoA.Tokenless.Wallet;
+using Stratis.Feature.PoA.Tokenless.Channels;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Feature.PoA.Tokenless.Networks;
+using Stratis.Features.Api;
+using Stratis.Features.BlockStore;
+using Stratis.Features.MemoryPool;
+using Stratis.Features.SmartContracts;
 using Stratis.SmartContracts.Tokenless;
 
 namespace Stratis.TokenlessD
@@ -21,20 +24,53 @@ namespace Stratis.TokenlessD
         {
             try
             {
-                var network = new TokenlessNetwork();
-                var nodeSettings = new NodeSettings(network, args: args);
-                var walletManager = new TokenlessWalletManager(network, nodeSettings.DataFolder, new TokenlessWalletSettings(nodeSettings));
-                if (!walletManager.Initialize())
-                    return;
+                Network network = null;
+
+                // TODO-TL: This needs to be moved someplace else.
+                var configReader = new TextFileConfiguration(args);
+                var configurationFile = configReader.GetOrDefault("conf", "");
+                var dataDir = configReader.GetOrDefault("datadir", "");
+                var configurationFilePath = Path.Combine(dataDir, configurationFile);
+                var fileConfig = new TextFileConfiguration(File.ReadAllText(configurationFilePath));
+                fileConfig.MergeInto(configReader);
+
+                NodeSettings nodeSettings = null;
+
+                var channelSettings = new ChannelSettings(configReader);
+                if (channelSettings.IsChannelNode)
+                {
+                    if (channelSettings.IsSystemChannelNode)
+                    {
+                        network = new SystemChannelNetwork();
+                        nodeSettings = new NodeSettings(network, agent: "Channel-System", configReader: configReader);
+                    }
+                    else
+                    {
+                        network = ChannelNetwork.Construct(dataDir, channelSettings.ChannelName);
+                        nodeSettings = new NodeSettings(network, agent: $"Channel-{channelSettings.ChannelName}", configReader: configReader);
+                    }
+                }
+                else
+                {
+                    network = new TokenlessNetwork();
+                    nodeSettings = new NodeSettings(network, agent: "Tokenless", configReader: configReader);
+                }
+
+                // Only non-channel nodes will need to go through the key store initialization process.
+                if (!channelSettings.IsChannelNode)
+                {
+                    var keyStoreManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, channelSettings, new TokenlessKeyStoreSettings(nodeSettings), nodeSettings.LoggerFactory);
+                    if (!keyStoreManager.Initialize())
+                        return;
+                }
 
                 IFullNodeBuilder nodeBuilder = new FullNodeBuilder()
                     .UseNodeSettings(nodeSettings)
                     .UseBlockStore()
                     .UseTokenlessPoaConsenus(network)
                     .UseMempool()
-                    .UseTokenlessWallet()
-                    .UseApi()
-                    .AddRPC()
+                    .UseTokenlessKeyStore()
+                    .UseApi(o => o.Exclude<SmartContractFeature>())
                     .AddSmartContracts(options =>
                     {
                         options.UseTokenlessReflectionExecutor();
@@ -49,7 +85,7 @@ namespace Stratis.TokenlessD
             }
             catch (Exception ex)
             {
-                Console.WriteLine("There was a problem initializing the node. Details: '{0}'", ex.ToString());
+                Console.WriteLine("There was a problem initializing the node : '{0}'", ex.ToString());
             }
         }
     }

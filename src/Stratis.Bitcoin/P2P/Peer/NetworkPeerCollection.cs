@@ -4,7 +4,7 @@ using System.Linq;
 using System.Net;
 using ConcurrentCollections;
 using NBitcoin;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 using TracerAttributes;
 
 namespace Stratis.Bitcoin.P2P.Peer

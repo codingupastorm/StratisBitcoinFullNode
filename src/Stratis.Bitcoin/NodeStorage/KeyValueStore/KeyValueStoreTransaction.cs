@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin.KeyValueStore
 {
@@ -18,16 +18,10 @@ namespace Stratis.Bitcoin.KeyValueStore
     public abstract class KeyValueStoreTransaction : IKeyValueStoreTransaction
     {
         /// <summary>The underlying key-value repository provider.</summary>
-        private readonly KeyValueStoreRepository repository;
-
-        /// <summary>Interface providing control over the updating of transient lookups.</summary>
-        public IKeyValueStoreTrackers Lookups { get; private set; }
+        private readonly IKeyValueStoreRepository repository;
 
         /// <summary>The mode of the transaction.</summary>
         private readonly KeyValueStoreTransactionMode mode;
-
-        /// <summary>Tracking changes allows updating of transient lookups after a successful commit operation.</summary>
-        internal Dictionary<string, IKeyValueStoreTracker> Trackers { get; private set; }
 
         /// <summary>Used to buffer changes to records until a commit takes place.</summary>
         internal ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>> TableUpdates { get; private set; }
@@ -51,10 +45,8 @@ namespace Stratis.Bitcoin.KeyValueStore
             KeyValueStoreTransactionMode mode,
             params string[] tables)
         {
-            this.repository = (KeyValueStoreRepository)keyValueStoreRepository;
+            this.repository = keyValueStoreRepository;
             this.mode = mode;
-            this.Lookups = this.repository.KeyValueStore.Lookups;
-            this.Trackers = this.repository.KeyValueStore.Lookups?.CreateTrackers(tables);
             this.TableUpdates = new ConcurrentDictionary<string, ConcurrentDictionary<byte[], byte[]>>();
             this.TablesCleared = new ConcurrentBag<string>();
 
@@ -197,17 +189,22 @@ namespace Stratis.Bitcoin.KeyValueStore
             return this.SelectAll<TKey, TObject>(tableName).ToDictionary(kv => kv.Item1, kv => kv.Item2);
         }
 
-        private IEnumerable<O> MergeSortedEnumerations<O, T>(IEnumerable<O> primary, IEnumerable<O> secondary, Func<O, T> keySelector, IComparer<T> comparer, bool descending = false)
+        private IEnumerable<O> MergeSortedEnumerations<O, T>(IEnumerable<O> primary, IEnumerable<O> secondary, Func<O, T> keySelector, IComparer<T> comparer, SortOrder sortOrder)
         {
+            Guard.Assert(sortOrder != SortOrder.Unsorted);
+
             while (true)
             {
                 O first = primary.FirstOrDefault();
                 O second = secondary.FirstOrDefault();
 
-                if (first == null && second == null)
+                bool firstAtEnd = first.Equals(default(O));
+                bool secondAtEnd = second.Equals(default(O));
+
+                if (firstAtEnd && secondAtEnd)
                     break;
 
-                int cmp = (second == null) ? -1 : ((first != null) ? comparer.Compare(keySelector(first), keySelector(second)) * (descending ? -1 : 1) : 1);
+                int cmp = secondAtEnd ? -1 : (!firstAtEnd ? comparer.Compare(keySelector(first), keySelector(second)) * ((sortOrder == SortOrder.Descending) ? -1 : 1) : 1);
 
                 if (cmp <= 0)
                 {
@@ -225,39 +222,55 @@ namespace Stratis.Bitcoin.KeyValueStore
                 }
             }
         }
-
-        private IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly = false, bool? backwards = null)
+      
+        private IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly, SortOrder sortOrder = SortOrder.Ascending,
+            byte[] firstKeyBytes = null, byte[] lastKeyBytes = null, bool includeFirstKey = true, bool includeLastKey = true)
         {
             IEnumerable<(byte[], byte[])> res = null;
             bool ignoreDB = this.TablesCleared.Contains(tableName);
 
-            this.TableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> upd);
+            var byteListComparer = new ByteArrayComparer();
 
-            // Not sorted?
-            if (backwards == null)
+            IEnumerable<KeyValuePair<byte[], byte[]>> upd = null;
+
+            if (this.TableUpdates.TryGetValue(tableName, out ConcurrentDictionary<byte[], byte[]> tableUpdates))
+            {
+                upd = tableUpdates.Select(u => u);
+
+                if (firstKeyBytes != null)
+                    upd = upd.Where(u => byteListComparer.Compare(u.Key, firstKeyBytes) >= (includeFirstKey ? 0 : 1));
+
+                if (lastKeyBytes != null)
+                    upd = upd.Where(u => byteListComparer.Compare(u.Key, lastKeyBytes) <= (includeLastKey ? 0 : -1));
+            }
+
+            if (sortOrder == SortOrder.Unsorted)
             {
                 res = upd?.Where(k => k.Value != null).Select(k => (k.Key, k.Value));
 
                 if (!ignoreDB)
                 {
-                    var dbRows = this.repository.GetAll(this, this.GetTable(tableName), keysOnly: keysOnly, backwards: backwards ?? false);
+                    var dbRows = this.repository.GetAll(this, this.GetTable(tableName), keysOnly: keysOnly, sortOrder: sortOrder,
+                        firstKey: firstKeyBytes, lastKey: lastKeyBytes, includeFirstKey: includeFirstKey, includeLastKey: includeLastKey);
 
-                    res = (res == null) ? dbRows : res.Concat(dbRows.Where(k => !upd.ContainsKey(k.Item1)));
+                    res = (res == null) ? dbRows : res.Concat(dbRows.Where(k => tableUpdates == null || !tableUpdates.ContainsKey(k.Item1)));
                 }
             }
             else
             {
                 var table = this.GetTable(tableName);
-                var byteListComparer = new ByteArrayComparer();
-                var updates = (upd == null) ? null : ((bool)backwards ? upd.OrderByDescending(k => k.Key, byteListComparer) : upd.OrderBy(k => k.Key, byteListComparer)).Select(k => (k.Key, keysOnly ? null : k.Value));
+
+                var updates = (upd == null) ? null : ((sortOrder == SortOrder.Descending) ? upd.OrderByDescending(k => k.Key, byteListComparer) : upd.OrderBy(k => k.Key, byteListComparer)).Select(k => (k.Key, keysOnly ? null : k.Value));
 
                 if (!ignoreDB && !this.TablesCleared.Contains(tableName))
                 {
-                    var dbrows = this.repository.GetAll(this, table, keysOnly: keysOnly, backwards: (bool)backwards);
+                    var dbrows = this.repository.GetAll(this, table, keysOnly: keysOnly, sortOrder: sortOrder,
+                        firstKey: firstKeyBytes, lastKey: lastKeyBytes, includeFirstKey: includeFirstKey, includeLastKey: includeLastKey);
+
                     if (updates == null)
                         res = dbrows;
                     else
-                        res = this.MergeSortedEnumerations<(byte[], byte[]), byte[]>(dbrows, updates, k => k.Item1, byteListComparer, descending: (bool)backwards);
+                        res = this.MergeSortedEnumerations<(byte[], byte[]), byte[]>(dbrows, updates, k => k.Item1, byteListComparer, sortOrder: sortOrder);
                 }
                 else
                 {
@@ -273,15 +286,43 @@ namespace Stratis.Bitcoin.KeyValueStore
         }
 
         /// <inheritdoc />
-        public IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName, bool keysOnly = false)
+        public IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly = false, SortOrder sortOrder = SortOrder.Descending)
         {
-            return this.SelectAll<TKey, TObject>(tableName, backwards: false, keysOnly: keysOnly);
+            return this.SelectAll<TKey, TObject>(tableName, keysOnly, sortOrder, firstKeyBytes: null);
         }
 
         /// <inheritdoc />
-        public IEnumerable<(TKey, TObject)> SelectBackward<TKey, TObject>(string tableName, bool keysOnly = false)
+        public IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName, TKey firstKey, bool includeFirstKey = true, bool keysOnly = false)
         {
-            return this.SelectAll<TKey, TObject>(tableName, backwards: true, keysOnly: keysOnly);
+            byte[] firstKeyBytes = this.Serialize(firstKey);
+
+            return this.SelectAll<TKey, TObject>(tableName, keysOnly, SortOrder.Ascending, firstKeyBytes: firstKeyBytes, includeFirstKey: includeFirstKey);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<(TKey, TObject)> SelectBackward<TKey, TObject>(string tableName, TKey lastKey, bool includeLastKey = true, bool keysOnly = false)
+        {
+            byte[] lastKeyBytes = this.Serialize(lastKey);
+
+            return this.SelectAll<TKey, TObject>(tableName, keysOnly, SortOrder.Descending, lastKeyBytes: lastKeyBytes, includeLastKey: includeLastKey);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<(TKey, TObject)> SelectForward<TKey, TObject>(string tableName, TKey firstKey, TKey lastKey, bool includeFirstKey = true, bool includeLastKey = true, bool keysOnly = false)
+        {
+            byte[] firstKeyBytes = this.Serialize(firstKey);
+            byte[] lastKeyBytes = this.Serialize(lastKey);
+
+            return this.SelectAll<TKey, TObject>(tableName, keysOnly, SortOrder.Ascending, firstKeyBytes: firstKeyBytes, lastKeyBytes: lastKeyBytes, includeFirstKey: includeFirstKey, includeLastKey: includeLastKey);
+        }
+
+        /// <inheritdoc />
+        public IEnumerable<(TKey, TObject)> SelectBackward<TKey, TObject>(string tableName, TKey firstKey, TKey lastKey, bool includeFirstKey = true, bool includeLastKey = true, bool keysOnly = false)
+        {
+            byte[] firstKeyBytes = this.Serialize(firstKey);
+            byte[] lastKeyBytes = this.Serialize(lastKey);
+
+            return this.SelectAll<TKey, TObject>(tableName, keysOnly, SortOrder.Descending, firstKeyBytes: firstKeyBytes, lastKeyBytes: lastKeyBytes, includeFirstKey: includeFirstKey, includeLastKey: includeLastKey);
         }
 
         /// <inheritdoc />
@@ -298,13 +339,6 @@ namespace Stratis.Bitcoin.KeyValueStore
             }
 
             kv[keyBytes] = null;
-
-            // If this is a tracked table.
-            if (this.Trackers != null && this.Trackers.TryGetValue(tableName, out IKeyValueStoreTracker tracker))
-            {
-                // Record the object and its old value.
-                tracker.ObjectEvent(obj, KeyValueStoreEvent.ObjectDeleted);
-            }
         }
 
         /// <inheritdoc />
@@ -330,10 +364,6 @@ namespace Stratis.Bitcoin.KeyValueStore
 
             this.TableUpdates.Clear();
             this.TablesCleared = new ConcurrentBag<string>();
-
-            // Having trackers allows us to postpone updating the lookups
-            // until after a successful commit.
-            this.Lookups?.OnCommit(this.Trackers);
         }
 
         /// <inheritdoc />

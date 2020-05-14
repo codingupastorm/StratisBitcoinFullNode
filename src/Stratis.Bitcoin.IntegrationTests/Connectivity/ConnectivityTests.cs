@@ -2,17 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using FluentAssertions;
 using NBitcoin;
-using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.RPC;
+using Stratis.Core.Connection;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities.Extensions;
+using Stratis.Core.Utilities.Extensions;
 using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests.Connectivity
@@ -153,9 +153,8 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
 
                 node1 = BanNode(node1, node2);
 
-                // Here we have to use the RPC client directly so that we can get the exception.
-                Action connectAction = () => node1.CreateRPCClient().AddNode(node2.Endpoint, true);
-                connectAction.Should().Throw<RPCException>().WithMessage("Internal error");
+                Action connectAction = () => node1.FullNode.ConnectionManager.ConnectAsync(node2.Endpoint).GetAwaiter().GetResult();
+                connectAction.Should().Throw<OperationCanceledException>().WithMessage("The peer has been disconnected");
 
                 node1.FullNode.ConnectionManager.ConnectedPeers.Should().BeEmpty();
 
@@ -209,11 +208,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
                 try
                 {
                     // Manually call AddNode so that we can catch the exception.
-                    node2.CreateRPCClient().AddNode(node1.Endpoint, true);
+                    node2.FullNode.ConnectionManager.ConnectAsync(node1.Endpoint).GetAwaiter().GetResult();
                 }
                 catch (Exception ex)
                 {
-                    Assert.IsType<RPCException>(ex);
+                    ex.Message.Contains("actively refused");
                 }
 
                 Assert.False(TestHelper.IsNodeConnectedTo(node2, node1));
@@ -238,11 +237,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
                 try
                 {
                     // Manually call AddNode so that we can catch the exception.
-                    node2.CreateRPCClient().AddNode(node1.Endpoint, true);
+                    node2.FullNode.ConnectionManager.ConnectAsync(node1.Endpoint).GetAwaiter().GetResult();
                 }
                 catch (Exception ex)
                 {
-                    Assert.IsType<RPCException>(ex);
+                    ex.Message.Contains("actively refused");
                 }
 
                 Assert.False(TestHelper.IsNodeConnectedTo(node2, node1));
@@ -270,6 +269,36 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
                 Assert.True(TestHelper.IsNodeConnectedTo(node2, node1));
 
                 TestHelper.DisconnectAll(node1, node2);
+            }
+        }
+
+        [Fact]
+        public void Node_Gets_Banned_Subsequent_Connections_DoesNot_Affect_InboundCount()
+        {
+            using (NodeBuilder builder = NodeBuilder.Create(this))
+            {
+                CoreNode node1 = builder.CreateStratisPosNode(this.posNetwork, "conn-10-node1").Start();
+                CoreNode node2 = builder.CreateStratisPosNode(this.posNetwork, "conn-10-node2").Start();
+
+                TestHelper.Connect(node1, node2);
+
+                // node1 bans node2
+                var service = node1.FullNode.NodeService<IPeerBanning>();
+                service.BanAndDisconnectPeer(node2.Endpoint);
+
+                // Ensure the node is disconnected.
+                TestBase.WaitLoop(() => TestHelper.IsNodeConnectedTo(node1, node2) == false);
+
+                // Try and connect to the node that banned me 10 times.
+                for (int i = 0; i < 10; i++)
+                {
+                    TestHelper.ConnectNoCheck(node2, node1);
+                    Task.Delay(TimeSpan.FromSeconds(1)).GetAwaiter().GetResult();
+                }
+
+                // Inbound peer count should still be 0.
+                var server = node1.FullNode.ConnectionManager.Servers.First();
+                Assert.True(server.ConnectedInboundPeersCount == 0);
             }
         }
 

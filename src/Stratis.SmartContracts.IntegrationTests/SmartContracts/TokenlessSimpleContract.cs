@@ -11,13 +11,13 @@ public class TokenlessSimpleContract : TokenlessSmartContract
 
     public TokenlessSimpleContract(ISmartContractState state) : base(state)
     {
+        this.Increment = 100;
     }
 
 
     public int CallMe()
     {
         this.Increment = this.Increment + 1;
-        return this. Increment;
+        return this.Increment;
     }
-
 }

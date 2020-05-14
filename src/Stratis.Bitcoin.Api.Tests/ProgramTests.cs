@@ -2,8 +2,8 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using NSubstitute;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Features.Api;
+using Stratis.Core.Configuration;
+using Stratis.Features.Api;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 

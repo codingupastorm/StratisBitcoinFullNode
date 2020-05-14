@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Base;
+using Stratis.Core.Utilities;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.Base

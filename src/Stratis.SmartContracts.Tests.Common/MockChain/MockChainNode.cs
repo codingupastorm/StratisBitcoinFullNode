@@ -1,24 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
-using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
-using Stratis.Bitcoin.Features.SmartContracts;
-using Stratis.Bitcoin.Features.SmartContracts.Models;
-using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
-using Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers;
-using Stratis.Bitcoin.Features.SmartContracts.Wallet;
-using Stratis.Bitcoin.Features.Wallet;
-using Stratis.Bitcoin.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.Models;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities.JsonErrors;
+using Stratis.Features.SmartContracts;
+using Stratis.Features.SmartContracts.Models;
+using Stratis.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
+using Stratis.Features.SmartContracts.ReflectionExecutor.Controllers;
+using Stratis.Features.Wallet;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Local;
 using Stratis.SmartContracts.Core;
@@ -38,7 +33,7 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
 
         // Services on the node. Used to retrieve information about the state of the network.
         private readonly SmartContractsController smartContractsController;
-        private readonly SmartContractWalletController smartContractWalletController;
+        //private readonly SmartContractWalletController smartContractWalletController;
         private readonly IStateRepositoryRoot stateRoot;
         private readonly IBlockStore blockStore;
 
@@ -93,7 +88,7 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
             this.CoreNode.SetMinerSecret(new BitcoinSecret(key, this.CoreNode.FullNode.Network));
 
             // Set up services for later
-            this.smartContractWalletController = this.CoreNode.FullNode.NodeController<SmartContractWalletController>();
+            //this.smartContractWalletController = this.CoreNode.FullNode.NodeController<SmartContractWalletController>();
             this.smartContractsController = this.CoreNode.FullNode.NodeController<SmartContractsController>();
             this.stateRoot = this.CoreNode.FullNode.NodeService<IStateRepositoryRoot>();
             this.blockStore = this.CoreNode.FullNode.NodeService<IBlockStore>();
@@ -108,74 +103,12 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
             this.chain.WaitForAllNodesToSync();
         }
 
-        public ulong GetWalletAddressBalance(string walletAddress)
-        {
-            var jsonResult = (JsonResult)this.smartContractWalletController.GetAddressBalance(walletAddress);
-            return (ulong)(decimal)jsonResult.Value;
-        }
-
         /// <summary>
         /// Get an unused address that can be used to send funds to this node.
         /// </summary>
         public HdAddress GetUnusedAddress()
         {
             return this.CoreNode.FullNode.WalletManager().GetUnusedAddress(new WalletAccountReference(this.WalletName, this.AccountName));
-        }
-
-        /// <summary>
-        /// Send a normal transaction.
-        /// </summary>
-        public Result<WalletSendTransactionModel> SendTransaction(Script scriptPubKey, Money amount, int utxos = 0, List<OutPoint> selectedInputs = null)
-        {
-            Recipient[] recipients;
-
-            if (utxos > 0)
-            {
-                if (amount % utxos != 0)
-                {
-                    throw new ArgumentException("Amount should be divisible by utxos if utxos are specified!");
-                }
-
-                recipients = new Recipient[utxos];
-                for (int i = 0; i < recipients.Length; i++)
-                {
-                    recipients[i] = new Recipient { Amount = amount / utxos, ScriptPubKey = scriptPubKey };
-                }
-            }
-            else
-            {
-                recipients = new[] { new Recipient { Amount = amount, ScriptPubKey = scriptPubKey } };
-            }
-
-            if (selectedInputs == null)
-            {
-                selectedInputs = this.CoreNode.FullNode.WalletManager().GetSpendableInputsForAddress(this.WalletName, this.MinerAddress.Address, 1); // Always send from the MinerAddress. Simplifies things.
-            }
-
-            var txBuildContext = new TransactionBuildContext(this.CoreNode.FullNode.Network)
-            {
-                AccountReference = new WalletAccountReference(this.WalletName, this.AccountName),
-                MinConfirmations = 1,
-                FeeType = FeeType.Medium,
-                WalletPassword = this.Password,
-                Recipients = recipients.ToList(),
-                SelectedInputs = selectedInputs,
-                ChangeAddress = this.MinerAddress // yes this is unconventional, but helps us to keep the balance on the same addresses
-            };
-
-            Transaction trx = (this.CoreNode.FullNode.NodeService<IWalletTransactionHandler>() as SmartContractWalletTransactionHandler).BuildTransaction(txBuildContext);
-
-            // Broadcast to the other node.
-
-            IActionResult result = this.smartContractWalletController.SendTransaction(new SendTransactionRequest(trx.ToHex()));
-            if (result is ErrorResult errorResult)
-            {
-                var errorResponse = (ErrorResponse)errorResult.Value;
-                return Result.Fail<WalletSendTransactionModel>(errorResponse.Errors[0].Message);
-            }
-
-            JsonResult response = (JsonResult)result;
-            return Result.Ok((WalletSendTransactionModel)response.Value);
         }
 
         /// <summary>
@@ -217,36 +150,6 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
         }
 
         /// <summary>
-        /// Sends a create contract transaction. Note that before this transaction can be mined it will need to reach the mempool.
-        /// You will likely want to call 'WaitMempoolCount' after this.
-        /// </summary>
-        public BuildCreateContractTransactionResponse BuildCreateContractTransaction(
-            byte[] contractCode,
-            double amount,
-            string[] parameters = null,
-            ulong gasLimit = SmartContractFormatLogic.GasLimitMaximum / 2, // half of maximum
-            ulong gasPrice = SmartContractMempoolValidator.MinGasPrice,
-            double feeAmount = 0.01,
-            string sender = null)
-        {
-            var request = new BuildCreateContractTransactionRequest
-            {
-                Amount = amount.ToString(CultureInfo.InvariantCulture),
-                AccountName = this.AccountName,
-                ContractCode = contractCode.ToHexString(),
-                FeeAmount = feeAmount.ToString(CultureInfo.InvariantCulture),
-                GasLimit = gasLimit,
-                GasPrice = gasPrice,
-                Parameters = parameters,
-                Password = this.Password,
-                Sender = sender ?? this.MinerAddress.Address,
-                WalletName = this.WalletName
-            };
-            JsonResult response = (JsonResult)this.smartContractsController.BuildCreateSmartContractTransaction(request);
-            return (BuildCreateContractTransactionResponse)response.Value;
-        }
-
-        /// <summary>
         /// Retrieves receipts for all cases where a specific event was logged in a specific contract.
         /// </summary>
         public IList<ReceiptResponse> GetReceipts(string contractAddress, string eventName)
@@ -272,10 +175,10 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
             string[] parameters = null,
             ulong gasLimit = SmartContractFormatLogic.GasLimitMaximum / 2, // half of maximum
             ulong gasPrice = SmartContractMempoolValidator.MinGasPrice,
-            decimal feeAmount = 0.01M, 
+            decimal feeAmount = 0.01M,
             string sender = null,
             List<OutpointRequest> outpoints = null)
-            {
+        {
             var request = new BuildCallContractTransactionRequest
             {
                 AccountName = this.AccountName,
@@ -310,8 +213,6 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
             {
                 Amount = amount.ToString(CultureInfo.InvariantCulture),
                 ContractAddress = contractAddress,
-                GasLimit = gasLimit,
-                GasPrice = gasPrice,
                 MethodName = methodName,
                 Parameters = parameters,
                 Sender = sender ?? this.MinerAddress.Address
@@ -341,7 +242,7 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
         /// </summary>
         public byte[] GetStorageValue(string contractAddress, string key)
         {
-            return this.stateRoot.GetStorageValue(contractAddress.ToUint160(this.CoreNode.FullNode.Network), Encoding.UTF8.GetBytes(key));
+            return this.stateRoot.GetStorageValue(contractAddress.ToUint160(this.CoreNode.FullNode.Network), Encoding.UTF8.GetBytes(key)).Value;
         }
 
         /// <summary>
@@ -357,7 +258,7 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
         /// </summary>
         public void WaitMempoolCount(int num)
         {
-            TestBase.WaitLoop(() => this.CoreNode.CreateRPCClient().GetRawMempool().Length >= num);
+            TestBase.WaitLoop(() => this.CoreNode.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count >= num);
         }
     }
 }

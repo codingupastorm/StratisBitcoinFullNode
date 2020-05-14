@@ -6,12 +6,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.AsyncWork;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Connection;
+using Stratis.Core.Configuration;
+using Stratis.Core.Connection;
 using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Utilities.Extensions;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.Extensions;
 
 namespace Stratis.Bitcoin.P2P
 {
@@ -211,6 +211,9 @@ namespace Stratis.Bitcoin.P2P
         /// </summary>
         private void AddDNSSeedNodes(List<IPEndPoint> endPoints)
         {
+            if (this.network.DNSSeeds == null)
+                return;
+
             foreach (DNSSeedData seed in this.network.DNSSeeds)
             {
                 try
@@ -231,6 +234,9 @@ namespace Stratis.Bitcoin.P2P
         /// </summary>
         private void AddSeedNodes(List<IPEndPoint> endPoints)
         {
+            if (this.network.SeedNodes == null)
+                return;
+
             endPoints.AddRange(this.network.SeedNodes.Select(ipAddress => ipAddress.Endpoint));
         }
 

@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.AsyncWork;
-using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Features.BlockStore;
+using Stratis.Core.Connection;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
@@ -15,7 +13,8 @@ using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
+using Stratis.Features.BlockStore;
 using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests.BlockStore
@@ -59,7 +58,6 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
         public override object Clone()
         {
             var res = new TestBehavior();
-
             return res;
         }
     }
@@ -121,8 +119,11 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
             }
         }
 
+        /// <summary>
+        /// CheckBlocksAnnounced_AndQueueEmptiesOverTime_ForMultiplePeers_WhenOneIsDisconnected
+        /// </summary>
         [Fact]
-        public void CheckBlocksAnnounced_AndQueueEmptiesOverTime_ForMultiplePeers_WhenOneIsDisconnected()
+        public void BlockStoreSignaledTests_Scenario2()
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {

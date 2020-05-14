@@ -4,22 +4,21 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
 using NBitcoin.Crypto;
-using Stratis.Bitcoin.AsyncWork;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Base.Deployments;
-using Stratis.Bitcoin.BlockPulling;
-using Stratis.Bitcoin.Configuration;
-using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Consensus.Rules;
-using Stratis.Bitcoin.Features.Consensus.CoinViews;
-using Stratis.Bitcoin.Features.Consensus.Interfaces;
-using Stratis.Bitcoin.Features.Consensus.ProvenBlockHeaders;
+using Stratis.Core.Base;
+using Stratis.Core.Base.Deployments;
+using Stratis.Core.BlockPulling;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Settings;
+using Stratis.Core.Consensus;
+using Stratis.Core.Consensus.Rules;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Utilities;
+using Stratis.Features.Consensus.Interfaces;
+using Stratis.Features.Consensus.ProvenBlockHeaders;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests.Rules
+namespace Stratis.Features.Consensus.Tests.Rules
 {
     public class ConsensusRuleUnitTestBase
     {
@@ -51,7 +50,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.Rules
             this.consensusSettings = new ConsensusSettings(NodeSettings.Default(this.network));
             this.nodeDeployments = new NodeDeployments(this.network, this.ChainIndexer);
 
-            if (network.Consensus.IsProofOfStake)
+            if (network.Consensus.ConsensusMiningReward.IsProofOfStake)
                 this.ruleContext = new PosRuleContext(new ValidationContext(), this.dateTimeProvider.Object.GetTimeOffset());
             else
                 this.ruleContext = new PowRuleContext(new ValidationContext(), this.dateTimeProvider.Object.GetTimeOffset());
@@ -141,7 +140,7 @@ namespace Stratis.Bitcoin.Features.Consensus.Tests.Rules
             this.dateTimeProvider = new Mock<IDateTimeProvider>();
             this.nodeDeployments = new NodeDeployments(this.network, this.ChainIndexer);
 
-            if (network.Consensus.IsProofOfStake)
+            if (network.Consensus.ConsensusMiningReward.IsProofOfStake)
             {
                 this.ruleContext = new PosRuleContext(new ValidationContext(), this.dateTimeProvider.Object.GetTimeOffset());
             }

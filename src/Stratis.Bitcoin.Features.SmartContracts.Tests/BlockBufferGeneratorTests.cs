@@ -1,4 +1,5 @@
-﻿using Stratis.Bitcoin.Features.Miner;
+﻿using Stratis.Bitcoin.Mining;
+using Stratis.Features.SmartContracts;
 using Stratis.SmartContracts.Networks;
 using Xunit;
 

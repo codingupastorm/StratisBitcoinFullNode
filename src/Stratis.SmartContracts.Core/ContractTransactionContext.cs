@@ -1,12 +1,14 @@
 ﻿using System.Linq;
 using NBitcoin;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 
 namespace Stratis.SmartContracts.Core
 {
     public class ContractTransactionContext : IContractTransactionContext
     {
         private readonly ulong blockHeight;
+
+        private readonly ulong txIndex;
 
         private readonly uint160 coinbaseAddress;
 
@@ -16,7 +18,7 @@ namespace Stratis.SmartContracts.Core
 
         private readonly uint160 sender;
 
-        private readonly Money mempoolFee;
+        private readonly byte[] transientData;
 
         /// <inheritdoc />
         public uint256 TransactionHash
@@ -39,19 +41,13 @@ namespace Stratis.SmartContracts.Core
         /// <inheritdoc />
         public uint Nvout
         {
-            get { return (uint) this.transaction.Outputs.IndexOf(this.contractTxOut); }
+            get { return (uint)this.transaction.Outputs.IndexOf(this.contractTxOut); }
         }
 
         /// <inheritdoc />
         public byte[] Data
         {
             get { return this.contractTxOut.ScriptPubKey.ToBytes(); }
-        }
-
-        /// <inheritdoc />
-        public Money MempoolFee
-        {
-            get { return this.mempoolFee; }
         }
 
         /// <inheritdoc />
@@ -66,6 +62,12 @@ namespace Stratis.SmartContracts.Core
             get { return this.blockHeight; }
         }
 
+        /// <inheritdoc />
+        public ulong TxIndex
+        {
+            get { return this.txIndex; }
+        }
+
         public uint Time
         {
             get
@@ -74,21 +76,31 @@ namespace Stratis.SmartContracts.Core
             }
         }
 
+        public byte[] TransientData
+        {
+            get
+            {
+                return this.transientData;
+            }
+        }
+
         public ContractTransactionContext(
             ulong blockHeight,
+            ulong txIndex,
             uint160 coinbaseAddress,
-            Money mempoolFee,
             uint160 sender,
-            Transaction transaction)
+            Transaction transaction,
+            byte[] transientData)
         {
             this.blockHeight = blockHeight;
+            this.txIndex = txIndex;
             this.coinbaseAddress = coinbaseAddress;
             this.transaction = transaction;
             this.contractTxOut = transaction.Outputs.FirstOrDefault(x => x.ScriptPubKey.IsSmartContractExec());
             Guard.NotNull(this.contractTxOut, nameof(this.contractTxOut));
 
             this.sender = sender;
-            this.mempoolFee = mempoolFee;
+            this.transientData = transientData;
         }
     }
 }

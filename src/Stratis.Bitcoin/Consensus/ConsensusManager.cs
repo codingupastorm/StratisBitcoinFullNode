@@ -5,24 +5,25 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.BlockPulling;
-using Stratis.Bitcoin.Configuration.Logging;
-using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Bitcoin.Connection;
-using Stratis.Bitcoin.Consensus.PerformanceCounters.ConsensusManager;
-using Stratis.Bitcoin.Consensus.ValidationResults;
-using Stratis.Bitcoin.Consensus.Validators;
+using Stratis.Bitcoin;
 using Stratis.Bitcoin.EventBus.CoreEvents;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Signals;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Utilities.Extensions;
+using Stratis.Core.Base;
+using Stratis.Core.BlockPulling;
+using Stratis.Core.Configuration.Logging;
+using Stratis.Core.Configuration.Settings;
+using Stratis.Core.Connection;
+using Stratis.Core.Consensus.PerformanceCounters.ConsensusManager;
+using Stratis.Core.Consensus.ValidationResults;
+using Stratis.Core.Consensus.Validators;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.Extensions;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.Consensus
+namespace Stratis.Core.Consensus
 {
     /// <inheritdoc cref="IConsensusManager"/>
     public class ConsensusManager : IConsensusManager
@@ -677,7 +678,7 @@ namespace Stratis.Bitcoin.Consensus
             // Add peers that needed to be banned as a result of a failure to connect blocks.
             // Otherwise they get lost as we are returning a different ConnnectBlocksResult.
             // We also need to set the ban reason and ban time otherwise it is not known why
-            // connecting the new chain failed and hence why the peer is being disconnected in 
+            // connecting the new chain failed and hence why the peer is being disconnected in
             // peer banning.
             reconnectionResult.BanReason = connectBlockResult.BanReason;
             reconnectionResult.BanDurationSeconds = connectBlockResult.BanDurationSeconds;

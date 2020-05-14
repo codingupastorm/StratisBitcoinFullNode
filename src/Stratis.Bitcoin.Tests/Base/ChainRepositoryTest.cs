@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Configuration;
+using Stratis.Core.Base;
+using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.Base
@@ -37,7 +37,7 @@ namespace Stratis.Bitcoin.Tests.Base
             using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(Interfaces.KeyValueStoreTransactionMode.Read))
             {
                 ChainedHeader tip = null;
-                foreach ((int key, BlockHeader blockHeader) in transaction.SelectForward<int, BlockHeader>("Chain"))
+                foreach ((int key, BlockHeader blockHeader) in transaction.SelectAll<int, BlockHeader>("Chain"))
                 {
                     if (tip != null && blockHeader.HashPrevBlock != tip.HashBlock)
                         break;

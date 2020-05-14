@@ -1,8 +1,8 @@
 ﻿using System.IO;
 using System.Linq;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
+using Stratis.Core.Consensus;
+using Stratis.Core.Consensus.Rules;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 
 namespace Stratis.Bitcoin.IntegrationTests
@@ -11,7 +11,7 @@ namespace Stratis.Bitcoin.IntegrationTests
     {
         public static void AppendToConfig(this CoreNode node, string configKeyValueItem)
         {
-            using (StreamWriter sw = File.AppendText(node.Config))
+            using (StreamWriter sw = File.AppendText(node.ConfigFilePath))
             {
                 sw.WriteLine(configKeyValueItem);
             }

@@ -5,10 +5,10 @@ using System.Net;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Utilities.Extensions;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.Extensions;
 
-namespace Stratis.Bitcoin.Configuration.Settings
+namespace Stratis.Core.Configuration.Settings
 {
     /// <summary>
     /// Configuration related to incoming and outgoing connections.
@@ -162,7 +162,7 @@ namespace Stratis.Bitcoin.Configuration.Settings
             this.InitialConnectionTarget = config.GetOrDefault("initialconnectiontarget", 1, this.logger);
             this.SyncTimeEnabled = config.GetOrDefault<bool>("synctime", true, this.logger);
             this.RelayTxes = !config.GetOrDefault("blocksonly", DefaultBlocksOnly, this.logger);
-            this.IpRangeFiltering = config.GetOrDefault<bool>("IpRangeFiltering", true, this.logger);
+            this.IpRangeFiltering = config.GetOrDefault<bool>("IpRangeFiltering", nodeSettings.Network.DefaultEnableIpRangeFiltering, this.logger);
 
             var agentPrefix = config.GetOrDefault("agentprefix", string.Empty, this.logger).Replace("-", string.Empty);
             if (agentPrefix.Length > MaximumAgentPrefixLength)
@@ -329,7 +329,7 @@ namespace Stratis.Bitcoin.Configuration.Settings
         public bool RelayTxes { get; set; }
 
         /// <summary>Filter peers that are within the same IP range to prevent sybil attacks.</summary>
-        public bool IpRangeFiltering { get; internal set; }
+        public bool IpRangeFiltering { get; set; }
 
         /// <summary>List of white listed IP endpoint. The node will flags peers that connects to the node, or that the node connects to, as whitelisted.</summary>
         public List<IPEndPoint> Whitelist { get; set; }

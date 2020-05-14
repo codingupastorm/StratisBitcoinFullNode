@@ -4,11 +4,11 @@ using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Behaviors;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
-using Stratis.Bitcoin.Utilities;
-using Stratis.Bitcoin.Utilities.Extensions;
+using Stratis.Core.Utilities;
+using Stratis.Core.Utilities.Extensions;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.Connection
+namespace Stratis.Core.Connection
 {
     public interface IConnectionManagerBehavior : INetworkPeerBehavior
     {

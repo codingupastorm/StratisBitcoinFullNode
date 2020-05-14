@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.SmartContracts.CLR.Serialization;
+using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.State;
 
 namespace Stratis.SmartContracts.CLR.Local
@@ -42,14 +43,24 @@ namespace Stratis.SmartContracts.CLR.Local
                 Address.Zero
             );
 
+            string version = StorageValue.DefaultVersion;
+
             IState state = this.stateFactory.Create(
                 this.stateRoot.StartTracking(),
                 block,
                 txOutValue,
-                new uint256());
+                new uint256(),
+                version, 
+                null); // Assume no transient data in local calls
 
             StateTransitionResult result;
             IState newState = state.Snapshot();
+
+            var placeholderPolicy = new EndorsementPolicy
+            {
+                Organisation = (Organisation) "LocalExecutorOrgansation",
+                RequiredSignatures = EndorsementPolicy.DefaultRequiredSignatures
+            };
 
             if (creation)
             {
@@ -58,6 +69,7 @@ namespace Stratis.SmartContracts.CLR.Local
                     txOutValue,
                     callData.GasLimit,
                     callData.ContractExecutionCode,
+                    placeholderPolicy, // Shouldn't matter for LocalExecutor
                     callData.MethodParameters
                 );
 

@@ -2,9 +2,8 @@
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Stratis.Bitcoin.Features.Api;
-using Stratis.Bitcoin.Features.Miner.Interfaces;
 using Stratis.Bitcoin.IntegrationTests.Common;
+using Stratis.Features.Api;
 using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests.API
@@ -16,7 +15,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         {
             this.stratisPosApiNode = this.posNodeBuilder.CreateStratisPosNode(this.posNetwork).Start();
 
-            this.stratisPosApiNode.FullNode.NodeService<IPosMinting>(true);
             this.apiUri = this.stratisPosApiNode.FullNode.NodeService<ApiSettings>().ApiUri;
 
             // With these tests we still need to create the wallets outside of the builder

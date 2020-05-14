@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Bitcoin.Consensus.Validators;
+using Stratis.Bitcoin;
 using Stratis.Bitcoin.Primitives;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Base;
+using Stratis.Core.Configuration.Settings;
+using Stratis.Core.Consensus.Validators;
+using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Consensus
+namespace Stratis.Core.Consensus
 {
     /// <summary>
     /// Tree of chained block headers that are being claimed by the connected peers and the node itself.

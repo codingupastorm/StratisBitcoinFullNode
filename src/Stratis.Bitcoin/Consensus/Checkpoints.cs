@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
-using Stratis.Bitcoin.Configuration.Settings;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Configuration.Settings;
+using Stratis.Core.Utilities;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.Consensus
+namespace Stratis.Core.Consensus
 {
     /// <summary>
     /// Interface of block header hash checkpoint provider.
@@ -127,7 +127,7 @@ namespace Stratis.Bitcoin.Consensus
         [NoTrace]
         private Dictionary<int, CheckpointInfo> GetCheckpoints()
         {
-            if (this.consensusSettings == null || !this.consensusSettings.UseCheckpoints)
+            if (this.consensusSettings == null || !this.consensusSettings.UseCheckpoints || this.network.Checkpoints == null)
                 return new Dictionary<int, CheckpointInfo>();
 
             return this.network.Checkpoints;

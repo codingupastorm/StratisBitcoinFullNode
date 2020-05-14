@@ -1,11 +1,11 @@
 ﻿using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Bitcoin.Consensus;
-using Stratis.Bitcoin.Features.Consensus.Rules.CommonRules;
+using Stratis.Core.Consensus;
+using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
-namespace Stratis.Bitcoin.Features.Consensus.Tests.Rules.CommonRules
+namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
 {
     public class CalculateStakeRuleTest : TestPosConsensusRulesUnitTestBase
     {

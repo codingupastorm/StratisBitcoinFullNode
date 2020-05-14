@@ -1,7 +1,7 @@
-﻿using Stratis.Bitcoin.Connection;
+﻿using Stratis.Core.Connection;
 using Stratis.Bitcoin.P2P.Peer;
 
-namespace Stratis.Bitcoin.Utilities.Extensions
+namespace Stratis.Core.Utilities.Extensions
 {
     public static class PeerExtensions
     {

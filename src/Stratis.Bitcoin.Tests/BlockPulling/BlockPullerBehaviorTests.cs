@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using Moq;
-using Stratis.Bitcoin.BlockPulling;
-using Stratis.Bitcoin.Configuration.Logging;
+using Stratis.Core.BlockPulling;
+using Stratis.Core.Configuration.Logging;
 using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.BlockPulling
@@ -22,7 +22,6 @@ namespace Stratis.Bitcoin.Tests.BlockPulling
             ibdState.Setup(x => x.IsInitialBlockDownload()).Returns(() => true);
 
             var loggerFactory = new ExtendedLoggerFactory();
-            loggerFactory.AddConsoleWithFilters();
 
             this.behavior = new BlockPullerBehavior(puller.Object, ibdState.Object, DateTimeProvider.Default, loggerFactory);
         }
@@ -77,7 +76,6 @@ namespace Stratis.Bitcoin.Tests.BlockPulling
                 ibdState.Setup(x => x.IsInitialBlockDownload()).Returns(() => true);
 
                 var loggerFactory = new ExtendedLoggerFactory();
-                loggerFactory.AddConsoleWithFilters();
 
                 behaviors.Add(new BlockPullerBehavior(puller.Object, ibdState.Object, DateTimeProvider.Default, loggerFactory));
             }

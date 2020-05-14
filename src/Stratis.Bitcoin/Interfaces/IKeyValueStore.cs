@@ -27,11 +27,5 @@ namespace Stratis.Bitcoin.Interfaces
         /// <param name="tables">The tables that will be updated if <paramref name="mode"/> is <see cref="KeyValueStoreTransactionMode.ReadWrite"/>.</param>
         /// <returns>A transaction specific to the key-store type.</returns>
         IKeyValueStoreTransaction CreateTransaction(KeyValueStoreTransactionMode mode, params string[] tables);
-
-        /// <summary>
-        /// Used to specify trackers to track changes.
-        /// </summary>
-        /// <param name="keyValueStoreTrackers">The trackers to use.</param>
-        void SetLookups(IKeyValueStoreTrackers keyValueStoreTrackers);
     }
 }

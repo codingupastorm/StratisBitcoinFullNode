@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Stratis.Bitcoin.Signals;
-using Stratis.Bitcoin.Utilities;
+using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.AsyncWork
+namespace Stratis.Core.AsyncWork
 {
     public interface IAsyncProvider
     {
@@ -126,7 +126,7 @@ namespace Stratis.Bitcoin.AsyncWork
         /// Having a single entry point for COMMON SERVICES allows us to speed up changes.
         /// </summary>
         ISignals Signals { get; }
-     
+
         /// <summary>
         /// Returns a list of friendly names of all loops, as well as their current status.
         /// </summary>

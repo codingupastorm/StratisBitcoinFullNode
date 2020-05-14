@@ -3,22 +3,23 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Base;
-using Stratis.Bitcoin.Consensus;
+using Stratis.Core.Base;
+using Stratis.Core.Consensus;
 using Stratis.Bitcoin.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Features.BlockStore;
 using Xunit;
 
 namespace Stratis.Bitcoin.Features.BlockStore.Tests
 {
     public class BlockStoreBehaviorTest
     {
-        private BlockStoreBehavior behavior;
-        private Mock<IChainState> chainState;
-        private ChainIndexer chainIndexer;
+        private readonly BlockStoreBehavior behavior;
+        private readonly Mock<IChainState> chainState;
+        private readonly ChainIndexer chainIndexer;
         private readonly ILoggerFactory loggerFactory;
-        private Mock<IConsensusManager> consensusManager;
-        private Mock<IBlockStoreQueue> blockStore;
+        private readonly Mock<IConsensusManager> consensusManager;
+        private readonly Mock<IBlockStoreQueue> blockStore;
 
         public BlockStoreBehaviorTest()
         {
