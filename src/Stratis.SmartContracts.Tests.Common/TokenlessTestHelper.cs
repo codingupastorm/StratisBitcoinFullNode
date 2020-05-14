@@ -101,7 +101,7 @@ namespace Stratis.SmartContracts.Tests.Common
         /// <summary>
         /// Used to instantiate a CA client with the admin's credentials. If multiple nodes need to interact with the CA in a test, they will need their own accounts & clients created.
         /// </summary>
-        public static CaClient GetAdminClient(IWebHost server = null)
+        public static CaClient GetAdminClient(IWebHost server)
         {
             IServerAddressesFeature serverAddresses = server.ServerFeatures.Get<IServerAddressesFeature>();
             string caBaseAddress = serverAddresses.Addresses.First();
