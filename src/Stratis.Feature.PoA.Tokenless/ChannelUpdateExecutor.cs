@@ -9,7 +9,6 @@ using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
-
     public interface IChannelUpdateExecutor
     {
         void Initialize();
@@ -47,14 +46,13 @@ namespace Stratis.Feature.PoA.Tokenless
             this.blockConnectedSubscription = this.signals.Subscribe<BlockConnected>(this.OnBlockConnected);
         }
 
-
         /// <inheritdoc/>
         private void OnBlockConnected(BlockConnected blockConnectedEvent)
         {
             // This rule is only applicable if this node is a system channel node.
             if (!this.channelSettings.IsSystemChannelNode)
             {
-                this.logger.LogDebug($"This is not a system channel node.");
+                this.logger.LogDebug($"Only system channel nodes can process channel update requests.");
                 return;
             }
 

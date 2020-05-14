@@ -1,5 +1,5 @@
 ﻿using Newtonsoft.Json;
-using Stratis.Bitcoin.Controllers.Converters;
+using Stratis.Core.Controllers.Converters;
 
 namespace Stratis.Features.Wallet.Models
 {

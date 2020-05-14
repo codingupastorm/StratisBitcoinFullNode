@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Globalization;
-using System.Linq;
 using Newtonsoft.Json;
 
-namespace Stratis.Bitcoin.Controllers.Converters
+namespace Stratis.Core.Controllers.Converters
 {
     /// <summary>
     /// Converts a decimal value to a string with the minimum number of decimals used by bitcoin (8).

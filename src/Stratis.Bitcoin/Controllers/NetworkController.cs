@@ -5,14 +5,14 @@ using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Core.Connection;
-using Stratis.Bitcoin.Controllers.Models;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Core.Connection;
+using Stratis.Core.Controllers.Models;
 using Stratis.Core.Utilities.Extensions;
 using Stratis.Core.Utilities.JsonErrors;
 
-namespace Stratis.Bitcoin.Controllers
+namespace Stratis.Core.Controllers
 {
     /// <summary>
     /// Provides methods that interact with the network elements of the full node.

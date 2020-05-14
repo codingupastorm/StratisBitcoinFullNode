@@ -50,7 +50,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate() };
 
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node1.DataFolder, this.network);
 
                 // Get the date again in case it has changed. The idea is that the certificate date will be one of the two dates. 
                 // Either the initial one or the second one if a date change occurred while the certificates were being generated.
@@ -98,8 +98,8 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
 
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node1.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node2.DataFolder, this.network);
 
                 node1.Start();
                 node2.Start();
