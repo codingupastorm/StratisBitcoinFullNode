@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.EventBus;
+using Stratis.Core.EventBus;
 
 namespace Stratis.Bitcoin.Signals
 {

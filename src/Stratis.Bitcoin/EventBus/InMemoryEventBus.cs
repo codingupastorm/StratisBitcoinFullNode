@@ -4,7 +4,7 @@ using System.Linq;
 using Microsoft.Extensions.Logging;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.EventBus
+namespace Stratis.Core.EventBus
 {
     public class InMemoryEventBus : IEventBus
     {

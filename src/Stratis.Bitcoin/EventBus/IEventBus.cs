@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Stratis.Bitcoin.EventBus
+namespace Stratis.Core.EventBus
 {
     /// <summary>
     /// Event Bus interface

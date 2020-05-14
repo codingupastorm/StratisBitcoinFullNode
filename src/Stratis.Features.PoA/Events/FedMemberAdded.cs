@@ -1,5 +1,5 @@
 ﻿using NBitcoin.PoA;
-using Stratis.Bitcoin.EventBus;
+using Stratis.Core.EventBus;
 
 namespace Stratis.Features.PoA.Events
 {

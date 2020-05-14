@@ -1,4 +1,4 @@
-﻿namespace Stratis.Bitcoin.EventBus
+﻿namespace Stratis.Core.EventBus
 {
     public interface ISubscription
     {

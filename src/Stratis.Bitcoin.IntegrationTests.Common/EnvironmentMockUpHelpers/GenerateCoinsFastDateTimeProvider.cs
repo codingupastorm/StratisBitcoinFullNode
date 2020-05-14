@@ -1,6 +1,6 @@
 ﻿using System;
-using Stratis.Bitcoin.EventBus;
-using Stratis.Bitcoin.EventBus.CoreEvents;
+using Stratis.Core.EventBus;
+using Stratis.Core.EventBus.CoreEvents;
 using Stratis.Bitcoin.Signals;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
