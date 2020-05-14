@@ -131,6 +131,7 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.SmartContracts.Tools.Sct", "Stratis.SmartContracts.Tools.Sct\Stratis.SmartContracts.Tools.Sct.csproj", "{4F0D058E-53EB-4DC0-88BB-296C0A130C01}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Stratis.SmartContracts.Tools.Sct.Tests", "Stratis.SmartContracts.Tools.Sct.Tests\Stratis.SmartContracts.Tools.Sct.Tests.csproj", "{C3B2CC8B-E90F-4C7B-8224-F0558D0C1FF5}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CertificateAuthority.Tests.Common", "CertificateAuthority.Tests.Common\CertificateAuthority.Tests.Common.csproj", "{7A1A920F-88C7-4087-90FA-CE3E086A2ED2}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MembershipServices", "MembershipServices\MembershipServices.csproj", "{9B1F8480-67BF-4192-928A-AAB90A477E81}"
