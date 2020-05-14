@@ -41,7 +41,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient((IWebHostBuilder)server);
+                var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
                 // Create and start the main "infra" tokenless node which will internally start the "system channel node".
@@ -81,7 +81,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient((IWebHostBuilder)server);
+                var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
 
                 // Create and start the parent node.
@@ -131,7 +131,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient((IWebHostBuilder)server);
+                var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
 
                 // Create and start the parent node.
@@ -205,7 +205,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient((IWebHostBuilder)server);
+                var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
                 // Create and start the main "infra" tokenless node which will internally start the "system channel node".

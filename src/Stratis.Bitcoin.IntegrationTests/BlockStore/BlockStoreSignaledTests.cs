@@ -94,7 +94,7 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient((IWebHostBuilder)server);
+                var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
