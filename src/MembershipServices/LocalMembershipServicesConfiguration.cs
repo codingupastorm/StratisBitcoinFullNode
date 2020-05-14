@@ -178,22 +178,25 @@ namespace MembershipServices
             return this.revokedCertificateThumbprints.Contains(thumbprint);
         }
 
-        public void InitializeFolderStructure()
+        public static void InitializeFolderStructure(string rootDir)
         {
-            Directory.CreateDirectory(this.baseDir);
-            Directory.CreateDirectory(Path.Combine(this.baseDir, AdminCerts));
-            Directory.CreateDirectory(Path.Combine(this.baseDir, CaCerts));
-            Directory.CreateDirectory(Path.Combine(this.baseDir, IntermediateCerts));
+            Directory.CreateDirectory(rootDir);
 
-            Directory.CreateDirectory(Path.Combine(this.baseDir, Crls));
+            Directory.CreateDirectory(Path.Combine(rootDir, AdminCerts));
+            Directory.CreateDirectory(Path.Combine(rootDir, CaCerts));
+            Directory.CreateDirectory(Path.Combine(rootDir, IntermediateCerts));
+            Directory.CreateDirectory(Path.Combine(rootDir, Crls));
+            Directory.CreateDirectory(Path.Combine(rootDir, Keystore));
+            Directory.CreateDirectory(Path.Combine(rootDir, SignCerts));
+            Directory.CreateDirectory(Path.Combine(rootDir, PeerCerts));
+        }
 
+        public void InitializeExistingCertificates()
+        {
             foreach (string fileName in Directory.GetFiles(Path.Combine(this.baseDir, Crls)))
             {
                 this.revokedCertificateThumbprints.Add(Path.GetFileName(fileName));
             }
-
-            Directory.CreateDirectory(Path.Combine(this.baseDir, Keystore));
-            Directory.CreateDirectory(Path.Combine(this.baseDir, SignCerts));
 
             // There will probably only be one certificate in this folder, but nevertheless, load it into the lookups.
             foreach (string fileName in Directory.GetFiles(Path.Combine(this.baseDir, SignCerts)))
@@ -215,8 +218,6 @@ namespace MembershipServices
                     // TODO: Log potentially corrupted certificate files in the signcerts folder
                 }
             }
-
-            Directory.CreateDirectory(Path.Combine(this.baseDir, PeerCerts));
 
             foreach (string fileName in Directory.GetFiles(Path.Combine(this.baseDir, PeerCerts)))
             {

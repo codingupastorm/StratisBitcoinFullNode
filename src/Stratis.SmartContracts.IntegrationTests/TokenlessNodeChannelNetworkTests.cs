@@ -217,7 +217,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Create second system node.
                 CoreNode infraNode2 = nodeBuilder.CreateInfraNode(network, 1, server, caBaseAddress: this.caBaseAddress);
-                TokenlessTestHelper.AddCertificatesToMembershipServices(new List<X509Certificate>() { infraNode2.ClientCertificate.ToCertificate() }, Path.Combine(infraNode2.DataFolder, network.RootFolderName, network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(new List<X509Certificate>() { infraNode2.ClientCertificate.ToCertificate() }, infraNode2.DataFolder, network);
                 infraNode2.Start();
 
                 // Connect the existing node to it.
