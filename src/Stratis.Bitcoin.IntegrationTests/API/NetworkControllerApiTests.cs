@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Flurl;
 using Flurl.Http;
 using Stratis.Core.Connection;
-using Stratis.Bitcoin.Controllers.Models;
+using Stratis.Core.Controllers.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Networks;

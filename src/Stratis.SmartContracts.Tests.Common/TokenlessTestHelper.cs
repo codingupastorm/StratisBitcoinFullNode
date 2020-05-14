@@ -9,6 +9,7 @@ using CertificateAuthority.Models;
 using CertificateAuthority.Tests.Common;
 using MembershipServices;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.IntegrationTests.Common;
@@ -99,20 +100,20 @@ namespace Stratis.SmartContracts.Tests.Common
         /// <summary>
         /// Used to instantiate a CA client with the admin's credentials. If multiple nodes need to interact with the CA in a test, they will need their own accounts & clients created.
         /// </summary>
-        public static CaClient GetAdminClient()
+        public static CaClient GetAdminClient(string baseAddress = null)
         {
             var httpClient = new HttpClient();
-            return new CaClient(new Uri(CaTestHelper.BaseAddress), httpClient, Settings.AdminAccountId, CaTestHelper.AdminPassword);
+            return new CaClient(new Uri(baseAddress ?? CaTestHelper.BaseAddress), httpClient, Settings.AdminAccountId, CaTestHelper.AdminPassword);
         }
 
         /// <summary>
         /// Creates a new account against the supplied running CA from scratch, and returns the client for it.
         /// </summary>
-        public static CaClient GetClientAndCreateAccount(IWebHost server, List<string> requestedPermissions = null, string organisation = null)
+        public static CaClient GetClientAndCreateAccount(IWebHost server, List<string> requestedPermissions = null, string organisation = null, string caBaseAddress = null)
         {
             var httpClient = new HttpClient();
             CredentialsModel credentials = CaTestHelper.CreateAccount(server, AccountAccessFlags.AdminAccess, permissions: requestedPermissions, organisation: organisation);
-            return new CaClient(new Uri(CaTestHelper.BaseAddress), httpClient, credentials.AccountId, credentials.Password);
+            return new CaClient(new Uri(caBaseAddress ?? CaTestHelper.BaseAddress), httpClient, credentials.AccountId, credentials.Password);
         }
 
         /// <summary>
@@ -143,15 +144,15 @@ namespace Stratis.SmartContracts.Tests.Common
             caCertificatesManager.RevokeCertificate(model);
         }
 
-        public static void AddCertificatesToMembershipServices(ICollection<X509Certificate> certificates, string dataDir)
+        public static void AddCertificatesToMembershipServices(ICollection<X509Certificate> certificates, string dataDir, Network network)
         {
             // TODO: A more elegant way to do this would be some kind of certificate registry in the test environment. But this approach does at least let us easily control which certificates are known to each node.
 
-            Directory.CreateDirectory(Path.Combine(dataDir, LocalMembershipServicesConfiguration.PeerCerts));
+            Directory.CreateDirectory(Path.Combine(dataDir, network.RootFolderName, network.Name, LocalMembershipServicesConfiguration.PeerCerts));
 
             foreach (X509Certificate certificate in certificates)
             {
-                string certificatePath = Path.Combine(dataDir, LocalMembershipServicesConfiguration.PeerCerts, MembershipServicesDirectory.GetCertificateThumbprint(certificate));
+                string certificatePath = Path.Combine(dataDir, network.RootFolderName, network.Name, LocalMembershipServicesConfiguration.PeerCerts, MembershipServicesDirectory.GetCertificateThumbprint(certificate));
                 File.WriteAllBytes(certificatePath, certificate.GetEncoded());
             }
         }

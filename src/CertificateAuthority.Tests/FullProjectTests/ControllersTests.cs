@@ -28,6 +28,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
         private AccountsController accountsController;
         private readonly CredentialsModel adminCredentials;
         private CertificatesController certificatesController;
+        private HelpersController helpersController;
         private DataCacheLayer dataCacheLayer;
         private TestServer server;
 
@@ -54,6 +55,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             this.accountsController = (AccountsController)this.server.Host.Services.GetService(typeof(AccountsController));
             this.certificatesController = (CertificatesController)this.server.Host.Services.GetService(typeof(CertificatesController));
+            this.helpersController = (HelpersController)this.server.Host.Services.GetService(typeof(HelpersController));
             this.dataCacheLayer = (DataCacheLayer)this.server.Host.Services.GetService(typeof(DataCacheLayer));
 
             CaTestHelper.InitializeCa(this.server);
@@ -76,6 +78,28 @@ namespace CertificateAuthority.Tests.FullProjectTests
             AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates | AccountAccessFlags.RevokeCertificates | AccountAccessFlags.AccessAnyCertificate;
 
             return CaTestHelper.CreateAccount(this.server.Host, credentials1Access);
+        }
+
+        [Fact]
+        public void TestSha256()
+        {
+            CreateServer();
+
+            string result = CaTestHelper.GetValue<string>(this.helpersController.GetSha256("test"));
+
+            Assert.False(string.IsNullOrWhiteSpace(result));
+        }
+
+        [Fact]
+        public void TestGetAllAccessLevels()
+        {
+            CreateServer();
+
+            CredentialsModel credentials1 = this.GetPrivilegedAccount();
+
+            Dictionary<string, string> result = CaTestHelper.GetValue<Dictionary<string, string>>(this.helpersController.GetAllAccessLevels(credentials1));
+
+            Assert.True(result.Count == DataHelper.AllAccessFlags.Count);
         }
 
         [Fact]
