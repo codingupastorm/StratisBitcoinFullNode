@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Stratis.Bitcoin.Controllers.Models
+namespace Stratis.Core.Controllers.Models
 {
     /// <summary>
     /// A class containing the necessary parameters for a block search request.

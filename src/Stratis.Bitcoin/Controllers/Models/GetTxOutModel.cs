@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.JsonConverters;
 
-namespace Stratis.Bitcoin.Controllers.Models
+namespace Stratis.Core.Controllers.Models
 {
     /// <summary>
     /// A model returned by a gettxout request

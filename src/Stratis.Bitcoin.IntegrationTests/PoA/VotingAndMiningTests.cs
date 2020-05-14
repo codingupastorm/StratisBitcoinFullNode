@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using NBitcoin;
 using NBitcoin.Crypto;
-using Stratis.Bitcoin.Controllers.Models;
+using Stratis.Core.Controllers.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;

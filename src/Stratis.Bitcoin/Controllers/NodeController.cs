@@ -11,23 +11,24 @@ using NLog;
 using NLog.Config;
 using NLog.Targets;
 using NLog.Targets.Wrappers;
+using Stratis.Bitcoin;
+using Stratis.Bitcoin.Interfaces;
+using Stratis.Bitcoin.P2P;
+using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Core.AsyncWork;
 using Stratis.Core.Base;
 using Stratis.Core.Builder.Feature;
 using Stratis.Core.Configuration;
 using Stratis.Core.Connection;
 using Stratis.Core.Consensus;
-using Stratis.Bitcoin.Controllers.Models;
-using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.P2P;
-using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Controllers.Models;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.JsonErrors;
 using Stratis.Core.Utilities.ModelStateErrors;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 using LogLevel = NLog.LogLevel;
 
-namespace Stratis.Bitcoin.Controllers
+namespace Stratis.Core.Controllers
 {
     /// <summary>
     /// Provides methods that interact with the full node.

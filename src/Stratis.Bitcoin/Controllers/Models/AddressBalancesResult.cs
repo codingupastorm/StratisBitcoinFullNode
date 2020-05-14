@@ -4,7 +4,7 @@ using NBitcoin;
 using Newtonsoft.Json;
 using Stratis.Core.Utilities.JsonConverters;
 
-namespace Stratis.Bitcoin.Controllers.Models
+namespace Stratis.Core.Controllers.Models
 {
     /// <summary>
     ///  A class that contains a list of balances per address as requested.
