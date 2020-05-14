@@ -20,8 +20,10 @@ namespace Stratis.Feature.PoA.Tokenless
     /// </summary>
     public sealed class ChannelUpdateExecutor : IChannelUpdateExecutor
     {
+        private readonly 
         private readonly ChannelSettings channelSettings;
         private readonly IChannelService channelService;
+        private readonly IChannelRepository channelRepository;
         private readonly IChannelRequestSerializer channelRequestSerializer;
         private readonly ILogger<ChannelUpdateExecutor> logger;
         private readonly ISignals signals;
@@ -32,11 +34,13 @@ namespace Stratis.Feature.PoA.Tokenless
             ChannelSettings channelSettings,
             ILoggerFactory loggerFactory,
             IChannelService channelService,
+            IChannelRepository channelRepository,
             IChannelRequestSerializer channelRequestSerializer,
             ISignals signals)
         {
             this.channelSettings = channelSettings;
             this.channelService = channelService;
+            this.channelRepository = channelRepository;
             this.channelRequestSerializer = channelRequestSerializer;
             this.signals = signals;
             this.logger = loggerFactory.CreateLogger<ChannelUpdateExecutor>();
@@ -44,6 +48,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         public void Initialize()
         {
+            // TODO: Do Disconnected too
             this.blockConnectedSubscription = this.signals.Subscribe<BlockConnected>(this.OnBlockConnected);
         }
 
@@ -74,6 +79,7 @@ namespace Stratis.Feature.PoA.Tokenless
                     this.logger.LogDebug("Transaction '{0}' contains a request to update channel '{1}'.", transaction.GetHash(), request.Name);
 
                     // Get channel membership
+                    var channelDef = this.channelRepository.GetChannelDefinition()
 
                     // Remove any members from the Remove pile
 
