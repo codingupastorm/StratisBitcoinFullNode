@@ -24,7 +24,7 @@ namespace MembershipServices
         public const string ClientCertificateName = "ClientCertificate.pfx";
 
         /// <summary>The password used to decrypt the PKCS#12 (.pfx) file containing the client certificate and private key.</summary>
-        public const string ClientCertificateConfigurationKey = "certificatepassword";
+        public const string ClientCertificateConfigurationKey = "password";
 
         /// <summary>The account ID ('username') used by the node to query the CA.</summary>
         public const string CaAccountIdKey = "caaccountid";
