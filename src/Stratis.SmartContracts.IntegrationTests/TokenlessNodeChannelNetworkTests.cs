@@ -24,7 +24,7 @@ using Xunit;
 
 namespace Stratis.SmartContracts.IntegrationTests
 {
-    public sealed class TokenlessNodeChannelNetworkTests : CaTester
+    public sealed class TokenlessNodeChannelNetworkTests
     {
         [Fact]
         public void InfraNodeCanCreateAndStartSystemChannelNode()
@@ -33,7 +33,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
             Process channelNodeProcess = null;
 
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder, this.caBaseAddress).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 var network = new TokenlessNetwork();
@@ -41,11 +41,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient(this.caBaseAddress);
+                var client = TokenlessTestHelper.GetAdminClient((IWebHostBuilder)server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
                 // Create and start the main "infra" tokenless node which will internally start the "system channel node".
-                CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, server, caBaseAddress: this.caBaseAddress);
+                CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, server);
                 infraNode.Start();
 
                 var channelService = infraNode.FullNode.NodeService<IChannelService>();
@@ -73,7 +73,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
             var processes = new List<Process>();
 
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder, this.caBaseAddress).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 var tokenlessNetwork = new TokenlessNetwork();
@@ -81,11 +81,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient(this.caBaseAddress);
+                var client = TokenlessTestHelper.GetAdminClient((IWebHostBuilder)server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
 
                 // Create and start the parent node.
-                CoreNode parentNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server, caBaseAddress: this.caBaseAddress);
+                CoreNode parentNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server);
                 parentNode.Start();
 
                 // Create 5 channels for the identity to be apart of.
@@ -123,7 +123,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder, this.caBaseAddress).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 var tokenlessNetwork = new TokenlessNetwork();
@@ -131,11 +131,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient(this.caBaseAddress);
+                var client = TokenlessTestHelper.GetAdminClient((IWebHostBuilder)server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
 
                 // Create and start the parent node.
-                CoreNode parentNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server, caBaseAddress: this.caBaseAddress);
+                CoreNode parentNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server);
                 parentNode.Start();
 
                 string anotherOrg = "AnotherOrganisation";
@@ -152,7 +152,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 parentNode.Restart();
 
                 // Create another node.
-                CoreNode otherNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 1, server, caBaseAddress: this.caBaseAddress);
+                CoreNode otherNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 1, server);
                 otherNode.Start();
 
                 // Get the marketing network's JSON.
@@ -176,7 +176,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Start a node from an allowed organisation and ensure it can join too.
                 // Create another node.
-                CoreNode otherNode2 = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 2, server, organisation: anotherOrg, caBaseAddress: this.caBaseAddress);
+                CoreNode otherNode2 = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 2, server, organisation: anotherOrg);
                 otherNode2.Start();
 
                 var otherNode2Response = $"{(new ApiSettings(otherNode2.FullNode.Settings)).ApiUri}"
@@ -197,7 +197,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder, this.caBaseAddress).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 var network = new TokenlessNetwork();
@@ -205,18 +205,18 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient(this.caBaseAddress);
+                var client = TokenlessTestHelper.GetAdminClient((IWebHostBuilder)server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
                 // Create and start the main "infra" tokenless node which will internally start the "system channel node".
-                CoreNode infraNode1 = nodeBuilder.CreateInfraNode(network, 0, server, caBaseAddress: this.caBaseAddress);
+                CoreNode infraNode1 = nodeBuilder.CreateInfraNode(network, 0, server);
                 infraNode1.Start();
 
                 var channelService = infraNode1.FullNode.NodeService<IChannelService>();
                 Assert.True(channelService.StartedChannelNodes.Count == 1);
 
                 // Create second system node.
-                CoreNode infraNode2 = nodeBuilder.CreateInfraNode(network, 1, server, caBaseAddress: this.caBaseAddress);
+                CoreNode infraNode2 = nodeBuilder.CreateInfraNode(network, 1, server);
                 TokenlessTestHelper.AddCertificatesToMembershipServices(new List<X509Certificate>() { infraNode2.ClientCertificate.ToCertificate() }, infraNode2.DataFolder, network);
                 infraNode2.Start();
 
