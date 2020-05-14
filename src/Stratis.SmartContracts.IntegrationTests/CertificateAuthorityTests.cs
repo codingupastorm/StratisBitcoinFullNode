@@ -42,7 +42,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 DateTime testDate = DateTime.Now.ToUniversalTime().Date;
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Create a node so we have 1 available public key.
@@ -90,7 +90,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
@@ -142,7 +142,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     server.Start();
 
                     // Start + Initialize CA.
-                    client = TokenlessTestHelper.GetAdminClient();
+                    client = TokenlessTestHelper.GetAdminClient(server);
                     Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                     CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
@@ -174,7 +174,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Get Authority Certificate.
