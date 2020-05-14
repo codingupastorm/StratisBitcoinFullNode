@@ -45,6 +45,13 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.blockConnectedSubscription = this.signals.Subscribe<BlockConnected>(this.OnBlockConnected);
         }
 
+        /// <summary>
+        /// We will only ever be subscribing to block connected events as block disconnected events
+        /// will effectively mean deleting a channel, which is not what we want.
+        /// <para>
+        /// Channel deletinon will be handled by a specific channel update executor class.
+        /// </para>
+        /// </summary>
         private void OnBlockConnected(BlockConnected blockConnectedEvent)
         {
             if (!this.channelSettings.IsSystemChannelNode)
