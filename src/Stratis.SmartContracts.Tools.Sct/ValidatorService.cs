@@ -1,11 +1,11 @@
 ﻿using System.Linq;
 using System.Reflection;
 using McMaster.Extensions.CommandLineUtils;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.CLR.Validation;
-using Stratis.SmartContracts.Networks;
 using Stratis.SmartContracts.Tools.Sct.Validation;
 
 namespace Stratis.SmartContracts.Tools.Sct
@@ -29,7 +29,7 @@ namespace Stratis.SmartContracts.Tools.Sct
             Assembly smartContract = Assembly.Load(compilation);
 
             // Network does not matter here as we are only checking the deserialized Types of the params.
-            var serializer = new MethodParameterStringSerializer(new SmartContractsRegTest());
+            var serializer = new MethodParameterStringSerializer(new TokenlessNetwork());
             object[] methodParameters = null;
             if (parameters.Length != 0)
             {
