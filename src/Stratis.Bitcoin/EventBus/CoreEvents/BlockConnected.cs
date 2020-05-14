@@ -1,6 +1,6 @@
 ﻿using Stratis.Bitcoin.Primitives;
 
-namespace Stratis.Bitcoin.EventBus.CoreEvents
+namespace Stratis.Core.EventBus.CoreEvents
 {
     /// <summary>
     /// Event that is executed when a block is connected to a consensus chain.

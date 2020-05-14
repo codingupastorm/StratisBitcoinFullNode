@@ -1,5 +1,5 @@
 ﻿using NBitcoin;
-using Stratis.Bitcoin.EventBus;
+using Stratis.Core.EventBus;
 
 namespace Stratis.Features.MemoryPool
 {

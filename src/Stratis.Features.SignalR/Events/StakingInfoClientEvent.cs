@@ -1,5 +1,5 @@
 using System;
-using Stratis.Bitcoin.EventBus;
+using Stratis.Core.EventBus;
 using Stratis.Bitcoin.Models;
 
 namespace Stratis.Features.SignalR.Events

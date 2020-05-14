@@ -3,8 +3,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.EventBus;
-using Stratis.Bitcoin.EventBus.CoreEvents;
+using Stratis.Core.EventBus;
+using Stratis.Core.EventBus.CoreEvents;
 using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Signals;
 
