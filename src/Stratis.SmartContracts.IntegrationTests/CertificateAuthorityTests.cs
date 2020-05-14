@@ -153,6 +153,9 @@ namespace Stratis.SmartContracts.IntegrationTests
                 {
                     server.Start();
 
+                    // Port may change.
+                    client = TokenlessTestHelper.GetAdminClient(server);
+
                     CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server);
 
                     List<CertificateInfoModel> nodeCerts = client.GetAllCertificates();
