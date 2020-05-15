@@ -59,7 +59,7 @@ namespace MembershipServices.Cli
             [Option("capassword", Required = true, HelpText = "The account password of the user requesting a certificate from the certificate authority.")]
             public string CaPassword { get; set; }
 
-            [Option("password", Required = true, HelpText = "The password for the node's keystore.")]
+            [Option("password", Required = true, HelpText = "The password for the node's keystore and client certificate.")]
             public string Password { get; set; }
 
             /// <summary>
@@ -104,7 +104,7 @@ namespace MembershipServices.Cli
             [Option("capassword", Required = true, HelpText = "The account password of the CA user.")]
             public string CaPassword { get; set; }
 
-            [Option("password", Required = true, HelpText = "The password for the node's keystore.")]
+            [Option("password", Required = true, HelpText = "The password for the node's keystore and client certificate.")]
             public string Password { get; set; }
         }
 
