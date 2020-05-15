@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Interfaces
+namespace Stratis.Core.Interfaces
 {
     /// <summary>
     /// Interface to insert and retrieve <see cref="ProvenBlockHeader"/> items from the database repository.

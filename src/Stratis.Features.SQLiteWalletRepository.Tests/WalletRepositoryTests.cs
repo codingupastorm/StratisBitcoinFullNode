@@ -8,7 +8,7 @@ using NBitcoin;
 using NBitcoin.Protocol;
 using Stratis.Core.Configuration;
 using Stratis.Core.Consensus;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Utilities;
 using Stratis.Features.BlockStore;

@@ -1,7 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using NBitcoin;
 using Stratis.Core.Consensus;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core;
 

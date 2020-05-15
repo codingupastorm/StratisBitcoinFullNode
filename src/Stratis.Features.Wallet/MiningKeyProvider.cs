@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using NBitcoin;
 using Stratis.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 
 namespace Stratis.Features.Wallet
 {

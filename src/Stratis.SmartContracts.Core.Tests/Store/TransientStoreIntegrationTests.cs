@@ -3,7 +3,7 @@ using System.IO;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.SmartContracts.Core.Store;
 using Xunit;

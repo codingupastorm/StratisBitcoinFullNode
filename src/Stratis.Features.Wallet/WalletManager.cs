@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.BuilderExtensions;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;

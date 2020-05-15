@@ -1,7 +1,7 @@
 ﻿using NBitcoin;
 using Stratis.Bitcoin.Primitives;
 
-namespace Stratis.Bitcoin.Interfaces
+namespace Stratis.Core.Interfaces
 {
     public interface IBlockStoreQueue : IBlockStore
     {

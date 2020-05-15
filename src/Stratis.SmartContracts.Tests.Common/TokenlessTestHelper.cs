@@ -9,6 +9,7 @@ using CertificateAuthority.Models;
 using CertificateAuthority.Tests.Common;
 using MembershipServices;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NBitcoin;
 using Org.BouncyCastle.X509;
@@ -100,20 +101,26 @@ namespace Stratis.SmartContracts.Tests.Common
         /// <summary>
         /// Used to instantiate a CA client with the admin's credentials. If multiple nodes need to interact with the CA in a test, they will need their own accounts & clients created.
         /// </summary>
-        public static CaClient GetAdminClient(string baseAddress = null)
+        public static CaClient GetAdminClient(IWebHost server)
         {
+            IServerAddressesFeature serverAddresses = server.ServerFeatures.Get<IServerAddressesFeature>();
+            string caBaseAddress = serverAddresses.Addresses.First();
+
             var httpClient = new HttpClient();
-            return new CaClient(new Uri(baseAddress ?? CaTestHelper.BaseAddress), httpClient, Settings.AdminAccountId, CaTestHelper.AdminPassword);
+            return new CaClient(new Uri(caBaseAddress), httpClient, Settings.AdminAccountId, CaTestHelper.AdminPassword);
         }
 
         /// <summary>
         /// Creates a new account against the supplied running CA from scratch, and returns the client for it.
         /// </summary>
-        public static CaClient GetClientAndCreateAccount(IWebHost server, List<string> requestedPermissions = null, string organisation = null, string caBaseAddress = null)
+        public static CaClient GetClientAndCreateAccount(IWebHost server, List<string> requestedPermissions = null, string organisation = null)
         {
+            IServerAddressesFeature serverAddresses = server.ServerFeatures.Get<IServerAddressesFeature>();
+            string baseAddress = serverAddresses.Addresses.First();
+
             var httpClient = new HttpClient();
             CredentialsModel credentials = CaTestHelper.CreateAccount(server, AccountAccessFlags.AdminAccess, permissions: requestedPermissions, organisation: organisation);
-            return new CaClient(new Uri(caBaseAddress ?? CaTestHelper.BaseAddress), httpClient, credentials.AccountId, credentials.Password);
+            return new CaClient(new Uri(baseAddress), httpClient, credentials.AccountId, credentials.Password);
         }
 
         /// <summary>

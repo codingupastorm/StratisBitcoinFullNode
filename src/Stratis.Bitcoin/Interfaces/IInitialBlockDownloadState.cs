@@ -1,4 +1,4 @@
-﻿namespace Stratis.Bitcoin.Interfaces
+﻿namespace Stratis.Core.Interfaces
 {
     /// <summary>
     /// Provides IBD (Initial Block Download) state.

@@ -8,7 +8,7 @@ using NBitcoin;
 using NBitcoin.DataEncoders;
 using Stratis.Core.Base;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;

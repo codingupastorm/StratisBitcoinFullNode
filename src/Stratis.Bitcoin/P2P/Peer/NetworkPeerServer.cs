@@ -9,7 +9,7 @@ using NBitcoin;
 using NBitcoin.Protocol;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.EventBus.CoreEvents;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.Signals;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;

@@ -1,5 +1,5 @@
 ﻿using NBitcoin;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 
 namespace Stratis.Feature.PoA.Tokenless.KeyStore
 {

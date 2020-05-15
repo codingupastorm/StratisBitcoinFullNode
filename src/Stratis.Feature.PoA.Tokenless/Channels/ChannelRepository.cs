@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels

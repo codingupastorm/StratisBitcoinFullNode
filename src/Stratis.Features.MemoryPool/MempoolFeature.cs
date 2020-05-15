@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Core.Builder;
 using Stratis.Core.Builder.Feature;
 using Stratis.Core.Configuration.Logging;

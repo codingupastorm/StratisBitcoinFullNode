@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;

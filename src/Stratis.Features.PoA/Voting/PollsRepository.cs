@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DBreeze.Utils;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 
 namespace Stratis.Features.PoA.Voting
 {

@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.EventBus;
 using Stratis.Core.EventBus.CoreEvents;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.Signals;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;

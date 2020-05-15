@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Base;
 using Stratis.Core.Consensus;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Core.Utilities;
 using TracerAttributes;

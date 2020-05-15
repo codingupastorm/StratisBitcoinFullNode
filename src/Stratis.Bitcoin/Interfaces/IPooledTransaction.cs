@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using NBitcoin;
 
-namespace Stratis.Bitcoin.Interfaces
+namespace Stratis.Core.Interfaces
 {
     public interface IPooledTransaction
     {

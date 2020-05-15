@@ -1,5 +1,5 @@
 ﻿using System.Text.RegularExpressions;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 
 namespace Stratis.Core.Configuration
 {

@@ -13,7 +13,7 @@ using Stratis.Core.Configuration;
 using Stratis.Core.Connection;
 using Stratis.Core.Controllers;
 using Stratis.Core.Controllers.Models;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Tests.Common;

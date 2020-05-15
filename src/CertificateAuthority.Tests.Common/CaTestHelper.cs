@@ -15,21 +15,9 @@ using Stratis.Feature.PoA.Tokenless.Networks;
 
 namespace CertificateAuthority.Tests.Common
 {
-    public class CaTester
-    {
-        protected int caPort;
-        protected string caBaseAddress => $"http://localhost:{this.caPort}";
-
-        public CaTester()
-        {
-            this.caPort = 5000 + (new Random().Next(1000));
-        }
-    }
-
     public static class CaTestHelper
     {
         public const string AdminPassword = "4815162342";
-        public static string BaseAddress = "http://localhost:5050";
         public const string CaMnemonic = "young shoe immense usual faculty edge habit misery swarm tape viable toddler";
         public const string CaMnemonicPassword = "node";
         public const string TestOrganisation = "dummyOrganization";
@@ -93,9 +81,15 @@ namespace CertificateAuthority.Tests.Common
 
         public static IWebHostBuilder CreateWebHostBuilder(string dataFolderName, string caBaseAddress = null)
         {
+            if (caBaseAddress == null)
+            {
+                int caPort = 5000 + (new Random().Next(1000));
+                caBaseAddress = $"http://localhost:{caPort}";
+            }
+
             // Initialize settings
             var settings = new Settings();
-            settings.Initialize(new string[] { $"-datadir={dataFolderName}", $"-serverurls={caBaseAddress ?? BaseAddress}" });
+            settings.Initialize(new string[] { $"-datadir={dataFolderName}", $"-serverurls={caBaseAddress}" });
 
             // Create the log folder
             string logFolder = Path.Combine(settings.DataDirectory, "Logs");
