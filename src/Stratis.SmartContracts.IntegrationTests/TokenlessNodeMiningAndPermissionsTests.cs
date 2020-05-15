@@ -35,7 +35,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
@@ -62,7 +62,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var caAdminClient = TokenlessTestHelper.GetAdminClient();
+                var caAdminClient = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(caAdminClient.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
@@ -100,7 +100,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
@@ -163,7 +163,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);

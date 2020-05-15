@@ -51,7 +51,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
@@ -120,7 +120,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Proposer
@@ -199,7 +199,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
@@ -298,7 +298,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
