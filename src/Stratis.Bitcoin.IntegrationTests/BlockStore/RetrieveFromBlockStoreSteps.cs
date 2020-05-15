@@ -80,10 +80,6 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
             TestHelper.WaitForNodeToSync(this.node, this.transactionNode);
         }
 
-        private void a_miner_validating_blocks()
-        {
-        }
-
         private void some_real_blocks_with_a_uint256_identifier()
         {
             this.node.MineBlocksAsync(1).GetAwaiter().GetResult();
@@ -186,10 +182,6 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
         {
             this.retrievedTransaction.Should().NotBeNull();
             this.retrievedTransaction.GetHash().Should().Be(this.transaction.GetHash());
-            // TODO?
-            //this.retrievedTransaction.Outputs.Should()
-              //  .Contain(t => t.Value == this.transferAmount.Satoshi
-                //              && t.ScriptPubKey.GetDestinationAddress(this.node.FullNode.Network).ScriptPubKey == this.receiverAddress.ScriptPubKey);
         }
 
         private void the_wrong_transaction_id_should_return_null()
