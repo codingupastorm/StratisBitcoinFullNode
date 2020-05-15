@@ -11,7 +11,7 @@ using Polly;
 using Polly.Retry;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Controllers
+namespace Stratis.Core.Controllers
 {
     public interface IRestApiClientBase
     {

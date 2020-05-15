@@ -48,7 +48,8 @@ namespace Stratis.SmartContracts.Tests.Common
             bool initialRun,
             int? apiPortOverride = null,
             string organisation = null,
-            List<string> permissions = null)
+            List<string> permissions = null,
+            string caBaseAddress = null)
         {
             string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
 
@@ -56,7 +57,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
             var configParameters = new NodeConfigParameters()
             {
-                { "caurl" , CaTestHelper.BaseAddress },
+                { "caurl" , caBaseAddress ?? CaTestHelper.BaseAddress },
                 { "debug" , "1" },
             };
 
@@ -120,7 +121,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
                 node.AuthorityCertificate = this.authorityCertificate;
 
-                CaClient client = TokenlessTestHelper.GetClientAndCreateAccount(server, requestedPermissions: permissions, organisation: organisation);
+                CaClient client = TokenlessTestHelper.GetClientAndCreateAccount(server, requestedPermissions: permissions, organisation: organisation, caBaseAddress: caBaseAddress);
 
                 (X509Certificate x509, CertificateInfoModel CertificateInfo) = IssueCertificate(client, node.ClientCertificatePrivateKey, node.TransactionSigningPrivateKey.PubKey, address, miningKey.PubKey);
 
@@ -144,25 +145,25 @@ namespace Stratis.SmartContracts.Tests.Common
         /// <summary>
         /// This creates a standard (normal) node on the <see cref="TokenlessNetwork"/>.
         /// </summary>
-        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, IWebHost server, string organisation = null, bool initialRun = true, List<string> permissions = null)
+        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, IWebHost server, string organisation = null, bool initialRun = true, List<string> permissions = null, string caBaseAddress = null)
         {
-            return CreateCoreNode(network, nodeIndex, server, "tokenless", false, false, false, initialRun, organisation: organisation, permissions: permissions);
+            return CreateCoreNode(network, nodeIndex, server, "tokenless", false, false, false, initialRun, organisation: organisation, permissions: permissions, caBaseAddress: caBaseAddress);
         }
 
         /// <summary>
         /// This creates a standard (normal) node on the <see cref="TokenlessNetwork"/> that is also apart of other channels.
         /// </summary>
-        public CoreNode CreateTokenlessNodeWithChannels(TokenlessNetwork network, int nodeIndex, IWebHost server, bool initialRun = true, string organisation = null)
+        public CoreNode CreateTokenlessNodeWithChannels(TokenlessNetwork network, int nodeIndex, IWebHost server, bool initialRun = true, string organisation = null, string caBaseAddress = null)
         {
-            return CreateCoreNode(network, nodeIndex, server, "tokenless", false, false, true, initialRun, organisation: organisation);
+            return CreateCoreNode(network, nodeIndex, server, "tokenless", false, false, true, initialRun, organisation: organisation, caBaseAddress: caBaseAddress);
         }
 
         /// <summary>
         /// This creates a "infra" node on the <see cref="TokenlessNetwork"/> which will start a system channel node internally.
         /// </summary>
-        public CoreNode CreateInfraNode(TokenlessNetwork network, int nodeIndex, IWebHost server)
+        public CoreNode CreateInfraNode(TokenlessNetwork network, int nodeIndex, IWebHost server, string caBaseAddress = null)
         {
-            CoreNode node = CreateCoreNode(network, nodeIndex, server, "infra", true, false, true, true, this.lastSystemChannelNodePort);
+            CoreNode node = CreateCoreNode(network, nodeIndex, server, "infra", true, false, true, true, this.lastSystemChannelNodePort, caBaseAddress: caBaseAddress);
             this.lastSystemChannelNodePort += 1;
             return node;
         }

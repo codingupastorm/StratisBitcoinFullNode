@@ -1,11 +1,11 @@
 ﻿using System;
 
-namespace Stratis.Bitcoin.EventBus
+namespace Stratis.Core.EventBus
 {
     /// <summary>
     /// Basic abstract implementation of <see cref="IEvent"/>.
     /// </summary>
-    /// <seealso cref="Stratis.Bitcoin.EventBus.IEvent" />
+    /// <seealso cref="Stratis.Core.EventBus.IEvent" />
     public abstract class EventBase
     {
         /// <inheritdoc />

@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Stratis.Bitcoin;
 using Stratis.Core.AsyncWork;
 
-namespace Stratis.Bitcoin.Controllers
+namespace Stratis.Core.Controllers
 {
     /// <summary>
     /// Controller providing HTML Dashboard

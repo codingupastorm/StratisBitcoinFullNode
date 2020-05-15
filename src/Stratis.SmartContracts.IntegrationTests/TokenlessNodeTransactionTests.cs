@@ -28,11 +28,11 @@ using Xunit;
 
 namespace Stratis.SmartContracts.IntegrationTests
 {
-    public sealed class TokenlessNodeTransactionTests
+    public sealed class TokenlessNodeTransactionTests : CaTester
     {
         private readonly TokenlessNetwork network;
 
-        public TokenlessNodeTransactionTests()
+        public TokenlessNodeTransactionTests() : base()
         {
             this.network = TokenlessTestHelper.Network;
         }
@@ -42,22 +42,22 @@ namespace Stratis.SmartContracts.IntegrationTests
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder, this.caBaseAddress).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(this.caBaseAddress);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server, caBaseAddress: this.caBaseAddress);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server, caBaseAddress: this.caBaseAddress);
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
 
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node1.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node2.DataFolder, this.network);
 
                 node1.Start();
                 node2.Start();
@@ -73,22 +73,22 @@ namespace Stratis.SmartContracts.IntegrationTests
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder, this.caBaseAddress).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(this.caBaseAddress);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
-                CoreNode node1 = nodeBuilder.CreateInfraNode(this.network, 0, server);
-                CoreNode node2 = nodeBuilder.CreateInfraNode(this.network, 1, server);
+                CoreNode node1 = nodeBuilder.CreateInfraNode(this.network, 0, server, caBaseAddress: this.caBaseAddress);
+                CoreNode node2 = nodeBuilder.CreateInfraNode(this.network, 1, server, caBaseAddress: this.caBaseAddress);
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
 
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node1.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node2.DataFolder, this.network);
 
                 node1.Start();
                 node2.Start();
@@ -104,22 +104,22 @@ namespace Stratis.SmartContracts.IntegrationTests
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder, this.caBaseAddress).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(this.caBaseAddress);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server, caBaseAddress: this.caBaseAddress);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server, caBaseAddress: this.caBaseAddress);
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
 
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node1.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node2.DataFolder, this.network);
 
                 node1.Start();
                 node2.Start();
@@ -145,22 +145,22 @@ namespace Stratis.SmartContracts.IntegrationTests
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder, this.caBaseAddress).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(this.caBaseAddress);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server, caBaseAddress: this.caBaseAddress);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server, caBaseAddress: this.caBaseAddress);
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
 
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node1.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node2.DataFolder, this.network);
 
                 node1.Start();
                 node2.Start();
@@ -198,22 +198,22 @@ namespace Stratis.SmartContracts.IntegrationTests
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder, this.caBaseAddress).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(this.caBaseAddress);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server, caBaseAddress: this.caBaseAddress);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server, caBaseAddress: this.caBaseAddress);
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
 
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node1.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node2.DataFolder, this.network);
 
                 node1.Start();
                 node2.Start();
@@ -260,24 +260,24 @@ namespace Stratis.SmartContracts.IntegrationTests
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder, this.caBaseAddress).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(this.caBaseAddress);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server);
-                CoreNode node3 = nodeBuilder.CreateTokenlessNode(this.network, 2, server);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server, caBaseAddress: this.caBaseAddress);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server, caBaseAddress: this.caBaseAddress);
+                CoreNode node3 = nodeBuilder.CreateTokenlessNode(this.network, 2, server, caBaseAddress: this.caBaseAddress);
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate(), node3.ClientCertificate.ToCertificate() };
 
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node3.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node1.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node2.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node3.DataFolder, this.network);
 
                 node1.Start();
                 node2.Start();
@@ -317,22 +317,22 @@ namespace Stratis.SmartContracts.IntegrationTests
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder, this.caBaseAddress).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(this.caBaseAddress);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server, caBaseAddress: this.caBaseAddress);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server, caBaseAddress: this.caBaseAddress);
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
 
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node1.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node2.DataFolder, this.network);
 
                 node1.Start();
                 node2.Start();
@@ -409,22 +409,22 @@ namespace Stratis.SmartContracts.IntegrationTests
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder, this.caBaseAddress).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(this.caBaseAddress);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server, caBaseAddress: this.caBaseAddress);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server, caBaseAddress: this.caBaseAddress);
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
 
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node1.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node2.DataFolder, this.network);
 
                 node1.Start();
                 node2.Start();
@@ -465,11 +465,11 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Last of all, create a 3rd node and check that nobody gets banned.
                 //CaClient client3 = TokenlessTestHelper.GetClientAndCreateAccount(server);
-                CoreNode node3 = nodeBuilder.CreateTokenlessNode(this.network, 2, server);
+                CoreNode node3 = nodeBuilder.CreateTokenlessNode(this.network, 2, server, caBaseAddress: this.caBaseAddress);
 
                 certificates.Add(node3.ClientCertificate.ToCertificate());
 
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node3.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node3.DataFolder, this.network);
 
                 node3.Start();
 
@@ -524,22 +524,22 @@ namespace Stratis.SmartContracts.IntegrationTests
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder, this.caBaseAddress).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
                 // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient();
+                var client = TokenlessTestHelper.GetAdminClient(this.caBaseAddress);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server, caBaseAddress: this.caBaseAddress);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server, caBaseAddress: this.caBaseAddress);
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
 
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node1.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node2.DataFolder, this.network);
 
                 node1.Start();
                 node2.Start();
@@ -613,8 +613,8 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
 
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node1.DataFolder, this.network.RootFolderName, this.network.Name));
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, Path.Combine(node2.DataFolder, this.network.RootFolderName, this.network.Name));
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node1.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node2.DataFolder, this.network);
 
                 node1.Start();
                 node2.Start();

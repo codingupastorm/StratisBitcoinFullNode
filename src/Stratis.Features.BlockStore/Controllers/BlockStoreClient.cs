@@ -1,6 +1,6 @@
 ﻿using System.Net.Http;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Controllers;
+using Stratis.Core.Controllers;
 
 namespace Stratis.Features.BlockStore.Controllers
 {

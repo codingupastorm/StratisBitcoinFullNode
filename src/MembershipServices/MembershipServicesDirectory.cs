@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -109,7 +110,8 @@ namespace MembershipServices
             }
 
             // We attempt to set up the folder structure regardless of whether it has been done already.
-            this.localMembershipServices.InitializeFolderStructure();
+            LocalMembershipServicesConfiguration.InitializeFolderStructure(this.nodeSettings.DataDir);
+            this.localMembershipServices.InitializeExistingCertificates();
 
             bool revoked = this.IsCertificateRevoked(CaCertificatesManager.GetThumbprint(this.ClientCertificate));
 

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.PoA;
-using Stratis.Bitcoin.Controllers.Models;
+using Stratis.Core.Controllers.Models;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.JsonErrors;
 using Stratis.Core.Utilities.ModelStateErrors;

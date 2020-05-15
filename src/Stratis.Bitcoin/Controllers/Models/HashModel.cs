@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Stratis.Bitcoin.Controllers.Models
+namespace Stratis.Core.Controllers.Models
 {
     /// <summary>
     /// A class containing the necessary parameters for a wallet resynchronization request

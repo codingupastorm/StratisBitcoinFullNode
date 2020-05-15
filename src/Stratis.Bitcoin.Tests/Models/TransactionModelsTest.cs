@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Stratis.Bitcoin.Controllers.Models;
+using Stratis.Core.Controllers.Models;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 

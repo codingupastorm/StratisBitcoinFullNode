@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Stratis.Bitcoin.EventBus;
+using Stratis.Core.EventBus;
 using Stratis.Features.Wallet.Models;
 
 namespace Stratis.Features.SignalR.Events

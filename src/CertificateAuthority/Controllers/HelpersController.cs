@@ -44,7 +44,7 @@ namespace CertificateAuthority.Controllers
         /// <param name="model">Your Id and password. <see cref="AccountAccessFlags.BasicAccess"/> access level is required.</param>
         /// <response code="201">Dictionary with access flag as key and access string as value.</response>
         [HttpPost("get_all_access_level_values")]
-        [ProducesResponseType(typeof(Dictionary<int, string>), 200)]
+        [ProducesResponseType(typeof(Dictionary<string, string>), 200)]
         public IActionResult GetAllAccessLevels(CredentialsModel model)
         {
             this.LogEntry(model);
@@ -55,10 +55,10 @@ namespace CertificateAuthority.Controllers
             {
                 this.cache.VerifyCredentialsAndAccessLevel(accessModelInfo, out AccountModel _);
 
-                Dictionary<int, string> accesses = new Dictionary<int, string>();
+                var accesses = new Dictionary<string, string>();
 
                 foreach (AccountAccessFlags flag in DataHelper.AllAccessFlags)
-                    accesses.Add((int)flag, flag.ToString());
+                    accesses.Add(((int)flag).ToString(), flag.ToString());
 
                 return this.Json(this.LogExit(accesses));
             }
