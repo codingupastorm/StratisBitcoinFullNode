@@ -1,11 +1,11 @@
-﻿using System;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Stratis.Bitcoin.Signals;
 using Stratis.Core.EventBus;
 using Stratis.Core.EventBus.CoreEvents;
-using Stratis.Bitcoin.Signals;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
+using Stratis.Feature.PoA.Tokenless.Networks;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -19,13 +19,13 @@ namespace Stratis.Feature.PoA.Tokenless
     /// </summary>
     public sealed class ChannelUpdateExecutor : IChannelUpdateExecutor
     {
-        private readonly 
         private readonly ChannelSettings channelSettings;
         private readonly IChannelService channelService;
         private readonly IChannelRepository channelRepository;
         private readonly IChannelRequestSerializer channelRequestSerializer;
         private readonly ILogger<ChannelUpdateExecutor> logger;
         private readonly ISignals signals;
+        private readonly Network network;
 
         private SubscriptionToken blockConnectedSubscription;
 
@@ -35,7 +35,8 @@ namespace Stratis.Feature.PoA.Tokenless
             IChannelService channelService,
             IChannelRepository channelRepository,
             IChannelRequestSerializer channelRequestSerializer,
-            ISignals signals)
+            ISignals signals,
+            Network network)
         {
             this.channelSettings = channelSettings;
             this.channelService = channelService;
@@ -43,6 +44,7 @@ namespace Stratis.Feature.PoA.Tokenless
             this.channelRequestSerializer = channelRequestSerializer;
             this.signals = signals;
             this.logger = loggerFactory.CreateLogger<ChannelUpdateExecutor>();
+            this.network = network;
         }
 
         public void Initialize()
@@ -77,15 +79,36 @@ namespace Stratis.Feature.PoA.Tokenless
                     this.logger.LogDebug("Transaction '{0}' contains a request to update channel '{1}'.", transaction.GetHash(), request.Name);
 
                     // Get channel membership
-                    var channelDef = this.channelRepository.GetChannelDefinition()
+                    ChannelDefinition channelDef = this.channelRepository.GetChannelDefinition((this.network as ChannelNetwork).Name);
 
                     // Remove any members from the Remove pile
+                    foreach (var orgToRemove in request.MembersToRemove.Organisations)
+                    {
+                        channelDef.AccessList.Organisations.Remove(orgToRemove);
+                    }
 
-                    // Add any members from the Add pile
+                    foreach (var member in request.MembersToRemove.Thumbprints)
+                    {
+                        channelDef.AccessList.Thumbprints.Remove(member);
+                    }
 
-                    // Save channel membership
+                    // Add those from the Add pile
+                    foreach (var orgToAdd in request.MembersToAdd.Organisations)
+                    {
+                        // Could use another data structure?
+                        if (!channelDef.AccessList.Organisations.Contains(orgToAdd))
+                        {
+                            channelDef.AccessList.Organisations.Add(orgToAdd);
+                        }
+                    }
 
-                    throw new NotImplementedException("See comments above.");
+                    foreach (var member in request.MembersToAdd.Thumbprints)
+                    {
+                        if (!channelDef.AccessList.Thumbprints.Contains(member))
+                        {
+                            channelDef.AccessList.Thumbprints.Add(member);
+                        }
+                    }
                 }
             }
         }
