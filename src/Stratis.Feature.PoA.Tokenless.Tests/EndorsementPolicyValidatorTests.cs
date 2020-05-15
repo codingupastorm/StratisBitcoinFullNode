@@ -68,17 +68,28 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 .Returns((policy.Organisation, "test address 3"));
 
             // Setup the signature validation state of the endorsements.
-            signatureValidator.Setup(s => s.Validate(validEndorsement, It.IsAny<byte[]>())).Returns(true);
-            signatureValidator.Setup(s => s.Validate(validEndorsement2, It.IsAny<byte[]>())).Returns(true);
-            signatureValidator.Setup(s => s.Validate(dudEndorsement, It.IsAny<byte[]>())).Returns(false);
+            SetupSenders(organisationLookup, dummyCert, policy);
 
             Assert.True(validator.Validate(rws, endorsements));
+
+            // Have to do this again
+            SetupSenders(organisationLookup, dummyCert, policy);
 
             // Try again, with one of the valid signatures removed.
             Assert.False(validator.Validate(rws, new []{ validEndorsement, dudEndorsement }));
 
+            SetupSenders(organisationLookup, dummyCert, policy);
+
             // Try again, with only the valid signatures.
-            Assert.False(validator.Validate(rws, new[] { validEndorsement, validEndorsement2 }));
+            Assert.True(validator.Validate(rws, new[] { validEndorsement, validEndorsement2 }));
+        }
+
+        private static void SetupSenders(Mock<IOrganisationLookup> organisationLookup, X509Certificate dummyCert, EndorsementPolicy policy)
+        {
+            organisationLookup.SetupSequence(o => o.FromCertificate(dummyCert))
+                .Returns((policy.Organisation, "test address"))
+                .Returns((policy.Organisation, "test address 2"))
+                .Returns((policy.Organisation, "test address 3"));
         }
     }
 }
