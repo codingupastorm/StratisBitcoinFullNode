@@ -8,7 +8,7 @@ using Stratis.Features.Consensus.CoinViews;
 using Stratis.Features.Consensus.Interfaces;
 using Stratis.Features.Consensus.ProvenBlockHeaders;
 using Stratis.Features.Consensus.Rules;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 
 namespace Stratis.Features.Consensus
 {

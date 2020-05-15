@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Stratis.Bitcoin.Interfaces
+namespace Stratis.Core.Interfaces
 {
     public interface IKeyValueStoreTrackers
     {

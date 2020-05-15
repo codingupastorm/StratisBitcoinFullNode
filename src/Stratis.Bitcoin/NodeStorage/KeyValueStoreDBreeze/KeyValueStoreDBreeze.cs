@@ -5,7 +5,7 @@ using System.Linq;
 using DBreeze;
 using DBreeze.Utils;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Core.Utilities;
 

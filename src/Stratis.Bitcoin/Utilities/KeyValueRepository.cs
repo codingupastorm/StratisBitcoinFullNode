@@ -2,7 +2,7 @@
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.KeyValueStoreLevelDB;
 using Stratis.Core.Utilities.JsonConverters;
 

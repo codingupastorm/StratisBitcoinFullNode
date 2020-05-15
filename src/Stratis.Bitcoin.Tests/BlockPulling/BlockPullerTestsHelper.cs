@@ -12,7 +12,7 @@ using Stratis.Core.Base;
 using Stratis.Core.BlockPulling;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Logging;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol;

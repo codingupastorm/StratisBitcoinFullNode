@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Interfaces
+namespace Stratis.Core.Interfaces
 {
     /// <summary>
     /// Represents a glue-layer containing the basic methods that all key-value databases should support.

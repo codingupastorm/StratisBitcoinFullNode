@@ -2,7 +2,7 @@
 using NBitcoin;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.Interfaces
+namespace Stratis.Core.Interfaces
 {
     /// <summary>
     /// Cache layer for <see cref="ProvenBlockHeader"/>s.

@@ -2,7 +2,7 @@
 using System.Linq;
 using NBitcoin;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Core.Utilities;
 using Stratis.Features.BlockStore;

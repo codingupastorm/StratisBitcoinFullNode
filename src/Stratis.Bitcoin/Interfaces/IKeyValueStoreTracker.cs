@@ -1,4 +1,4 @@
-﻿namespace Stratis.Bitcoin.Interfaces
+﻿namespace Stratis.Core.Interfaces
 {
     /// <summary>
     /// Enumerates the database events to keep track of.

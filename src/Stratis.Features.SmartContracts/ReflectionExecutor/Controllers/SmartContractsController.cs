@@ -13,7 +13,7 @@ using Newtonsoft.Json;
 using Stratis.Core.Connection;
 using Stratis.Features.SmartContracts.Interfaces;
 using Stratis.Features.SmartContracts.Models;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Core.Utilities.JsonErrors;
 using Stratis.Core.Utilities.ModelStateErrors;
 using Stratis.Features.MemoryPool.Broadcasting;

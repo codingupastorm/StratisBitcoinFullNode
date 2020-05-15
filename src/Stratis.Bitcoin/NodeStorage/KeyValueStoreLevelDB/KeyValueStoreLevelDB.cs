@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using LevelDB;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Core.Utilities;
 
