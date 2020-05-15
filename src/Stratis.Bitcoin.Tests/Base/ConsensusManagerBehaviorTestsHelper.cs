@@ -11,7 +11,7 @@ using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Connection;
 using Stratis.Core.Consensus;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol;

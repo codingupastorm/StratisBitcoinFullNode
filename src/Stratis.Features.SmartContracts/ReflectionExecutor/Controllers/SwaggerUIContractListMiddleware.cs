@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using NBitcoin;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.Core.Receipts;
 using Swashbuckle.AspNetCore.SwaggerUI;

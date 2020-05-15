@@ -17,7 +17,7 @@ using Stratis.Core.Consensus;
 using Stratis.Core.EventBus;
 using Stratis.Core.EventBus.CoreEvents;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;

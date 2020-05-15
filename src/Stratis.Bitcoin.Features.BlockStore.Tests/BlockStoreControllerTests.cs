@@ -7,7 +7,7 @@ using Moq;
 using NBitcoin;
 using Stratis.Core.Base;
 using Stratis.Core.Controllers.Models;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Wallet.Common;
 using Stratis.Core.Utilities.JsonErrors;

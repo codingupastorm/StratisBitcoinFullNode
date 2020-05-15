@@ -5,7 +5,7 @@ using Moq;
 using NBitcoin;
 using Stratis.Core.Base;
 using Stratis.Core.Consensus;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Features.BlockStore;
 using Xunit;

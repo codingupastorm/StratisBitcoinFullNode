@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.Models;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Features.SmartContracts;

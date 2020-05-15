@@ -2,7 +2,7 @@
 using Stratis.Core.Base;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Consensus;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 {

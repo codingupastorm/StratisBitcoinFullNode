@@ -2,7 +2,7 @@
 using System.Linq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 
 namespace Stratis.Features.Wallet.Interfaces
 {

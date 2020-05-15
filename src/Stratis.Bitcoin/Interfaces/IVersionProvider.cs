@@ -1,4 +1,4 @@
-﻿namespace Stratis.Bitcoin.Interfaces
+﻿namespace Stratis.Core.Interfaces
 {
     public interface IVersionProvider
     {

@@ -1,4 +1,4 @@
-﻿namespace Stratis.Bitcoin.Interfaces
+﻿namespace Stratis.Core.Interfaces
 {
     /// <summary>
     /// An interface used to retrieve unspent transactions from a pooled source

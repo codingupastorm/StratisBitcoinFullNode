@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using NBitcoin;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Core.Utilities;
 
 namespace Stratis.SmartContracts.Core.Receipts

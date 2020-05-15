@@ -8,7 +8,7 @@ using Stratis.Features.Consensus.CoinViews;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.Wallet;
 using Stratis.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common
 {

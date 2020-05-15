@@ -9,7 +9,7 @@ using Stratis.Core.Builder;
 using Stratis.Core.Builder.Feature;
 using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Consensus;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Features.SmartContracts.Caching;

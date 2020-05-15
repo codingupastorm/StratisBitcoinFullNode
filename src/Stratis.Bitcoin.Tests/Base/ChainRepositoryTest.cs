@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Base;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.Interfaces;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Interfaces;
 using Stratis.Core.Utilities;
 using Xunit;
 
@@ -34,7 +34,7 @@ namespace Stratis.Bitcoin.Tests.Base
                 repo.SaveAsync(chain).GetAwaiter().GetResult();
             }
 
-            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(Interfaces.KeyValueStoreTransactionMode.Read))
+            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.Read))
             {
                 ChainedHeader tip = null;
                 foreach ((int key, BlockHeader blockHeader) in transaction.SelectAll<int, BlockHeader>("Chain"))
@@ -56,7 +56,7 @@ namespace Stratis.Bitcoin.Tests.Base
 
             var keyValueStore = new ChainRepositoryStore(this.repositorySerializer, new DataFolder(dir), new LoggerFactory(), DateTimeProvider.Default);
 
-            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(Interfaces.KeyValueStoreTransactionMode.ReadWrite))
+            using (IKeyValueStoreTransaction transaction = keyValueStore.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 ChainedHeader toSave = tip;
                 var blocks = new List<ChainedHeader>();

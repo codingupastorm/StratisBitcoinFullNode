@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Base;
 using Stratis.Core.Controllers.Models;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.JsonErrors;
 using Stratis.Core.Utilities.ModelStateErrors;

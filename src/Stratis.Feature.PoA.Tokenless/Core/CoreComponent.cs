@@ -3,7 +3,7 @@ using NBitcoin;
 using Stratis.Core.Base;
 using Stratis.Core.Connection;
 using Stratis.Core.Consensus;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Feature.PoA.Tokenless.Core

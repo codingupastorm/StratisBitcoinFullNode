@@ -4,7 +4,7 @@ using Stratis.Core.Builder;
 using Stratis.Core.Configuration;
 using Stratis.Features.Api;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.Interfaces;
+using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.P2P;
 using Stratis.Features.BlockStore;
 using Stratis.Features.Consensus;
