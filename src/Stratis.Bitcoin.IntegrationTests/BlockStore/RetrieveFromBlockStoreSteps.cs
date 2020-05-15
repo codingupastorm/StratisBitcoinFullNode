@@ -1,14 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using FluentAssertions;
 using NBitcoin;
-using Stratis.Features.Wallet;
-using Stratis.Features.Wallet.Controllers;
-using Stratis.Features.Wallet.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common.TestFramework;
 using Xunit.Abstractions;
 using CertificateAuthority.Tests.Common;
@@ -17,12 +12,15 @@ using Microsoft.AspNetCore.Hosting;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using CertificateAuthority;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
+using Stratis.Bitcoin.Tests.Common;
+using Stratis.Feature.PoA.Tokenless.Controllers;
+using Stratis.Feature.PoA.Tokenless.Controllers.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 {
     public partial class RetrieveFromBlockStoreSpecification : BddSpecification
     {
-        private CaTester caTester = new CaTester();
         private IWebHost server;
         private SmartContractNodeBuilder builder;
         private CoreNode node;
@@ -42,14 +40,14 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
         private uint256 retrievedBlockId;
         private Transaction wontRetrieveBlockId;
         private readonly TokenlessNetwork network = new TokenlessNetwork();
-        private string caBaseAddress => this.caTester.CABaseAddress;
 
         public RetrieveFromBlockStoreSpecification(ITestOutputHelper output) : base(output) {}
 
         protected override void BeforeTest()
         {
-            string testRootFolder = Path.Combine(this.GetType().Name, this.CurrentTest.DisplayName);
-            this.server = CaTestHelper.CreateWebHostBuilder(testRootFolder, this.caBaseAddress).Build();
+            TestBase.GetTestRootFolder(out string testRootFolder, this.CurrentTest.DisplayName);
+
+            this.server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build();
             this.builder = SmartContractNodeBuilder.Create(testRootFolder);
         }
 
@@ -64,19 +62,19 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
             this.server.Start();
 
             // Start + Initialize CA.
-            var client = TokenlessTestHelper.GetAdminClient(this.caBaseAddress);
+            var client = TokenlessTestHelper.GetAdminClient(this.server);
 
             client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network).Should().BeTrue();
         }
 
         private void a_poa_node_running()
         {
-            this.node = this.builder.CreateTokenlessNode(this.network, 1, this.server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }, caBaseAddress: this.caBaseAddress).Start();
+            this.node = this.builder.CreateTokenlessNode(this.network, 1, this.server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
         }
 
         private void a_poa_node_to_transact_with()
         {
-            this.transactionNode = this.builder.CreateTokenlessNode(this.network, 1, this.server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }, caBaseAddress: this.caBaseAddress).Start();
+            this.transactionNode = this.builder.CreateTokenlessNode(this.network, 2, this.server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
 
             TestHelper.Connect(this.transactionNode, this.node);
             TestHelper.WaitForNodeToSync(this.node, this.transactionNode);
@@ -88,7 +86,7 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 
         private void some_real_blocks_with_a_uint256_identifier()
         {
-            this.node.MineBlocksAsync(1);
+            this.node.MineBlocksAsync(1).GetAwaiter().GetResult();
 
             this.blockIds = new List<uint256> { this.node.FullNode.ChainBehaviorState.ConsensusTip.HashBlock };
         }
@@ -122,15 +120,29 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 
         private void a_real_transaction()
         {
-            // TODO: Build the transaction.
+            var tokenlessController = this.node.FullNode.NodeController<TokenlessController>();
 
-            this.node.FullNode.NodeController<WalletController>()
-                .SendTransaction(new SendTransactionRequest(this.transaction.ToHex()));
+            var opReturnModel = new BuildOpReturnTransactionModel()
+            {
+                OpReturnData = "OpReturnData"
+            };
+
+            var opReturnResult = (JsonResult)tokenlessController.BuildOpReturnTransaction(opReturnModel);
+            var opReturnResponse = (TokenlessTransactionModel)opReturnResult.Value;
+
+            tokenlessController.SendTransactionAsync(new SendTransactionModel() { TransactionHex = opReturnResponse.Hex }).GetAwaiter().GetResult();
+
+            this.transaction = this.network.CreateTransaction(opReturnResponse.Hex);
         }
 
         private void the_block_with_the_transaction_is_mined()
         {
-            this.blockWithTransactionId = TestHelper.MineBlocks(this.node, 2).BlockHashes[0];
+            this.node.MineBlocksAsync(1).GetAwaiter().GetResult();
+
+            this.blockWithTransactionId = this.node.FullNode.ChainBehaviorState.ConsensusTip.HashBlock;
+
+            this.node.MineBlocksAsync(1).GetAwaiter().GetResult();
+
             TestHelper.WaitForNodeToSync(this.node, this.transactionNode);
         }
 
