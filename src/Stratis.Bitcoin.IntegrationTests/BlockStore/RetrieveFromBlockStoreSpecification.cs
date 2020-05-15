@@ -11,8 +11,8 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
         [Fact]
         public void CanGetBlockOrNullByIdentifier()
         {
-            Given(a_pow_node_running);
-            And(a_miner_validating_blocks);
+            Given(a_ca_node_running);
+            And(a_poa_node_running);
             And(some_real_blocks_with_a_uint256_identifier);
             And(a_wrong_block_id);
             And(the_node_is_synced);
@@ -26,9 +26,9 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
         [Fact]
         public void CanGetTxOrNullByIdentifier()
         {
-            Given(a_pow_node_running);
-            And(a_pow_node_to_transact_with);
-            And(a_miner_validating_blocks);
+            Given(a_ca_node_running);
+            And(a_poa_node_running);
+            And(a_poa_node_to_transact_with);
             And(some_blocks_creating_reward);
             And(the_nodes_are_synced);
             And(a_real_transaction);
