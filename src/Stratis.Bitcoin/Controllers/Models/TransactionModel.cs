@@ -3,9 +3,9 @@ using System.Linq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
-using Stratis.Bitcoin.Controllers.Converters;
+using Stratis.Core.Controllers.Converters;
 
-namespace Stratis.Bitcoin.Controllers.Models
+namespace Stratis.Core.Controllers.Models
 {
     /// <summary>
     /// A class representing a transaction.

@@ -48,18 +48,25 @@ namespace Stratis.Feature.PoA.Tokenless
                     .AddFeature<TokenlessFeature>()
                     .FeatureServices(services =>
                     {
+                        // Core
+                        services.AddSingleton<ICoreComponent, CoreComponent>();
+
+                        // Channels
                         services.AddSingleton<IChannelService, ChannelService>();
+                        services.AddSingleton<IChannelCreationExecutor, ChannelCreationExecutor>();
                         services.AddSingleton<IChannelUpdateExecutor, ChannelUpdateExecutor>();
                         services.AddSingleton<ChannelSettings>();
                         services.AddSingleton<IChannelAccessValidator, ChannelAccessValidator>();
+
+                        // Mempool
                         services.Replace(ServiceDescriptor.Singleton<ITxMempool, TokenlessMempool>());
                         services.Replace(ServiceDescriptor.Singleton<IMempoolValidator, TokenlessMempoolValidator>());
+
+                        //Mining
                         services.AddSingleton<BlockDefinition, TokenlessBlockDefinition>();
+
                         services.AddSingleton<ITokenlessSigner, TokenlessSigner>();
-                        services.AddSingleton<ICoreComponent, CoreComponent>();
                         services.AddSingleton<ITokenlessBroadcaster, TokenlessBroadcaster>();
-                        services.AddSingleton<IReadWriteSetTransactionSerializer, ReadWriteSetTransactionSerializer>();
-                        services.AddSingleton<IReadWriteSetValidator, ReadWriteSetValidator>();
 
                         // Endorsement. For now everyone gets this. May not be the case in the future.
                         services.AddSingleton<IEndorsementRequestHandler, EndorsementRequestHandler>();
@@ -74,6 +81,8 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<EndorsedContractTransactionValidationRule>(); // Shared logic implementation for mempool/consensus rule.
                         services.AddSingleton<IPrivateDataRetriever, PrivateDataRetriever>();
                         services.AddSingleton<ReadWriteSetPolicyValidator>();
+                        services.AddSingleton<IReadWriteSetTransactionSerializer, ReadWriteSetTransactionSerializer>();
+                        services.AddSingleton<IReadWriteSetValidator, ReadWriteSetValidator>();
 
                         // Private data.
                         services.AddSingleton<ITransientKeyValueStore, TransientKeyValueStore>();

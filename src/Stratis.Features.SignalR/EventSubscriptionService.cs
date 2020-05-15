@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.EventBus;
+using Stratis.Core.EventBus;
 using Stratis.Bitcoin.Signals;
 
 namespace Stratis.Features.SignalR

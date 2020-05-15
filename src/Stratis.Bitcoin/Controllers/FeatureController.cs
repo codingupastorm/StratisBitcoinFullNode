@@ -1,12 +1,13 @@
 ﻿using System;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using Stratis.Bitcoin;
 using Stratis.Core.Base;
 using Stratis.Core.Configuration;
 using Stratis.Core.Connection;
 using Stratis.Core.Consensus;
 
-namespace Stratis.Bitcoin.Controllers
+namespace Stratis.Core.Controllers
 {
     [AttributeUsage(AttributeTargets.Method)]
     public class ActionDescription : Attribute
