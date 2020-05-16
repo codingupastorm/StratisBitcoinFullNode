@@ -97,9 +97,9 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             CredentialsModel credentials1 = this.GetPrivilegedAccount();
 
-            Dictionary<string, string> result = CaTestHelper.GetValue<Dictionary<string, string>>(this.helpersController.GetAllAccessLevels(credentials1));
+            Dictionary<string, string> results = CaTestHelper.GetValue<Dictionary<string, string>>(this.helpersController.GetAllAccessLevels(credentials1));
 
-            Assert.True(result.Count == DataHelper.AllAccessFlags.Count);
+            Assert.True(results.Count == DataHelper.AllAccessFlags.Count);
         }
 
         [Fact]
