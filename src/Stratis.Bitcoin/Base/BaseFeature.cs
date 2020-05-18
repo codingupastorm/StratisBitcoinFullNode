@@ -8,6 +8,13 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Rules;
 using Stratis.Bitcoin;
+using Stratis.Bitcoin.P2P;
+using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Bitcoin.P2P.Protocol.Behaviors;
+using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Bitcoin.Signals;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Base.Deployments;
 using Stratis.Core.BlockPulling;
 using Stratis.Core.Builder;
 using Stratis.Core.Builder.Feature;
@@ -20,13 +27,6 @@ using Stratis.Core.Consensus.Validators;
 using Stratis.Core.Controllers;
 using Stratis.Core.EventBus;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.P2P;
-using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.P2P.Protocol.Behaviors;
-using Stratis.Bitcoin.P2P.Protocol.Payloads;
-using Stratis.Bitcoin.Signals;
-using Stratis.Core.AsyncWork;
-using Stratis.Core.Base.Deployments;
 using Stratis.Core.Utilities;
 
 [assembly: InternalsVisibleTo("Stratis.Bitcoin.Tests")]
@@ -231,7 +231,7 @@ namespace Stratis.Core.Base
 
             this.chainState.ConsensusTip = this.consensusManager.Tip;
 
-            this.nodeStats.RegisterStats(sb => sb.Append(this.asyncProvider.GetStatistics(!this.nodeSettings.Log.DebugArgs.Any())), StatsType.Component, this.GetType().Name, 100);
+            this.nodeStats.RegisterStats(sb => sb.Append(this.asyncProvider.GetStatistics(!this.nodeSettings.LogSettings.DebugArgs.Any())), StatsType.Component, this.GetType().Name, 100);
         }
 
         /// <summary>
@@ -342,8 +342,6 @@ namespace Stratis.Core.Base
 
             this.logger.LogInformation("Disposing finalized block info repository.");
             this.finalizedBlockInfoRepository.Dispose();
-
-            this.logger.LogInformation("Disposing address indexer.");
 
             this.logger.LogInformation("Disposing block store.");
             this.blockStore.Dispose();
