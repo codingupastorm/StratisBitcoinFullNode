@@ -24,6 +24,8 @@ namespace Stratis.Bitcoin.P2P
         /// <summary>Whether IP address of the node is final or can be updated.</summary>
         private bool IsMyExternalAddressFinal { get; set; }
 
+        private readonly ConnectionManagerSettings connectionManagerSettings;
+
         /// <summary>Protects access to <see cref="MyExternalAddress"/>, <see cref="MyExternalAddressPeerScore"/> and <see cref="IsMyExternalAddressFinal"/>.</summary>
         private readonly object lockObject;
 
@@ -36,12 +38,14 @@ namespace Stratis.Bitcoin.P2P
         /// Initializes an instance of the self endpoint tracker.
         /// </summary>
         /// <param name="loggerFactory">Factory for creating loggers.</param>
+        /// <param name="connectionManagerSettings">The settings for the node's connection manager.</param>
         public SelfEndpointTracker(ILoggerFactory loggerFactory, ConnectionManagerSettings connectionManagerSettings)
         {
             this.lockObject = new object();
             this.IsMyExternalAddressFinal = false;
             this.MyExternalAddress = connectionManagerSettings.ExternalEndpoint;
             this.MyExternalPort = connectionManagerSettings.Port;
+            this.connectionManagerSettings = connectionManagerSettings;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
@@ -97,6 +101,11 @@ namespace Stratis.Bitcoin.P2P
                     this.logger.LogDebug("Score for old endpoint '{0}' is <= 0. Updating endpoint to '{1}' and resetting peer score to 1.", this.MyExternalAddress, replacementEndpoint);
                     this.MyExternalAddress = replacementEndpoint;
                     this.MyExternalAddressPeerScore = 1;
+
+                    // It is highly unlikely that the node's own endpoint is in the addnodes collection, but remove it if it has been inadvertently added previously.
+                    // TODO: Should we do this for the case where the external IP is directly specified as well?
+                    this.connectionManagerSettings.RemoveAddNode(ipEndPoint);
+                    this.connectionManagerSettings.RemoveAddNode(replacementEndpoint);
                 }
             }
         }

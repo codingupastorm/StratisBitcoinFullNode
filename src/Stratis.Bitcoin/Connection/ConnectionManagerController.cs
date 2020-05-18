@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Stratis.Bitcoin.P2P;
 using Stratis.Core.Controllers;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Core.Utilities;
@@ -22,12 +23,15 @@ namespace Stratis.Core.Connection
 
         private readonly IPeerBanning peerBanning;
 
+        private readonly ISelfEndpointTracker selfEndpointTracker;
+
         public ConnectionManagerController(IConnectionManager connectionManager,
-            ILoggerFactory loggerFactory, IPeerBanning peerBanning) : base(connectionManager: connectionManager)
+            ILoggerFactory loggerFactory, IPeerBanning peerBanning, ISelfEndpointTracker selfEndpointTracker) : base(connectionManager: connectionManager)
         {
             Guard.NotNull(this.ConnectionManager, nameof(this.ConnectionManager));
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.peerBanning = peerBanning;
+            this.selfEndpointTracker = selfEndpointTracker;
         }
 
         /// <summary>
@@ -43,6 +47,10 @@ namespace Stratis.Core.Connection
         public bool AddNodeRPC(string endpointStr, string command)
         {
             IPEndPoint endpoint = endpointStr.ToIPEndPoint(this.ConnectionManager.Network.DefaultPort);
+
+            if (this.selfEndpointTracker.IsSelf(endpoint))
+                throw new InvalidOperationException($"Can't connect to self ({endpoint}).");
+
             switch (command)
             {
                 case "add":
