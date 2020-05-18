@@ -149,17 +149,17 @@ namespace Stratis.SmartContracts.Tests.Common
         /// <summary>
         /// This creates a standard (normal) node on the <see cref="TokenlessNetwork"/>.
         /// </summary>
-        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, IWebHost server, string organisation = null, bool initialRun = true, List<string> permissions = null)
+        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, IWebHost server, string organisation = null, bool initialRun = true, List<string> permissions = null, string agent = "tokenless")
         {
-            return CreateCoreNode(network, nodeIndex, server, "tokenless", false, false, false, initialRun, organisation: organisation, permissions: permissions);
+            return CreateCoreNode(network, nodeIndex, server, agent, false, false, false, initialRun, organisation: organisation, permissions: permissions);
         }
 
         /// <summary>
         /// This creates a standard (normal) node on the <see cref="TokenlessNetwork"/> that is also apart of other channels.
         /// </summary>
-        public CoreNode CreateTokenlessNodeWithChannels(TokenlessNetwork network, int nodeIndex, IWebHost server, bool initialRun = true, string organisation = null)
+        public CoreNode CreateTokenlessNodeWithChannels(TokenlessNetwork network, int nodeIndex, IWebHost server, bool initialRun = true, string organisation = null, string agent = "tokenless")
         {
-            return CreateCoreNode(network, nodeIndex, server, "tokenless", false, false, true, initialRun, organisation: organisation);
+            return CreateCoreNode(network, nodeIndex, server, agent, false, false, true, initialRun, organisation: organisation);
         }
 
         /// <summary>

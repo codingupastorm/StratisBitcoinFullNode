@@ -14,6 +14,11 @@ using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Utilities.Extensions;
 using Xunit;
+using Stratis.Feature.PoA.Tokenless.Networks;
+using Microsoft.AspNetCore.Hosting;
+using CertificateAuthority.Tests.Common;
+using Stratis.SmartContracts.Tests.Common;
+using CertificateAuthority;
 
 namespace Stratis.Bitcoin.IntegrationTests.Connectivity
 {
@@ -31,15 +36,21 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
         [Fact]
         public void Ensure_Node_DoesNot_ReconnectTo_SameNode()
         {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                var nodeConfig = new NodeConfigParameters
-                {
-                    { "-debug", "1" }
-                };
+            var network = new TokenlessNetwork();
 
-                CoreNode nodeA = builder.CreateStratisPowNode(this.powNetwork, "conn-1-nodeA", configParameters: nodeConfig).Start();
-                CoreNode nodeB = builder.CreateStratisPowNode(this.powNetwork, "conn-1-nodeB", configParameters: nodeConfig).Start();
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                CoreNode nodeA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "conn-1-nodeA").Start();
+                CoreNode nodeB = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "conn-1-nodeB").Start();
 
                 TestHelper.Connect(nodeA, nodeB);
                 TestHelper.ConnectNoCheck(nodeA, nodeB);
