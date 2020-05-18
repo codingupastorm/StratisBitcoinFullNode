@@ -455,6 +455,11 @@ namespace Stratis.Core.Connection
             this.consensusManager.PeerDisconnected(networkPeerId);
         }
 
+        public List<INetworkPeer> FindNodesByIp(IPAddress ipAddress)
+        {
+            return this.connectedPeers.FindByIp(ipAddress);
+        }
+
         public INetworkPeer FindNodeByEndpoint(IPEndPoint ipEndpoint)
         {
             return this.connectedPeers.FindByEndpoint(ipEndpoint);

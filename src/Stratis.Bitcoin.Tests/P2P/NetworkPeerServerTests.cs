@@ -61,6 +61,8 @@ namespace Stratis.Bitcoin.Tests.P2P
             connectionManager.Setup(a => a.FindNodeByEndpoint(It.IsAny<IPEndPoint>()))
                 .Returns(new Mock<INetworkPeer>().Object);
 
+            var selfEndpointTracker = new Mock<ISelfEndpointTracker>();
+
             var networkPeerServer = new NetworkPeerServer(this.Network,
                 endpointAddNode,
                 endpointAddNode,
@@ -72,6 +74,7 @@ namespace Stratis.Bitcoin.Tests.P2P
                 asyncProvider,
                 peerAddressManager.Object,
                 connectionManager.Object,
+                selfEndpointTracker.Object,
                 DateTimeProvider.Default);
 
             // Mimic external client

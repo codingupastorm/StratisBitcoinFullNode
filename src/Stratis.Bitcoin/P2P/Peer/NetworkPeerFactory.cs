@@ -213,7 +213,7 @@ namespace Stratis.Bitcoin.P2P.Peer
             Guard.NotNull(localEndPoint, nameof(localEndPoint));
             Guard.NotNull(externalEndPoint, nameof(externalEndPoint));
 
-            return new NetworkPeerServer(this.network, localEndPoint, externalEndPoint, version, this.loggerFactory, this, this.initialBlockDownloadState, this.connectionManagerSettings, this.asyncProvider, this.peerAddressManager, connectionManager, this.dateTimeProvider);
+            return new NetworkPeerServer(this.network, localEndPoint, externalEndPoint, version, this.loggerFactory, this, this.initialBlockDownloadState, this.connectionManagerSettings, this.asyncProvider, this.peerAddressManager, connectionManager, this.selfEndpointTracker, this.dateTimeProvider);
         }
 
         /// <inheritdoc/>
