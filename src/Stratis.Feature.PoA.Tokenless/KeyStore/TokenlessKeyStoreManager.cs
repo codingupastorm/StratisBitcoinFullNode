@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Configuration;
@@ -74,7 +73,8 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
             if (keyStoreOk && blockSigningKeyFileOk && transactionKeyFileOk)
                 return true;
 
-            this.logger.LogError($"Restart the daemon.");
+            this.logger.LogWarning($"Restart the daemon.");
+
             return false;
         }
 
@@ -164,9 +164,9 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
 
                 this.KeyStore = wallet;
 
-                this.logger.LogError($"The wallet file ({KeyStoreFileName}) has been created.");
-                this.logger.LogError($"Record the mnemonic ({mnemonic}) in a safe place.");
-                this.logger.LogError($"IMPORTANT: You will need the mnemonic to recover the wallet.");
+                this.logger.LogInformation($"The wallet file ({KeyStoreFileName}) has been created.");
+                this.logger.LogInformation($"Record the mnemonic ({mnemonic}) in a safe place.");
+                this.logger.LogInformation($"IMPORTANT: You will need the mnemonic to recover the wallet.");
 
                 // Only stop the node if this node is not a channel node.
                 if (!this.channelSettings.IsChannelNode)
@@ -199,7 +199,7 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
                 var keyTool = new KeyTool(this.keyStoreSettings.RootPath);
                 keyTool.SavePrivateKey(key, KeyType.FederationKey);
 
-                this.logger.LogError($"The key file '{KeyTool.FederationKeyFileName}' has been created.");
+                this.logger.LogInformation($"The key file '{KeyTool.FederationKeyFileName}' has been created.");
 
                 // Only stop the node if this node is not a channel node.
                 if (!this.channelSettings.IsChannelNode)
@@ -228,7 +228,7 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
                 var keyTool = new KeyTool(this.keyStoreSettings.RootPath);
                 keyTool.SavePrivateKey(key, KeyType.TransactionSigningKey);
 
-                this.logger.LogError($"The key file '{KeyTool.TransactionSigningKeyFileName}' has been created.");
+                this.logger.LogInformation($"The key file '{KeyTool.TransactionSigningKeyFileName}' has been created.");
 
                 // Only stop the node if this node is not a channel node.
                 if (!this.channelSettings.IsChannelNode)
@@ -243,7 +243,6 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
             if (string.IsNullOrEmpty(this.keyStoreSettings.Password))
             {
                 this.logger.LogError($"Run this daemon with a -password=<password> argument so that the '{fileName}' file can be created.");
-
                 return false;
             }
 
