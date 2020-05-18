@@ -176,9 +176,9 @@ namespace CertificateAuthority.Database
         public List<AccountModel> GetAllAccounts(CredentialsAccessModel credentialsModel, bool excludeApproved = false)
         {
             if (excludeApproved)
-                return ExecuteQuery(credentialsModel, (dbContext) => dbContext.Accounts.Where(a => !a.Approved).ToList());
+                return ExecuteQuery(credentialsModel, (dbContext) => dbContext.Accounts.Where(a => !a.Approved).Include(a => a.Permissions).ToList());
 
-            return ExecuteQuery(credentialsModel, (dbContext) => dbContext.Accounts.ToList());
+            return ExecuteQuery(credentialsModel, (dbContext) => dbContext.Accounts.Include(a => a.Permissions).ToList());
         }
 
         /// <summary>Creates a new account.</summary>
