@@ -12,6 +12,7 @@ using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
+using Stratis.Core.Connection;
 using Stratis.Core.Utilities;
 using Xunit;
 using Xunit.Abstractions;
@@ -56,6 +57,10 @@ namespace Stratis.Bitcoin.Tests.P2P
             var peerAddressManager = new Mock<IPeerAddressManager>();
             peerAddressManager.Setup(pam => pam.FindPeersByIp(It.IsAny<IPEndPoint>())).Returns(new List<PeerAddress>());
 
+            var connectionManager = new Mock<IConnectionManager>();
+            connectionManager.Setup(a => a.FindNodeByEndpoint(It.IsAny<IPEndPoint>()))
+                .Returns(new Mock<INetworkPeer>().Object);
+
             var networkPeerServer = new NetworkPeerServer(this.Network,
                 endpointAddNode,
                 endpointAddNode,
@@ -66,6 +71,7 @@ namespace Stratis.Bitcoin.Tests.P2P
                 connectionManagerSettings,
                 asyncProvider,
                 peerAddressManager.Object,
+                connectionManager.Object,
                 DateTimeProvider.Default);
 
             // Mimic external client

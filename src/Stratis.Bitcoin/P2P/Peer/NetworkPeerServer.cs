@@ -12,6 +12,7 @@ using Stratis.Core.EventBus.CoreEvents;
 using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.Signals;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Connection;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 
@@ -91,6 +92,8 @@ namespace Stratis.Bitcoin.P2P.Peer
 
         private readonly IPeerAddressManager peerAddressManager;
 
+        private readonly IConnectionManager connectionManager;
+
         private readonly IDateTimeProvider dateTimeProvider;
 
         /// <summary>
@@ -114,6 +117,7 @@ namespace Stratis.Bitcoin.P2P.Peer
             ConnectionManagerSettings connectionManagerSettings,
             IAsyncProvider asyncProvider,
             IPeerAddressManager peerAddressManager,
+            IConnectionManager connectionManager,
             IDateTimeProvider dateTimeProvider)
         {
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName, $"[{localEndPoint}] ");
@@ -123,6 +127,7 @@ namespace Stratis.Bitcoin.P2P.Peer
             this.initialBlockDownloadState = initialBlockDownloadState;
             this.connectionManagerSettings = connectionManagerSettings;
             this.peerAddressManager = peerAddressManager;
+            this.connectionManager = connectionManager;
             this.dateTimeProvider = dateTimeProvider;
 
             this.InboundNetworkPeerConnectionParameters = new NetworkPeerConnectionParameters();
@@ -236,6 +241,10 @@ namespace Stratis.Bitcoin.P2P.Peer
         private (bool successful, string reason) AllowClientConnection(TcpClient tcpClient)
         {
             var clientRemoteEndPoint = tcpClient.Client.RemoteEndPoint as IPEndPoint;
+
+            // TODO: We actually need IP-based searching here, but this will likely break a lot of tests due to them running between nodes on localhost. Need to make a design decision, maybe only fail existing connections for non-loopback and non-self IPs?
+            if (this.connectionManager.FindNodeByEndpoint(clientRemoteEndPoint) != null)
+                return (false, $"Inbound Refused: Peer {clientRemoteEndPoint} is already connected.");
 
             var peers = this.peerAddressManager.FindPeersByIp(clientRemoteEndPoint);
             var bannedPeer = peers.FirstOrDefault(p => p.IsBanned(this.dateTimeProvider.GetUtcNow()));

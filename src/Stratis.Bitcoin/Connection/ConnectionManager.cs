@@ -198,7 +198,7 @@ namespace Stratis.Core.Connection
             foreach (NodeServerEndpoint listen in this.ConnectionSettings.Bind)
             {
                 NetworkPeerConnectionParameters cloneParameters = this.Parameters.Clone();
-                INetworkPeerServer server = this.NetworkPeerFactory.CreateNetworkPeerServer(listen.Endpoint, this.ConnectionSettings.ExternalEndpoint, this.Parameters.Version);
+                INetworkPeerServer server = this.NetworkPeerFactory.CreateNetworkPeerServer(listen.Endpoint, this.ConnectionSettings.ExternalEndpoint, this, this.Parameters.Version);
 
                 this.Servers.Add(server);
                 var cmb = (cloneParameters.TemplateBehaviors.Single(x => x is IConnectionManagerBehavior) as ConnectionManagerBehavior);

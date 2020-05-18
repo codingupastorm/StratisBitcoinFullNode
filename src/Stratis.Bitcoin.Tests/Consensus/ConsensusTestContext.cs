@@ -110,7 +110,7 @@ namespace Stratis.Bitcoin.Tests.Consensus
             this.signals = new Bitcoin.Signals.Signals(this.loggerFactory, null);
             this.asyncProvider = new AsyncProvider(this.loggerFactory, this.signals, this.nodeLifetime);
 
-            // Dont check PoW of a header in this test.
+            // Don't check PoW of a header in this test.
             this.Network.Consensus.ConsensusRules.HeaderValidationRules.RemoveAll(x => x.GetType() == typeof(CheckDifficultyPowRule));
 
             this.ChainedHeaderTree = new ChainedHeaderTree(

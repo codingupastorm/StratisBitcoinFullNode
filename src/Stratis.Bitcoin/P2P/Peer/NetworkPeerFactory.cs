@@ -11,6 +11,7 @@ using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.P2P.Protocol;
 using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Connection;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin.P2P.Peer
@@ -55,9 +56,10 @@ namespace Stratis.Bitcoin.P2P.Peer
         /// </summary>
         /// <param name="localEndPoint">IP address and port to listen on.</param>
         /// <param name="externalEndPoint">IP address and port that the server is reachable from the Internet on.</param>
+        /// <param name="connectionManager">The node's connection manager.</param>
         /// <param name="version">Version of the network protocol that the server should run.</param>
         /// <returns>Newly created network peer server, which is ready to be started.</returns>
-        INetworkPeerServer CreateNetworkPeerServer(IPEndPoint localEndPoint, IPEndPoint externalEndPoint, ProtocolVersion version = ProtocolVersion.PROTOCOL_VERSION);
+        INetworkPeerServer CreateNetworkPeerServer(IPEndPoint localEndPoint, IPEndPoint externalEndPoint, IConnectionManager connectionManager, ProtocolVersion version = ProtocolVersion.PROTOCOL_VERSION);
 
         /// <summary>
         /// Creates a new representation of the network connection using TCP client object.
@@ -206,12 +208,12 @@ namespace Stratis.Bitcoin.P2P.Peer
         }
 
         /// <inheritdoc/>
-        public INetworkPeerServer CreateNetworkPeerServer(IPEndPoint localEndPoint, IPEndPoint externalEndPoint, ProtocolVersion version = ProtocolVersion.PROTOCOL_VERSION)
+        public INetworkPeerServer CreateNetworkPeerServer(IPEndPoint localEndPoint, IPEndPoint externalEndPoint, IConnectionManager connectionManager, ProtocolVersion version = ProtocolVersion.PROTOCOL_VERSION)
         {
             Guard.NotNull(localEndPoint, nameof(localEndPoint));
             Guard.NotNull(externalEndPoint, nameof(externalEndPoint));
 
-            return new NetworkPeerServer(this.network, localEndPoint, externalEndPoint, version, this.loggerFactory, this, this.initialBlockDownloadState, this.connectionManagerSettings, this.asyncProvider, this.peerAddressManager, this.dateTimeProvider);
+            return new NetworkPeerServer(this.network, localEndPoint, externalEndPoint, version, this.loggerFactory, this, this.initialBlockDownloadState, this.connectionManagerSettings, this.asyncProvider, this.peerAddressManager, connectionManager, this.dateTimeProvider);
         }
 
         /// <inheritdoc/>
