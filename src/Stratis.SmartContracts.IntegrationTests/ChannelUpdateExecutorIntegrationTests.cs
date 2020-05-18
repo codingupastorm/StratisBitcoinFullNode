@@ -114,7 +114,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     {
                         dynamic channelNetwork = $"http://localhost:{infraNode.SystemChannelApiPort}/api"
                             .AppendPathSegment("channels/networkjson")
-                            .SetQueryParam("cn", "Sales")
+                            .SetQueryParam("cn", newChannelName)
                             .GetJsonAsync()
                             .GetAwaiter().GetResult();
 
