@@ -6,14 +6,14 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Protocol;
+using Stratis.Core.AsyncWork;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.P2P.Protocol;
-using Stratis.Bitcoin.P2P.Protocol.Payloads;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.P2P.Protocol;
+using Stratis.Core.P2P.Protocol.Payloads;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.P2P.Peer
+namespace Stratis.Core.P2P.Peer
 {
     /// <summary>
     /// Contract for factory for creating P2P network peers.

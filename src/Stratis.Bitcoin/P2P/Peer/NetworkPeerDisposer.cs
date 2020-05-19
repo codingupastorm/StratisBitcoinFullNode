@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Stratis.Core.AsyncWork;
 
-namespace Stratis.Bitcoin.P2P.Peer
+namespace Stratis.Core.P2P.Peer
 {
     /// <summary>Maintains a list of connected peers and ensures their proper disposal.</summary>
     /// <remarks>

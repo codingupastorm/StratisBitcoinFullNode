@@ -9,7 +9,7 @@ using Moq;
 using NBitcoin;
 using Stratis.Core.Connection;
 using Stratis.Core.Models;
-using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Core.P2P.Peer;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Tests.Wallet.Common;

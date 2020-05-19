@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using Stratis.Core.Utilities;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.P2P
+namespace Stratis.Core.P2P
 {
     /// <summary>
     /// Contract for <see cref="PeerSelector"/>.

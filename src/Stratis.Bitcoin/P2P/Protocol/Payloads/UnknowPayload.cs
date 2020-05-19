@@ -1,6 +1,6 @@
 ﻿using NBitcoin;
 
-namespace Stratis.Bitcoin.P2P.Protocol.Payloads
+namespace Stratis.Core.P2P.Protocol.Payloads
 {
     public class UnknowPayload : Payload
     {

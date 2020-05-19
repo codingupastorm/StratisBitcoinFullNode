@@ -1,6 +1,6 @@
 ﻿using System.Linq;
-using Stratis.Bitcoin.P2P;
-using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Core.P2P;
+using Stratis.Core.P2P.Peer;
 
 namespace Stratis.Core.Utilities.Extensions
 {

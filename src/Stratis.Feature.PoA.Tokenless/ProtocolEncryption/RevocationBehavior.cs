@@ -5,9 +5,9 @@ using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.P2P.Protocol;
-using Stratis.Bitcoin.P2P.Protocol.Behaviors;
+using Stratis.Core.P2P.Peer;
+using Stratis.Core.P2P.Protocol;
+using Stratis.Core.P2P.Protocol.Behaviors;
 using TracerAttributes;
 
 namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption

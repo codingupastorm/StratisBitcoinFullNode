@@ -1,9 +1,9 @@
 ﻿using System;
-using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Core.P2P.Peer;
 using Stratis.Core.Utilities;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.P2P.Protocol.Behaviors
+namespace Stratis.Core.P2P.Protocol.Behaviors
 {
     public interface INetworkPeerBehavior : IDisposable
     {

@@ -7,15 +7,15 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Protocol;
+using Stratis.Bitcoin.Signals;
+using Stratis.Core.AsyncWork;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.EventBus.CoreEvents;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.Signals;
-using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 
-namespace Stratis.Bitcoin.P2P.Peer
+namespace Stratis.Core.P2P.Peer
 {
     public interface INetworkPeerServer : IDisposable
     {

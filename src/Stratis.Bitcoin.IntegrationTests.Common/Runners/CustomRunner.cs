@@ -5,7 +5,7 @@ using Stratis.Core.Base;
 using Stratis.Core.Builder;
 using Stratis.Core.Configuration;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.P2P;
+using Stratis.Core.P2P;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.Runners
 {
