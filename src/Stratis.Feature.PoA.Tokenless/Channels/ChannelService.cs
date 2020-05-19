@@ -275,7 +275,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 File.Copy(Path.Combine(this.nodeSettings.DataDir, TokenlessKeyStoreManager.KeyStoreFileName), keyStoreFile);
         }
 
-        private void CreateChannelConfigurationFile(string channelRootFolder, params string[] channelArgs)
+        protected void CreateChannelConfigurationFile(string channelRootFolder, params string[] channelArgs)
         {
             var configurationFilePath = Path.Combine(channelRootFolder, ChannelConfigurationFileName);
 
