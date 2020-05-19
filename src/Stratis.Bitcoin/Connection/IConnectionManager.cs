@@ -4,9 +4,9 @@ using System.Net;
 using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Core.Consensus;
-using Stratis.Bitcoin.P2P;
-using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Core.P2P;
+using Stratis.Core.P2P.Peer;
+using Stratis.Core.P2P.Protocol.Payloads;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Settings;
 

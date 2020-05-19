@@ -2,11 +2,11 @@
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Core.P2P.Peer;
 using Stratis.Core.Utilities;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.P2P.Protocol.Behaviors
+namespace Stratis.Core.P2P.Protocol.Behaviors
 {
     /// <summary>
     /// Sets the minimum supported client version <see cref="this.NodeSettings.MinProtocolVersion"/> to <see cref="this.Network.Consensus.Options.EnforcedMinProtocolVersion"/>

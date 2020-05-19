@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 using Stratis.Core.Utilities.Extensions;
 using Stratis.Core.Utilities.JsonConverters;
 
-namespace Stratis.Bitcoin.P2P
+namespace Stratis.Core.P2P
 {
     /// <summary>
     /// A class which holds data on a peer's (IPEndPoint) attempts, connections and successful handshake events.

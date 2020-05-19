@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 using Stratis.Core.Utilities.ValidationAttributes;
 
-namespace Stratis.Bitcoin.Models
+namespace Stratis.Core.Models
 {
     /// <summary>
     /// A class containing the necessary parameters for a build transaction request.

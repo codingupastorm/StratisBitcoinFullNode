@@ -1,13 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text;
-using Stratis.Bitcoin.Validations;
+using Stratis.Core.Validations;
 
 namespace Stratis.Features.SmartContracts.Models
 {
     /// <summary>
     /// A class containing the necessary parameters to perform a local smart contract method call request.
     /// </summary>
-    public class LocalCallContractRequest 
+    public class LocalCallContractRequest
     {
         /// <summary>
         /// The address of the smart contract containing the method.

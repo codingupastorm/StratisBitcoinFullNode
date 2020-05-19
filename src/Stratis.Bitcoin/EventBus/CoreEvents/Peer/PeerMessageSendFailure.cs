@@ -1,5 +1,5 @@
 ﻿using System.Net;
-using Stratis.Bitcoin.P2P.Protocol;
+using Stratis.Core.P2P.Protocol;
 
 namespace Stratis.Core.EventBus.CoreEvents
 {

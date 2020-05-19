@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Stratis.Core.EventBus;
 
-namespace Stratis.Bitcoin.Signals
+namespace Stratis.Core.Signals
 {
     public interface ISignals : IEventBus
     {

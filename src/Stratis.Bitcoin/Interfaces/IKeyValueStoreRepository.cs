@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using Stratis.Bitcoin.KeyValueStore;
+using Stratis.Core.NodeStorage.KeyValueStore;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Core.Interfaces

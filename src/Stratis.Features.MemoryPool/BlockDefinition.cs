@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Consensus;
 using Stratis.Core.Consensus.Rules;
-using Stratis.Bitcoin.Mining;
+using Stratis.Core.Mining;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 using Stratis.Features.MemoryPool.Interfaces;

@@ -27,7 +27,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
             var mockLoggerFactory = new Mock<ILoggerFactory>();
             mockLoggerFactory.Setup(l => l.CreateLogger(It.IsAny<string>())).Returns(this.mockLogger.Object).Verifiable();
 
-            var signals = new Bitcoin.Signals.Signals(mockLoggerFactory.Object, null);
+            var signals = new Core.Signals.Signals(mockLoggerFactory.Object, null);
             var nodeLifetime = new Mock<INodeLifetime>().Object;
 
             this.asyncProvider = new AsyncProvider(mockLoggerFactory.Object, signals, nodeLifetime);

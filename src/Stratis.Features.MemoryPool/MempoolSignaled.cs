@@ -2,13 +2,13 @@
 using System.Linq;
 using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Core.EventBus;
-using Stratis.Core.EventBus.CoreEvents;
-using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.Primitives;
-using Stratis.Bitcoin.Signals;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Connection;
+using Stratis.Core.EventBus;
+using Stratis.Core.EventBus.CoreEvents;
+using Stratis.Core.P2P.Peer;
+using Stratis.Core.Primitives;
+using Stratis.Core.Signals;
 using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool.Interfaces;
 
@@ -27,16 +27,6 @@ namespace Stratis.Features.MemoryPool
         private readonly ITxMempool memPool;
         private readonly IMempoolValidator validator;
         private readonly MempoolOrphans mempoolOrphans;
-
-        /// <summary>
-        /// Memory pool manager injected dependency.
-        /// </summary>
-        private readonly MempoolManager manager;
-
-        /// <summary>
-        /// Concurrent chain injected dependency.
-        /// </summary>
-        private readonly ChainIndexer chainIndexer;
 
         /// <summary>
         /// Connection manager injected dependency.
@@ -64,8 +54,6 @@ namespace Stratis.Features.MemoryPool
         /// <param name="validator">The mempool validator.</param>
         /// <param name="mempoolOrphans">The mempool orphan list.</param>
         public MempoolSignaled(
-            MempoolManager manager,
-            ChainIndexer chainIndexer,
             IConnectionManager connection,
             INodeLifetime nodeLifetime,
             IAsyncProvider asyncProvider,
@@ -75,8 +63,6 @@ namespace Stratis.Features.MemoryPool
             MempoolOrphans mempoolOrphans,
             ISignals signals)
         {
-            this.manager = manager;
-            this.chainIndexer = chainIndexer;
             this.connection = connection;
             this.nodeLifetime = nodeLifetime;
             this.asyncProvider = asyncProvider;

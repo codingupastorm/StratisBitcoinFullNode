@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Stratis.Bitcoin.Models
+namespace Stratis.Core.Models
 {
     public class RequestModel
     {

@@ -1,8 +1,8 @@
 ﻿using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.P2P.Protocol;
-using Stratis.Bitcoin.P2P.Protocol.Behaviors;
+using Stratis.Core.P2P.Peer;
+using Stratis.Core.P2P.Protocol;
+using Stratis.Core.P2P.Protocol.Behaviors;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.Payloads;
 

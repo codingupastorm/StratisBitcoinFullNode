@@ -7,7 +7,7 @@ using Stratis.Core.Consensus;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Fee;
 using Stratis.Features.MemoryPool.Interfaces;
-using Stratis.Bitcoin.Signals;
+using Stratis.Core.Signals;
 using static Stratis.Features.MemoryPool.TxMempool;
 
 namespace Stratis.Feature.PoA.Tokenless.Mempool

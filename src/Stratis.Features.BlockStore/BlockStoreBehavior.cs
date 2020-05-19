@@ -8,11 +8,11 @@ using Stratis.Core.Base;
 using Stratis.Core.Connection;
 using Stratis.Core.Consensus;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.P2P.Protocol;
-using Stratis.Bitcoin.P2P.Protocol.Behaviors;
-using Stratis.Bitcoin.P2P.Protocol.Payloads;
-using Stratis.Bitcoin.Primitives;
+using Stratis.Core.P2P.Peer;
+using Stratis.Core.P2P.Protocol;
+using Stratis.Core.P2P.Protocol.Behaviors;
+using Stratis.Core.P2P.Protocol.Payloads;
+using Stratis.Core.Primitives;
 using Stratis.Core.Utilities;
 using TracerAttributes;
 

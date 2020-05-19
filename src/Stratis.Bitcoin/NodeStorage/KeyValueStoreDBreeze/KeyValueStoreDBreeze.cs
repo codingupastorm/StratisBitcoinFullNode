@@ -6,10 +6,10 @@ using DBreeze;
 using DBreeze.Utils;
 using Microsoft.Extensions.Logging;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.KeyValueStore;
+using Stratis.Core.NodeStorage.KeyValueStore;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.KeyValueStoreDBreeze
+namespace Stratis.Core.NodeStorage.KeyValueStoreDBreeze
 {
     public class KeyValueStoreDBreeze : IKeyValueStoreRepository
     {

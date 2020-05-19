@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Core.Consensus;
-using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Core.P2P.Peer;
 using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.SmartContracts.Core.ReadWrite;

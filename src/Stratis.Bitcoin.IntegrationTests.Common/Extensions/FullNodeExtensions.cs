@@ -2,13 +2,13 @@
 using System.Linq;
 using System.Reflection;
 using NBitcoin;
+using Stratis.Core;
 using Stratis.Core.Base;
 using Stratis.Core.Consensus;
-using Stratis.Features.Consensus.CoinViews;
+using Stratis.Core.Interfaces;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.Wallet;
 using Stratis.Features.Wallet.Interfaces;
-using Stratis.Core.Interfaces;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common
 {

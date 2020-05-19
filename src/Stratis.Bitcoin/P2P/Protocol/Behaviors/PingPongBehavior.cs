@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Core.P2P.Peer;
+using Stratis.Core.P2P.Protocol.Payloads;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.P2P.Protocol.Behaviors
+namespace Stratis.Core.P2P.Protocol.Behaviors
 {
     [Flags]
     public enum PingPongMode

@@ -1,5 +1,5 @@
 ﻿using NBitcoin;
-using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Core.P2P.Peer;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {

@@ -10,7 +10,7 @@ using Stratis.Core.Connection;
 using Stratis.Core.Consensus;
 using Stratis.Features.Notifications.Controllers;
 using Stratis.Features.Notifications.Interfaces;
-using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Core.P2P.Peer;
 
 [assembly: InternalsVisibleTo("Stratis.Features.Notifications.Tests")]
 

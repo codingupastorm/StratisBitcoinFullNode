@@ -4,7 +4,7 @@ using NBitcoin;
 using NBitcoin.Protocol;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.P2P.Protocol.Payloads
+namespace Stratis.Core.P2P.Protocol.Payloads
 {
     /// <summary>
     /// Block headers received after a getheaders messages.

@@ -1,15 +1,16 @@
 ﻿using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Configuration;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.NodeStorage.KeyValueStoreLevelDB;
 using Stratis.Core.Utilities;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.NodeStorage
 {
-    public class TestKeyValueStore : KeyValueStoreLevelDB.KeyValueStoreLevelDB
+    public class TestKeyValueStore : KeyValueStoreLevelDB
     {
         public TestKeyValueStore(IRepositorySerializer repositorySerializer, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider)
             : base(dataFolder.BlockPath, loggerFactory, repositorySerializer)

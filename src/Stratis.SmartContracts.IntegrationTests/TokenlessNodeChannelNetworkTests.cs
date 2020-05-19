@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using CertificateAuthority.Tests.Common;
 using Flurl;
 using Flurl.Http;
 using Microsoft.AspNetCore.Hosting;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin;
-using Stratis.Core.Controllers.Models;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core;
+using Stratis.Core.Controllers.Models;
 using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
@@ -48,7 +48,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, server);
                 infraNode.Start();
 
-                var channelService = infraNode.FullNode.NodeService<IChannelService>();
+                var channelService = infraNode.FullNode.NodeService<IChannelService>() as ProcessChannelService;
                 Assert.True(channelService.StartedChannelNodes.Count == 1);
 
                 channelNodeProcess = Process.GetProcessById(channelService.StartedChannelNodes.First().Process.Id);
@@ -99,7 +99,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 parentNode.Restart();
 
                 // Ensure that the node started the other daemons, each belonging to their own channel (network).
-                var channelService = parentNode.FullNode.NodeService<IChannelService>();
+                var channelService = parentNode.FullNode.NodeService<IChannelService>() as ProcessChannelService;
                 Assert.True(channelService.StartedChannelNodes.Count == 5);
 
                 foreach (var channel in channelService.StartedChannelNodes)
@@ -171,7 +171,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     })
                     .GetAwaiter().GetResult();
 
-                IChannelService channelService = otherNode.FullNode.NodeService<IChannelService>();
+                var channelService = otherNode.FullNode.NodeService<IChannelService>() as ProcessChannelService;
                 Assert.Single(channelService.StartedChannelNodes);
 
                 // Start a node from an allowed organisation and ensure it can join too.
@@ -187,7 +187,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     })
                     .GetAwaiter().GetResult();
 
-                IChannelService otherNode2ChannelService = otherNode2.FullNode.NodeService<IChannelService>();
+                var otherNode2ChannelService = otherNode2.FullNode.NodeService<IChannelService>() as ProcessChannelService;
                 Assert.Single(otherNode2ChannelService.StartedChannelNodes);
             }
         }
@@ -212,7 +212,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CoreNode infraNode1 = nodeBuilder.CreateInfraNode(network, 0, server);
                 infraNode1.Start();
 
-                var channelService = infraNode1.FullNode.NodeService<IChannelService>();
+                var channelService = infraNode1.FullNode.NodeService<IChannelService>() as ProcessChannelService;
                 Assert.True(channelService.StartedChannelNodes.Count == 1);
 
                 // Create second system node.
@@ -282,6 +282,47 @@ namespace Stratis.SmartContracts.IntegrationTests
                     return false;
 
                 }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(2).TotalMilliseconds);
+            }
+        }
+
+
+        [Fact]
+        public void DebugChannelNodes()
+        {
+            var network = new TokenlessNetwork();
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                // Create a tokenless node
+                var tokenlessNetwork = new TokenlessNetwork();
+
+                server.Start();
+
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
+
+                CoreNode node = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server, debugChannels: true);
+
+                node.Start();
+
+                // Create 5 channels for the identity to be apart of.
+                nodeBuilder.CreateChannel(node, "marketing", 2);
+                nodeBuilder.CreateChannel(node, "sales", 3);
+                nodeBuilder.CreateChannel(node, "legal", 4);
+                nodeBuilder.CreateChannel(node, "it", 5);
+                nodeBuilder.CreateChannel(node, "humanresources", 6);
+
+                // Re-start the parent node as to load and start the channels it belongs to.
+                node.Restart();
+
+                Thread.Sleep(10_000);
+
+                var channelService = node.FullNode.NodeService<IChannelService>() as TestChannelService;
+
+                Assert.Equal(5, channelService.ChannelNodes.Count);
             }
         }
     }

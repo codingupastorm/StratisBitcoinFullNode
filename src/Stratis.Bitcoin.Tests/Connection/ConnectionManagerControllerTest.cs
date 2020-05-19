@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Net;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Stratis.Core.P2P;
 using Stratis.Core.Connection;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
@@ -16,16 +18,19 @@ namespace Stratis.Bitcoin.Tests.Controllers
         private ConnectionManagerController controller;
         private readonly Mock<ILoggerFactory> mockLoggerFactory;
         private readonly Mock<IPeerBanning> peerBanning;
+        private readonly Mock<ISelfEndpointTracker> selfEndpointTracker;
 
         public ConnectionManagerControllerTest()
         {
             this.connectionManager = new Mock<IConnectionManager>();
             this.peerBanning = new Mock<IPeerBanning>();
+            this.selfEndpointTracker = new Mock<ISelfEndpointTracker>();
             this.mockLoggerFactory = new Mock<ILoggerFactory>();
             this.mockLoggerFactory.Setup(i => i.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
             this.connectionManager.Setup(i => i.Network)
                 .Returns(KnownNetworks.StratisTest);
-            this.controller = new ConnectionManagerController(this.connectionManager.Object, this.LoggerFactory.Object, this.peerBanning.Object);
+            this.selfEndpointTracker.Setup(i => i.IsSelf(It.IsAny<IPEndPoint>())).Returns(false);
+            this.controller = new ConnectionManagerController(this.connectionManager.Object, this.LoggerFactory.Object, this.peerBanning.Object, this.selfEndpointTracker.Object);
         }
 
         [Fact]

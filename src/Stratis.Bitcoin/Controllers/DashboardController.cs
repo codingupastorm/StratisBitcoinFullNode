@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Stratis.Bitcoin;
+using Stratis.Core;
 using Stratis.Core.AsyncWork;
 
 namespace Stratis.Core.Controllers

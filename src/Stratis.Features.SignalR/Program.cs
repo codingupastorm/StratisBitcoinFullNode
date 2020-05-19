@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Stratis.Bitcoin;
+using Stratis.Core;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Features.SignalR

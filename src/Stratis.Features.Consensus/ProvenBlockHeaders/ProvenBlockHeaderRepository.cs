@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Configuration;
 using Stratis.Core.Interfaces;
+using Stratis.Core.NodeStorage.KeyValueStoreLevelDB;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Features.Consensus.ProvenBlockHeaders
@@ -14,7 +15,7 @@ namespace Stratis.Features.Consensus.ProvenBlockHeaders
     {
     }
 
-    public class ProvenBlockHeaderKeyValueStore : Bitcoin.KeyValueStoreLevelDB.KeyValueStoreLevelDB, IProvenBlockHeaderKeyValueStore
+    public class ProvenBlockHeaderKeyValueStore : KeyValueStoreLevelDB, IProvenBlockHeaderKeyValueStore
     {
         public ProvenBlockHeaderKeyValueStore(Network network, DataFolder dataFolder, ILoggerFactory loggerFactory, IDateTimeProvider dateTimeProvider, IRepositorySerializer repositorySerializer)
             : base(dataFolder.ProvenBlockHeaderPath, loggerFactory, repositorySerializer)

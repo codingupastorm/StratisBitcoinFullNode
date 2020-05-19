@@ -11,8 +11,8 @@ using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Connection;
 using Stratis.Core.Consensus;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.Signals;
+using Stratis.Core.P2P.Peer;
+using Stratis.Core.Signals;
 using Stratis.Features.Consensus.Behaviors;
 
 [assembly: InternalsVisibleTo("Stratis.Features.Miner.Tests")]

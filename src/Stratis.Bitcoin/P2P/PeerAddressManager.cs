@@ -9,7 +9,7 @@ using Stratis.Core.Configuration;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 
-namespace Stratis.Bitcoin.P2P
+namespace Stratis.Core.P2P
 {
     /// <summary>
     /// This manager keeps a set of peers discovered on the network in cache and on disk.

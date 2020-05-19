@@ -97,9 +97,45 @@ namespace CertificateAuthority.Tests.FullProjectTests
 
             CredentialsModel credentials1 = this.GetPrivilegedAccount();
 
-            Dictionary<string, string> result = CaTestHelper.GetValue<Dictionary<string, string>>(this.helpersController.GetAllAccessLevels(credentials1));
+            Dictionary<string, string> results = CaTestHelper.GetValue<Dictionary<string, string>>(this.helpersController.GetAllAccessLevels(credentials1));
 
-            Assert.True(result.Count == DataHelper.AllAccessFlags.Count);
+            Assert.True(results.Count == DataHelper.AllAccessFlags.Count);
+        }
+
+        [Fact]
+        public void TestGetAccountInfoById()
+        {
+            CreateServer();
+
+            CredentialsModel credentials1 = this.GetPrivilegedAccount();
+
+            var credentials2 = new CredentialsModelWithTargetId() {AccountId = credentials1.AccountId, TargetAccountId = credentials1.AccountId, Password = credentials1.Password};
+
+            AccountModel result = CaTestHelper.GetValue<AccountModel>(this.accountsController.GetAccountInfoById(credentials2));
+
+            Assert.Equal(result.Permissions.Count, CaCertificatesManager.ValidPermissions.Count);
+        }
+
+        [Fact]
+        public void TestListAll()
+        {
+            CreateServer();
+
+            CredentialsModel credentials1 = this.GetPrivilegedAccount();
+
+            var credentials2 = new CredentialsModelWithTargetId() { AccountId = credentials1.AccountId, TargetAccountId = credentials1.AccountId, Password = credentials1.Password };
+
+            List<AccountModel> result = CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.ListAll(credentials2));
+
+            foreach (AccountModel account in result)
+            {
+                // The default admin account has an ID of 1.
+                if (account.Id == this.adminCredentials.AccountId)
+                    continue;
+
+                // All accounts except the admin account should have the full set of valid permissions by default.
+                Assert.Equal(account.Permissions.Count, CaCertificatesManager.ValidPermissions.Count);
+            }
         }
 
         [Fact]

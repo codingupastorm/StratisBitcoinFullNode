@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Stratis.Core.Builder;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin
+namespace Stratis.Core
 {
     /// <summary>
     /// Contract for the full node built by full node builder.
