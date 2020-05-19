@@ -6,14 +6,15 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.PlatformAbstractions;
 using NBitcoin;
+using Stratis.Core.AsyncWork;
 using Stratis.Core.Base;
 using Stratis.Core.Builder;
 using Stratis.Core.Configuration;
 using Stratis.Core.Connection;
 using Stratis.Core.Consensus;
 using Stratis.Core.Interfaces;
-using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin
@@ -129,7 +130,7 @@ namespace Stratis.Bitcoin
             get
             {
                 string versionString = typeof(FullNode).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ??
-                    Microsoft.Extensions.PlatformAbstractions.PlatformServices.Default.Application.ApplicationVersion;
+                    PlatformServices.Default.Application.ApplicationVersion;
 
                 if (!string.IsNullOrEmpty(versionString))
                 {

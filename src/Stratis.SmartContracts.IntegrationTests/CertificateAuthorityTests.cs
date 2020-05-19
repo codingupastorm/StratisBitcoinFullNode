@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.Common;
-using MembershipServices;
 using Microsoft.AspNetCore.Hosting;
 using NBitcoin;
 using Org.BouncyCastle.X509;
