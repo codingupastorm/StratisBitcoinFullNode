@@ -1,60 +1,60 @@
 ﻿using System.IO;
-using CertificateAuthority;
-using CertificateAuthority.Tests.Common;
-using MembershipServices;
+using NBitcoin;
 using Stratis.Bitcoin;
-using Stratis.Core.Base;
-using Stratis.Core.Builder;
-using Stratis.Core.Configuration;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.P2P;
+using Stratis.Core.Base;
+using Stratis.Core.Builder;
+using Stratis.Core.Configuration;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless;
+using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Networks;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.Api;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.SmartContracts;
 using Stratis.SmartContracts.Tokenless;
+using TextFileConfiguration = Stratis.Core.Configuration.TextFileConfiguration;
 
 namespace Stratis.SmartContracts.Tests.Common
 {
     public sealed class ChannelNodeRunner : NodeRunner
     {
-        private readonly string channelName;
+        private readonly string[] args;
         private readonly IDateTimeProvider dateTimeProvider;
 
-        public ChannelNodeRunner(string channelName, string dataFolder, EditableTimeProvider timeProvider)
+        public ChannelNodeRunner(string[] args, string dataFolder, EditableTimeProvider timeProvider)
             : base(dataFolder, null)
         {
-            this.channelName = channelName;
+            this.args = args;
             this.dateTimeProvider = timeProvider;
         }
 
         public override void BuildNode()
         {
-            var channelNetwork = ChannelNetwork.Construct(Path.Combine(this.DataFolder, "channels"), this.channelName);
+            Network network = null;
 
-            var settings = new NodeSettings(channelNetwork, args: new string[]
-            {
-                "-certificatepassword=test",
-                "-password=test",
-                "-conf=channel.conf",
-                "-datadir=" + this.DataFolder,
-                $"-{CertificateAuthorityInterface.CaAccountIdKey}={Settings.AdminAccountId}",
-                $"-{CertificateAuthorityInterface.CaPasswordKey}={CaTestHelper.AdminPassword}",
-                $"-{CertificateAuthorityInterface.ClientCertificateConfigurationKey}=test",
-                "-ischannelnode=true",
-            });
+            // TODO-TL: This needs to be moved someplace else.
+            var configReader = new TextFileConfiguration(args);
+            var configurationFile = configReader.GetOrDefault("conf", "");
+            var dataDir = configReader.GetOrDefault("datadir", "");
+            var configurationFilePath = Path.Combine(dataDir, configurationFile);
+            var fileConfig = new TextFileConfiguration(File.ReadAllText(configurationFilePath));
+            fileConfig.MergeInto(configReader);
+
+
+            var channelSettings = new ChannelSettings(configReader);
+            network = ChannelNetwork.Construct(dataDir, channelSettings.ChannelName);
+            NodeSettings nodeSettings = new NodeSettings(network, agent: $"Channel-{channelSettings.ChannelName}", configReader: configReader);
 
             IFullNodeBuilder builder = new FullNodeBuilder()
-                .UseNodeSettings(settings)
+                .UseNodeSettings(nodeSettings)
                 .UseBlockStore()
-                .UseTokenlessPoaConsenus(channelNetwork)
+                .UseTokenlessPoaConsenus(network)
                 .UseMempool()
                 .UseApi()
                 .UseTokenlessKeyStore()

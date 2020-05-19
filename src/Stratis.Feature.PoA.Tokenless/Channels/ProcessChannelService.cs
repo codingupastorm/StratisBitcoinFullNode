@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.IO.Pipes;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using CertificateAuthority;
-using MembershipServices;
 using Microsoft.Extensions.Logging;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Configuration;
@@ -19,8 +15,6 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     {
         public const int SystemChannelId = 1;
         private const string SystemChannelName = "system";
-
-        private const string ChannelConfigurationFileName = "channel.conf";
 
         private readonly IAsyncProvider asyncProvider;
         private readonly INodeLifetime nodeLifetime;
@@ -67,28 +61,6 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 this.nodeLifetime.ApplicationStopping,
                 repeatEvery: TimeSpan.FromSeconds(1));
             }
-        }
-
-        private void CreateChannelConfigurationFile(string channelRootFolder, params string[] channelArgs)
-        {
-            var configurationFilePath = Path.Combine(channelRootFolder, ChannelConfigurationFileName);
-
-            var args = new StringBuilder();
-            args.AppendLine($"-certificatepassword=test");
-            args.AppendLine($"-password=test");
-            args.AppendLine($"-{CertificateAuthorityInterface.CaBaseUrlKey}={CertificateAuthorityInterface.CaBaseUrl}");
-            args.AppendLine($"-{CertificateAuthorityInterface.CaAccountIdKey}={Settings.AdminAccountId}");
-            args.AppendLine($"-{CertificateAuthorityInterface.CaPasswordKey}={this.nodeSettings.ConfigReader.GetOrDefault(CertificateAuthorityInterface.CaPasswordKey, "")} ");
-            args.AppendLine($"-{CertificateAuthorityInterface.ClientCertificateConfigurationKey}=test");
-            args.AppendLine($"-agent{CertificateAuthorityInterface.ClientCertificateConfigurationKey}=test");
-
-            // Append any channel specific arguments.
-            foreach (var channelArg in channelArgs)
-            {
-                args.AppendLine(channelArg);
-            }
-
-            File.WriteAllText(configurationFilePath, args.ToString());
         }
 
         protected override async Task<bool> StartChannelAsync(string channelRootFolder, params string[] channelArgs)

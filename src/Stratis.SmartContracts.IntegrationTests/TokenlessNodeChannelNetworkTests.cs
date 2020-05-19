@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 using CertificateAuthority.Tests.Common;
 using Flurl;
@@ -281,6 +282,47 @@ namespace Stratis.SmartContracts.IntegrationTests
                     return false;
 
                 }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(2).TotalMilliseconds);
+            }
+        }
+
+
+        [Fact]
+        public void DebugChannelNodes()
+        {
+            var network = new TokenlessNetwork();
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                // Create a tokenless node
+                var tokenlessNetwork = new TokenlessNetwork();
+
+                server.Start();
+
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
+
+                CoreNode node = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server, debugChannels:true);
+
+                node.Start();
+
+                // Create 5 channels for the identity to be apart of.
+                nodeBuilder.CreateChannel(node, "marketing", 2);
+                nodeBuilder.CreateChannel(node, "sales", 3);
+                nodeBuilder.CreateChannel(node, "legal", 4);
+                nodeBuilder.CreateChannel(node, "it", 5);
+                nodeBuilder.CreateChannel(node, "humanresources", 6);
+
+                // Re-start the parent node as to load and start the channels it belongs to.
+                node.Restart();
+
+                Thread.Sleep(10_000);
+
+                var channelService = node.FullNode.NodeService<IChannelService>() as TestChannelService;
+
+                Assert.Equal(5, channelService.ChannelNodes.Count);
             }
         }
     }
