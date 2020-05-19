@@ -15,10 +15,11 @@ using Stratis.Core.Configuration;
 using Stratis.Core.Connection;
 using Stratis.Core.Consensus;
 using Stratis.Core.Interfaces;
+using Stratis.Core.Properties;
 using Stratis.Core.Signals;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin
+namespace Stratis.Core
 {
     /// <summary>
     /// Node providing all supported features of the blockchain and its network.
@@ -182,7 +183,7 @@ namespace Stratis.Bitcoin
 
             this.AsyncProvider = this.Services.ServiceProvider.GetService<IAsyncProvider>();
 
-            this.logger.LogInformation(Properties.Resources.AsciiLogo);
+            this.logger.LogInformation(Resources.AsciiLogo);
             this.logger.LogInformation("Full node initialized on {0}.", this.Network.Name);
 
             this.State = FullNodeState.Initialized;

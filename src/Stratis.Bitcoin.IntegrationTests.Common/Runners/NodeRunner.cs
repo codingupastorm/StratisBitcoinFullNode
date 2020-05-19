@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
+using Stratis.Core;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.Runners
 {

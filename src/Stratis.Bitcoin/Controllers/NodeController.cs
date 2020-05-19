@@ -11,7 +11,7 @@ using NLog;
 using NLog.Config;
 using NLog.Targets;
 using NLog.Targets.Wrappers;
-using Stratis.Bitcoin;
+using Stratis.Core;
 using Stratis.Core.Interfaces;
 using Stratis.Core.P2P;
 using Stratis.Core.P2P.Peer;

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin;
+using Stratis.Core.Consensus;
 using Stratis.Core.EventBus;
 using Stratis.Core.EventBus.CoreEvents;
 using Stratis.Core.Primitives;

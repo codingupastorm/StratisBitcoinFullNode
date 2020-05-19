@@ -10,7 +10,6 @@ using NLog.Config;
 using NLog.Extensions.Logging;
 using NLog.Targets;
 using NLog.Targets.Wrappers;
-using Stratis.Bitcoin;
 using Stratis.Core.Configuration.Settings;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
@@ -82,7 +81,7 @@ namespace Stratis.Core.Configuration.Logging
             // { "libevent", "" },
             // { "lock", "" },
             // { "mempoolrej", "" },
-            { "net", $"{nameof(Stratis)}.{nameof(Bitcoin)}.{nameof(Core.Connection)}.*" },
+            { "net", $"{nameof(Stratis)}.{nameof(Core)}.{nameof(Connection)}.*" },
             // { "proxy", "" },
             // { "prune", "" },
             // { "rand", "" },
@@ -93,8 +92,8 @@ namespace Stratis.Core.Configuration.Logging
             // { "zmq", "" },
 
             // Short Names
-            { "configuration", $"{nameof(Stratis)}.{nameof(Bitcoin)}.{nameof(Configuration)}.*" },
-            { "fullnode", $"{nameof(Stratis)}.{nameof(Bitcoin)}.{nameof(FullNode)}" }
+            { "configuration", $"{nameof(Stratis)}.{nameof(Core)}.{nameof(Configuration)}.*" },
+            { "fullnode", $"{nameof(Stratis)}.{nameof(Core)}.{nameof(FullNode)}" }
         };
 
         public static void RegisterFeatureNamespace<T>(string key)
@@ -260,7 +259,7 @@ namespace Stratis.Core.Configuration.Logging
                     if (settings.DebugArgs[0] == "1")
                     {
                         // Increase all logging to Debug.
-                        builder.AddFilter($"{nameof(Stratis)}.{nameof(Bitcoin)}", LogLevel.Debug);
+                        builder.AddFilter($"{nameof(Stratis)}.{nameof(Core)}", LogLevel.Debug);
                         builder.AddFilter($"{nameof(Stratis)}.Feature", LogLevel.Debug);
                         builder.AddFilter($"{nameof(Stratis)}.Features", LogLevel.Debug);
                     }

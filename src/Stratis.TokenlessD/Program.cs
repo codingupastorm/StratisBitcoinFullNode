@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using NBitcoin;
-using Stratis.Bitcoin;
+using Stratis.Core;
 using Stratis.Core.Builder;
 using Stratis.Core.Configuration;
 using Stratis.Core.Utilities;
