@@ -9,7 +9,6 @@ using Stratis.Features.Wallet;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
-using Stratis.Bitcoin.IntegrationTests.Wallet;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
@@ -317,7 +316,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
 
                 // Create tx and node 1 has this in mempool.
                 HdAddress receivingAddress = node2.FullNode.WalletManager().GetUnusedAddress(new WalletAccountReference(name, accountName));
-                Transaction transaction = node1.FullNode.WalletTransactionHandler().BuildTransaction(WalletTests.CreateContext(node1.FullNode.Network,
+                Transaction transaction = node1.FullNode.WalletTransactionHandler().BuildTransaction(CreateContext(node1.FullNode.Network,
                     new WalletAccountReference(name, accountName), password, receivingAddress.ScriptPubKey, Money.COIN * 100, FeeType.Medium, 101));
 
                 Assert.True(node1.FullNode.MempoolManager().Validator.AcceptToMemoryPool(mempoolValidationState, transaction).Result);
@@ -361,7 +360,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 TestHelper.MineBlocks(stratisSender, 5);
 
                 // Send coins to the receiver
-                var context = WalletTests.CreateContext(network, new WalletAccountReference(WalletName, Account), Password, new Key().PubKey.GetAddress(network).ScriptPubKey, Money.COIN * 100, FeeType.Medium, 1);
+                var context = CreateContext(network, new WalletAccountReference(WalletName, Account), Password, new Key().PubKey.GetAddress(network).ScriptPubKey, Money.COIN * 100, FeeType.Medium, 1);
 
                 Transaction trx = stratisSender.FullNode.WalletTransactionHandler().BuildTransaction(context);
 
@@ -397,7 +396,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 TestHelper.MineBlocks(stratisSender, 5);
 
                 // Send coins to the receiver.
-                var context = WalletTests.CreateContext(network, new WalletAccountReference(WalletName, Account), Password, new Key().PubKey.GetAddress(network).ScriptPubKey, Money.COIN * 100, FeeType.Medium, 1);
+                var context = CreateContext(network, new WalletAccountReference(WalletName, Account), Password, new Key().PubKey.GetAddress(network).ScriptPubKey, Money.COIN * 100, FeeType.Medium, 1);
 
                 Transaction trx = stratisSender.FullNode.WalletTransactionHandler().BuildTransaction(context);
 
@@ -435,7 +434,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 TestHelper.MineBlocks(stratisSender, 5);
 
                 // Send coins to the receiver.
-                var context = WalletTests.CreateContext(network, new WalletAccountReference(WalletName, Account), Password, new Key().PubKey.GetAddress(network).ScriptPubKey, Money.COIN * 100, FeeType.Medium, 1);
+                var context = CreateContext(network, new WalletAccountReference(WalletName, Account), Password, new Key().PubKey.GetAddress(network).ScriptPubKey, Money.COIN * 100, FeeType.Medium, 1);
 
                 Transaction trx = stratisSender.FullNode.WalletTransactionHandler().BuildTransaction(context);
 
@@ -472,7 +471,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 TestHelper.MineBlocks(stratisSender, 5);
 
                 // Send coins to the receiver
-                var context = WalletTests.CreateContext(network, new WalletAccountReference(WalletName, Account), Password, new Key().PubKey.GetAddress(network).ScriptPubKey, Money.COIN * 100, FeeType.Medium, 1);
+                var context = CreateContext(network, new WalletAccountReference(WalletName, Account), Password, new Key().PubKey.GetAddress(network).ScriptPubKey, Money.COIN * 100, FeeType.Medium, 1);
 
                 Transaction trx = stratisSender.FullNode.WalletTransactionHandler().BuildTransaction(context);
 
@@ -507,7 +506,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 TestHelper.MineBlocks(stratisSender, 5);
 
                 // Send coins to the receiver
-                var context = WalletTests.CreateContext(network, new WalletAccountReference(WalletName, Account), Password, new Key().PubKey.GetAddress(network).ScriptPubKey, Money.COIN * 100, FeeType.Medium, 1);
+                var context = CreateContext(network, new WalletAccountReference(WalletName, Account), Password, new Key().PubKey.GetAddress(network).ScriptPubKey, Money.COIN * 100, FeeType.Medium, 1);
 
                 Transaction trx = stratisSender.FullNode.WalletTransactionHandler().BuildTransaction(context);
 
@@ -542,7 +541,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 TestHelper.MineBlocks(stratisSender, 5);
 
                 // Send coins to the receiver.
-                var context = WalletTests.CreateContext(network, new WalletAccountReference(WalletName, Account), Password, new Key().PubKey.GetAddress(network).ScriptPubKey, Money.COIN * 100, FeeType.Medium, 1);
+                var context = CreateContext(network, new WalletAccountReference(WalletName, Account), Password, new Key().PubKey.GetAddress(network).ScriptPubKey, Money.COIN * 100, FeeType.Medium, 1);
                 context.OpReturnData = "1";
                 context.OpReturnAmount = Money.Coins(0.01m);
                 Transaction trx = stratisSender.FullNode.WalletTransactionHandler().BuildTransaction(context);
@@ -579,6 +578,19 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
 
                 Assert.Equal("scriptpubkey", entry.ErrorMessage);
             }
+        }
+
+        public static TransactionBuildContext CreateContext(Network network, WalletAccountReference accountReference, string password,
+            Script destinationScript, Money amount, FeeType feeType, int minConfirmations)
+        {
+            return new TransactionBuildContext(network)
+            {
+                AccountReference = accountReference,
+                MinConfirmations = minConfirmations,
+                FeeType = feeType,
+                WalletPassword = password,
+                Recipients = new[] { new Recipient { Amount = amount, ScriptPubKey = destinationScript } }.ToList()
+            };
         }
     }
 }
