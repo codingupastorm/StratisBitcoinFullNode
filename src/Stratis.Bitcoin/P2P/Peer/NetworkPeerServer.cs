@@ -10,6 +10,7 @@ using NBitcoin.Protocol;
 using Stratis.Core.Signals;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Configuration.Settings;
+using Stratis.Core.Connection;
 using Stratis.Core.EventBus.CoreEvents;
 using Stratis.Core.Interfaces;
 using Stratis.Core.Utilities;
@@ -91,6 +92,10 @@ namespace Stratis.Core.P2P.Peer
 
         private readonly IPeerAddressManager peerAddressManager;
 
+        private readonly IConnectionManager connectionManager;
+
+        private readonly ISelfEndpointTracker selfEndpointTracker;
+
         private readonly IDateTimeProvider dateTimeProvider;
 
         /// <summary>
@@ -114,6 +119,8 @@ namespace Stratis.Core.P2P.Peer
             ConnectionManagerSettings connectionManagerSettings,
             IAsyncProvider asyncProvider,
             IPeerAddressManager peerAddressManager,
+            IConnectionManager connectionManager,
+            ISelfEndpointTracker selfEndpointTracker,
             IDateTimeProvider dateTimeProvider)
         {
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName, $"[{localEndPoint}] ");
@@ -123,6 +130,8 @@ namespace Stratis.Core.P2P.Peer
             this.initialBlockDownloadState = initialBlockDownloadState;
             this.connectionManagerSettings = connectionManagerSettings;
             this.peerAddressManager = peerAddressManager;
+            this.connectionManager = connectionManager;
+            this.selfEndpointTracker = selfEndpointTracker;
             this.dateTimeProvider = dateTimeProvider;
 
             this.InboundNetworkPeerConnectionParameters = new NetworkPeerConnectionParameters();
@@ -236,6 +245,13 @@ namespace Stratis.Core.P2P.Peer
         private (bool successful, string reason) AllowClientConnection(TcpClient tcpClient)
         {
             var clientRemoteEndPoint = tcpClient.Client.RemoteEndPoint as IPEndPoint;
+
+            // We need IP-based searching here because we can't predict the inbound's ephemeral port.
+            // But purely matching by IP will likely break a lot of tests due to them running between nodes on localhost.
+            // So for now only fail existing connections for non-local and non-self IPs.
+            // Self-connection is prevented elsewhere and we can't be sure which network interface a test node might bind on, it might have a public IP.
+            if ((this.connectionManager.ConnectedPeers.FindByIp(clientRemoteEndPoint.Address).Count > 0) && !clientRemoteEndPoint.Address.IsLocal() && !this.selfEndpointTracker.IsSelf(clientRemoteEndPoint))
+                return (false, $"Inbound Refused: Peer with IP {clientRemoteEndPoint.Address} is already connected.");
 
             var peers = this.peerAddressManager.FindPeersByIp(clientRemoteEndPoint);
             var bannedPeer = peers.FirstOrDefault(p => p.IsBanned(this.dateTimeProvider.GetUtcNow()));
