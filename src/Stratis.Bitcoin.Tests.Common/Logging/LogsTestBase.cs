@@ -4,6 +4,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
+using Stratis.Core;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Signals;

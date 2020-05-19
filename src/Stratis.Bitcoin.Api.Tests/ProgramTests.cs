@@ -2,9 +2,10 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using NSubstitute;
+using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core;
 using Stratis.Core.Configuration;
 using Stratis.Features.Api;
-using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
 namespace Stratis.Bitcoin.Api.Tests
@@ -47,7 +48,7 @@ namespace Stratis.Bitcoin.Api.Tests
             this.apiSettings.UseHttps = false;
             this.SetCertificateInStore(true);
 
-             Program.Initialize(null, new FullNode(), this.apiSettings, this.certificateStore, this.webHostBuilder);
+            Program.Initialize(null, new FullNode(), this.apiSettings, this.certificateStore, this.webHostBuilder);
 
             this.certificateStore.DidNotReceiveWithAnyArgs().TryGet(null, out _);
         }

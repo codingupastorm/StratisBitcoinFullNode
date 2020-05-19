@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
 using NBitcoin.PoA;
-using Stratis.Bitcoin;
+using Stratis.Core;
 using Stratis.Core.Base;
 using Stratis.Core.Base.Deployments;
 using Stratis.Core.Configuration;

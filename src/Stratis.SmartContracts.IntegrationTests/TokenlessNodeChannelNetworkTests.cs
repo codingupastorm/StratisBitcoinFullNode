@@ -10,9 +10,9 @@ using Flurl;
 using Flurl.Http;
 using Microsoft.AspNetCore.Hosting;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core;
 using Stratis.Core.Controllers.Models;
 using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
@@ -304,7 +304,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
 
-                CoreNode node = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server, debugChannels:true);
+                CoreNode node = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server, debugChannels: true);
 
                 node.Start();
 

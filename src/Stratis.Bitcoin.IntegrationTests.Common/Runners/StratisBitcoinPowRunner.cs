@@ -1,11 +1,12 @@
 ﻿using NBitcoin;
+using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Core;
 using Stratis.Core.Base;
 using Stratis.Core.Builder;
 using Stratis.Core.Configuration;
-using Stratis.Features.Api;
-using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Core.Interfaces;
 using Stratis.Core.P2P;
+using Stratis.Features.Api;
 using Stratis.Features.BlockStore;
 using Stratis.Features.Consensus;
 using Stratis.Features.MemoryPool;

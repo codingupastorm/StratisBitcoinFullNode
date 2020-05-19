@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
 using NBitcoin;
+using Stratis.Bitcoin.Properties;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Base;
 using Stratis.Core.Builder;
@@ -18,7 +19,7 @@ using Stratis.Core.Interfaces;
 using Stratis.Core.Signals;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin
+namespace Stratis.Core
 {
     /// <summary>
     /// Node providing all supported features of the blockchain and its network.
@@ -27,9 +28,6 @@ namespace Stratis.Bitcoin
     {
         /// <summary>Instance logger.</summary>
         private ILogger logger;
-
-        /// <summary>Factory for creating loggers.</summary>
-        private ILoggerFactory loggerFactory;
 
         /// <summary>Component responsible for starting and stopping all the node's features.</summary>
         private FullNodeFeatureExecutor fullNodeFeatureExecutor;
@@ -178,11 +176,10 @@ namespace Stratis.Bitcoin
             this.NodeStats = this.Services.ServiceProvider.GetService<INodeStats>();
 
             this.ConnectionManager = this.Services.ServiceProvider.GetService<IConnectionManager>();
-            this.loggerFactory = this.Services.ServiceProvider.GetService<NodeSettings>().LoggerFactory;
 
             this.AsyncProvider = this.Services.ServiceProvider.GetService<IAsyncProvider>();
 
-            this.logger.LogInformation(Properties.Resources.AsciiLogo);
+            this.logger.LogInformation(Resources.AsciiLogo);
             this.logger.LogInformation("Full node initialized on {0}.", this.Network.Name);
 
             this.State = FullNodeState.Initialized;

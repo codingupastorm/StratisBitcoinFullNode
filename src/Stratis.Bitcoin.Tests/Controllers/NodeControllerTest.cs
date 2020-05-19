@@ -8,6 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using Stratis.Bitcoin.Tests.Common;
+using Stratis.Bitcoin.Tests.Common.Logging;
+using Stratis.Bitcoin.Tests.Wallet.Common;
+using Stratis.Core;
+using Stratis.Core.AsyncWork;
 using Stratis.Core.Base;
 using Stratis.Core.Configuration;
 using Stratis.Core.Connection;
@@ -16,10 +21,6 @@ using Stratis.Core.Controllers.Models;
 using Stratis.Core.Interfaces;
 using Stratis.Core.P2P;
 using Stratis.Core.P2P.Peer;
-using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Tests.Common.Logging;
-using Stratis.Bitcoin.Tests.Wallet.Common;
-using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.JsonErrors;
 using Xunit;
@@ -33,7 +34,6 @@ namespace Stratis.Bitcoin.Tests.Controllers
         private readonly Mock<IConnectionManager> connectionManager;
         private readonly Mock<IDateTimeProvider> dateTimeProvider;
         private readonly Mock<IFullNode> fullNode;
-        private readonly Mock<IPeerBanning> peerBanning;
         private readonly Network network;
         private readonly NodeSettings nodeSettings;
 
@@ -57,7 +57,6 @@ namespace Stratis.Bitcoin.Tests.Controllers
             this.dateTimeProvider = new Mock<IDateTimeProvider>();
             this.fullNode = new Mock<IFullNode>();
             this.nodeSettings = new NodeSettings(networksSelector: Networks.Networks.Bitcoin);
-            this.peerBanning = new Mock<IPeerBanning>();
 
             this.blockStore = new Mock<IBlockStore>();
             this.getUnspentTransaction = new Mock<IGetUnspentTransaction>();
@@ -69,7 +68,7 @@ namespace Stratis.Bitcoin.Tests.Controllers
             this.controller = new NodeController(
                 this.chainIndexer,
                 this.chainState.Object,
-                this.connectionManager.Object,
+                this.connectionManager.Object, 
                 this.dateTimeProvider.Object,
                 this.fullNode.Object,
                 this.LoggerFactory.Object,

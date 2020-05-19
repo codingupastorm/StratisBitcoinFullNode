@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin;
+using Stratis.Core;
 using Stratis.Core.Builder.Feature;
 using Stratis.Core.Utilities;
 

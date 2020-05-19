@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Rules;
-using Stratis.Bitcoin;
+using Stratis.Core;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Base.Deployments;
 using Stratis.Core.BlockPulling;

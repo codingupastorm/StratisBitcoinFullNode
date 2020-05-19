@@ -1,6 +1,7 @@
-﻿using Stratis.Core.Builder;
+﻿using Stratis.Bitcoin.IntegrationTests.Common.Runners;
+using Stratis.Core;
+using Stratis.Core.Builder;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Core.Utilities;
 using Stratis.Features.Api;
 using Stratis.Features.BlockStore;

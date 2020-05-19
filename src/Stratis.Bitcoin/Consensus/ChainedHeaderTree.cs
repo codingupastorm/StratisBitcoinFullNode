@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin;
+using Stratis.Core;
 using Stratis.Core.Primitives;
 using Stratis.Core.Base;
 using Stratis.Core.Configuration.Settings;
