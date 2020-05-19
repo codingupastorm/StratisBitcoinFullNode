@@ -61,13 +61,11 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             // Don't care what this is as long as it's not null.
             membershipServices.Setup(s => s.GetCertificateForTransactionSigningPubKeyHash(It.IsAny<byte[]>())).Returns(dummyCert);
 
-            // Setup the organisations and addresses in sequential call order. Required for the policy to be satisfied.
-            organisationLookup.SetupSequence(o => o.FromCertificate(dummyCert))
-                .Returns((policy.Organisation, "test address"))
-                .Returns((policy.Organisation, "test address 2"))
-                .Returns((policy.Organisation, "test address 3"));
-
             // Setup the signature validation state of the endorsements.
+            signatureValidator.Setup(s => s.Validate(validEndorsement, It.IsAny<byte[]>())).Returns(true);
+            signatureValidator.Setup(s => s.Validate(validEndorsement2, It.IsAny<byte[]>())).Returns(true);
+            signatureValidator.Setup(s => s.Validate(dudEndorsement, It.IsAny<byte[]>())).Returns(false);
+
             SetupSenders(organisationLookup, dummyCert, policy);
 
             Assert.True(validator.Validate(rws, endorsements));
