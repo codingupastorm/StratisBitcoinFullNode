@@ -1,6 +1,6 @@
 ﻿using NBitcoin.Protocol;
-using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Core.P2P.Peer;
+using Stratis.Core.P2P.Protocol.Payloads;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.P2P

@@ -1,8 +1,8 @@
 ﻿using System;
-using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Core.P2P.Peer;
+using Stratis.Core.P2P.Protocol.Payloads;
 
-namespace Stratis.Bitcoin.P2P.Protocol.Filters
+namespace Stratis.Core.P2P.Protocol.Filters
 {
     public class ActionFilter : INetworkPeerFilter
     {

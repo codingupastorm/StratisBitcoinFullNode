@@ -5,7 +5,7 @@ using System.Reflection;
 using Stratis.Core.Utilities;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.P2P.Protocol.Payloads
+namespace Stratis.Core.P2P.Protocol.Payloads
 {
     /// <summary>
     /// An attribute that enables mapping between command names and P2P netowrk types.

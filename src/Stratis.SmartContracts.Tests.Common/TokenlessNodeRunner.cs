@@ -9,7 +9,7 @@ using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
-using Stratis.Bitcoin.P2P;
+using Stratis.Core.P2P;
 using Stratis.Core.Base;
 using Stratis.Core.Builder;
 using Stratis.Core.Builder.Feature;

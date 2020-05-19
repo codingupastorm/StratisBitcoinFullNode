@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using NBitcoin;
-using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Core.P2P.Protocol.Payloads;
 using TracerAttributes;
 
 namespace Stratis.Features.PoA.Payloads

@@ -2,7 +2,7 @@
 using System.Linq;
 using NBitcoin;
 using Stratis.Core.Consensus;
-using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Core.P2P.Peer;
 using Stratis.Bitcoin.Tests.Common;
 
 namespace Stratis.Bitcoin.Tests.Consensus

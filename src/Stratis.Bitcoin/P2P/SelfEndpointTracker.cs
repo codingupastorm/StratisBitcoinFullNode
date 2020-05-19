@@ -5,7 +5,7 @@ using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Utilities.Extensions;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.P2P
+namespace Stratis.Core.P2P
 {
     /// <summary>
     /// Tracker for endpoints known to be self.

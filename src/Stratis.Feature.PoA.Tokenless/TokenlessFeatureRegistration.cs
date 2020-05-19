@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using NBitcoin;
 using NBitcoin.PoA;
 using Stratis.Core.Mining;
-using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Core.P2P.Peer;
 using Stratis.Core.Base;
 using Stratis.Core.Builder;
 using Stratis.Core.Configuration.Logging;

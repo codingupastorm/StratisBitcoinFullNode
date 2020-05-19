@@ -1,4 +1,4 @@
-﻿namespace Stratis.Bitcoin.P2P.Protocol.Payloads
+﻿namespace Stratis.Core.P2P.Protocol.Payloads
 {
     /// <summary>
     /// Ask for known peer addresses in the network.

@@ -3,7 +3,7 @@ using System.Linq;
 using System.Net;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Stratis.Bitcoin.P2P;
+using Stratis.Core.P2P;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Connection;

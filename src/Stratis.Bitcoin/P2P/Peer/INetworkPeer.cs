@@ -5,12 +5,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using NBitcoin;
 using NBitcoin.Protocol;
-using Stratis.Bitcoin.P2P.Protocol;
-using Stratis.Bitcoin.P2P.Protocol.Behaviors;
-using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Core.P2P.Protocol;
+using Stratis.Core.P2P.Protocol.Behaviors;
+using Stratis.Core.P2P.Protocol.Payloads;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.P2P.Peer
+namespace Stratis.Core.P2P.Peer
 {
     /// <summary>
     /// Represents a counterparty of the node on the network. This is usually another node, but it can be

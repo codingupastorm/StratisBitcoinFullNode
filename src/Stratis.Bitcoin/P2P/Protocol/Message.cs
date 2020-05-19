@@ -6,10 +6,10 @@ using NBitcoin;
 using NBitcoin.Crypto;
 using NBitcoin.DataEncoders;
 using NBitcoin.Protocol;
-using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Core.P2P.Protocol.Payloads;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.P2P.Protocol
+namespace Stratis.Core.P2P.Protocol
 {
     public class Message : IBitcoinSerializable
     {

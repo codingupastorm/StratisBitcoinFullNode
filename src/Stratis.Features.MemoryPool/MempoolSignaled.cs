@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Core.EventBus;
 using Stratis.Core.EventBus.CoreEvents;
-using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Core.P2P.Peer;
 using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Signals;
 using Stratis.Core.AsyncWork;

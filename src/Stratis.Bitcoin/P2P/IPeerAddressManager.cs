@@ -4,7 +4,7 @@ using System.Net;
 using NBitcoin;
 using Stratis.Core.Configuration;
 
-namespace Stratis.Bitcoin.P2P
+namespace Stratis.Core.P2P
 {
     /// <summary>Contract for <see cref="PeerAddressManager"/>.</summary>
     public interface IPeerAddressManager : IDisposable
