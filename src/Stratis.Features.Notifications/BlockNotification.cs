@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Consensus;
-using Stratis.Bitcoin.Signals;
+using Stratis.Core.Signals;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 using Stratis.Features.Notifications.Interfaces;

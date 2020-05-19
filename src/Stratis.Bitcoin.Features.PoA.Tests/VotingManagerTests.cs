@@ -3,7 +3,7 @@ using Moq;
 using NBitcoin;
 using NBitcoin.PoA;
 using Stratis.Core.EventBus.CoreEvents;
-using Stratis.Bitcoin.Primitives;
+using Stratis.Core.Primitives;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Features.PoA.Voting;
 using Xunit;

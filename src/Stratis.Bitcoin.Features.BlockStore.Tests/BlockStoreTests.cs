@@ -9,8 +9,8 @@ using NBitcoin.DataEncoders;
 using Stratis.Core.Base;
 using Stratis.Core.Configuration;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.Primitives;
-using Stratis.Bitcoin.Signals;
+using Stratis.Core.Primitives;
+using Stratis.Core.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
@@ -94,7 +94,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var blockStoreFlushCondition = new BlockStoreQueueFlushCondition(this.chainState, this.initialBlockDownloadState.Object);
 
             this.loggerFactory = new LoggerFactory();
-            this.signals = new Signals.Signals(this.loggerFactory, null);
+            this.signals = new Signals(this.loggerFactory, null);
             this.asyncProvider = new AsyncProvider(this.loggerFactory, this.signals, this.nodeLifetime);
 
             this.blockStoreQueue = new BlockStoreQueue(this.chainIndexer, this.chainState, blockStoreFlushCondition, this.storeSettings,

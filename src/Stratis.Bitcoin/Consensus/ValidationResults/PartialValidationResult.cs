@@ -1,4 +1,4 @@
-﻿using Stratis.Bitcoin.Primitives;
+﻿using Stratis.Core.Primitives;
 
 namespace Stratis.Core.Consensus.ValidationResults
 {

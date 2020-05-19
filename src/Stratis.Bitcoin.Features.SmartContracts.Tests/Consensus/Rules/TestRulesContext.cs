@@ -3,14 +3,14 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Stratis.Core.AsyncWork;
 using Stratis.Core.Base;
 using Stratis.Core.Base.Deployments;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Consensus;
 using Stratis.Core.Consensus.Rules;
-using Stratis.Bitcoin.Signals;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Signals;
 using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.Rules;
 using Stratis.Features.SmartContracts.Interfaces;
@@ -99,7 +99,7 @@ namespace Stratis.Bitcoin.Features.SmartContracts.Tests.Consensus.Rules
             testRulesContext.ChainIndexer = new ChainIndexer(network);
             testRulesContext.ChainState = new ChainState();
 
-            testRulesContext.Signals = new Signals.Signals(testRulesContext.LoggerFactory, null);
+            testRulesContext.Signals = new Signals(testRulesContext.LoggerFactory, null);
             testRulesContext.AsyncProvider = new AsyncProvider(testRulesContext.LoggerFactory, testRulesContext.Signals, new NodeLifetime());
 
             NodeDeployments deployments = new NodeDeployments(testRulesContext.Network, testRulesContext.ChainIndexer);

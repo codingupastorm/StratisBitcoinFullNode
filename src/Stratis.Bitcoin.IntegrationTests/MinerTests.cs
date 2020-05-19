@@ -6,6 +6,11 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using Stratis.Bitcoin.IntegrationTests.Common;
+using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Bitcoin.Networks;
+using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.AsyncWork;
 using Stratis.Core.Base;
 using Stratis.Core.Base.Deployments;
 using Stratis.Core.Configuration;
@@ -14,16 +19,12 @@ using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Connection;
 using Stratis.Core.Consensus;
 using Stratis.Core.Consensus.Rules;
-using Stratis.Bitcoin.IntegrationTests.Common;
-using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Core.Interfaces;
 using Stratis.Core.Mining;
-using Stratis.Bitcoin.Networks;
 using Stratis.Core.P2P;
 using Stratis.Core.P2P.Peer;
 using Stratis.Core.P2P.Protocol.Payloads;
-using Stratis.Bitcoin.Tests.Common;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Signals;
 using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.CoinViews;
 using Stratis.Features.Consensus.Rules;
@@ -154,7 +155,7 @@ namespace Stratis.Bitcoin.IntegrationTests
 
                 this.cachedCoinView = new CachedCoinView(inMemoryCoinView, dateTimeProvider, new LoggerFactory(), nodeStats, consensusSettings);
 
-                var signals = new Signals.Signals(loggerFactory, null);
+                var signals = new Signals(loggerFactory, null);
                 var asyncProvider = new AsyncProvider(loggerFactory, signals, new NodeLifetime());
 
                 var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, nodeSettings.DataFolder, loggerFactory, new SelfEndpointTracker(loggerFactory, connectionSettings));

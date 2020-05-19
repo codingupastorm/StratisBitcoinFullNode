@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Bitcoin.Signals;
+using Stratis.Core.Signals;
 using Stratis.Core.EventBus;
 using Stratis.Core.EventBus.CoreEvents;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
