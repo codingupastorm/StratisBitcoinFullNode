@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using Stratis.Core.Utilities.ValidationAttributes;
 using Stratis.Bitcoin.Validations;
+using Stratis.Core.Utilities.ValidationAttributes;
 
-namespace Stratis.Bitcoin.Models
+namespace Stratis.Core.Models
 {
     /// <summary>
     /// A class containing the necessary parameters for a transaction fee estimate request.

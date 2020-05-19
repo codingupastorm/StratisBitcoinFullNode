@@ -6,7 +6,7 @@ using System.Threading;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.KeyValueStore;
+using Stratis.Core.NodeStorage.KeyValueStore;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Features.BlockStore

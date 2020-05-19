@@ -6,10 +6,9 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Configuration;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.KeyValueStore;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.NodeStorage
+namespace Stratis.Core.NodeStorage
 {
     public class Migrate
     {

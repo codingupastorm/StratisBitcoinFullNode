@@ -1,7 +1,7 @@
 ﻿using System;
 using NBitcoin;
 
-namespace Stratis.Bitcoin.Mining
+namespace Stratis.Core.Mining
 {
     /// <summary>
     /// Semi- immutable settings to be used by <see cref="BlockDefinition"/>.
@@ -36,7 +36,7 @@ namespace Stratis.Bitcoin.Mining
         /// </summary>
         public BlockDefinitionOptions RestrictForNetwork(Network network)
         {
-            uint minAllowedBlockWeight = MinBlockSize * (uint) network.Consensus.Options.WitnessScaleFactor;
+            uint minAllowedBlockWeight = MinBlockSize * (uint)network.Consensus.Options.WitnessScaleFactor;
             this.BlockMaxWeight = Math.Max(minAllowedBlockWeight, Math.Min(network.Consensus.Options.MaxBlockWeight, this.BlockMaxWeight));
             this.BlockMaxSize = Math.Max(MinBlockSize, Math.Min(network.Consensus.Options.MaxBlockSerializedSize, this.BlockMaxSize));
 

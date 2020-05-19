@@ -11,7 +11,7 @@ using Stratis.Core.Connection;
 using Stratis.Core.Consensus;
 using Stratis.Core.Consensus.Validators;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.Mining;
+using Stratis.Core.Mining;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool;
