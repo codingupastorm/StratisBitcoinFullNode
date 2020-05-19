@@ -58,7 +58,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             peerAddressManager.Setup(pam => pam.FindPeersByIp(It.IsAny<IPEndPoint>())).Returns(new List<PeerAddress>());
 
             var connectionManager = new Mock<IConnectionManager>();
-            connectionManager.Setup(a => a.FindNodesByIp(It.IsAny<IPAddress>()))
+            connectionManager.Setup(a => a.ConnectedPeers.FindByIp(It.IsAny<IPAddress>()))
                 .Returns(new List<INetworkPeer>() {});
 
             var selfEndpointTracker = new Mock<ISelfEndpointTracker>();

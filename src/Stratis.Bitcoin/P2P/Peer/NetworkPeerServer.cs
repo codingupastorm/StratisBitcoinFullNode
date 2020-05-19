@@ -250,7 +250,7 @@ namespace Stratis.Core.P2P.Peer
             // But purely matching by IP will likely break a lot of tests due to them running between nodes on localhost.
             // So for now only fail existing connections for non-local and non-self IPs.
             // Self-connection is prevented elsewhere and we can't be sure which network interface a test node might bind on, it might have a public IP.
-            if ((this.connectionManager.FindNodesByIp(clientRemoteEndPoint.Address).Count > 0) && !clientRemoteEndPoint.Address.IsLocal() && !this.selfEndpointTracker.IsSelf(clientRemoteEndPoint))
+            if ((this.connectionManager.ConnectedPeers.FindByIp(clientRemoteEndPoint.Address).Count > 0) && !clientRemoteEndPoint.Address.IsLocal() && !this.selfEndpointTracker.IsSelf(clientRemoteEndPoint))
                 return (false, $"Inbound Refused: Peer with IP {clientRemoteEndPoint.Address} is already connected.");
 
             var peers = this.peerAddressManager.FindPeersByIp(clientRemoteEndPoint);

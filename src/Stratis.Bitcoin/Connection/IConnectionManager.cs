@@ -35,8 +35,6 @@ namespace Stratis.Core.Connection
 
         IReadOnlyNetworkPeerCollection ConnectedPeers { get; }
 
-        List<INetworkPeer> FindNodesByIp(IPAddress ipAddress);
-
         INetworkPeer FindNodeByEndpoint(IPEndPoint ipEndpoint);
 
         INetworkPeer FindNodeById(int peerId);
