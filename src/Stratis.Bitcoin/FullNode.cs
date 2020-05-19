@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
 using NBitcoin;
+using Stratis.Bitcoin.Properties;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Base;
 using Stratis.Core.Builder;
@@ -15,7 +16,6 @@ using Stratis.Core.Configuration;
 using Stratis.Core.Connection;
 using Stratis.Core.Consensus;
 using Stratis.Core.Interfaces;
-using Stratis.Core.Properties;
 using Stratis.Core.Signals;
 using Stratis.Core.Utilities;
 
@@ -28,9 +28,6 @@ namespace Stratis.Core
     {
         /// <summary>Instance logger.</summary>
         private ILogger logger;
-
-        /// <summary>Factory for creating loggers.</summary>
-        private ILoggerFactory loggerFactory;
 
         /// <summary>Component responsible for starting and stopping all the node's features.</summary>
         private FullNodeFeatureExecutor fullNodeFeatureExecutor;
@@ -179,7 +176,6 @@ namespace Stratis.Core
             this.NodeStats = this.Services.ServiceProvider.GetService<INodeStats>();
 
             this.ConnectionManager = this.Services.ServiceProvider.GetService<IConnectionManager>();
-            this.loggerFactory = this.Services.ServiceProvider.GetService<NodeSettings>().LoggerFactory;
 
             this.AsyncProvider = this.Services.ServiceProvider.GetService<IAsyncProvider>();
 
