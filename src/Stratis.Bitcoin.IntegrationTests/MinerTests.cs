@@ -17,7 +17,7 @@ using Stratis.Core.Consensus.Rules;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.Mining;
+using Stratis.Core.Mining;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;

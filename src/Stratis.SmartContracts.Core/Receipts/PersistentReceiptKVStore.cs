@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Stratis.Core.Configuration;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.KeyValueStoreLevelDB;
+using Stratis.Core.NodeStorage.KeyValueStoreLevelDB;
 using Stratis.Core.Utilities;
 
 namespace Stratis.SmartContracts.Core.Receipts

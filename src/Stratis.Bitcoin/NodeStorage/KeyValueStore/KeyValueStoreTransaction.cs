@@ -5,7 +5,7 @@ using System.Linq;
 using Stratis.Core.Interfaces;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.KeyValueStore
+namespace Stratis.Core.NodeStorage.KeyValueStore
 {
     /// <summary>
     /// An abstract representation of the underlying database transaction.
@@ -222,7 +222,7 @@ namespace Stratis.Bitcoin.KeyValueStore
                 }
             }
         }
-      
+
         private IEnumerable<(TKey, TObject)> SelectAll<TKey, TObject>(string tableName, bool keysOnly, SortOrder sortOrder = SortOrder.Ascending,
             byte[] firstKeyBytes = null, byte[] lastKeyBytes = null, bool includeFirstKey = true, bool includeLastKey = true)
         {

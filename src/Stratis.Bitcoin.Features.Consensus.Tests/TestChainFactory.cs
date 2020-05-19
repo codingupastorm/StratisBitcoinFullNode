@@ -15,7 +15,7 @@ using Stratis.Core.Consensus;
 using Stratis.Core.Consensus.Rules;
 using Stratis.Core.Consensus.Validators;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.Mining;
+using Stratis.Core.Mining;
 using Stratis.Bitcoin.P2P;
 using Stratis.Bitcoin.P2P.Peer;
 using Stratis.Bitcoin.Signals;

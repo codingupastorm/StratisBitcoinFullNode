@@ -1,6 +1,6 @@
 ﻿using Stratis.Core.Interfaces;
 
-namespace Stratis.Bitcoin.KeyValueStore
+namespace Stratis.Core.NodeStorage.KeyValueStore
 {
     public class KeyValueStoreTable
     {

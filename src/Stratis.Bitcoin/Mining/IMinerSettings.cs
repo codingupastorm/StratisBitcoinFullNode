@@ -1,4 +1,4 @@
-﻿namespace Stratis.Bitcoin.Mining
+﻿namespace Stratis.Core.Mining
 {
     public interface IMinerSettings
     {
