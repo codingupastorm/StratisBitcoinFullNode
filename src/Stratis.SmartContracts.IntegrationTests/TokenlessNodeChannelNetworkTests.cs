@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -11,9 +10,9 @@ using Flurl.Http;
 using Microsoft.AspNetCore.Hosting;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin;
-using Stratis.Core.Controllers.Models;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Controllers.Models;
 using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
@@ -48,7 +47,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, server);
                 infraNode.Start();
 
-                var channelService = infraNode.FullNode.NodeService<IChannelService>();
+                var channelService = infraNode.FullNode.NodeService<IChannelService>() as ProcessChannelService;
                 Assert.True(channelService.StartedChannelNodes.Count == 1);
 
                 channelNodeProcess = Process.GetProcessById(channelService.StartedChannelNodes.First().Process.Id);
@@ -99,7 +98,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 parentNode.Restart();
 
                 // Ensure that the node started the other daemons, each belonging to their own channel (network).
-                var channelService = parentNode.FullNode.NodeService<IChannelService>();
+                var channelService = parentNode.FullNode.NodeService<IChannelService>() as ProcessChannelService;
                 Assert.True(channelService.StartedChannelNodes.Count == 5);
 
                 foreach (var channel in channelService.StartedChannelNodes)
@@ -171,7 +170,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     })
                     .GetAwaiter().GetResult();
 
-                IChannelService channelService = otherNode.FullNode.NodeService<IChannelService>();
+                var channelService = otherNode.FullNode.NodeService<IChannelService>() as ProcessChannelService;
                 Assert.Single(channelService.StartedChannelNodes);
 
                 // Start a node from an allowed organisation and ensure it can join too.
@@ -187,7 +186,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     })
                     .GetAwaiter().GetResult();
 
-                IChannelService otherNode2ChannelService = otherNode2.FullNode.NodeService<IChannelService>();
+                var otherNode2ChannelService = otherNode2.FullNode.NodeService<IChannelService>() as ProcessChannelService;
                 Assert.Single(otherNode2ChannelService.StartedChannelNodes);
             }
         }
@@ -212,7 +211,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CoreNode infraNode1 = nodeBuilder.CreateInfraNode(network, 0, server);
                 infraNode1.Start();
 
-                var channelService = infraNode1.FullNode.NodeService<IChannelService>();
+                var channelService = infraNode1.FullNode.NodeService<IChannelService>() as ProcessChannelService;
                 Assert.True(channelService.StartedChannelNodes.Count == 1);
 
                 // Create second system node.
