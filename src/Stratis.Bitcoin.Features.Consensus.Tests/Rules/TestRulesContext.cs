@@ -12,7 +12,7 @@ using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Consensus;
 using Stratis.Core.Consensus.Rules;
-using Stratis.Bitcoin.Signals;
+using Stratis.Core.Signals;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.CoinViews;

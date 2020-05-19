@@ -18,7 +18,7 @@ using Stratis.Core.Interfaces;
 using Stratis.Core.Mining;
 using Stratis.Core.P2P;
 using Stratis.Core.P2P.Peer;
-using Stratis.Bitcoin.Signals;
+using Stratis.Core.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;

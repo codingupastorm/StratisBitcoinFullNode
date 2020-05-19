@@ -8,18 +8,18 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
 using NBitcoin.Protocol;
+using Stratis.Bitcoin.Networks;
+using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.AsyncWork;
 using Stratis.Core.Base;
 using Stratis.Core.BlockPulling;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.Networks;
 using Stratis.Core.P2P.Peer;
 using Stratis.Core.P2P.Protocol;
 using Stratis.Core.P2P.Protocol.Behaviors;
 using Stratis.Core.P2P.Protocol.Payloads;
-using Stratis.Bitcoin.Tests.Common;
-using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin.Tests.BlockPulling
@@ -60,7 +60,7 @@ namespace Stratis.Bitcoin.Tests.BlockPulling
         {
             var peer = new Mock<INetworkPeer>();
 
-            var signals = new Bitcoin.Signals.Signals(this.loggerFactory, null);
+            var signals = new Core.Signals.Signals(this.loggerFactory, null);
             var asyncProvider = new AsyncProvider(this.loggerFactory, signals, new NodeLifetime());
 
             var connection = new NetworkPeerConnection(KnownNetworks.StratisMain, peer.Object, new TcpClient(), this.currentPeerId, (message, token) => Task.CompletedTask,

@@ -7,7 +7,7 @@ using NBitcoin;
 using Stratis.Core.Consensus;
 using Stratis.Core.Interfaces;
 using Stratis.Core.Mining;
-using Stratis.Bitcoin.Primitives;
+using Stratis.Core.Primitives;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool;

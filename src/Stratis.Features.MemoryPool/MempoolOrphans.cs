@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.EventBus.CoreEvents;
 using Stratis.Core.P2P.Peer;
-using Stratis.Bitcoin.Signals;
+using Stratis.Core.Signals;
 using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool.Interfaces;
 

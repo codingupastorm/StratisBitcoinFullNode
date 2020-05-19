@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Stratis.Core.Models;
-using Stratis.Bitcoin.Validations;
+using Stratis.Core.Validations;
 
 namespace Stratis.Features.SmartContracts.Models
 {

@@ -5,8 +5,8 @@ using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
 using Stratis.Bitcoin.IntegrationTests.Common.TestNetworks;
 using Stratis.Bitcoin.Networks;
-using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Primitives;
 using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests

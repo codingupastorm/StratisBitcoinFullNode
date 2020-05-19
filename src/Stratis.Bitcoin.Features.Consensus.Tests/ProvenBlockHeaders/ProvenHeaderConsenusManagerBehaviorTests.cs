@@ -16,7 +16,7 @@ using Stratis.Bitcoin.Networks;
 using Stratis.Core.P2P.Peer;
 using Stratis.Core.P2P.Protocol;
 using Stratis.Core.P2P.Protocol.Payloads;
-using Stratis.Bitcoin.Signals;
+using Stratis.Core.Signals;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;

@@ -4,7 +4,7 @@ using System.Text;
 using Stratis.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Core.Models;
 using Stratis.Core.Utilities.ValidationAttributes;
-using Stratis.Bitcoin.Validations;
+using Stratis.Core.Validations;
 
 namespace Stratis.Features.SmartContracts.Models
 {

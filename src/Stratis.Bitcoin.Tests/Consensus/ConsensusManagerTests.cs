@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Primitives;
+using Stratis.Core.Primitives;
 using Stratis.Core.Consensus;
 using Stratis.Core.Consensus.Validators;
 using Xunit;

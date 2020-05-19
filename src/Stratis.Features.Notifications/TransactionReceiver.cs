@@ -10,7 +10,7 @@ using Stratis.Core.P2P.Peer;
 using Stratis.Core.P2P.Protocol;
 using Stratis.Core.P2P.Protocol.Behaviors;
 using Stratis.Core.P2P.Protocol.Payloads;
-using Stratis.Bitcoin.Signals;
+using Stratis.Core.Signals;
 
 namespace Stratis.Features.Notifications
 {

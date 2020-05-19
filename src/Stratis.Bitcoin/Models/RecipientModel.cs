@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Stratis.Bitcoin.Validations;
+using Stratis.Core.Validations;
 using Stratis.Core.Utilities.ValidationAttributes;
 
 namespace Stratis.Core.Models

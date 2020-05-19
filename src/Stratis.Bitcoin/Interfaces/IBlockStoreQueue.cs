@@ -1,5 +1,5 @@
 ﻿using NBitcoin;
-using Stratis.Bitcoin.Primitives;
+using Stratis.Core.Primitives;
 
 namespace Stratis.Core.Interfaces
 {

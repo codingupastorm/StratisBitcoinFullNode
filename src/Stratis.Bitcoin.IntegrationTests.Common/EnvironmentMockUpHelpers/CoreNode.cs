@@ -21,8 +21,8 @@ using Stratis.Core.Interfaces;
 using Stratis.Core.P2P;
 using Stratis.Core.P2P.Peer;
 using Stratis.Core.P2P.Protocol.Payloads;
-using Stratis.Bitcoin.Primitives;
-using Stratis.Bitcoin.Signals;
+using Stratis.Core.Primitives;
+using Stratis.Core.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
@@ -234,7 +234,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         private IAsyncProvider GetOrCreateAsyncProvider()
         {
             if (this.runner.FullNode == null)
-                return new AsyncProvider(this.loggerFactory, new Signals.Signals(this.loggerFactory, null), new NodeLifetime());
+                return new AsyncProvider(this.loggerFactory, new Signals(this.loggerFactory, null), new NodeLifetime());
             else
                 return this.runner.FullNode.NodeService<IAsyncProvider>();
         }

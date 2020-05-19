@@ -1,20 +1,21 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.EventBus;
 using Stratis.Core.EventBus.CoreEvents;
-using Stratis.Bitcoin.Primitives;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Primitives;
+using Stratis.Core.Signals;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.Signals
 {
     public class SignalsTest
     {
-        private readonly Bitcoin.Signals.ISignals signals;
+        private readonly ISignals signals;
 
         public SignalsTest()
         {
-            this.signals = new Bitcoin.Signals.Signals(new LoggerFactory(), null);
+            this.signals = new Core.Signals.Signals(new LoggerFactory(), null);
         }
 
         [Fact]

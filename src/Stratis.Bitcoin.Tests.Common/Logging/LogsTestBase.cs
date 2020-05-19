@@ -4,8 +4,9 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
-using Stratis.Core.Configuration.Logging;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Configuration.Logging;
+using Stratis.Core.Signals;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Bitcoin.Tests.Common.Logging
@@ -113,7 +114,7 @@ namespace Stratis.Bitcoin.Tests.Common.Logging
         protected IAsyncProvider CreateAsyncProvider()
         {
             var loggerFactory = new ExtendedLoggerFactory();
-            var signals = new Signals.Signals(loggerFactory, null);
+            var signals = new Signals(loggerFactory, null);
             var nodeLifetime = new NodeLifetime();
             var asyncProvider = new AsyncProvider(loggerFactory, signals, nodeLifetime);
 

@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Stratis.Core.Models;
 using Stratis.Core.Utilities.ValidationAttributes;
-using Stratis.Bitcoin.Validations;
+using Stratis.Core.Validations;
 
 namespace Stratis.Features.Wallet.Models
 {
@@ -207,7 +207,7 @@ namespace Stratis.Features.Wallet.Models
         /// then the balance for the entire wallet (all accounts) is retrieved.
         /// </summary>         
         public string AccountName { get; set; }
-        
+
         /// <summary>
         /// For Cirrus we need to get Balances By Address
         /// </summary>
@@ -509,7 +509,7 @@ namespace Stratis.Features.Wallet.Models
         /// </summary>
         public string WalletName { get; set; }
     }
-    
+
     /// <summary>
     /// A class containing the necessary parameters for a wallet stats request.
     /// </summary>
@@ -543,7 +543,7 @@ namespace Stratis.Features.Wallet.Models
         /// </summary>
         public bool Verbose { get; set; }
     }
-    
+
     /// <summary>
     /// A class containing the necessary parameters to perform an add address book entry request.
     /// </summary>
