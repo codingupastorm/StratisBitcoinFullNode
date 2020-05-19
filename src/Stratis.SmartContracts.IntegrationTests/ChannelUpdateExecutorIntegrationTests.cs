@@ -18,6 +18,7 @@ using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.Networks;
+using Stratis.Features.Api;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;
 
@@ -57,19 +58,19 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Create second system node.
                 CoreNode infraNode2 = nodeBuilder.CreateInfraNode(network, 1, server, caBaseAddress: this.caBaseAddress);
 
-                //CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 2, server, caBaseAddress: this.caBaseAddress, organisation: "Org1");
-                //CoreNode node3 = nodeBuilder.CreateTokenlessNode(this.network, 3, server, caBaseAddress: this.caBaseAddress, organisation: "Org2");
+                CoreNode node2 = nodeBuilder.CreateTokenlessNodeWithChannels(this.network, 2, server, caBaseAddress: this.caBaseAddress, organisation: "Org1");
+                CoreNode node3 = nodeBuilder.CreateTokenlessNodeWithChannels(this.network, 3, server, caBaseAddress: this.caBaseAddress, organisation: "Org2");
 
-                var certificates = new List<X509Certificate>() { infraNode.ClientCertificate.ToCertificate(), infraNode2.ClientCertificate.ToCertificate(), };//node2.ClientCertificate.ToCertificate(), node3.ClientCertificate.ToCertificate() };
+                var certificates = new List<X509Certificate>() { infraNode.ClientCertificate.ToCertificate(), infraNode2.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate(), node3.ClientCertificate.ToCertificate() };
 
                 TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, infraNode.DataFolder, this.network);
                 TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, infraNode2.DataFolder, network);
-                //TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node2.DataFolder, this.network);
-                //TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node3.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node2.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node3.DataFolder, this.network);
 
                 infraNode2.Start();
-                //node2.Start();
-                //node3.Start();
+                node2.Start();
+                node3.Start();
 
                 // Connect the existing node to it.
                 await $"http://localhost:{infraNode.SystemChannelApiPort}/api"
@@ -77,9 +78,9 @@ namespace Stratis.SmartContracts.IntegrationTests
                     .SetQueryParam("endpoint", $"127.0.0.1:{infraNode2.ProtocolPort}")
                     .SetQueryParam("command", "add").GetAsync();
 
-                //TestHelper.Connect(infraNode, node2);
-                //TestHelper.Connect(node2, node3);
-                //TestHelper.Connect(infraNode, node3);
+                TestHelper.Connect(infraNode, node2);
+                TestHelper.Connect(node2, node3);
+                TestHelper.Connect(infraNode, node3);
 
                 // Wait until the first system channel node's tip has advanced beyond bootstrap mode.
                 TestBase.WaitLoop(() =>
@@ -147,15 +148,11 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(2).TotalMilliseconds);
 
-                // TODO Check that node2/3 can't access the channel.
-                // TODO Add node2/3's org to the channel access control and update
-                // TODO Then check again
-
                 var orgToAdd = "TestOrg";
 
                 var request = new ChannelUpdateRequest
                 {
-                    Name = "Channel1",
+                    Name = newChannelName,
                     MembersToAdd = new AccessControlList
                     {
                         Organisations = new List<string>
@@ -171,6 +168,32 @@ namespace Stratis.SmartContracts.IntegrationTests
                 await infraNode.BroadcastTransactionAsync(tx);
                 TestBase.WaitLoop(() => infraNode2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await infraNode.MineBlocksAsync(1);
+
+                // TODO Check that node2/3 can't access the channel.
+                // Get the marketing network's JSON.
+                string networkJson = $"http://localhost:{infraNode.SystemChannelApiPort}/api"
+                    .AppendPathSegment("channels/networkjson")
+                    .SetQueryParam("cn", newChannelName)
+                    .GetStringAsync()
+                    .GetAwaiter().GetResult();
+
+                dynamic channelNetwork = $"http://localhost:{infraNode.SystemChannelApiPort}/api"
+                    .AppendPathSegment("channels/networkjson")
+                    .SetQueryParam("cn", newChannelName)
+                    .GetJsonAsync()
+                    .GetAwaiter().GetResult();
+
+                // Attempt to join the channel with node 2.
+                var joinChannelResponse = $"{(new ApiSettings(node2.FullNode.Settings)).ApiUri}"
+                    .AppendPathSegment("api/channels/join")
+                    .PostJsonAsync(new ChannelJoinRequest()
+                    {
+                        NetworkJson = networkJson
+                    })
+                    .GetAwaiter().GetResult();
+
+                // TODO Add node2/3's org to the channel access control and update
+                // TODO Then check again
 
                 // This approach doesn't work, try building the tx directly instead.
                 //var response = await $"http://localhost:{infraNode.SystemChannelApiPort}/api".AppendPathSegment("channels/update").PostJsonAsync(request);
