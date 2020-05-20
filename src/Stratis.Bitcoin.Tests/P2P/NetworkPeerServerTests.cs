@@ -8,10 +8,11 @@ using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.P2P;
-using Stratis.Bitcoin.P2P.Peer;
+using Stratis.Core.P2P;
+using Stratis.Core.P2P.Peer;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
+using Stratis.Core.Connection;
 using Stratis.Core.Utilities;
 using Xunit;
 using Xunit.Abstractions;
@@ -56,6 +57,14 @@ namespace Stratis.Bitcoin.Tests.P2P
             var peerAddressManager = new Mock<IPeerAddressManager>();
             peerAddressManager.Setup(pam => pam.FindPeersByIp(It.IsAny<IPEndPoint>())).Returns(new List<PeerAddress>());
 
+            var connectionManager = new Mock<IConnectionManager>();
+            connectionManager.Setup(a => a.ConnectedPeers.FindByIp(It.IsAny<IPAddress>()))
+                .Returns(new List<INetworkPeer>() {});
+
+            var selfEndpointTracker = new Mock<ISelfEndpointTracker>();
+            selfEndpointTracker.Setup(a => a.IsSelf(It.IsAny<IPEndPoint>()))
+                .Returns(false);
+
             var networkPeerServer = new NetworkPeerServer(this.Network,
                 endpointAddNode,
                 endpointAddNode,
@@ -66,6 +75,8 @@ namespace Stratis.Bitcoin.Tests.P2P
                 connectionManagerSettings,
                 asyncProvider,
                 peerAddressManager.Object,
+                connectionManager.Object,
+                selfEndpointTracker.Object,
                 DateTimeProvider.Default);
 
             // Mimic external client

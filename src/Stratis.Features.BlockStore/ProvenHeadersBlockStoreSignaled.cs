@@ -1,11 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Stratis.Core.AsyncWork;
 using Stratis.Core.Base;
 using Stratis.Core.Connection;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.Primitives;
-using Stratis.Bitcoin.Signals;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Primitives;
+using Stratis.Core.Signals;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Features.BlockStore

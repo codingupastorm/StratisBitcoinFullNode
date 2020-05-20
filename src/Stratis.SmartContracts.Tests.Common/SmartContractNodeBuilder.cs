@@ -52,6 +52,7 @@ namespace Stratis.SmartContracts.Tests.Common
             int? apiPortOverride = null,
             string organisation = null,
             List<string> permissions = null,
+            bool debugChannels = false,
             NodeConfigParameters configParameters = null)
         {
             string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
@@ -81,7 +82,7 @@ namespace Stratis.SmartContracts.Tests.Common
             if (willStartChannels)
                 configParameters.Add("channelprocesspath", "..\\..\\..\\..\\Stratis.TokenlessD\\");
 
-            CoreNode node = this.CreateNode(new TokenlessNodeRunner(dataFolder, network, this.TimeProvider, agent), "poa.conf", configParameters: configParameters);
+            CoreNode node = this.CreateNode(new TokenlessNodeRunner(dataFolder, network, this.TimeProvider, agent, debugChannels ? this :  null), "poa.conf", configParameters: configParameters);
 
             Mnemonic mnemonic = nodeIndex < 3
                 ? TokenlessNetwork.Mnemonics[nodeIndex]
@@ -152,18 +153,18 @@ namespace Stratis.SmartContracts.Tests.Common
         /// This creates a standard (normal) node on the <see cref="TokenlessNetwork"/>.
         /// </summary>
         public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, IWebHost server, string organisation = null, bool initialRun = true, List<string> permissions = null, 
-            string agent = "tokenless", NodeConfigParameters configParameters = null)
+            string agent = "tokenless", bool debugChannels = false, NodeConfigParameters configParameters = null)
         {
-            return CreateCoreNode(network, nodeIndex, server, agent, false, false, false, initialRun, organisation: organisation, permissions: permissions, configParameters: configParameters);
+            return CreateCoreNode(network, nodeIndex, server, agent, false, false, false, initialRun, organisation: organisation, permissions: permissions, debugChannels: debugChannels, configParameters: configParameters);
         }
 
         /// <summary>
         /// This creates a standard (normal) node on the <see cref="TokenlessNetwork"/> that is also apart of other channels.
         /// </summary>
         public CoreNode CreateTokenlessNodeWithChannels(TokenlessNetwork network, int nodeIndex, IWebHost server, bool initialRun = true, string organisation = null, 
-            string agent = "tokenless", NodeConfigParameters configParameters = null)
+            bool debugChannels = false, string agent = "tokenless", NodeConfigParameters configParameters = null)
         {
-            return CreateCoreNode(network, nodeIndex, server, agent, false, false, true, initialRun, organisation: organisation, configParameters: configParameters);
+            return CreateCoreNode(network, nodeIndex, server, agent, false, false, true, initialRun, organisation: organisation, debugChannels: debugChannels, configParameters: configParameters);
         }
 
         /// <summary>
@@ -205,6 +206,12 @@ namespace Stratis.SmartContracts.Tests.Common
             // Save the channel definition so that it can loaded on node start.
             IChannelRepository channelRepository = parentNode.FullNode.NodeService<IChannelRepository>();
             channelRepository.SaveChannelDefinition(new ChannelDefinition() { Id = nodeIndex, Name = channelName, AccessList = channelNetwork.InitialAccessList, NetworkJson = serializedJson });
+        }
+
+        public CoreNode CreateChannelNode(string channelRootFolder, params string[] channelArgs)
+        {
+            CoreNode node = this.CreateNode(new ChannelNodeRunner(channelArgs, channelRootFolder, this.TimeProvider), "poa.conf");
+            return node;
         }
 
         private TokenlessKeyStoreManager InitializeNodeKeyStore(CoreNode node, Network network, NodeSettings settings)

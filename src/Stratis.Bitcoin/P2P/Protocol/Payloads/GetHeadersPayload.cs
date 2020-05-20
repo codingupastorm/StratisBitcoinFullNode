@@ -1,7 +1,7 @@
 ﻿using NBitcoin;
 using NBitcoin.Protocol;
 
-namespace Stratis.Bitcoin.P2P.Protocol.Payloads
+namespace Stratis.Core.P2P.Protocol.Payloads
 {
     /// <summary>
     /// Ask block headers that happened since BlockLocator.

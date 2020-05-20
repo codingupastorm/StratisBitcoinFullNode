@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text;
-using Stratis.Bitcoin.Validations;
+using Stratis.Core.Validations;
 
 namespace Stratis.Feature.PoA.Tokenless.Controllers.Models
 {

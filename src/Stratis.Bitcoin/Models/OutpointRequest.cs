@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Stratis.Bitcoin.Models
+namespace Stratis.Core.Models
 {
     public class OutpointRequest : RequestModel
     {

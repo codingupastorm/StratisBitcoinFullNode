@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Net;
 using NBitcoin;
-using Stratis.Bitcoin.P2P;
+using Stratis.Core.P2P;
 
 namespace Stratis.Core.Configuration
 {

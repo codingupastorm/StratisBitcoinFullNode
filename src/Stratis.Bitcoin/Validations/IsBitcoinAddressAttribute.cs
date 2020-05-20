@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using NBitcoin;
 
-namespace Stratis.Bitcoin.Validations
+namespace Stratis.Core.Validations
 {
     public class IsBitcoinAddressAttribute : ValidationAttribute
     {

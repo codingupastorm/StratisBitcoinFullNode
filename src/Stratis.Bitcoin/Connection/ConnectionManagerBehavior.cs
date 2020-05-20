@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.P2P.Protocol.Behaviors;
-using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Core.P2P.Peer;
+using Stratis.Core.P2P.Protocol.Behaviors;
+using Stratis.Core.P2P.Protocol.Payloads;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 using TracerAttributes;

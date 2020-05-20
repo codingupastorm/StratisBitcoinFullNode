@@ -7,7 +7,7 @@ using NBitcoin;
 using Stratis.Core.Utilities;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.P2P.Peer
+namespace Stratis.Core.P2P.Peer
 {
     public class NetworkPeerEventArgs : EventArgs
     {

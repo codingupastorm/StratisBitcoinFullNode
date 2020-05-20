@@ -1,7 +1,7 @@
 ﻿using NBitcoin;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.P2P.Protocol.Payloads
+namespace Stratis.Core.P2P.Protocol.Payloads
 {
     public class BitcoinSerializablePayload<T> : Payload where T : IBitcoinSerializable, new()
     {

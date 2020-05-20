@@ -7,10 +7,10 @@ using System.Text;
 using LevelDB;
 using Microsoft.Extensions.Logging;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.KeyValueStore;
+using Stratis.Core.NodeStorage.KeyValueStore;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.KeyValueStoreLevelDB
+namespace Stratis.Core.NodeStorage.KeyValueStoreLevelDB
 {
     public class KeyValueStoreLevelDB : IKeyValueStoreRepository
     {

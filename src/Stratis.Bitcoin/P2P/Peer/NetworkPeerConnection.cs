@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Protocol;
-using Stratis.Core.EventBus.CoreEvents;
-using Stratis.Bitcoin.P2P.Protocol;
-using Stratis.Bitcoin.P2P.Protocol.Payloads;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.EventBus.CoreEvents;
+using Stratis.Core.P2P.Protocol;
+using Stratis.Core.P2P.Protocol.Payloads;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 
-namespace Stratis.Bitcoin.P2P.Peer
+namespace Stratis.Core.P2P.Peer
 {
     /// <summary>
     /// Represents a network connection to a peer. It is responsible for reading incoming messages

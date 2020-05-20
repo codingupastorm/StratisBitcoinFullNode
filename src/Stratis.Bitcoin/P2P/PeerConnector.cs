@@ -6,15 +6,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Stratis.Core.AsyncWork;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Connection;
-using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.P2P.Peer;
 using Stratis.Core.Utilities;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.P2P
+namespace Stratis.Core.P2P
 {
     /// <summary>Contract for <see cref="PeerConnector"/>.</summary>
     public interface IPeerConnector : IDisposable

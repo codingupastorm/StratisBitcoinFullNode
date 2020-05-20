@@ -7,7 +7,7 @@ using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Bitcoin.Networks;
-using Stratis.Bitcoin.P2P;
+using Stratis.Core.P2P;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;

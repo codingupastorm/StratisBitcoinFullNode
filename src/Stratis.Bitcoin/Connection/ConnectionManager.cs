@@ -10,9 +10,9 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Consensus;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.P2P;
-using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Core.P2P;
+using Stratis.Core.P2P.Peer;
+using Stratis.Core.P2P.Protocol.Payloads;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Logging;
@@ -198,7 +198,7 @@ namespace Stratis.Core.Connection
             foreach (NodeServerEndpoint listen in this.ConnectionSettings.Bind)
             {
                 NetworkPeerConnectionParameters cloneParameters = this.Parameters.Clone();
-                INetworkPeerServer server = this.NetworkPeerFactory.CreateNetworkPeerServer(listen.Endpoint, this.ConnectionSettings.ExternalEndpoint, this.Parameters.Version);
+                INetworkPeerServer server = this.NetworkPeerFactory.CreateNetworkPeerServer(listen.Endpoint, this.ConnectionSettings.ExternalEndpoint, this, this.Parameters.Version);
 
                 this.Servers.Add(server);
                 var cmb = (cloneParameters.TemplateBehaviors.Single(x => x is IConnectionManagerBehavior) as ConnectionManagerBehavior);
@@ -454,7 +454,7 @@ namespace Stratis.Core.Connection
         {
             this.consensusManager.PeerDisconnected(networkPeerId);
         }
-
+        
         public INetworkPeer FindNodeByEndpoint(IPEndPoint ipEndpoint)
         {
             return this.connectedPeers.FindByEndpoint(ipEndpoint);

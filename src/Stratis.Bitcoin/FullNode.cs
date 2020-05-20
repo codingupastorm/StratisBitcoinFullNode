@@ -6,17 +6,20 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.PlatformAbstractions;
 using NBitcoin;
+using Stratis.Bitcoin.Properties;
+using Stratis.Core.AsyncWork;
 using Stratis.Core.Base;
 using Stratis.Core.Builder;
 using Stratis.Core.Configuration;
 using Stratis.Core.Connection;
 using Stratis.Core.Consensus;
 using Stratis.Core.Interfaces;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.Signals;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin
+namespace Stratis.Core
 {
     /// <summary>
     /// Node providing all supported features of the blockchain and its network.
@@ -25,9 +28,6 @@ namespace Stratis.Bitcoin
     {
         /// <summary>Instance logger.</summary>
         private ILogger logger;
-
-        /// <summary>Factory for creating loggers.</summary>
-        private ILoggerFactory loggerFactory;
 
         /// <summary>Component responsible for starting and stopping all the node's features.</summary>
         private FullNodeFeatureExecutor fullNodeFeatureExecutor;
@@ -42,7 +42,7 @@ namespace Stratis.Bitcoin
         public IInitialBlockDownloadState InitialBlockDownloadState { get; private set; }
 
         /// <summary>Provider of notification about newly available blocks and transactions.</summary>
-        public Signals.ISignals Signals { get; set; }
+        public ISignals Signals { get; set; }
 
         /// <summary>ASP.NET Core host for RPC server.</summary>
         public IWebHost RPCHost { get; set; }
@@ -129,7 +129,7 @@ namespace Stratis.Bitcoin
             get
             {
                 string versionString = typeof(FullNode).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ??
-                    Microsoft.Extensions.PlatformAbstractions.PlatformServices.Default.Application.ApplicationVersion;
+                    PlatformServices.Default.Application.ApplicationVersion;
 
                 if (!string.IsNullOrEmpty(versionString))
                 {
@@ -171,16 +171,15 @@ namespace Stratis.Bitcoin
             this.Settings = this.Services.ServiceProvider.GetService<NodeSettings>();
             this.ChainBehaviorState = this.Services.ServiceProvider.GetService<IChainState>();
             this.ChainIndexer = this.Services.ServiceProvider.GetService<ChainIndexer>();
-            this.Signals = this.Services.ServiceProvider.GetService<Signals.ISignals>();
+            this.Signals = this.Services.ServiceProvider.GetService<ISignals>();
             this.InitialBlockDownloadState = this.Services.ServiceProvider.GetService<IInitialBlockDownloadState>();
             this.NodeStats = this.Services.ServiceProvider.GetService<INodeStats>();
 
             this.ConnectionManager = this.Services.ServiceProvider.GetService<IConnectionManager>();
-            this.loggerFactory = this.Services.ServiceProvider.GetService<NodeSettings>().LoggerFactory;
 
             this.AsyncProvider = this.Services.ServiceProvider.GetService<IAsyncProvider>();
 
-            this.logger.LogInformation(Properties.Resources.AsciiLogo);
+            this.logger.LogInformation(Resources.AsciiLogo);
             this.logger.LogInformation("Full node initialized on {0}.", this.Network.Name);
 
             this.State = FullNodeState.Initialized;

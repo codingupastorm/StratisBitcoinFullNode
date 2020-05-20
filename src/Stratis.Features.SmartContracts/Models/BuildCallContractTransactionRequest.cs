@@ -3,9 +3,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Text;
 using Newtonsoft.Json;
 using Stratis.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
-using Stratis.Bitcoin.Models;
+using Stratis.Core.Models;
 using Stratis.Core.Utilities.ValidationAttributes;
-using Stratis.Bitcoin.Validations;
+using Stratis.Core.Validations;
 
 namespace Stratis.Features.SmartContracts.Models
 {

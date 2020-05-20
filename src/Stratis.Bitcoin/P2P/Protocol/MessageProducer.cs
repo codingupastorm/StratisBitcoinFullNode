@@ -2,7 +2,7 @@
 using ConcurrentCollections;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin.P2P.Protocol
+namespace Stratis.Core.P2P.Protocol
 {
     /// <summary>
     /// Binding between <see cref="MessageProducer{T}"/> and <see cref="IMessageListener{T}"/>.

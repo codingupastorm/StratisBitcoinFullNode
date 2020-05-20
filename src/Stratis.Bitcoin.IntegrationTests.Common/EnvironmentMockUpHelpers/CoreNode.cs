@@ -11,20 +11,21 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
 using Org.BouncyCastle.X509;
+using Stratis.Bitcoin.IntegrationTests.Common.Runners;
+using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core;
+using Stratis.Core.AsyncWork;
 using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Consensus;
 using Stratis.Core.EventBus;
 using Stratis.Core.EventBus.CoreEvents;
-using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.P2P;
-using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.P2P.Protocol.Payloads;
-using Stratis.Bitcoin.Primitives;
-using Stratis.Bitcoin.Signals;
-using Stratis.Bitcoin.Tests.Common;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.P2P;
+using Stratis.Core.P2P.Peer;
+using Stratis.Core.P2P.Protocol.Payloads;
+using Stratis.Core.Primitives;
+using Stratis.Core.Signals;
 using Stratis.Core.Utilities;
 using Stratis.Features.Wallet;
 using Stratis.Features.Wallet.Interfaces;
@@ -234,7 +235,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         private IAsyncProvider GetOrCreateAsyncProvider()
         {
             if (this.runner.FullNode == null)
-                return new AsyncProvider(this.loggerFactory, new Signals.Signals(this.loggerFactory, null), new NodeLifetime());
+                return new AsyncProvider(this.loggerFactory, new Signals(this.loggerFactory, null), new NodeLifetime());
             else
                 return this.runner.FullNode.NodeService<IAsyncProvider>();
         }

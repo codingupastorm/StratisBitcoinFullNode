@@ -3,10 +3,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.P2P.Protocol;
-using Stratis.Bitcoin.P2P.Protocol.Behaviors;
-using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Core.P2P.Peer;
+using Stratis.Core.P2P.Protocol;
+using Stratis.Core.P2P.Protocol.Behaviors;
+using Stratis.Core.P2P.Protocol.Payloads;
 using TracerAttributes;
 
 namespace Stratis.Features.MemoryPool.Broadcasting

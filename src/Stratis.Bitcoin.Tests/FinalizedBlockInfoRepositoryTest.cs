@@ -2,9 +2,10 @@
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
-using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Configuration;
+using Stratis.Core.Consensus;
 using Stratis.Core.Utilities;
 using Xunit;
 

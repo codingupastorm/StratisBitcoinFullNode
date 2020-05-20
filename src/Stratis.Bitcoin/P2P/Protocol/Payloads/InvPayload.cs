@@ -3,7 +3,7 @@ using System.Linq;
 using NBitcoin;
 using TracerAttributes;
 
-namespace Stratis.Bitcoin.P2P.Protocol.Payloads
+namespace Stratis.Core.P2P.Protocol.Payloads
 {
     /// <summary>
     /// Announce the hash of a transaction or block.

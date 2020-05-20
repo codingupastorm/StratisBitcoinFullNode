@@ -8,8 +8,8 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Base;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.P2P.Protocol.Payloads;
+using Stratis.Core.P2P.Peer;
+using Stratis.Core.P2P.Protocol.Payloads;
 using Stratis.Core.Utilities;
 using TracerAttributes;
 

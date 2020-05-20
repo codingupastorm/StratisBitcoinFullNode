@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.Mining;
+using Stratis.Core.Mining;
 using Stratis.Core.Utilities;
 
 namespace Stratis.Features.Miner

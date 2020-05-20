@@ -7,7 +7,7 @@ using NBitcoin;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 
-namespace Stratis.Bitcoin
+namespace Stratis.Core.Consensus
 {
     /// <summary>Provider of the last finalized block's height and hash.</summary>
     /// <remarks>

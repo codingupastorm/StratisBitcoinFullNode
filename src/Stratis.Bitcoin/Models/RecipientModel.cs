@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Stratis.Core.Validations;
 using Stratis.Core.Utilities.ValidationAttributes;
-using Stratis.Bitcoin.Validations;
 
-namespace Stratis.Bitcoin.Models
+namespace Stratis.Core.Models
 {
     public class RecipientModel
     {

@@ -4,7 +4,7 @@ using System.Runtime.Loader;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Stratis.Bitcoin;
+using Stratis.Core;
 
 namespace Stratis.Core.Utilities
 {

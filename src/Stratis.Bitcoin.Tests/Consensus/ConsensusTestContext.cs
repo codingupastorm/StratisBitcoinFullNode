@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
+using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.AsyncWork;
 using Stratis.Core.Base;
 using Stratis.Core.Base.Deployments;
 using Stratis.Core.BlockPulling;
@@ -18,12 +20,10 @@ using Stratis.Core.Consensus;
 using Stratis.Core.Consensus.Rules;
 using Stratis.Core.Consensus.Validators;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.P2P;
-using Stratis.Bitcoin.P2P.Peer;
-using Stratis.Bitcoin.P2P.Protocol.Payloads;
-using Stratis.Bitcoin.Signals;
-using Stratis.Bitcoin.Tests.Common;
-using Stratis.Core.AsyncWork;
+using Stratis.Core.P2P;
+using Stratis.Core.P2P.Peer;
+using Stratis.Core.P2P.Protocol.Payloads;
+using Stratis.Core.Signals;
 using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.Rules;
 using Stratis.Features.Consensus.Rules.CommonRules;
@@ -107,10 +107,10 @@ namespace Stratis.Bitcoin.Tests.Consensus
             this.selfEndpointTracker = new SelfEndpointTracker(this.loggerFactory, connectionSettings);
             this.Network.Consensus.Options = new ConsensusOptions();
 
-            this.signals = new Bitcoin.Signals.Signals(this.loggerFactory, null);
+            this.signals = new Core.Signals.Signals(this.loggerFactory, null);
             this.asyncProvider = new AsyncProvider(this.loggerFactory, this.signals, this.nodeLifetime);
 
-            // Dont check PoW of a header in this test.
+            // Don't check PoW of a header in this test.
             this.Network.Consensus.ConsensusRules.HeaderValidationRules.RemoveAll(x => x.GetType() == typeof(CheckDifficultyPowRule));
 
             this.ChainedHeaderTree = new ChainedHeaderTree(
@@ -350,7 +350,7 @@ namespace Stratis.Bitcoin.Tests.Consensus
         {
             var networkPeer = new Mock<INetworkPeer>();
 
-            var signals = new Bitcoin.Signals.Signals(this.loggerFactory, null);
+            var signals = new Core.Signals.Signals(this.loggerFactory, null);
             var asyncProvider = new AsyncProvider(this.loggerFactory, this.signals, new NodeLifetime());
 
             var connection = new NetworkPeerConnection(this.Network, networkPeer.Object, new TcpClient(), 0, (message, token) => Task.CompletedTask,
