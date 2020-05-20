@@ -64,8 +64,11 @@ namespace Stratis.SmartContracts.Tests.Common
             if (configParameters == null)
                 configParameters = new NodeConfigParameters();
 
-            configParameters.Add("caurl", caBaseAddress);
-            configParameters.Add("debug", "1");
+            if (!configParameters.ContainsKey("caurl"))
+                configParameters.Add("caurl", caBaseAddress);
+
+            if (!configParameters.ContainsKey("debug"))
+                configParameters.Add("debug", "1");
 
             if (isInfraNode)
             {

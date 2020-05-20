@@ -388,8 +388,13 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
                 var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "conn-10-node1").Start();
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "conn-10-node2").Start();
+                var nodeConfig = new NodeConfigParameters
+                {
+                    { "bantime", "120" }
+                };
+
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "conn-10-node1", configParameters: nodeConfig).Start();
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "conn-10-node2", configParameters: nodeConfig).Start();
 
                 TestHelper.Connect(node1, node2);
 
@@ -408,9 +413,8 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
                 }
 
                 // Inbound peer count should still be 0.
-                // TODO: This is not even true after the ban and disconnect. Find out why.
-                //var server2 = node1.FullNode.ConnectionManager.Servers.First();
-                //Assert.True(server2.ConnectedInboundPeersCount == 0);
+                var server2 = node1.FullNode.ConnectionManager.Servers.First();
+                Assert.True(server2.ConnectedInboundPeersCount == 0);
             }
         }
 
