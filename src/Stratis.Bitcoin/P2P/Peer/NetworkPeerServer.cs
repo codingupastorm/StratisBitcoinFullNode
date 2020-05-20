@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Protocol;
-using Stratis.Core.Signals;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Connection;
 using Stratis.Core.EventBus.CoreEvents;
 using Stratis.Core.Interfaces;
+using Stratis.Core.Signals;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 

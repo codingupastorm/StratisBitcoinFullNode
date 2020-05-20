@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Stratis.Core.Validations;
 using Stratis.Core.Utilities.ValidationAttributes;
+using Stratis.Core.Validations;
 
 namespace Stratis.Core.Models
 {

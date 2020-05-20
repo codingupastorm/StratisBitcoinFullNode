@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Stratis.Core.P2P.Peer;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.P2P.Peer;
 
 namespace Stratis.Core.P2P.Protocol
 {

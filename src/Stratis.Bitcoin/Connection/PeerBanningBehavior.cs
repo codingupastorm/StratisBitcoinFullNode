@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
+using Stratis.Core.Configuration;
 using Stratis.Core.P2P.Peer;
 using Stratis.Core.P2P.Protocol.Behaviors;
-using Stratis.Core.Configuration;
 using TracerAttributes;
 
 namespace Stratis.Core.Connection

@@ -45,7 +45,8 @@ namespace Stratis.Core.NodeStorage
 
                                     stack.Push(key);
                                     key = newKey;
-                                } while (!blockHeight.ContainsKey(key));
+                                }
+                                while (!blockHeight.ContainsKey(key));
 
                                 height = blockHeight[key];
                                 while (stack.Count > 0)

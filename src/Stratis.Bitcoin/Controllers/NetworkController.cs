@@ -5,10 +5,10 @@ using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Core.P2P;
-using Stratis.Core.P2P.Peer;
 using Stratis.Core.Connection;
 using Stratis.Core.Controllers.Models;
+using Stratis.Core.P2P;
+using Stratis.Core.P2P.Peer;
 using Stratis.Core.Utilities.Extensions;
 using Stratis.Core.Utilities.JsonErrors;
 

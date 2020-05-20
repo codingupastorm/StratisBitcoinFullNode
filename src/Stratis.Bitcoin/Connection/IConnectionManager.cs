@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 using NBitcoin;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Consensus;
 using Stratis.Core.P2P;
 using Stratis.Core.P2P.Peer;
 using Stratis.Core.P2P.Protocol.Payloads;
-using Stratis.Core.Configuration;
-using Stratis.Core.Configuration.Settings;
 
 namespace Stratis.Core.Connection
 {

@@ -8,15 +8,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Configuration;
+using Stratis.Core.Configuration.Logging;
+using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Consensus;
 using Stratis.Core.Interfaces;
 using Stratis.Core.P2P;
 using Stratis.Core.P2P.Peer;
 using Stratis.Core.P2P.Protocol.Payloads;
-using Stratis.Core.AsyncWork;
-using Stratis.Core.Configuration;
-using Stratis.Core.Configuration.Logging;
-using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 
@@ -454,7 +454,7 @@ namespace Stratis.Core.Connection
         {
             this.consensusManager.PeerDisconnected(networkPeerId);
         }
-        
+
         public INetworkPeer FindNodeByEndpoint(IPEndPoint ipEndpoint)
         {
             return this.connectedPeers.FindByEndpoint(ipEndpoint);

@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Stratis.Core.Configuration;
 using Stratis.Core.Base;
+using Stratis.Core.Configuration;
 
 namespace Stratis.Core.Builder
 {

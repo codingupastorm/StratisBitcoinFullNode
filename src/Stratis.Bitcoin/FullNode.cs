@@ -8,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.PlatformAbstractions;
 using NBitcoin;
-using Stratis.Bitcoin.Properties;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Base;
 using Stratis.Core.Builder;
@@ -16,6 +15,7 @@ using Stratis.Core.Configuration;
 using Stratis.Core.Connection;
 using Stratis.Core.Consensus;
 using Stratis.Core.Interfaces;
+using Stratis.Core.Properties;
 using Stratis.Core.Signals;
 using Stratis.Core.Utilities;
 

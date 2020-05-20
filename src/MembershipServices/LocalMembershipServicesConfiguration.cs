@@ -123,7 +123,7 @@ namespace MembershipServices
                 this.mapAddresses.TryRemove(MembershipServicesDirectory.GetCertificateTransactionSigningAddress(certificate, this.network), out _);
                 this.mapTransactionSigningPubKeyHash.TryRemove(MembershipServicesDirectory.ExtractCertificateExtension(certificate, CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid), out _);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return false;
             }
@@ -213,7 +213,7 @@ namespace MembershipServices
 
                     this.PutCertificateIntoMappings(certificate);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     // TODO: Log potentially corrupted certificate files in the signcerts folder
                 }
@@ -233,7 +233,7 @@ namespace MembershipServices
 
                     this.PutCertificateIntoMappings(certificate);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     // TODO: Log potentially corrupted certificate files in the peercerts folder
                 }

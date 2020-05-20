@@ -1,7 +1,7 @@
 ﻿using System;
 using NBitcoin;
-using Stratis.Core.P2P.Protocol.Payloads;
 using Stratis.Core.Configuration.Settings;
+using Stratis.Core.P2P.Protocol.Payloads;
 
 namespace Stratis.Core.Consensus
 {

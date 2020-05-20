@@ -189,17 +189,17 @@ namespace Stratis.Core.NodeStorage.KeyValueStore
             return this.SelectAll<TKey, TObject>(tableName).ToDictionary(kv => kv.Item1, kv => kv.Item2);
         }
 
-        private IEnumerable<O> MergeSortedEnumerations<O, T>(IEnumerable<O> primary, IEnumerable<O> secondary, Func<O, T> keySelector, IComparer<T> comparer, SortOrder sortOrder)
+        private IEnumerable<To> MergeSortedEnumerations<To, T>(IEnumerable<To> primary, IEnumerable<To> secondary, Func<To, T> keySelector, IComparer<T> comparer, SortOrder sortOrder)
         {
             Guard.Assert(sortOrder != SortOrder.Unsorted);
 
             while (true)
             {
-                O first = primary.FirstOrDefault();
-                O second = secondary.FirstOrDefault();
+                To first = primary.FirstOrDefault();
+                To second = secondary.FirstOrDefault();
 
-                bool firstAtEnd = first.Equals(default(O));
-                bool secondAtEnd = second.Equals(default(O));
+                bool firstAtEnd = first.Equals(default(To));
+                bool secondAtEnd = second.Equals(default(To));
 
                 if (firstAtEnd && secondAtEnd)
                     break;
