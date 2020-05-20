@@ -36,7 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Stratis.Bitcoin\Stratis.Core.csproj" />
+    <ProjectReference Include="..\Stratis.Core\Stratis.Core.csproj" />
     <ProjectReference Include="..\Stratis.Features.SmartContracts\Stratis.Features.SmartContracts.csproj" />
   </ItemGroup>
 

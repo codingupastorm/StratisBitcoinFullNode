@@ -12,7 +12,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CertificateAuthority\CertificateAuthority.csproj" />
     <ProjectReference Include="..\NBitcoin\NBitcoin.csproj" />
-    <ProjectReference Include="..\Stratis.Bitcoin\Stratis.Core.csproj" />
+    <ProjectReference Include="..\Stratis.Core\Stratis.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
