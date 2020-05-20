@@ -36,7 +36,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NBitcoin\NBitcoin.csproj" />
-    <ProjectReference Include="..\Stratis.Bitcoin\Stratis.Core.csproj" />
+    <ProjectReference Include="..\Stratis.Core\Stratis.Core.csproj" />
     <ProjectReference Include="..\Stratis.Features.BlockStore\Stratis.Features.BlockStore.csproj" />
     <ProjectReference Include="..\Stratis.Features.MemoryPool\Stratis.Features.MemoryPool.csproj" />
     <ProjectReference Include="..\Stratis.Features.PoA\Stratis.Features.PoA.csproj" />
