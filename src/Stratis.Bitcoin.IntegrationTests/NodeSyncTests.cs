@@ -1,11 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using CertificateAuthority;
+using CertificateAuthority.Tests.Common;
+using Microsoft.AspNetCore.Hosting;
 using NBitcoin;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Feature.PoA.Tokenless.Networks;
+using Stratis.SmartContracts.Tests.Common;
 using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests
@@ -31,17 +37,28 @@ namespace Stratis.Bitcoin.IntegrationTests
         }
 
         [Fact]
-        public void PosNodesAreSyncedBigReorgHappensReorgIsIgnored()
+        public void TokenlessNodesAreSyncedBigReorgHappensReorgIsIgnored()
         {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            var network = new TokenlessNetwork();
+            Type consensusType = typeof(NBitcoin.Consensus);
+            consensusType.GetProperty("MaxReorgLength").SetValue(network.Consensus, (uint)10);
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                var stratisRegTestMaxReorg = new StratisRegTestMaxReorg();
+                server.Start();
 
-                CoreNode miner = builder.CreateStratisPosNode(stratisRegTestMaxReorg, "ns-5-miner").WithDummyWallet().Start();
-                CoreNode syncer = builder.CreateStratisPosNode(stratisRegTestMaxReorg, "ns-5-syncer").Start();
-                CoreNode reorg = builder.CreateStratisPosNode(stratisRegTestMaxReorg, "ns-5-reorg").WithDummyWallet().Start();
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
-                TestHelper.MineBlocks(miner, 1);
+                CoreNode miner = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "ns-5-miner", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+                CoreNode syncer = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "ns-5-syncer", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+                CoreNode reorg = nodeBuilder.CreateTokenlessNode(network, 2, server, agent: "ns-5-reorg", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+
+                miner.MineBlocksAsync(1).GetAwaiter().GetResult();
 
                 // Sync miner with syncer and reorg
                 TestHelper.ConnectAndSync(miner, reorg);
@@ -50,8 +67,9 @@ namespace Stratis.Bitcoin.IntegrationTests
                 // Create a reorg by mining on two different chains
                 TestHelper.Disconnect(miner, reorg);
                 TestHelper.Disconnect(miner, syncer);
-                TestHelper.MineBlocks(miner, 11);
-                TestHelper.MineBlocks(reorg, 12);
+
+                miner.MineBlocksAsync(11).GetAwaiter().GetResult();
+                reorg.MineBlocksAsync(12).GetAwaiter().GetResult();
 
                 // Make sure the nodes are actually on different chains.
                 Assert.NotEqual(miner.FullNode.ChainIndexer.GetHeader(2).HashBlock, reorg.FullNode.ChainIndexer.GetHeader(2).HashBlock);
