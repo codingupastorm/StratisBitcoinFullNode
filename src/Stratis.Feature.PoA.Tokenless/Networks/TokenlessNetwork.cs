@@ -30,7 +30,7 @@ namespace Stratis.Feature.PoA.Tokenless.Networks
         [JsonPropertyName("federationkeys")]
         public Key[] FederationKeys { get; set; }
 
-        public TokenlessNetwork()
+        public TokenlessNetwork(Mnemonic[] mnemonics = null)
         {
             // The message start string is designed to be unlikely to occur in normal data.
             // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
@@ -67,14 +67,9 @@ namespace Stratis.Feature.PoA.Tokenless.Networks
             this.GenesisReward = Money.Zero;
             this.Genesis = CreateGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion);
 
-            this.FederationKeys = Mnemonics.Select(m => TokenlessKeyStore.GetKey(500, m, TokenlessKeyStoreAccount.BlockSigning, 0)).ToArray();
+            this.FederationKeys = (mnemonics ?? Mnemonics).Select(m => TokenlessKeyStore.GetKey(500, m, TokenlessKeyStoreAccount.BlockSigning, 0)).ToArray();
 
-            var genesisFederationMembers = new List<IFederationMember>
-            {
-                new FederationMember(this.FederationKeys[0].PubKey),
-                new FederationMember(this.FederationKeys[1].PubKey),
-                new FederationMember(this.FederationKeys[2].PubKey)
-            };
+            var genesisFederationMembers = this.FederationKeys.Select(k => (IFederationMember)new FederationMember(k.PubKey)).ToList();
 
             // TODO-TL: Implement new TokenlessConsensusOptions?
             var consensusOptions = new PoAConsensusOptions(

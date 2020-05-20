@@ -30,13 +30,16 @@ namespace Stratis.SmartContracts.Tests.Common
         // This does not have to be re-retrieved from the CA for every node.
         private X509Certificate authorityCertificate;
 
+        private List<Mnemonic> mnemonics;
+
         public EditableTimeProvider TimeProvider { get; }
 
-        public SmartContractNodeBuilder(string rootFolder) : base(rootFolder)
+        public SmartContractNodeBuilder(string rootFolder, Mnemonic[] mnemonics = null) : base(rootFolder)
         {
             // We have to override them so that the channel daemons can use 30002 and up.
             this.lastSystemChannelNodePort = new SystemChannelNetwork().DefaultAPIPort + 100;
             this.TimeProvider = new EditableTimeProvider();
+            this.mnemonics = (mnemonics ?? TokenlessNetwork.Mnemonics).ToList();
         }
 
         private CoreNode CreateCoreNode(
@@ -54,6 +57,8 @@ namespace Stratis.SmartContracts.Tests.Common
             bool debugChannels = false,
             NodeConfigParameters configParameters = null)
         {
+            // TODO: Assert that mnemonics match network members.
+
             string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
 
             string commonName = CaTestHelper.GenerateRandomString();
@@ -86,9 +91,9 @@ namespace Stratis.SmartContracts.Tests.Common
 
             CoreNode node = this.CreateNode(new TokenlessNodeRunner(dataFolder, network, this.TimeProvider, agent, debugChannels ? this :  null), "poa.conf", configParameters: configParameters);
 
-            Mnemonic mnemonic = nodeIndex < 3
-                ? TokenlessNetwork.Mnemonics[nodeIndex]
-                : new Mnemonic(Wordlist.English, WordCount.Twelve);
+            Guard.Assert(nodeIndex < this.mnemonics.Count);
+
+            Mnemonic mnemonic = this.mnemonics[nodeIndex];
 
             string[] args = initialRun ?
                 new string[] {
@@ -146,6 +151,8 @@ namespace Stratis.SmartContracts.Tests.Common
                     var ownCertificatePath = Path.Combine(settings.DataDir, LocalMembershipServicesConfiguration.SignCerts, MembershipServicesDirectory.GetCertificateThumbprint(x509));
                     File.WriteAllBytes(ownCertificatePath, x509.GetEncoded());
                 }
+
+                node.Mnemonic = mnemonic;
 
                 return node;
             }
@@ -242,10 +249,10 @@ namespace Stratis.SmartContracts.Tests.Common
             return (certificateInfo.ToCertificate(), certificateInfo);
         }
 
-        public static SmartContractNodeBuilder Create(string testRootFolder)
+        public static SmartContractNodeBuilder Create(string testRootFolder, Mnemonic[] mnemonics = null)
         {
             string testFolderPath = Path.Combine(testRootFolder, "node");
-            var builder = new SmartContractNodeBuilder(testFolderPath);
+            var builder = new SmartContractNodeBuilder(testFolderPath, mnemonics: mnemonics);
             return builder;
         }
     }
