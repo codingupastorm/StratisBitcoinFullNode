@@ -12,8 +12,11 @@ using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Networks;
 using Stratis.Core.P2P;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Core.Utilities.Extensions;
 using Xunit;
+using Stratis.Feature.PoA.Tokenless.Networks;
+using Microsoft.AspNetCore.Hosting;
+using CertificateAuthority.Tests.Common;
+using Stratis.SmartContracts.Tests.Common;
 
 namespace Stratis.Bitcoin.IntegrationTests.Connectivity
 {
@@ -31,15 +34,21 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
         [Fact]
         public void Ensure_Node_DoesNot_ReconnectTo_SameNode()
         {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                var nodeConfig = new NodeConfigParameters
-                {
-                    { "-debug", "1" }
-                };
+            var network = new TokenlessNetwork();
 
-                CoreNode nodeA = builder.CreateStratisPowNode(this.powNetwork, "conn-1-nodeA", configParameters: nodeConfig).Start();
-                CoreNode nodeB = builder.CreateStratisPowNode(this.powNetwork, "conn-1-nodeB", configParameters: nodeConfig).Start();
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                CoreNode nodeA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "conn-1-nodeA").Start();
+                CoreNode nodeB = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "conn-1-nodeB").Start();
 
                 TestHelper.Connect(nodeA, nodeB);
                 TestHelper.ConnectNoCheck(nodeA, nodeB);
@@ -52,60 +61,28 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
             }
         }
 
-        /// <summary>
-        /// Peer A_1 connects to Peer A_2
-        /// Peer B_1 connects to Peer B_2
-        /// Peer A_1 connects to Peer B_1
-        ///
-        /// Peer A_1 asks Peer B_1 for its addresses and gets Peer B_2
-        /// Peer A_1 now also connects to Peer B_2
-        /// </summary>
-        [Fact]
-        public void Ensure_Peer_CanDiscover_Address_From_ConnectedPeers_And_Connect_ToThem()
-        {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                CoreNode nodeGroupA_1 = builder.CreateStratisPowNode(this.powNetwork, "conn-2-nodeGroupA_1").EnablePeerDiscovery().Start();
-                CoreNode nodeGroupB_1 = builder.CreateStratisPowNode(this.powNetwork, "conn-2-nodeGroupB_1").EnablePeerDiscovery().Start();
-                CoreNode nodeGroupB_2 = builder.CreateStratisPowNode(this.powNetwork, "conn-2-nodeGroupB_2").EnablePeerDiscovery().Start();
-
-                // Connect B_1 to B_2.
-                nodeGroupB_1.FullNode.NodeService<IPeerAddressManager>().AddPeer(nodeGroupB_2.Endpoint, IPAddress.Loopback);
-                TestBase.WaitLoop(() => TestHelper.IsNodeConnectedTo(nodeGroupB_1, nodeGroupB_2));
-                TestBase.WaitLoop(() =>
-                {
-                    return nodeGroupB_1.FullNode.NodeService<IPeerAddressManager>().Peers.Any(p => p.Endpoint.Match(nodeGroupB_2.Endpoint));
-                });
-
-                // Connect group A_1 to B_1
-                // A_1 will receive B_1's addresses which includes B_2.
-                TestHelper.Connect(nodeGroupA_1, nodeGroupB_1);
-
-                //Wait until A_1 contains both B_1 and B_2's addresses in its address manager.
-                TestBase.WaitLoop(() =>
-                 {
-                     var result = nodeGroupA_1.FullNode.NodeService<IPeerAddressManager>().Peers.Any(p => p.Endpoint.Match(nodeGroupB_1.Endpoint));
-                     if (result)
-                         return nodeGroupA_1.FullNode.NodeService<IPeerAddressManager>().Peers.Any(p => p.Endpoint.Match(nodeGroupB_2.Endpoint));
-                     return false;
-                 });
-
-                // Wait until A_1 connected to B_2.
-                TestBase.WaitLoop(() => TestHelper.IsNodeConnectedTo(nodeGroupA_1, nodeGroupB_2));
-            }
-        }
-
         [Fact]
         public void When_Connecting_WithAddnode_Connect_ToPeer_AndAnyPeers_InTheAddressManager()
         {
             // TS101_Connectivity_CallAddNode.
 
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            var network = new TokenlessNetwork();
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                CoreNode node1 = builder.CreateStratisPosNode(this.posNetwork, "conn-3-node1").Start();
-                CoreNode node2 = builder.CreateStratisPosNode(this.posNetwork, "conn-3-node2").Start();
-                CoreNode node3 = builder.CreateStratisPosNode(this.posNetwork, "conn-3-node3").Start();
-                CoreNode syncerNode = builder.CreateStratisPosNode(this.posNetwork, "conn-3-syncerNode").Start();
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "conn-3-node1").Start();
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "conn-3-node2").Start();
+                CoreNode node3 = nodeBuilder.CreateTokenlessNode(network, 2, server, agent: "conn-3-node3").Start();
+                CoreNode syncerNode = nodeBuilder.CreateTokenlessNode(network, 3, server, agent: "conn-3-syncerNode").Start();
 
                 TestHelper.Connect(node1, syncerNode);
 
@@ -126,16 +103,27 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
         [Fact]
         public void When_Connecting_WithConnectOnly_Connect_ToTheRequestedPeer()
         {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            var network = new TokenlessNetwork();
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                CoreNode node1 = builder.CreateStratisPosNode(this.posNetwork, "conn-4-node1").Start();
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "conn-4-node1").Start();
 
                 var nodeConfig = new NodeConfigParameters
                 {
                     { "-connect", node1.Endpoint.ToString() }
                 };
 
-                CoreNode node2 = builder.CreateStratisPosNode(this.posNetwork, "conn-4-node2", configParameters: nodeConfig).Start();
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "conn-4-node2", configParameters: nodeConfig).Start();
 
                 TestBase.WaitLoop(() => TestHelper.IsNodeConnectedTo(node1, node2));
             }
@@ -146,10 +134,21 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
         {
             // TS105_Connectivity_PreventConnectingToBannedNodes.
 
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            var network = new TokenlessNetwork();
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                CoreNode node1 = builder.CreateStratisPosNode(this.posNetwork, "conn-5-node1").Start();
-                CoreNode node2 = builder.CreateStratisPosNode(this.posNetwork, "conn-5-node2").Start();
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "conn-5-node1").Start();
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "conn-5-node2").Start();
 
                 node1 = BanNode(node1, node2);
 
@@ -171,9 +170,20 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
         {
             // TS106_Connectivity_CanErrorHandleConnectionToNonExistingNodes.
 
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            var network = new TokenlessNetwork();
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                CoreNode node1 = builder.CreateStratisPosNode(this.posNetwork, "conn-6-node1").Start();
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "conn-6-node1").Start();
 
                 var node1ConnectionMgr = node1.FullNode.NodeService<IConnectionManager>();
 
@@ -193,15 +203,26 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
         [Fact]
         public void NodeServer_Disabled_When_ConnectNode_Args_Specified()
         {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            var network = new TokenlessNetwork();
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
                 var nodeConfig = new NodeConfigParameters
                 {
                     { "-connect", "0" }
                 };
 
-                CoreNode node1 = builder.CreateStratisPowNode(this.powNetwork, "conn-7-node1", configParameters: nodeConfig).Start();
-                CoreNode node2 = builder.CreateStratisPowNode(this.powNetwork, "conn-7-node2").Start();
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "conn-7-node1", configParameters: nodeConfig).Start();
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "conn-7-node2").Start();
 
                 Assert.False(node1.FullNode.ConnectionManager.Servers.Any());
 
@@ -222,16 +243,27 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
         [Fact]
         public void NodeServer_Disabled_When_Listen_Specified_AsFalse()
         {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            var network = new TokenlessNetwork();
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
                 var nodeConfig = new NodeConfigParameters
                 {
                     { "-listen", "0" }
                 };
 
-                CoreNode node1 = builder.CreateStratisPowNode(this.powNetwork, "conn-8-node1", configParameters: nodeConfig).Start();
-                CoreNode node2 = builder.CreateStratisPowNode(this.powNetwork, "conn-8-node2").Start();
-
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "conn-8-node1", configParameters: nodeConfig).Start();
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "conn-8-node2").Start();
+                
                 Assert.False(node1.FullNode.ConnectionManager.Servers.Any());
 
                 try
@@ -251,16 +283,27 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
         [Fact]
         public void NodeServer_Enabled_When_ConnectNode_Args_Specified_And_Listen_Specified()
         {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            var network = new TokenlessNetwork();
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
                 var nodeConfig = new NodeConfigParameters
                 {
                     { "-connect", "0" },
                     { "-listen", "1" }
                 };
 
-                CoreNode node1 = builder.CreateStratisPowNode(this.powNetwork, "conn-9-node1", configParameters: nodeConfig).Start();
-                CoreNode node2 = builder.CreateStratisPowNode(this.powNetwork, "conn-9-node2").Start();
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "conn-9-node1", configParameters: nodeConfig).Start();
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "conn-9-node2").Start();
 
                 Assert.True(node1.FullNode.ConnectionManager.Servers.Any());
 
@@ -275,10 +318,26 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
         [Fact]
         public void Node_Gets_Banned_Subsequent_Connections_DoesNot_Affect_InboundCount()
         {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            var network = new TokenlessNetwork();
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                CoreNode node1 = builder.CreateStratisPosNode(this.posNetwork, "conn-10-node1").Start();
-                CoreNode node2 = builder.CreateStratisPosNode(this.posNetwork, "conn-10-node2").Start();
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                var nodeConfig = new NodeConfigParameters
+                {
+                    { "bantime", "120" }
+                };
+
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "conn-10-node1", configParameters: nodeConfig).Start();
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "conn-10-node2", configParameters: nodeConfig).Start();
 
                 TestHelper.Connect(node1, node2);
 
@@ -297,8 +356,8 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
                 }
 
                 // Inbound peer count should still be 0.
-                var server = node1.FullNode.ConnectionManager.Servers.First();
-                Assert.True(server.ConnectedInboundPeersCount == 0);
+                var server2 = node1.FullNode.ConnectionManager.Servers.First();
+                Assert.True(server2.ConnectedInboundPeersCount == 0);
             }
         }
 

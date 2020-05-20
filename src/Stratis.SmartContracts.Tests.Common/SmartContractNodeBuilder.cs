@@ -51,7 +51,8 @@ namespace Stratis.SmartContracts.Tests.Common
             int? apiPortOverride = null,
             string organisation = null,
             List<string> permissions = null,
-            bool debugChannels = false)
+            bool debugChannels = false,
+            NodeConfigParameters configParameters = null)
         {
             string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
 
@@ -60,11 +61,14 @@ namespace Stratis.SmartContracts.Tests.Common
             IServerAddressesFeature serverAddresses = server.ServerFeatures.Get<IServerAddressesFeature>();
             string caBaseAddress = serverAddresses.Addresses.First();
 
-            var configParameters = new NodeConfigParameters()
-            {
-                { "caurl" , caBaseAddress },
-                { "debug" , "1" },
-            };
+            if (configParameters == null)
+                configParameters = new NodeConfigParameters();
+
+            if (!configParameters.ContainsKey("caurl"))
+                configParameters.Add("caurl", caBaseAddress);
+
+            if (!configParameters.ContainsKey("debug"))
+                configParameters.Add("debug", "1");
 
             if (isInfraNode)
             {
@@ -150,17 +154,19 @@ namespace Stratis.SmartContracts.Tests.Common
         /// <summary>
         /// This creates a standard (normal) node on the <see cref="TokenlessNetwork"/>.
         /// </summary>
-        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, IWebHost server, string organisation = null, bool initialRun = true, List<string> permissions = null, bool debugChannels = false)
+        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, IWebHost server, string organisation = null, bool initialRun = true, List<string> permissions = null, 
+            string agent = "tokenless", bool debugChannels = false, NodeConfigParameters configParameters = null)
         {
-            return CreateCoreNode(network, nodeIndex, server, "tokenless", false, false, false, initialRun, organisation: organisation, permissions: permissions, debugChannels: debugChannels);
+            return CreateCoreNode(network, nodeIndex, server, agent, false, false, false, initialRun, organisation: organisation, permissions: permissions, debugChannels: debugChannels, configParameters: configParameters);
         }
 
         /// <summary>
         /// This creates a standard (normal) node on the <see cref="TokenlessNetwork"/> that is also apart of other channels.
         /// </summary>
-        public CoreNode CreateTokenlessNodeWithChannels(TokenlessNetwork network, int nodeIndex, IWebHost server, bool initialRun = true, string organisation = null, bool debugChannels = false)
+        public CoreNode CreateTokenlessNodeWithChannels(TokenlessNetwork network, int nodeIndex, IWebHost server, bool initialRun = true, string organisation = null, 
+            bool debugChannels = false, string agent = "tokenless", NodeConfigParameters configParameters = null)
         {
-            return CreateCoreNode(network, nodeIndex, server, "tokenless", false, false, true, initialRun, organisation: organisation, debugChannels: debugChannels);
+            return CreateCoreNode(network, nodeIndex, server, agent, false, false, true, initialRun, organisation: organisation, debugChannels: debugChannels, configParameters: configParameters);
         }
 
         /// <summary>
