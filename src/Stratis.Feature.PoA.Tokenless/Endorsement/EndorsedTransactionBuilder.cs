@@ -34,7 +34,6 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
             var transaction = new Transaction();
 
-            // TODO at the moment this is the full RWS. We should check that only the public RWS is signed and returned by the endorser.
             AddReadWriteSet(transaction, proposalResponses);
             AddEndorsements(transaction, proposalResponses.Select(p => p.Endorsement));
 

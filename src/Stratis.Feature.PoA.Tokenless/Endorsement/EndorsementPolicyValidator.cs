@@ -21,12 +21,18 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         private readonly IMembershipServicesDirectory membershipServices;
         private readonly IOrganisationLookup organisationLookup;
         private readonly IStateRepositoryRoot stateRoot;
+        private readonly IEndorsementSignatureValidator signatureValidator;
 
-        public EndorsementPolicyValidator(IMembershipServicesDirectory membershipServices, IOrganisationLookup organisationLookup, IStateRepositoryRoot stateRoot)
+        public EndorsementPolicyValidator(
+            IMembershipServicesDirectory membershipServices, 
+            IOrganisationLookup organisationLookup, 
+            IStateRepositoryRoot stateRoot,
+            IEndorsementSignatureValidator signatureValidator)
         {
             this.membershipServices = membershipServices;
             this.organisationLookup = organisationLookup;
             this.stateRoot = stateRoot;
+            this.signatureValidator = signatureValidator;
         }
 
         /// <summary>
@@ -60,7 +66,13 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
                 if (cert != null)
                 {
                     (Organisation organisation, string sender) = this.organisationLookup.FromCertificate(cert);
-                    policyValidator.AddSignature(organisation, sender);
+                    
+                    // It's possible that we get an endorsement which contains some invalid signatures but still meets the policy.
+                    // Therefore we should only add valid signatures to the policy.
+                    if (this.signatureValidator.Validate(endorsement, rws.ToJsonEncodedBytes()))
+                    {
+                        policyValidator.AddSignature(organisation, sender);
+                    }
                 }
             }
 

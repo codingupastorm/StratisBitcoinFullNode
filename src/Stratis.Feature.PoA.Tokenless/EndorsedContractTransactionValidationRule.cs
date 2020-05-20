@@ -59,18 +59,18 @@ namespace Stratis.Feature.PoA.Tokenless
 
             if (!this.policyValidator.Validate(rws, endorsements))
             {
+                var rwsBytes = EndorsedTransactionBuilder.ExtractRwsBytes(transaction);
+
+                // Determine if we failed due to a signature problem.
+                if (!this.signatureValidator.Validate(endorsements, rwsBytes))
+                {
+                    return (false, EndorsementValidationErrorType.SignaturesInvalid);
+                }
+
                 return (false, EndorsementValidationErrorType.PolicyInvalid);
             }
 
-            // Save a serialization roundtrip by getting the RWS bytes.
-            var rwsBytes = EndorsedTransactionBuilder.ExtractRwsBytes(transaction);
-
-            if (this.signatureValidator.Validate(endorsements, rwsBytes))
-            {
-                return (true, EndorsementValidationErrorType.None);
-            }
-
-            return (false, EndorsementValidationErrorType.SignaturesInvalid);
+            return (true, EndorsementValidationErrorType.None);
         }
     }
 }

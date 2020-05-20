@@ -116,6 +116,9 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 .Setup(x => x.Validate(It.IsAny<ReadWriteSet>(), It.IsAny<IEnumerable<Endorsement.Endorsement>>()))
                 .Returns(false);
 
+            // Signatures invalid.
+            this.signatureValidator.Setup(b => b.Validate(It.IsAny<IEnumerable<Endorsement.Endorsement>>(), It.IsAny<byte[]>())).Returns(true);
+
             var rule = new EndorsedContractTransactionValidationRule(this.builder.Object, this.signatureValidator.Object, this.policyValidator.Object);
 
             var tx = new Transaction();
@@ -133,7 +136,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             this.builder.Verify(x => x.TryParseTransaction(It.IsAny<Transaction>(), out endorsements, out rws), Times.Once);
             this.policyValidator.Verify(x => x.Validate(It.IsAny<ReadWriteSet>(), It.IsAny<IEnumerable<Endorsement.Endorsement>>()), Times.Once);
-            this.signatureValidator.Verify(x => x.Validate(It.IsAny<IEnumerable<Endorsement.Endorsement>>(), It.IsAny<byte[]>()), Times.Never);
+            this.signatureValidator.Verify(x => x.Validate(It.IsAny<IEnumerable<Endorsement.Endorsement>>(), It.IsAny<byte[]>()), Times.Once);
         }
 
         [Fact]
@@ -145,10 +148,10 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             // Not malformed
             this.builder.Setup(b => b.TryParseTransaction(It.IsAny<Transaction>(), out endorsements, out rws)).Returns(true);
 
-            // Policy valid
+            // Policy invalid due to signatures being invalid
             this.policyValidator
                 .Setup(x => x.Validate(It.IsAny<ReadWriteSet>(), It.IsAny<IEnumerable<Endorsement.Endorsement>>()))
-                .Returns(true);
+                .Returns(false);
 
             // Signatures invalid.
             this.signatureValidator.Setup(b => b.Validate(It.IsAny<IEnumerable<Endorsement.Endorsement>>(), It.IsAny<byte[]>())).Returns(false);
@@ -207,7 +210,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             this.builder.Verify(x => x.TryParseTransaction(It.IsAny<Transaction>(), out endorsements, out rws), Times.Once);
             this.policyValidator.Verify(x => x.Validate(It.IsAny<ReadWriteSet>(), It.IsAny<IEnumerable<Endorsement.Endorsement>>()), Times.Once);
-            this.signatureValidator.Verify(x => x.Validate(It.IsAny<IEnumerable<Endorsement.Endorsement>>(), It.IsAny<byte[]>()), Times.Once);
+            this.signatureValidator.Verify(x => x.Validate(It.IsAny<IEnumerable<Endorsement.Endorsement>>(), It.IsAny<byte[]>()), Times.Never);
         }
     }
 }
