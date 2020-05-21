@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using CertificateAuthority.Tests.Common;
@@ -162,12 +163,17 @@ namespace Stratis.SmartContracts.IntegrationTests
                     .GetStringAsync()
                     .GetAwaiter().GetResult();
 
+                // Change the API Port. This is just so our second node on this channel can run without issues
+                ChannelNetwork channelNetwork = JsonSerializer.Deserialize<ChannelNetwork>(networkJson);
+                channelNetwork.DefaultAPIPort = 60003;
+                string updatedNetworkJson = JsonSerializer.Serialize(channelNetwork);
+
                 // Join the channel.
                 var response = $"{(new ApiSettings(otherNode.FullNode.Settings)).ApiUri}"
                     .AppendPathSegment("api/channels/join")
                     .PostJsonAsync(new ChannelJoinRequest()
                     {
-                        NetworkJson = networkJson
+                        NetworkJson = updatedNetworkJson
                     })
                     .GetAwaiter().GetResult();
 
@@ -179,11 +185,16 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CoreNode otherNode2 = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 2, server, organisation: anotherOrg);
                 otherNode2.Start();
 
+                // Change the API Port. This is just so our second node on this channel can run without issues
+                ChannelNetwork channelNetwork2 = JsonSerializer.Deserialize<ChannelNetwork>(networkJson);
+                channelNetwork2.DefaultAPIPort = 65003;
+                string updatedNetworkJson2 = JsonSerializer.Serialize(channelNetwork2);
+
                 var otherNode2Response = $"{(new ApiSettings(otherNode2.FullNode.Settings)).ApiUri}"
                     .AppendPathSegment("api/channels/join")
                     .PostJsonAsync(new ChannelJoinRequest()
                     {
-                        NetworkJson = networkJson
+                        NetworkJson = updatedNetworkJson2
                     })
                     .GetAwaiter().GetResult();
 
