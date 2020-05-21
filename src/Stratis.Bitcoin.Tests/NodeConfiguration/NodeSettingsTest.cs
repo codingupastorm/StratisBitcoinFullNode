@@ -2,7 +2,7 @@
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Features.Api;
-using Stratis.Bitcoin.Networks;
+using Stratis.Core.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 

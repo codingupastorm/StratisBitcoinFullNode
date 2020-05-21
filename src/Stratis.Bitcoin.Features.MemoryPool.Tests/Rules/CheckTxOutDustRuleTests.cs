@@ -5,7 +5,7 @@ using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Logging;
 using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Features.MemoryPool.Rules;
-using Stratis.Bitcoin.Networks;
+using Stratis.Core.Networks;
 using Xunit;
 
 namespace Stratis.Features.MemoryPool.Tests.Rules

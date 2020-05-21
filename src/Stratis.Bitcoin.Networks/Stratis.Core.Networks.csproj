@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>Stratis Bitcoin Features PoA</Description>
-    <AssemblyTitle>Stratis.Features.PoA</AssemblyTitle>
+    <Description>Stratis Bitcoin FullNode</Description>
+    <AssemblyTitle>Stratis.Core.Networks</AssemblyTitle>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <AssemblyName>Stratis.Features.PoA</AssemblyName>
-    <PackageId>Stratis.Features.PoA</PackageId>
+    <AssemblyName>Stratis.Core.Networks</AssemblyName>
+    <PackageId>Stratis.Core.Networks</PackageId>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
@@ -17,22 +17,13 @@
     <Version>3.0.6.0-beta</Version>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <Authors>Stratis Group Ltd.</Authors>
+    <RootNamespace>Stratis.Core.Networks</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Tracer.Fody" Version="3.2.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\CertificateAuthority\CertificateAuthority.csproj" />
-    <ProjectReference Include="..\MembershipServices\MembershipServices.csproj" />
-    <ProjectReference Include="..\Stratis.Features.BlockStore\Stratis.Features.BlockStore.csproj" />
+    <ProjectReference Include="..\NBitcoin\NBitcoin.csproj" />
     <ProjectReference Include="..\Stratis.Features.Consensus\Stratis.Features.Consensus.csproj" />
     <ProjectReference Include="..\Stratis.Features.MemoryPool\Stratis.Features.MemoryPool.csproj" />
-    <ProjectReference Include="..\Stratis.Bitcoin\Stratis.Bitcoin.csproj" />
   </ItemGroup>
 
 </Project>

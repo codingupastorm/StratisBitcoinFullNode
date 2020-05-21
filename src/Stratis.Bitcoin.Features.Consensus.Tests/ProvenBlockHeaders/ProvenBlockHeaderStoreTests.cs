@@ -9,7 +9,7 @@ using Moq;
 using NBitcoin;
 using Stratis.Core.Configuration;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.Networks;
+using Stratis.Core.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Core.Utilities;

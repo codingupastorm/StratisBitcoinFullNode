@@ -57,9 +57,9 @@ rm "src\Stratis.Bitcoin.Features.WatchOnlyWallet\bin\debug\" -Recurse -Force
 dotnet pack src\Stratis.Bitcoin.Features.WatchOnlyWallet --configuration Debug --include-source --include-symbols
 dotnet nuget push "src\Stratis.Bitcoin.Features.WatchOnlyWallet\bin\debug\*.symbols.nupkg" --source "https://api.nuget.org/v3/index.json"
 
-rm "src\Stratis.Bitcoin.Networks\bin\debug\" -Recurse -Force
-dotnet pack src\Stratis.Bitcoin.Networks --configuration Debug --include-source --include-symbols
-dotnet nuget push "src\Stratis.Bitcoin.Networks\bin\debug\*.symbols.nupkg" --source "https://api.nuget.org/v3/index.json"
+rm "src\Stratis.Core.Networks\bin\debug\" -Recurse -Force
+dotnet pack src\Stratis.Core.Networks --configuration Debug --include-source --include-symbols
+dotnet nuget push "src\Stratis.Core.Networks\bin\debug\*.symbols.nupkg" --source "https://api.nuget.org/v3/index.json"
 
 rm "src\Stratis.Features.Collateral\bin\debug\" -Recurse -Force
 dotnet pack src\Stratis.Features.Collateral --configuration Debug --include-source --include-symbols
