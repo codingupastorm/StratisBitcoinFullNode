@@ -124,7 +124,7 @@ namespace Stratis.Bitcoin.IntegrationTests
                 CoreNode minerNode = nodeBuilder.CreateTokenlessNode(network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
                 CoreNode connectorNode = nodeBuilder.CreateTokenlessNode(network, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
                 CoreNode firstNode = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
-                CoreNode secondNode = nodeBuilder.CreateTokenlessNode(network, 3, server, permissions: new List<string>() { CaCertificatesManager.SendPermission }).Start();
+                CoreNode secondNode = nodeBuilder.CreateTokenlessNode(network, 3, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
 
                 TestHelper.Connect(minerNode, connectorNode);
                 TestHelper.Connect(connectorNode, firstNode);
@@ -143,16 +143,15 @@ namespace Stratis.Bitcoin.IntegrationTests
 
                 // Random node on network generates a block.
                 firstNode.MineBlocksAsync(1).GetAwaiter().GetResult();
-                TestHelper.WaitForNodeToSync(firstNode, connectorNode, secondNode);
+                TestHelper.WaitForNodeToSync(firstNode, connectorNode, secondNode, minerNode);
 
                 // Miner mines the block.
                 minerNode.MineBlocksAsync(1).GetAwaiter().GetResult();
-                // TODO: Failing.
-                //TestHelper.WaitForNodeToSync(minerNode, connectorNode);
+                TestHelper.WaitForNodeToSync(minerNode, connectorNode);
 
                 // Connector node mines a block.
-                //connectorNode.MineBlocksAsync(1).GetAwaiter().GetResult();
-                //TestHelper.WaitForNodeToSync(nodes.ToArray());
+                connectorNode.MineBlocksAsync(1).GetAwaiter().GetResult();
+                TestHelper.WaitForNodeToSync(nodes.ToArray());
             }
         }
     }
