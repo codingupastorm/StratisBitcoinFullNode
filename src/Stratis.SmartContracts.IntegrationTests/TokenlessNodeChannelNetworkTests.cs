@@ -11,10 +11,12 @@ using Flurl;
 using Flurl.Http;
 using Microsoft.AspNetCore.Hosting;
 using Org.BouncyCastle.X509;
+using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core;
 using Stratis.Core.Controllers.Models;
+using Stratis.Core.P2P;
 using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
@@ -200,6 +202,21 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 var otherNode2ChannelService = otherNode2.FullNode.NodeService<IChannelService>() as ProcessChannelService;
                 Assert.Single(otherNode2ChannelService.StartedChannelNodes);
+
+                // Channels are started, now check that all nodes can connect to each other.
+                TestHelper.ConnectNoCheck(parentNode, otherNode);
+                TestHelper.ConnectNoCheck(parentNode, otherNode2);
+                TestHelper.ConnectNoCheck(otherNode, otherNode2);
+
+                Task.Delay(500);
+
+                var addressManagers = new[] {
+                    parentNode.FullNode.NodeService<IPeerAddressManager>(),
+                    otherNode.FullNode.NodeService<IPeerAddressManager>(),
+                    otherNode2.FullNode.NodeService<IPeerAddressManager>()
+                };
+
+                Assert.True(addressManagers.All(a => a.Peers.Any()));
             }
         }
 
