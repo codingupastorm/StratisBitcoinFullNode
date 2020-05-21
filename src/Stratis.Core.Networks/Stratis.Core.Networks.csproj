@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>Stratis Bitcoin FullNode</Description>
+    <Description>Stratis FullNode</Description>
     <AssemblyTitle>Stratis.Core.Networks</AssemblyTitle>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AssemblyName>Stratis.Core.Networks</AssemblyName>

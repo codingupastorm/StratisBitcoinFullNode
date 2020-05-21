@@ -28,8 +28,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NBitcoin\NBitcoin.csproj" />
-    <ProjectReference Include="..\Stratis.Bitcoin.Networks\Stratis.Core.Networks.csproj" />
     <ProjectReference Include="..\Stratis.Bitcoin.Tests.Common\Stratis.Bitcoin.Tests.Common.csproj" />
+    <ProjectReference Include="..\Stratis.Core.Networks\Stratis.Core.Networks.csproj" />
   </ItemGroup>
 
   <ItemGroup>
