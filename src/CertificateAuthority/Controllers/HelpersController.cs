@@ -4,6 +4,7 @@ using CertificateAuthority.Database;
 using CertificateAuthority.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
 using NLog;
 
 namespace CertificateAuthority.Controllers
@@ -13,11 +14,11 @@ namespace CertificateAuthority.Controllers
     [ApiController]
     public class HelpersController : LoggedController
     {
-        private readonly DataCacheLayer cache;
+        private readonly DataCacheLayer dataCacheLayer;
 
         public HelpersController(DataCacheLayer cache) : base(LogManager.GetCurrentClassLogger())
         {
-            this.cache = cache;
+            this.dataCacheLayer = cache;
         }
 
         /// <summary>Calculates sha256 hash of a given string.</summary>
@@ -53,7 +54,7 @@ namespace CertificateAuthority.Controllers
 
             try
             {
-                this.cache.VerifyCredentialsAndAccessLevel(accessModelInfo, out AccountModel _);
+                this.dataCacheLayer.VerifyCredentialsAndAccessLevel(accessModelInfo, out AccountModel _);
 
                 var accesses = new Dictionary<string, string>();
 
@@ -65,6 +66,25 @@ namespace CertificateAuthority.Controllers
             catch (InvalidCredentialsException)
             {
                 return this.LogErrorExit(StatusCode(StatusCodes.Status403Forbidden));
+            }
+            catch (Exception ex)
+            {
+                return this.LogErrorExit(BadRequest(ex));
+            }
+        }
+
+        /// <summary>
+        /// Generates a mnemonic set to be used for keystore generation etc.
+        /// </summary>
+        [HttpGet("mnemonic")]
+        public IActionResult GenerateMnemonic()
+        {
+            this.LogEntry();
+
+            try
+            {
+                var mnemonic = new Mnemonic(Wordlist.English, WordCount.Twelve);
+                return this.Json(this.LogExit(mnemonic));
             }
             catch (Exception ex)
             {

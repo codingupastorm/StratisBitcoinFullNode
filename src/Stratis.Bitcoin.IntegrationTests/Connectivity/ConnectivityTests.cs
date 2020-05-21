@@ -61,63 +61,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Connectivity
             }
         }
 
-        // TODO: Is this test relevant/required?
-        /*
-        /// <summary>
-        /// Peer A_1 connects to Peer A_2
-        /// Peer B_1 connects to Peer B_2
-        /// Peer A_1 connects to Peer B_1
-        ///
-        /// Peer A_1 asks Peer B_1 for its addresses and gets Peer B_2
-        /// Peer A_1 now also connects to Peer B_2
-        /// </summary>        
-        [Fact]
-        public void Ensure_Peer_CanDiscover_Address_From_ConnectedPeers_And_Connect_ToThem()
-        {
-            var network = new TokenlessNetwork();
-
-            TestBase.GetTestRootFolder(out string testRootFolder);
-
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
-            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
-            {
-                server.Start();
-
-                // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient(server);
-                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
-
-                CoreNode nodeGroupA_1 = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "conn-2-nodeGroupA_1", permissions: new List<string>() { CaCertificatesManager.SendPermission }).EnablePeerDiscovery().Start();
-                CoreNode nodeGroupB_1 = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "conn-2-nodeGroupB_1", permissions: new List<string>() { CaCertificatesManager.SendPermission }).EnablePeerDiscovery().Start();
-                CoreNode nodeGroupB_2 = nodeBuilder.CreateTokenlessNode(network, 2, server, agent: "conn-2-nodeGroupB_2", permissions: new List<string>() { CaCertificatesManager.SendPermission }).EnablePeerDiscovery().Start();
-
-                // Connect B_1 to B_2.
-                nodeGroupB_1.FullNode.NodeService<IPeerAddressManager>().AddPeer(nodeGroupB_2.Endpoint, IPAddress.Loopback);
-                TestBase.WaitLoop(() => TestHelper.IsNodeConnectedTo(nodeGroupB_1, nodeGroupB_2));
-                TestBase.WaitLoop(() =>
-                {
-                    return nodeGroupB_1.FullNode.NodeService<IPeerAddressManager>().Peers.Any(p => p.Endpoint.Match(nodeGroupB_2.Endpoint));
-                });
-
-                // Connect group A_1 to B_1
-                // A_1 will receive B_1's addresses which includes B_2.
-                TestHelper.Connect(nodeGroupA_1, nodeGroupB_1);
-
-                // Wait until A_1 contains both B_1 and B_2's addresses in its address manager.
-                TestBase.WaitLoop(() =>
-                 {
-                     var result = nodeGroupA_1.FullNode.NodeService<IPeerAddressManager>().Peers.Any(p => p.Endpoint.Match(nodeGroupB_1.Endpoint));
-                     if (result)
-                         return nodeGroupA_1.FullNode.NodeService<IPeerAddressManager>().Peers.Any(p => p.Endpoint.Match(nodeGroupB_2.Endpoint));
-                     return false;
-                 });
-
-                // Wait until A_1 connected to B_2.
-                TestBase.WaitLoop(() => TestHelper.IsNodeConnectedTo(nodeGroupA_1, nodeGroupB_2));
-            }
-        }
-        */
-
         [Fact]
         public void When_Connecting_WithAddnode_Connect_ToPeer_AndAnyPeers_InTheAddressManager()
         {
