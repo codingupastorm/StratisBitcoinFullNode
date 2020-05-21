@@ -90,14 +90,17 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.logger.LogInformation("Executing a delay to wait for the node to start.");
             await Task.Delay(TimeSpan.FromSeconds(10));
 
-            // TODO: The code always adds the node to the list AND logs that the process was started, even if it exited. Should that be changed?
-            lock (this.StartedChannelNodes)
-                this.StartedChannelNodes.Add(channelNodeProcess);
+            if (!process.HasExited)
+            {
+                lock (this.StartedChannelNodes)
+                    this.StartedChannelNodes.Add(channelNodeProcess);
 
-            // TODO: Log channel name here?
-            this.logger.LogInformation($"Node started with Pid '{process.Id}'.");
+                // TODO: Log channel name here?
+                this.logger.LogInformation($"Node started with Pid '{process.Id}'.");
+                return true;
+            }
 
-            return !process.HasExited;
+            return false;
         }
 
         public override void StopChannelNodes()
