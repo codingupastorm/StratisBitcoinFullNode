@@ -221,6 +221,82 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
+        public void CanNotJoinChannelNode()
+        {
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                var tokenlessNetwork = new TokenlessNetwork();
+
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
+
+                // Create and start the parent node.
+                CoreNode parentNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server);
+                parentNode.Start();
+
+                string anotherOrg = "AnotherOrganisation";
+
+                // Create a channel for the identity to be apart of.
+                nodeBuilder.CreateChannel(parentNode, "marketing", 2, new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        CaTestHelper.TestOrganisation,
+                        anotherOrg
+                    }
+                });
+                parentNode.Restart();
+
+                // Create another node.
+                CoreNode otherNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 1, server, organisation: "disallowedOrg");
+                otherNode.Start();
+
+                // Get the marketing network's JSON.
+                string networkJson = $"{(new ApiSettings(parentNode.FullNode.Settings)).ApiUri}"
+                    .AppendPathSegment("api/channels/networkjson")
+                    .SetQueryParam("cn", "marketing")
+                    .GetStringAsync()
+                    .GetAwaiter().GetResult();
+
+                // Change the API Port. This is just so our second node on this channel can run without issues
+                ChannelNetwork channelNetwork = JsonSerializer.Deserialize<ChannelNetwork>(networkJson);
+                channelNetwork.DefaultAPIPort = 60003;
+                string updatedNetworkJson = JsonSerializer.Serialize(channelNetwork);
+
+                // Join the channel.
+                var response = $"{(new ApiSettings(otherNode.FullNode.Settings)).ApiUri}"
+                    .AppendPathSegment("api/channels/join")
+                    .PostJsonAsync(new ChannelJoinRequest()
+                    {
+                        NetworkJson = updatedNetworkJson
+                    })
+                    .GetAwaiter().GetResult();
+
+                var channelService = otherNode.FullNode.NodeService<IChannelService>() as ProcessChannelService;
+                Assert.Single(channelService.StartedChannelNodes);
+
+                // Try to connect the nodes
+                TestHelper.ConnectNoCheck(parentNode, otherNode);
+
+                var addressManagers = new[] {
+                    parentNode.FullNode.NodeService<IPeerAddressManager>(),
+                    otherNode.FullNode.NodeService<IPeerAddressManager>(),
+                };
+
+                Task.Delay(500);
+
+                // Node should not be allowed to connect because it is disallowed.
+                Assert.False(addressManagers.Any(a => a.Peers.Any()));
+            }
+        }
+
+        [Fact]
         public async Task SystemChannelCreateChannelFromChannelRequestTxAsync()
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
