@@ -159,6 +159,20 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                 // Record channel membership (in normal node repo) and start up channel node.
                 ChannelNetwork network = JsonSerializer.Deserialize<ChannelNetwork>(request.NetworkJson);
 
+                if (request.Port.HasValue)
+                {
+                    network.DefaultPort = request.Port.Value;
+                }
+
+                if (request.ApiPort.HasValue)
+                {
+                    network.DefaultAPIPort = request.ApiPort.Value;
+                }
+
+                if (request.SignalRPort.HasValue)
+                {
+                    network.DefaultSignalRPort = request.SignalRPort.Value;
+                }
                 // Note that we don't check if we are allowed to join the network.
                 // The network's AccessControlList may have changed from what it was in the initial json, to allow us to join.
 
