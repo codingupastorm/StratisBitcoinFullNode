@@ -230,7 +230,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
 
                 byte[] transientData = null;
 
-                if (!String.IsNullOrEmpty(model.TransientDataHex))
+                if (!string.IsNullOrEmpty(model.TransientDataHex))
                 {
                     transientData = model.TransientDataHex.HexToByteArray();
                 }

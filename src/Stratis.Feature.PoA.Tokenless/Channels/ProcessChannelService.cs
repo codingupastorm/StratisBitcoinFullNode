@@ -13,16 +13,13 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 {
     public sealed class ProcessChannelService : ChannelService
     {
-        public const int SystemChannelId = 1;
-        private const string SystemChannelName = "system";
-
         private readonly IAsyncProvider asyncProvider;
         private readonly INodeLifetime nodeLifetime;
 
         /// <inheritdoc />
         public List<ChannelNodeProcess> StartedChannelNodes { get; }
 
-        public ProcessChannelService(ChannelSettings channelSettings, IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, NodeSettings nodeSettings, IChannelRepository channelRepository, INodeLifetime nodeLifetime, IAsyncProvider asyncProvider) 
+        public ProcessChannelService(ChannelSettings channelSettings, IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, NodeSettings nodeSettings, IChannelRepository channelRepository, INodeLifetime nodeLifetime, IAsyncProvider asyncProvider)
             : base(channelSettings, dateTimeProvider, loggerFactory, nodeSettings, channelRepository)
         {
             this.nodeLifetime = nodeLifetime;

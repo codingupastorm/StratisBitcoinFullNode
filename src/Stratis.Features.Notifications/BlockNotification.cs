@@ -2,8 +2,6 @@
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Core.Consensus;
-using Stratis.Core.Signals;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 using Stratis.Features.Notifications.Interfaces;
@@ -30,29 +28,20 @@ namespace Stratis.Features.Notifications
 
         private readonly ILogger logger;
 
-        private readonly IConsensusManager consensusManager;
-        private readonly ISignals signals;
-
         private ChainedHeader tip;
 
         public BlockNotification(
             ILoggerFactory loggerFactory,
             ChainIndexer chainIndexer,
-            IConsensusManager consensusManager,
-            ISignals signals,
             IAsyncProvider asyncProvider,
             INodeLifetime nodeLifetime)
         {
             Guard.NotNull(loggerFactory, nameof(loggerFactory));
             Guard.NotNull(chainIndexer, nameof(chainIndexer));
-            Guard.NotNull(consensusManager, nameof(consensusManager));
-            Guard.NotNull(signals, nameof(signals));
             Guard.NotNull(asyncProvider, nameof(asyncProvider));
             Guard.NotNull(nodeLifetime, nameof(nodeLifetime));
 
             this.ChainIndexer = chainIndexer;
-            this.consensusManager = consensusManager;
-            this.signals = signals;
             this.asyncProvider = asyncProvider;
             this.nodeLifetime = nodeLifetime;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);

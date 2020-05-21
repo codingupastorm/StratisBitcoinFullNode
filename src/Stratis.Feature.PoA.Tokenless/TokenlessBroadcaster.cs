@@ -69,7 +69,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
             // TODO: Error handling. What if we don't have any peers in the same organisation?
 
-            Parallel.ForEach<INetworkPeer>(peers.Select(x => x.Peer), async (INetworkPeer peer) => await SendMessageToPeerAsync(peer, payload));
+            Parallel.ForEach(peers.Select(x => x.Peer), async (INetworkPeer peer) => await SendMessageToPeerAsync(peer, payload));
         }
 
         private async Task SendMessageToPeerAsync(INetworkPeer peer, Payload payload)
@@ -78,7 +78,7 @@ namespace Stratis.Feature.PoA.Tokenless
             {
                 await peer.SendMessageAsync(payload).ConfigureAwait(false);
             }
-            catch (OperationCanceledException e)
+            catch (OperationCanceledException)
             {
                 // This catch is a bit dirty but is copied from FederatedPegBroadcaster code.
             }
