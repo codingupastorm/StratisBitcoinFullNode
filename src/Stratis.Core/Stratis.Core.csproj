@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>Stratis Bitcoin FullNode</Description>
-    <AssemblyTitle>Stratis.Bitcoin</AssemblyTitle>
+    <Description>Stratis FullNode</Description>
+    <AssemblyTitle>Stratis.Core</AssemblyTitle>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <AssemblyName>Stratis.Bitcoin</AssemblyName>
+    <AssemblyName>Stratis.Core</AssemblyName>
     <PackageId>Stratis.Core</PackageId>
     <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
