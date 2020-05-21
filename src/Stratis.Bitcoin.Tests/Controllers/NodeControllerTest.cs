@@ -19,6 +19,7 @@ using Stratis.Core.Connection;
 using Stratis.Core.Controllers;
 using Stratis.Core.Controllers.Models;
 using Stratis.Core.Interfaces;
+using Stratis.Core.Networks;
 using Stratis.Core.P2P;
 using Stratis.Core.P2P.Peer;
 using Stratis.Core.Utilities;
@@ -56,7 +57,7 @@ namespace Stratis.Bitcoin.Tests.Controllers
             this.connectionManager.Setup(c => c.Network).Returns(this.network);
             this.dateTimeProvider = new Mock<IDateTimeProvider>();
             this.fullNode = new Mock<IFullNode>();
-            this.nodeSettings = new NodeSettings(networksSelector: Networks.Networks.Bitcoin);
+            this.nodeSettings = new NodeSettings(networksSelector: Networks.Bitcoin);
 
             this.blockStore = new Mock<IBlockStore>();
             this.getUnspentTransaction = new Mock<IGetUnspentTransaction>();
@@ -68,7 +69,7 @@ namespace Stratis.Bitcoin.Tests.Controllers
             this.controller = new NodeController(
                 this.chainIndexer,
                 this.chainState.Object,
-                this.connectionManager.Object, 
+                this.connectionManager.Object,
                 this.dateTimeProvider.Object,
                 this.fullNode.Object,
                 this.LoggerFactory.Object,
