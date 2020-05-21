@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Flurl;
 using Flurl.Http;
-using NBitcoin;
 using Newtonsoft.Json;
 using NLog;
 using NLog.Config;
