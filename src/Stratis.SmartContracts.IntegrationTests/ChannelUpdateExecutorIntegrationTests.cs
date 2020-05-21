@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text.Json;
 using System.Threading.Tasks;
 using CertificateAuthority.Tests.Common;
 using Flurl;
@@ -220,6 +221,7 @@ namespace Stratis.SmartContracts.IntegrationTests
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 var tokenlessNetwork = new TokenlessNetwork();
+                var channelName = "marketing";
 
                 server.Start();
 
@@ -231,20 +233,15 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Create and start the parent node.
                 CoreNode parentNode =
                     nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server, debugChannels: true);
+
                 parentNode.Start();
+
 
                 string anotherOrg = "AnotherOrganisation";
 
                 // Create a channel for the identity to be apart of.
                 nodeBuilder.CreateChannel(parentNode, "marketing", 2);
                 parentNode.Restart();
-
-                // Create another node.
-                CoreNode otherNode =
-                    nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 1, server);
-                otherNode.Start();
-
-                var channelName = "marketing";
 
                 // Get the marketing network's JSON.
                 string networkJson = $"{(new ApiSettings(parentNode.FullNode.Settings)).ApiUri}"
@@ -253,34 +250,44 @@ namespace Stratis.SmartContracts.IntegrationTests
                     .GetStringAsync()
                     .GetAwaiter().GetResult();
 
+                // Create another node.
+                //CoreNode otherNode =
+                //    nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 1, server);
+                //otherNode.Start();
+
                 // Join the channel.
-                var response = $"{(new ApiSettings(otherNode.FullNode.Settings)).ApiUri}"
-                    .AppendPathSegment("api/channels/join")
-                    .PostJsonAsync(new ChannelJoinRequest()
-                    {
-                        NetworkJson = networkJson
-                    })
-                    .GetAwaiter().GetResult();
-                
-                var channelService = otherNode.FullNode.NodeService<IChannelService>() as ProcessChannelService;
-                Assert.Single(channelService.StartedChannelNodes);
+                //var response = $"{(new ApiSettings(otherNode.FullNode.Settings)).ApiUri}"
+                //    .AppendPathSegment("api/channels/join")
+                //    .PostJsonAsync(new ChannelJoinRequest()
+                //    {
+                //        NetworkJson = networkJson
+                //    })
+                //    .GetAwaiter().GetResult();
+
+
+                //var channelService = otherNode.FullNode.NodeService<IChannelService>() as ProcessChannelService;
+                //Assert.Single(channelService.StartedChannelNodes);
 
                 // Start a node from a new organisation. Joining should fail.
                 CoreNode otherNode2 =
                     nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 3, server, organisation: anotherOrg);
                 otherNode2.Start();
 
+                ChannelNetwork channelNetwork = JsonSerializer.Deserialize<ChannelNetwork>(networkJson);
+                channelNetwork.DefaultAPIPort = 60003;
+                string updatedNetworkJson = JsonSerializer.Serialize(channelNetwork);
+
                 var otherNode2Response = $"{(new ApiSettings(otherNode2.FullNode.Settings)).ApiUri}"
                     .AppendPathSegment("api/channels/join")
                     .PostJsonAsync(new ChannelJoinRequest()
                     {
-                        NetworkJson = networkJson
+                        NetworkJson = updatedNetworkJson
                     })
                     .GetAwaiter().GetResult();
 
                 var otherNode2ChannelService =
                     otherNode2.FullNode.NodeService<IChannelService>() as ProcessChannelService;
-                Assert.Single(otherNode2ChannelService.StartedChannelNodes);
+                Assert.Empty(otherNode2ChannelService.StartedChannelNodes);
 
                 // TODO send channel update request
                 var request = new ChannelUpdateRequest
@@ -302,7 +309,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     .PostJsonAsync(request)
                     .GetAwaiter().GetResult();
 
-                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+                Assert.Equal(HttpStatusCode.OK, updateChannelResponse.StatusCode);
                 TestBase.WaitLoop(() => parentNode.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 parentNode.MineBlocksAsync(1).GetAwaiter().GetResult();
 
@@ -311,11 +318,14 @@ namespace Stratis.SmartContracts.IntegrationTests
                     nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 2, server, organisation: anotherOrg);
                 otherNode3.Start();
 
+                channelNetwork.DefaultAPIPort++;
+                string updatedNetworkJson3 = JsonSerializer.Serialize(channelNetwork);
+
                 var otherNode3Response = $"{(new ApiSettings(otherNode2.FullNode.Settings)).ApiUri}"
                     .AppendPathSegment("api/channels/join")
                     .PostJsonAsync(new ChannelJoinRequest()
                     {
-                        NetworkJson = networkJson
+                        NetworkJson = updatedNetworkJson3
                     })
                     .GetAwaiter().GetResult();
 
