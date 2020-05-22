@@ -154,8 +154,6 @@ namespace Stratis.SmartContracts.Tests.Common
                     File.WriteAllBytes(ownCertificatePath, x509.GetEncoded());
                 }
 
-                node.Mnemonic = mnemonic;
-
                 return node;
             }
         }
