@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using NBitcoin;
 using NBitcoin.BouncyCastle.Math;
 using NBitcoin.Protocol;
-using Stratis.Bitcoin.Networks.Deployments;
-using Stratis.Bitcoin.Networks.Policies;
+using Stratis.Core.Networks.Deployments;
+using Stratis.Core.Networks.Policies;
 
-namespace Stratis.Bitcoin.Networks
+namespace Stratis.Core.Networks
 {
     public class StratisRegTest : StratisMain
     {

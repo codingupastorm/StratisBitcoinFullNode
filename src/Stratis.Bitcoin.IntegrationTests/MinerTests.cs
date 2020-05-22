@@ -8,7 +8,7 @@ using NBitcoin;
 using NBitcoin.DataEncoders;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.Networks;
+using Stratis.Core.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Base;

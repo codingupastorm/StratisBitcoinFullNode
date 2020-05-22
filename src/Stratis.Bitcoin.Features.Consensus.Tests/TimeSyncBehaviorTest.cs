@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Net;
 using Microsoft.Extensions.Logging;
 using Stratis.Core.Base;
-using Stratis.Bitcoin.Networks;
+using Stratis.Core.Networks;
 using Stratis.Core.Signals;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.AsyncWork;

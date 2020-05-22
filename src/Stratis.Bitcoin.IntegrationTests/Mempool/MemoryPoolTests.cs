@@ -9,7 +9,7 @@ using Stratis.Features.Wallet;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
-using Stratis.Bitcoin.Networks;
+using Stratis.Core.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 

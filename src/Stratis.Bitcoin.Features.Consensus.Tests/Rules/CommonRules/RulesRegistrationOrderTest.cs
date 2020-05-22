@@ -5,7 +5,7 @@ using NBitcoin;
 using Stratis.Core.Consensus.Rules;
 using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Features.Consensus.Rules.ProvenHeaderRules;
-using Stratis.Bitcoin.Networks;
+using Stratis.Core.Networks;
 using Xunit;
 
 namespace Stratis.Features.Consensus.Tests.Rules.CommonRules

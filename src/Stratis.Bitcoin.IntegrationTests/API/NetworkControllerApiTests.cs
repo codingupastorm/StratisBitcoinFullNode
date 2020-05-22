@@ -9,7 +9,7 @@ using Stratis.Core.Connection;
 using Stratis.Core.Controllers.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.Networks;
+using Stratis.Core.Networks;
 using Stratis.Core.P2P;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;

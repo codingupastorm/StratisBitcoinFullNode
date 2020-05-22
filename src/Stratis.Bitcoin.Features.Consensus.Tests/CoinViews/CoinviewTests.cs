@@ -8,7 +8,7 @@ using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Consensus;
-using Stratis.Bitcoin.Networks;
+using Stratis.Core.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.CoinViews;

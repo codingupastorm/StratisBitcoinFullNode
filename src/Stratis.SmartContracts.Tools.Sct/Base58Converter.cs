@@ -16,7 +16,7 @@ namespace Stratis.SmartContracts.Tools.Sct
         private static readonly string[] AssemblyNames =
         {
             "Stratis.SmartContracts.Networks",
-            "Stratis.Bitcoin.Networks"
+            "Stratis.Core.Networks"
         };
 
         public Base58Converter()

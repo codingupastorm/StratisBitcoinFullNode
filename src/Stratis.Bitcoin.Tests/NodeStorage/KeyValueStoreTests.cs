@@ -4,6 +4,7 @@ using NBitcoin;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Configuration;
 using Stratis.Core.Interfaces;
+using Stratis.Core.Networks;
 using Stratis.Core.NodeStorage.KeyValueStoreLevelDB;
 using Stratis.Core.Utilities;
 using Xunit;
@@ -25,7 +26,7 @@ namespace Stratis.Bitcoin.Tests.NodeStorage
             network = network ?? KnownNetworks.StratisMain;
 
             string dataDir = TestBase.CreateDataFolder(this, callingMethod, network).RootPath;
-            var nodeSettings = new NodeSettings(networksSelector: Networks.Networks.Bitcoin, args: new[] { $"-datadir={dataDir}" });
+            var nodeSettings = new NodeSettings(networksSelector: Networks.Bitcoin, args: new[] { $"-datadir={dataDir}" });
             var serializer = new RepositorySerializer(network.Consensus.ConsensusFactory);
 
             return new TestKeyValueStore(serializer, nodeSettings.DataFolder, nodeSettings.LoggerFactory, DateTimeProvider.Default);

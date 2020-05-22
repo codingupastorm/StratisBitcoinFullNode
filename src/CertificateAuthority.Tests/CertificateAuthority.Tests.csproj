@@ -24,7 +24,7 @@
     <ProjectReference Include="..\CertificateAuthority.Tests.Common\CertificateAuthority.Tests.Common.csproj" />
     <ProjectReference Include="..\CertificateAuthority\CertificateAuthority.csproj" />
     <ProjectReference Include="..\Stratis.Bitcoin.IntegrationTests.Common\Stratis.Bitcoin.IntegrationTests.Common.csproj" />
-    <ProjectReference Include="..\Stratis.Bitcoin.Networks\Stratis.Bitcoin.Networks.csproj" />
+    <ProjectReference Include="..\Stratis.Bitcoin.Networks\Stratis.Core.Networks.csproj" />
     <ProjectReference Include="..\Stratis.Bitcoin.Tests.Common\Stratis.Bitcoin.Tests.Common.csproj" />
   </ItemGroup>
 

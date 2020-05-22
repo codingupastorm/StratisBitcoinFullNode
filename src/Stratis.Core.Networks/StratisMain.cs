@@ -8,10 +8,10 @@ using NBitcoin.Protocol;
 using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Features.Consensus.Rules.ProvenHeaderRules;
 using Stratis.Features.MemoryPool.Rules;
-using Stratis.Bitcoin.Networks.Deployments;
-using Stratis.Bitcoin.Networks.Policies;
+using Stratis.Core.Networks.Deployments;
+using Stratis.Core.Networks.Policies;
 
-namespace Stratis.Bitcoin.Networks
+namespace Stratis.Core.Networks
 {
     public class StratisMain : FeeNetwork
     {

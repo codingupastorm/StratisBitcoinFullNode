@@ -12,7 +12,7 @@ using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Connection;
 using Stratis.Core.Consensus;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.Networks;
+using Stratis.Core.Networks;
 using Stratis.Core.P2P.Peer;
 using Stratis.Core.P2P.Protocol;
 using Stratis.Core.P2P.Protocol.Payloads;

@@ -13,7 +13,7 @@ using Stratis.Core.Controllers.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.TestNetworks;
-using Stratis.Bitcoin.Networks;
+using Stratis.Core.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.TestFramework;
 using Stratis.Features.Api;
