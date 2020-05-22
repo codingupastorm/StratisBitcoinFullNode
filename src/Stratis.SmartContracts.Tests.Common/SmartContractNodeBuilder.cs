@@ -86,9 +86,16 @@ namespace Stratis.SmartContracts.Tests.Common
 
             CoreNode node = this.CreateNode(new TokenlessNodeRunner(dataFolder, network, this.TimeProvider, agent, debugChannels ? this :  null), "poa.conf", configParameters: configParameters);
 
-            Mnemonic mnemonic = nodeIndex < 3
-                ? TokenlessNetwork.Mnemonics[nodeIndex]
-                : new Mnemonic(Wordlist.English, WordCount.Twelve);
+            // If not a federation member then generate a mnemonic.
+            if (!configParameters.TryGetValue("mnemonic", out string mnemonic))
+            {
+                mnemonic = (nodeIndex < TokenlessNetwork.Mnemonics.Length
+                    ? TokenlessNetwork.Mnemonics[nodeIndex]
+                    : new Mnemonic(Wordlist.English, WordCount.Twelve)).ToString();
+            }
+
+            if (nodeIndex < network.FederationKeys.Length)
+                Guard.Equals(network.FederationKeys[nodeIndex], TokenlessNetwork.FederationKeyFromMnemonic(new Mnemonic(mnemonic)).PubKey);
 
             string[] args = initialRun ?
                 new string[] {

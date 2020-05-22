@@ -67,14 +67,9 @@ namespace Stratis.Feature.PoA.Tokenless.Networks
             this.GenesisReward = Money.Zero;
             this.Genesis = CreateGenesisBlock(consensusFactory, this.GenesisTime, this.GenesisNonce, this.GenesisBits, this.GenesisVersion);
 
-            this.FederationKeys = Mnemonics.Select(m => TokenlessKeyStore.GetKey(500, m, TokenlessKeyStoreAccount.BlockSigning, 0)).ToArray();
+            this.FederationKeys = Mnemonics.Select(m => FederationKeyFromMnemonic(m)).ToArray();
 
-            var genesisFederationMembers = new List<IFederationMember>
-            {
-                new FederationMember(this.FederationKeys[0].PubKey),
-                new FederationMember(this.FederationKeys[1].PubKey),
-                new FederationMember(this.FederationKeys[2].PubKey)
-            };
+            var genesisFederationMembers = this.FederationKeys.Select(k => (IFederationMember)new FederationMember(k.PubKey)).ToList();
 
             // TODO-TL: Implement new TokenlessConsensusOptions?
             var consensusOptions = new PoAConsensusOptions(
@@ -120,6 +115,11 @@ namespace Stratis.Feature.PoA.Tokenless.Networks
 
             TokenlessConsensusRuleSet.Create(this);
             TokenlessMempoolRuleSet.Create(this);
+        }
+
+        public static Key FederationKeyFromMnemonic(Mnemonic mnemonic)
+        {
+            return TokenlessKeyStore.GetKey(500, mnemonic, TokenlessKeyStoreAccount.BlockSigning, 0);
         }
 
         private Block CreateGenesisBlock(TokenlessConsensusFactory consensusFactory, uint time, uint nonce, uint bits, int version, string data = "")

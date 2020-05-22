@@ -1,12 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using CertificateAuthority;
+using CertificateAuthority.Tests.Common;
+using Microsoft.AspNetCore.Hosting;
 using NBitcoin;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Core.Networks;
+using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Feature.PoA.Tokenless.Networks;
+using Stratis.SmartContracts.Tests.Common;
 using Xunit;
+using System.Linq;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
+using NBitcoin.PoA;
 
 namespace Stratis.Bitcoin.IntegrationTests
 {
@@ -31,17 +40,28 @@ namespace Stratis.Bitcoin.IntegrationTests
         }
 
         [Fact]
-        public void PosNodesAreSyncedBigReorgHappensReorgIsIgnored()
+        public void TokenlessNodesAreSyncedBigReorgHappensReorgIsIgnored()
         {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            var network = new TokenlessNetwork();
+            Type consensusType = typeof(NBitcoin.Consensus);
+            consensusType.GetProperty("MaxReorgLength").SetValue(network.Consensus, (uint)10);
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                var stratisRegTestMaxReorg = new StratisRegTestMaxReorg();
+                server.Start();
 
-                CoreNode miner = builder.CreateStratisPosNode(stratisRegTestMaxReorg, "ns-5-miner").WithDummyWallet().Start();
-                CoreNode syncer = builder.CreateStratisPosNode(stratisRegTestMaxReorg, "ns-5-syncer").Start();
-                CoreNode reorg = builder.CreateStratisPosNode(stratisRegTestMaxReorg, "ns-5-reorg").WithDummyWallet().Start();
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
-                TestHelper.MineBlocks(miner, 1);
+                CoreNode miner = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "ns-5-miner", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+                CoreNode syncer = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "ns-5-syncer", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+                CoreNode reorg = nodeBuilder.CreateTokenlessNode(network, 2, server, agent: "ns-5-reorg", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+
+                miner.MineBlocksAsync(1).GetAwaiter().GetResult();
 
                 // Sync miner with syncer and reorg
                 TestHelper.ConnectAndSync(miner, reorg);
@@ -50,8 +70,9 @@ namespace Stratis.Bitcoin.IntegrationTests
                 // Create a reorg by mining on two different chains
                 TestHelper.Disconnect(miner, reorg);
                 TestHelper.Disconnect(miner, syncer);
-                TestHelper.MineBlocks(miner, 11);
-                TestHelper.MineBlocks(reorg, 12);
+
+                miner.MineBlocksAsync(11).GetAwaiter().GetResult();
+                reorg.MineBlocksAsync(12).GetAwaiter().GetResult();
 
                 // Make sure the nodes are actually on different chains.
                 Assert.NotEqual(miner.FullNode.ChainIndexer.GetHeader(2).HashBlock, reorg.FullNode.ChainIndexer.GetHeader(2).HashBlock);
@@ -85,16 +106,33 @@ namespace Stratis.Bitcoin.IntegrationTests
         /// </para>
         /// </summary>
         [Fact]
-        public void Pow_MiningNodeWithOneConnection_AlwaysSynced()
+        public void MiningNodeWithOneConnection_AlwaysSynced()
         {
-            string testFolderPath = Path.Combine(this.GetType().Name, nameof(Pow_MiningNodeWithOneConnection_AlwaysSynced));
+            var network = new TokenlessNetwork();
 
-            using (NodeBuilder nodeBuilder = NodeBuilder.Create(testFolderPath))
+            // Add one more federation member.
+            var mnemonics = new List<Mnemonic>(TokenlessNetwork.Mnemonics);
+            mnemonics.Add(new Mnemonic(Wordlist.English, WordCount.Twelve));
+            network.FederationKeys = mnemonics.Select(m => TokenlessNetwork.FederationKeyFromMnemonic(m)).ToArray();
+            var genesisFederationMembers = network.FederationKeys.Select(k => (IFederationMember)new FederationMember(k.PubKey)).ToList();
+            (network.Consensus.Options as PoAConsensusOptions).GenesisFederationMembers = genesisFederationMembers;
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                CoreNode minerNode = nodeBuilder.CreateStratisPowNode(this.powNetwork).WithDummyWallet().Start();
-                CoreNode connectorNode = nodeBuilder.CreateStratisPowNode(this.powNetwork).WithDummyWallet().Start();
-                CoreNode firstNode = nodeBuilder.CreateStratisPowNode(this.powNetwork).WithDummyWallet().Start();
-                CoreNode secondNode = nodeBuilder.CreateStratisPowNode(this.powNetwork).WithDummyWallet().Start();
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                CoreNode minerNode = nodeBuilder.CreateTokenlessNode(network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+                CoreNode connectorNode = nodeBuilder.CreateTokenlessNode(network, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+                CoreNode firstNode = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+                CoreNode secondNode = nodeBuilder.CreateTokenlessNode(network, 3, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }, 
+                    configParameters: new NodeConfigParameters() { { "mnemonic", mnemonics[3].ToString() } }).Start();
 
                 TestHelper.Connect(minerNode, connectorNode);
                 TestHelper.Connect(connectorNode, firstNode);
@@ -105,22 +143,22 @@ namespace Stratis.Bitcoin.IntegrationTests
 
                 nodes.ForEach(n =>
                 {
-                    TestHelper.MineBlocks(n, 1);
+                    n.MineBlocksAsync(1).GetAwaiter().GetResult();
                     TestHelper.WaitForNodeToSync(nodes.ToArray());
                 });
 
-                Assert.Equal(minerNode.FullNode.ChainIndexer.Height, nodes.Count);
+                Assert.Equal(nodes.Count, minerNode.FullNode.ChainIndexer.Height);
 
                 // Random node on network generates a block.
-                TestHelper.MineBlocks(firstNode, 1);
-                TestHelper.WaitForNodeToSync(firstNode, connectorNode, secondNode);
+                firstNode.MineBlocksAsync(1).GetAwaiter().GetResult();
+                TestHelper.WaitForNodeToSync(firstNode, connectorNode, secondNode, minerNode);
 
                 // Miner mines the block.
-                TestHelper.MineBlocks(minerNode, 1);
+                minerNode.MineBlocksAsync(1).GetAwaiter().GetResult();
                 TestHelper.WaitForNodeToSync(minerNode, connectorNode);
 
-                TestHelper.MineBlocks(connectorNode, 1);
-
+                // Connector node mines a block.
+                connectorNode.MineBlocksAsync(1).GetAwaiter().GetResult();
                 TestHelper.WaitForNodeToSync(nodes.ToArray());
             }
         }
