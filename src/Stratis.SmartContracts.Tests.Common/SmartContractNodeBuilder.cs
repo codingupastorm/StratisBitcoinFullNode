@@ -57,7 +57,8 @@ namespace Stratis.SmartContracts.Tests.Common
             bool debugChannels = false,
             NodeConfigParameters configParameters = null)
         {
-            // TODO: Assert that mnemonics match network members.
+            if (nodeIndex < this.mnemonics.Count)
+                Guard.Equals(network.FederationKeys[nodeIndex], TokenlessNetwork.FederationKeyFromMnemonic(this.mnemonics[nodeIndex]).PubKey);
 
             string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
 

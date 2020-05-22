@@ -110,10 +110,10 @@ namespace Stratis.Bitcoin.IntegrationTests
         {
             var network = new TokenlessNetwork();
 
-            // Need one more federation member.
+            // Add one more federation member.
             var mnemonics = new List<Mnemonic>(TokenlessNetwork.Mnemonics);
             mnemonics.Add(new Mnemonic(Wordlist.English, WordCount.Twelve));
-            network.FederationKeys = mnemonics.Select(m => TokenlessKeyStore.GetKey(500, m, TokenlessKeyStoreAccount.BlockSigning, 0)).ToArray();
+            network.FederationKeys = mnemonics.Select(m => TokenlessNetwork.FederationKeyFromMnemonic(m)).ToArray();
             var genesisFederationMembers = network.FederationKeys.Select(k => (IFederationMember)new FederationMember(k.PubKey)).ToList();
             (network.Consensus.Options as PoAConsensusOptions).GenesisFederationMembers = genesisFederationMembers;
 
