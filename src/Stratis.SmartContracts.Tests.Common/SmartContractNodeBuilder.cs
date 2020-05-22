@@ -30,16 +30,13 @@ namespace Stratis.SmartContracts.Tests.Common
         // This does not have to be re-retrieved from the CA for every node.
         private X509Certificate authorityCertificate;
 
-        private List<Mnemonic> mnemonics;
-
         public EditableTimeProvider TimeProvider { get; }
 
-        public SmartContractNodeBuilder(string rootFolder, Mnemonic[] mnemonics = null) : base(rootFolder)
+        public SmartContractNodeBuilder(string rootFolder) : base(rootFolder)
         {
             // We have to override them so that the channel daemons can use 30002 and up.
             this.lastSystemChannelNodePort = new SystemChannelNetwork().DefaultAPIPort + 100;
             this.TimeProvider = new EditableTimeProvider();
-            this.mnemonics = (mnemonics ?? TokenlessNetwork.Mnemonics).ToList();
         }
 
         private CoreNode CreateCoreNode(
@@ -57,9 +54,6 @@ namespace Stratis.SmartContracts.Tests.Common
             bool debugChannels = false,
             NodeConfigParameters configParameters = null)
         {
-            if (nodeIndex < this.mnemonics.Count)
-                Guard.Equals(network.FederationKeys[nodeIndex], TokenlessNetwork.FederationKeyFromMnemonic(this.mnemonics[nodeIndex]).PubKey);
-
             string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
 
             string commonName = CaTestHelper.GenerateRandomString();
@@ -93,9 +87,15 @@ namespace Stratis.SmartContracts.Tests.Common
             CoreNode node = this.CreateNode(new TokenlessNodeRunner(dataFolder, network, this.TimeProvider, agent, debugChannels ? this :  null), "poa.conf", configParameters: configParameters);
 
             // If not a federation member then generate a mnemonic.
-            Mnemonic mnemonic = nodeIndex < this.mnemonics.Count
-                ? this.mnemonics[nodeIndex]
-                : new Mnemonic(Wordlist.English, WordCount.Twelve);
+            if (!configParameters.TryGetValue("mnemonic", out string mnemonic))
+            {
+                mnemonic = (nodeIndex < TokenlessNetwork.Mnemonics.Length
+                    ? TokenlessNetwork.Mnemonics[nodeIndex]
+                    : new Mnemonic(Wordlist.English, WordCount.Twelve)).ToString();
+            }
+
+            if (nodeIndex < network.FederationKeys.Length)
+                Guard.Equals(network.FederationKeys[nodeIndex], TokenlessNetwork.FederationKeyFromMnemonic(new Mnemonic(mnemonic)).PubKey);
 
             string[] args = initialRun ?
                 new string[] {
@@ -249,10 +249,10 @@ namespace Stratis.SmartContracts.Tests.Common
             return (certificateInfo.ToCertificate(), certificateInfo);
         }
 
-        public static SmartContractNodeBuilder Create(string testRootFolder, Mnemonic[] mnemonics = null)
+        public static SmartContractNodeBuilder Create(string testRootFolder)
         {
             string testFolderPath = Path.Combine(testRootFolder, "node");
-            var builder = new SmartContractNodeBuilder(testFolderPath, mnemonics: mnemonics);
+            var builder = new SmartContractNodeBuilder(testFolderPath);
             return builder;
         }
     }

@@ -120,7 +120,7 @@ namespace Stratis.Bitcoin.IntegrationTests
             TestBase.GetTestRootFolder(out string testRootFolder);
 
             using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
-            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder, mnemonics: mnemonics.ToArray()))
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
                 server.Start();
 
@@ -131,7 +131,8 @@ namespace Stratis.Bitcoin.IntegrationTests
                 CoreNode minerNode = nodeBuilder.CreateTokenlessNode(network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
                 CoreNode connectorNode = nodeBuilder.CreateTokenlessNode(network, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
                 CoreNode firstNode = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
-                CoreNode secondNode = nodeBuilder.CreateTokenlessNode(network, 3, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+                CoreNode secondNode = nodeBuilder.CreateTokenlessNode(network, 3, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }, 
+                    configParameters: new NodeConfigParameters() { { "mnemonic", mnemonics[3].ToString() } }).Start();
 
                 TestHelper.Connect(minerNode, connectorNode);
                 TestHelper.Connect(connectorNode, firstNode);
