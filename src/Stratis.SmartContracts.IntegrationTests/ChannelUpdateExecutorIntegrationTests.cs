@@ -68,17 +68,13 @@ namespace Stratis.SmartContracts.IntegrationTests
                     .GetStringAsync()
                     .GetAwaiter().GetResult();
 
-                // Change the API Port. This is just so our second node on this channel can run without issues
-                ChannelNetwork channelNetwork = JsonSerializer.Deserialize<ChannelNetwork>(networkJson);
-                channelNetwork.DefaultAPIPort = 60003;
-                string updatedNetworkJson = JsonSerializer.Serialize(channelNetwork);
-
                 // Join the channel.
                 var response = $"{(new ApiSettings(otherNode.FullNode.Settings)).ApiUri}"
                     .AppendPathSegment("api/channels/join")
                     .PostJsonAsync(new ChannelJoinRequest()
                     {
-                        NetworkJson = updatedNetworkJson
+                        NetworkJson = networkJson,
+                        ApiPort = 60003
                     })
                     .GetAwaiter().GetResult();
 
