@@ -13,6 +13,9 @@ using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;
+using System.Linq;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
+using NBitcoin.PoA;
 
 namespace Stratis.Bitcoin.IntegrationTests
 {
@@ -105,10 +108,14 @@ namespace Stratis.Bitcoin.IntegrationTests
         [Fact]
         public void MiningNodeWithOneConnection_AlwaysSynced()
         {
+            var network = new TokenlessNetwork();
+
             // Need one more federation member.
             var mnemonics = new List<Mnemonic>(TokenlessNetwork.Mnemonics);
             mnemonics.Add(new Mnemonic(Wordlist.English, WordCount.Twelve));
-            var network = new TokenlessNetwork(mnemonics.ToArray());
+            network.FederationKeys = mnemonics.Select(m => TokenlessKeyStore.GetKey(500, m, TokenlessKeyStoreAccount.BlockSigning, 0)).ToArray();
+            var genesisFederationMembers = network.FederationKeys.Select(k => (IFederationMember)new FederationMember(k.PubKey)).ToList();
+            (network.Consensus.Options as PoAConsensusOptions).GenesisFederationMembers = genesisFederationMembers;
 
             TestBase.GetTestRootFolder(out string testRootFolder);
 
