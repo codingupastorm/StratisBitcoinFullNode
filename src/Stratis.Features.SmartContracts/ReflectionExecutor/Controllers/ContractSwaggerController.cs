@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -46,14 +45,14 @@ namespace Stratis.Features.SmartContracts.ReflectionExecutor.Controllers
         /// <exception cref="Exception"></exception>
         [Route("{address}")]
         [HttpGet]
-        public async Task<IActionResult> ContractSwaggerDoc(string address)
+        public IActionResult ContractSwaggerDoc(string address)
         {
             var code = this.stateRepository.GetCode(address.ToUint160(this.network));
 
             if (code == null)
                 throw new Exception("Contract does not exist");
 
-            Result<IContractAssembly> assemblyLoadResult = this.loader.Load((ContractByteCode) code);
+            Result<IContractAssembly> assemblyLoadResult = this.loader.Load((ContractByteCode)code);
 
             if (assemblyLoadResult.IsFailure)
                 throw new Exception("Error loading assembly");

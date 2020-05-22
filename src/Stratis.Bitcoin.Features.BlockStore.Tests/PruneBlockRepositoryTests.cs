@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.Networks;
+using Stratis.Core.Networks;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Core.Utilities;
 using Stratis.Features.BlockStore;

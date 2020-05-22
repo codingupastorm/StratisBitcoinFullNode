@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using NBitcoin;
-using Stratis.Bitcoin.Networks;
+using Stratis.Core.Networks;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.TestNetworks
 {

@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Flurl;
 using Flurl.Http;
-using NBitcoin;
 using Newtonsoft.Json;
 using NLog;
 using NLog.Config;
@@ -16,9 +15,13 @@ using NLog.Targets.Wrappers;
 using Stratis.Core.Controllers.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.Networks;
 using Stratis.Core.Utilities.JsonErrors;
 using Xunit;
+using Stratis.Feature.PoA.Tokenless.Networks;
+using Stratis.Bitcoin.Tests.Common;
+using Microsoft.AspNetCore.Hosting;
+using CertificateAuthority.Tests.Common;
+using Stratis.SmartContracts.Tests.Common;
 
 namespace Stratis.Bitcoin.IntegrationTests
 {
@@ -27,13 +30,13 @@ namespace Stratis.Bitcoin.IntegrationTests
     /// </summary>
     public class LogLevelsTests : IDisposable
     {
-        private readonly Network network;
+        private readonly TokenlessNetwork network;
 
         private IList<LoggingRule> rules;
 
         public LogLevelsTests()
         {
-            this.network = new StratisRegTest();
+            this.network = new TokenlessNetwork();
         }
 
         public void Dispose()
@@ -58,10 +61,19 @@ namespace Stratis.Bitcoin.IntegrationTests
             string ruleName = "non-existant-rule";
             string logLevel = "debug";
 
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
                 // Arrange.
-                CoreNode node = builder.CreateStratisPosNode(this.network).Start();
+                CoreNode node = nodeBuilder.CreateTokenlessNode(this.network, 0, server).Start();
                 this.ConfigLogManager();
 
                 // Act.
@@ -91,10 +103,19 @@ namespace Stratis.Bitcoin.IntegrationTests
             string ruleName = "logging1";
             string logLevel = "xxxxxxxx";
 
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
                 // Arrange.
-                CoreNode node = builder.CreateStratisPosNode(this.network).Start();
+                CoreNode node = nodeBuilder.CreateTokenlessNode(this.network, 0, server).Start();
                 this.ConfigLogManager();
 
                 // Act.
@@ -124,10 +145,19 @@ namespace Stratis.Bitcoin.IntegrationTests
             string ruleName = "logging2"; // Currently 'fatal'.
             string logLevel = "trace";
 
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
                 // Arrange.
-                CoreNode node = builder.CreateStratisPosNode(this.network).Start();
+                CoreNode node = nodeBuilder.CreateTokenlessNode(this.network, 0, server).Start();
                 this.ConfigLogManager();
 
                 // Act.
@@ -150,10 +180,19 @@ namespace Stratis.Bitcoin.IntegrationTests
             string ruleName = "logging3"; // Currently 'trace'.
             string logLevel = "info";
 
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
                 // Arrange.
-                CoreNode node = builder.CreateStratisPosNode(this.network).Start();
+                CoreNode node = nodeBuilder.CreateTokenlessNode(this.network, 0, server).Start();
                 this.ConfigLogManager();
 
                 // Act.
@@ -178,11 +217,20 @@ namespace Stratis.Bitcoin.IntegrationTests
             string ruleName3 = "logging3";
             string logLevel = "Error";
 
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
                 // Arrange.
-                CoreNode node1 = builder.CreateStratisPosNode(this.network).Start();
-                CoreNode node2 = builder.CreateStratisPosNode(this.network).Start();
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server).Start();
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server).Start();
 
                 TestHelper.Connect(node1, node2);
 
@@ -219,10 +267,19 @@ namespace Stratis.Bitcoin.IntegrationTests
             string ruleName2 = "logging2";
             string ruleName3 = "logging3";
 
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
                 // Arrange.
-                CoreNode node = builder.CreateStratisPosNode(this.network).Start();
+                CoreNode node = nodeBuilder.CreateTokenlessNode(this.network, 0, server).Start();
                 this.ConfigLogManager();
 
                 // Act.

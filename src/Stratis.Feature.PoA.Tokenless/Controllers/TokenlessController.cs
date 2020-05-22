@@ -20,7 +20,6 @@ using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Payloads;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.Features.SmartContracts;
 using Stratis.Features.SmartContracts.Interfaces;
@@ -216,16 +215,22 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             {
                 Transaction transaction = this.coreComponent.Network.CreateTransaction(model.TransactionHex);
 
-                // As it is an endorsement we assume this is a CALL transaction. TODO: Should this assumption be asserted?
                 // We can use the contract address to get the endorsement policy.
 
                 Result<ContractTxData> deserializationResult = this.callDataSerializer.Deserialize(transaction.Outputs.First().ScriptPubKey.ToBytes());
+
+                if (deserializationResult.IsFailure)
+                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, "Smart contract data couldn't be deserialized.", string.Empty);
+
+                if (deserializationResult.Value.IsCreateContract)
+                    return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, "Endorsement is only available for contract calls.", string.Empty);
+
                 uint160 contractAddress = deserializationResult.Value.ContractAddress;
                 EndorsementPolicy policy = this.stateRoot.GetPolicy(contractAddress);
 
                 byte[] transientData = null;
 
-                if (!String.IsNullOrEmpty(model.TransientDataHex))
+                if (!string.IsNullOrEmpty(model.TransientDataHex))
                 {
                     transientData = model.TransientDataHex.HexToByteArray();
                 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using CertificateAuthority.Tests.Common;
@@ -10,10 +11,12 @@ using Flurl;
 using Flurl.Http;
 using Microsoft.AspNetCore.Hosting;
 using Org.BouncyCastle.X509;
+using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core;
 using Stratis.Core.Controllers.Models;
+using Stratis.Core.P2P;
 using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
@@ -162,12 +165,17 @@ namespace Stratis.SmartContracts.IntegrationTests
                     .GetStringAsync()
                     .GetAwaiter().GetResult();
 
+                // Change the API Port. This is just so our second node on this channel can run without issues
+                ChannelNetwork channelNetwork = JsonSerializer.Deserialize<ChannelNetwork>(networkJson);
+                channelNetwork.DefaultAPIPort = 60003;
+                string updatedNetworkJson = JsonSerializer.Serialize(channelNetwork);
+
                 // Join the channel.
                 var response = $"{(new ApiSettings(otherNode.FullNode.Settings)).ApiUri}"
                     .AppendPathSegment("api/channels/join")
                     .PostJsonAsync(new ChannelJoinRequest()
                     {
-                        NetworkJson = networkJson
+                        NetworkJson = updatedNetworkJson
                     })
                     .GetAwaiter().GetResult();
 
@@ -179,16 +187,112 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CoreNode otherNode2 = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 2, server, organisation: anotherOrg);
                 otherNode2.Start();
 
+                // Change the API Port. This is just so our second node on this channel can run without issues
+                ChannelNetwork channelNetwork2 = JsonSerializer.Deserialize<ChannelNetwork>(networkJson);
+                channelNetwork2.DefaultAPIPort = 65003;
+                string updatedNetworkJson2 = JsonSerializer.Serialize(channelNetwork2);
+
                 var otherNode2Response = $"{(new ApiSettings(otherNode2.FullNode.Settings)).ApiUri}"
                     .AppendPathSegment("api/channels/join")
                     .PostJsonAsync(new ChannelJoinRequest()
                     {
-                        NetworkJson = networkJson
+                        NetworkJson = updatedNetworkJson2
                     })
                     .GetAwaiter().GetResult();
 
                 var otherNode2ChannelService = otherNode2.FullNode.NodeService<IChannelService>() as ProcessChannelService;
                 Assert.Single(otherNode2ChannelService.StartedChannelNodes);
+
+                // Channels are started, now check that all nodes can connect to each other.
+                TestHelper.ConnectNoCheck(parentNode, otherNode);
+                TestHelper.ConnectNoCheck(parentNode, otherNode2);
+                TestHelper.ConnectNoCheck(otherNode, otherNode2);
+
+                Task.Delay(500);
+
+                var addressManagers = new[] {
+                    parentNode.FullNode.NodeService<IPeerAddressManager>(),
+                    otherNode.FullNode.NodeService<IPeerAddressManager>(),
+                    otherNode2.FullNode.NodeService<IPeerAddressManager>()
+                };
+
+                Assert.True(addressManagers.All(a => a.Peers.Any()));
+            }
+        }
+
+        [Fact]
+        public void CanNotJoinChannelNode()
+        {
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                var tokenlessNetwork = new TokenlessNetwork();
+
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
+
+                // Create and start the parent node.
+                CoreNode parentNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server);
+                parentNode.Start();
+
+                string anotherOrg = "AnotherOrganisation";
+
+                // Create a channel for the identity to be apart of.
+                nodeBuilder.CreateChannel(parentNode, "marketing", 2, new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        CaTestHelper.TestOrganisation,
+                        anotherOrg
+                    }
+                });
+                parentNode.Restart();
+
+                // Create another node.
+                CoreNode otherNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 1, server, organisation: "disallowedOrg");
+                otherNode.Start();
+
+                // Get the marketing network's JSON.
+                string networkJson = $"{(new ApiSettings(parentNode.FullNode.Settings)).ApiUri}"
+                    .AppendPathSegment("api/channels/networkjson")
+                    .SetQueryParam("cn", "marketing")
+                    .GetStringAsync()
+                    .GetAwaiter().GetResult();
+
+                // Change the API Port. This is just so our second node on this channel can run without issues
+                ChannelNetwork channelNetwork = JsonSerializer.Deserialize<ChannelNetwork>(networkJson);
+                channelNetwork.DefaultAPIPort = 60003;
+                string updatedNetworkJson = JsonSerializer.Serialize(channelNetwork);
+
+                // Join the channel.
+                var response = $"{(new ApiSettings(otherNode.FullNode.Settings)).ApiUri}"
+                    .AppendPathSegment("api/channels/join")
+                    .PostJsonAsync(new ChannelJoinRequest()
+                    {
+                        NetworkJson = updatedNetworkJson
+                    })
+                    .GetAwaiter().GetResult();
+
+                var channelService = otherNode.FullNode.NodeService<IChannelService>() as ProcessChannelService;
+                Assert.Single(channelService.StartedChannelNodes);
+
+                // Try to connect the nodes
+                TestHelper.ConnectNoCheck(parentNode, otherNode);
+
+                var addressManagers = new[] {
+                    parentNode.FullNode.NodeService<IPeerAddressManager>(),
+                    otherNode.FullNode.NodeService<IPeerAddressManager>(),
+                };
+
+                Task.Delay(500);
+
+                // Node should not be allowed to connect because it is disallowed.
+                Assert.False(addressManagers.Any(a => a.Peers.Any()));
             }
         }
 

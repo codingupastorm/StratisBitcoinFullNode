@@ -1,16 +1,13 @@
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Base;
 using Stratis.Core.Builder;
 using Stratis.Core.Builder.Feature;
 using Stratis.Core.Connection;
-using Stratis.Core.Consensus;
-using Stratis.Features.Notifications.Controllers;
-using Stratis.Features.Notifications.Interfaces;
 using Stratis.Core.P2P.Peer;
+using Stratis.Features.Notifications.Interfaces;
 
 [assembly: InternalsVisibleTo("Stratis.Features.Notifications.Tests")]
 
@@ -28,28 +25,20 @@ namespace Stratis.Features.Notifications
 
         private readonly IConnectionManager connectionManager;
 
-        private readonly IConsensusManager consensusManager;
-
         private readonly IChainState chainState;
 
         private readonly ChainIndexer chainIndexer;
 
-        private readonly ILoggerFactory loggerFactory;
-
         public BlockNotificationFeature(
             IBlockNotification blockNotification,
             IConnectionManager connectionManager,
-            IConsensusManager consensusManager,
             IChainState chainState,
-            ChainIndexer chainIndexer,
-            ILoggerFactory loggerFactory)
+            ChainIndexer chainIndexer)
         {
             this.blockNotification = blockNotification;
             this.connectionManager = connectionManager;
-            this.consensusManager = consensusManager;
             this.chainState = chainState;
             this.chainIndexer = chainIndexer;
-            this.loggerFactory = loggerFactory;
         }
 
         public override Task InitializeAsync()

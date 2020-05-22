@@ -40,7 +40,7 @@ namespace Stratis.Feature.PoA.Tokenless
             if (!(message.Message.Payload is RequestPrivateDataPayload payload))
                 return;
 
-            var cert = ((TlsEnabledNetworkPeerConnection) peer.Connection).GetPeerCertificate();
+            Org.BouncyCastle.X509.X509Certificate cert = ((TlsEnabledNetworkPeerConnection)peer.Connection).GetPeerCertificate();
 
             // See if we have the data.
             (TransientStorePrivateData Data, uint BlockHeight) entry = this.transientStore.Get(payload.Id);
@@ -59,7 +59,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 {
                     await peer.SendMessageAsync(new PrivateDataPayload(payload.Id, entry.BlockHeight, entry.Data.ToBytes())).ConfigureAwait(false);
                 }
-                catch (OperationCanceledException e)
+                catch (OperationCanceledException)
                 {
                     // This catch is a bit dirty but is copied from FederatedPegBroadcaster code.
                 }

@@ -13,16 +13,13 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 {
     public sealed class ProcessChannelService : ChannelService
     {
-        public const int SystemChannelId = 1;
-        private const string SystemChannelName = "system";
-
         private readonly IAsyncProvider asyncProvider;
         private readonly INodeLifetime nodeLifetime;
 
         /// <inheritdoc />
         public List<ChannelNodeProcess> StartedChannelNodes { get; }
 
-        public ProcessChannelService(ChannelSettings channelSettings, IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, NodeSettings nodeSettings, IChannelRepository channelRepository, INodeLifetime nodeLifetime, IAsyncProvider asyncProvider) 
+        public ProcessChannelService(ChannelSettings channelSettings, IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, NodeSettings nodeSettings, IChannelRepository channelRepository, INodeLifetime nodeLifetime, IAsyncProvider asyncProvider)
             : base(channelSettings, dateTimeProvider, loggerFactory, nodeSettings, channelRepository)
         {
             this.nodeLifetime = nodeLifetime;
@@ -90,14 +87,17 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.logger.LogInformation("Executing a delay to wait for the node to start.");
             await Task.Delay(TimeSpan.FromSeconds(10));
 
-            // TODO: The code always adds the node to the list AND logs that the process was started, even if it exited. Should that be changed?
-            lock (this.StartedChannelNodes)
-                this.StartedChannelNodes.Add(channelNodeProcess);
+            if (!process.HasExited)
+            {
+                lock (this.StartedChannelNodes)
+                    this.StartedChannelNodes.Add(channelNodeProcess);
 
-            // TODO: Log channel name here?
-            this.logger.LogInformation($"Node started with Pid '{process.Id}'.");
+                // TODO: Log channel name here?
+                this.logger.LogInformation($"Node started with Pid '{process.Id}'.");
+                return true;
+            }
 
-            return !process.HasExited;
+            return false;
         }
 
         public override void StopChannelNodes()

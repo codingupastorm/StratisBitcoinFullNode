@@ -4,7 +4,7 @@ using System.Net;
 using FluentAssertions;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Settings;
-using Stratis.Bitcoin.Networks;
+using Stratis.Core.Networks;
 using Stratis.Core.P2P;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Core.Utilities;

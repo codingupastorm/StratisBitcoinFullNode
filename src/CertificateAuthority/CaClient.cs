@@ -204,6 +204,7 @@ namespace CertificateAuthority
         /// <typeparam name="T"></typeparam>
         /// <param name="endpoint"></param>
         /// <param name="model"></param>
+        /// <param name="logger"></param>
         /// <returns></returns>
         private T RequestFromCA<T>(string endpoint, object model, ILogger logger = null)
         {

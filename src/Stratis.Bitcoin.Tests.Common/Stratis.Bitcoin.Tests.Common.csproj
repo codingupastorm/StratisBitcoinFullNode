@@ -26,8 +26,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Stratis.Bitcoin.Networks\Stratis.Bitcoin.Networks.csproj" />
-    <ProjectReference Include="..\Stratis.Bitcoin\Stratis.Bitcoin.csproj" />
+    <ProjectReference Include="..\Stratis.Core.Networks\Stratis.Core.Networks.csproj" />
+    <ProjectReference Include="..\Stratis.Core\Stratis.Core.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
