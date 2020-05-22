@@ -26,6 +26,8 @@ namespace Stratis.SmartContracts.Tests.Common
     public class SmartContractNodeBuilder : NodeBuilder
     {
         private int lastSystemChannelNodePort;
+        private int lastChannelNodePort;
+
 
         // This does not have to be re-retrieved from the CA for every node.
         private X509Certificate authorityCertificate;
@@ -36,6 +38,9 @@ namespace Stratis.SmartContracts.Tests.Common
         {
             // We have to override them so that the channel daemons can use 30002 and up.
             this.lastSystemChannelNodePort = new SystemChannelNetwork().DefaultAPIPort + 100;
+            
+            this.lastChannelNodePort = 40_000;
+
             this.TimeProvider = new EditableTimeProvider();
         }
 
@@ -212,6 +217,9 @@ namespace Stratis.SmartContracts.Tests.Common
 
         public CoreNode CreateChannelNode(string channelRootFolder, params string[] channelArgs)
         {
+            // This allows all of our channel nodes to not conflict on api ports.
+            channelArgs = channelArgs.Concat(new string[] {$"-apiport={this.lastChannelNodePort++}"}).ToArray();
+
             CoreNode node = this.CreateNode(new ChannelNodeRunner(channelArgs, channelRootFolder, this.TimeProvider), "poa.conf");
             return node;
         }

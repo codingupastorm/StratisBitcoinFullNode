@@ -429,5 +429,71 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.Equal(5, channelService.ChannelNodes.Count);
             }
         }
+
+        [Fact]
+        public void ExecuteSmartContractOnChannel()
+        {
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                var tokenlessNetwork = new TokenlessNetwork();
+
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
+
+                // Create and start the parent node.
+                CoreNode node1 = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server, debugChannels:true);
+                node1.Start();
+
+                // Create a channel for the identity to be apart of.
+                nodeBuilder.CreateChannel(node1, "marketing", 2);
+                node1.Restart();
+
+                // Create another node.
+                CoreNode node2 = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 1, server, debugChannels:true);
+                node2.Start();
+
+                // Get the marketing network's JSON.
+                string networkJson = $"{(new ApiSettings(node1.FullNode.Settings)).ApiUri}"
+                    .AppendPathSegment("api/channels/networkjson")
+                    .SetQueryParam("cn", "marketing")
+                    .GetStringAsync()
+                    .GetAwaiter().GetResult();
+
+                // Join the channel.
+                var response = $"{(new ApiSettings(node2.FullNode.Settings)).ApiUri}"
+                    .AppendPathSegment("api/channels/join")
+                    .PostJsonAsync(new ChannelJoinRequest()
+                    {
+                        NetworkJson = networkJson
+                    })
+                    .GetAwaiter().GetResult();
+
+                var channelService1 = node1.FullNode.NodeService<IChannelService>() as TestChannelService;
+                Assert.Single(channelService1.ChannelNodes);
+
+                var channelService2 = node2.FullNode.NodeService<IChannelService>() as TestChannelService;
+                Assert.Single(channelService2.ChannelNodes);
+
+                var node1Channel = channelService1.ChannelNodes.First();
+                var node2Channel = channelService2.ChannelNodes.First();
+
+                TestHelper.Connect(node1Channel, node2Channel);
+
+                var addressManagers = new[] {
+                    node1.FullNode.NodeService<IPeerAddressManager>(),
+                    node2.FullNode.NodeService<IPeerAddressManager>(),
+                };
+
+                Task.Delay(500);
+
+                Assert.True(addressManagers.All(a => a.Peers.Any()));
+            }
+        }
     }
 }
