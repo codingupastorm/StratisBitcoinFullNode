@@ -82,7 +82,6 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             process.StartInfo.Arguments = startUpArgs;
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.CreateNoWindow = false;
-            //process.StartInfo.RedirectStandardOutput = true;
             process.Start();
 
             this.logger.LogInformation("Executing a delay to wait for the node to start.");
@@ -92,10 +91,6 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             {
                 lock (this.StartedChannelNodes)
                     this.StartedChannelNodes.Add(channelNodeProcess);
-
-                //var output = await process.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
-                
-                //this.logger.LogError(output);
 
                 this.logger.LogInformation($"Node started with Pid '{process.Id}'.");
                 return true;

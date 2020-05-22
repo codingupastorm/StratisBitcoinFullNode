@@ -199,7 +199,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Start a node from an allowed organisation and ensure it can join too.
                 // Create another node.
-                CoreNode otherNode2 = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 2, server, organisation: "FAIL");
+                CoreNode otherNode2 = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 2, server, organisation: anotherOrg);
                 otherNode2.Start();
 
                 // Change the API Port. This is just so our second node on this channel can run without issues
@@ -396,7 +396,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                         var nodeStatus = $"http://localhost:{channelNetwork.defaultapiport}/api".AppendPathSegment("node/status").GetJsonAsync<NodeStatusModel>().GetAwaiter().GetResult();
                         return nodeStatus.State == FullNodeState.Started.ToString();
                     }
-                    catch (Exception e) { }
+                    catch (Exception) { }
 
                     return false;
 
