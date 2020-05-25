@@ -1,14 +1,14 @@
 ﻿using System.IO;
 using NBitcoin;
-using Stratis.Core;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
-using Stratis.Core.P2P;
+using Stratis.Core;
 using Stratis.Core.Base;
 using Stratis.Core.Builder;
 using Stratis.Core.Configuration;
+using Stratis.Core.P2P;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Channels;
@@ -24,13 +24,14 @@ namespace Stratis.SmartContracts.Tests.Common
 {
     public sealed class ChannelNodeRunner : NodeRunner
     {
-        private readonly string[] args;
+
         private readonly IDateTimeProvider dateTimeProvider;
 
-        public ChannelNodeRunner(string[] args, string dataFolder, EditableTimeProvider timeProvider)
+        public string[] Args { get; set; }
+
+        public ChannelNodeRunner(string dataFolder, EditableTimeProvider timeProvider)
             : base(dataFolder, null)
         {
-            this.args = args;
             this.dateTimeProvider = timeProvider;
         }
 
@@ -39,7 +40,7 @@ namespace Stratis.SmartContracts.Tests.Common
             Network network = null;
 
             // TODO-TL: This needs to be moved someplace else.
-            var configReader = new TextFileConfiguration(args);
+            var configReader = new TextFileConfiguration(this.Args);
             var configurationFile = configReader.GetOrDefault("conf", "");
             var dataDir = configReader.GetOrDefault("datadir", "");
             var configurationFilePath = Path.Combine(dataDir, configurationFile);

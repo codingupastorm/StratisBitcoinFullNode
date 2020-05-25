@@ -486,8 +486,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TestHelper.Connect(node1Channel, node2Channel);
 
                 var addressManagers = new[] {
-                    node1.FullNode.NodeService<IPeerAddressManager>(),
-                    node2.FullNode.NodeService<IPeerAddressManager>(),
+                    node1Channel.FullNode.NodeService<IPeerAddressManager>(),
+                    node2Channel.FullNode.NodeService<IPeerAddressManager>(),
                 };
 
                 Task.Delay(500);
