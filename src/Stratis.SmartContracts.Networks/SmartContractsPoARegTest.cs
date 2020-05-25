@@ -11,7 +11,6 @@ using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
 using Stratis.Features.PoA.Voting.ConsensusRules;
 using Stratis.Features.SmartContracts.MempoolRules;
 using Stratis.Features.SmartContracts.PoA;
-using Stratis.Features.SmartContracts.PoA.MempoolRules;
 using Stratis.Features.SmartContracts.Rules;
 using Stratis.SmartContracts.Networks.Policies;
 
@@ -68,8 +67,7 @@ namespace Stratis.SmartContracts.Networks
                 genesisFederationMembers: genesisFederationMembers,
                 targetSpacingSeconds: 60,
                 votingEnabled: true,
-                autoKickIdleMembers: false,
-                enablePermissionedMembership: false
+                autoKickIdleMembers: false
             );
 
             var buriedDeployments = new BuriedDeploymentsArray
