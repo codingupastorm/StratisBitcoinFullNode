@@ -86,7 +86,16 @@ namespace MembershipServices
             // https://github.com/hyperledger/fabric/blob/master/docs/source/msp.rst
             // https://github.com/hyperledger/fabric-sdk-go/blob/master/internal/github.com/hyperledger/fabric/msp/msp.go
 
-            this.localMembershipServices = new LocalMembershipServicesConfiguration(this.nodeSettings.DataDir, this.nodeSettings.Network);
+            // We need to set the MSD to be set to that of the original daemon if it's a channel node.
+            // TODO: This is a dirty assumption to make - is there a cleaner way?
+            bool isChannelNode = this.configuration.GetOrDefault<bool>("ischannelnode", false);
+
+            string msDirectory = isChannelNode
+                ? Directory.GetParent(Directory.GetParent(this.nodeSettings.DataDir).FullName).FullName
+                : this.nodeSettings.DataDir;
+
+            this.localMembershipServices = new LocalMembershipServicesConfiguration(msDirectory, this.nodeSettings.Network);
+
 
             // Channel - defines administrative and participatory rights at the channel level. Defined in a channel configuration JSON (in the HL design).
             // Instantiated on the file system of every node in the channel (similar to local version, but there can be multiple providers for a channel) and kept synchronized via consensus.

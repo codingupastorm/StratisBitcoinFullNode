@@ -10,9 +10,12 @@ using CertificateAuthority.Tests.Common;
 using Flurl;
 using Flurl.Http;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core;
 using Stratis.Core.Controllers.Models;
@@ -20,8 +23,12 @@ using Stratis.Core.P2P;
 using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
+using Stratis.Feature.PoA.Tokenless.Controllers;
+using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.Api;
+using Stratis.Features.SmartContracts.Models;
+using Stratis.SmartContracts.CLR.Compilation;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;
 
@@ -29,6 +36,13 @@ namespace Stratis.SmartContracts.IntegrationTests
 {
     public sealed class TokenlessNodeChannelNetworkTests
     {
+        private readonly TokenlessNetwork network;
+
+        public TokenlessNodeChannelNetworkTests() : base()
+        {
+            this.network = TokenlessTestHelper.Network;
+        }
+
         [Fact]
         public void InfraNodeCanCreateAndStartSystemChannelNode()
         {
@@ -431,7 +445,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
-        public void ExecuteSmartContractOnChannel()
+        public async Task ExecuteSmartContractOnChannelAsync()
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 
@@ -446,16 +460,23 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
 
-                // Create and start the parent node.
+                // Create both nodes.
                 CoreNode node1 = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server, debugChannels:true);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 1, server, debugChannels: true);
+
+                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
+
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node1.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node2.DataFolder, this.network);
+
+                // Start parent node.
                 node1.Start();
 
                 // Create a channel for the identity to be apart of.
                 nodeBuilder.CreateChannel(node1, "marketing", 2);
                 node1.Restart();
 
-                // Create another node.
-                CoreNode node2 = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 1, server, debugChannels:true);
+                // Start second node.
                 node2.Start();
 
                 // Get the marketing network's JSON.
@@ -490,9 +511,31 @@ namespace Stratis.SmartContracts.IntegrationTests
                     node2Channel.FullNode.NodeService<IPeerAddressManager>(),
                 };
 
-                Task.Delay(500);
+                await Task.Delay(500);
 
                 Assert.True(addressManagers.All(a => a.Peers.Any()));
+
+
+                var node1ChannelController = node1Channel.FullNode.NodeController<TokenlessController>();
+
+                ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/TokenlessSimpleContract.cs");
+
+                var createModel = new BuildCreateContractTransactionModel()
+                {
+                    ContractCode = compilationResult.Compilation
+                };
+
+                var createResult = (JsonResult)node1ChannelController.BuildCreateContractTransaction(createModel);
+                var createResponse = (BuildCreateContractTransactionResponse)createResult.Value;
+
+                var txResponse = await node1ChannelController.SendTransactionAsync(new SendTransactionModel()
+                {
+                    TransactionHex = createResponse.Hex
+                });
+
+                TestBase.WaitLoop(() => node2Channel.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                await node1Channel.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1Channel, node2Channel);
             }
         }
     }
