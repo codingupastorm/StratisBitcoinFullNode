@@ -19,6 +19,13 @@ using Stratis.Bitcoin.Tests.Common.TestFramework;
 using Stratis.Features.Api;
 using Stratis.Features.Wallet.Models;
 using Xunit.Abstractions;
+using Stratis.Feature.PoA.Tokenless.Networks;
+using CertificateAuthority.Tests.Common;
+using Stratis.SmartContracts.Tests.Common;
+using Microsoft.AspNetCore.Hosting;
+using Xunit;
+using CertificateAuthority;
+using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 
 namespace Stratis.Bitcoin.IntegrationTests.API
 {
@@ -48,6 +55,8 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         // Wallet
         private const string GeneralInfoUri = "api/wallet/general-info";
 
+        private IWebHost server;
+
         private CoreNode stratisPosApiNode;
         private CoreNode firstStratisPowApiNode;
         private CoreNode secondStratisPowApiNode;
@@ -58,12 +67,14 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         private int maturity = 1;
         private NodeBuilder powNodeBuilder;
         private NodeBuilder posNodeBuilder;
+        private SmartContractNodeBuilder nodeBuilder;
 
         private Uri apiUri;
         private HttpClient httpClient;
         private HttpClientHandler httpHandler;
         private Network powNetwork;
         private Network posNetwork;
+        private TokenlessNetwork network;
 
         public ApiSpecification(ITestOutputHelper output) : base(output)
         {
@@ -71,6 +82,19 @@ namespace Stratis.Bitcoin.IntegrationTests.API
 
         protected override void BeforeTest()
         {
+            var network = new TokenlessNetwork();
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            this.server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build();
+            this.nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder);
+
+            this.server.Start();
+
+            // Start + Initialize CA.
+            var client = TokenlessTestHelper.GetAdminClient(this.server);
+            Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
             this.httpHandler = new HttpClientHandler() { ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => true };
             this.httpClient = new HttpClient(this.httpHandler);
             this.httpClient.DefaultRequestHeaders.Accept.Clear();
@@ -81,6 +105,7 @@ namespace Stratis.Bitcoin.IntegrationTests.API
 
             this.powNetwork = new BitcoinRegTestOverrideCoinbaseMaturity(1);
             this.posNetwork = new StratisRegTest();
+            this.network = new TokenlessNetwork();
         }
 
         protected override void AfterTest()
@@ -91,12 +116,19 @@ namespace Stratis.Bitcoin.IntegrationTests.API
                 this.httpClient = null;
             }
 
+            if (this.server != null)
+            {
+                this.server.Dispose();
+                this.server = null;
+            }
+
             if (this.httpHandler != null)
             {
                 this.httpHandler.Dispose();
                 this.httpHandler = null;
             }
 
+            this.nodeBuilder.Dispose();
             this.powNodeBuilder.Dispose();
             this.posNodeBuilder.Dispose();
         }
@@ -110,7 +142,11 @@ namespace Stratis.Bitcoin.IntegrationTests.API
 
         private void a_proof_of_work_node_with_api_enabled()
         {
-            this.firstStratisPowApiNode = this.powNodeBuilder.CreateStratisPowNode(this.powNetwork).WithDummyWallet().Start();
+
+            // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
+            this.firstStratisPowApiNode = this.nodeBuilder.CreateTokenlessNode(this.network, 0, this.server).Start();
+
+            //this.firstStratisPowApiNode = this.powNodeBuilder.CreateStratisPowNode(this.powNetwork).WithDummyWallet().Start();
             this.firstStratisPowApiNode.Mnemonic = this.firstStratisPowApiNode.Mnemonic;
 
             this.firstStratisPowApiNode.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity = this.maturity;
@@ -119,18 +155,21 @@ namespace Stratis.Bitcoin.IntegrationTests.API
 
         private void a_second_proof_of_work_node_with_api_enabled()
         {
-            this.secondStratisPowApiNode = this.powNodeBuilder.CreateStratisPowNode(this.powNetwork).WithDummyWallet().Start();
+            this.secondStratisPowApiNode = this.nodeBuilder.CreateTokenlessNode(this.network, 1, this.server).Start();
+            //this.secondStratisPowApiNode = this.powNodeBuilder.CreateStratisPowNode(this.powNetwork).WithDummyWallet().Start();
             this.secondStratisPowApiNode.Mnemonic = this.secondStratisPowApiNode.Mnemonic;
         }
 
-        protected void a_block_is_mined_creating_spendable_coins()
+        protected void a_block_is_mined()
         {
-            TestHelper.MineBlocks(this.firstStratisPowApiNode, 1);
+            this.firstStratisPowApiNode.MineBlocksAsync(1).GetAwaiter().GetResult();
+            //TestHelper.MineBlocks(this.firstStratisPowApiNode, 1);
         }
 
         private void more_blocks_mined_past_maturity_of_original_block()
         {
-            TestHelper.MineBlocks(this.firstStratisPowApiNode, this.maturity);
+            this.firstStratisPowApiNode.MineBlocksAsync(this.maturity).GetAwaiter().GetResult();
+            //TestHelper.MineBlocks(this.firstStratisPowApiNode, this.maturity);
         }
 
         private void calling_addnode_connects_two_nodes()
