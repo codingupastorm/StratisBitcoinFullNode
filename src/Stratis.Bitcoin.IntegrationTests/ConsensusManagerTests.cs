@@ -3,27 +3,22 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
+using Stratis.Bitcoin.IntegrationTests.Common;
+using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
+using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Base;
 using Stratis.Core.Connection;
 using Stratis.Core.Consensus;
 using Stratis.Core.Consensus.Rules;
-using Stratis.Bitcoin.IntegrationTests.Common;
-using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
 using Stratis.Core.Interfaces;
 using Stratis.Core.Networks;
-using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests
 {
     public class ConsensusManagerTests
     {
-        private const string Password = "password";
-        private const string WalletName = "mywallet";
-        private const string Passphrase = "passphrase";
-        private const string Account = "account 0";
-
         private readonly Network powNetwork;
 
         public ConsensusManagerTests()

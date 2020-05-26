@@ -11,8 +11,8 @@ using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
-using Stratis.Core.Networks;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.BlockStore;
@@ -38,7 +38,7 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
         [Fact]
         public void BlockRepositoryPutBatch()
         {
-            var dataFolder = TestBase.CreateDataFolder(this);
+            var dataFolder = TestBase.CreateDataFolder(this, network: this.network);
 
             var keyValueStore = new BlockKeyValueStore(new RepositorySerializer(this.network.Consensus.ConsensusFactory), dataFolder, this.loggerFactory, DateTimeProvider.Default);
 

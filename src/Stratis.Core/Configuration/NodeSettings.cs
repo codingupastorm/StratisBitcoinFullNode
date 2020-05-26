@@ -6,7 +6,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBitcoin.Networks;
 using NBitcoin.Protocol;
 using NLog.Extensions.Logging;
 using Stratis.Core.Builder.Feature;
@@ -139,12 +138,13 @@ namespace Stratis.Core.Configuration
         public NodeSettings(Network network = null, ProtocolVersion protocolVersion = SupportedProtocolVersion,
             string agent = "StratisNode", TextFileConfiguration configReader = null, string[] args = null, NetworksSelector networksSelector = null)
         {
+            // Record arguments.
+            this.Network = network ?? throw new ConfigurationException("Network must be provided.");
+
             // Create the default logger factory and logger.
             var loggerFactory = ExtendedLoggerFactory.Create();
             this.Logger = loggerFactory.CreateLogger(typeof(NodeSettings).FullName);
 
-            // Record arguments.
-            this.Network = network;
             this.ProtocolVersion = protocolVersion;
             this.Agent = agent;
 
@@ -187,27 +187,6 @@ namespace Stratis.Core.Configuration
             }
 
             this.DebugMode = this.ConfigReader.GetOrDefault("debug", false, this.Logger);
-
-            // If the network is not known then derive it from the command line arguments.
-            if (this.Network == null)
-            {
-                if (networksSelector == null)
-                    throw new ConfigurationException("Network or NetworkSelector not provided.");
-
-                // Find out if we need to run on testnet or regtest from the config file.
-                bool testNet = this.ConfigReader.GetOrDefault<bool>("testnet", false, this.Logger);
-                bool regTest = this.ConfigReader.GetOrDefault<bool>("regtest", false, this.Logger);
-
-                if (testNet && regTest)
-                    throw new ConfigurationException("Invalid combination of regtest and testnet.");
-
-                this.Network = testNet ? networksSelector.Testnet() : regTest ? networksSelector.Regtest() : networksSelector.Mainnet();
-
-                this.Logger.LogDebug("Network set to '{0}'.", this.Network.Name);
-            }
-
-            // Ensure the network being used is registered and we have the correct Network object reference.
-            this.Network = NetworkRegistration.Register(this.Network);
 
             // Set the full data directory path.
             if (this.DataDir == null)
