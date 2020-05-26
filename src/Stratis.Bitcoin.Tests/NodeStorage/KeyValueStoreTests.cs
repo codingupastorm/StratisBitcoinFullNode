@@ -25,7 +25,7 @@ namespace Stratis.Bitcoin.Tests.NodeStorage
         {
             network = network ?? KnownNetworks.StratisMain;
 
-            string dataDir = TestBase.CreateDataFolder(this, callingMethod, network).RootPath;
+            string dataDir = TestBase.CreateDataFolder(this, network, callingMethod).RootPath;
             var nodeSettings = new NodeSettings(new BitcoinMain(), args: new[] { $"-datadir={dataDir}" });
             var serializer = new RepositorySerializer(network.Consensus.ConsensusFactory);
 

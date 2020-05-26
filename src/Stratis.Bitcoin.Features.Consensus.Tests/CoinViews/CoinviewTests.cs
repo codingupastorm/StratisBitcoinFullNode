@@ -4,12 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Consensus;
 using Stratis.Core.Networks;
-using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.CoinViews;
 using Stratis.Features.Consensus.ProvenBlockHeaders;
@@ -35,7 +35,7 @@ namespace Stratis.Features.Consensus.Tests.CoinViews
         public CoinviewTests()
         {
             this.network = new StratisMain();
-            this.dataFolder = TestBase.CreateDataFolder(this);
+            this.dataFolder = TestBase.CreateDataFolder(this, network: this.network);
             this.dateTimeProvider = new DateTimeProvider();
             this.loggerFactory = new ExtendedLoggerFactory();
             this.nodeStats = new NodeStats(this.dateTimeProvider, this.loggerFactory);
