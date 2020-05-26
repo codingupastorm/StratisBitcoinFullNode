@@ -8,7 +8,7 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         public void Getblockcount_returns_tipheight()
         {
             Given(a_proof_of_work_node_with_api_enabled);
-            And(a_block_is_mined_creating_spendable_coins);
+            And(a_block_is_mined);
             And(more_blocks_mined_past_maturity_of_original_block);
             When(calling_getblockcount);
             Then(the_blockcount_should_match_consensus_tip_height);
@@ -26,7 +26,7 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         public void Getbestblockhash_returns_tip_hash()
         {
             Given(a_proof_of_work_node_with_api_enabled);
-            And(a_block_is_mined_creating_spendable_coins);
+            And(a_block_is_mined);
             And(more_blocks_mined_past_maturity_of_original_block);
             When(calling_getbestblockhash);
             Then(the_consensus_tip_blockhash_is_returned);
@@ -36,7 +36,7 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         public void Getblockhash_returns_blockhash_at_given_height()
         {
             Given(a_proof_of_work_node_with_api_enabled);
-            And(a_block_is_mined_creating_spendable_coins);
+            And(a_block_is_mined);
             When(calling_getblockhash);
             Then(the_blockhash_is_returned);
         }
@@ -45,7 +45,7 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         public void Getblockheader_returns_blockheader()
         {
             Given(a_proof_of_work_node_with_api_enabled);
-            And(a_block_is_mined_creating_spendable_coins);
+            And(a_block_is_mined);
             When(calling_getblockheader);
             Then(the_blockheader_is_returned);
         }

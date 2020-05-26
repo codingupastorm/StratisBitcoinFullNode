@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Features.Api;
 using Xunit;
 
@@ -13,12 +12,10 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         [Fact]
         public void CanPerformMultipleParallelCallsToTheSameController()
         {
-            this.stratisPosApiNode = this.posNodeBuilder.CreateStratisPosNode(this.posNetwork).Start();
+            // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
+            this.stratisApiNode = this.nodeBuilder.CreateTokenlessNode(this.network, 0, this.server).Start();
 
-            this.apiUri = this.stratisPosApiNode.FullNode.NodeService<ApiSettings>().ApiUri;
-
-            // With these tests we still need to create the wallets outside of the builder
-            this.stratisPosApiNode.FullNode.WalletManager().CreateWallet(WalletPassword, WalletName, WalletPassphrase);
+            this.apiUri = this.stratisApiNode.FullNode.NodeService<ApiSettings>().ApiUri;
 
             var indexes = new List<int>();
             for (int i = 0; i < 1024; i++)
@@ -33,20 +30,20 @@ namespace Stratis.Bitcoin.IntegrationTests.API
             });
 
             // Check that none failed.
-            Assert.Equal(0, success.Count(s => !s));
+            Assert.Equal(0, success.Count(s => !s));            
         }
 
         private bool APICallGetsExpectedResult(int ndx)
         {
-            string apiendpoint = $"{GeneralInfoUri}?name={WalletName}";
+            string apiendpoint = $"{GetBlockHashUri}?height=0";
 
             // One out of two API calls will be invalid.
             bool fail = (ndx & 1) == 0;
 
             if (fail)
             {
-                // Induce failure by omitting the "name" argument.
-                apiendpoint = $"{GeneralInfoUri}";
+                // Induce failure by passing an invalid api.
+                apiendpoint = $"{GetBlockHashUri}xxx";
             }
 
             HttpResponseMessage response = this.httpClient.GetAsync($"{this.apiUri}{apiendpoint}").GetAwaiter().GetResult();
