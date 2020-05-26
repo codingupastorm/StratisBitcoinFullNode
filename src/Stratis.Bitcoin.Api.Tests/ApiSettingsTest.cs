@@ -66,7 +66,7 @@ namespace Stratis.Bitcoin.Api.Tests
         {
             // Arrange.
             int customPort = 55555;
-            var nodeSettings = new NodeSettings(this.Network, args:new[] { $"-apiport={customPort}" });
+            var nodeSettings = new NodeSettings(this.Network, args: new[] { $"-apiport={customPort}" });
 
             // Act.
             ApiSettings settings = FullNodeSetup(nodeSettings);
@@ -85,7 +85,7 @@ namespace Stratis.Bitcoin.Api.Tests
             // Arrange.
             string customApiUri = "http://0.0.0.0";
             Network network = KnownNetworks.Main;
-            var nodeSettings = new NodeSettings(network, args:new[] { $"-apiuri={customApiUri}" });
+            var nodeSettings = new NodeSettings(network, args: new[] { $"-apiuri={customApiUri}" });
 
             // Act.
             ApiSettings settings = FullNodeSetup(nodeSettings);
@@ -105,7 +105,7 @@ namespace Stratis.Bitcoin.Api.Tests
             // Arrange.
             string customApiUri = "http://0.0.0.0";
             Network network = KnownNetworks.StratisMain;
-            var nodeSettings = new NodeSettings(network, args:new[] { $"-apiuri={customApiUri}" });
+            var nodeSettings = new NodeSettings(network, args: new[] { $"-apiuri={customApiUri}" });
 
             // Act.
             ApiSettings settings = FullNodeSetup(nodeSettings);
@@ -125,7 +125,7 @@ namespace Stratis.Bitcoin.Api.Tests
             string customApiUri = "http://0.0.0.0";
             int customPort = 55555;
             Network network = KnownNetworks.Main;
-            var nodeSettings = new NodeSettings(network, args:new[] { $"-apiuri={customApiUri}", $"-apiport={customPort}" });
+            var nodeSettings = new NodeSettings(network, args: new[] { $"-apiuri={customApiUri}", $"-apiport={customPort}" });
 
             // Act.
             ApiSettings settings = FullNodeSetup(nodeSettings);
@@ -145,7 +145,7 @@ namespace Stratis.Bitcoin.Api.Tests
             int customPort = 5522;
             string customApiUri = $"http://0.0.0.0:{customPort}";
             Network network = KnownNetworks.Main;
-            var nodeSettings = new NodeSettings(network, args:new[] { $"-apiuri={customApiUri}" });
+            var nodeSettings = new NodeSettings(network, args: new[] { $"-apiuri={customApiUri}" });
 
             // Act.
             ApiSettings settings = FullNodeSetup(nodeSettings);

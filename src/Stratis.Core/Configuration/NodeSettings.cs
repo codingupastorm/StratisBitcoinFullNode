@@ -125,7 +125,6 @@ namespace Stratis.Core.Configuration
         /// <param name="protocolVersion">Supported protocol version for which to create the configuration.</param>
         /// <param name="agent">The nodes user agent that will be shared with peers.</param>
         /// <param name="args">The command-line arguments.</param>
-        /// <param name="networksSelector">A selector class that delayed load a network for either - regtest/testnet/mainnet.</param>
         /// <exception cref="ConfigurationException">Thrown in case of any problems with the configuration file or command line arguments.</exception>
         /// <remarks>
         /// Processing depends on whether a configuration file is passed via the command line.
@@ -136,7 +135,7 @@ namespace Stratis.Core.Configuration
         ///   name would be determined. In this case we first need to determine the network.
         /// </remarks>
         public NodeSettings(Network network, ProtocolVersion protocolVersion = SupportedProtocolVersion,
-            string agent = "StratisNode", TextFileConfiguration configReader = null, string[] args = null, NetworksSelector networksSelector = null)
+            string agent = "StratisNode", TextFileConfiguration configReader = null, string[] args = null)
         {
             // Record arguments.
             this.Network = network ?? throw new ConfigurationException("Network must be provided.");
