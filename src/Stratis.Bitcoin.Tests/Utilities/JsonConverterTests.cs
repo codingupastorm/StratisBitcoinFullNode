@@ -2,7 +2,7 @@
 using NBitcoin;
 using NBitcoin.Crypto;
 using NBitcoin.OpenAsset;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Stratis.Core.Utilities.JsonConverters;
 using Xunit;
 
@@ -14,20 +14,21 @@ namespace Stratis.Bitcoin.Tests.Utilities
         [Trait("UnitTest", "UnitTest")]
         public void CanSerializeInJson()
         {
+            var network = new BitcoinMain();
+
             var k = new Key();
             CanSerializeInJsonCore(DateTimeOffset.UtcNow);
             CanSerializeInJsonCore(new byte[] { 1, 2, 3 });
             CanSerializeInJsonCore(k);
             CanSerializeInJsonCore(Money.Coins(5.0m));
-            CanSerializeInJsonCore(k.PubKey.GetAddress(KnownNetworks.Main));
+            CanSerializeInJsonCore(k.PubKey.GetAddress(network));
             CanSerializeInJsonCore(new KeyPath("1/2"));
-            CanSerializeInJsonCore(KnownNetworks.Main);
             CanSerializeInJsonCore(new uint256(RandomUtils.GetBytes(32)));
             CanSerializeInJsonCore(new uint160(RandomUtils.GetBytes(20)));
             CanSerializeInJsonCore(new AssetId(k.PubKey));
             CanSerializeInJsonCore(k.PubKey.ScriptPubKey);
-            CanSerializeInJsonCore(new Key().PubKey.WitHash.GetAddress(KnownNetworks.Main));
-            CanSerializeInJsonCore(new Key().PubKey.WitHash.ScriptPubKey.GetWitScriptAddress(KnownNetworks.Main));
+            CanSerializeInJsonCore(new Key().PubKey.WitHash.GetAddress(network));
+            CanSerializeInJsonCore(new Key().PubKey.WitHash.ScriptPubKey.GetWitScriptAddress(network));
             ECDSASignature sig = k.Sign(new uint256(RandomUtils.GetBytes(32)));
             CanSerializeInJsonCore(sig);
             CanSerializeInJsonCore(new TransactionSignature(sig, SigHash.All));
@@ -44,14 +45,15 @@ namespace Stratis.Bitcoin.Tests.Utilities
         [Fact]
         public void CanSerializeRandomClass()
         {
-            string str = Serializer.ToString(new DummyClass() { ExtPubKey = new ExtKey().Neuter().GetWif(KnownNetworks.RegTest) }, KnownNetworks.RegTest);
-            Assert.NotNull(Serializer.ToObject<DummyClass>(str, KnownNetworks.RegTest));
+            var network = new BitcoinRegTest();
+            string str = Serializer.ToString(new DummyClass() { ExtPubKey = new ExtKey().Neuter().GetWif(network) }, network);
+            Assert.NotNull(Serializer.ToObject<DummyClass>(str, network));
         }
 
         private T CanSerializeInJsonCore<T>(T value)
         {
             string str = Serializer.ToString(value);
-            T obj2 = Serializer.ToObject<T>(str, KnownNetworks.Main);
+            T obj2 = Serializer.ToObject<T>(str, new BitcoinMain());
             Assert.Equal(str, Serializer.ToString(obj2));
             return obj2;
         }

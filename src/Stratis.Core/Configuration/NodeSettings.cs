@@ -135,7 +135,7 @@ namespace Stratis.Core.Configuration
         /// - Alternatively, if the file name is not supplied then a network-specific file
         ///   name would be determined. In this case we first need to determine the network.
         /// </remarks>
-        public NodeSettings(Network network = null, ProtocolVersion protocolVersion = SupportedProtocolVersion,
+        public NodeSettings(Network network, ProtocolVersion protocolVersion = SupportedProtocolVersion,
             string agent = "StratisNode", TextFileConfiguration configReader = null, string[] args = null, NetworksSelector networksSelector = null)
         {
             // Record arguments.

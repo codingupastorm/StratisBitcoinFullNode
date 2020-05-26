@@ -57,7 +57,7 @@ namespace Stratis.Bitcoin.Tests.Controllers
             this.connectionManager.Setup(c => c.Network).Returns(this.network);
             this.dateTimeProvider = new Mock<IDateTimeProvider>();
             this.fullNode = new Mock<IFullNode>();
-            this.nodeSettings = new NodeSettings(networksSelector: Networks.Bitcoin);
+            this.nodeSettings = new NodeSettings(new BitcoinMain());
 
             this.blockStore = new Mock<IBlockStore>();
             this.getUnspentTransaction = new Mock<IGetUnspentTransaction>();
