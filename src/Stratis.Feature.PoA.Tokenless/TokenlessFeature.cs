@@ -7,12 +7,12 @@ using MembershipServices;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.PoA;
-using Stratis.Core.P2P.Peer;
-using Stratis.Core.P2P.Protocol.Behaviors;
-using Stratis.Core.P2P.Protocol.Payloads;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Builder.Feature;
 using Stratis.Core.Consensus;
+using Stratis.Core.P2P.Peer;
+using Stratis.Core.P2P.Protocol.Behaviors;
+using Stratis.Core.P2P.Protocol.Payloads;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Core;
@@ -110,12 +110,10 @@ namespace Stratis.Feature.PoA.Tokenless
 
             this.federationManager.Initialize();
 
+            this.membershipServices.Initialize();
+
             // TODO-TL: Check if we need a new ConsensusOptions.
             var options = (PoAConsensusOptions)this.coreComponent.Network.Consensus.Options;
-            if (options.EnablePermissionedMembership)
-            {
-                this.membershipServices.Initialize();
-            }
 
             if (options.VotingEnabled)
             {

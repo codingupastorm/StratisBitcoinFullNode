@@ -27,6 +27,7 @@ namespace Stratis.SmartContracts.Tests.Common
     {
         private int lastSystemChannelNodePort;
 
+
         // This does not have to be re-retrieved from the CA for every node.
         private X509Certificate authorityCertificate;
 
@@ -36,6 +37,7 @@ namespace Stratis.SmartContracts.Tests.Common
         {
             // We have to override them so that the channel daemons can use 30002 and up.
             this.lastSystemChannelNodePort = new SystemChannelNetwork().DefaultAPIPort + 100;
+
             this.TimeProvider = new EditableTimeProvider();
         }
 
@@ -219,7 +221,24 @@ namespace Stratis.SmartContracts.Tests.Common
 
         public CoreNode CreateChannelNode(string channelRootFolder, params string[] channelArgs)
         {
-            CoreNode node = this.CreateNode(new ChannelNodeRunner(channelArgs, channelRootFolder, this.TimeProvider), "poa.conf");
+            // Welcome to Hack City
+
+            // Create a new Channel Runner
+            var channelNodeRunner = new ChannelNodeRunner(channelRootFolder, this.TimeProvider);
+
+            // Make a CoreNode out of it. In the case of a channels node this does very little for us! The important thing it does do is get a unique port and apiport.
+            CoreNode node = this.CreateNode(channelNodeRunner);
+
+            // Append the ports we generated to the node's arguments. They won't be in here otherwise because CoreNode saves them to some other config file.
+            channelArgs = channelArgs.Concat(new string[]
+            {
+                $"-apiport={node.ApiPort}",
+                $"-port={node.ProtocolPort}"
+            }).ToArray();
+
+            // Set these args on the runner that we created earlier. We couldn't put them in the constructor because we didn't have the ports yet.
+            channelNodeRunner.Args = channelArgs;
+
             return node;
         }
 

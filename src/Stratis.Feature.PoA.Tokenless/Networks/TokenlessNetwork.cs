@@ -81,9 +81,7 @@ namespace Stratis.Feature.PoA.Tokenless.Networks
                 genesisFederationMembers: genesisFederationMembers,
                 targetSpacingSeconds: 16,
                 votingEnabled: true,
-                autoKickIdleMembers: false,
-                enablePermissionedMembership: true
-            );
+                autoKickIdleMembers: false);
 
             this.Consensus = new NBitcoin.Consensus(
                 consensusFactory: consensusFactory,

@@ -3,14 +3,13 @@ using MembershipServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NBitcoin;
-using NBitcoin.PoA;
-using Stratis.Core.Mining;
-using Stratis.Core.P2P.Peer;
 using Stratis.Core.Base;
 using Stratis.Core.Builder;
 using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Consensus;
 using Stratis.Core.Interfaces;
+using Stratis.Core.Mining;
+using Stratis.Core.P2P.Peer;
 using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Consensus;
@@ -142,14 +141,11 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<IChannelRepository, ChannelRepository>();
                         services.AddSingleton<IChannelRequestSerializer, ChannelRequestSerializer>();
 
-                        var options = (PoAConsensusOptions)network.Consensus.Options;
-                        if (options.EnablePermissionedMembership)
-                        {
-                            ServiceDescriptor descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(INetworkPeerFactory));
-                            services.Remove(descriptor);
-                            services.AddSingleton<IClientCertificateValidator, ClientCertificateValidator>();
-                            services.AddSingleton<INetworkPeerFactory, TlsEnabledNetworkPeerFactory>();
-                        }
+                        // Enable permissioned membership.
+                        ServiceDescriptor descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(INetworkPeerFactory));
+                        services.Remove(descriptor);
+                        services.AddSingleton<IClientCertificateValidator, ClientCertificateValidator>();
+                        services.AddSingleton<INetworkPeerFactory, TlsEnabledNetworkPeerFactory>();
 
                         // Necessary for the dynamic contract controller
                         // Use AddScoped for instance-per-request lifecycle, ref. https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-2.2#scoped

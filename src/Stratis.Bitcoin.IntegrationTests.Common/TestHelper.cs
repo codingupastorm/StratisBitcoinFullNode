@@ -5,10 +5,10 @@ using System.Net;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
-using Stratis.Core.Consensus;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Core.P2P.Peer;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Consensus;
+using Stratis.Core.P2P.Peer;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 using Stratis.Features.BlockStore;
@@ -361,7 +361,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common
                         isConnecting = true;
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     // The connect request failed, probably due to a web exception so try again.
                     isConnecting = false;
