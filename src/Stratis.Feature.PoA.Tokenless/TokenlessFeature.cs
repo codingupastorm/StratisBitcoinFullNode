@@ -112,8 +112,6 @@ namespace Stratis.Feature.PoA.Tokenless
 
             this.membershipServices.Initialize();
 
-            this.membershipServices.Initialize();
-
             // TODO-TL: Check if we need a new ConsensusOptions.
             var options = (PoAConsensusOptions)this.coreComponent.Network.Consensus.Options;
 
