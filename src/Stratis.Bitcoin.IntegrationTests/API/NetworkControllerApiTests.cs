@@ -9,10 +9,13 @@ using Stratis.Core.Connection;
 using Stratis.Core.Controllers.Models;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Core.Networks;
 using Stratis.Core.P2P;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
+using Stratis.Feature.PoA.Tokenless.Networks;
+using Stratis.SmartContracts.Tests.Common;
+using CertificateAuthority.Tests.Common;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Stratis.Bitcoin.IntegrationTests.API
 {
@@ -21,12 +24,21 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         [Fact]
         public async Task Can_BanAndDisconnect_Peer_From_ApiAsync()
         {
-            using (var builder = NodeBuilder.Create(this))
-                
-            {
-                var network = new StratisRegTest();
+            var network = new TokenlessNetwork();
 
-                var nodeA = builder.CreateStratisPosNode(network, "nc-1-nodeA").Start();
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CoreNode nodeA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "nc-1-nodeA").Start();
 
                 var nodeBIp = "127.0.0.2";
                 var nodeBIpAddress = IPAddress.Parse(nodeBIp);
@@ -36,7 +48,7 @@ namespace Stratis.Bitcoin.IntegrationTests.API
                     { "-externalip", nodeBIp }
                 };
 
-                var nodeB = builder.CreateStratisPosNode(network, agent: "nc-1-nodeB", configParameters: nodeBConfig).Start();
+                CoreNode nodeB = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "nc-1-nodeB", configParameters: nodeBConfig).Start();
 
                 var nodeAaddressManager = nodeA.FullNode.NodeService<IPeerAddressManager>();
                 nodeAaddressManager.AddPeer(new IPEndPoint(nodeBIpAddress, nodeB.Endpoint.Port), IPAddress.Loopback);
@@ -67,11 +79,21 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         [Fact]
         public async Task Can_UnBan_Peer_From_ApiAsync()
         {
-            using (var builder = NodeBuilder.Create(this))
-            {
-                var network = new StratisRegTest();
+            var network = new TokenlessNetwork();
 
-                var nodeA = builder.CreateStratisPosNode(network, "nc-2-nodeA").Start();
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CoreNode nodeA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "nc-2-nodeA", configParameters: new NodeConfigParameters() { { "-bantime", "120" } }).Start();
 
                 var nodeB_Ip = "127.0.0.2";
                 var nodeB_IpAddress = IPAddress.Parse(nodeB_Ip);
@@ -99,11 +121,21 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         [Fact]
         public async Task Can_ClearAll_Banned_PeersAsync()
         {
-            using (var builder = NodeBuilder.Create(this))
-            {
-                var network = new StratisRegTest();
+            var network = new TokenlessNetwork();
 
-                var nodeA = builder.CreateStratisPosNode(network, "nc-3-nodeA").Start();
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CoreNode nodeA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "nc-3-nodeA", configParameters: new NodeConfigParameters() { { "-bantime", "120" } }).Start();
 
                 var nodeB_Ip = "127.0.0.2";
                 var nodeB_IpAddress = IPAddress.Parse(nodeB_Ip);
@@ -125,11 +157,21 @@ namespace Stratis.Bitcoin.IntegrationTests.API
         [Fact]
         public async Task Can_GetBannedPeers_From_ApiAsync()
         {
-            using (var builder = NodeBuilder.Create(this))
-            {
-                var network = new StratisRegTest();
+            var network = new TokenlessNetwork();
 
-                var nodeA = builder.CreateStratisPosNode(network, "nc-4-nodeA").Start();
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CoreNode nodeA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "nc-4-nodeA", configParameters: new NodeConfigParameters() { { "-bantime", "120" } }).Start();
 
                 var nodeB_Ip = "127.0.0.2";
                 var nodeB_IpAddress = IPAddress.Parse(nodeB_Ip);
