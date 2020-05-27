@@ -14,7 +14,7 @@ namespace CertificateAuthority.API
 {
     public class Program
     {
-        private const string NLogConfigFileName = "nlog.config";
+        private const string NLogConfigFileName = "NLog.config";
 
         public static void Main(string[] args)
         {
@@ -25,7 +25,7 @@ namespace CertificateAuthority.API
 
             Directory.CreateDirectory(logFolder);
 
-            var nlogConfigPath = Path.Combine(settings.DataDirectory, NLogConfigFileName);
+            var nlogConfigPath = InitializeNLog(settings);
 
             IWebHostBuilder builder = WebHost
                 .CreateDefaultBuilder()
@@ -45,6 +45,24 @@ namespace CertificateAuthority.API
             ConfigureLoggerPath(logFolder);
 
             webhost.Run();
+        }
+
+        /// <summary>
+        /// Creates an NLog.config in the node folder if it doesn't exist.
+        /// </summary>
+        /// <returns>The path to the NLog file.</returns>
+        private static string InitializeNLog(Settings settings)
+        {
+            var nlogConfigPath = Path.Combine(settings.DataDirectory, NLogConfigFileName);
+
+            // File already exists. This could be from an earlier run, or it could be a user-defined config.
+            if (File.Exists(nlogConfigPath))
+                return nlogConfigPath;
+
+            // This will copy the file from the executable directory to the node data folder.
+            File.Copy(NLogConfigFileName, nlogConfigPath);
+
+            return nlogConfigPath;
         }
 
         /// <summary>
