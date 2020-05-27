@@ -7,6 +7,7 @@ using CertificateAuthority.Tests.Common;
 using Flurl;
 using Flurl.Http;
 using Microsoft.AspNetCore.Hosting;
+using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
@@ -51,14 +52,18 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Create and start the parent node.
                 CoreNode parentNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server, debugChannels: true);
-                parentNode.Start();
+                CoreNode otherNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 1, server, organisation: disallowedOrg, debugChannels: true);
 
+                var certificates = new List<X509Certificate>() { parentNode.ClientCertificate.ToCertificate(), otherNode.ClientCertificate.ToCertificate() };
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, parentNode.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, otherNode.DataFolder, this.network);
+
+                parentNode.Start();
                 // Create a channel for the identity to be apart of.
                 nodeBuilder.CreateChannel(parentNode, channelName, 2);
                 parentNode.Restart();
 
-                // Create another node.
-                CoreNode otherNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 1, server, organisation: disallowedOrg, debugChannels: true);
+                // Start other node.
                 otherNode.Start();
 
                 TestHelper.Connect(parentNode, otherNode);
