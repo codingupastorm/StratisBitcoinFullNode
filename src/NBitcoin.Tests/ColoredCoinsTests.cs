@@ -21,7 +21,7 @@ namespace NBitcoin.Tests
                 TestCase testcase = JsonConvert.DeserializeObject<TestCase[]>(File.ReadAllText(TestDataLocations.GetFileFromDataFolder("openasset-known-tx.json")))
                     .First(t => t.Test == test);
                 var repository = new NoSqlTransactionRepository(network);
-                foreach(string tx in testcase.Txs)
+                foreach (string tx in testcase.Txs)
                 {
                     Transaction txObj = network.CreateTransaction(tx);
                     repository.Put(txObj.GetHash(), txObj);
@@ -122,7 +122,7 @@ namespace NBitcoin.Tests
             Assert.Equal(testAddress.ScriptPubKey, testColored.ScriptPubKey);
 
             Assert.Equal(this.networkTest, testColored.Network);
-            testColored = new BitcoinColoredAddress("bWqaKUZETiECYgmJNbNZUoanBxnAzoVjCNx");
+            testColored = new BitcoinColoredAddress("bWqaKUZETiECYgmJNbNZUoanBxnAzoVjCNx", this.networkTest);
             Assert.Contains(testColored.Network, new[] { this.networkRegTest, this.networkTest });
             Assert.Equal(colored.ToNetwork(this.networkTest), testColored);
         }
@@ -410,7 +410,7 @@ namespace NBitcoin.Tests
                 "6a056a104f41010003ac0200e58e260412345678", //valid push consume a marker
             };
 
-            foreach(Script script in invalidMarkers.Select(m => new Script(Encoders.Hex.DecodeData(m))))
+            foreach (Script script in invalidMarkers.Select(m => new Script(Encoders.Hex.DecodeData(m))))
             {
                 ColorMarker marker = ColorMarker.TryParse(script);
                 Assert.Null(marker);
@@ -423,7 +423,7 @@ namespace NBitcoin.Tests
                 "6a576e104f41010003ac0200e58e2604123456786811", //Invalid push at the end
             };
 
-            foreach(Script script in validMarkers.Select(m => new Script(Encoders.Hex.DecodeData(m))))
+            foreach (Script script in validMarkers.Select(m => new Script(Encoders.Hex.DecodeData(m))))
             {
                 ColorMarker marker = ColorMarker.TryParse(script);
                 Assert.NotNull(marker);

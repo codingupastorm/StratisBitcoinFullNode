@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
-using Newtonsoft.Json;
+using Stratis.Bitcoin.Tests.Common;
 using Stratis.Features.Wallet;
 using Stratis.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Tests.Common;
 
 namespace Stratis.Bitcoin.Tests.Wallet.Common
 {
@@ -139,8 +138,11 @@ namespace Stratis.Bitcoin.Tests.Wallet.Common
         {
             Network network = walletRepository?.Network ?? KnownNetworks.Main;
 
-            var wallet = new Features.Wallet.Wallet(name, walletRepository: walletRepository);
-            wallet.Network = network;
+            var wallet = new Features.Wallet.Wallet(name, walletRepository: walletRepository)
+            {
+                Network = network
+            };
+
             wallet.AccountsRoot = new List<AccountRoot> { new AccountRoot(wallet) { CoinType = (CoinType)network.Consensus.CoinType } };
             return wallet;
         }
@@ -257,7 +259,8 @@ namespace Stratis.Bitcoin.Tests.Wallet.Common
                 ScriptPubKey = pubKey.Hash.ScriptPubKey
             };
 
-            res.Transactions.Add(new TransactionData() {
+            res.Transactions.Add(new TransactionData()
+            {
                 Id = new uint256((ulong)addrType),
                 Index = index,
                 ScriptPubKey = pubKey.Hash.ScriptPubKey
@@ -289,7 +292,7 @@ namespace Stratis.Bitcoin.Tests.Wallet.Common
 
         public static (PubKey PubKey, BitcoinPubKeyAddress Address) GenerateAddressKeys(Features.Wallet.Wallet wallet, string accountExtendedPubKey, string keyPath)
         {
-            PubKey addressPubKey = ExtPubKey.Parse(accountExtendedPubKey).Derive(new KeyPath(keyPath)).PubKey;
+            PubKey addressPubKey = ExtPubKey.Parse(accountExtendedPubKey, wallet.Network).Derive(new KeyPath(keyPath)).PubKey;
             BitcoinPubKeyAddress address = addressPubKey.GetAddress(wallet.Network);
 
             return (addressPubKey, address);
@@ -568,13 +571,6 @@ namespace Stratis.Bitcoin.Tests.Wallet.Common
 
     public class WalletFixture : IDisposable
     {
-        private readonly Dictionary<(string, string), Features.Wallet.Wallet> walletsGenerated;
-
-        public WalletFixture()
-        {
-            this.walletsGenerated = new Dictionary<(string, string), Features.Wallet.Wallet>();
-        }
-
         public void Dispose()
         {
         }

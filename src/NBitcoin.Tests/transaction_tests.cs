@@ -12,6 +12,7 @@ using NBitcoin.OpenAsset;
 using NBitcoin.Policy;
 using Newtonsoft.Json.Linq;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Xunit;
 
 namespace NBitcoin.Tests
@@ -23,7 +24,7 @@ namespace NBitcoin.Tests
 
         public Transaction_tests()
         {
-            this.networkMain = KnownNetworks.Main;
+            this.networkMain = new BitcoinMain();
             this.consensusFactory = this.networkMain.Consensus.ConsensusFactory;
         }
 
@@ -146,7 +147,7 @@ namespace NBitcoin.Tests
         [Trait("UnitTest", "UnitTest")]
         public void CanExtractTxOutDestinationEasily()
         {
-            var secret = new BitcoinSecret("KyJTjvFpPF6DDX4fnT56d2eATPfxjdUPXFFUb85psnCdh34iyXRQ");
+            var secret = new BitcoinSecret("KyJTjvFpPF6DDX4fnT56d2eATPfxjdUPXFFUb85psnCdh34iyXRQ", this.networkMain);
 
             var tx = new Transaction();
             var p2pkh = new TxOut(new Money((ulong)45000000), secret.GetAddress());
@@ -1412,7 +1413,7 @@ namespace NBitcoin.Tests
             Key[] privKeys = new[]{"5JaTXbAUmfPYZFRwrYaALK48fN6sFJp4rHqq2QSXs8ucfpE4yQU",
                         "5Jb7fCeh1Wtm4yBBg3q3XbT6B525i17kVhy3vMC9AqfR6FH2qGk",
                         "5JFjmGo5Fww9p8gvx48qBYDJNAzR9pmH5S389axMtDyPT8ddqmw"}
-                        .Select(k => new BitcoinSecret(k).PrivateKey).ToArray();
+                        .Select(k => new BitcoinSecret(k, this.networkMain).PrivateKey).ToArray();
 
             //First: combine the three keys into a multisig address
             Script redeem = PayToMultiSigTemplate.Instance.GenerateScriptPubKey(2, privKeys.Select(k => k.PubKey).ToArray());
@@ -1910,7 +1911,7 @@ namespace NBitcoin.Tests
         [Fact]
         public void Play2()
         {
-            var secret = new BitcoinSecret("L5AQtV2HDm4xGsseLokK2VAT2EtYKcTm3c7HwqnJBFt9LdaQULsM");
+            var secret = new BitcoinSecret("L5AQtV2HDm4xGsseLokK2VAT2EtYKcTm3c7HwqnJBFt9LdaQULsM", this.networkMain);
             Combinaison[] all = GetCombinaisons().ToArray();
             while (true)
             {
@@ -2052,7 +2053,7 @@ namespace NBitcoin.Tests
         [Trait("UnitTest", "UnitTest")]
         public void TestSigHashes()
         {
-            var secret = new BitcoinSecret("L5AQtV2HDm4xGsseLokK2VAT2EtYKcTm3c7HwqnJBFt9LdaQULsM");
+            var secret = new BitcoinSecret("L5AQtV2HDm4xGsseLokK2VAT2EtYKcTm3c7HwqnJBFt9LdaQULsM", this.networkMain);
             Key key = secret.PrivateKey;
             var output = new StringBuilder();
             foreach (bool segwit in new[] { false, true })

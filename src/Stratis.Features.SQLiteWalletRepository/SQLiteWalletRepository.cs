@@ -478,7 +478,7 @@ namespace Stratis.Features.SQLiteWalletRepository
             {
                 IEnumerable<HDAccount> accounts = conn.GetAccounts(wallet.WalletId);
 
-                if (accounts.Any(a => a.ExtPubKey != null && ExtPubKey.Parse(a.ExtPubKey) == extPubKey))
+                if (accounts.Any(a => a.ExtPubKey != null && ExtPubKey.Parse(a.ExtPubKey, this.Network) == extPubKey))
                     throw new WalletException($"There is already an account in this wallet with this xpubkey: " + extPubKey.ToString(this.Network));
 
                 if (accounts.Any(a => a.AccountIndex == accountIndex))
