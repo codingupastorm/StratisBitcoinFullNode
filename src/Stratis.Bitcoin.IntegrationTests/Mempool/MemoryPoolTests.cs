@@ -12,6 +12,13 @@ using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
 using Stratis.Core.Networks;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
+using System.Security;
+using Stratis.Feature.PoA.Tokenless.Networks;
+using Microsoft.AspNetCore.Hosting;
+using CertificateAuthority.Tests.Common;
+using Stratis.SmartContracts.Tests.Common;
+using CertificateAuthority;
+using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 
 namespace Stratis.Bitcoin.IntegrationTests.Mempool
 {
@@ -22,230 +29,90 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
         private const string Passphrase = "passphrase";
         private const string Account = "account 0";
 
-        private readonly Network network;
+        private readonly TokenlessNetwork network;
 
         public MemoryPoolTests()
         {
-            this.network = new BitcoinRegTest();
+            this.network = new TokenlessNetwork();
         }
 
         [Fact]
         public void AddToMempool()
         {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                CoreNode stratisNodeSync = builder.CreateStratisPowNode(this.network).WithDummyWallet().Start();
+                server.Start();
 
-                TestHelper.MineBlocks(stratisNodeSync, 105); // coinbase maturity = 100
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
+               
+                CoreNode stratisNodeSync = nodeBuilder.CreateTokenlessNode(this.network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
 
-                Block block = stratisNodeSync.FullNode.BlockStore().GetBlock(stratisNodeSync.FullNode.ChainIndexer.GetHeader(4).HashBlock);
-                Transaction prevTrx = block.Transactions.First();
-                var dest = new BitcoinSecret(new Key(), stratisNodeSync.FullNode.Network);
+                Transaction tx = TokenlessTestHelper.CreateBasicOpReturnTransaction(stratisNodeSync);
 
-                Transaction tx = stratisNodeSync.FullNode.Network.CreateTransaction();
-                tx.AddInput(new TxIn(new OutPoint(prevTrx.GetHash(), 0), PayToPubkeyHashTemplate.Instance.GenerateScriptPubKey(stratisNodeSync.MinerSecret.PubKey)));
-                tx.AddOutput(new TxOut("25", dest.PubKey.Hash));
-                tx.AddOutput(new TxOut("24", new Key().PubKey.Hash)); // 1 btc fee
-                tx.Sign(stratisNodeSync.FullNode.Network, stratisNodeSync.MinerSecret, false);
-
-                stratisNodeSync.Broadcast(tx);
+                stratisNodeSync.BroadcastTransactionAsync(tx).GetAwaiter().GetResult();
 
                 TestBase.WaitLoop(() => stratisNodeSync.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 1);
             }
         }
 
         [Fact]
-        public void AddToMempoolTrxSpendingTwoOutputFromSameTrx()
-        {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                CoreNode stratisNodeSync = builder.CreateStratisPowNode(this.network).WithDummyWallet().Start();
-
-                TestHelper.MineBlocks(stratisNodeSync, 105); // coinbase maturity = 100
-
-                Block block = stratisNodeSync.FullNode.BlockStore().GetBlock(stratisNodeSync.FullNode.ChainIndexer.GetHeader(4).HashBlock);
-                Transaction prevTrx = block.Transactions.First();
-                var dest1 = new BitcoinSecret(new Key(), stratisNodeSync.FullNode.Network);
-                var dest2 = new BitcoinSecret(new Key(), stratisNodeSync.FullNode.Network);
-
-                Transaction parentTx = stratisNodeSync.FullNode.Network.CreateTransaction();
-                parentTx.AddInput(new TxIn(new OutPoint(prevTrx.GetHash(), 0), PayToPubkeyHashTemplate.Instance.GenerateScriptPubKey(stratisNodeSync.MinerSecret.PubKey)));
-                parentTx.AddOutput(new TxOut("25", dest1.PubKey.Hash));
-                parentTx.AddOutput(new TxOut("24", dest2.PubKey.Hash)); // 1 btc fee
-                parentTx.Sign(stratisNodeSync.FullNode.Network, stratisNodeSync.MinerSecret, false);
-
-                stratisNodeSync.Broadcast(parentTx);
-                // wiat for the trx to enter the pool
-                TestBase.WaitLoop(() => stratisNodeSync.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 1);
-                // mine the transactions in the mempool
-                TestHelper.GenerateBlockManually(stratisNodeSync, stratisNodeSync.FullNode.MempoolManager().InfoAllAsync().Result.Select(s => s.Trx).ToList());
-                TestBase.WaitLoop(() => stratisNodeSync.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 0);
-
-                //create a new trx spending both outputs
-                Transaction tx = stratisNodeSync.FullNode.Network.CreateTransaction();
-                tx.AddInput(new TxIn(new OutPoint(parentTx.GetHash(), 0), PayToPubkeyHashTemplate.Instance.GenerateScriptPubKey(dest1.PubKey)));
-                tx.AddInput(new TxIn(new OutPoint(parentTx.GetHash(), 1), PayToPubkeyHashTemplate.Instance.GenerateScriptPubKey(dest2.PubKey)));
-                tx.AddOutput(new TxOut("48", new Key().PubKey.Hash)); // 1 btc fee
-                Transaction signed = new TransactionBuilder(stratisNodeSync.FullNode.Network).AddKeys(dest1, dest2).AddCoins(parentTx.Outputs.AsCoins()).SignTransaction(tx);
-
-                stratisNodeSync.Broadcast(signed);
-                TestBase.WaitLoop(() => stratisNodeSync.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 1);
-            }
-        }
-
-        [Fact] //(Skip = "Working on fixing this after AsyncProvider PR gives intermittent results.")]
         public void MempoolReceiveFromManyNodes()
         {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                CoreNode stratisNodeSync = builder.CreateStratisPowNode(this.network).WithDummyWallet().Start();
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
-                TestHelper.MineBlocks(stratisNodeSync, 201); // coinbase maturity = 100
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
+
+                CoreNode stratisNodeSync = nodeBuilder.CreateTokenlessNode(this.network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
 
                 var trxs = new List<Transaction>();
-                foreach (int index in Enumerable.Range(1, 100))
+                var rand = new Random();
+                foreach (int index in Enumerable.Range(1, 30))
                 {
-                    Block block = stratisNodeSync.FullNode.BlockStore().GetBlock(stratisNodeSync.FullNode.ChainIndexer.GetHeader(index).HashBlock);
-                    Transaction prevTrx = block.Transactions.First();
-                    var dest = new BitcoinSecret(new Key(), stratisNodeSync.FullNode.Network);
-
-                    Transaction tx = stratisNodeSync.FullNode.Network.CreateTransaction();
-                    tx.AddInput(new TxIn(new OutPoint(prevTrx.GetHash(), 0), PayToPubkeyHashTemplate.Instance.GenerateScriptPubKey(stratisNodeSync.MinerSecret.PubKey)));
-                    tx.AddOutput(new TxOut("25", dest.PubKey.Hash));
-                    tx.AddOutput(new TxOut("24", new Key().PubKey.Hash)); // 1 btc fee
-                    tx.Sign(stratisNodeSync.FullNode.Network, stratisNodeSync.MinerSecret, false);
+                    var data = new byte[4];
+                    rand.NextBytes(data);
+                    Transaction tx = TokenlessTestHelper.CreateBasicOpReturnTransaction(stratisNodeSync, data);
                     trxs.Add(tx);
                 }
 
                 var options = new ParallelOptions { MaxDegreeOfParallelism = 10 };
                 Parallel.ForEach(trxs, options, transaction =>
                 {
-                    stratisNodeSync.Broadcast(transaction);
+                    stratisNodeSync.BroadcastTransactionAsync(transaction).GetAwaiter().GetResult();
                 });
 
-                TestBase.WaitLoop(() => stratisNodeSync.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 100);
-            }
-        }
-
-        [Fact]
-        public void TxMempoolMapOrphans()
-        {
-            var rand = new Random();
-            var randByte = new byte[32];
-            uint256 randHash()
-            {
-                rand.NextBytes(randByte);
-                return new uint256(randByte);
-            }
-
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                CoreNode stratisNode = builder.CreateStratisPowNode(this.network).WithDummyWallet().Start();
-
-                // 50 orphan transactions:
-                for (ulong i = 0; i < 50; i++)
-                {
-                    Transaction tx = stratisNode.FullNode.Network.CreateTransaction();
-                    tx.AddInput(new TxIn(new OutPoint(randHash(), 0), new Script(OpcodeType.OP_1)));
-                    tx.AddOutput(new TxOut(new Money(1 * Money.CENT), stratisNode.MinerSecret.ScriptPubKey));
-
-                    stratisNode.FullNode.NodeService<MempoolOrphans>().AddOrphanTx(i, tx);
-                }
-
-                Assert.Equal(50, stratisNode.FullNode.NodeService<MempoolOrphans>().OrphansList().Count);
-
-                // ... and 50 that depend on other orphans:
-                for (ulong i = 0; i < 50; i++)
-                {
-                    MempoolOrphans.OrphanTx txPrev = stratisNode.FullNode.NodeService<MempoolOrphans>().OrphansList().ElementAt(rand.Next(stratisNode.FullNode.NodeService<MempoolOrphans>().OrphansList().Count));
-
-                    Transaction tx = stratisNode.FullNode.Network.CreateTransaction();
-                    tx.AddInput(new TxIn(new OutPoint(txPrev.Tx.GetHash(), 0), new Script(OpcodeType.OP_1)));
-                    tx.AddOutput(new TxOut(new Money((1 + i + 100) * Money.CENT), stratisNode.MinerSecret.ScriptPubKey));
-                    stratisNode.FullNode.NodeService<MempoolOrphans>().AddOrphanTx(i, tx);
-                }
-
-                Assert.Equal(100, stratisNode.FullNode.NodeService<MempoolOrphans>().OrphansList().Count);
-
-                // This really-big orphan should be ignored:
-                for (ulong i = 0; i < 10; i++)
-                {
-                    MempoolOrphans.OrphanTx txPrev = stratisNode.FullNode.NodeService<MempoolOrphans>().OrphansList().ElementAt(rand.Next(stratisNode.FullNode.NodeService<MempoolOrphans>().OrphansList().Count));
-                    Transaction tx = stratisNode.FullNode.Network.CreateTransaction();
-                    tx.AddOutput(new TxOut(new Money(1 * Money.CENT), stratisNode.MinerSecret.ScriptPubKey));
-                    foreach (int index in Enumerable.Range(0, 2777))
-                        tx.AddInput(new TxIn(new OutPoint(txPrev.Tx.GetHash(), index), new Script(OpcodeType.OP_1)));
-
-                    Assert.False(stratisNode.FullNode.NodeService<MempoolOrphans>().AddOrphanTx(i, tx));
-                }
-
-                Assert.Equal(100, stratisNode.FullNode.NodeService<MempoolOrphans>().OrphansList().Count);
-
-                // Test EraseOrphansFor:
-                for (ulong i = 0; i < 3; i++)
-                {
-                    int sizeBefore = stratisNode.FullNode.NodeService<MempoolOrphans>().OrphansList().Count;
-                    stratisNode.FullNode.NodeService<MempoolOrphans>().EraseOrphansFor(i);
-                    Assert.True(stratisNode.FullNode.NodeService<MempoolOrphans>().OrphansList().Count < sizeBefore);
-                }
-
-                // Test LimitOrphanTxSize() function:
-                stratisNode.FullNode.NodeService<MempoolOrphans>().LimitOrphanTxSize(40);
-                Assert.True(stratisNode.FullNode.NodeService<MempoolOrphans>().OrphansList().Count <= 40);
-                stratisNode.FullNode.NodeService<MempoolOrphans>().LimitOrphanTxSize(10);
-                Assert.True(stratisNode.FullNode.NodeService<MempoolOrphans>().OrphansList().Count <= 10);
-                stratisNode.FullNode.NodeService<MempoolOrphans>().LimitOrphanTxSize(0);
-                Assert.True(!stratisNode.FullNode.NodeService<MempoolOrphans>().OrphansList().Any());
-            }
-        }
-
-        [Fact]
-        public void MempoolAddNodeWithOrphans()
-        {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                CoreNode stratisNodeSync = builder.CreateStratisPowNode(this.network).WithDummyWallet().Start();
-
-                TestHelper.MineBlocks(stratisNodeSync, 101); // coinbase maturity = 100
-
-                Block block = stratisNodeSync.FullNode.BlockStore().GetBlock(stratisNodeSync.FullNode.ChainIndexer.GetHeader(1).HashBlock);
-                Transaction prevTrx = block.Transactions.First();
-                var dest = new BitcoinSecret(new Key(), stratisNodeSync.FullNode.Network);
-
-                var key = new Key();
-                Transaction tx = stratisNodeSync.FullNode.Network.CreateTransaction();
-                tx.AddInput(new TxIn(new OutPoint(prevTrx.GetHash(), 0), PayToPubkeyHashTemplate.Instance.GenerateScriptPubKey(stratisNodeSync.MinerSecret.PubKey)));
-                tx.AddOutput(new TxOut("25", dest.PubKey.Hash));
-                tx.AddOutput(new TxOut("24", key.PubKey.Hash)); // 1 btc fee
-                tx.Sign(stratisNodeSync.FullNode.Network, stratisNodeSync.MinerSecret, false);
-
-                Transaction txOrphan = stratisNodeSync.FullNode.Network.CreateTransaction();
-                txOrphan.AddInput(new TxIn(new OutPoint(tx.GetHash(), 1), PayToPubkeyHashTemplate.Instance.GenerateScriptPubKey(key.PubKey)));
-                txOrphan.AddOutput(new TxOut("10", new Key().PubKey.Hash));
-                txOrphan.Sign(stratisNodeSync.FullNode.Network, key.GetBitcoinSecret(stratisNodeSync.FullNode.Network), false);
-
-                // broadcast the orphan
-                stratisNodeSync.Broadcast(txOrphan);
-                TestBase.WaitLoop(() => stratisNodeSync.FullNode.NodeService<MempoolOrphans>().OrphansList().Count == 1);
-                // broadcast the parent
-                stratisNodeSync.Broadcast(tx);
-                TestBase.WaitLoop(() => stratisNodeSync.FullNode.NodeService<MempoolOrphans>().OrphansList().Count == 0);
-                // wait for orphan to get in the pool
-                TestBase.WaitLoop(() => stratisNodeSync.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 2);
+                TestBase.WaitLoop(() => stratisNodeSync.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 30);
             }
         }
 
         [Fact]
         public void MempoolSyncTransactions()
         {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                CoreNode stratisNodeSync = builder.CreateStratisPowNode(this.network).WithDummyWallet().Start();
-                CoreNode stratisNode1 = builder.CreateStratisPowNode(this.network).Start();
-                CoreNode stratisNode2 = builder.CreateStratisPowNode(this.network).Start();
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
-                // Generate blocks and wait for the downloader to pickup
-                TestHelper.MineBlocks(stratisNodeSync, 105); // coinbase maturity = 100
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
+
+                CoreNode stratisNodeSync = nodeBuilder.CreateTokenlessNode(this.network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+                CoreNode stratisNode1 = nodeBuilder.CreateTokenlessNode(this.network, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+                CoreNode stratisNode2 = nodeBuilder.CreateTokenlessNode(this.network, 2, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
 
                 // Sync both nodes.
                 TestHelper.ConnectAndSync(stratisNode1, stratisNodeSync);
@@ -253,23 +120,19 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
 
                 // Create some transactions and push them to the pool.
                 var trxs = new List<Transaction>();
+                var rand = new Random();
                 foreach (int index in Enumerable.Range(1, 5))
                 {
-                    Block block = stratisNodeSync.FullNode.BlockStore().GetBlock(stratisNodeSync.FullNode.ChainIndexer.GetHeader(index).HashBlock);
-                    Transaction prevTrx = block.Transactions.First();
-                    var dest = new BitcoinSecret(new Key(), stratisNodeSync.FullNode.Network);
-
-                    Transaction tx = stratisNodeSync.FullNode.Network.CreateTransaction();
-                    tx.AddInput(new TxIn(new OutPoint(prevTrx.GetHash(), 0), PayToPubkeyHashTemplate.Instance.GenerateScriptPubKey(stratisNodeSync.MinerSecret.PubKey)));
-                    tx.AddOutput(new TxOut("25", dest.PubKey.Hash));
-                    tx.AddOutput(new TxOut("24", new Key().PubKey.Hash)); // 1 btc fee
-                    tx.Sign(stratisNodeSync.FullNode.Network, stratisNodeSync.MinerSecret, false);
+                    var data = new byte[4];
+                    rand.NextBytes(data);
+                    Transaction tx = TokenlessTestHelper.CreateBasicOpReturnTransaction(stratisNodeSync, data);
                     trxs.Add(tx);
                 }
+
                 var options = new ParallelOptions { MaxDegreeOfParallelism = 5 };
                 Parallel.ForEach(trxs, options, transaction =>
                 {
-                    stratisNodeSync.Broadcast(transaction);
+                    stratisNodeSync.BroadcastTransactionAsync(transaction).GetAwaiter().GetResult();
                 });
 
                 // wait for all nodes to have all trx

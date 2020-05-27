@@ -199,10 +199,10 @@ namespace Stratis.SmartContracts.Tests.Common
             return transaction;
         }
 
-        public static Transaction CreateBasicOpReturnTransaction(CoreNode node)
+        public static Transaction CreateBasicOpReturnTransaction(CoreNode node, byte[] data = null)
         {
             Transaction transaction = Network.CreateTransaction();
-            Script outputScript = TxNullDataTemplate.Instance.GenerateScriptPubKey(new byte[] { 0, 1, 2, 3 });
+            Script outputScript = TxNullDataTemplate.Instance.GenerateScriptPubKey(data ?? new byte[] { 0, 1, 2, 3 });
             transaction.Outputs.Add(new TxOut(Money.Zero, outputScript));
 
             ITokenlessSigner signer = node.FullNode.NodeService<ITokenlessSigner>();
