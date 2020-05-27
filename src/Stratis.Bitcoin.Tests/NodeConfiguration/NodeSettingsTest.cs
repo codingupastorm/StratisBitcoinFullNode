@@ -10,7 +10,7 @@ namespace Stratis.Bitcoin.Tests.NodeConfiguration
 {
     public class NodeSettingsTest : TestBase
     {
-        public NodeSettingsTest() : base(KnownNetworks.Main)
+        public NodeSettingsTest() : base(new BitcoinMain())
         {
         }
 
@@ -21,7 +21,7 @@ namespace Stratis.Bitcoin.Tests.NodeConfiguration
         public void NodeSettings_CanReadSingleValueFromCmdLine()
         {
             // Arrange
-            var nodeSettings = new NodeSettings(networksSelector: Networks.Bitcoin, args: new[] { "-agentprefix=abc" });
+            var nodeSettings = new NodeSettings(this.Network, args: new[] { "-agentprefix=abc" });
             // Act
             string result = nodeSettings.ConfigReader.GetOrDefault("agentprefix", string.Empty);
             // Assert
@@ -35,10 +35,10 @@ namespace Stratis.Bitcoin.Tests.NodeConfiguration
         public void NodeSettings_CanReadSingleValueFromFile()
         {
             // Arrange
-            string dataDir = TestBase.CreateDataFolder(this).RootPath;
+            string dataDir = TestBase.CreateDataFolder(this, network: this.Network).RootPath;
             string configFile = Path.Combine(dataDir, "config.txt");
             File.WriteAllText(configFile, "agentprefix=def");
-            var nodeSettings = new NodeSettings(networksSelector: Networks.Bitcoin, args: new[] { $"-datadir={dataDir}", $"-conf=config.txt" });
+            var nodeSettings = new NodeSettings(this.Network, args: new[] { $"-datadir={dataDir}", $"-conf=config.txt" });
             // Act
             string result = nodeSettings.ConfigReader.GetOrDefault("agentprefix", string.Empty);
             // Assert
@@ -52,10 +52,10 @@ namespace Stratis.Bitcoin.Tests.NodeConfiguration
         public void NodeSettings_CanReadSingleValueFromCmdLineAndFile()
         {
             // Arrange
-            string dataDir = TestBase.CreateDataFolder(this).RootPath;
+            string dataDir = TestBase.CreateDataFolder(this, network: this.Network).RootPath;
             string configFile = Path.Combine(dataDir, "config.txt");
             File.WriteAllText(configFile, "agentprefix=def");
-            var nodeSettings = new NodeSettings(networksSelector: Networks.Bitcoin, args: new[] { $"-datadir={dataDir}", $"-conf=config.txt", "-agentprefix=abc" });
+            var nodeSettings = new NodeSettings(this.Network, args: new[] { $"-datadir={dataDir}", $"-conf=config.txt", "-agentprefix=abc" });
             // Act
             string result = nodeSettings.ConfigReader.GetOrDefault("agentprefix", string.Empty);
             // Assert
@@ -69,10 +69,10 @@ namespace Stratis.Bitcoin.Tests.NodeConfiguration
         public void NodeSettings_CanReadSingleValueFromNone()
         {
             // Arrange
-            string dataDir = TestBase.CreateDataFolder(this).RootPath;
+            string dataDir = TestBase.CreateDataFolder(this, network: this.Network).RootPath;
             string configFile = Path.Combine(dataDir, "config.txt");
             File.WriteAllText(configFile, "");
-            var nodeSettings = new NodeSettings(networksSelector: Networks.Bitcoin, args: new[] { $"-datadir={dataDir}", $"-conf=config.txt" });
+            var nodeSettings = new NodeSettings(this.Network, args: new[] { $"-datadir={dataDir}", $"-conf=config.txt" });
             // Act
             string result = nodeSettings.ConfigReader.GetOrDefault("agentprefix", string.Empty);
             // Assert
@@ -87,7 +87,7 @@ namespace Stratis.Bitcoin.Tests.NodeConfiguration
         public void NodeSettings_CanReadMultiValueFromCmdLine()
         {
             // Arrange
-            var nodeSettings = new NodeSettings(networksSelector: Networks.Bitcoin, args: new[] { "-addnode=0.0.0.0", "-addnode=0.0.0.1" });
+            var nodeSettings = new NodeSettings(this.Network, args: new[] { "-addnode=0.0.0.0", "-addnode=0.0.0.1" });
             // Act
             string[] result = nodeSettings.ConfigReader.GetAll("addnode");
             // Assert
@@ -103,10 +103,10 @@ namespace Stratis.Bitcoin.Tests.NodeConfiguration
         public void NodeSettings_CanReadMultiValueFromFile()
         {
             // Arrange
-            string dataDir = TestBase.CreateDataFolder(this).RootPath;
+            string dataDir = TestBase.CreateDataFolder(this, network: this.Network).RootPath;
             string configFile = Path.Combine(dataDir, "config.txt");
             File.WriteAllText(configFile, "addnode=0.0.0.0\r\naddnode=0.0.0.1");
-            var nodeSettings = new NodeSettings(networksSelector: Networks.Bitcoin, args: new[] { $"-datadir={dataDir}", $"-conf=config.txt" });
+            var nodeSettings = new NodeSettings(this.Network, args: new[] { $"-datadir={dataDir}", $"-conf=config.txt" });
             // Act
             string[] result = nodeSettings.ConfigReader.GetAll("addnode");
             // Assert
@@ -122,10 +122,10 @@ namespace Stratis.Bitcoin.Tests.NodeConfiguration
         public void NodeSettings_CanReadMultiValueFromCmdLineAndFile()
         {
             // Arrange
-            string dataDir = TestBase.CreateDataFolder(this).RootPath;
+            string dataDir = TestBase.CreateDataFolder(this, network: this.Network).RootPath;
             string configFile = Path.Combine(dataDir, "config.txt");
             File.WriteAllText(configFile, "addnode=0.0.0.0");
-            var nodeSettings = new NodeSettings(networksSelector: Networks.Bitcoin, args: new[] { $"-datadir={dataDir}", $"-conf=config.txt", "-addnode=0.0.0.1" });
+            var nodeSettings = new NodeSettings(this.Network, args: new[] { $"-datadir={dataDir}", $"-conf=config.txt", "-addnode=0.0.0.1" });
             // Act
             string[] result = nodeSettings.ConfigReader.GetAll("addnode");
             // Assert
@@ -141,10 +141,10 @@ namespace Stratis.Bitcoin.Tests.NodeConfiguration
         public void NodeSettings_CanReadMultiValueFromNone()
         {
             // Arrange
-            string dataDir = TestBase.CreateDataFolder(this).RootPath;
+            string dataDir = TestBase.CreateDataFolder(this, network: this.Network).RootPath;
             string configFile = Path.Combine(dataDir, "config.txt");
             File.WriteAllText(configFile, "");
-            var nodeSettings = new NodeSettings(networksSelector: Networks.Bitcoin, args: new[] { $"-datadir={dataDir}", $"-conf=config.txt" });
+            var nodeSettings = new NodeSettings(this.Network, args: new[] { $"-datadir={dataDir}", $"-conf=config.txt" });
             // Act
             string[] result = nodeSettings.ConfigReader.GetAll("addnode");
             // Assert

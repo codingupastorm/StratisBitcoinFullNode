@@ -8,9 +8,9 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.BuilderExtensions;
+using Stratis.Core.AsyncWork;
 using Stratis.Core.Configuration;
 using Stratis.Core.Interfaces;
-using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 using Stratis.Features.MemoryPool.Broadcasting;
@@ -435,6 +435,7 @@ namespace Stratis.Features.Wallet
                     throw;
 
                 Wallet jsonWallet = this.fileStorage.LoadByFileName(fileName);
+                jsonWallet.Network = this.network;
 
                 check?.Invoke(jsonWallet);
 
@@ -504,7 +505,7 @@ namespace Stratis.Features.Wallet
                                 int lastUsedInternalAddress = account.InternalAddresses.LastOrDefault(p => p.Transactions.Any())?.Index ?? -1;
                                 int buffer = this.walletSettings?.UnusedAddressesBuffer ?? 20;
 
-                                this.WalletRepository.CreateAccount(jsonWallet.Name, account.Index, account.Name, ExtPubKey.Parse(account.ExtendedPubKey), account.CreationTime,
+                                this.WalletRepository.CreateAccount(jsonWallet.Name, account.Index, account.Name, ExtPubKey.Parse(account.ExtendedPubKey, this.network), account.CreationTime,
                                     (lastUsedExternalAddress + 1 + buffer, lastUsedInternalAddress + 1 + buffer));
 
                                 foreach (HdAddress address in account.ExternalAddresses)

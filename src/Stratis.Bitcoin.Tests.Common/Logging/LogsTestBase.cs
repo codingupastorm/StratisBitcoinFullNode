@@ -7,6 +7,7 @@ using NBitcoin;
 using Stratis.Core;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Configuration.Logging;
+using Stratis.Core.Networks;
 using Stratis.Core.Signals;
 using Stratis.Core.Utilities;
 
@@ -18,7 +19,7 @@ namespace Stratis.Bitcoin.Tests.Common.Logging
         /// This class is not able to work concurrently because logs is a static class.
         /// The logs class needs to be refactored first before tests can run in parallel.
         /// </remarks>
-        public LogsTestBase(Network network = null) : base(network ?? KnownNetworks.Main)
+        public LogsTestBase(Network network = null) : base(network ?? new BitcoinMain())
         {
             this.FullNodeLogger = new Mock<ILogger>();
             this.RPCLogger = new Mock<ILogger>();

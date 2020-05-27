@@ -5,6 +5,8 @@ using System.Net;
 using System.Threading.Tasks;
 using Moq;
 using NBitcoin;
+using Stratis.Bitcoin.Tests.Common.Logging;
+using Stratis.Core.AsyncWork;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Configuration.Settings;
@@ -13,8 +15,6 @@ using Stratis.Core.Consensus;
 using Stratis.Core.P2P;
 using Stratis.Core.P2P.Peer;
 using Stratis.Core.Signals;
-using Stratis.Bitcoin.Tests.Common.Logging;
-using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 using Xunit;
@@ -44,7 +44,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             var nodeSettings = new NodeSettings(this.Network, args: new[] { "-IpRangeFiltering=false" });
             var connectionManagerSettings = new ConnectionManagerSettings(nodeSettings);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, peerFolder, this.extendedLoggerFactory,
                 new SelfEndpointTracker(this.extendedLoggerFactory, connectionManagerSettings));
 
@@ -86,7 +86,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             var nodeSettings = new NodeSettings(this.Network);
             var connectionSettings = new ConnectionManagerSettings(nodeSettings);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, peerFolder, this.extendedLoggerFactory,
                 new SelfEndpointTracker(this.extendedLoggerFactory, connectionSettings));
 
@@ -101,7 +101,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             var nodeSettings = new NodeSettings(this.Network, args: new[] { "-IpRangeFiltering=false" });
             var connectionManagerSettings = new ConnectionManagerSettings(nodeSettings);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, peerFolder, this.extendedLoggerFactory,
                 new SelfEndpointTracker(this.extendedLoggerFactory, connectionManagerSettings));
 
@@ -149,7 +149,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             var nodeSettings = new NodeSettings(this.Network);
             var connectionSettings = new ConnectionManagerSettings(nodeSettings);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, peerFolder, this.extendedLoggerFactory, new SelfEndpointTracker(this.extendedLoggerFactory, connectionSettings));
 
             IPAddress ipAddressThree = IPAddress.Parse("::ffff:192.168.0.3");
@@ -170,7 +170,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             var nodeSettings = new NodeSettings(this.Network);
             var connectionSettings = new ConnectionManagerSettings(nodeSettings);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, peerFolder, this.extendedLoggerFactory,
                 new SelfEndpointTracker(this.extendedLoggerFactory, connectionSettings));
             var networkPeerFactory = new Mock<INetworkPeerFactory>();
@@ -185,7 +185,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             var nodeSettings = new NodeSettings(this.Network, args: new[] { "-IpRangeFiltering=false" });
             var connectionManagerSettings = new ConnectionManagerSettings(nodeSettings);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, peerFolder, this.extendedLoggerFactory,
                 new SelfEndpointTracker(this.extendedLoggerFactory, connectionManagerSettings));
 
@@ -236,7 +236,7 @@ namespace Stratis.Bitcoin.Tests.P2P
 
             var connectionManagerSettingsExisting = new ConnectionManagerSettings(nodeSettings);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, peerFolder, this.extendedLoggerFactory,
                 new SelfEndpointTracker(this.extendedLoggerFactory, connectionManagerSettingsExisting));
 
@@ -299,7 +299,7 @@ namespace Stratis.Bitcoin.Tests.P2P
 
             var connectionManagerSettingsExisting = new ConnectionManagerSettings(nodeSettings);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, peerFolder, this.extendedLoggerFactory,
                 new SelfEndpointTracker(this.extendedLoggerFactory, connectionManagerSettingsExisting));
             var networkPeerFactoryExisting = new Mock<INetworkPeerFactory>();
@@ -339,7 +339,7 @@ namespace Stratis.Bitcoin.Tests.P2P
 
             var connectionManagerSettingsExisting = new ConnectionManagerSettings(nodeSettings);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, peerFolder, this.extendedLoggerFactory,
                 new SelfEndpointTracker(this.extendedLoggerFactory, connectionManagerSettingsExisting));
 
@@ -379,7 +379,7 @@ namespace Stratis.Bitcoin.Tests.P2P
 
             var connectionManagerSettingsExisting = new ConnectionManagerSettings(nodeSettings);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, peerFolder, this.extendedLoggerFactory,
                 new SelfEndpointTracker(this.extendedLoggerFactory, connectionManagerSettingsExisting));
 
@@ -423,7 +423,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             var nodeSettings = new NodeSettings(this.Network);
             var connectionSettings = new ConnectionManagerSettings(nodeSettings);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, peerFolder, this.extendedLoggerFactory,
                 new SelfEndpointTracker(this.extendedLoggerFactory, connectionSettings));
             var networkPeerFactory = new Mock<INetworkPeerFactory>();
@@ -442,7 +442,7 @@ namespace Stratis.Bitcoin.Tests.P2P
 
             connectionSettings.Connect.Add(networkAddressConnectNode);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, peerFolder, this.extendedLoggerFactory,
                 new SelfEndpointTracker(this.extendedLoggerFactory, connectionSettings));
             var networkPeerFactory = new Mock<INetworkPeerFactory>();
@@ -478,7 +478,7 @@ namespace Stratis.Bitcoin.Tests.P2P
                 Bind = new List<NodeServerEndpoint>()
             };
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, peerFolder, this.extendedLoggerFactory,
                 new SelfEndpointTracker(this.extendedLoggerFactory, connectionManagerSettings));
 
