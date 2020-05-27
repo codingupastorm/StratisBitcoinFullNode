@@ -32,7 +32,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
         
         [Fact]
-        public void CanJoinChannelNode()
+        public async Task CanJoinChannelNode()
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 
@@ -80,7 +80,6 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 var channelService = otherNode.FullNode.NodeService<IChannelService>() as ProcessChannelService;
                 Assert.Single(channelService.StartedChannelNodes);
-
                 // Try to connect the nodes
                 TestHelper.ConnectNoCheck(parentNode, otherNode);
 
@@ -89,7 +88,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     otherNode.FullNode.NodeService<IPeerAddressManager>(),
                 };
 
-                Task.Delay(500);
+                await Task.Delay(500);
 
                 // Node should not be allowed to connect because it is disallowed.
                 Assert.False(addressManagers.Any(a => a.Peers.Any()));
@@ -121,7 +120,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Now that the org is allowed try to connect the nodes again
                 TestHelper.ConnectNoCheck(parentNode, otherNode);
 
-                Task.Delay(500);
+                await Task.Delay(500);
 
                 // Node should be allowed to connect now!
                 Assert.True(addressManagers.All(a => a.Peers.Any()));
