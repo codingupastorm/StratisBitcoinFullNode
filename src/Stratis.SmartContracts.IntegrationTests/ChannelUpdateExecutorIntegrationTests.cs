@@ -50,7 +50,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
 
                 // Create and start the parent node.
-                CoreNode parentNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server);
+                CoreNode parentNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server, debugChannels: true);
                 parentNode.Start();
 
                 // Create a channel for the identity to be apart of.
@@ -58,8 +58,11 @@ namespace Stratis.SmartContracts.IntegrationTests
                 parentNode.Restart();
 
                 // Create another node.
-                CoreNode otherNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 1, server, organisation: disallowedOrg);
+                CoreNode otherNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 1, server, organisation: disallowedOrg, debugChannels: true);
                 otherNode.Start();
+
+                TestHelper.Connect(parentNode, otherNode);
+                TestHelper.WaitForNodeToSync(parentNode, otherNode);
 
                 // Get the marketing network's JSON.
                 string networkJson = $"{(new ApiSettings(parentNode.FullNode.Settings)).ApiUri}"
@@ -78,20 +81,22 @@ namespace Stratis.SmartContracts.IntegrationTests
                     })
                     .GetAwaiter().GetResult();
 
-                var channelService = otherNode.FullNode.NodeService<IChannelService>() as ProcessChannelService;
-                Assert.Single(channelService.StartedChannelNodes);
-                // Try to connect the nodes
-                TestHelper.ConnectNoCheck(parentNode, otherNode);
+                var parentNodeChannelService = otherNode.FullNode.NodeService<IChannelService>() as TestChannelService;
+                Assert.Single(parentNodeChannelService.ChannelNodes);
 
-                var addressManagers = new[] {
-                    parentNode.FullNode.NodeService<IPeerAddressManager>(),
-                    otherNode.FullNode.NodeService<IPeerAddressManager>(),
-                };
+                var otherNodeChannelService = otherNode.FullNode.NodeService<IChannelService>() as TestChannelService;
+                
+                var otherNodeChannel = otherNodeChannelService.ChannelNodes.First();
+                var parentNodeChannel = parentNodeChannelService.ChannelNodes.First();
+
+                // Try to connect the nodes
+                // IMPORTANT: Must connect FROM otherNode TO parentNode to ensure the connection is inbound on the parent and the cert check is done.
+                TestHelper.ConnectNoCheck(otherNodeChannel, parentNodeChannel);
 
                 await Task.Delay(500);
 
                 // Node should not be allowed to connect because it is disallowed.
-                Assert.False(addressManagers.Any(a => a.Peers.Any()));
+                TestBase.WaitLoop(() => !TestHelper.IsNodeConnectedTo(otherNodeChannel, parentNodeChannel));
 
                 // Send channel update request to add the disallowed org.
                 var request = new ChannelUpdateRequest
@@ -115,15 +120,19 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 Assert.Equal(HttpStatusCode.OK, updateChannelResponse.StatusCode);
                 TestBase.WaitLoop(() => parentNode.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
-                parentNode.MineBlocksAsync(1).GetAwaiter().GetResult();
+                parentNode.MineBlocksAsync(2).GetAwaiter().GetResult();
+                TestHelper.WaitForNodeToSync(parentNode, otherNode);
+
+                // Hacky - need to restart to ensure the allowed orgs list is updated.
+                //parentNodeChannel.Restart();
 
                 // Now that the org is allowed try to connect the nodes again
-                TestHelper.ConnectNoCheck(parentNode, otherNode);
+                TestHelper.Connect(otherNodeChannel, parentNodeChannel);
 
                 await Task.Delay(500);
 
                 // Node should be allowed to connect now!
-                Assert.True(addressManagers.All(a => a.Peers.Any()));
+                Assert.True(TestHelper.IsNodeConnectedTo(otherNodeChannel, parentNodeChannel));
             }
         }
     }
