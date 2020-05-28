@@ -3,10 +3,11 @@ using System.Linq;
 using FluentAssertions;
 using FluentAssertions.Common;
 using NBitcoin;
-using Stratis.Core.Connection;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Connection;
+using Stratis.Core.Networks;
 using Xunit.Abstractions;
 
 namespace Stratis.Bitcoin.IntegrationTests.Mempool
@@ -36,7 +37,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
 
         protected void nodeA_nodeB_and_nodeC()
         {
-            Network regTest = KnownNetworks.RegTest;
+            Network regTest = new BitcoinRegTest();
 
             this.nodeA = this.nodeBuilder.CreateStratisPowNode(regTest).WithDummyWallet().Start();
             this.nodeB = this.nodeBuilder.CreateStratisPowNode(regTest).Start();

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using NBitcoin.DataEncoders;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Xunit;
 
 namespace NBitcoin.Tests
@@ -14,7 +14,7 @@ namespace NBitcoin.Tests
 
         public Bloom_Tests()
         {
-            this.network = KnownNetworks.Main;
+            this.network = new BitcoinMain();
         }
 
         [Fact]

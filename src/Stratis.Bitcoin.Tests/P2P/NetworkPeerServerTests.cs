@@ -4,15 +4,16 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Moq;
 using NBitcoin.Protocol;
+using Stratis.Bitcoin.Tests.Common;
+using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Configuration.Settings;
+using Stratis.Core.Connection;
 using Stratis.Core.Interfaces;
+using Stratis.Core.Networks;
 using Stratis.Core.P2P;
 using Stratis.Core.P2P.Peer;
-using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Tests.Common.Logging;
-using Stratis.Core.Connection;
 using Stratis.Core.Utilities;
 using Xunit;
 using Xunit.Abstractions;
@@ -47,7 +48,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             var initialBlockDownloadState = new Mock<IInitialBlockDownloadState>();
             initialBlockDownloadState.Setup(i => i.IsInitialBlockDownload()).Returns(inIBD);
 
-            var nodeSettings = new NodeSettings(KnownNetworks.RegTest);
+            var nodeSettings = new NodeSettings(new BitcoinRegTest());
             var connectionManagerSettings = new ConnectionManagerSettings(nodeSettings);
 
             var endpointAddNode = new IPEndPoint(IPAddress.Parse("::ffff:192.168.0.1"), 80);
@@ -59,7 +60,7 @@ namespace Stratis.Bitcoin.Tests.P2P
 
             var connectionManager = new Mock<IConnectionManager>();
             connectionManager.Setup(a => a.ConnectedPeers.FindByIp(It.IsAny<IPAddress>()))
-                .Returns(new List<INetworkPeer>() {});
+                .Returns(new List<INetworkPeer>() { });
 
             var selfEndpointTracker = new Mock<ISelfEndpointTracker>();
             selfEndpointTracker.Setup(a => a.IsSelf(It.IsAny<IPEndPoint>()))

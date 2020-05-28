@@ -8,7 +8,7 @@ using NBitcoin.Crypto;
 using NBitcoin.DataEncoders;
 using NBitcoin.Protocol;
 using Newtonsoft.Json.Linq;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Xunit;
 
 namespace NBitcoin.Tests
@@ -19,7 +19,7 @@ namespace NBitcoin.Tests
 
         public Script_Tests()
         {
-            this.network = KnownNetworks.Main;
+            this.network = new BitcoinMain();
         }
 
         private static Dictionary<string, OpcodeType> mapOpNames = new Dictionary<string, OpcodeType>();
@@ -203,14 +203,14 @@ namespace NBitcoin.Tests
         /// Tests how <see cref="IndexedTxIn.VerifyScript(Network, Script, ScriptVerify, out ScriptError)"/> responds to a script composed of 
         /// <see cref="OpcodeType.OP_CHECKCOLDSTAKEVERIFY"/> and <see cref="OpcodeType.OP_TRUE"/> under various circumstances as controlled via the inputs.
         /// </summary>
-        /// <param name="isPos">If set uses the <see cref="KnownNetworks.StratisMain"/> network (versus the <see cref="KnownNetworks.Main"/> network).</param>
+        /// <param name="isPos">If set uses the <see cref="Stratis.Core.Networks.StratisMain"/> network (versus the <see cref="Stratis.Core.Networks.BitcoinMain"/> network).</param>
         /// <param name="isActivated">If set includes the <see cref="ScriptVerify.CheckColdStakeVerify"/> flag into the <see cref="ScriptVerify"/> flags.</param>
         /// <param name="isCoinStake">If set executes the opcode in the context of a cold coin stake transaction (versus a normal transaction).</param>
         /// <param name="expectedFlagSet">Determines whether we expect the <see cref="PosTransaction.IsColdCoinStake"/> variable to be set on the transaction.</param>
         /// <param name="expectedError">Determines the error we expect the verify operation to produce.</param>
         private void Coldstaking_testsCore(bool isPos, bool isActivated, bool isCoinStake, bool expectedFlagSet, ScriptError expectedError)
         {
-            Network network = isPos ? KnownNetworks.StratisMain : KnownNetworks.Main;
+            Network network = isPos ? new StratisMain() : this.network;
 
             Transaction tx = network.CreateTransaction();
             tx.Outputs.Add(new TxOut()
@@ -242,7 +242,7 @@ namespace NBitcoin.Tests
             coldCoinStake.Inputs.AsIndexedInputs().First().VerifyScript(network, tx.Outputs[0].ScriptPubKey, scriptVerify, out error);
 
             Assert.Equal(expectedError, error);
-            Assert.Equal(expectedFlagSet, (coldCoinStake as PosTransaction)?.IsColdCoinStake ?? false);            
+            Assert.Equal(expectedFlagSet, (coldCoinStake as PosTransaction)?.IsColdCoinStake ?? false);
         }
 
         [Fact]
@@ -897,7 +897,7 @@ namespace NBitcoin.Tests
             Assert.True(combined.ToBytes().Length == 0);
 
             // Single signature case:
-            SignSignature(KnownNetworks.Main, keys, txFrom, txTo, 0); // changes scriptSig
+            SignSignature(this.network, keys, txFrom, txTo, 0); // changes scriptSig
             scriptSig = txTo.Inputs[0].ScriptSig;
             combined = Script.CombineSignatures(this.network, scriptPubKey, txTo, 0, scriptSig, empty);
             Assert.True(combined == scriptSig);
@@ -905,7 +905,7 @@ namespace NBitcoin.Tests
             Assert.True(combined == scriptSig);
             Script scriptSigCopy = scriptSig.Clone();
             // Signing again will give a different, valid signature:
-            SignSignature(KnownNetworks.Main, keys, txFrom, txTo, 0);
+            SignSignature(this.network, keys, txFrom, txTo, 0);
             scriptSig = txTo.Inputs[0].ScriptSig;
 
             combined = Script.CombineSignatures(this.network, scriptPubKey, txTo, 0, scriptSigCopy, scriptSig);
@@ -918,7 +918,7 @@ namespace NBitcoin.Tests
             txFrom.Outputs[0].ScriptPubKey = scriptPubKey;
             txTo.Inputs[0].PrevOut = new OutPoint(txFrom, 0);
 
-            SignSignature(KnownNetworks.Main, keys, txFrom, txTo, 0, pkSingle);
+            SignSignature(this.network, keys, txFrom, txTo, 0, pkSingle);
             scriptSig = txTo.Inputs[0].ScriptSig;
 
             combined = Script.CombineSignatures(this.network, scriptPubKey, txTo, 0, scriptSig, empty);
@@ -929,7 +929,7 @@ namespace NBitcoin.Tests
             Assert.True(combined == scriptSig);
             scriptSigCopy = scriptSig.Clone();
 
-            SignSignature(KnownNetworks.Main, keys, txFrom, txTo, 0);
+            SignSignature(this.network, keys, txFrom, txTo, 0);
             scriptSig = txTo.Inputs[0].ScriptSig;
 
             combined = Script.CombineSignatures(this.network, scriptPubKey, txTo, 0, scriptSigCopy, scriptSig);
@@ -946,7 +946,7 @@ namespace NBitcoin.Tests
             txFrom.Outputs[0].ScriptPubKey = scriptPubKey;
             txTo.Inputs[0].PrevOut = new OutPoint(txFrom, 0);
 
-            SignSignature(KnownNetworks.Main, keys, txFrom, txTo, 0);
+            SignSignature(this.network, keys, txFrom, txTo, 0);
             scriptSig = txTo.Inputs[0].ScriptSig;
 
             combined = Script.CombineSignatures(this.network, scriptPubKey, txTo, 0, scriptSig, empty);

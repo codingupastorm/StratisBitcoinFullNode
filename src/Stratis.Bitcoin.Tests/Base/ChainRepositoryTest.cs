@@ -6,6 +6,7 @@ using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Base;
 using Stratis.Core.Configuration;
 using Stratis.Core.Interfaces;
+using Stratis.Core.Networks;
 using Stratis.Core.Utilities;
 using Xunit;
 
@@ -15,7 +16,7 @@ namespace Stratis.Bitcoin.Tests.Base
     {
         private readonly RepositorySerializer repositorySerializer;
 
-        public ChainRepositoryTest() : base(KnownNetworks.StratisRegTest)
+        public ChainRepositoryTest() : base(new StratisRegTest())
         {
             this.repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
         }
@@ -24,7 +25,7 @@ namespace Stratis.Bitcoin.Tests.Base
         public void SaveWritesChainToDisk()
         {
             string dir = CreateTestDir(this);
-            var chain = new ChainIndexer(KnownNetworks.StratisRegTest);
+            var chain = new ChainIndexer(this.Network);
             this.AppendBlock(chain);
 
             var keyValueStore = new ChainRepositoryStore(this.repositorySerializer, new DataFolder(dir), new LoggerFactory(), DateTimeProvider.Default);
@@ -51,7 +52,7 @@ namespace Stratis.Bitcoin.Tests.Base
         public void GetChainReturnsConcurrentChainFromDisk()
         {
             string dir = CreateTestDir(this);
-            var chain = new ChainIndexer(KnownNetworks.StratisRegTest);
+            var chain = new ChainIndexer(this.Network);
             ChainedHeader tip = this.AppendBlock(chain);
 
             var keyValueStore = new ChainRepositoryStore(this.repositorySerializer, new DataFolder(dir), new LoggerFactory(), DateTimeProvider.Default);
@@ -75,7 +76,7 @@ namespace Stratis.Bitcoin.Tests.Base
             }
             using (var repo = new ChainRepository(keyValueStore, new LoggerFactory()))
             {
-                var testChain = new ChainIndexer(KnownNetworks.StratisRegTest);
+                var testChain = new ChainIndexer(this.Network);
                 testChain.SetTip(repo.LoadAsync(testChain.Genesis).GetAwaiter().GetResult());
                 Assert.Equal(tip, testChain.Tip);
             }

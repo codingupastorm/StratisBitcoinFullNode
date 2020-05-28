@@ -1,8 +1,8 @@
 ﻿using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Core.Consensus;
+using Stratis.Core.Networks;
 using Stratis.Features.Consensus.Rules.CommonRules;
-using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
 namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
@@ -53,7 +53,7 @@ namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
         [Fact]
         public async Task RunAsync_ProofOfWorkBlock_CheckPow_ValidPow_SetsStake_SetsNextWorkRequiredAsync()
         {
-            this.network = KnownNetworks.RegTest;
+            this.network = new BitcoinRegTest();
             this.ChainIndexer = MineChainWithHeight(2, this.network);
             this.consensusRules = this.InitializeConsensusRules();
 

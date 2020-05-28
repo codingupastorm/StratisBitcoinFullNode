@@ -3,8 +3,9 @@ using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Configuration;
+using Stratis.Core.Networks;
 using Stratis.SmartContracts.Core.Store;
 using Xunit;
 
@@ -17,7 +18,7 @@ namespace Stratis.SmartContracts.Core.Tests.Store
         private readonly PrivateDataStore store;
 
         public PrivateDataStoreIntegrationTests()
-            : base(KnownNetworks.Main)
+            : base(new BitcoinMain())
         {
             this.dir = CreateTestDir(this);
             this.repo = new PrivateDataKeyValueStore(new DataFolder(this.dir), new LoggerFactory(), this.RepositorySerializer);
@@ -30,7 +31,7 @@ namespace Stratis.SmartContracts.Core.Tests.Store
             var contractAddress = new uint160(RandomUtils.GetBytes(20));
             var key = RandomUtils.GetBytes(64);
             var value = RandomUtils.GetBytes(128);
-            
+
             this.store.StoreBytes(contractAddress, key, value);
 
             var data = this.store.GetBytes(contractAddress, key);
@@ -38,7 +39,7 @@ namespace Stratis.SmartContracts.Core.Tests.Store
             Assert.True(value.SequenceEqual(data));
 
             var newValue = value.ToArray();
-            newValue[0] = (byte) (newValue[0] + 1); // Slightly change the original value.
+            newValue[0] = (byte)(newValue[0] + 1); // Slightly change the original value.
 
             this.store.StoreBytes(contractAddress, key, newValue);
 

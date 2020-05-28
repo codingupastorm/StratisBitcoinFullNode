@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Xunit;
 
 namespace NBitcoin.Tests
@@ -13,7 +13,7 @@ namespace NBitcoin.Tests
 
         public NetworkTests()
         {
-            this.networkMain = KnownNetworks.Main;
+            this.networkMain = new BitcoinMain();
         }
 
         [Fact]

@@ -6,7 +6,7 @@ using NBitcoin.DataEncoders;
 using NBitcoin.Networks;
 using NBitcoin.OpenAsset;
 using Newtonsoft.Json;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Xunit;
 
 namespace NBitcoin.Tests
@@ -97,9 +97,9 @@ namespace NBitcoin.Tests
         {
             NetworkRegistration.Clear();
 
-            this.networkRegTest = KnownNetworks.RegTest;
-            this.networkTest = KnownNetworks.TestNet;
-            this.networkMain = KnownNetworks.Main;
+            this.networkRegTest = new BitcoinRegTest();
+            this.networkTest = new BitcoinTest();
+            this.networkMain = new BitcoinMain();
         }
 
         [Fact]
@@ -132,7 +132,7 @@ namespace NBitcoin.Tests
         //https://github.com/OpenAssets/open-assets-protocol/blob/master/specification.mediawiki
         public void CanColorizeSpecScenario()
         {
-            var repo = new NoSqlColoredTransactionRepository(KnownNetworks.Main);
+            var repo = new NoSqlColoredTransactionRepository(new BitcoinMain());
             Money dust = Money.Parse("0.00005");
             var colored = new ColoredTransaction();
             var a1 = new AssetKey(this.networkMain);
@@ -348,7 +348,7 @@ namespace NBitcoin.Tests
             Assert.True(destroyed[0].Id == colored2.Inputs[0].Asset.Id);
 
             //Verify that FetchColor update the repository
-            var persistent = new NoSqlColoredTransactionRepository(KnownNetworks.Main, tester.Repository.Transactions, new InMemoryNoSqlRepository(KnownNetworks.Main));
+            var persistent = new NoSqlColoredTransactionRepository(new BitcoinMain(), tester.Repository.Transactions, new InMemoryNoSqlRepository(new BitcoinMain()));
             colored2 = ColoredTransaction.FetchColors(tester.TestedTxId, persistent);
             Assert.NotNull(persistent.Get(tester.TestedTxId));
 

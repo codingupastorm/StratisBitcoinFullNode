@@ -1,8 +1,8 @@
 ﻿using System;
 using NBitcoin;
 using Stratis.Core.Consensus;
+using Stratis.Core.Networks;
 using Stratis.Features.Consensus.Rules.CommonRules;
-using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
 namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
@@ -11,7 +11,7 @@ namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
     {
         public BitcoinActivationRuleTest()
         {
-            this.network = KnownNetworks.TestNet; //important for bips
+            this.network = new BitcoinTest(); //important for bips
             this.ChainIndexer = GenerateChainWithHeight(5, this.network);
             this.consensusRules = this.InitializeConsensusRules();
         }

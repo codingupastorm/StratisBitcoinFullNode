@@ -2,10 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Stratis.Core.P2P;
-using Stratis.Core.Connection;
-using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
+using Stratis.Core.Connection;
+using Stratis.Core.Networks;
+using Stratis.Core.P2P;
 using Stratis.Core.Utilities.JsonErrors;
 using Xunit;
 
@@ -28,7 +28,7 @@ namespace Stratis.Bitcoin.Tests.Controllers
             this.mockLoggerFactory = new Mock<ILoggerFactory>();
             this.mockLoggerFactory.Setup(i => i.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
             this.connectionManager.Setup(i => i.Network)
-                .Returns(KnownNetworks.StratisTest);
+                .Returns(new StratisTest());
             this.selfEndpointTracker.Setup(i => i.IsSelf(It.IsAny<IPEndPoint>())).Returns(false);
             this.controller = new ConnectionManagerController(this.connectionManager.Object, this.LoggerFactory.Object, this.peerBanning.Object, this.selfEndpointTracker.Object);
         }

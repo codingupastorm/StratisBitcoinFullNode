@@ -2,7 +2,7 @@
 using HashLib;
 using NBitcoin.Crypto;
 using NBitcoin.DataEncoders;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Xunit;
 using Hashes = NBitcoin.Crypto.Hashes;
 
@@ -14,7 +14,7 @@ namespace NBitcoin.Tests
 
         public Pos_hash_tests()
         {
-            this.stratisMain = KnownNetworks.StratisMain;
+            this.stratisMain = new StratisMain();
         }
 
         [Fact]

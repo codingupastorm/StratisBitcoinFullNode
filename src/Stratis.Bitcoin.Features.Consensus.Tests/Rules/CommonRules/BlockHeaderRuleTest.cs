@@ -1,8 +1,8 @@
 ﻿using System.Threading.Tasks;
 using NBitcoin;
 using Stratis.Core.Consensus;
+using Stratis.Core.Networks;
 using Stratis.Features.Consensus.Rules.CommonRules;
-using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
 namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
@@ -13,7 +13,7 @@ namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
 
         public BlockHeaderRuleTest()
         {
-            this.network = KnownNetworks.RegTest;
+            this.network = new BitcoinRegTest();
         }
 
         [Fact]
@@ -23,7 +23,7 @@ namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
             var blockHeaderRule = testContext.CreateRule<SetActivationDeploymentsPartialValidationRule>();
 
             var context = new PowRuleContext(new ValidationContext(), testContext.DateTimeProvider.GetTimeOffset());
-            context.ValidationContext.BlockToValidate = KnownNetworks.RegTest.Consensus.ConsensusFactory.CreateBlock();
+            context.ValidationContext.BlockToValidate = this.network.Consensus.ConsensusFactory.CreateBlock();
             context.ValidationContext.BlockToValidate.Header.HashPrevBlock = testContext.ChainIndexer.Tip.HashBlock;
             context.ValidationContext.ChainedHeaderToValidate = new ChainedHeader(context.ValidationContext.BlockToValidate.Header, context.ValidationContext.BlockToValidate.Header.GetHash(), 0);
 

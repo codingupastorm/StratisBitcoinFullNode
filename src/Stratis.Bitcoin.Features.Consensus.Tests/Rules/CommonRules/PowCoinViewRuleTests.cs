@@ -4,6 +4,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
+using Stratis.Core.AsyncWork;
 using Stratis.Core.Base;
 using Stratis.Core.Base.Deployments;
 using Stratis.Core.Configuration;
@@ -11,9 +12,8 @@ using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Consensus;
 using Stratis.Core.Consensus.Rules;
+using Stratis.Core.Networks;
 using Stratis.Core.Signals;
-using Stratis.Bitcoin.Tests.Common;
-using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.Rules;
 using Stratis.Features.Consensus.Rules.CommonRules;
@@ -37,7 +37,7 @@ namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
 
         public PowCoinViewRuleTests()
         {
-            this.network = KnownNetworks.RegTest;
+            this.network = new BitcoinRegTest();
             this.rule = new PowCoinviewRule();
         }
 
@@ -96,12 +96,12 @@ namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
                 var dateTimeProvider = new DateTimeProvider();
 
                 rule.Parent = new PowConsensusRuleEngine(
-                    KnownNetworks.RegTest,
+                    this.network,
                     new Mock<ILoggerFactory>().Object,
                     new Mock<IDateTimeProvider>().Object,
                     new ChainIndexer(this.network),
-                    new NodeDeployments(KnownNetworks.RegTest, new ChainIndexer(this.network)),
-                    new ConsensusSettings(NodeSettings.Default(KnownNetworks.RegTest)), new Mock<ICheckpoints>().Object, new Mock<ICoinView>().Object, new Mock<IChainState>().Object,
+                    new NodeDeployments(this.network, new ChainIndexer(this.network)),
+                    new ConsensusSettings(NodeSettings.Default(this.network)), new Mock<ICheckpoints>().Object, new Mock<ICoinView>().Object, new Mock<IChainState>().Object,
                     new InvalidBlockHashStore(dateTimeProvider),
                     new NodeStats(dateTimeProvider, loggerFactory),
                     new AsyncProvider(loggerFactory, new Mock<ISignals>().Object, new Mock<NodeLifetime>().Object),
