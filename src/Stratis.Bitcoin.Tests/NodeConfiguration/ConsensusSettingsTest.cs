@@ -50,7 +50,7 @@ namespace Stratis.Bitcoin.Tests.NodeConfiguration
             Assert.Equal(network.Consensus.DefaultAssumeValid, settings.BlockAssumedValid);
 
             settings = new ConsensusSettings(NodeSettings.Default(this.testNet));
-            Assert.Equal(network.Consensus.DefaultAssumeValid, settings.BlockAssumedValid);
+            Assert.Equal(this.testNet.Consensus.DefaultAssumeValid, settings.BlockAssumedValid);
         }
     }
 }
