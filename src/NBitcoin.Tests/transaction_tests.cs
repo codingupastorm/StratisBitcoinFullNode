@@ -2673,9 +2673,9 @@ namespace NBitcoin.Tests
         private static TransactionBuilder CreateBuilder(CKeyStore keystore, Transaction txFrom)
         {
             Coin[] coins = txFrom.Outputs.AsCoins().ToArray();
-            TransactionBuilder builder = new TransactionBuilder(this.networkMain)
+            TransactionBuilder builder = new TransactionBuilder(new BitcoinMain())
             {
-                StandardTransactionPolicy = new StandardTransactionPolicy(this.networkMain)
+                StandardTransactionPolicy = new StandardTransactionPolicy(new BitcoinMain())
                 {
                     CheckFee = false,
                     MinRelayTxFee = null,

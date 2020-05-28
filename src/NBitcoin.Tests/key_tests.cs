@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NBitcoin.Crypto;
 using NBitcoin.DataEncoders;
+using Stratis.Core.Networks;
 using Xunit;
 
 namespace NBitcoin.Tests
@@ -17,27 +18,21 @@ namespace NBitcoin.Tests
         private const string strSecret2C = ("L3Hq7a8FEQwJkW1M2GNKDW28546Vp5miewcCzSqUD9kCAXrJdS3g");
         private const string strAddressBad = ("1HV9Lc3sNHZxwj4Zk6fB38tEmBryq2cBiF");
 
-        private BitcoinPubKeyAddress addr1;
-        private BitcoinPubKeyAddress addr2;
-        private BitcoinPubKeyAddress addr1C;
-        private BitcoinPubKeyAddress addr2C;
-
-        private BitcoinAddress addrLocal;
-        private uint256 msgLocal = Hashes.Hash256(TestUtils.ToBytes("Localbitcoins.com will change the world"));
-        private byte[] signatureLocal = Convert.FromBase64String("IJ/17TjGGUqmEppAliYBUesKHoHzfY4gR4DW0Yg7QzrHUB5FwX1uTJ/H21CF8ncY8HHNB5/lh8kPAOeD5QxV8Xc=");
+        private readonly BitcoinPubKeyAddress addr1;
+        private readonly BitcoinPubKeyAddress addr2;
+        private readonly BitcoinPubKeyAddress addr1C;
+        private readonly BitcoinPubKeyAddress addr2C;
 
         private readonly Network networkMain;
 
         public key_tests()
         {
-            this.networkMain = this.networkMain;
+            this.networkMain = new BitcoinMain();
 
             this.addr1 = (BitcoinPubKeyAddress)this.networkMain.CreateBitcoinAddress("1QFqqMUD55ZV3PJEJZtaKCsQmjLT6JkjvJ");
             this.addr2 = (BitcoinPubKeyAddress)this.networkMain.CreateBitcoinAddress("1F5y5E5FMc5YzdJtB9hLaUe43GDxEKXENJ");
             this.addr1C = (BitcoinPubKeyAddress)this.networkMain.CreateBitcoinAddress("1NoJrossxPBKfCHuJXT4HadJrXRE9Fxiqs");
             this.addr2C = (BitcoinPubKeyAddress)this.networkMain.CreateBitcoinAddress("1CRj2HyM1CXWzHAXLQtiGLyggNT9WQqsDs");
-
-            this.addrLocal = this.networkMain.CreateBitcoinAddress("1Q1wVsNNiUo68caU7BfyFFQ8fVBqxC2DSc");
         }
 
         [Fact]
@@ -93,6 +88,7 @@ namespace NBitcoin.Tests
                     Assert.True(((BitcoinPubKeyAddress)this.networkMain.CreateBitcoinAddress(test.Address)).VerifyMessage(test.Message, signature));
                     Assert.True(secret.PubKey.VerifyMessage(test.Message, signature));
                 }
+
                 var address = (BitcoinPubKeyAddress)this.networkMain.CreateBitcoinAddress(test.Address);
                 Assert.True(address.VerifyMessage(test.Message, test.Signature));
                 Assert.True(!address.VerifyMessage("bad message", test.Signature));

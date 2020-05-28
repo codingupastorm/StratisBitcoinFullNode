@@ -40,7 +40,7 @@ namespace Stratis.Features.MemoryPool.Tests
                 Directory.CreateDirectory(this.dir);
             }
 
-            this.network = new BitcoinMain()
+            this.network = new BitcoinMain();
         }
 
         public void Dispose()
