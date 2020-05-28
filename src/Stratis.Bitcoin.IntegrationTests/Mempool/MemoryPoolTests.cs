@@ -19,6 +19,7 @@ using CertificateAuthority.Tests.Common;
 using Stratis.SmartContracts.Tests.Common;
 using CertificateAuthority;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
+using Org.BouncyCastle.X509;
 
 namespace Stratis.Bitcoin.IntegrationTests.Mempool
 {
@@ -111,8 +112,15 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 CoreNode stratisNodeSync = nodeBuilder.CreateTokenlessNode(this.network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
-                CoreNode stratisNode1 = nodeBuilder.CreateTokenlessNode(this.network, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
-                CoreNode stratisNode2 = nodeBuilder.CreateTokenlessNode(this.network, 2, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+                CoreNode stratisNode1 = nodeBuilder.CreateTokenlessNode(this.network, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission });
+                CoreNode stratisNode2 = nodeBuilder.CreateTokenlessNode(this.network, 2, server, permissions: new List<string>() { CaCertificatesManager.SendPermission });
+
+                var certificates = new List<X509Certificate>() { stratisNodeSync.ClientCertificate.ToCertificate()};
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, stratisNode1.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, stratisNode2.DataFolder, this.network);
+
+                stratisNode1.Start();
+                stratisNode2.Start();
 
                 // Sync both nodes.
                 TestHelper.ConnectAndSync(stratisNode1, stratisNodeSync);
@@ -145,7 +153,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 TestBase.WaitLoop(() => stratisNode2.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 5);
 
                 // mine the transactions in the mempool
-                TestHelper.MineBlocks(stratisNodeSync, 1);
+                stratisNodeSync.MineBlocksAsync(1).GetAwaiter().GetResult();
                 TestBase.WaitLoop(() => stratisNodeSync.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 0);
 
                 // wait for block and mempool to change
