@@ -21,7 +21,6 @@ namespace Stratis.Features.Wallet.Tests
 {
     public class WalletTransactionHandlerTest : LogsTestBase
     {
-        private readonly IBlockStore blockStore;
         private readonly string costlyOpReturnData;
         private readonly IScriptAddressReader scriptAddressReader;
         private readonly StandardTransactionPolicy standardTransactionPolicy;
@@ -33,7 +32,6 @@ namespace Stratis.Features.Wallet.Tests
             byte[] maxQuantityOfBytes = Enumerable.Range(0, 80).Select(Convert.ToByte).ToArray();
             this.costlyOpReturnData = Encoding.UTF8.GetString(maxQuantityOfBytes);
 
-            this.blockStore = new Mock<IBlockStore>().Object;
             this.standardTransactionPolicy = new StandardTransactionPolicy(this.Network);
             this.scriptAddressReader = new ScriptAddressReader();
         }
@@ -567,7 +565,7 @@ namespace Stratis.Features.Wallet.Tests
             (ExtKey ExtKey, string ExtPubKey) accountKeys = WalletTestsHelpers.GenerateAccountKeys(wallet, "password", "m/44'/0'/0'");
             (PubKey PubKey, BitcoinPubKeyAddress Address) destinationKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/1");
 
-            var account = wallet.AddNewAccount(ExtPubKey.Parse(accountKeys.ExtPubKey), accountName: walletReference.AccountName);
+            var account = wallet.AddNewAccount(ExtPubKey.Parse(accountKeys.ExtPubKey, this.Network), accountName: walletReference.AccountName);
 
             HdAddress address = account.ExternalAddresses.ElementAt(0);
 

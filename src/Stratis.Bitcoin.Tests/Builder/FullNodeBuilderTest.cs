@@ -8,6 +8,7 @@ using Stratis.Core;
 using Stratis.Core.Builder;
 using Stratis.Core.Builder.Feature;
 using Stratis.Core.Configuration;
+using Stratis.Core.Networks;
 using Stratis.Core.Utilities;
 using Stratis.Features.Consensus;
 using Xunit;
@@ -25,11 +26,11 @@ namespace Stratis.Bitcoin.Tests.Builder
             }
         }
 
-        private FeatureCollection featureCollection;
-        private List<Action<IFeatureCollection>> featureCollectionDelegates;
+        private readonly FeatureCollection featureCollection;
+        private readonly List<Action<IFeatureCollection>> featureCollectionDelegates;
         private FullNodeBuilder fullNodeBuilder;
-        private List<Action<IServiceCollection>> serviceCollectionDelegates;
-        private List<Action<IServiceProvider>> serviceProviderDelegates;
+        private readonly List<Action<IServiceCollection>> serviceCollectionDelegates;
+        private readonly List<Action<IServiceProvider>> serviceProviderDelegates;
 
         public FullNodeBuilderTest()
         {
@@ -38,9 +39,10 @@ namespace Stratis.Bitcoin.Tests.Builder
             this.featureCollectionDelegates = new List<Action<IFeatureCollection>>();
             this.featureCollection = new FeatureCollection();
 
-            this.fullNodeBuilder = new FullNodeBuilder(this.serviceCollectionDelegates, this.serviceProviderDelegates, this.featureCollectionDelegates, this.featureCollection);
-
-            this.fullNodeBuilder.Network = KnownNetworks.RegTest;
+            this.fullNodeBuilder = new FullNodeBuilder(this.serviceCollectionDelegates, this.serviceProviderDelegates, this.featureCollectionDelegates, this.featureCollection)
+            {
+                Network = new BitcoinRegTest()
+            };
         }
 
         [Fact]
@@ -67,7 +69,7 @@ namespace Stratis.Bitcoin.Tests.Builder
             Assert.Single(this.featureCollectionDelegates);
             Assert.Empty(this.serviceProviderDelegates);
             Assert.Single(this.serviceCollectionDelegates);
-            Assert.Equal(KnownNetworks.RegTest, this.fullNodeBuilder.Network);
+            Assert.Equal(new BitcoinRegTest().Name, this.fullNodeBuilder.Network.Name);
             Assert.Equal(settings, this.fullNodeBuilder.NodeSettings);
         }
 
