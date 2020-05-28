@@ -1,13 +1,14 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
+using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core;
 using Stratis.Core.Base;
 using Stratis.Core.Builder;
 using Stratis.Core.Configuration;
 using Stratis.Core.Connection;
 using Stratis.Core.Consensus;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Stratis.Features.BlockStore;
 using Stratis.Features.Consensus;
 using Xunit;
@@ -16,7 +17,7 @@ namespace Stratis.Features.MemoryPool.Tests
 {
     public class FullNodeBuilderTest : TestBase
     {
-        public FullNodeBuilderTest() : base(KnownNetworks.TestNet)
+        public FullNodeBuilderTest() : base(new BitcoinTest())
         {
         }
 

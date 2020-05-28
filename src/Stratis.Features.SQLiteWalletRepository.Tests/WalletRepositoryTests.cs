@@ -6,10 +6,11 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using NBitcoin;
 using NBitcoin.Protocol;
+using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Configuration;
 using Stratis.Core.Consensus;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Stratis.Core.Utilities;
 using Stratis.Features.BlockStore;
 using Stratis.Features.Wallet;
@@ -147,13 +148,8 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
         public WalletRepositoryTests(bool dbPerWallet = true)
         {
             this.dbPerWallet = dbPerWallet;
-            //this.network = KnownNetworks.StratisTest;
-            this.network = KnownNetworks.StratisMain;
+            this.network = new StratisMain();
 
-
-            //Configure this to point to your "StratisTest" root folder and wallet.
-            //this.walletNames = new[] { "test2", "test" };
-            //this.dataDir = @"E:\RunNodes\SideChains\Data\MainchainUser";
             this.walletNames = new[] { "wallettABA" };
             this.dataDir = @"C:\Dev\InternalTestnet_Data\Runtime\NodeMDA";
         }
@@ -420,7 +416,7 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
         private void LoadWallet(BlockBase blockBase, SQLiteWalletRepository repo, string walletName)
         {
             // Bypasses IsExtPubKey wallet check.
-            Stratis.Features.Wallet.Wallet wallet = new FileStorage<Stratis.Features.Wallet.Wallet>(blockBase.NodeSettings.DataFolder.WalletPath).LoadByFileName($"{walletName}.wallet.json");
+            Wallet.Wallet wallet = new FileStorage<Wallet.Wallet>(blockBase.NodeSettings.DataFolder.WalletPath).LoadByFileName($"{walletName}.wallet.json");
 
             // Create a new empty wallet in the repository.
             byte[] chainCode = wallet.ChainCode;
@@ -441,7 +437,7 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
         {
             using (var dataFolder = new TempDataFolder(this.GetType().Name))
             {
-                var network = mainChain ? KnownNetworks.StratisMain : KnownNetworks.StratisTest;
+                var network = mainChain ? new StratisMain() : new StratisTest();
                 var blockBase = new BlockBase(network, this.dataDir);
 
                 // Initialize the repo.
@@ -464,7 +460,7 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
                 // Now verify the DB against the JSON wallet(s).
                 foreach (string walletName in walletNames)
                 {
-                    Stratis.Features.Wallet.Wallet wallet = new FileStorage<Stratis.Features.Wallet.Wallet>(blockBase.NodeSettings.DataFolder.WalletPath).LoadByFileName($"{walletName}.wallet.json");
+                    Wallet.Wallet wallet = new FileStorage<Wallet.Wallet>(blockBase.NodeSettings.DataFolder.WalletPath).LoadByFileName($"{walletName}.wallet.json");
 
                     foreach (HdAccount hdAccount in wallet.GetAccounts())
                     {
@@ -682,7 +678,7 @@ namespace Stratis.Features.SQLiteWalletRepository.Tests
 
             using (var dataFolder = new TempDataFolder(this.GetType().Name))
             {
-                var network = KnownNetworks.StratisMain;
+                var network = new StratisMain();
                 var blockBase = new BlockBase(network, this.dataDir);
 
                 // Initialize the repo.

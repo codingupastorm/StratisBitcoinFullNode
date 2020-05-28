@@ -5,8 +5,9 @@ using System.Threading.Tasks;
 using NBitcoin;
 using NBitcoin.BouncyCastle.Math;
 using NBitcoin.Crypto;
-using Stratis.Features.MemoryPool.Interfaces;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
+using Stratis.Features.MemoryPool.Interfaces;
 using Xunit;
 
 namespace Stratis.Features.MemoryPool.Tests
@@ -16,7 +17,9 @@ namespace Stratis.Features.MemoryPool.Tests
     /// </summary>
     public class MempoolValidatorTest : TestBase
     {
-        public MempoolValidatorTest() : base(KnownNetworks.RegTest)
+        private readonly Network mainNet = new BitcoinMain();
+
+        public MempoolValidatorTest() : base(new BitcoinRegTest())
         {
         }
 
@@ -26,7 +29,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -104,7 +107,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            var network = KnownNetworks.Main;
+            var network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -131,19 +134,19 @@ namespace Stratis.Features.MemoryPool.Tests
         {
             string dataDir = GetTestDirectoryPath(this);
 
-            var miner = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
-            ITestChainContext context = await TestChainFactory.CreateAsync(KnownNetworks.RegTest, miner.PubKey.Hash.ScriptPubKey, dataDir);
+            var miner = new BitcoinSecret(new Key(), this.Network);
+            ITestChainContext context = await TestChainFactory.CreateAsync(this.Network, miner.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
             Assert.NotNull(validator);
 
-            var alice = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
-            var bob = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
-            var satoshi = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
+            var alice = new BitcoinSecret(new Key(), this.Network);
+            var bob = new BitcoinSecret(new Key(), this.Network);
+            var satoshi = new BitcoinSecret(new Key(), this.Network);
 
             // Fund Alice, Bob, Satoshi
             // 50 Coins come from first tx on chain - send satoshi 1, bob 2, Alice 1.5 and change back to miner
             var coin = new Coin(context.SrcTxs[0].GetHash(), 0, context.SrcTxs[0].TotalOut, miner.ScriptPubKey);
-            var txBuilder = new TransactionBuilder(KnownNetworks.RegTest);
+            var txBuilder = new TransactionBuilder(this.Network);
             Transaction multiOutputTx = txBuilder
                 .AddCoins(new List<Coin> { coin })
                 .AddKeys(miner)
@@ -167,7 +170,7 @@ namespace Stratis.Features.MemoryPool.Tests
                         .Select(o => new Coin(new OutPoint(multiOutputTx.GetHash(), multiOutputTx.Outputs.IndexOf(o)), o))
                         .ToArray();
 
-            txBuilder = new TransactionBuilder(KnownNetworks.RegTest);
+            txBuilder = new TransactionBuilder(this.Network);
             Transaction multiInputTx = txBuilder
                 .AddCoins(aliceCoins)
                 .AddKeys(alice)
@@ -195,15 +198,15 @@ namespace Stratis.Features.MemoryPool.Tests
         {
             string dataDir = GetTestDirectoryPath(this);
 
-            var miner = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
-            ITestChainContext context = await TestChainFactory.CreateAsync(KnownNetworks.RegTest, miner.PubKey.Hash.ScriptPubKey, dataDir);
+            var miner = new BitcoinSecret(new Key(), this.Network);
+            ITestChainContext context = await TestChainFactory.CreateAsync(this.Network, miner.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
             Assert.NotNull(validator);
 
-            var alice = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
-            var bob = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
-            var satoshi = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
-            var nico = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
+            var alice = new BitcoinSecret(new Key(), this.Network);
+            var bob = new BitcoinSecret(new Key(), this.Network);
+            var satoshi = new BitcoinSecret(new Key(), this.Network);
+            var nico = new BitcoinSecret(new Key(), this.Network);
 
             // corp needs two out of three of alice, bob, nico
             Script corpMultiSig = PayToMultiSigTemplate
@@ -213,7 +216,7 @@ namespace Stratis.Features.MemoryPool.Tests
             // Fund corp
             // 50 Coins come from first tx on chain - send corp 42 and change back to miner
             var coin = new Coin(context.SrcTxs[0].GetHash(), 0, context.SrcTxs[0].TotalOut, miner.ScriptPubKey);
-            var txBuilder = new TransactionBuilder(KnownNetworks.RegTest);
+            var txBuilder = new TransactionBuilder(this.Network);
             Transaction sendToMultiSigTx = txBuilder
                 .AddCoins(new List<Coin> { coin })
                 .AddKeys(miner)
@@ -232,7 +235,7 @@ namespace Stratis.Features.MemoryPool.Tests
                         .ToArray();
 
             // Alice initiates the transaction
-            txBuilder = new TransactionBuilder(KnownNetworks.RegTest);
+            txBuilder = new TransactionBuilder(this.Network);
             Transaction multiSigTx = txBuilder
                     .AddCoins(corpCoins)
                     .AddKeys(alice)
@@ -243,7 +246,7 @@ namespace Stratis.Features.MemoryPool.Tests
             Assert.True(!txBuilder.Verify(multiSigTx)); //Well, only one signature on the two required...
 
             // Nico completes the transaction
-            txBuilder = new TransactionBuilder(KnownNetworks.RegTest);
+            txBuilder = new TransactionBuilder(this.Network);
             multiSigTx = txBuilder
                     .AddCoins(corpCoins)
                     .AddKeys(nico)
@@ -263,15 +266,15 @@ namespace Stratis.Features.MemoryPool.Tests
         {
             string dataDir = GetTestDirectoryPath(this);
 
-            var miner = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
-            ITestChainContext context = await TestChainFactory.CreateAsync(KnownNetworks.RegTest, miner.PubKey.Hash.ScriptPubKey, dataDir);
+            var miner = new BitcoinSecret(new Key(), this.Network);
+            ITestChainContext context = await TestChainFactory.CreateAsync(this.Network, miner.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
             Assert.NotNull(validator);
 
-            var alice = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
-            var bob = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
-            var satoshi = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
-            var nico = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
+            var alice = new BitcoinSecret(new Key(), this.Network);
+            var bob = new BitcoinSecret(new Key(), this.Network);
+            var satoshi = new BitcoinSecret(new Key(), this.Network);
+            var nico = new BitcoinSecret(new Key(), this.Network);
 
             // corp needs two out of three of alice, bob, nico
             Script corpMultiSig = PayToMultiSigTemplate
@@ -279,12 +282,12 @@ namespace Stratis.Features.MemoryPool.Tests
                         .GenerateScriptPubKey(2, new[] { alice.PubKey, bob.PubKey, nico.PubKey });
 
             // P2SH address for corp multi-sig
-            BitcoinScriptAddress corpRedeemAddress = corpMultiSig.GetScriptAddress(KnownNetworks.RegTest);
+            BitcoinScriptAddress corpRedeemAddress = corpMultiSig.GetScriptAddress(this.Network);
 
             // Fund corp
             // 50 Coins come from first tx on chain - send corp 42 and change back to miner
             var coin = new Coin(context.SrcTxs[0].GetHash(), 0, context.SrcTxs[0].TotalOut, miner.ScriptPubKey);
-            var txBuilder = new TransactionBuilder(KnownNetworks.RegTest);
+            var txBuilder = new TransactionBuilder(this.Network);
             Transaction fundP2shTx = txBuilder
                 .AddCoins(new List<Coin> { coin })
                 .AddKeys(miner)
@@ -299,10 +302,10 @@ namespace Stratis.Features.MemoryPool.Tests
             // AliceBobNico corp. send 20 to Satoshi
             Coin[] corpCoins = fundP2shTx.Outputs
                         .Where(o => o.ScriptPubKey == corpRedeemAddress.ScriptPubKey)
-                        .Select(o => ScriptCoin.Create(KnownNetworks.RegTest, new OutPoint(fundP2shTx.GetHash(), fundP2shTx.Outputs.IndexOf(o)), o, corpMultiSig))
+                        .Select(o => ScriptCoin.Create(this.Network, new OutPoint(fundP2shTx.GetHash(), fundP2shTx.Outputs.IndexOf(o)), o, corpMultiSig))
                         .ToArray();
 
-            txBuilder = new TransactionBuilder(KnownNetworks.RegTest);
+            txBuilder = new TransactionBuilder(this.Network);
             Transaction p2shSpendTx = txBuilder
                     .AddCoins(corpCoins)
                     .AddKeys(alice, bob)
@@ -323,17 +326,17 @@ namespace Stratis.Features.MemoryPool.Tests
         {
             string dataDir = GetTestDirectoryPath(this);
 
-            var miner = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
-            ITestChainContext context = await TestChainFactory.CreateAsync(KnownNetworks.RegTest, miner.PubKey.WitHash.ScriptPubKey, dataDir);
+            var miner = new BitcoinSecret(new Key(), this.Network);
+            ITestChainContext context = await TestChainFactory.CreateAsync(this.Network, miner.PubKey.WitHash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
             Assert.NotNull(validator);
 
-            var bob = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
+            var bob = new BitcoinSecret(new Key(), this.Network);
 
             // Fund Bob
             // 50 Coins come from first tx on chain - send bob 42 and change back to miner
             var witnessCoin = new Coin(context.SrcTxs[0].GetHash(), 0, context.SrcTxs[0].TotalOut, miner.PubKey.WitHash.ScriptPubKey);
-            var txBuilder = new TransactionBuilder(KnownNetworks.RegTest);
+            var txBuilder = new TransactionBuilder(this.Network);
             Transaction p2wpkhTx = txBuilder
                 .AddCoins(witnessCoin)
                 .AddKeys(miner)
@@ -354,17 +357,17 @@ namespace Stratis.Features.MemoryPool.Tests
         {
             string dataDir = GetTestDirectoryPath(this);
 
-            var miner = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
-            ITestChainContext context = await TestChainFactory.CreateAsync(KnownNetworks.RegTest, miner.PubKey.ScriptPubKey.WitHash.ScriptPubKey, dataDir);
+            var miner = new BitcoinSecret(new Key(), this.Network);
+            ITestChainContext context = await TestChainFactory.CreateAsync(this.Network, miner.PubKey.ScriptPubKey.WitHash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
             Assert.NotNull(validator);
 
-            var bob = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
+            var bob = new BitcoinSecret(new Key(), this.Network);
 
             // Fund Bob
             // 50 Coins come from first tx on chain - send bob 42 and change back to miner
-            ScriptCoin witnessCoin = ScriptCoin.Create(KnownNetworks.RegTest, context.SrcTxs[0].GetHash(), 0, context.SrcTxs[0].TotalOut, miner.PubKey.ScriptPubKey.WitHash.ScriptPubKey, miner.PubKey.ScriptPubKey).AssertCoherent(KnownNetworks.RegTest);
-            var txBuilder = new TransactionBuilder(KnownNetworks.RegTest);
+            ScriptCoin witnessCoin = ScriptCoin.Create(this.Network, context.SrcTxs[0].GetHash(), 0, context.SrcTxs[0].TotalOut, miner.PubKey.ScriptPubKey.WitHash.ScriptPubKey, miner.PubKey.ScriptPubKey).AssertCoherent(this.Network);
+            var txBuilder = new TransactionBuilder(this.Network);
             Transaction p2wshTx = txBuilder
                 .AddCoins(witnessCoin)
                 .AddKeys(miner)
@@ -385,17 +388,17 @@ namespace Stratis.Features.MemoryPool.Tests
         {
             string dataDir = GetTestDirectoryPath(this);
 
-            var miner = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
-            ITestChainContext context = await TestChainFactory.CreateAsync(KnownNetworks.RegTest, miner.PubKey.ScriptPubKey.WitHash.ScriptPubKey.Hash.ScriptPubKey, dataDir);
+            var miner = new BitcoinSecret(new Key(), this.Network);
+            ITestChainContext context = await TestChainFactory.CreateAsync(this.Network, miner.PubKey.ScriptPubKey.WitHash.ScriptPubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
             Assert.NotNull(validator);
 
-            var bob = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
+            var bob = new BitcoinSecret(new Key(), this.Network);
 
             // Fund Bob
             // 50 Coins come from first tx on chain - send bob 42 and change back to miner
-            ScriptCoin witnessCoin = ScriptCoin.Create(KnownNetworks.RegTest, context.SrcTxs[0].GetHash(), 0, context.SrcTxs[0].TotalOut, miner.PubKey.ScriptPubKey.WitHash.ScriptPubKey.Hash.ScriptPubKey, miner.PubKey.ScriptPubKey);
-            var txBuilder = new TransactionBuilder(KnownNetworks.RegTest);
+            ScriptCoin witnessCoin = ScriptCoin.Create(this.Network, context.SrcTxs[0].GetHash(), 0, context.SrcTxs[0].TotalOut, miner.PubKey.ScriptPubKey.WitHash.ScriptPubKey.Hash.ScriptPubKey, miner.PubKey.ScriptPubKey);
+            var txBuilder = new TransactionBuilder(this.Network);
             Transaction p2shOverp2wpkh = txBuilder
                 .AddCoins(witnessCoin)
                 .AddKeys(miner)
@@ -406,7 +409,7 @@ namespace Stratis.Features.MemoryPool.Tests
             Assert.True(txBuilder.Verify(p2shOverp2wpkh)); //check fully signed
 
             // remove witness data from tx
-            Transaction noWitTx = p2shOverp2wpkh.WithOptions(TransactionOptions.None, KnownNetworks.RegTest.Consensus.ConsensusFactory);
+            Transaction noWitTx = p2shOverp2wpkh.WithOptions(TransactionOptions.None, this.Network.Consensus.ConsensusFactory);
 
             Assert.Equal(p2shOverp2wpkh.GetHash(), noWitTx.GetHash());
             Assert.True(noWitTx.GetSerializedSize() < p2shOverp2wpkh.GetSerializedSize());
@@ -422,7 +425,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            var network = KnownNetworks.Main;
+            var network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -451,7 +454,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            var network = KnownNetworks.Main;
+            var network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -483,7 +486,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            var network = KnownNetworks.StratisMain;
+            var network = new StratisMain();
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreatePosAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -516,7 +519,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -557,7 +560,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -589,7 +592,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -627,7 +630,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -663,7 +666,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -688,7 +691,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -714,7 +717,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -743,7 +746,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -780,7 +783,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            var network = KnownNetworks.Main;
+            var network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -808,7 +811,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -843,7 +846,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            var network = KnownNetworks.Main;
+            var network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -873,7 +876,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -903,7 +906,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -953,7 +956,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -990,7 +993,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -1022,7 +1025,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -1056,7 +1059,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -1085,7 +1088,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -1122,11 +1125,11 @@ namespace Stratis.Features.MemoryPool.Tests
         {
             string dataDir = GetTestDirectoryPath(this);
 
-            var miner = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
-            ITestChainContext context = await TestChainFactory.CreateAsync(KnownNetworks.RegTest, miner.PubKey.Hash.ScriptPubKey, dataDir).ConfigureAwait(false);
+            var miner = new BitcoinSecret(new Key(), this.Network);
+            ITestChainContext context = await TestChainFactory.CreateAsync(this.Network, miner.PubKey.Hash.ScriptPubKey, dataDir).ConfigureAwait(false);
             IMempoolValidator validator = context.MempoolValidator;
-            var bob = new BitcoinSecret(new Key(), KnownNetworks.RegTest);
-            var txBuilder = new TransactionBuilder(KnownNetworks.RegTest);
+            var bob = new BitcoinSecret(new Key(), this.Network);
+            var txBuilder = new TransactionBuilder(this.Network);
 
             //Create Coin from first tx on chain
             var coin = new Coin(context.SrcTxs[0].GetHash(), 0, context.SrcTxs[0].TotalOut, PayToPubkeyHashTemplate.Instance.GenerateScriptPubKey(miner.PubKey));
@@ -1165,7 +1168,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -1225,7 +1228,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -1384,7 +1387,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -1453,7 +1456,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -1489,7 +1492,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -1542,7 +1545,7 @@ namespace Stratis.Features.MemoryPool.Tests
             string dataDir = GetTestDirectoryPath(this);
 
             // Run mempool tests on mainnet so that RequireStandard flag is set in the mempool settings.
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);
             IMempoolValidator validator = context.MempoolValidator;
@@ -1570,7 +1573,7 @@ namespace Stratis.Features.MemoryPool.Tests
         {
             string dataDir = GetTestDirectoryPath(this);
 
-            Network network = KnownNetworks.Main;
+            Network network = this.mainNet;
 
             var minerSecret = new BitcoinSecret(new Key(), network);
             ITestChainContext context = await TestChainFactory.CreateAsync(network, minerSecret.PubKey.Hash.ScriptPubKey, dataDir);

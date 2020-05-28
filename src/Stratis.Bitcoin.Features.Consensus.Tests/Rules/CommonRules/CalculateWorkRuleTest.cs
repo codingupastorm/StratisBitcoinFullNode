@@ -1,8 +1,9 @@
 ﻿using System.Linq;
 using NBitcoin;
-using Stratis.Core.Consensus;
-using Stratis.Features.Consensus.Rules.CommonRules;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Consensus;
+using Stratis.Core.Networks;
+using Stratis.Features.Consensus.Rules.CommonRules;
 using Xunit;
 
 namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
@@ -31,7 +32,7 @@ namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
         [Fact]
         public void Run_ProofOfWorkBlock_CheckPow_InValidPow_ThrowsBadDiffBitsConsensusErrorException()
         {
-            Block block = TestRulesContextFactory.MineBlock(KnownNetworks.RegTest, this.ChainIndexer);
+            Block block = TestRulesContextFactory.MineBlock(new BitcoinRegTest(), this.ChainIndexer);
 
             this.ruleContext.ValidationContext = new ValidationContext()
             {

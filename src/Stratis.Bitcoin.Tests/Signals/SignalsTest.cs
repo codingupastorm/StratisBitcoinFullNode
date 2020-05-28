@@ -3,6 +3,7 @@ using NBitcoin;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.EventBus;
 using Stratis.Core.EventBus.CoreEvents;
+using Stratis.Core.Networks;
 using Stratis.Core.Primitives;
 using Stratis.Core.Signals;
 using Xunit;
@@ -11,6 +12,7 @@ namespace Stratis.Bitcoin.Tests.Signals
 {
     public class SignalsTest
     {
+        private readonly Network stratisMain = new StratisMain();
         private readonly ISignals signals;
 
         public SignalsTest()
@@ -21,7 +23,7 @@ namespace Stratis.Bitcoin.Tests.Signals
         [Fact]
         public void SignalBlockBroadcastsToBlockSignaler()
         {
-            Block block = KnownNetworks.StratisMain.CreateBlock();
+            Block block = this.stratisMain.CreateBlock();
             ChainedHeader header = ChainedHeadersHelper.CreateGenesisChainedHeader();
             var chainedHeaderBlock = new ChainedHeaderBlock(block, header);
 
@@ -37,7 +39,7 @@ namespace Stratis.Bitcoin.Tests.Signals
         [Fact]
         public void SignalBlockDisconnectedToBlockSignaler()
         {
-            Block block = KnownNetworks.StratisMain.CreateBlock();
+            Block block = this.stratisMain.CreateBlock();
             ChainedHeader header = ChainedHeadersHelper.CreateGenesisChainedHeader();
             var chainedHeaderBlock = new ChainedHeaderBlock(block, header);
 
@@ -53,7 +55,7 @@ namespace Stratis.Bitcoin.Tests.Signals
         [Fact]
         public void SignalTransactionBroadcastsToTransactionSignaler()
         {
-            Transaction transaction = KnownNetworks.StratisMain.CreateTransaction();
+            Transaction transaction = this.stratisMain.CreateTransaction();
 
             bool signaled = false;
             using (SubscriptionToken sub = this.signals.Subscribe<TransactionReceived>(transaction1 => signaled = true))
@@ -67,7 +69,7 @@ namespace Stratis.Bitcoin.Tests.Signals
         [Fact]
         public void SignalUnsubscribingPreventTriggeringPreviouslySubscribedAction()
         {
-            Transaction transaction = KnownNetworks.StratisMain.CreateTransaction();
+            Transaction transaction = this.stratisMain.CreateTransaction();
 
             bool signaled = false;
             using (SubscriptionToken sub = this.signals.Subscribe<TransactionReceived>(transaction1 => signaled = true))

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Configuration;
+using Stratis.Core.Networks;
 using Stratis.Core.Utilities;
 using Stratis.Features.Consensus;
 using Stratis.Features.Consensus.CoinViews;
@@ -22,7 +23,7 @@ namespace Stratis.Bitcoin.IntegrationTests
 
         public NodeContext(object caller, string name, Network network, bool clean)
         {
-            network = network ?? KnownNetworks.RegTest;
+            network = network ?? new BitcoinRegTest();
             this.loggerFactory = new LoggerFactory();
             this.Network = network;
             this.FolderName = TestBase.CreateTestDir(caller, name);

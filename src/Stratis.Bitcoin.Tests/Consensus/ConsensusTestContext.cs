@@ -20,6 +20,7 @@ using Stratis.Core.Consensus;
 using Stratis.Core.Consensus.Rules;
 using Stratis.Core.Consensus.Validators;
 using Stratis.Core.Interfaces;
+using Stratis.Core.Networks;
 using Stratis.Core.P2P;
 using Stratis.Core.P2P.Peer;
 using Stratis.Core.P2P.Protocol.Payloads;
@@ -75,7 +76,7 @@ namespace Stratis.Bitcoin.Tests.Consensus
 
         public TestContext()
         {
-            this.Network = KnownNetworks.RegTest;
+            this.Network = new BitcoinRegTest();
 
             this.chainIndexer = new ChainIndexer(this.Network);
             this.dateTimeProvider = new DateTimeProvider();

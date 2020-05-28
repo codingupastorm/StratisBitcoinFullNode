@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Stratis.Core.Utilities;
 using Stratis.Patricia;
 using Stratis.SmartContracts.Core.State;
@@ -144,7 +144,7 @@ namespace Stratis.SmartContracts.Core.Tests
         [Fact]
         public void Test20DBreeze()
         {
-            var engine = new ContractStateTableStore(DbreezeTestLocation, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(KnownNetworks.StratisRegTest.Consensus.ConsensusFactory));
+            var engine = new ContractStateTableStore(DbreezeTestLocation, new LoggerFactory(), DateTimeProvider.Default, new RepositorySerializer(new StratisRegTest().Consensus.ConsensusFactory));
             using (IKeyValueStoreTransaction t = engine.CreateTransaction(KeyValueStoreTransactionMode.ReadWrite))
             {
                 t.RemoveAllKeys(DbreezeTestDb);

@@ -1,6 +1,6 @@
 ﻿using System;
 using NBitcoin.DataEncoders;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Xunit;
 
 namespace NBitcoin.Tests
@@ -11,7 +11,7 @@ namespace NBitcoin.Tests
 
         public sighash_tests()
         {
-            this.networkMain = KnownNetworks.Main;
+            this.networkMain = new BitcoinMain();
         }
 
         private static Random rand = new Random();
@@ -21,7 +21,7 @@ namespace NBitcoin.Tests
             OpcodeType[] oplist = { OpcodeType.OP_FALSE, OpcodeType.OP_1, OpcodeType.OP_2, OpcodeType.OP_3, OpcodeType.OP_CHECKSIG, OpcodeType.OP_IF, OpcodeType.OP_VERIF, OpcodeType.OP_RETURN, OpcodeType.OP_CODESEPARATOR };
             var script = new Script();
             int ops = (rand.Next() % 10);
-            for(int i = 0; i < ops; i++)
+            for (int i = 0; i < ops; i++)
                 script += oplist[rand.Next() % oplist.Length];
 
             return script;
@@ -57,15 +57,15 @@ namespace NBitcoin.Tests
         {
             TestCase[] tests = TestCase.read_json(TestDataLocations.GetFileFromDataFolder("sighash.json"));
 
-            foreach(TestCase test in tests)
+            foreach (TestCase test in tests)
             {
                 string strTest = test.ToString();
-                if(test.Count < 1) // Allow for extra stuff (useful for comments)
+                if (test.Count < 1) // Allow for extra stuff (useful for comments)
                 {
                     Assert.True(false, "Bad test: " + strTest);
                     continue;
                 }
-                if(test.Count == 1)
+                if (test.Count == 1)
                     continue; // comment
 
                 string raw_tx, raw_script, sigHashHex;
@@ -87,7 +87,7 @@ namespace NBitcoin.Tests
                 byte[] raw = ParseHex(raw_script);
                 scriptCode = new Script(raw);
 
-                uint256 sh = Script.SignatureHash(KnownNetworks.Main, scriptCode, tx, nIn, (SigHash)nHashType);
+                uint256 sh = Script.SignatureHash(new BitcoinMain(), scriptCode, tx, nIn, (SigHash)nHashType);
                 Assert.True(sh.ToString() == sigHashHex, strTest);
             }
         }

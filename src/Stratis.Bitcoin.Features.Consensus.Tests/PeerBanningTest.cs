@@ -24,7 +24,7 @@ namespace Stratis.Features.Consensus.Tests
     {
         private static readonly Script MinerScriptPubKey;
 
-        public PeerBanningTest() : base(KnownNetworks.RegTest)
+        public PeerBanningTest() : base(new BitcoinRegTest())
         {
         }
 
@@ -37,7 +37,7 @@ namespace Stratis.Features.Consensus.Tests
         {
             string dataDir = GetTestDirectoryPath(this);
 
-            TestChainContext context = await TestChainFactory.CreateAsync(KnownNetworks.RegTest, dataDir, mockPeerAddressManager);
+            TestChainContext context = await TestChainFactory.CreateAsync(this.Network, dataDir, mockPeerAddressManager);
             var peerEndPoint = new IPEndPoint(IPAddress.Parse("1.2.3.4"), context.Network.DefaultPort);
             context.PeerAddressManager.AddPeer(peerEndPoint, peerEndPoint.Address.MapToIPv6());
 

@@ -23,7 +23,7 @@ namespace Stratis.Bitcoin.Tests.NodeStorage
     {
         public IKeyValueStoreRepository GetStore([System.Runtime.CompilerServices.CallerMemberName] string callingMethod = "", Network network = null)
         {
-            network = network ?? KnownNetworks.StratisMain;
+            network = network ?? new StratisMain();
 
             string dataDir = TestBase.CreateDataFolder(this, network, callingMethod).RootPath;
             var nodeSettings = new NodeSettings(new BitcoinMain(), args: new[] { $"-datadir={dataDir}" });

@@ -6,7 +6,7 @@ using Stratis.Core.Base;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Consensus;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Stratis.Core.Utilities;
 using Xunit;
 
@@ -22,7 +22,7 @@ namespace Stratis.Features.Consensus.Tests
 
         public InitialBlockDownloadTest()
         {
-            this.network = KnownNetworks.Main;
+            this.network = new BitcoinMain();
             this.consensusSettings = new ConsensusSettings(new NodeSettings(this.network));
             this.checkpoints = new Checkpoints(this.network, this.consensusSettings);
             this.chainState = new ChainState();

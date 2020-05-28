@@ -2,9 +2,10 @@
 using System.IO;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Configuration;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Stratis.SmartContracts.Core.Store;
 using Xunit;
 
@@ -16,8 +17,8 @@ namespace Stratis.SmartContracts.Core.Tests.Store
         private TransientKeyValueStore repo;
         private string dir;
 
-        public TransientStoreIntegrationTests() 
-            : base(KnownNetworks.Main)
+        public TransientStoreIntegrationTests()
+            : base(new BitcoinMain())
         {
             this.dir = CreateTestDir(this);
             this.repo = new TransientKeyValueStore(new DataFolder(this.dir), new LoggerFactory(), this.RepositorySerializer);
@@ -36,11 +37,11 @@ namespace Stratis.SmartContracts.Core.Tests.Store
         {
             Assert.Equal(0UL, this.store.GetMinBlockHeight());
 
-            this.store.Persist(uint256.One, 100, new TransientStorePrivateData(new byte[] {}));
+            this.store.Persist(uint256.One, 100, new TransientStorePrivateData(new byte[] { }));
 
             Assert.Equal(100UL, this.store.GetMinBlockHeight());
 
-            this.store.Persist(uint256.Zero, 50, new TransientStorePrivateData(new byte[] {}));
+            this.store.Persist(uint256.Zero, 50, new TransientStorePrivateData(new byte[] { }));
 
             Assert.Equal(50UL, this.store.GetMinBlockHeight());
         }
@@ -122,7 +123,7 @@ namespace Stratis.SmartContracts.Core.Tests.Store
         {
             uint256 id = new uint256(123456);
             uint blockHeight = 6789;
-            TransientStorePrivateData data = new TransientStorePrivateData(new byte[] {0, 1, 2, 3});
+            TransientStorePrivateData data = new TransientStorePrivateData(new byte[] { 0, 1, 2, 3 });
 
             this.store.Persist(id, blockHeight, data);
 

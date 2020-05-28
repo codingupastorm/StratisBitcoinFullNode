@@ -2,9 +2,9 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Hosting;
 using NSubstitute;
-using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core;
 using Stratis.Core.Configuration;
+using Stratis.Core.Networks;
 using Stratis.Features.Api;
 using Xunit;
 
@@ -21,7 +21,7 @@ namespace Stratis.Bitcoin.Api.Tests
 
         public ProgramTest()
         {
-            this.apiSettings = new ApiSettings(NodeSettings.Default(KnownNetworks.TestNet)) { UseHttps = true };
+            this.apiSettings = new ApiSettings(NodeSettings.Default(new BitcoinTest())) { UseHttps = true };
             this.certificateToUse = new X509Certificate2();
             this.certificateStore = Substitute.For<ICertificateStore>();
             this.webHostBuilder = Substitute.For<IWebHostBuilder>();

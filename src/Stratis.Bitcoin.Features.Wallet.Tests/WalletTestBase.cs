@@ -1,6 +1,6 @@
 ﻿using System;
 using NBitcoin;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 
 namespace Stratis.Features.Wallet.Tests
 {
@@ -59,7 +59,7 @@ namespace Stratis.Features.Wallet.Tests
             var key = new Key();
             var address = new HdAddress
             {
-                Address = key.PubKey.GetAddress(KnownNetworks.Main).ToString(),
+                Address = key.PubKey.GetAddress(new BitcoinMain()).ToString(),
                 AddressType = changeAddress ? 1 : 0,
                 ScriptPubKey = key.ScriptPubKey
             };

@@ -3426,7 +3426,7 @@ namespace Stratis.Features.Wallet.Tests
 
         private WalletManager CreateWalletManager(DataFolder dataFolder, Network network, params string[] cmdLineArgs)
         {
-            var nodeSettings = new NodeSettings(KnownNetworks.RegTest, ProtocolVersion.PROTOCOL_VERSION, network.Name, args: cmdLineArgs);
+            var nodeSettings = new NodeSettings(new BitcoinRegTest(), ProtocolVersion.PROTOCOL_VERSION, network.Name, args: cmdLineArgs);
             var walletSettings = new WalletSettings(nodeSettings);
 
             IWalletRepository walletRepository = new SQLiteWalletRepository.SQLiteWalletRepository(this.LoggerFactory.Object, dataFolder, network, DateTimeProvider.Default, new ScriptAddressReader());

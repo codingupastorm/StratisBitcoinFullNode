@@ -3,12 +3,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
-using Moq;
 using NBitcoin;
+using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Core.Configuration;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Tests.Common.Logging;
+using Stratis.Core.Networks;
 using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.ProvenBlockHeaders;
 using Xunit;
@@ -17,14 +16,12 @@ namespace Stratis.Features.Consensus.Tests.ProvenBlockHeaders
 {
     public class ProvenBlockHeaderRepositoryTests : LogsTestBase
     {
-        private readonly Mock<ILoggerFactory> loggerFactory;
         private readonly RepositorySerializer repositorySerializer;
         private const string ProvenBlockHeaderTable = "ProvenBlockHeader";
         private const string BlockHashTable = "BlockHashHeight";
 
-        public ProvenBlockHeaderRepositoryTests() : base(KnownNetworks.StratisTest)
+        public ProvenBlockHeaderRepositoryTests() : base(new StratisTest())
         {
-            this.loggerFactory = new Mock<ILoggerFactory>();
             this.repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
         }
 

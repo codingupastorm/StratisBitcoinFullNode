@@ -10,7 +10,6 @@ using NBitcoin.DataEncoders;
 using NBitcoin.Networks;
 using NBitcoin.OpenAsset;
 using Newtonsoft.Json.Linq;
-using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Networks;
 using Xunit;
 
@@ -33,9 +32,9 @@ namespace NBitcoin.Tests
         {
             NetworkRegistration.Clear();
 
-            this.networkTestNet = KnownNetworks.TestNet;
-            this.networkRegTest = KnownNetworks.RegTest;
-            this.networkMain = KnownNetworks.Main;
+            this.networkTestNet = new BitcoinTest();
+            this.networkRegTest = new BitcoinRegTest();
+            this.networkMain = new BitcoinMain();
         }
 
         [Fact]
@@ -104,7 +103,7 @@ namespace NBitcoin.Tests
             Assert.Equal("0014751e76e8199196d454941c45d1b3a323f1433bd6", address.Hash.ScriptPubKey.ToHex());
             Assert.Equal("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4", address.ScriptPubKey.GetDestinationAddress(address.Network).ToString());
             Assert.Equal("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4", address.Hash.GetAddress(address.Network).ToString());
-            Assert.Contains(address.Network.Name, new[] { KnownNetworks.Main.Name, KnownNetworks.StratisMain.Name });
+            Assert.Contains(address.Network.Name, new[] { this.networkMain.Name, new StratisMain().Name });
 
             Assert.Equal("tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx", address.ScriptPubKey.GetDestinationAddress(address.Network).ToNetwork(this.networkTestNet).ToString());
 
@@ -114,7 +113,7 @@ namespace NBitcoin.Tests
             Assert.Equal("tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx", address.ScriptPubKey.GetDestinationAddress(address.Network).ToString());
             Assert.Equal("0014751e76e8199196d454941c45d1b3a323f1433bd6", address.Hash.ScriptPubKey.ToHex());
             Assert.Equal("tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx", address.Hash.GetAddress(address.Network).ToString());
-            Assert.Contains(address.Network.Name, new[] { KnownNetworks.RegTest.Name, this.networkTestNet.Name });
+            Assert.Contains(address.Network.Name, new[] { this.networkRegTest.Name, this.networkTestNet.Name });
 
             // No idea why this is failing as it does in fact throw a FormatException.
             //Assert.Throws<FormatException>(() => BitcoinAddress.Create("tb1qw508d6qejxtdg4y5r3zarvary0c5xw7kxpjzsx", this.networkMain));
@@ -126,7 +125,7 @@ namespace NBitcoin.Tests
 
             //Example of the BIP
             pubkey = new PubKey("0450863AD64A87AE8A2FE83C1AF1A8403CB53F53E486D8511DAD8A04887E5B23522CD470243453A299FA9E77237716103ABC11A1DF38855ED6F2EE187E9C582BA6");
-            Assert.Equal(new Script("OP_0 010966776006953D5567439E5E39F86A0D273BEE"), pubkey.GetSegwitAddress(KnownNetworks.Main).ScriptPubKey);
+            Assert.Equal(new Script("OP_0 010966776006953D5567439E5E39F86A0D273BEE"), pubkey.GetSegwitAddress(this.networkMain).ScriptPubKey);
 
             //Test .ToNetwork()
             BitcoinPubKeyAddress addr = pubkey.GetAddress(this.networkMain);
@@ -680,7 +679,7 @@ namespace NBitcoin.Tests
             Assert.True(result.Network == regTest);
 
             result = Network.Parse(address.Base58, regTest);
-            Assert.Contains(result.Network, new[] { regTest, KnownNetworks.TestNet });
+            Assert.Contains(result.Network, new[] { regTest, this.networkTestNet });
         }
 
         [Fact(Skip = "This test is probably not applicable for DLT ore we need re-write this to test specific test/reg addresses should be require them in DLT")]
@@ -858,7 +857,7 @@ namespace NBitcoin.Tests
             JObject jobj = JObject.Parse(File.ReadAllText(TestDataLocations.GetFileFromDataBlockFolder("Block1.json")));
             var array = (JArray)jobj["mrkl_tree"];
             List<uint256> expected = array.OfType<JValue>().Select(v => uint256.Parse(v.ToString())).ToList();
-            Block block = Block.ParseJson(KnownNetworks.Main, File.ReadAllText(TestDataLocations.GetFileFromDataBlockFolder("Block1.json")));
+            Block block = Block.ParseJson(this.networkMain, File.ReadAllText(TestDataLocations.GetFileFromDataBlockFolder("Block1.json")));
             Assert.Equal("000000000000000040cd080615718eb68f00a0138706e7afd4068f3e08d4ca20", block.GetHash().ToString());
             Assert.True(block.CheckMerkleRoot());
         }

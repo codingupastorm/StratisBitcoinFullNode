@@ -3,13 +3,14 @@ using System.IO;
 using System.Linq;
 using FluentAssertions;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Xunit;
 
 namespace NBitcoin.Tests
 {
     public class ProvenBlockHeaderTests : TestBase
     {
-        public ProvenBlockHeaderTests() : base(KnownNetworks.StratisTest)
+        public ProvenBlockHeaderTests() : base(new StratisTest())
         {
         }
 

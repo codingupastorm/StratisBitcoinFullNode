@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System.Security;
 using System.Threading.Tasks;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Xunit;
 
 namespace NBitcoin.Tests
@@ -13,7 +13,7 @@ namespace NBitcoin.Tests
 
         public BIP38Tests()
         {
-            this.networkMain = KnownNetworks.Main;
+            this.networkMain = new BitcoinMain();
         }
 
         [Fact]
@@ -62,13 +62,12 @@ namespace NBitcoin.Tests
             });
         }
 
-
         [Fact]
         [Trait("UnitTest", "UnitTest")]
         //Encrypted keys base58 string do not have network information
         public void DoNotThrowFormatExceptionIfNetworkInformationNotPresentInBase58()
         {
-            Network network = KnownNetworks.TestNet;
+            Network network = new BitcoinTest();
             string encryptedPrivateKey = new Key().GetEncryptedBitcoinSecret("abc123", network).ToString();
             Key key = Key.Parse(encryptedPrivateKey, "abc123", network);
         }
@@ -108,7 +107,7 @@ namespace NBitcoin.Tests
                 Compressed = false
                 }
             };
-            foreach(var test in tests)
+            foreach (var test in tests)
             {
                 //Can generate unencrypted key with password and encrypted key
                 var encryptedKey = new BitcoinEncryptedSecretEC(test.Encrypted, this.networkMain);
@@ -160,7 +159,7 @@ namespace NBitcoin.Tests
                 }
             };
 
-            foreach(var test in tests)
+            foreach (var test in tests)
             {
                 //Can generate unencrypted key with password and encrypted key
                 var encryptedKey = new BitcoinEncryptedSecretEC(test.Encrypted, this.networkMain);
@@ -211,7 +210,7 @@ namespace NBitcoin.Tests
         public void EncryptedSecretECmultiplyNoLotSimple()
         {
             var compressedValues = new[] { false, true };
-            foreach(bool compressed in compressedValues)
+            foreach (bool compressed in compressedValues)
             {
                 var code = new BitcoinPassphraseCode("test", this.networkMain, null);
                 Assert.Null(code.LotSequence);
@@ -244,14 +243,14 @@ namespace NBitcoin.Tests
             Assert.Equal(seed, actualSeed);
 
             //The real deal
-            for(int i = 0; i < 5; i++)
+            for (int i = 0; i < 5; i++)
             {
                 seed = RandomUtils.GetBytes(24);
                 derived = RandomUtils.GetBytes(64);
                 encrypted = BitcoinEncryptedSecret.EncryptSeed(seed, derived);
 
                 byte[] encryptedBefore = encrypted.ToArray();
-                for(int u = 8; u < 16; u++)
+                for (int u = 8; u < 16; u++)
                 {
                     encrypted[u] = 0;
                 }
@@ -273,7 +272,7 @@ namespace NBitcoin.Tests
             Assert.Equal(key, actualSeed);
 
             //The real deal
-            for(int i = 0; i < 5; i++)
+            for (int i = 0; i < 5; i++)
             {
                 key = RandomUtils.GetBytes(32);
                 derived = RandomUtils.GetBytes(64);
