@@ -38,6 +38,7 @@ namespace Stratis.SmartContracts.Tests.Common
         public override void BuildNode()
         {
             Network network = null;
+            NodeSettings nodeSettings;
 
             // TODO-TL: This needs to be moved someplace else.
             var configReader = new TextFileConfiguration(this.Args);
@@ -47,10 +48,18 @@ namespace Stratis.SmartContracts.Tests.Common
             var fileConfig = new TextFileConfiguration(File.ReadAllText(configurationFilePath));
             fileConfig.MergeInto(configReader);
 
+            ChannelSettings channelSettings = new ChannelSettings(configReader);
 
-            var channelSettings = new ChannelSettings(configReader);
-            network = ChannelNetwork.Construct(dataDir, channelSettings.ChannelName);
-            NodeSettings nodeSettings = new NodeSettings(network, agent: $"Channel-{channelSettings.ChannelName}", configReader: configReader);
+            if (channelSettings.IsSystemChannelNode)
+            {
+                network = new SystemChannelNetwork();
+                nodeSettings = new NodeSettings(network, agent: "Channel-System", configReader: configReader);
+            }
+            else
+            {
+                network = ChannelNetwork.Construct(dataDir, channelSettings.ChannelName);
+                nodeSettings = new NodeSettings(network, agent: $"Channel-{channelSettings.ChannelName}", configReader: configReader);
+            }
 
             IFullNodeBuilder builder = new FullNodeBuilder()
                 .UseNodeSettings(nodeSettings)

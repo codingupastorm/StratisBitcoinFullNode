@@ -181,9 +181,9 @@ namespace Stratis.SmartContracts.Tests.Common
         /// <summary>
         /// This creates a "infra" node on the <see cref="TokenlessNetwork"/> which will start a system channel node internally.
         /// </summary>
-        public CoreNode CreateInfraNode(TokenlessNetwork network, int nodeIndex, IWebHost server)
+        public CoreNode CreateInfraNode(TokenlessNetwork network, int nodeIndex, IWebHost server, bool debugChannels = false)
         {
-            CoreNode node = CreateCoreNode(network, nodeIndex, server, "infra", true, false, true, true, this.lastSystemChannelNodePort);
+            CoreNode node = CreateCoreNode(network, nodeIndex, server, "infra", true, false, true, true, this.lastSystemChannelNodePort, debugChannels: debugChannels);
             this.lastSystemChannelNodePort += 1;
             return node;
         }
