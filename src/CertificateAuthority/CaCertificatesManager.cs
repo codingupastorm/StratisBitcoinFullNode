@@ -58,7 +58,7 @@ namespace CertificateAuthority
         public const string CallContractPermissionOid = "1.5.2";
         public const string CreateContractPermissionOid = "1.5.3";
         public const string MiningPermissionOid = "1.5.4";
-        
+
         public const string SystemChannelPermissionOid = "1.6.0";
 
         public const string ChannelCreatePermissionOid = "1.6.1";
@@ -265,7 +265,7 @@ namespace CertificateAuthority
             // TODO: Include timestamp and possibly thumbprint to distinguish between multiple versions of the same certificate for a given address
             string certFilename = $"{p2pkh}.crt";
 
-            File.WriteAllBytes(Path.Combine(this.settings.DataDirectory, certFilename), certificateFromReq.GetEncoded());
+            File.WriteAllBytes(Path.Combine(this.settings.CertificateDirectory, certFilename), certificateFromReq.GetEncoded());
 
             this.logger.Info("New certificate was issued by account id {0}; certificate: '{1}'.", model.AccountId, infoModel);
 
