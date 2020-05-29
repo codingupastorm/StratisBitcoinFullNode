@@ -404,6 +404,32 @@ namespace Stratis.SmartContracts.IntegrationTests
             }
         }
 
+        [Fact]
+        public void DebugInfraNodes()
+        {
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            Process channelNodeProcess = null;
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                var network = new TokenlessNetwork();
+
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                //CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, server, true);
+                CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, server, true);
+                infraNode.Start();
+
+                var channelService = infraNode.FullNode.NodeService<IChannelService>() as TestChannelService;
+                Assert.True(channelService.ChannelNodes.Count == 1);
+            }
+        }
 
         [Fact]
         public void DebugChannelNodes()
