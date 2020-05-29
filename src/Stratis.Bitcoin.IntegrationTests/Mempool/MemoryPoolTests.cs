@@ -20,6 +20,7 @@ using Stratis.SmartContracts.Tests.Common;
 using CertificateAuthority;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Org.BouncyCastle.X509;
+using Stratis.Feature.PoA.Tokenless.Consensus;
 
 namespace Stratis.Bitcoin.IntegrationTests.Mempool
 {
@@ -167,28 +168,31 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
         [Fact]
         public void MineBlocksBlockOrphanedAfterReorgTxsReturnedToMempool()
         {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                // Setup two synced nodes with some mined blocks.
-                string password = "password";
-                string name = "mywallet";
-                string accountName = "account 0";
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
-                CoreNode node1 = builder.CreateStratisPowNode(this.network).WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest100Miner).Start();
-                CoreNode node2 = builder.CreateStratisPowNode(this.network).WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest100Miner).Start();
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
+
+                // Setup two synced nodes with some mined blocks.
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server).Start();
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server).Start();
 
                 var mempoolValidationState = new MempoolValidationState(true);
 
-                TestHelper.MineBlocks(node1, 20);
+                node1.MineBlocksAsync(20).GetAwaiter().GetResult();
                 TestHelper.ConnectAndSync(node1, node2);
 
                 // Nodes disconnect.
                 TestHelper.Disconnect(node1, node2);
 
                 // Create tx and node 1 has this in mempool.
-                HdAddress receivingAddress = node2.FullNode.WalletManager().GetUnusedAddress(new WalletAccountReference(name, accountName));
-                Transaction transaction = node1.FullNode.WalletTransactionHandler().BuildTransaction(CreateContext(node1.FullNode.Network,
-                    new WalletAccountReference(name, accountName), password, receivingAddress.ScriptPubKey, Money.COIN * 100, FeeType.Medium, 101));
+                Transaction transaction = TokenlessTestHelper.CreateBasicOpReturnTransaction(node1);
 
                 Assert.True(node1.FullNode.MempoolManager().Validator.AcceptToMemoryPool(mempoolValidationState, transaction).Result);
                 Assert.Contains(transaction.GetHash(), node1.FullNode.MempoolManager().GetMempoolAsync().Result);
@@ -197,12 +201,12 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 TestBase.WaitLoop(() => node2.FullNode.MempoolManager().MempoolSize().Result == 0);
 
                 // Node 1 mines new tx into block - removed from mempool.
-                (HdAddress addressUsed, List<uint256> blockHashes) = TestHelper.MineBlocks(node1, 1);
-                uint256 minedBlockHash = blockHashes.Single();
+                node1.MineBlocksAsync(1).GetAwaiter().GetResult();
                 TestBase.WaitLoop(() => node1.FullNode.MempoolManager().MempoolSize().Result == 0);
+                uint256 minedBlockHash = node1.FullNode.ChainIndexer.Tip.HashBlock;
 
                 // Node 2 mines two blocks to have greatest chainwork.
-                TestHelper.MineBlocks(node2, 2);
+                node2.MineBlocksAsync(2).GetAwaiter().GetResult();
 
                 // Sync nodes and reorg occurs.
                 TestHelper.ConnectAndSync(node1, true, node2);
@@ -214,32 +218,42 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 Assert.Contains(transaction.GetHash(), node1.FullNode.MempoolManager().GetMempoolAsync().Result);
 
                 // New mined block contains this transaction from the orphaned block.
-                TestHelper.MineBlocks(node1, 1);
+                node1.MineBlocksAsync(1).GetAwaiter().GetResult();
                 Assert.Contains(transaction, node1.FullNode.ChainIndexer.Tip.Block.Transactions);
             }
         }
 
+        // TODO: Not relevant for tokenless networks?
+        /*         
         [Fact]
         public void Mempool_SendPosTransaction_AheadOfFutureDrift_ShouldRejectByMempool()
         {
-            var network = new StratisRegTest();
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                CoreNode stratisSender = builder.CreateStratisPosNode(network).WithReadyBlockchainData(ReadyBlockchain.StratisRegTest10Miner).Start();
+                server.Start();
 
-                TestHelper.MineBlocks(stratisSender, 5);
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
-                // Send coins to the receiver
-                var context = CreateContext(network, new WalletAccountReference(WalletName, Account), Password, new Key().PubKey.GetAddress(network).ScriptPubKey, Money.COIN * 100, FeeType.Medium, 1);
+                // Setup two synced nodes with some mined blocks.
+                CoreNode stratisSender = nodeBuilder.CreateTokenlessNode(this.network, 0, server).Start();
 
-                Transaction trx = stratisSender.FullNode.WalletTransactionHandler().BuildTransaction(context);
+                stratisSender.MineBlocksAsync(5).GetAwaiter().GetResult();
+
+                // Build a transaction.
+                Transaction trx = TokenlessTestHelper.CreateBasicOpReturnTransaction(stratisSender);
 
                 // This should make the mempool reject a POS trx.
                 trx.Time = Utils.DateTimeToUnixTime(Utils.UnixTimeToDateTime(trx.Time).AddMinutes(5));
 
                 // Sign trx again after changing the time property.
-                trx = context.TransactionBuilder.SignTransaction(trx);
+                ITokenlessSigner signer = stratisSender.FullNode.NodeService<ITokenlessSigner>();
+                trx.Inputs.Clear();
+                signer.InsertSignedTxIn(trx, stratisSender.TransactionSigningPrivateKey.GetBitcoinSecret(TokenlessTestHelper.Network));
 
                 // Enable standard policy relay.
                 stratisSender.FullNode.NodeService<MempoolSettings>().RequireStandard = true;
@@ -252,7 +266,10 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 Assert.Equal("time-too-new", entry.ErrorMessage);
             }
         }
+        */
 
+        // TODO: Not relevant for tokenless networks?
+        /*
         [Fact]
         public void Mempool_SendPosTransaction_WithElapsedLockTime_ShouldBeAcceptedByMempool()
         {
@@ -290,7 +307,10 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 TestBase.WaitLoop(() => stratisSender.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count == 1);
             }
         }
+        */
 
+        // TODO: Not relevant for tokenless networks?
+        /*
         [Fact]
         public void Mempool_SendPosTransaction_WithFutureLockTime_ShouldBeRejectedByMempool()
         {
@@ -329,6 +349,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 Assert.Equal("non-final", entry.ErrorMessage);
             }
         }
+        */
 
         [Fact]
         public void Mempool_SendOversizeTransaction_ShouldRejectByMempool()
