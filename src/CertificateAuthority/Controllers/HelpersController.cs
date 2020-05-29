@@ -84,7 +84,7 @@ namespace CertificateAuthority.Controllers
             try
             {
                 var mnemonic = new Mnemonic(Wordlist.English, WordCount.Twelve);
-                return this.Json(this.LogExit(mnemonic));
+                return this.Json(this.LogExit(mnemonic.ToString()));
             }
             catch (Exception ex)
             {
