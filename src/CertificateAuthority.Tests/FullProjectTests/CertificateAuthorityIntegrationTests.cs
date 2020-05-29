@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
+using System.Threading.Tasks;
+using CertificateAuthority.API;
 using CertificateAuthority.Controllers;
 using CertificateAuthority.Models;
 using CertificateAuthority.Tests.Common;
@@ -9,8 +12,8 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
 using NBitcoin;
 using Org.BouncyCastle.Pkcs;
-using Stratis.Core.Networks;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Xunit;
 
 namespace CertificateAuthority.Tests.FullProjectTests
@@ -22,6 +25,16 @@ namespace CertificateAuthority.Tests.FullProjectTests
         public CertificateAuthorityIntegrationTests()
         {
             this.network = new StratisRegTest();
+        }
+
+        [Fact]
+        public void ActualCAStarts()
+        {
+            var task = Task.Run(() => { Program.Main(new string[0]); });
+
+            Thread.Sleep(5000);
+
+            Assert.False(task.IsFaulted);
         }
 
         [Fact]
