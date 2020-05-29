@@ -28,6 +28,7 @@ namespace CertificateAuthority
 
         private string configurationFile;
 
+        public string CertificateDirectory { get; private set; }
         public string DataDirectory { get; private set; }
 
         public string DatabasePath { get; private set; }
@@ -78,6 +79,12 @@ namespace CertificateAuthority
                 string directoryPath = Path.Combine(this.DataDirectory, RootFolderName, SubFolderName);
                 this.DataDirectory = Directory.CreateDirectory(directoryPath).FullName;
             }
+
+            this.CertificateDirectory = Path.Combine(this.DataDirectory, "Certificates");
+            if (!Directory.Exists(this.CertificateDirectory))
+                Directory.CreateDirectory(this.CertificateDirectory);
+
+            Console.WriteLine($"{nameof(this.CertificateDirectory)}: {this.CertificateDirectory}");
 
             if (this.configurationFile == null)
             {
