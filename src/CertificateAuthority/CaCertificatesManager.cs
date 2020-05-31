@@ -686,7 +686,7 @@ namespace CertificateAuthority
 
         public void GrantIssuePermission(CredentialsModelWithTargetId model)
         {
-            var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.AdminAccess);
+            var credentials = new CredentialsAccessWithModel<CredentialsModelWithTargetId>(model, AccountAccessFlags.GrantIssue);
             this.repository.VerifyCredentialsAndAccessLevel(credentials, out _);
             this.repository.GrantIssuePermission(model);
         }
