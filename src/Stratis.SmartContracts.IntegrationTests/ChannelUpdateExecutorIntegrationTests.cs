@@ -61,7 +61,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 parentNode.Start();
                 // Create a channel for the identity to be apart of.
                 nodeBuilder.CreateChannel(parentNode, channelName, 2);
-                parentNode.Restart();
+                //parentNode.Restart();
 
                 // Start other node.
                 otherNode.Start();
@@ -76,7 +76,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     .GetStringAsync()
                     .GetAwaiter().GetResult();
 
-                // Join the channel.
+                // Attempt to join the channel as the other node.
                 var response = $"{(new ApiSettings(otherNode.FullNode.Settings)).ApiUri}"
                     .AppendPathSegment("api/channels/join")
                     .PostJsonAsync(new ChannelJoinRequest()
@@ -127,9 +127,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TestBase.WaitLoop(() => parentNode.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 parentNode.MineBlocksAsync(2).GetAwaiter().GetResult();
                 TestHelper.WaitForNodeToSync(parentNode, otherNode);
-
-                // Hacky - need to restart to ensure the allowed orgs list is updated.
-                //parentNodeChannel.Restart();
 
                 // Now that the org is allowed try to connect the nodes again
                 TestHelper.Connect(otherNodeChannel, parentNodeChannel);
