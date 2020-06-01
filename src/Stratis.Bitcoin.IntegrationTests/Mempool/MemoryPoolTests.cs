@@ -15,6 +15,9 @@ using Stratis.SmartContracts.Tests.Common;
 using CertificateAuthority;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Org.BouncyCastle.X509;
+using Stratis.Features.MemoryPool.Broadcasting;
+using Stratis.Feature.PoA.Tokenless.Consensus;
+using Stratis.Features.Wallet;
 
 namespace Stratis.Bitcoin.IntegrationTests.Mempool
 {
@@ -212,50 +215,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
             }
         }
 
-        // TODO: Not relevant for tokenless networks?
-        /*         
-        [Fact]
-        public void Mempool_SendPosTransaction_AheadOfFutureDrift_ShouldRejectByMempool()
-        {
-            TestBase.GetTestRootFolder(out string testRootFolder);
-
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
-            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
-            {
-                server.Start();
-
-                // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient(server);
-                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
-
-                // Setup two synced nodes with some mined blocks.
-                CoreNode stratisSender = nodeBuilder.CreateTokenlessNode(this.network, 0, server).Start();
-
-                stratisSender.MineBlocksAsync(5).GetAwaiter().GetResult();
-
-                // Build a transaction.
-                Transaction trx = TokenlessTestHelper.CreateBasicOpReturnTransaction(stratisSender);
-
-                // This should make the mempool reject a POS trx.
-                trx.Time = Utils.DateTimeToUnixTime(Utils.UnixTimeToDateTime(trx.Time).AddMinutes(5));
-
-                // Sign trx again after changing the time property.
-                ITokenlessSigner signer = stratisSender.FullNode.NodeService<ITokenlessSigner>();
-                trx.Inputs.Clear();
-                signer.InsertSignedTxIn(trx, stratisSender.TransactionSigningPrivateKey.GetBitcoinSecret(TokenlessTestHelper.Network));
-
-                // Enable standard policy relay.
-                stratisSender.FullNode.NodeService<MempoolSettings>().RequireStandard = true;
-
-                var broadcaster = stratisSender.FullNode.NodeService<IBroadcasterManager>();
-
-                broadcaster.BroadcastTransactionAsync(trx).GetAwaiter().GetResult();
-                var entry = broadcaster.GetTransaction(trx.GetHash());
-
-                Assert.Equal("time-too-new", entry.ErrorMessage);
-            }
-        }
-        */
 
         // TODO: Not relevant for tokenless networks?
         /*
@@ -305,18 +264,24 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
         {
             // See AcceptToMemoryPool_TxFinalCannotMine_ReturnsFalseAsync for the 'unit test' version
 
-            var network = new StratisRegTest();
+            TestBase.GetTestRootFolder(out string testRootFolder);
 
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                CoreNode stratisSender = builder.CreateStratisPosNode(network).WithReadyBlockchainData(ReadyBlockchain.StratisRegTest10Miner).Start();
+                server.Start();
 
-                TestHelper.MineBlocks(stratisSender, 5);
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
-                // Send coins to the receiver.
-                var context = CreateContext(network, new WalletAccountReference(WalletName, Account), Password, new Key().PubKey.GetAddress(network).ScriptPubKey, Money.COIN * 100, FeeType.Medium, 1);
+                // Setup two synced nodes with some mined blocks.
+                CoreNode stratisSender = nodeBuilder.CreateTokenlessNode(this.network, 0, server).Start();
 
-                Transaction trx = stratisSender.FullNode.WalletTransactionHandler().BuildTransaction(context);
+                stratisSender.MineBlocksAsync(5).GetAwaiter().GetResult();
+
+                // Create large tx.
+                Transaction trx = TokenlessTestHelper.CreateBasicOpReturnTransaction(stratisSender);
 
                 // Treat the locktime as absolute, not relative.
                 trx.Inputs.First().Sequence = new Sequence(Sequence.SEQUENCE_LOCKTIME_DISABLE_FLAG);
@@ -324,8 +289,10 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 // Set the nLockTime to be ahead of the current tip so that locktime has not elapsed.
                 trx.LockTime = new LockTime(stratisSender.FullNode.ChainIndexer.Height + 1);
 
-                // Sign trx again after changing the nLockTime.
-                trx = context.TransactionBuilder.SignTransaction(trx);
+                // Sign trx again after adding an output
+                ITokenlessSigner signer = stratisSender.FullNode.NodeService<ITokenlessSigner>();
+                trx.Inputs.Clear();
+                signer.InsertSignedTxIn(trx, stratisSender.TransactionSigningPrivateKey.GetBitcoinSecret(TokenlessTestHelper.Network));
 
                 // Enable standard policy relay.
                 stratisSender.FullNode.NodeService<MempoolSettings>().RequireStandard = true;
@@ -384,7 +351,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 Assert.Equal("tx-size", entry.ErrorMessage);
             }
         }
-*/
+        */
 
         // TODO: Not relevant for tokenless networks?
         /*
