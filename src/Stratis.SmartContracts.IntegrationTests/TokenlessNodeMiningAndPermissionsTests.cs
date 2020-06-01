@@ -1,9 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
 using Microsoft.AspNetCore.Hosting;
+using Org.BouncyCastle.X509;
+using Stratis.Bitcoin.IntegrationTests;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
@@ -22,6 +25,44 @@ namespace Stratis.SmartContracts.IntegrationTests
         public TokenlessNodeMiningAndPermissionsTests()
         {
             this.network = TokenlessTestHelper.Network;
+        }
+
+        [Fact]
+        public void TokenlessNodesConnectToEachOtherOnlyOnce()
+        {
+            // Prior to the AddNode list being made a HashSet in PR #425, this test would both:
+            // - Throw an exception when outputting NodeStats.
+            // - Have 2 Inbound connections to the same node.
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
+
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server);
+
+                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
+
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node1.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node2.DataFolder, this.network);
+
+                node1.AppendToConfig($"addnode=127.0.0.1:{node2.ProtocolPort}");
+                node1.AppendToConfig($"addnode=127.0.0.1:{node2.ProtocolPort}");
+
+                node1.Start();
+                node2.Start();
+
+                Thread.Sleep(5000);
+
+                Assert.Single(node1.FullNode.ConnectionManager.ConnectedPeers);
+                Assert.Single(node2.FullNode.ConnectionManager.ConnectedPeers);
+            }
         }
 
         [Fact]
