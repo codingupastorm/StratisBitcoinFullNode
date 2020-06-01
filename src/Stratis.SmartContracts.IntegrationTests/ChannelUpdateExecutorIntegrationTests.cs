@@ -61,7 +61,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 parentNode.Start();
                 // Create a channel for the identity to be apart of.
                 nodeBuilder.CreateChannel(parentNode, channelName, 2);
-                //parentNode.Restart();
+                parentNode.Restart();
 
                 // Start other node.
                 otherNode.Start();
