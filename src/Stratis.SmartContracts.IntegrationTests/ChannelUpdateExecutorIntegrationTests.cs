@@ -86,7 +86,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     })
                     .GetAwaiter().GetResult();
 
-                var parentNodeChannelService = otherNode.FullNode.NodeService<IChannelService>() as TestChannelService;
+                var parentNodeChannelService = parentNode.FullNode.NodeService<IChannelService>() as TestChannelService;
                 Assert.Single(parentNodeChannelService.ChannelNodes);
 
                 var otherNodeChannelService = otherNode.FullNode.NodeService<IChannelService>() as TestChannelService;
