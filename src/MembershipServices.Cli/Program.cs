@@ -119,7 +119,7 @@ namespace MembershipServices.Cli
             var network = new TokenlessNetwork();
             var nodeSettings = new NodeSettings(network, args: new[] { $"-datadir={options.DataDir}", $"-password={options.Password}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" });
             var loggerFactory = new LoggerFactory();
-            
+
             var keyStoreSettings = new TokenlessKeyStoreSettings(nodeSettings);
             var keyStoreManager = new TokenlessKeyStoreManager(network, nodeSettings.DataFolder, new ChannelSettings(nodeSettings.ConfigReader), keyStoreSettings, loggerFactory);
             keyStoreManager.Initialize();
@@ -149,9 +149,8 @@ namespace MembershipServices.Cli
             caClient = new CaClient(new Uri(options.CaUrl), new HttpClient(), int.Parse(options.CaAccountId), options.CaPassword);
 
             Key privateKey = keyStoreManager.GetKey(keyStoreSettings.Password, TokenlessKeyStoreAccount.P2PCertificates);
-            
+
             LocalMembershipServicesConfiguration.InitializeFolderStructure(Path.Combine(options.DataDir, network.RootFolderName, network.Name));
-            File.WriteAllText(Path.Combine(nodeSettings.DataFolder.RootPath, LocalMembershipServicesConfiguration.Keystore, "key.dat"), privateKey.GetBitcoinSecret(network).ToWif());
 
             PubKey transactionSigningPubKey = keyStoreManager.GetKey(keyStoreSettings.Password, TokenlessKeyStoreAccount.TransactionSigning).PubKey;
             PubKey blockSigningPubKey = keyStoreManager.GetKey(keyStoreSettings.Password, TokenlessKeyStoreAccount.BlockSigning).PubKey;

@@ -37,8 +37,8 @@ namespace Stratis.Core.Configuration
             this.DnsMasterFilePath = path;
             this.SmartContractStatePath = Path.Combine(path, "contracts");
             this.ProvenBlockHeaderPath = Path.Combine(path, "provenheaders");
-            this.TransientStorePath = Path.Combine(path, "transient");
-            this.PrivateDataStorePath = Path.Combine(path, "private");
+            this.TransientStorePath = Path.Combine(path, "transientdatastore");
+            this.PrivateDataStorePath = Path.Combine(path, "privatedatastore");
             this.RootPath = path;
         }
 
