@@ -15,6 +15,7 @@ using Xunit;
 using System.Collections.Generic;
 using CertificateAuthority;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
+using Org.BouncyCastle.X509;
 
 namespace Stratis.Bitcoin.IntegrationTests.Mempool
 {
@@ -64,14 +65,28 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
 
         protected void nodeA_nodeB_and_nodeC()
         {
-            this.nodeA = this.nodeBuilder.CreateTokenlessNode(this.network, 0, this.server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
-            this.nodeB = this.nodeBuilder.CreateTokenlessNode(this.network, 1, this.server).Start();
-            this.nodeC = this.nodeBuilder.CreateTokenlessNode(this.network, 2, this.server).Start();
+            this.nodeA = this.nodeBuilder.CreateTokenlessNode(this.network, 0, this.server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission });
+            this.nodeB = this.nodeBuilder.CreateTokenlessNode(this.network, 1, this.server, permissions: new List<string>() { CaCertificatesManager.SendPermission });
+            this.nodeC = this.nodeBuilder.CreateTokenlessNode(this.network, 2, this.server, permissions: new List<string>() { CaCertificatesManager.SendPermission });
+
+            X509Certificate[] certificates = { this.nodeA.ClientCertificate.ToCertificate(), this.nodeB.ClientCertificate.ToCertificate(), this.nodeC.ClientCertificate.ToCertificate() };
+
+            // Add certificates to nodeA.
+            TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, this.nodeA.DataFolder, this.network);
+            this.nodeA.Start();
+
+            // Add certificates to nodeB.
+            TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, this.nodeB.DataFolder , this.network);
+            this.nodeB.Start();
+
+            // Add certificates to nodeC.
+            TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, this.nodeC.DataFolder, this.network);
+            this.nodeC.Start();
         }
 
         protected void nodeA_mines_blocks()
         {
-            // add some coins to nodeA
+            // nodeA mines a block.
             this.nodeA.MineBlocksAsync(1).GetAwaiter().GetResult();
         }
 
