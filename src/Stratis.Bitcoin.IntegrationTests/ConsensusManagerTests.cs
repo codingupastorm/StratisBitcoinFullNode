@@ -13,17 +13,18 @@ using Stratis.Core.Consensus;
 using Stratis.Core.Consensus.Rules;
 using Stratis.Core.Interfaces;
 using Stratis.Core.Networks;
+using Stratis.Feature.PoA.Tokenless.Networks;
 using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests
 {
     public class ConsensusManagerTests
     {
-        private readonly Network powNetwork;
+        private readonly Network network;
 
         public ConsensusManagerTests()
         {
-            this.powNetwork = new BitcoinRegTest();
+            this.network = new TokenlessNetwork();
         }
 
         private class ConsensusOptionsTest : PosConsensusOptions
@@ -133,9 +134,9 @@ namespace Stratis.Bitcoin.IntegrationTests
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {
-                var minerA = builder.CreateStratisPowNode(this.powNetwork, "cm-1-minerA").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
-                var minerB = builder.CreateStratisPowNode(this.powNetwork, "cm-1-minerB").WithDummyWallet().Start();
-                var syncer = builder.CreateStratisPowNode(this.powNetwork, "cm-1-syncer").Start();
+                var minerA = builder.CreateStratisPowNode(this.network, "cm-1-minerA").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
+                var minerB = builder.CreateStratisPowNode(this.network, "cm-1-minerB").WithDummyWallet().Start();
+                var syncer = builder.CreateStratisPowNode(this.network, "cm-1-syncer").Start();
 
                 // Sync the network to height 10.
                 TestHelper.ConnectAndSync(syncer, minerA);
@@ -214,9 +215,9 @@ namespace Stratis.Bitcoin.IntegrationTests
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {
-                var minerA = builder.CreateStratisPowNode(this.powNetwork, "cm-4-minerA").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
-                var minerB = builder.CreateStratisPowNode(this.powNetwork, "cm-4-minerB").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Listener).Start();
-                var syncer = builder.CreateStratisPowNode(this.powNetwork, "cm-4-syncer").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Listener).Start();
+                var minerA = builder.CreateStratisPowNode(this.network, "cm-4-minerA").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
+                var minerB = builder.CreateStratisPowNode(this.network, "cm-4-minerB").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Listener).Start();
+                var syncer = builder.CreateStratisPowNode(this.network, "cm-4-syncer").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Listener).Start();
 
                 // Sync the network to height 10.
                 TestHelper.ConnectAndSync(syncer, minerA, minerB);
@@ -262,8 +263,8 @@ namespace Stratis.Bitcoin.IntegrationTests
                 // Inject a rule that will fail at block 15 of the new chain.
                 syncerNetwork.Consensus.ConsensusRules.FullValidationRules.Insert(1, typeof(FailValidation15_2));
 
-                var minerA = builder.CreateStratisPowNode(this.powNetwork, "cm-5-minerA").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
-                var minerB = builder.CreateStratisPowNode(this.powNetwork, "cm-5-minerB").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Listener).Start();
+                var minerA = builder.CreateStratisPowNode(this.network, "cm-5-minerA").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
+                var minerB = builder.CreateStratisPowNode(this.network, "cm-5-minerB").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Listener).Start();
                 var syncer = builder.CreateStratisPowNode(syncerNetwork, "cm-5-syncer").Start();
 
                 // Sync the network to height 10.
@@ -307,8 +308,8 @@ namespace Stratis.Bitcoin.IntegrationTests
                 // Inject a rule that will fail at block 11 of the new chain
                 syncerNetwork.Consensus.ConsensusRules.FullValidationRules.Insert(1, typeof(FailValidation11_2));
 
-                var minerA = builder.CreateStratisPowNode(this.powNetwork, "cm-6-minerA").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
-                var minerB = builder.CreateStratisPowNode(this.powNetwork, "cm-6-minerB").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Listener).Start();
+                var minerA = builder.CreateStratisPowNode(this.network, "cm-6-minerA").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
+                var minerB = builder.CreateStratisPowNode(this.network, "cm-6-minerB").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Listener).Start();
                 var syncer = builder.CreateStratisPowNode(syncerNetwork, "cm-6-syncer").Start();
 
                 // Sync the network to height 10.
@@ -343,9 +344,9 @@ namespace Stratis.Bitcoin.IntegrationTests
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {
-                var minerA = builder.CreateStratisPowNode(this.powNetwork, "cm-7-minerA").WithDummyWallet().WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
-                var minerB = builder.CreateStratisPowNode(this.powNetwork, "cm-7-minerB").WithDummyWallet().Start();
-                var syncer = builder.CreateStratisPowNode(this.powNetwork, "cm-7-syncer");
+                var minerA = builder.CreateStratisPowNode(this.network, "cm-7-minerA").WithDummyWallet().WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
+                var minerB = builder.CreateStratisPowNode(this.network, "cm-7-minerB").WithDummyWallet().Start();
+                var syncer = builder.CreateStratisPowNode(this.network, "cm-7-syncer");
 
                 void flushCondition(IServiceCollection services)
                 {
@@ -399,7 +400,7 @@ namespace Stratis.Bitcoin.IntegrationTests
                 // Inject a rule that will fail at block 11 of the new chain
                 syncerNetwork.Consensus.ConsensusRules.FullValidationRules.Insert(1, typeof(FailValidation11));
 
-                var minerA = builder.CreateStratisPowNode(this.powNetwork, "cm-8-minerA").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
+                var minerA = builder.CreateStratisPowNode(this.network, "cm-8-minerA").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
                 var syncer = builder.CreateStratisPowNode(syncerNetwork, "cm-8-syncer").Start();
 
                 // Miner A mines to height 11.
@@ -421,9 +422,9 @@ namespace Stratis.Bitcoin.IntegrationTests
         {
             using (NodeBuilder builder = NodeBuilder.Create(this))
             {
-                var minerA = builder.CreateStratisPowNode(this.powNetwork, "cm-9-minerA").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest100Miner).Start();
-                var minerB = builder.CreateStratisPowNode(this.powNetwork, "cm-9-minerB").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest100Listener).Start();
-                var syncer = builder.CreateStratisPowNode(this.powNetwork, "cm-9-syncer").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest100Listener).Start();
+                var minerA = builder.CreateStratisPowNode(this.network, "cm-9-minerA").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest100Miner).Start();
+                var minerB = builder.CreateStratisPowNode(this.network, "cm-9-minerB").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest100Listener).Start();
+                var syncer = builder.CreateStratisPowNode(this.network, "cm-9-syncer").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest100Listener).Start();
 
                 // Sync the network to height 100.
                 TestHelper.ConnectAndSync(syncer, minerA, minerB);
