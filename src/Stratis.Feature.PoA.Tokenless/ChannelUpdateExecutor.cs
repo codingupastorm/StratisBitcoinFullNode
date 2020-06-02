@@ -81,6 +81,13 @@ namespace Stratis.Feature.PoA.Tokenless
                     // Get channel membership
                     ChannelDefinition channelDef = this.channelRepository.GetChannelDefinition(request.Name);
 
+                    // Channel def does not exist!
+                    if (channelDef == null)
+                    {
+                        this.logger.LogDebug($"{transaction.GetHash()}' updates an unknown channel.");
+                        continue;
+                    }
+
                     // Remove any members from the Remove pile
                     foreach (var orgToRemove in request.MembersToRemove.Organisations)
                     {
