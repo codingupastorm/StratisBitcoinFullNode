@@ -27,7 +27,7 @@ namespace Stratis.Core.Configuration.Settings
 
         /// <summary>List of end points that the node should try to connect to.</summary>
         /// <remarks>All access should be protected under <see cref="addNodeLock"/></remarks>
-        private readonly List<IPEndPoint> addNode;
+        private readonly HashSet<IPEndPoint> addNode;
 
         /// <summary>
         /// Protects access to the list of addnode endpoints.
@@ -50,7 +50,7 @@ namespace Stratis.Core.Configuration.Settings
 
             lock (this.addNodeLock)
             {
-                this.addNode = new List<IPEndPoint>();
+                this.addNode = new HashSet<IPEndPoint>();
             }
 
             this.Bind = new List<NodeServerEndpoint>();
@@ -178,7 +178,8 @@ namespace Stratis.Core.Configuration.Settings
         {
             lock (this.addNodeLock)
             {
-                this.addNode.Add(addNode);
+                if (!this.addNode.Contains(addNode))
+                    this.addNode.Add(addNode);
             }
         }
 

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Xunit;
 
 namespace NBitcoin.Tests
@@ -13,7 +13,7 @@ namespace NBitcoin.Tests
 
         public uint256_tests()
         {
-            this.networkMain = KnownNetworks.Main;
+            this.networkMain = new BitcoinMain();
         }
 
         [Fact]
@@ -67,7 +67,7 @@ namespace NBitcoin.Tests
             var ms = new MemoryStream();
             var stream = new BitcoinStream(ms, true);
             stream.ConsensusFactory = this.networkMain.Consensus.ConsensusFactory;
-            
+
             var v = new uint256("00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
             var vless = new uint256("00000000fffffffffffffffffffffffffffffffffffffffffffffffffffffffe");
             var vplus = new uint256("00000001ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");

@@ -29,6 +29,7 @@ using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.Api;
 using Stratis.Features.SmartContracts.Models;
 using Stratis.SmartContracts.CLR.Compilation;
+using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;
 
@@ -403,6 +404,32 @@ namespace Stratis.SmartContracts.IntegrationTests
             }
         }
 
+        [Fact]
+        public void DebugInfraNodes()
+        {
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            Process channelNodeProcess = null;
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                var network = new TokenlessNetwork();
+
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                //CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, server, true);
+                CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, server, true);
+                infraNode.Start();
+
+                var channelService = infraNode.FullNode.NodeService<IChannelService>() as TestChannelService;
+                Assert.True(channelService.ChannelNodes.Count == 1);
+            }
+        }
 
         [Fact]
         public void DebugChannelNodes()
@@ -515,7 +542,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 Assert.True(addressManagers.All(a => a.Peers.Any()));
 
-
+                // Create a contract
                 var node1ChannelController = node1Channel.FullNode.NodeController<TokenlessController>();
 
                 ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/TokenlessSimpleContract.cs");
@@ -536,6 +563,34 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TestBase.WaitLoop(() => node2Channel.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 await node1Channel.MineBlocksAsync(1);
                 TokenlessTestHelper.WaitForNodeToSync(node1Channel, node2Channel);
+
+                Assert.Contains(node1Channel.GetTip().Block.Transactions, t => t.GetHash() == createResponse.TransactionId);
+
+                // Call a contract
+                var node2ChannelController = node2Channel.FullNode.NodeController<TokenlessController>();
+
+                var callResult = (JsonResult) node2ChannelController.BuildCallContractTransaction(new BuildCallContractTransactionModel
+                {
+                    Address = createResponse.NewContractAddress,
+                    MethodName = "CallMe"
+                });
+
+                var callResponse = (BuildCallContractTransactionResponse) callResult.Value;
+
+                var callTxResponse = await node1ChannelController.SendTransactionAsync(new SendTransactionModel()
+                {
+                    TransactionHex = callResponse.Hex
+                });
+
+                TestBase.WaitLoop(() => node1Channel.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                await node1Channel.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1Channel, node2Channel);
+
+                Assert.Contains(node1Channel.GetTip().Block.Transactions, t => t.GetHash() == callResponse.TransactionId);
+
+                var receiptRepo = node1Channel.FullNode.NodeService<IReceiptRepository>();
+                Receipt receipt = receiptRepo.Retrieve(callResponse.TransactionId);
+                Assert.True(receipt.Success);
             }
         }
     }

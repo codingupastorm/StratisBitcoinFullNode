@@ -4,18 +4,18 @@ using Microsoft.Extensions.DependencyInjection;
 using Stratis.Core.Builder;
 using Stratis.Core.Builder.Feature;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.Builder
 {
     public class FullNodeBuilderExtensionsTest
     {
-        private FeatureCollection featureCollection;
-        private List<Action<IFeatureCollection>> featureCollectionDelegates;
-        private FullNodeBuilder fullNodeBuilder;
-        private List<Action<IServiceCollection>> serviceCollectionDelegates;
-        private List<Action<IServiceProvider>> serviceProviderDelegates;
+        private readonly FeatureCollection featureCollection;
+        private readonly List<Action<IFeatureCollection>> featureCollectionDelegates;
+        private readonly FullNodeBuilder fullNodeBuilder;
+        private readonly List<Action<IServiceCollection>> serviceCollectionDelegates;
+        private readonly List<Action<IServiceProvider>> serviceProviderDelegates;
 
         public FullNodeBuilderExtensionsTest()
         {
@@ -24,8 +24,10 @@ namespace Stratis.Bitcoin.Tests.Builder
             this.featureCollectionDelegates = new List<Action<IFeatureCollection>>();
             this.featureCollection = new FeatureCollection();
 
-            this.fullNodeBuilder = new FullNodeBuilder(this.serviceCollectionDelegates, this.serviceProviderDelegates, this.featureCollectionDelegates, this.featureCollection);
-            this.fullNodeBuilder.Network = KnownNetworks.TestNet;
+            this.fullNodeBuilder = new FullNodeBuilder(this.serviceCollectionDelegates, this.serviceProviderDelegates, this.featureCollectionDelegates, this.featureCollection)
+            {
+                Network = new BitcoinTest()
+            };
         }
 
         [Fact]
@@ -53,39 +55,7 @@ namespace Stratis.Bitcoin.Tests.Builder
             Assert.Equal(nodeSettings.ConfigurationFile, this.fullNodeBuilder.NodeSettings.ConfigurationFile);
             Assert.Equal(nodeSettings.DataDir, this.fullNodeBuilder.NodeSettings.DataDir);
             Assert.NotNull(this.fullNodeBuilder.Network);
-            Assert.Equal(KnownNetworks.TestNet, this.fullNodeBuilder.Network);
-            Assert.Single(this.serviceCollectionDelegates);
-        }
-
-        [Fact]
-        public void UseNodeSettingsUsingTestNetConfiguresNodeBuilderWithTestnetSettings()
-        {
-            var nodeSettings = new NodeSettings(KnownNetworks.TestNet, args:new string[] {
-                "-datadir=TestData/FullNodeBuilder/UseNodeSettings" });
-
-            FullNodeBuilderNodeSettingsExtension.UseNodeSettings(this.fullNodeBuilder, nodeSettings);
-
-            Assert.NotNull(this.fullNodeBuilder.NodeSettings);
-            Assert.Equal(nodeSettings.ConfigurationFile, this.fullNodeBuilder.NodeSettings.ConfigurationFile);
-            Assert.Equal(nodeSettings.DataDir, this.fullNodeBuilder.NodeSettings.DataDir);
-            Assert.NotNull(this.fullNodeBuilder.Network);
-            Assert.Equal(KnownNetworks.TestNet, this.fullNodeBuilder.Network);
-            Assert.Single(this.serviceCollectionDelegates);
-        }
-
-        [Fact]
-        public void UseNodeSettingsUsingRegTestNetConfiguresNodeBuilderWithRegTestNet()
-        {
-            var nodeSettings = new NodeSettings(KnownNetworks.RegTest, args:new string[] {
-                "-datadir=TestData/FullNodeBuilder/UseNodeSettings" });
-
-            FullNodeBuilderNodeSettingsExtension.UseNodeSettings(this.fullNodeBuilder, nodeSettings);
-
-            Assert.NotNull(this.fullNodeBuilder.NodeSettings);
-            Assert.Equal(nodeSettings.ConfigurationFile, this.fullNodeBuilder.NodeSettings.ConfigurationFile);
-            Assert.Equal(nodeSettings.DataDir, this.fullNodeBuilder.NodeSettings.DataDir);
-            Assert.NotNull(this.fullNodeBuilder.Network);
-            Assert.Equal(KnownNetworks.RegTest, this.fullNodeBuilder.Network);
+            Assert.Equal(new BitcoinTest().Name, this.fullNodeBuilder.Network.Name);
             Assert.Single(this.serviceCollectionDelegates);
         }
     }

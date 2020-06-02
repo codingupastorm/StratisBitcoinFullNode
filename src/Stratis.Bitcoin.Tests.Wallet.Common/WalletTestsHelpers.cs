@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
-using Newtonsoft.Json;
+using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Stratis.Features.Wallet;
 using Stratis.Features.Wallet.Interfaces;
-using Stratis.Bitcoin.Tests.Common;
 
 namespace Stratis.Bitcoin.Tests.Wallet.Common
 {
@@ -78,7 +78,7 @@ namespace Stratis.Bitcoin.Tests.Wallet.Common
             var key = new Key();
             var address = new HdAddress()
             {
-                Address = key.PubKey.GetAddress(KnownNetworks.Main).ToString(),
+                Address = key.PubKey.GetAddress(new BitcoinMain()).ToString(),
                 Index = index,
                 AddressType = changeAddress ? 1 : 0,
                 HdPath = (account == null) ? null : $"{account.HdPath}/{(changeAddress ? 1 : 0)}/{index}",
@@ -137,10 +137,13 @@ namespace Stratis.Bitcoin.Tests.Wallet.Common
 
         public static Features.Wallet.Wallet CreateWallet(string name, IWalletRepository walletRepository = null)
         {
-            Network network = walletRepository?.Network ?? KnownNetworks.Main;
+            Network network = walletRepository?.Network ?? new BitcoinMain();
 
-            var wallet = new Features.Wallet.Wallet(name, walletRepository: walletRepository);
-            wallet.Network = network;
+            var wallet = new Features.Wallet.Wallet(name, walletRepository: walletRepository)
+            {
+                Network = network
+            };
+
             wallet.AccountsRoot = new List<AccountRoot> { new AccountRoot(wallet) { CoinType = (CoinType)network.Consensus.CoinType } };
             return wallet;
         }
@@ -154,7 +157,7 @@ namespace Stratis.Bitcoin.Tests.Wallet.Common
         {
             var mnemonic = new Mnemonic(Wordlist.English, WordCount.Twelve);
             ExtKey extendedKey = mnemonic.DeriveExtKey(password);
-            Network network = walletRepository?.Network ?? KnownNetworks.Main;
+            Network network = walletRepository?.Network ?? new BitcoinMain();
             string encryptedSeed = extendedKey.PrivateKey.GetEncryptedBitcoinSecret(password, network).ToWif();
 
             var wallet = new Features.Wallet.Wallet(name, encryptedSeed, extendedKey.ChainCode, walletRepository: walletRepository);
@@ -257,7 +260,8 @@ namespace Stratis.Bitcoin.Tests.Wallet.Common
                 ScriptPubKey = pubKey.Hash.ScriptPubKey
             };
 
-            res.Transactions.Add(new TransactionData() {
+            res.Transactions.Add(new TransactionData()
+            {
                 Id = new uint256((ulong)addrType),
                 Index = index,
                 ScriptPubKey = pubKey.Hash.ScriptPubKey
@@ -289,7 +293,7 @@ namespace Stratis.Bitcoin.Tests.Wallet.Common
 
         public static (PubKey PubKey, BitcoinPubKeyAddress Address) GenerateAddressKeys(Features.Wallet.Wallet wallet, string accountExtendedPubKey, string keyPath)
         {
-            PubKey addressPubKey = ExtPubKey.Parse(accountExtendedPubKey).Derive(new KeyPath(keyPath)).PubKey;
+            PubKey addressPubKey = ExtPubKey.Parse(accountExtendedPubKey, wallet.Network).Derive(new KeyPath(keyPath)).PubKey;
             BitcoinPubKeyAddress address = addressPubKey.GetAddress(wallet.Network);
 
             return (addressPubKey, address);
@@ -402,10 +406,11 @@ namespace Stratis.Bitcoin.Tests.Wallet.Common
 
         public static ChainIndexer PrepareChainWithBlock()
         {
-            var chain = new ChainIndexer(KnownNetworks.StratisMain);
+            var network = new StratisMain();
+            var chain = new ChainIndexer(network);
             uint nonce = RandomUtils.GetUInt32();
-            Block block = KnownNetworks.StratisMain.CreateBlock();
-            block.AddTransaction(KnownNetworks.StratisMain.CreateTransaction());
+            Block block = network.CreateBlock();
+            block.AddTransaction(network.CreateTransaction());
             block.UpdateMerkleRoot();
             block.Header.HashPrevBlock = chain.Genesis.HashBlock;
             block.Header.Nonce = nonce;
@@ -568,13 +573,6 @@ namespace Stratis.Bitcoin.Tests.Wallet.Common
 
     public class WalletFixture : IDisposable
     {
-        private readonly Dictionary<(string, string), Features.Wallet.Wallet> walletsGenerated;
-
-        public WalletFixture()
-        {
-            this.walletsGenerated = new Dictionary<(string, string), Features.Wallet.Wallet>();
-        }
-
         public void Dispose()
         {
         }

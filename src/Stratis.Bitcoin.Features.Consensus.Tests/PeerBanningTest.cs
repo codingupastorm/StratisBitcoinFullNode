@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Moq;
 using NBitcoin;
+using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Configuration.Settings;
@@ -14,7 +15,6 @@ using Stratis.Core.Consensus;
 using Stratis.Core.Networks;
 using Stratis.Core.P2P;
 using Stratis.Core.P2P.Peer;
-using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Utilities;
 using Xunit;
 
@@ -24,7 +24,7 @@ namespace Stratis.Features.Consensus.Tests
     {
         private static readonly Script MinerScriptPubKey;
 
-        public PeerBanningTest() : base(KnownNetworks.RegTest)
+        public PeerBanningTest() : base(new BitcoinRegTest())
         {
         }
 
@@ -37,7 +37,7 @@ namespace Stratis.Features.Consensus.Tests
         {
             string dataDir = GetTestDirectoryPath(this);
 
-            TestChainContext context = await TestChainFactory.CreateAsync(KnownNetworks.RegTest, dataDir, mockPeerAddressManager);
+            TestChainContext context = await TestChainFactory.CreateAsync(this.Network, dataDir, mockPeerAddressManager);
             var peerEndPoint = new IPEndPoint(IPAddress.Parse("1.2.3.4"), context.Network.DefaultPort);
             context.PeerAddressManager.AddPeer(peerEndPoint, peerEndPoint.Address.MapToIPv6());
 
@@ -243,7 +243,7 @@ namespace Stratis.Features.Consensus.Tests
         [Fact]
         public void PeerBanning_Add_Peer_To_Address_Manager_And_Ban()
         {
-            var dataFolder = CreateDataFolder(this);
+            var dataFolder = CreateDataFolder(this, network: this.Network);
 
             var loggerFactory = new ExtendedLoggerFactory();
 
@@ -275,7 +275,7 @@ namespace Stratis.Features.Consensus.Tests
         [Fact]
         public void PeerBanning_Add_WhiteListed_Peer_Does_Not_Get_Banned()
         {
-            var dataFolder = CreateDataFolder(this);
+            var dataFolder = CreateDataFolder(this, network: this.Network);
 
             var loggerFactory = new ExtendedLoggerFactory();
 
@@ -318,7 +318,7 @@ namespace Stratis.Features.Consensus.Tests
         [Fact]
         public void PeerBanning_Add_Peers_To_Address_Manager_And_Ban_IP_Range()
         {
-            var dataFolder = CreateDataFolder(this);
+            var dataFolder = CreateDataFolder(this, network: this.Network);
 
             var loggerFactory = new ExtendedLoggerFactory();
 
@@ -360,7 +360,7 @@ namespace Stratis.Features.Consensus.Tests
         [Fact]
         public void PeerBanning_SavingAndLoading_BannedPeerToAddressManager()
         {
-            DataFolder dataFolder = CreateDataFolder(this);
+            DataFolder dataFolder = CreateDataFolder(this, network: this.Network);
 
             var loggerFactory = new ExtendedLoggerFactory();
 
@@ -396,7 +396,7 @@ namespace Stratis.Features.Consensus.Tests
         [Fact]
         public void PeerBanning_Resetting_Expired_BannedPeer()
         {
-            DataFolder dataFolder = CreateDataFolder(this);
+            DataFolder dataFolder = CreateDataFolder(this, network: this.Network);
 
             var loggerFactory = new ExtendedLoggerFactory();
 

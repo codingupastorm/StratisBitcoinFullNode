@@ -6,7 +6,7 @@ using NBitcoin;
 using Stratis.Core.Base;
 using Stratis.Core.Consensus;
 using Stratis.Core.Interfaces;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Stratis.Features.BlockStore;
 using Xunit;
 
@@ -24,7 +24,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
         public BlockStoreBehaviorTest()
         {
             this.loggerFactory = new LoggerFactory();
-            this.chainIndexer = new ChainIndexer(KnownNetworks.StratisMain);
+            this.chainIndexer = new ChainIndexer(new StratisMain());
             this.chainState = new Mock<IChainState>();
             this.consensusManager = new Mock<IConsensusManager>();
             this.blockStore = new Mock<IBlockStoreQueue>();

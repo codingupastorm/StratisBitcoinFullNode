@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using NBitcoin.DataEncoders;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Xunit;
 
 namespace NBitcoin.Tests
@@ -35,7 +35,7 @@ namespace NBitcoin.Tests
 
         public base58_tests()
         {
-            this.networkMain = KnownNetworks.Main;
+            this.networkMain = new BitcoinMain();
         }
 
         [Fact]
@@ -97,9 +97,9 @@ namespace NBitcoin.Tests
                 bool isPrivkey = (bool)test.GetDynamic(2).isPrivkey;
                 bool isTestnet = (bool)test.GetDynamic(2).isTestnet;
                 if (isTestnet)
-                    network = KnownNetworks.TestNet;
+                    network = new BitcoinTest();
                 else
-                    network = KnownNetworks.Main;
+                    network = this.networkMain;
 
                 if (isPrivkey)
                 {
@@ -159,9 +159,9 @@ namespace NBitcoin.Tests
                 bool isTestnet = (bool)metadata.isTestnet;
 
                 if (isTestnet)
-                    network = KnownNetworks.TestNet;
+                    network = new BitcoinTest();
                 else
-                    network = KnownNetworks.Main;
+                    network = this.networkMain;
                 if (isPrivkey)
                 {
                     bool isCompressed = metadata.isCompressed;
@@ -203,7 +203,7 @@ namespace NBitcoin.Tests
                         BitcoinAddress addrOut = dest.GetAddress(network);
                         Assert.True(addrOut.ToString() == exp_base58string, "mismatch: " + strTest);
                         Assert.True(addrOut.ScriptPubKey == dest.ScriptPubKey);
-                        Assert.True(dest.ScriptPubKey.GetDestination(KnownNetworks.Main) == dest);
+                        Assert.True(dest.ScriptPubKey.GetDestination(this.networkMain) == dest);
                     }
                     catch (ArgumentException)
                     {

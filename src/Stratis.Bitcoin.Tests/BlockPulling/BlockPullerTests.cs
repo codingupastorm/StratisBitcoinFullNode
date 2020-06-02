@@ -5,10 +5,11 @@ using System.Net;
 using System.Threading.Tasks;
 using Moq;
 using NBitcoin;
+using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.BlockPulling;
+using Stratis.Core.Networks;
 using Stratis.Core.P2P.Peer;
 using Stratis.Core.P2P.Protocol.Payloads;
-using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Utilities;
 using Xunit;
 
@@ -40,7 +41,7 @@ namespace Stratis.Bitcoin.Tests.BlockPulling
             Assert.Equal(2, this.puller.PullerBehaviorsByPeerId.Count);
 
             VersionPayload version = new NetworkPeerConnectionParameters().CreateVersion(new IPEndPoint(1, 1), new IPEndPoint(1, 1),
-                KnownNetworks.StratisMain, new DateTimeProvider().GetTimeOffset());
+                new StratisMain(), new DateTimeProvider().GetTimeOffset());
 
             version.Services = NetworkPeerServices.Network | NetworkPeerServices.NODE_WITNESS;
 

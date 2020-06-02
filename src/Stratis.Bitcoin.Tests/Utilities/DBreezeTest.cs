@@ -8,6 +8,7 @@ using FluentAssertions;
 using NBitcoin;
 using NBitcoin.BitcoinCore;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Stratis.Core.Utilities;
 using Xunit;
 
@@ -24,7 +25,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
         /// <summary>
         /// Initializes the DBreeze serializer.
         /// </summary>
-        public DBreezeTest() : base(KnownNetworks.StratisRegTest)
+        public DBreezeTest() : base(new StratisRegTest())
         {
             this.repositorySerializer = new RepositorySerializer(this.Network.Consensus.ConsensusFactory);
         }
@@ -32,7 +33,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
         [Fact]
         public void SerializerWithBitcoinSerializableReturnsAsBytes()
         {
-            Block block = KnownNetworks.StratisRegTest.Consensus.ConsensusFactory.CreateBlock();
+            Block block = this.Network.Consensus.ConsensusFactory.CreateBlock();
 
             byte[] result = this.repositorySerializer.Serialize(block);
 
@@ -63,11 +64,10 @@ namespace Stratis.Bitcoin.Tests.Utilities
         [Fact]
         public void DeserializerWithCoinsDeserializesObject()
         {
-            Network network = KnownNetworks.StratisRegTest;
-            Block genesis = network.GetGenesis();
+            Block genesis = this.Network.GetGenesis();
             var coins = new Coins(genesis.Transactions[0], 0);
 
-            var result = this.repositorySerializer.Deserialize<Coins>(coins.ToBytes(KnownNetworks.StratisRegTest.Consensus.ConsensusFactory));
+            var result = this.repositorySerializer.Deserialize<Coins>(coins.ToBytes(this.Network.Consensus.ConsensusFactory));
 
             Assert.Equal(coins.CoinBase, result.CoinBase);
             Assert.Equal(coins.Height, result.Height);
@@ -84,11 +84,10 @@ namespace Stratis.Bitcoin.Tests.Utilities
         [Fact]
         public void DeserializerWithBlockHeaderDeserializesObject()
         {
-            Network network = KnownNetworks.StratisRegTest;
-            Block genesis = network.GetGenesis();
+            Block genesis = this.Network.GetGenesis();
             BlockHeader blockHeader = genesis.Header;
 
-            var result = this.repositorySerializer.Deserialize<BlockHeader>(blockHeader.ToBytes(KnownNetworks.StratisRegTest.Consensus.ConsensusFactory));
+            var result = this.repositorySerializer.Deserialize<BlockHeader>(blockHeader.ToBytes(this.Network.Consensus.ConsensusFactory));
 
             Assert.Equal(blockHeader.GetHash(), result.GetHash());
         }
@@ -96,8 +95,7 @@ namespace Stratis.Bitcoin.Tests.Utilities
         [Fact]
         public void DeserializerWithRewindDataDeserializesObject()
         {
-            Network network = KnownNetworks.StratisRegTest;
-            Block genesis = network.GetGenesis();
+            Block genesis = this.Network.GetGenesis();
             var rewindData = new RewindData(genesis.GetHash());
 
             var result = this.repositorySerializer.Deserialize<RewindData>(rewindData.ToBytes());
@@ -118,10 +116,9 @@ namespace Stratis.Bitcoin.Tests.Utilities
         [Fact]
         public void DeserializerWithBlockDeserializesObject()
         {
-            Network network = KnownNetworks.StratisRegTest;
-            Block block = network.GetGenesis();
+            Block block = this.Network.GetGenesis();
 
-            var result = this.repositorySerializer.Deserialize<Block>(block.ToBytes(KnownNetworks.StratisRegTest.Consensus.ConsensusFactory));
+            var result = this.repositorySerializer.Deserialize<Block>(block.ToBytes(this.Network.Consensus.ConsensusFactory));
 
             Assert.Equal(block.GetHash(), result.GetHash());
         }

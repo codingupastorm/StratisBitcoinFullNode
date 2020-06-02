@@ -14,7 +14,6 @@ namespace Stratis.Features.Wallet.Models
         public string WalletName { get; set; }
 
         [JsonProperty(PropertyName = "network")]
-        [JsonConverter(typeof(NetworkConverter))]
         public Network Network { get; set; }
 
         /// <summary>

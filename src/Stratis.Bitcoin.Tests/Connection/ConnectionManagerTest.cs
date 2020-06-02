@@ -3,12 +3,12 @@ using System.Linq;
 using System.Net;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Stratis.Core.P2P;
+using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Connection;
-using Stratis.Bitcoin.Tests.Common;
-using Stratis.Bitcoin.Tests.Common.Logging;
+using Stratis.Core.Networks;
+using Stratis.Core.P2P;
 using Stratis.Core.Utilities.Extensions;
 using Xunit;
 
@@ -17,22 +17,18 @@ namespace Stratis.Bitcoin.Tests.Connection
     public class ConnectionManagerSettingsTest : LogsTestBase
     {
         private readonly Mock<IConnectionManager> connectionManager;
-        private ConnectionManagerController controller;
         private readonly Mock<ILoggerFactory> mockLoggerFactory;
-        private readonly Mock<IPeerBanning> peerBanning;
         private readonly Mock<ISelfEndpointTracker> selfEndpointTracker;
 
         public ConnectionManagerSettingsTest()
         {
             this.connectionManager = new Mock<IConnectionManager>();
-            this.peerBanning = new Mock<IPeerBanning>();
             this.selfEndpointTracker = new Mock<ISelfEndpointTracker>();
             this.mockLoggerFactory = new Mock<ILoggerFactory>();
             this.mockLoggerFactory.Setup(i => i.CreateLogger(It.IsAny<string>())).Returns(new Mock<ILogger>().Object);
             this.connectionManager.Setup(i => i.Network)
-                .Returns(KnownNetworks.StratisTest);
+                .Returns(new StratisTest());
             this.selfEndpointTracker.Setup(i => i.IsSelf(It.IsAny<IPEndPoint>())).Returns(false);
-            this.controller = new ConnectionManagerController(this.connectionManager.Object, this.LoggerFactory.Object, this.peerBanning.Object, this.selfEndpointTracker.Object);
         }
 
         [Fact]
@@ -48,7 +44,7 @@ namespace Stratis.Bitcoin.Tests.Connection
             // IPV4: 127.0.0.1:16178 != 0.0.0.0:16178 (both are considered local endpoints)
             endpointA = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 16178);
             endpointB = new IPEndPoint(IPAddress.Parse("0.0.0.0"), 16178);
-            networkEndpoints = new List<IPEndPoint>() { endpointB};
+            networkEndpoints = new List<IPEndPoint>() { endpointB };
             connectionManagerSettings.Port = 16178;
             Assert.False(endpointA.CanBeMappedTo(networkEndpoints, out endpointOut));
 

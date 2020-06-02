@@ -1,15 +1,16 @@
 ﻿using NBitcoin;
 using NBitcoin.Crypto;
 using Stratis.Core.Consensus;
+using Stratis.Core.Networks;
 using Stratis.Features.Consensus.Rules.CommonRules;
-using Stratis.Bitcoin.Tests.Common;
 using Xunit;
 
 namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
 {
     public class PosBlockSignatureRepresentationRuleTest : TestPosConsensusRulesUnitTestBase
     {
-        private Key key;
+        private readonly Key key;
+        private readonly Network stratisMain = new StratisMain();
 
         public PosBlockSignatureRepresentationRuleTest()
         {
@@ -19,10 +20,10 @@ namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
         [Fact]
         public void Run_IsCanonicalBlockSignature_DoesNotThrowException()
         {
-            Block block = KnownNetworks.StratisMain.Consensus.ConsensusFactory.CreateBlock();
-            block.Transactions.Add(KnownNetworks.StratisMain.CreateTransaction());
+            Block block = this.stratisMain.Consensus.ConsensusFactory.CreateBlock();
+            block.Transactions.Add(this.stratisMain.CreateTransaction());
 
-            Transaction transaction = KnownNetworks.StratisMain.CreateTransaction();
+            Transaction transaction = this.stratisMain.CreateTransaction();
             transaction.Inputs.Add(new TxIn()
             {
                 PrevOut = new OutPoint(new uint256(15), 1),
@@ -48,10 +49,10 @@ namespace Stratis.Features.Consensus.Tests.Rules.CommonRules
         [Fact]
         public void Run_IsNotCanonicalBlockSignature_ThrowsBadBlockSignatureConsensusErrorException()
         {
-            Block block = KnownNetworks.StratisMain.Consensus.ConsensusFactory.CreateBlock();
-            block.Transactions.Add(KnownNetworks.StratisMain.CreateTransaction());
+            Block block = this.stratisMain.Consensus.ConsensusFactory.CreateBlock();
+            block.Transactions.Add(this.stratisMain.CreateTransaction());
 
-            Transaction transaction = KnownNetworks.StratisMain.CreateTransaction();
+            Transaction transaction = this.stratisMain.CreateTransaction();
             transaction.Inputs.Add(new TxIn()
             {
                 PrevOut = new OutPoint(new uint256(15), 1),

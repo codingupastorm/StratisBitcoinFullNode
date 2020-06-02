@@ -126,8 +126,7 @@ namespace Stratis.Features.Wallet
         /// <summary>
         /// The network this wallet is for.
         /// </summary>
-        [JsonProperty(PropertyName = "network")]
-        [JsonConverter(typeof(NetworkConverter))]
+        [JsonIgnore]
         public Network Network { get; set; }
 
         /// <summary>

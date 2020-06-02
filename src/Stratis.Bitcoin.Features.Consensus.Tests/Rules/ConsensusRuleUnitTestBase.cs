@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
 using NBitcoin.Crypto;
+using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.AsyncWork;
 using Stratis.Core.Base;
 using Stratis.Core.Base.Deployments;
 using Stratis.Core.BlockPulling;
@@ -11,9 +13,8 @@ using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Consensus;
 using Stratis.Core.Consensus.Rules;
+using Stratis.Core.Networks;
 using Stratis.Core.Signals;
-using Stratis.Bitcoin.Tests.Common;
-using Stratis.Core.AsyncWork;
 using Stratis.Core.Utilities;
 using Stratis.Features.Consensus.Interfaces;
 using Stratis.Features.Consensus.ProvenBlockHeaders;
@@ -91,7 +92,7 @@ namespace Stratis.Features.Consensus.Tests.Rules
         protected Mock<ICoinView> coinView;
         protected Mock<IRewindDataIndexCache> rewindDataIndexStore;
 
-        public PosConsensusRuleUnitTestBase() : base(KnownNetworks.StratisTest)
+        public PosConsensusRuleUnitTestBase() : base(new StratisTest())
         {
             this.stakeChain = new Mock<IStakeChain>();
             this.stakeValidator = new Mock<IStakeValidator>();
@@ -195,7 +196,7 @@ namespace Stratis.Features.Consensus.Tests.Rules
 
     public class TestConsensusRulesUnitTestBase : ConsensusRuleUnitTestBase<TestConsensusRules>
     {
-        public TestConsensusRulesUnitTestBase() : base(KnownNetworks.TestNet)
+        public TestConsensusRulesUnitTestBase() : base(new BitcoinTest())
         {
             this.network.Consensus.Options = new ConsensusOptions();
             this.consensusRules = InitializeConsensusRules();
@@ -216,7 +217,7 @@ namespace Stratis.Features.Consensus.Tests.Rules
         protected Mock<ICoinView> coinView;
         protected Mock<IRewindDataIndexCache> rewindDataIndexStore;
 
-        public TestPosConsensusRulesUnitTestBase() : base(KnownNetworks.StratisTest)
+        public TestPosConsensusRulesUnitTestBase() : base(new StratisTest())
         {
             this.stakeChain = new Mock<IStakeChain>();
             this.stakeValidator = new Mock<IStakeValidator>();

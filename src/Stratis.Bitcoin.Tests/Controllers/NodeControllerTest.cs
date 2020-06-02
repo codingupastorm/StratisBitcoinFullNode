@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
-using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Tests.Wallet.Common;
 using Stratis.Core;
@@ -49,7 +48,7 @@ namespace Stratis.Bitcoin.Tests.Controllers
 
         public NodeControllerTest()
         {
-            this.network = KnownNetworks.TestNet;
+            this.network = new BitcoinTest();
 
             this.chainIndexer = WalletTestsHelpers.GenerateChainWithHeight(3, this.network);
             this.chainState = new Mock<IChainState>();
@@ -57,7 +56,7 @@ namespace Stratis.Bitcoin.Tests.Controllers
             this.connectionManager.Setup(c => c.Network).Returns(this.network);
             this.dateTimeProvider = new Mock<IDateTimeProvider>();
             this.fullNode = new Mock<IFullNode>();
-            this.nodeSettings = new NodeSettings(networksSelector: Networks.Bitcoin);
+            this.nodeSettings = new NodeSettings(new BitcoinMain());
 
             this.blockStore = new Mock<IBlockStore>();
             this.getUnspentTransaction = new Mock<IGetUnspentTransaction>();
@@ -611,7 +610,7 @@ namespace Stratis.Bitcoin.Tests.Controllers
         public void ValidateAddress_ValidAddressOfDifferentNetwork_ReturnsFalse()
         {
             // P2PKH
-            BitcoinPubKeyAddress pubkeyaddress = new Key().PubKey.GetAddress(KnownNetworks.Main);
+            BitcoinPubKeyAddress pubkeyaddress = new Key().PubKey.GetAddress(new BitcoinMain());
             string address = pubkeyaddress.ToString();
 
             var json = (JsonResult)this.controller.ValidateAddress(address);

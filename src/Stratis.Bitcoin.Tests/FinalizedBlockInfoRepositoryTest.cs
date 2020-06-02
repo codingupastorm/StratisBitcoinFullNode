@@ -6,6 +6,7 @@ using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Configuration;
 using Stratis.Core.Consensus;
+using Stratis.Core.Networks;
 using Stratis.Core.Utilities;
 using Xunit;
 
@@ -15,7 +16,7 @@ namespace Stratis.Bitcoin.Tests
     {
         private readonly ILoggerFactory loggerFactory;
 
-        public FinalizedBlockInfoRepositoryTest() : base(KnownNetworks.StratisRegTest)
+        public FinalizedBlockInfoRepositoryTest() : base(new StratisRegTest())
         {
             this.loggerFactory = new LoggerFactory();
         }

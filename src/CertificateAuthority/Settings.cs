@@ -28,6 +28,7 @@ namespace CertificateAuthority
 
         private string configurationFile;
 
+        public string CertificateDirectory { get; private set; }
         public string DataDirectory { get; private set; }
 
         public string DatabasePath { get; private set; }
@@ -79,6 +80,12 @@ namespace CertificateAuthority
                 this.DataDirectory = Directory.CreateDirectory(directoryPath).FullName;
             }
 
+            this.CertificateDirectory = Path.Combine(this.DataDirectory, "Certificates");
+            if (!Directory.Exists(this.CertificateDirectory))
+                Directory.CreateDirectory(this.CertificateDirectory);
+
+            Console.WriteLine($"{nameof(this.CertificateDirectory)}: {this.CertificateDirectory}");
+
             if (this.configurationFile == null)
             {
                 Console.WriteLine("Configuration file not specified, setting default.");
@@ -98,7 +105,7 @@ namespace CertificateAuthority
 
             var configFileArgs = new TextFileConfiguration(File.ReadAllText(this.configurationFile));
 
-            string defaultDbPath = Path.Combine(this.DataDirectory, "SQLiteDatabase.db");
+            string defaultDbPath = Path.Combine(this.DataDirectory, "certificatedatabase.db");
             this.DatabasePath = configFileArgs.GetOrDefault<string>("dbpath", defaultDbPath).NormalizeDirectorySeparator();
 
             this.DefaultIssuanceCertificateDays = configFileArgs.GetOrDefault<int>("defaultcertdays", 10 * 365);

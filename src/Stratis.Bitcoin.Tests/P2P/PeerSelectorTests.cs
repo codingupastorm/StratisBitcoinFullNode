@@ -3,12 +3,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Logging;
 using Stratis.Core.Configuration.Settings;
 using Stratis.Core.Networks;
 using Stratis.Core.P2P;
-using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 using Xunit;
@@ -46,7 +46,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             IPAddress ipAddress = IPAddress.Parse("::ffff:192.168.0.1");
             var endpoint = new IPEndPoint(ipAddress, 80);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             PeerAddressManager peerAddressManager = this.CreatePeerAddressManager(peerFolder);
             peerAddressManager.AddPeer(endpoint, IPAddress.Loopback);
 
@@ -91,7 +91,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             ipAddress = IPAddress.Parse("::ffff:192.168.0.3");
             var endPointThree = new IPEndPoint(ipAddress, 80);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             PeerAddressManager peerAddressManager = this.CreatePeerAddressManager(peerFolder);
             peerAddressManager.AddPeer(endPointOne, IPAddress.Loopback);
             peerAddressManager.AddPeer(endPointTwo, IPAddress.Loopback);
@@ -127,7 +127,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             ipAddress = IPAddress.Parse("::ffff:192.168.0.3");
             var endPointThree = new IPEndPoint(ipAddress, 80);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             PeerAddressManager peerAddressManager = this.CreatePeerAddressManager(peerFolder);
             peerAddressManager.AddPeer(endPointOne, IPAddress.Loopback);
             peerAddressManager.AddPeer(endPointTwo, IPAddress.Loopback);
@@ -168,7 +168,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             ipAddress = IPAddress.Parse("::ffff:192.168.0.3");
             var endPointThree = new IPEndPoint(ipAddress, 80);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             PeerAddressManager peerAddressManager = this.CreatePeerAddressManager(peerFolder);
             peerAddressManager.AddPeer(endPointOne, IPAddress.Loopback);
             peerAddressManager.AddPeer(endPointTwo, IPAddress.Loopback);
@@ -213,7 +213,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             ipAddress = IPAddress.Parse("::ffff:192.168.0.3");
             var endPointThree = new IPEndPoint(ipAddress, 80);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             PeerAddressManager peerAddressManager = this.CreatePeerAddressManager(peerFolder);
 
             peerAddressManager.AddPeer(endPointOne, IPAddress.Loopback);
@@ -255,7 +255,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             ipAddress = IPAddress.Parse("::ffff:192.168.0.3");
             var endPointThree = new IPEndPoint(ipAddress, 80);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             PeerAddressManager peerAddressManager = this.CreatePeerAddressManager(peerFolder);
 
             peerAddressManager.AddPeer(endPointOne, IPAddress.Loopback);
@@ -302,7 +302,7 @@ namespace Stratis.Bitcoin.Tests.P2P
                 peersToAdd.Add(new IPEndPoint(ipAddress, 80));
             }
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             PeerAddressManager peerAddressManager = this.CreatePeerAddressManager(peerFolder);
             peerAddressManager.AddPeers(peersToAdd.ToArray(), IPAddress.Loopback);
 
@@ -346,7 +346,7 @@ namespace Stratis.Bitcoin.Tests.P2P
                 peersToAdd.Add(new IPEndPoint(ipAddress, 80));
             }
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             PeerAddressManager peerAddressManager = this.CreatePeerAddressManager(peerFolder);
             peerAddressManager.AddPeers(peersToAdd.ToArray(), IPAddress.Loopback);
 
@@ -391,7 +391,7 @@ namespace Stratis.Bitcoin.Tests.P2P
                 peersToAdd.Add(new IPEndPoint(ipAddress, 80));
             }
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             PeerAddressManager peerAddressManager = this.CreatePeerAddressManager(peerFolder);
             peerAddressManager.AddPeers(peersToAdd.ToArray(), IPAddress.Loopback);
 
@@ -435,7 +435,7 @@ namespace Stratis.Bitcoin.Tests.P2P
                 peersToAdd.Add(new IPEndPoint(ipAddress, 80));
             }
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             PeerAddressManager peerAddressManager = this.CreatePeerAddressManager(peerFolder);
 
             peerAddressManager.AddPeers(peersToAdd.ToArray(), IPAddress.Loopback);
@@ -478,7 +478,7 @@ namespace Stratis.Bitcoin.Tests.P2P
                 peersToAdd.Add(new IPEndPoint(ipAddress, 80));
             }
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             PeerAddressManager peerAddressManager = this.CreatePeerAddressManager(peerFolder);
 
             peerAddressManager.AddPeers(peersToAdd.ToArray(), IPAddress.Loopback);
@@ -525,7 +525,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             ipAddress = IPAddress.Parse(discoveredpeer);
             var endPointTwo = new IPEndPoint(ipAddress, 80);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
 
             var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, peerFolder, this.extendedLoggerFactory,
                 new SelfEndpointTracker(this.extendedLoggerFactory, this.connectionManagerSettings));
@@ -566,7 +566,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             ipAddress = IPAddress.Parse("::ffff:192.168.0.2");
             var endPointTwo = new IPEndPoint(ipAddress, 80);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
 
             var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, peerFolder, this.extendedLoggerFactory,
                 new SelfEndpointTracker(this.extendedLoggerFactory, this.connectionManagerSettings));
@@ -606,7 +606,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             ipAddress = IPAddress.Parse("::ffff:192.168.0.2");
             var endPointTwo = new IPEndPoint(ipAddress, 80);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
 
             var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, peerFolder, this.extendedLoggerFactory,
                 new SelfEndpointTracker(this.extendedLoggerFactory, this.connectionManagerSettings));
@@ -646,7 +646,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             ipAddress = IPAddress.Parse("::ffff:192.168.0.2");
             var endPointTwo = new IPEndPoint(ipAddress, 80);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
 
             var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, peerFolder, this.extendedLoggerFactory,
                 new SelfEndpointTracker(this.extendedLoggerFactory, this.connectionManagerSettings));
@@ -682,7 +682,7 @@ namespace Stratis.Bitcoin.Tests.P2P
             ipAddress = IPAddress.Parse("::ffff:192.168.0.2");
             var endPointTwo = new IPEndPoint(ipAddress, 80);
 
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
 
             var peerAddressManager = new PeerAddressManager(DateTimeProvider.Default, peerFolder, this.extendedLoggerFactory,
                 new SelfEndpointTracker(this.extendedLoggerFactory, this.connectionManagerSettings));
@@ -762,7 +762,7 @@ namespace Stratis.Bitcoin.Tests.P2P
         public void PeerSelector_ReturnConnectedPeers_AfterHandshakeFailure_WithAttemptsRemaining()
         {
             IPAddress ipAddress = IPAddress.Parse("::ffff:192.168.0.1");
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             PeerAddressManager peerAddressManager = this.CreatePeerAddressManager(peerFolder);
             peerAddressManager.AddPeer(new IPEndPoint(ipAddress, 80), IPAddress.Loopback);
 
@@ -791,7 +791,7 @@ namespace Stratis.Bitcoin.Tests.P2P
         public void PeerSelector_ReturnConnectedPeers_AfterHandshakeFailure_ThresholdExceeded()
         {
             IPAddress ipAddress = IPAddress.Parse("::ffff:192.168.0.1");
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             PeerAddressManager peerAddressManager = this.CreatePeerAddressManager(peerFolder);
             peerAddressManager.AddPeer(new IPEndPoint(ipAddress, 80), IPAddress.Loopback);
 
@@ -820,7 +820,7 @@ namespace Stratis.Bitcoin.Tests.P2P
         public void PeerSelector_ReturnConnectedPeers_AfterHandshakeFailure_HandshakeSucceeded_ResetsCounters()
         {
             IPAddress ipAddress = IPAddress.Parse("::ffff:192.168.0.1");
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             PeerAddressManager peerAddressManager = this.CreatePeerAddressManager(peerFolder);
             peerAddressManager.AddPeer(new IPEndPoint(ipAddress, 80), IPAddress.Loopback);
 
@@ -849,7 +849,7 @@ namespace Stratis.Bitcoin.Tests.P2P
         public void PeerSelector_ReturnConnectedPeers_AfterThresholdExpired_ResetCounters()
         {
             IPAddress ipAddress = IPAddress.Parse("::ffff:192.168.0.1");
-            DataFolder peerFolder = CreateDataFolder(this);
+            DataFolder peerFolder = CreateDataFolder(this, network: this.Network);
             PeerAddressManager peerAddressManager = this.CreatePeerAddressManager(peerFolder);
             peerAddressManager.AddPeer(new IPEndPoint(ipAddress, 80), IPAddress.Loopback);
 

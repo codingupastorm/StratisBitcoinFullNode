@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NBitcoin;
 using Stratis.Core.Configuration;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Stratis.Core.Utilities;
 using Stratis.Features.MemoryPool.Fee;
 using Xunit;
@@ -16,7 +16,7 @@ namespace Stratis.Features.MemoryPool.Tests
         public void BlockPolicyEstimates()
         {
             var dateTimeSet = new DateTimeProviderSet();
-            NodeSettings settings = NodeSettings.Default(KnownNetworks.TestNet);
+            NodeSettings settings = NodeSettings.Default(new BitcoinTest());
             var mpool = new TxMempool(DateTimeProvider.Default,
                 new BlockPolicyEstimator(new MempoolSettings(settings), settings.LoggerFactory, settings), settings.LoggerFactory, settings);
             var entry = new TestMemPoolEntryHelper();
@@ -43,7 +43,7 @@ namespace Stratis.Features.MemoryPool.Tests
             var txf = new Transaction();
             txf.AddInput(new TxIn(garbage));
             txf.AddOutput(new TxOut(0L, Script.Empty));
-            var baseRate = new FeeRate(basefee, txf.GetVirtualSize(KnownNetworks.TestNet.Consensus.Options.WitnessScaleFactor));
+            var baseRate = new FeeRate(basefee, txf.GetVirtualSize(new BitcoinTest().Consensus.Options.WitnessScaleFactor));
 
             // Create a fake block
             var block = new List<Transaction>();
@@ -59,7 +59,7 @@ namespace Stratis.Features.MemoryPool.Tests
                 { // For each fee
                     for (int k = 0; k < 4; k++)
                     { // add 4 fee txs
-                        Transaction tx = KnownNetworks.Main.CreateTransaction(txf.ToHex());
+                        Transaction tx = new BitcoinMain().CreateTransaction(txf.ToHex());
                         tx.Inputs[0].PrevOut.N = (uint)(10000 * blocknum + 100 * j + k); // make transaction unique
                         uint256 hash = tx.GetHash();
                         mpool.AddUnchecked(hash, entry.Fee(feeV[j]).Time(dateTimeSet.GetTime()).Priority(0).Height(blocknum).FromTx(tx, mpool));
@@ -146,7 +146,7 @@ namespace Stratis.Features.MemoryPool.Tests
                 { // For each fee multiple
                     for (int k = 0; k < 4; k++)
                     { // add 4 fee txs
-                        Transaction tx = KnownNetworks.Main.CreateTransaction(txf.ToHex());
+                        Transaction tx = new BitcoinMain().CreateTransaction(txf.ToHex());
                         tx.Inputs[0].PrevOut.N = (uint)(10000 * blocknum + 100 * j + k);
                         uint256 hash = tx.GetHash();
                         mpool.AddUnchecked(hash, entry.Fee(feeV[j]).Time(dateTimeSet.GetTime()).Priority(0).Height(blocknum).FromTx(tx, mpool));
@@ -190,7 +190,7 @@ namespace Stratis.Features.MemoryPool.Tests
                 { // For each fee multiple
                     for (int k = 0; k < 4; k++)
                     { // add 4 fee txs
-                        Transaction tx = KnownNetworks.Main.CreateTransaction(txf.ToHex());
+                        Transaction tx = new BitcoinMain().CreateTransaction(txf.ToHex());
                         tx.Inputs[0].PrevOut.N = (uint)(10000 * blocknum + 100 * j + k);
                         uint256 hash = tx.GetHash();
                         mpool.AddUnchecked(hash, entry.Fee(feeV[j]).Time(dateTimeSet.GetTime()).Priority(0).Height(blocknum).FromTx(tx, mpool));

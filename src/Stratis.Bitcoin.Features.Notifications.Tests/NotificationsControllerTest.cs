@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Networks;
 using Stratis.Core.Signals;
 using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.JsonErrors;
@@ -20,7 +20,7 @@ namespace Stratis.Features.Notifications.Tests
 
         public NotificationsControllerTest()
         {
-            this.network = KnownNetworks.StratisMain;
+            this.network = new StratisMain();
         }
 
         [Theory]

@@ -7,12 +7,12 @@ using FluentAssertions;
 using Moq;
 using NBitcoin;
 using NBitcoin.Policy;
-using Stratis.Core.Configuration;
-using Stratis.Core.Consensus;
-using Stratis.Core.Interfaces;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Bitcoin.Tests.Wallet.Common;
 using Stratis.Core.AsyncWork;
+using Stratis.Core.Configuration;
+using Stratis.Core.Consensus;
+using Stratis.Core.Interfaces;
 using Stratis.Core.Utilities;
 using Stratis.Features.Wallet.Interfaces;
 using Xunit;
@@ -21,7 +21,6 @@ namespace Stratis.Features.Wallet.Tests
 {
     public class WalletTransactionHandlerTest : LogsTestBase
     {
-        private readonly IBlockStore blockStore;
         private readonly string costlyOpReturnData;
         private readonly IScriptAddressReader scriptAddressReader;
         private readonly StandardTransactionPolicy standardTransactionPolicy;
@@ -33,7 +32,6 @@ namespace Stratis.Features.Wallet.Tests
             byte[] maxQuantityOfBytes = Enumerable.Range(0, 80).Select(Convert.ToByte).ToArray();
             this.costlyOpReturnData = Encoding.UTF8.GetString(maxQuantityOfBytes);
 
-            this.blockStore = new Mock<IBlockStore>().Object;
             this.standardTransactionPolicy = new StandardTransactionPolicy(this.Network);
             this.scriptAddressReader = new ScriptAddressReader();
         }
@@ -290,7 +288,7 @@ namespace Stratis.Features.Wallet.Tests
         [Fact]
         public void Given_AnInvalidAccountIsUsed_When_GetMaximumSpendableAmountIsCalled_Then_AnExceptionIsThrown()
         {
-            DataFolder dataFolder = CreateDataFolder(this);
+            DataFolder dataFolder = CreateDataFolder(this, this.Network);
 
             var chain = new ChainIndexer(this.Network);
             IWalletRepository walletRepository = new SQLiteWalletRepository.SQLiteWalletRepository(this.LoggerFactory.Object, dataFolder, this.Network, DateTimeProvider.Default, new ScriptAddressReader());
@@ -314,7 +312,7 @@ namespace Stratis.Features.Wallet.Tests
         [Fact]
         public void Given_GetMaximumSpendableAmountIsCalled_When_ThereAreNoSpendableFound_Then_MaxAmountReturnsAsZero()
         {
-            DataFolder dataFolder = CreateDataFolder(this);
+            DataFolder dataFolder = CreateDataFolder(this, this.Network);
 
             IWalletRepository walletRepository = new SQLiteWalletRepository.SQLiteWalletRepository(this.LoggerFactory.Object, dataFolder, this.Network, DateTimeProvider.Default, new ScriptAddressReader());
 
@@ -347,7 +345,7 @@ namespace Stratis.Features.Wallet.Tests
         [Fact]
         public void GetMaximumSpendableAmountReturnsAsZeroIfNoConfirmedTransactions()
         {
-            DataFolder dataFolder = CreateDataFolder(this);
+            DataFolder dataFolder = CreateDataFolder(this, this.Network);
 
             IWalletRepository walletRepository = new SQLiteWalletRepository.SQLiteWalletRepository(this.LoggerFactory.Object, dataFolder, this.Network, DateTimeProvider.Default, new ScriptAddressReader());
 
@@ -380,7 +378,7 @@ namespace Stratis.Features.Wallet.Tests
         [Fact]
         public void GetMaximumSpendableAmountReturnsSumOfUnconfirmedWhenNoConfirmedSpendableFoundAndUnconfirmedAllowed()
         {
-            DataFolder dataFolder = CreateDataFolder(this);
+            DataFolder dataFolder = CreateDataFolder(this, this.Network);
 
             var walletFeePolicy = new Mock<IWalletFeePolicy>();
             walletFeePolicy.Setup(w => w.GetFeeRate(FeeType.Low.ToConfirmations())).Returns(new FeeRate(20000));
@@ -415,7 +413,7 @@ namespace Stratis.Features.Wallet.Tests
         [Fact]
         public void Given_GetMaximumSpendableAmountIsCalled_When_ThereAreNoTransactions_Then_MaxAmountReturnsAsZero()
         {
-            DataFolder dataFolder = CreateDataFolder(this);
+            DataFolder dataFolder = CreateDataFolder(this, this.Network);
 
             IWalletRepository walletRepository = new SQLiteWalletRepository.SQLiteWalletRepository(this.LoggerFactory.Object, dataFolder, this.Network, DateTimeProvider.Default, new ScriptAddressReader());
 
@@ -538,7 +536,7 @@ namespace Stratis.Features.Wallet.Tests
 
         private WalletTransactionHandlerTestContext SetupWallet(FeeRate feeRate = null, int coinBaseBlocks = 1)
         {
-            DataFolder dataFolder = CreateDataFolder(this);
+            DataFolder dataFolder = CreateDataFolder(this, this.Network);
 
             IWalletRepository walletRepository = new SQLiteWalletRepository.SQLiteWalletRepository(this.LoggerFactory.Object, dataFolder, this.Network, DateTimeProvider.Default, new ScriptAddressReader());
             walletRepository.TestMode = true;
@@ -567,7 +565,7 @@ namespace Stratis.Features.Wallet.Tests
             (ExtKey ExtKey, string ExtPubKey) accountKeys = WalletTestsHelpers.GenerateAccountKeys(wallet, "password", "m/44'/0'/0'");
             (PubKey PubKey, BitcoinPubKeyAddress Address) destinationKeys = WalletTestsHelpers.GenerateAddressKeys(wallet, accountKeys.ExtPubKey, "0/1");
 
-            var account = wallet.AddNewAccount(ExtPubKey.Parse(accountKeys.ExtPubKey), accountName: walletReference.AccountName);
+            var account = wallet.AddNewAccount(ExtPubKey.Parse(accountKeys.ExtPubKey, this.Network), accountName: walletReference.AccountName);
 
             HdAddress address = account.ExternalAddresses.ElementAt(0);
 

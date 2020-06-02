@@ -4,7 +4,7 @@ using System.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Stratis.Core.Controllers.Models;
-using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Networks;
 using Xunit;
 
 namespace Stratis.Bitcoin.Tests.Models
@@ -23,7 +23,7 @@ namespace Stratis.Bitcoin.Tests.Models
 
         public TransactionModelsTest()
         {
-            var network = KnownNetworks.Main;
+            var network = new BitcoinMain();
             this.txBlock10CoinbaseModelBrief = new TransactionBriefModel(network.CreateTransaction(TxBlock10Hex));
             this.txBlock460373CoinbaseModelVerbose = new TransactionVerboseModel(network.CreateTransaction(TxBlock460373CoinbaseHex), network);
             this.txTwoInTwoOutModelVerbose = new TransactionVerboseModel(network.CreateTransaction(TxTwoInTwoOutHex), network);
