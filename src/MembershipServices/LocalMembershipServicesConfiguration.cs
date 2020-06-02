@@ -11,42 +11,36 @@ namespace MembershipServices
 {
     public class LocalMembershipServicesConfiguration
     {
-        public string baseDir { get; set; }
+        private readonly string membershipServicesFolder;
 
         private readonly Network network;
 
         /// <summary>
         /// Subfolder holding certificate files each corresponding to an administrator certificate.
         /// </summary>
-        public const string AdminCerts = "admincerts";
-
-        /// <summary>
-        /// Subfolder holding certificate files each corresponding to a root CA's certificate.
-        /// </summary>
-        public const string CaCerts = "cacerts";
+        public const string AdminCerts = @"msd\admincerts";
 
         /// <summary>
         /// Subfolder holding certificate files each corresponding to an intermediate CA's certificate.
         /// </summary>
         /// <remarks>Optional.</remarks>
-        public const string IntermediateCerts = "intermediatecerts";
+        public const string IntermediateCerts = @"msd\intermediatecerts";
 
         /// <summary>
         /// Subfolder holding the considered CRLs (certificate revocation lists).
         /// </summary>
         /// <remarks>Optional.</remarks>
-        public const string Crls = "crls";
+        public const string Crls = @"msd\crls";
 
         /// <summary>
-        /// Subfolder holding a file with the node's signing key (private key).
+        /// Subfolder holding certificate files each corresponding to a root CA's certificate.
         /// </summary>
-        /// <remarks>Only ECC keys are supported.</remarks>
-        public const string Keystore = "keystore";
+        public const string CaCerts = @"msd\cacerts";
 
         /// <summary>
         /// Subfolder holding a file with the node's X.509 certificate (public key).
         /// </summary>
-        public const string SignCerts = "signcerts";
+        public const string SignCerts = @"msd\signcerts";
 
         /// <summary>
         /// Subfolder holding certificate files for the peers the node is aware of. This is primarily for validating transaction signing, as P2P certificates do not yet require a central registry.
@@ -54,7 +48,7 @@ namespace MembershipServices
         /// <remarks>This is somewhat a stopgap solution until channels are properly implemented, as channels could be established between peers of (potentially) different organisations.
         /// It is also so that transaction validation/endorsement can be correctly performed, as a transaction signature does not contain any certificate information. So the MSD
         /// will have to be responsible for mapping the sender address in a transaction to a certificate stored in this folder. Further research about exactly how HL does this is required.</remarks>
-        public const string PeerCerts = "peercerts";
+        public const string PeerCerts = @"msd\peercerts";
 
         /// <summary>
         /// An identifier for this local MSD.
@@ -74,10 +68,10 @@ namespace MembershipServices
         private readonly ConcurrentDictionary<byte[], X509Certificate> mapTransactionSigningPubKeyHash;
         private readonly HashSet<string> revokedCertificateThumbprints;
 
-        public LocalMembershipServicesConfiguration(string baseDir, Network network)
+        public LocalMembershipServicesConfiguration(string membershipServicesBaseFolder, Network network)
         {
             // TODO: Use the identifier in the base path. Specify the local MSD ID on first startup?
-            this.baseDir = baseDir;
+            this.membershipServicesFolder = membershipServicesBaseFolder;
 
             this.network = network;
 
@@ -164,7 +158,7 @@ namespace MembershipServices
             this.revokedCertificateThumbprints.Add(thumbprint);
 
             // We don't actually need to store the certificate, only a record of its thumbprint.
-            FileStream file = File.Create(Path.Combine(this.baseDir, Crls, thumbprint));
+            FileStream file = File.Create(Path.Combine(this.membershipServicesFolder, Crls, thumbprint));
             file.Flush();
             file.Dispose();
 
@@ -178,28 +172,27 @@ namespace MembershipServices
             return this.revokedCertificateThumbprints.Contains(thumbprint);
         }
 
-        public static void InitializeFolderStructure(string rootDir)
+        public static void InitializeFolderStructure(string membershipServicesRootFolder)
         {
-            Directory.CreateDirectory(rootDir);
+            Directory.CreateDirectory(membershipServicesRootFolder);
 
-            Directory.CreateDirectory(Path.Combine(rootDir, AdminCerts));
-            Directory.CreateDirectory(Path.Combine(rootDir, CaCerts));
-            Directory.CreateDirectory(Path.Combine(rootDir, IntermediateCerts));
-            Directory.CreateDirectory(Path.Combine(rootDir, Crls));
-            Directory.CreateDirectory(Path.Combine(rootDir, Keystore));
-            Directory.CreateDirectory(Path.Combine(rootDir, SignCerts));
-            Directory.CreateDirectory(Path.Combine(rootDir, PeerCerts));
+            Directory.CreateDirectory(Path.Combine(membershipServicesRootFolder, AdminCerts));
+            Directory.CreateDirectory(Path.Combine(membershipServicesRootFolder, CaCerts));
+            Directory.CreateDirectory(Path.Combine(membershipServicesRootFolder, IntermediateCerts));
+            Directory.CreateDirectory(Path.Combine(membershipServicesRootFolder, Crls));
+            Directory.CreateDirectory(Path.Combine(membershipServicesRootFolder, SignCerts));
+            Directory.CreateDirectory(Path.Combine(membershipServicesRootFolder, PeerCerts));
         }
 
         public void InitializeExistingCertificates()
         {
-            foreach (string fileName in Directory.GetFiles(Path.Combine(this.baseDir, Crls)))
+            foreach (string fileName in Directory.GetFiles(Path.Combine(this.membershipServicesFolder, Crls)))
             {
                 this.revokedCertificateThumbprints.Add(Path.GetFileName(fileName));
             }
 
             // There will probably only be one certificate in this folder, but nevertheless, load it into the lookups.
-            foreach (string fileName in Directory.GetFiles(Path.Combine(this.baseDir, SignCerts)))
+            foreach (string fileName in Directory.GetFiles(Path.Combine(this.membershipServicesFolder, SignCerts)))
             {
                 try
                 {
@@ -219,7 +212,7 @@ namespace MembershipServices
                 }
             }
 
-            foreach (string fileName in Directory.GetFiles(Path.Combine(this.baseDir, PeerCerts)))
+            foreach (string fileName in Directory.GetFiles(Path.Combine(this.membershipServicesFolder, PeerCerts)))
             {
                 try
                 {
@@ -274,7 +267,7 @@ namespace MembershipServices
                     throw new ArgumentOutOfRangeException(nameof(memberType), memberType, null);
             }
 
-            return Path.Combine(this.baseDir, subFolder, $"{MembershipServicesDirectory.GetCertificateThumbprint(certificate)}");
+            return Path.Combine(this.membershipServicesFolder, subFolder, $"{MembershipServicesDirectory.GetCertificateThumbprint(certificate)}");
         }
     }
 }
