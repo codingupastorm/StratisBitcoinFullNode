@@ -9,7 +9,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
         public void TXPropogatedToWhitelistedNodesGetsTo3rdPeer()
         {
             Given(nodeA_nodeB_and_nodeC);
-            And(nodeA_mines_coins_that_are_spendable);
+            And(nodeA_mines_blocks);
             And(nodeA_connects_to_nodeB);
             And(nodeB_connects_to_nodeC);
             When(nodeA_creates_a_transaction_and_propagates_to_nodeB);
@@ -20,7 +20,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
         public void TXPropogatedToNONWhitelistedNodesGetsTo3rdPeer()
         {
             Given(nodeA_nodeB_and_nodeC);
-            And(nodeA_mines_coins_that_are_spendable);
+            And(nodeA_mines_blocks);
             And(nodeA_connects_to_nodeB);
             And(nodeB_connects_to_nodeC);
             And(nodeA_nodeB_and_nodeC_are_NON_whitelisted);
