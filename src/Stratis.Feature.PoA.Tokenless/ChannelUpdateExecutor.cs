@@ -116,6 +116,8 @@ namespace Stratis.Feature.PoA.Tokenless
                             channelDef.AccessList.Thumbprints.Add(member);
                         }
                     }
+
+                    this.channelRepository.SaveChannelDefinition(channelDef);
                 }
             }
         }
