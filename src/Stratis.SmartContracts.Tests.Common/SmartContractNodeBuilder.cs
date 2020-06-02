@@ -189,7 +189,7 @@ namespace Stratis.SmartContracts.Tests.Common
             return node;
         }
 
-        public void CreateChannel(CoreNode parentNode, string channelName, int nodeIndex, AccessControlList acl = null)
+        public ChannelDefinition CreateChannel(CoreNode parentNode, string channelName, int nodeIndex, AccessControlList acl = null)
         {
             if (acl == null)
             {
@@ -217,7 +217,14 @@ namespace Stratis.SmartContracts.Tests.Common
 
             // Save the channel definition so that it can loaded on node start.
             IChannelRepository channelRepository = parentNode.FullNode.NodeService<IChannelRepository>();
-            channelRepository.SaveChannelDefinition(new ChannelDefinition() { Id = nodeIndex, Name = channelName, AccessList = channelNetwork.InitialAccessList, NetworkJson = serializedJson });
+            var channelDef = new ChannelDefinition()
+            {
+                Id = nodeIndex, Name = channelName, AccessList = channelNetwork.InitialAccessList,
+                NetworkJson = serializedJson
+            };
+            channelRepository.SaveChannelDefinition(channelDef);
+
+            return channelDef;
         }
 
         public CoreNode CreateChannelNode(string channelRootFolder, params string[] channelArgs)
