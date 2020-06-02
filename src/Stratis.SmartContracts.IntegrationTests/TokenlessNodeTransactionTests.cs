@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using CertificateAuthority.Tests.Common;
 using Microsoft.AspNetCore.Hosting;
@@ -570,10 +569,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TokenlessTestHelper.WaitForNodeToSync(node1, node2);
 
                 // Try and send the same transaction again. This should fail.
-
-                // Gives the block repo time to save batch
-                Thread.Sleep(2000);
-
                 var failResponse = await node1Controller.SendTransactionAsync(new SendTransactionModel()
                 {
                     TransactionHex = opReturnResponse.Hex
