@@ -15,9 +15,6 @@ using Stratis.SmartContracts.Tests.Common;
 using CertificateAuthority;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Org.BouncyCastle.X509;
-using Stratis.Features.MemoryPool.Broadcasting;
-using Stratis.Feature.PoA.Tokenless.Consensus;
-using Stratis.Features.Wallet;
 
 namespace Stratis.Bitcoin.IntegrationTests.Mempool
 {
@@ -214,97 +211,5 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 Assert.Contains(transaction, node1.FullNode.ChainIndexer.Tip.Block.Transactions);
             }
         }
-
-        // TODO: Not relevant for tokenless networks?
-        /*
-        [Fact]
-        public void Mempool_SendOversizeTransaction_ShouldRejectByMempool()
-        {
-            TestBase.GetTestRootFolder(out string testRootFolder);
-
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
-            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
-            {
-                server.Start();
-
-                // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient(server);
-                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
-
-                // Setup two synced nodes with some mined blocks.
-                CoreNode stratisSender = nodeBuilder.CreateTokenlessNode(this.network, 0, server).Start();
-
-                stratisSender.MineBlocksAsync(5).GetAwaiter().GetResult();
-
-                // Create large tx.
-                Transaction trx = TokenlessTestHelper.CreateBasicOpReturnTransaction(stratisSender);
-
-                // Add nonsense script to make tx large.
-                Script script = Script.FromBytesUnsafe(new string('A', this.network.Consensus.Options.MaxStandardTxWeight).Select(c => (byte)c).ToArray());
-                trx.Outputs.Add(new TxOut(new Money(1), script));
-
-                // Sign trx again after adding an output
-                ITokenlessSigner signer = stratisSender.FullNode.NodeService<ITokenlessSigner>();
-                trx.Inputs.Clear();
-                signer.InsertSignedTxIn(trx, stratisSender.TransactionSigningPrivateKey.GetBitcoinSecret(TokenlessTestHelper.Network));
-
-                // Enable standard policy relay.
-                stratisSender.FullNode.NodeService<MempoolSettings>().RequireStandard = true;
-
-                var broadcaster = stratisSender.FullNode.NodeService<IBroadcasterManager>();
-
-                broadcaster.BroadcastTransactionAsync(trx).GetAwaiter().GetResult();
-                var entry = broadcaster.GetTransaction(trx.GetHash());
-
-                Assert.Equal("tx-size", entry.ErrorMessage);
-            }
-        }
-        */
-
-        // TODO: Not relevant for tokenless networks?
-        /*
-
-        [Fact]
-        public void Mempool_SendTransactionWithEarlyTimestamp_ShouldRejectByMempool()
-        {
-            TestBase.GetTestRootFolder(out string testRootFolder);
-
-            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
-            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
-            {
-                server.Start();
-
-                // Start + Initialize CA.
-                var client = TokenlessTestHelper.GetAdminClient(server);
-                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
-
-                // Setup node.
-                CoreNode stratisSender = nodeBuilder.CreateTokenlessNode(this.network, 0, server).Start();
-
-                stratisSender.MineBlocksAsync(5).GetAwaiter().GetResult();
-
-                // Build a transaction.
-                Transaction trx = TokenlessTestHelper.CreateBasicOpReturnTransaction(stratisSender);
-
-                // Use timestamp value that is definitely earlier than the input's timestamp
-                trx.Time = 1;
-
-                // Sign trx again after mutating timestamp
-                ITokenlessSigner signer = stratisSender.FullNode.NodeService<ITokenlessSigner>();
-                trx.Inputs.Clear();
-                signer.InsertSignedTxIn(trx, stratisSender.TransactionSigningPrivateKey.GetBitcoinSecret(TokenlessTestHelper.Network));
-
-                // Enable standard policy relay.
-                stratisSender.FullNode.NodeService<MempoolSettings>().RequireStandard = true;
-
-                var broadcaster = stratisSender.FullNode.NodeService<IBroadcasterManager>();
-
-                broadcaster.BroadcastTransactionAsync(trx).GetAwaiter().GetResult();
-                var entry = broadcaster.GetTransaction(trx.GetHash());
-
-                Assert.Equal("timestamp earlier than input", entry.ErrorMessage);
-            }
-        }
-        */
     }
 }
