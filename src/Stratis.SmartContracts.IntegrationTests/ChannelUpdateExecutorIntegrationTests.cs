@@ -51,33 +51,52 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
 
                 // Create and start the parent node.
-                CoreNode parentNode = nodeBuilder.CreateInfraNode(tokenlessNetwork, 0, server, debugChannels: true);
-                CoreNode otherNode = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 2, server, organisation: disallowedOrg, debugChannels: true);
+                CoreNode infraNode = nodeBuilder.CreateInfraNode(tokenlessNetwork, 0, server, debugChannels: true);
+                CoreNode channelNodeParent = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 2, server, debugChannels: true);
+                CoreNode disallowedNodeParent = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 3, server, organisation: disallowedOrg, debugChannels: true);
 
-                var certificates = new List<X509Certificate>() { parentNode.ClientCertificate.ToCertificate(), otherNode.ClientCertificate.ToCertificate() };
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, parentNode.DataFolder, this.network);
-                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, otherNode.DataFolder, this.network);
+                var certificates = new List<X509Certificate>() { infraNode.ClientCertificate.ToCertificate(), disallowedNodeParent.ClientCertificate.ToCertificate(), channelNodeParent.ClientCertificate.ToCertificate() };
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, infraNode.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, disallowedNodeParent.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, channelNodeParent.DataFolder, this.network);
 
-                parentNode.Start();
-                // Create a channel for the identity to be apart of.
-                var channelDef = nodeBuilder.CreateChannel(parentNode, channelName, 3);
-                //parentNode.Restart();
+                infraNode.Start();
 
-                // Start other node.
-                otherNode.Start();
+                // Create the "marketing" channel.
+                var channelDef = nodeBuilder.CreateChannel(infraNode, channelName, 3);
 
-                TestHelper.Connect(parentNode, otherNode);
-                TestHelper.WaitForNodeToSync(parentNode, otherNode);
+                // Start other nodes.
+                channelNodeParent.Start();
+                disallowedNodeParent.Start();
+
+                TestHelper.Connect(infraNode, disallowedNodeParent);
+                TestHelper.Connect(infraNode, channelNodeParent);
+                TestHelper.WaitForNodeToSync(infraNode, disallowedNodeParent);
+                TestHelper.WaitForNodeToSync(infraNode, channelNodeParent);
 
                 // Get the marketing network's JSON.
-                string networkJson = $"{(new ApiSettings(parentNode.FullNode.Settings)).ApiUri}"
+                string networkJson = $"{(new ApiSettings(infraNode.FullNode.Settings)).ApiUri}"
                     .AppendPathSegment("api/channels/networkjson")
                     .SetQueryParam("cn", channelName)
                     .GetStringAsync()
                     .GetAwaiter().GetResult();
 
                 // Attempt to join the channel as the other node.
-                var response = $"{(new ApiSettings(otherNode.FullNode.Settings)).ApiUri}"
+                var response1 = $"{(new ApiSettings(channelNodeParent.FullNode.Settings)).ApiUri}"
+                    .AppendPathSegment("api/channels/join")
+                    .PostJsonAsync(new ChannelJoinRequest()
+                    {
+                        NetworkJson = networkJson,
+                        ApiPort = 60002
+                    })
+                    .GetAwaiter().GetResult();
+
+                var allowedNodeParentChannelService = channelNodeParent.FullNode.NodeService<IChannelService>() as TestChannelService;
+                Assert.Single(allowedNodeParentChannelService.ChannelNodes);
+
+
+                // Attempt to join the channel as the disallowed node.
+                var response = $"{(new ApiSettings(disallowedNodeParent.FullNode.Settings)).ApiUri}"
                     .AppendPathSegment("api/channels/join")
                     .PostJsonAsync(new ChannelJoinRequest()
                     {
@@ -86,14 +105,14 @@ namespace Stratis.SmartContracts.IntegrationTests
                     })
                     .GetAwaiter().GetResult();
 
-                var parentNodeChannelService = parentNode.FullNode.NodeService<IChannelService>() as TestChannelService;
-                Assert.Single(parentNodeChannelService.ChannelNodes);
+                var infraNodeChannelService = infraNode.FullNode.NodeService<IChannelService>() as TestChannelService;
+                Assert.Single(infraNodeChannelService.ChannelNodes);
 
+                var disallowedNodeParentChannelService = disallowedNodeParent.FullNode.NodeService<IChannelService>() as TestChannelService;
 
-                var otherNodeChannelService = otherNode.FullNode.NodeService<IChannelService>() as TestChannelService;
-                
-                var otherNodeChannel = otherNodeChannelService.ChannelNodes.First();
-                var systemChannel = parentNodeChannelService.ChannelNodes.First();
+                var allowedNodeChannel = allowedNodeParentChannelService.ChannelNodes.First();
+                var disallowedNodeChannel = disallowedNodeParentChannelService.ChannelNodes.First();
+                var systemChannel = infraNodeChannelService.ChannelNodes.First();
 
                 // Save the channel def on the system channel.
                 IChannelRepository channelRepository = systemChannel.FullNode.NodeService<IChannelRepository>();
@@ -101,12 +120,12 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Try to connect the nodes
                 // IMPORTANT: Must connect FROM otherNode TO parentNode to ensure the connection is inbound on the parent and the cert check is done.
-                TestHelper.ConnectNoCheck(otherNodeChannel, systemChannel);
+                TestHelper.ConnectNoCheck(disallowedNodeChannel, allowedNodeChannel);
 
                 await Task.Delay(500);
 
                 // Node should not be allowed to connect because it is disallowed.
-                TestBase.WaitLoop(() => !TestHelper.IsNodeConnectedTo(otherNodeChannel, systemChannel));
+                TestBase.WaitLoop(() => !TestHelper.IsNodeConnectedTo(disallowedNodeChannel, allowedNodeChannel));
 
                 // Send channel update request to add the disallowed org.
                 var request = new ChannelUpdateRequest
@@ -134,12 +153,12 @@ namespace Stratis.SmartContracts.IntegrationTests
                 //TestHelper.WaitForNodeToSync(parentNode, otherNode);
 
                 // Now that the org is allowed try to connect the nodes again
-                TestHelper.Connect(otherNodeChannel, systemChannel);
+                TestHelper.Connect(disallowedNodeChannel, allowedNodeChannel);
 
                 await Task.Delay(500);
 
                 // Node should be allowed to connect now!
-                Assert.True(TestHelper.IsNodeConnectedTo(otherNodeChannel, systemChannel));
+                Assert.True(TestHelper.IsNodeConnectedTo(disallowedNodeChannel, allowedNodeChannel));
             }
         }
     }
