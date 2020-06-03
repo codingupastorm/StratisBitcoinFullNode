@@ -285,18 +285,21 @@ namespace Stratis.Bitcoin.IntegrationTests
 
                 TestBase.WaitLoop(() => TestHelper.AreNodesSynced(syncer, minerB));
 
+                // Miner A mines to height 5 on a new and longer chain whilst disconnected.
+                minerA.MineBlocksAsync(2).GetAwaiter().GetResult();
+
                 // Enable syncer to send blocks to miner A.
                 TestHelper.EnableBlockPropagation(syncer, minerA);
 
-                // Miner A mines to height 5.
-                minerA.MineBlocksAsync(2).GetAwaiter().GetResult();
+                minerA.MineBlocksAsync(1).GetAwaiter().GetResult();
 
+                // Syncer should switch to the new longest chain...
                 TestBase.WaitLoopMessage(() => TestHelper.AreNodesSyncedMessage(syncer, minerA), waitTimeSeconds: 120);
                 TestBase.WaitLoopMessage(() => TestHelper.AreNodesSyncedMessage(syncer, minerB), waitTimeSeconds: 120);
 
-                Assert.True(TestHelper.IsNodeSyncedAtHeight(syncer, 5));
-                Assert.True(TestHelper.IsNodeSyncedAtHeight(minerA, 5));
-                Assert.True(TestHelper.IsNodeSyncedAtHeight(minerB, 5));
+                Assert.True(TestHelper.IsNodeSyncedAtHeight(syncer, 6));
+                Assert.True(TestHelper.IsNodeSyncedAtHeight(minerA, 6));
+                Assert.True(TestHelper.IsNodeSyncedAtHeight(minerB, 6));
             }
         }
 
