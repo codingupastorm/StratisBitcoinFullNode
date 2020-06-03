@@ -6,14 +6,13 @@ using Moq;
 using NBitcoin;
 using Stratis.Core.Configuration;
 using Stratis.Core.Configuration.Logging;
+using Stratis.Core.Interfaces;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
-using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
 using Stratis.Feature.PoA.Tokenless.Networks;
-using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Fee;
 using Stratis.Features.MemoryPool.Interfaces;
@@ -26,7 +25,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
     public sealed class TokenlessTestHelper
     {
         public readonly BlockPolicyEstimator BlockPolicyEstimator;
-        private readonly IBlockRepository blockRepository;
+        private readonly IBlockStoreQueue blockStoreQueue;
         public readonly ICallDataSerializer CallDataSerializer;
         public readonly ChainIndexer ChainIndexer;
         private readonly Mock<ICertificatePermissionsChecker> CertificatePermissionsChecker;
@@ -48,7 +47,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             this.NodeSettings = NodeSettings.Default(this.Network);
             this.LoggerFactory = new ExtendedLoggerFactory();
 
-            this.blockRepository = new Mock<IBlockRepository>().Object;
+            this.blockStoreQueue = new Mock<IBlockStoreQueue>().Object;
             this.CallDataSerializer = new NoGasCallDataSerializer(new ContractPrimitiveSerializer(this.Network));
 
             this.CertificatePermissionsChecker = new Mock<ICertificatePermissionsChecker>();
@@ -78,7 +77,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 if (ruleType == typeof(IsSmartContractWellFormedMempoolRule))
                     yield return new IsSmartContractWellFormedMempoolRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.CallDataSerializer);
                 else if (ruleType == typeof(NoDuplicateTransactionExistOnChainMempoolRule))
-                    yield return new NoDuplicateTransactionExistOnChainMempoolRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.blockRepository);
+                    yield return new NoDuplicateTransactionExistOnChainMempoolRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.blockStoreQueue);
                 else if (ruleType == typeof(SenderInputMempoolRule))
                     yield return new SenderInputMempoolRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.TokenlessSigner, this.CertificatePermissionsChecker.Object);
                 else if (ruleType == typeof(CreateTokenlessMempoolEntryRule))
