@@ -1,4 +1,5 @@
-﻿using System.Threading.Channels;
+﻿using System.Collections.Generic;
+using System.Threading.Channels;
 using CertificateAuthority;
 using Org.BouncyCastle.X509;
 using Stratis.Feature.PoA.Tokenless.Channels;
@@ -24,22 +25,20 @@ namespace Stratis.Feature.PoA.Tokenless.AccessControl
         {
             ChannelDefinition channelDefinition = this.channelRepository.GetChannelDefinition(network.Name);
 
-            AccessControlList accessList = channelDefinition.AccessList;
-
-            if (accessList?.Organisations == null || accessList.Thumbprints == null)
-            {
-                // Original behaviour.
-                accessList = network.InitialAccessList;
-            }
+            // Default to network initial access lists if no access lists are defined, designated by a null value.
+            // Important that we do not override these values if the access lists are only empty, as this may be a desired state.
+            List<string> organisationAccessList = channelDefinition?.AccessList?.Organisations ?? network.InitialAccessList.Organisations;
+            List<string> thumbPrintAccessList = channelDefinition?.AccessList?.Thumbprints ?? network.InitialAccessList.Thumbprints;
 
             string organisation = certificate.GetOrganisation();
 
-            if (accessList.Organisations.Contains(organisation))
+            // Check organisations and thumbprints independently.
+            if (organisationAccessList.Contains(organisation))
                 return true;
 
             string thumbprint = CaCertificatesManager.GetThumbprint(certificate);
 
-            return accessList.Thumbprints.Contains(thumbprint);
+            return thumbPrintAccessList.Contains(thumbprint);
         }
     }
 }
