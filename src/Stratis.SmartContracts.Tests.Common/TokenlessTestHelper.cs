@@ -164,6 +164,17 @@ namespace Stratis.SmartContracts.Tests.Common
             }
         }
 
+        public static void ShareCertificatesAndStart(Network network, params CoreNode[] nodes)
+        {
+            var certificates = nodes.Select(n => n.ClientCertificate.ToCertificate()).ToList();
+
+            foreach (CoreNode node in nodes)
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node.DataFolder, network);
+
+            foreach (CoreNode node in nodes)
+                node.Start();
+        }
+
         public static Transaction CreateContractCreateTransaction(CoreNode node, Key key, string contractFilename, EndorsementPolicy policy = null)
         {
             if (policy == null)
