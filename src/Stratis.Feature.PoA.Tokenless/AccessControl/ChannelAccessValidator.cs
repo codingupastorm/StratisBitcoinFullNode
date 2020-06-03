@@ -24,19 +24,22 @@ namespace Stratis.Feature.PoA.Tokenless.AccessControl
         {
             ChannelDefinition channelDefinition = this.channelRepository.GetChannelDefinition(network.Name);
 
-            if (channelDefinition?.AccessList?.Organisations == null || channelDefinition.AccessList?.Thumbprints == null)
+            AccessControlList accessList = channelDefinition.AccessList;
+
+            if (accessList?.Organisations == null || accessList.Thumbprints == null)
             {
-                return false;
+                // Original behaviour.
+                accessList = network.InitialAccessList;
             }
 
             string organisation = certificate.GetOrganisation();
 
-            if (channelDefinition.AccessList.Organisations.Contains(organisation))
+            if (accessList.Organisations.Contains(organisation))
                 return true;
 
             string thumbprint = CaCertificatesManager.GetThumbprint(certificate);
 
-            return channelDefinition.AccessList.Thumbprints.Contains(thumbprint);
+            return accessList.Thumbprints.Contains(thumbprint);
         }
     }
 }
