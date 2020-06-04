@@ -13,11 +13,13 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
     {
         private readonly IBlockRepository blockRepository;
         private readonly ILogger<NoDuplicateTransactionExistOnChainRule> logger;
+        private readonly ChainIndexer chainIndexer;
 
-        public NoDuplicateTransactionExistOnChainRule(IBlockRepository blockRepository, ILoggerFactory loggerFactory)
+        public NoDuplicateTransactionExistOnChainRule(IBlockRepository blockRepository, ILoggerFactory loggerFactory, ChainIndexer chainIndexer)
         {
             this.blockRepository = blockRepository;
             this.logger = loggerFactory.CreateLogger<NoDuplicateTransactionExistOnChainRule>();
+            this.chainIndexer = chainIndexer;
         }
 
         /// <inheritdoc/>
@@ -27,11 +29,16 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
             {
                 uint256 txId = transaction.GetHash();
 
-                bool exists = this.blockRepository.TransactionExists(txId);
-                if (exists)
+                uint256 blockId = this.blockRepository.GetBlockIdByTransactionId(txId);
+
+                if (blockId != null)
                 {
-                    this.logger.LogDebug("'{0}' already exists.", txId);
-                    TokenlessPoAConsensusErrors.DuplicateTransaction.Throw();
+                    bool exists = this.chainIndexer.GetHeader(blockId) != null;
+                    if (exists)
+                    {
+                        this.logger.LogDebug("'{0}' already exists.", txId);
+                        TokenlessPoAConsensusErrors.DuplicateTransaction.Throw();
+                    }
                 }
             }
 
@@ -39,3 +46,4 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus.Rules
         }
     }
 }
+
