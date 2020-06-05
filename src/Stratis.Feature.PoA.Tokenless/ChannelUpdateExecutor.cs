@@ -79,7 +79,14 @@ namespace Stratis.Feature.PoA.Tokenless
                     this.logger.LogDebug("Transaction '{0}' contains a request to update channel '{1}'.", transaction.GetHash(), request.Name);
 
                     // Get channel membership
-                    ChannelDefinition channelDef = this.channelRepository.GetChannelDefinition((this.network as ChannelNetwork).Name);
+                    ChannelDefinition channelDef = this.channelRepository.GetChannelDefinition(request.Name);
+
+                    // Channel def does not exist!
+                    if (channelDef == null)
+                    {
+                        this.logger.LogDebug($"{transaction.GetHash()}' updates an unknown channel.");
+                        continue;
+                    }
 
                     // Remove any members from the Remove pile
                     foreach (var orgToRemove in request.MembersToRemove.Organisations)
@@ -109,6 +116,8 @@ namespace Stratis.Feature.PoA.Tokenless
                             channelDef.AccessList.Thumbprints.Add(member);
                         }
                     }
+
+                    this.channelRepository.SaveChannelDefinition(channelDef);
                 }
             }
         }

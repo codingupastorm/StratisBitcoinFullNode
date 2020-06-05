@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Features.BlockStore;
+using Stratis.Core.Interfaces;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.MemoryPool.Interfaces;
 
@@ -11,7 +11,7 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
     /// </summary>
     public sealed class NoDuplicateTransactionExistOnChainMempoolRule : MempoolRule
     {
-        private readonly IBlockRepository blockRepository;
+        private readonly IBlockStoreQueue blockStoreQueue;
 
         public NoDuplicateTransactionExistOnChainMempoolRule(
             Network network,
@@ -19,17 +19,17 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
             MempoolSettings settings,
             ChainIndexer chainIndexer,
             ILoggerFactory loggerFactory,
-            IBlockRepository blockRepository)
+            IBlockStoreQueue blockStoreQueue)
             : base(network, mempool, settings, chainIndexer, loggerFactory)
         {
-            this.blockRepository = blockRepository;
+            this.blockStoreQueue = blockStoreQueue;
         }
 
         /// <inheritdoc/>
         public override void CheckTransaction(MempoolValidationContext context)
         {
-            bool exists = this.blockRepository.TransactionExists(context.TransactionHash);
-            if (exists)
+            Transaction exists = this.blockStoreQueue.GetTransactionById(context.TransactionHash);
+            if (exists != null)
             {
                 this.logger.LogDebug("'{0}' already exists.", context.Transaction.GetHash());
                 context.State.Fail(new MempoolError(MempoolErrors.RejectDuplicate, "duplicate-transaction-already-exists-on-chain"), $"'{context.Transaction.GetHash()}' already exists on chain.").Throw();
