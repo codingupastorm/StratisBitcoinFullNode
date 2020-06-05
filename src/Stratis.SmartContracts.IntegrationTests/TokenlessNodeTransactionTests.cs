@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,8 +10,9 @@ using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
-using Stratis.Core.P2P;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.P2P;
+using Stratis.Core.Utilities.JsonErrors;
 using Stratis.Feature.PoA.Tokenless.Controllers;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.Feature.PoA.Tokenless.Networks;
@@ -568,7 +568,18 @@ namespace Stratis.SmartContracts.IntegrationTests
                 await node1.MineBlocksAsync(1);
                 TokenlessTestHelper.WaitForNodeToSync(node1, node2);
 
-                // Build and send the same transaction again.
+                // Try and send the same transaction again. This should fail.
+                var failResponse = await node1Controller.SendTransactionAsync(new SendTransactionModel()
+                {
+                    TransactionHex = opReturnResponse.Hex
+                });
+
+                Assert.IsType<ErrorResult>(failResponse);
+
+                Assert.Empty(node1.FullNode.MempoolManager().GetMempoolAsync().Result);
+                Assert.Empty(node2.FullNode.MempoolManager().GetMempoolAsync().Result);
+
+                // Build and send the same transaction newly and sign it.
                 opReturnResult = (JsonResult)node1Controller.BuildOpReturnTransaction(opReturnModel);
                 opReturnResponse = (TokenlessTransactionModel)opReturnResult.Value;
 
