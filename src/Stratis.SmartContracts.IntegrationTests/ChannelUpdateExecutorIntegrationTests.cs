@@ -33,7 +33,7 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
         
         [Fact]
-        public async Task CanJoinChannelNode()
+        public async Task CanJoinChannelNode_After_ChannelUpdate()
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 
