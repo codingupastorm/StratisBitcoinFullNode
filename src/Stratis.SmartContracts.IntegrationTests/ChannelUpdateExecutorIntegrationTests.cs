@@ -107,6 +107,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     })
                     .GetAwaiter().GetResult();
 
+                // Expect a node to be created even if it can't connect to anyone.
                 var disallowedNodeParentChannelService = disallowedNodeParent.FullNode.NodeService<IChannelService>() as TestChannelService;
                 Assert.Single(disallowedNodeParentChannelService.ChannelNodes);
 
