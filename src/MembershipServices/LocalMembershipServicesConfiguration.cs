@@ -12,35 +12,36 @@ namespace MembershipServices
     public class LocalMembershipServicesConfiguration
     {
         private readonly string membershipServicesFolder;
+        public const string MembershipServicesRootFolder = "msd";
 
         private readonly Network network;
 
         /// <summary>
         /// Subfolder holding certificate files each corresponding to an administrator certificate.
         /// </summary>
-        public const string AdminCerts = @"msd\admincerts";
+        public const string AdminCerts = @"admincerts";
 
         /// <summary>
         /// Subfolder holding certificate files each corresponding to an intermediate CA's certificate.
         /// </summary>
         /// <remarks>Optional.</remarks>
-        public const string IntermediateCerts = @"msd\intermediatecerts";
+        public const string IntermediateCerts = @"intermediatecerts";
 
         /// <summary>
         /// Subfolder holding the considered CRLs (certificate revocation lists).
         /// </summary>
         /// <remarks>Optional.</remarks>
-        public const string Crls = @"msd\crls";
+        public const string Crls = @"crls";
 
         /// <summary>
         /// Subfolder holding certificate files each corresponding to a root CA's certificate.
         /// </summary>
-        public const string CaCerts = @"msd\cacerts";
+        public const string CaCerts = @"cacerts";
 
         /// <summary>
         /// Subfolder holding a file with the node's X.509 certificate (public key).
         /// </summary>
-        public const string SignCerts = @"msd\signcerts";
+        public const string SignCerts = @"signcerts";
 
         /// <summary>
         /// Subfolder holding certificate files for the peers the node is aware of. This is primarily for validating transaction signing, as P2P certificates do not yet require a central registry.
@@ -48,7 +49,7 @@ namespace MembershipServices
         /// <remarks>This is somewhat a stopgap solution until channels are properly implemented, as channels could be established between peers of (potentially) different organisations.
         /// It is also so that transaction validation/endorsement can be correctly performed, as a transaction signature does not contain any certificate information. So the MSD
         /// will have to be responsible for mapping the sender address in a transaction to a certificate stored in this folder. Further research about exactly how HL does this is required.</remarks>
-        public const string PeerCerts = @"msd\peercerts";
+        public const string PeerCerts = @"peercerts";
 
         /// <summary>
         /// An identifier for this local MSD.
@@ -71,7 +72,7 @@ namespace MembershipServices
         public LocalMembershipServicesConfiguration(string membershipServicesBaseFolder, Network network)
         {
             // TODO: Use the identifier in the base path. Specify the local MSD ID on first startup?
-            this.membershipServicesFolder = membershipServicesBaseFolder;
+            this.membershipServicesFolder = Path.Combine(membershipServicesBaseFolder, MembershipServicesRootFolder);
 
             this.network = network;
 
@@ -172,16 +173,18 @@ namespace MembershipServices
             return this.revokedCertificateThumbprints.Contains(thumbprint);
         }
 
-        public static void InitializeFolderStructure(string membershipServicesRootFolder)
+        public static void InitializeFolderStructure(string membershipServicesFolder)
         {
-            Directory.CreateDirectory(membershipServicesRootFolder);
+            var rootFolder = Path.Combine(membershipServicesFolder, MembershipServicesRootFolder);
 
-            Directory.CreateDirectory(Path.Combine(membershipServicesRootFolder, AdminCerts));
-            Directory.CreateDirectory(Path.Combine(membershipServicesRootFolder, CaCerts));
-            Directory.CreateDirectory(Path.Combine(membershipServicesRootFolder, IntermediateCerts));
-            Directory.CreateDirectory(Path.Combine(membershipServicesRootFolder, Crls));
-            Directory.CreateDirectory(Path.Combine(membershipServicesRootFolder, SignCerts));
-            Directory.CreateDirectory(Path.Combine(membershipServicesRootFolder, PeerCerts));
+            Directory.CreateDirectory(rootFolder);
+
+            Directory.CreateDirectory(Path.Combine(rootFolder, AdminCerts));
+            Directory.CreateDirectory(Path.Combine(rootFolder, CaCerts));
+            Directory.CreateDirectory(Path.Combine(rootFolder, IntermediateCerts));
+            Directory.CreateDirectory(Path.Combine(rootFolder, Crls));
+            Directory.CreateDirectory(Path.Combine(rootFolder, SignCerts));
+            Directory.CreateDirectory(Path.Combine(rootFolder, PeerCerts));
         }
 
         public void InitializeExistingCertificates()
@@ -249,19 +252,19 @@ namespace MembershipServices
             switch (memberType)
             {
                 case MemberType.NetworkPeer:
-                    subFolder = PeerCerts;
+                    subFolder = Path.Combine(MembershipServicesRootFolder, PeerCerts);
                     break;
                 case MemberType.Admin:
-                    subFolder = AdminCerts;
+                    subFolder = Path.Combine(MembershipServicesRootFolder, AdminCerts);
                     break;
                 case MemberType.IntermediateCA:
-                    subFolder = IntermediateCerts;
+                    subFolder = Path.Combine(MembershipServicesRootFolder, IntermediateCerts);
                     break;
                 case MemberType.RootCA:
-                    subFolder = CaCerts;
+                    subFolder = Path.Combine(MembershipServicesRootFolder, CaCerts);
                     break;
                 case MemberType.Self:
-                    subFolder = SignCerts;
+                    subFolder = Path.Combine(MembershipServicesRootFolder, SignCerts);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(memberType), memberType, null);
