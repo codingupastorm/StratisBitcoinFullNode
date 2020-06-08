@@ -21,6 +21,7 @@ using Stratis.Features.PoA.Voting;
 using Stratis.Features.SmartContracts.Models;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Compilation;
+using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Tests.Common;
@@ -637,7 +638,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var node1Controller = node1.FullNode.NodeController<TokenlessController>();
                 var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
 
-                ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/TokenlessSimpleContract.cs");
+                ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/StoreSingleChar.cs");
 
                 var createModel = new BuildCreateContractTransactionModel()
                 {
@@ -659,42 +660,27 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Receipt createReceipt = receiptRepository.Retrieve(createResponse.TransactionId);
                 Assert.True(createReceipt.Success);
 
-                var callModel = new BuildCallContractTransactionModel()
+                // Get the result from the controller for the multiple
+                var storageResult = (JsonResult) node1Controller.GetStorage(new GetStorageRequest
                 {
-                    Address = createReceipt.NewContractAddress.ToBase58Address(this.network),
-                    MethodName = "CallMe"
-                };
-
-                var callResult = (JsonResult)node1Controller.BuildCallContractTransaction(callModel);
-                var callResponse = (BuildCallContractTransactionResponse)callResult.Value;
-
-                await node1Controller.SendTransactionAsync(new SendTransactionModel()
-                {
-                    TransactionHex = callResponse.Hex
+                    ContractAddress = createResponse.NewContractAddress,
+                    DataType = MethodParameterDataType.String,
+                    StorageKey = "Multiple"
                 });
 
-                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
-                await node1.MineBlocksAsync(1);
-                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+                string storageValue = (string) storageResult.Value;
+                Assert.Equal("123", storageValue);
 
-                Receipt callReceipt = receiptRepository.Retrieve(callResponse.TransactionId);
-                Assert.True(callReceipt.Success);
-
-                // Also check that OpReturn Transaction can be sent via controller
-                var opReturnModel = new BuildOpReturnTransactionModel()
+                // And for the single
+                storageResult = (JsonResult)node1Controller.GetStorage(new GetStorageRequest
                 {
-                    OpReturnData = "Sending a message via opReturn 123"
-                };
-
-                var opReturnResult = (JsonResult)node1Controller.BuildOpReturnTransaction(opReturnModel);
-                var opReturnResponse = (TokenlessTransactionModel)opReturnResult.Value;
-
-                await node1Controller.SendTransactionAsync(new SendTransactionModel()
-                {
-                    TransactionHex = opReturnResponse.Hex
+                    ContractAddress = createResponse.NewContractAddress,
+                    DataType = MethodParameterDataType.String,
+                    StorageKey = "Single"
                 });
+                storageValue = (string)storageResult.Value;
 
-                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                Assert.Equal("1", storageValue);
             }
         }
 

@@ -166,6 +166,9 @@
     <Compile Update="SmartContracts\StorageDemo.cs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
+    <Compile Update="SmartContracts\StoreSingleChar.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
     <Compile Update="SmartContracts\Token.cs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
