@@ -74,6 +74,9 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TestHelper.WaitForNodeToSync(infraNode, disallowedNodeParent);
                 TestHelper.WaitForNodeToSync(infraNode, channelNodeParent);
 
+                var infraNodeChannelService = infraNode.FullNode.NodeService<IChannelService>() as TestChannelService;
+                Assert.Single(infraNodeChannelService.ChannelNodes);
+
                 // Get the marketing network's JSON.
                 string networkJson = $"{(new ApiSettings(infraNode.FullNode.Settings)).ApiUri}"
                     .AppendPathSegment("api/channels/networkjson")
@@ -94,7 +97,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var allowedNodeParentChannelService = channelNodeParent.FullNode.NodeService<IChannelService>() as TestChannelService;
                 Assert.Single(allowedNodeParentChannelService.ChannelNodes);
 
-
                 // Attempt to join the channel as the disallowed node.
                 var response = $"{(new ApiSettings(disallowedNodeParent.FullNode.Settings)).ApiUri}"
                     .AppendPathSegment("api/channels/join")
@@ -105,10 +107,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                     })
                     .GetAwaiter().GetResult();
 
-                var infraNodeChannelService = infraNode.FullNode.NodeService<IChannelService>() as TestChannelService;
-                Assert.Single(infraNodeChannelService.ChannelNodes);
-
                 var disallowedNodeParentChannelService = disallowedNodeParent.FullNode.NodeService<IChannelService>() as TestChannelService;
+                Assert.Single(disallowedNodeParentChannelService.ChannelNodes);
 
                 var allowedNodeChannel = allowedNodeParentChannelService.ChannelNodes.First();
                 var disallowedNodeChannel = disallowedNodeParentChannelService.ChannelNodes.First();
@@ -150,7 +150,28 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.Equal(HttpStatusCode.OK, updateChannelResponse.StatusCode);
                 TestBase.WaitLoop(() => systemChannel.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
                 systemChannel.MineBlocksAsync(2).GetAwaiter().GetResult();
-                //TestHelper.WaitForNodeToSync(parentNode, otherNode);
+
+                // TODO
+                // Fake update the channel def on the allowed node channel.
+                // This simulates a channel update request being successfully propagated to the allowed channel node.
+                // TBD how this should occur in reality - when implemented then this can be removed.
+                var updatedChannelDef = new ChannelDefinition
+                {
+                    AccessList = new AccessControlList
+                    {
+                        Organisations = new List<string>(channelDef.AccessList.Organisations)
+                        {
+                            disallowedOrg
+                        },
+                        Thumbprints = new List<string>(channelDef.AccessList.Thumbprints)
+                    },
+                    Id = channelDef.Id,
+                    Name = channelDef.Name,
+                    NetworkJson = channelDef.NetworkJson
+                };
+
+                IChannelRepository allowedNodeChannelRepository = allowedNodeChannel.FullNode.NodeService<IChannelRepository>();
+                allowedNodeChannelRepository.SaveChannelDefinition(updatedChannelDef);
 
                 // Now that the org is allowed try to connect the nodes again
                 TestHelper.Connect(disallowedNodeChannel, allowedNodeChannel);
