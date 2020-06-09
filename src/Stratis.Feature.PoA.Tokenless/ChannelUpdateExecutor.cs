@@ -56,13 +56,6 @@ namespace Stratis.Feature.PoA.Tokenless
         /// <inheritdoc/>
         private void OnBlockConnected(BlockConnected blockConnectedEvent)
         {
-            // This rule is only applicable if this node is a system channel node.
-            if (!this.channelSettings.IsSystemChannelNode)
-            {
-                this.logger.LogDebug($"Only system channel nodes can process channel update requests.");
-                return;
-            }
-
             foreach (Transaction transaction in blockConnectedEvent.ConnectedBlock.Block.Transactions)
             {
                 // If the TxOut is null then this transaction does not contain any channel update execution code.
@@ -77,6 +70,13 @@ namespace Stratis.Feature.PoA.Tokenless
                 if (request != null)
                 {
                     this.logger.LogDebug("Transaction '{0}' contains a request to update channel '{1}'.", transaction.GetHash(), request.Name);
+
+                    // This rule is only applicable if this node is a system channel node.
+                    if (this.channelSettings.ChannelName != request.Name)
+                    {
+                        this.logger.LogDebug($"Nodes can only update their own channel.");
+                        continue;
+                    }
 
                     // Get channel membership
                     ChannelDefinition channelDef = this.channelRepository.GetChannelDefinition(request.Name);
