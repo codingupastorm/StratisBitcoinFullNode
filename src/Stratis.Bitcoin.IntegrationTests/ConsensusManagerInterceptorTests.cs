@@ -6,6 +6,13 @@ using Stratis.Core.Networks;
 using Stratis.Core.Primitives;
 using Stratis.Bitcoin.Tests.Common;
 using Xunit;
+using Stratis.Feature.PoA.Tokenless.Networks;
+using Microsoft.AspNetCore.Hosting;
+using CertificateAuthority.Tests.Common;
+using Stratis.SmartContracts.Tests.Common;
+using System.Collections.Generic;
+using CertificateAuthority;
+using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 
 namespace Stratis.Bitcoin.IntegrationTests
 {
@@ -18,11 +25,26 @@ namespace Stratis.Bitcoin.IntegrationTests
         [Fact]
         public async Task ReorgChain_Scenario1_Async()
         {
-            using (var builder = NodeBuilder.Create(this))
+            var network = new TokenlessNetwork();
+            var networkNoValidationRules = new TokenlessNetwork();
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                var minerA = builder.CreateStratisPowNode(new BitcoinRegTest(), "cmi-1-minerA").WithDummyWallet();
-                var minerB = builder.CreateStratisPowNode(new BitcoinRegTestNoValidationRules(), "cmi-1-minerB").NoValidation().WithDummyWallet();
-                var syncer = builder.CreateStratisPowNode(new BitcoinRegTest(), "cmi-1-syncer").WithDummyWallet();
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                var config = new NodeConfigParameters() { { "bantime", "120" } };
+
+                // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }, configParameters: config);
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(networkNoValidationRules, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }, configParameters: config);
+                CoreNode syncer = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: new List<string>() { CaCertificatesManager.SendPermission }, configParameters: config);
 
                 bool minerADisconnectedFromSyncer = false;
 
@@ -43,14 +65,12 @@ namespace Stratis.Bitcoin.IntegrationTests
                     }
                 }
 
-                // Start minerA and mine 10 blocks. We cannot use a premade chain as it adversely affects the max tip age calculation, causing sporadic sync errors.
-                minerA.Start();
-                TestHelper.MineBlocks(minerA, 10);
-                TestBase.WaitLoop(() => minerA.FullNode.ConsensusManager().Tip.Height == 10);
-
                 // Start the nodes.
-                minerB.Start();
-                syncer.Start();
+                TokenlessTestHelper.ShareCertificatesAndStart(network, minerA, minerB, syncer);
+
+                // Start minerA and mine 10 blocks. We cannot use a premade chain as it adversely affects the max tip age calculation, causing sporadic sync errors.
+                minerA.MineBlocksAsync(10).GetAwaiter().GetResult();
+                TestBase.WaitLoop(() => minerA.FullNode.ConsensusManager().Tip.Height == 10);
 
                 minerA.SetDisconnectInterceptor(interceptor);
 
@@ -61,7 +81,7 @@ namespace Stratis.Bitcoin.IntegrationTests
                 TestHelper.Disconnect(minerA, minerB);
 
                 // MinerA continues to mine to height 14.
-                TestHelper.MineBlocks(minerA, 4);
+                minerA.MineBlocksAsync(4).GetAwaiter().GetResult();
                 TestBase.WaitLoop(() => minerA.FullNode.ConsensusManager().Tip.Height == 14);
                 TestBase.WaitLoop(() => minerB.FullNode.ConsensusManager().Tip.Height == 10);
                 TestBase.WaitLoop(() => syncer.FullNode.ConsensusManager().Tip.Height == 14);
