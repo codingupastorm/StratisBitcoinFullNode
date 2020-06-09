@@ -71,7 +71,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 {
                     this.logger.LogDebug("Transaction '{0}' contains a request to update channel '{1}'.", transaction.GetHash(), request.Name);
 
-                    // This rule is only applicable if this node is a system channel node.
+                    // This rule is only applicable if this node is on the channel.
                     if (this.channelSettings.ChannelName != request.Name)
                     {
                         this.logger.LogDebug($"Nodes can only update their own channel.");
