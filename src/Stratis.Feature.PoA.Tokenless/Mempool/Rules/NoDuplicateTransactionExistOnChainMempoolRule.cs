@@ -28,11 +28,16 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
         /// <inheritdoc/>
         public override void CheckTransaction(MempoolValidationContext context)
         {
-            Transaction exists = this.blockStoreQueue.GetTransactionById(context.TransactionHash);
-            if (exists != null)
+            // Check that the block cointaining the transaction (if any) does not already occur on the active chain.
+            uint256 blockId = this.blockStoreQueue.GetBlockIdByTransactionId(context.TransactionHash);
+            if (blockId != null)
             {
-                this.logger.LogDebug("'{0}' already exists.", context.Transaction.GetHash());
-                context.State.Fail(new MempoolError(MempoolErrors.RejectDuplicate, "duplicate-transaction-already-exists-on-chain"), $"'{context.Transaction.GetHash()}' already exists on chain.").Throw();
+                bool exists = this.chainIndexer.GetHeader(blockId) != null;
+                if (exists)
+                {
+                    this.logger.LogDebug("'{0}' already exists.", context.Transaction.GetHash());
+                    context.State.Fail(new MempoolError(MempoolErrors.RejectDuplicate, "duplicate-transaction-already-exists-on-chain"), $"'{context.Transaction.GetHash()}' already exists on chain.").Throw();
+                }
             }
         }
     }
