@@ -25,7 +25,8 @@ namespace MembershipServices
         Admin,
         IntermediateCA,
         RootCA,
-        Self
+        SelfSign,
+        Revocation
     }
 
     /// <summary>
@@ -62,7 +63,7 @@ namespace MembershipServices
 
         private readonly Stratis.Core.Configuration.TextFileConfiguration configuration;
 
-        private readonly LocalMembershipServicesConfiguration localMembershipServices;
+        private readonly LocalMembershipServicesConfiguration localMembershipServicesConfiguration;
 
         // A mapping of channel identifiers to their corresponding membership services configuration.
         // As channels do not really exist yet, the identifier format is yet to be defined.
@@ -94,8 +95,7 @@ namespace MembershipServices
                 ? Directory.GetParent(Directory.GetParent(this.nodeSettings.DataDir).FullName).FullName
                 : this.nodeSettings.DataDir;
 
-            this.localMembershipServices = new LocalMembershipServicesConfiguration(msDirectory, this.nodeSettings.Network);
-
+            this.localMembershipServicesConfiguration = new LocalMembershipServicesConfiguration(msDirectory, this.nodeSettings.Network);
 
             // Channel - defines administrative and participatory rights at the channel level. Defined in a channel configuration JSON (in the HL design).
             // Instantiated on the file system of every node in the channel (similar to local version, but there can be multiple providers for a channel) and kept synchronized via consensus.
@@ -119,8 +119,8 @@ namespace MembershipServices
             }
 
             // We attempt to set up the folder structure regardless of whether it has been done already.
-            LocalMembershipServicesConfiguration.InitializeFolderStructure(this.nodeSettings.DataDir);
-            this.localMembershipServices.InitializeExistingCertificates();
+            this.localMembershipServicesConfiguration.InitializeFolderStructure();
+            this.localMembershipServicesConfiguration.InitializeExistingCertificates();
 
             bool revoked = this.IsCertificateRevoked(CaCertificatesManager.GetThumbprint(this.ClientCertificate));
 
@@ -131,12 +131,12 @@ namespace MembershipServices
         /// <inheritdoc />
         public bool AddLocalMember(X509Certificate memberCertificate, MemberType memberType)
         {
-            return this.localMembershipServices.AddCertificate(memberCertificate, memberType);
+            return this.localMembershipServicesConfiguration.AddCertificate(memberCertificate, memberType);
         }
 
         public bool RemoveLocalMember(X509Certificate memberCertificate, MemberType memberType)
         {
-            return this.localMembershipServices.RemoveCertificate(memberCertificate, memberType);
+            return this.localMembershipServicesConfiguration.RemoveCertificate(memberCertificate, memberType);
         }
 
         public bool AddChannelMember(X509Certificate memberCertificate, string channelId, MemberType memberType)
@@ -160,30 +160,30 @@ namespace MembershipServices
 
         public X509Certificate GetCertificateForThumbprint(string thumbprint)
         {
-            return this.localMembershipServices.GetCertificateByThumbprint(thumbprint);
+            return this.localMembershipServicesConfiguration.GetCertificateByThumbprint(thumbprint);
         }
 
         public X509Certificate GetCertificateForAddress(uint160 address)
         {
             var p2pkh = new BitcoinPubKeyAddress(new KeyId(address), this.nodeSettings.Network);
 
-            return this.localMembershipServices.GetCertificateByAddress(p2pkh.ToString());
+            return this.localMembershipServicesConfiguration.GetCertificateByAddress(p2pkh.ToString());
         }
 
         public X509Certificate GetCertificateForTransactionSigningPubKeyHash(byte[] transactionSigningPubKeyHash)
         {
-            return this.localMembershipServices.GetCertificateByTransactionSigningPubKeyHash(transactionSigningPubKeyHash);
+            return this.localMembershipServicesConfiguration.GetCertificateByTransactionSigningPubKeyHash(transactionSigningPubKeyHash);
         }
 
         public void RevokeCertificate(string thumbprint)
         {
-            this.localMembershipServices.RevokeCertificate(thumbprint);
+            this.localMembershipServicesConfiguration.RevokeCertificate(thumbprint);
         }
 
         // TODO: Perhaps move revocation checking into a sub-component of the MSD to keep the top level cleaner.
         public bool IsCertificateRevoked(string thumbprint)
         {
-            return this.localMembershipServices.IsCertificateRevoked(thumbprint);
+            return this.localMembershipServicesConfiguration.IsCertificateRevoked(thumbprint);
         }
 
         public bool IsCertificateRevokedByTransactionSigningKeyHash(byte[] pubKeyHash)
