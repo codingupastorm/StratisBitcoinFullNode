@@ -13,6 +13,8 @@ using Stratis.SmartContracts.Tests.Common;
 using System.Collections.Generic;
 using CertificateAuthority;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
+using NBitcoin;
+using Stratis.Features.PoA;
 
 namespace Stratis.Bitcoin.IntegrationTests
 {
@@ -87,10 +89,14 @@ namespace Stratis.Bitcoin.IntegrationTests
                 TestBase.WaitLoop(() => syncer.FullNode.ConsensusManager().Tip.Height == 14);
 
                 // minerB mines 5 more blocks:
-                // Block 6,7,9,10 = valid
-                // Block 8 = invalid
+                // Block 11,12,14,15 = valid
+                // Block 13 = invalid
                 Assert.False(TestHelper.IsNodeConnected(minerB));
-                await TestHelper.BuildBlocks.OnNode(minerB).Amount(5).Invalid(13, (node, block) => BlockBuilder.InvalidCoinbaseReward(node, block)).BuildAsync();
+
+                minerB.MineBlocksAsync(5).GetAwaiter().GetResult();
+
+                // Mark block 13 as invalid by changing the signature of the block in memory.
+                ((minerB.FullNode.ChainIndexer.GetHeader(13).Block as Block).Header as PoABlockHeader).BlockSignature.Signature = new byte[] { 0 };
 
                 // Reconnect minerA to minerB.
                 TestHelper.ConnectNoCheck(minerA, minerB);
