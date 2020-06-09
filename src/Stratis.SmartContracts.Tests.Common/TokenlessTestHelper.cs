@@ -10,7 +10,6 @@ using CertificateAuthority.Tests.Common;
 using MembershipServices;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Bitcoin.IntegrationTests.Common;
@@ -154,12 +153,13 @@ namespace Stratis.SmartContracts.Tests.Common
         public static void AddCertificatesToMembershipServices(ICollection<X509Certificate> certificates, string dataDir, Network network)
         {
             // TODO: A more elegant way to do this would be some kind of certificate registry in the test environment. But this approach does at least let us easily control which certificates are known to each node.
+            var peerCertificateFolder = Path.Combine(dataDir, network.RootFolderName, network.Name, LocalMembershipServicesConfiguration.MembershipServicesRootFolder, LocalMembershipServicesConfiguration.PeerCerts);
 
-            Directory.CreateDirectory(Path.Combine(dataDir, network.RootFolderName, network.Name, LocalMembershipServicesConfiguration.PeerCerts));
+            Directory.CreateDirectory(peerCertificateFolder);
 
             foreach (X509Certificate certificate in certificates)
             {
-                string certificatePath = Path.Combine(dataDir, network.RootFolderName, network.Name, LocalMembershipServicesConfiguration.PeerCerts, MembershipServicesDirectory.GetCertificateThumbprint(certificate));
+                string certificatePath = Path.Combine(peerCertificateFolder, MembershipServicesDirectory.GetCertificateThumbprint(certificate));
                 File.WriteAllBytes(certificatePath, certificate.GetEncoded());
             }
         }
