@@ -149,8 +149,9 @@ namespace Stratis.Feature.PoA.Tokenless
             if (this.channelSettings.IsSystemChannelNode)
             {
                 this.channelCreationExecutor.Initialize();
-                this.channelUpdateExecutor.Initialize();
             }
+
+            this.channelUpdateExecutor.Initialize();
 
             // Restart any channels that were created previously or that this nodes belong to.
             await this.channelService.RestartChannelNodesAsync();
