@@ -41,13 +41,6 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
         /// <inheritdoc/>
         public override void CheckTransaction(MempoolValidationContext context)
         {
-            // This rule is only applicable if this node is a system channel node.
-            if (!this.channelSettings.IsSystemChannelNode)
-            {
-                this.logger.LogDebug($"This is not a system channel node.");
-                return;
-            }
-
             Transaction transaction = context.Transaction;
 
             // If the TxOut is null then this transaction does not contain any channel update execution code.
