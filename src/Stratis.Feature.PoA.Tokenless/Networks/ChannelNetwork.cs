@@ -40,7 +40,8 @@ namespace Stratis.Feature.PoA.Tokenless.Networks
         /// <returns>A new instance of <see cref="ChannelNetwork"/>.</returns>
         public static ChannelNetwork Construct(string channelDataFolder, string channelName)
         {
-            var json = File.ReadAllText($"{channelDataFolder}\\{channelName}_network.json");
+            var jsonPath = Path.Combine(channelDataFolder, $"{channelName}_network.json");
+            var json = File.ReadAllText(jsonPath);
 
             ChannelNetwork channelNetwork = JsonSerializer.Deserialize<ChannelNetwork>(json);
             channelNetwork.Consensus.ConsensusFactory = new TokenlessConsensusFactory();

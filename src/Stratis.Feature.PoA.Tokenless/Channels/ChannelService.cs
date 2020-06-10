@@ -144,7 +144,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             {
                 this.logger.LogInformation("Starting a system channel node.");
 
-                var channelRootFolder = $"{this.nodeSettings.DataFolder.RootPath}\\channels\\{SystemChannelName.ToLowerInvariant()}";
+                var channelRootFolder = Path.Combine(this.nodeSettings.DataFolder.RootPath, "channels", SystemChannelName.ToLowerInvariant());
                 Directory.CreateDirectory(channelRootFolder);
 
                 // Copy the parent node's authority and client certificate to the channel node's root.
@@ -195,8 +195,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         private string WriteChannelNetworkJson(string channelName, int channelId, AccessControlList accessList, ChannelNetwork channelNetwork = null)
         {
             // If the network json already exist, do nothing.
-            var rootFolderName = $"{this.nodeSettings.DataFolder.RootPath}\\channels\\{channelName.ToLowerInvariant()}";
-            var networkFileName = $"{rootFolderName}\\{channelName.ToLowerInvariant()}_network.json";
+            var rootFolderName = Path.Combine(this.nodeSettings.DataFolder.RootPath, "channels", channelName.ToLowerInvariant());
+            var networkFileName = Path.Combine(rootFolderName, $"{channelName.ToLowerInvariant()}_network.json");
             if (File.Exists(networkFileName))
                 return rootFolderName;
 
