@@ -67,16 +67,12 @@ namespace Stratis.Feature.PoA.Tokenless
                 }
 
                 (ChannelUpdateRequest request, string message) = this.channelRequestSerializer.Deserialize<ChannelUpdateRequest>(txOut.ScriptPubKey);
+
+                // A mempool rule prevents this transaction from being accepted from nodes without the CaCertificatesManager.ChannelCreatePermission
+                // Therefore if we are here we are assure it's safe to execute
                 if (request != null)
                 {
                     this.logger.LogDebug("Transaction '{0}' contains a request to update channel '{1}'.", transaction.GetHash(), request.Name);
-
-                    // This rule is only applicable if this node is on the channel.
-                    if (this.channelSettings.ChannelName != request.Name)
-                    {
-                        this.logger.LogDebug($"Nodes can only update their own channel.");
-                        continue;
-                    }
 
                     // Get channel membership
                     ChannelDefinition channelDef = this.channelRepository.GetChannelDefinition(request.Name);
