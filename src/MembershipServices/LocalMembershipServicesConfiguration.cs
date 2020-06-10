@@ -11,37 +11,30 @@ namespace MembershipServices
 {
     public class LocalMembershipServicesConfiguration
     {
-        private readonly string membershipServicesFolder;
-        public const string MembershipServicesRootFolder = "msd";
-
         private readonly Network network;
+        private readonly string rootFolder;
 
         /// <summary>
         /// Subfolder holding certificate files each corresponding to an administrator certificate.
         /// </summary>
-        public const string AdminCerts = @"admincerts";
+        private readonly string AdminCerts = @"admincerts";
 
         /// <summary>
         /// Subfolder holding certificate files each corresponding to an intermediate CA's certificate.
         /// </summary>
         /// <remarks>Optional.</remarks>
-        public const string IntermediateCerts = @"intermediatecerts";
+        private readonly string IntermediateCerts = @"intermediatecerts";
 
         /// <summary>
         /// Subfolder holding the considered CRLs (certificate revocation lists).
         /// </summary>
         /// <remarks>Optional.</remarks>
-        public const string Crls = @"crls";
+        private readonly string Crls = @"crls";
 
         /// <summary>
         /// Subfolder holding certificate files each corresponding to a root CA's certificate.
         /// </summary>
-        public const string CaCerts = @"cacerts";
-
-        /// <summary>
-        /// Subfolder holding a file with the node's X.509 certificate (public key).
-        /// </summary>
-        public const string SignCerts = @"signcerts";
+        private readonly string CaCerts = @"cacerts";
 
         /// <summary>
         /// Subfolder holding certificate files for the peers the node is aware of. This is primarily for validating transaction signing, as P2P certificates do not yet require a central registry.
@@ -49,7 +42,12 @@ namespace MembershipServices
         /// <remarks>This is somewhat a stopgap solution until channels are properly implemented, as channels could be established between peers of (potentially) different organisations.
         /// It is also so that transaction validation/endorsement can be correctly performed, as a transaction signature does not contain any certificate information. So the MSD
         /// will have to be responsible for mapping the sender address in a transaction to a certificate stored in this folder. Further research about exactly how HL does this is required.</remarks>
-        public const string PeerCerts = @"peercerts";
+        private readonly string PeerCerts = @"peercerts";
+
+        /// <summary>
+        /// Subfolder holding a file with the node's X.509 certificate (public key).
+        /// </summary>
+        private readonly string SignCerts = @"signcerts";
 
         /// <summary>
         /// An identifier for this local MSD.
@@ -69,10 +67,10 @@ namespace MembershipServices
         private readonly ConcurrentDictionary<byte[], X509Certificate> mapTransactionSigningPubKeyHash;
         private readonly HashSet<string> revokedCertificateThumbprints;
 
-        public LocalMembershipServicesConfiguration(string membershipServicesBaseFolder, Network network)
+        public LocalMembershipServicesConfiguration(string folder, Network network)
         {
             // TODO: Use the identifier in the base path. Specify the local MSD ID on first startup?
-            this.membershipServicesFolder = Path.Combine(membershipServicesBaseFolder, MembershipServicesRootFolder);
+            this.rootFolder = Path.Combine(folder, "msd");
 
             this.network = network;
 
@@ -85,7 +83,7 @@ namespace MembershipServices
 
         public bool AddCertificate(X509Certificate certificate, MemberType memberType)
         {
-            string pathToCert = GetCertificatePath(certificate, memberType);
+            string pathToCert = GetCertificatePath(memberType, certificate);
 
             try
             {
@@ -103,7 +101,7 @@ namespace MembershipServices
 
         public bool RemoveCertificate(X509Certificate certificate, MemberType memberType)
         {
-            string pathToCert = GetCertificatePath(certificate, memberType);
+            string pathToCert = GetCertificatePath(memberType, certificate);
 
             // We are using the return result to indicate if the certificate was deleted. So if it never existed in the first place, it wasn't deleted.
             if (!File.Exists(pathToCert))
@@ -159,7 +157,7 @@ namespace MembershipServices
             this.revokedCertificateThumbprints.Add(thumbprint);
 
             // We don't actually need to store the certificate, only a record of its thumbprint.
-            FileStream file = File.Create(Path.Combine(this.membershipServicesFolder, Crls, thumbprint));
+            FileStream file = File.Create(Path.Combine(GetCertificatePath(MemberType.Revocation), thumbprint));
             file.Flush();
             file.Dispose();
 
@@ -173,29 +171,27 @@ namespace MembershipServices
             return this.revokedCertificateThumbprints.Contains(thumbprint);
         }
 
-        public static void InitializeFolderStructure(string membershipServicesFolder)
+        public void InitializeFolderStructure()
         {
-            var rootFolder = Path.Combine(membershipServicesFolder, MembershipServicesRootFolder);
+            Directory.CreateDirectory(this.rootFolder);
 
-            Directory.CreateDirectory(rootFolder);
-
-            Directory.CreateDirectory(Path.Combine(rootFolder, AdminCerts));
-            Directory.CreateDirectory(Path.Combine(rootFolder, CaCerts));
-            Directory.CreateDirectory(Path.Combine(rootFolder, IntermediateCerts));
-            Directory.CreateDirectory(Path.Combine(rootFolder, Crls));
-            Directory.CreateDirectory(Path.Combine(rootFolder, SignCerts));
-            Directory.CreateDirectory(Path.Combine(rootFolder, PeerCerts));
+            Directory.CreateDirectory(GetCertificatePath(MemberType.Admin));
+            Directory.CreateDirectory(GetCertificatePath(MemberType.RootCA));
+            Directory.CreateDirectory(GetCertificatePath(MemberType.IntermediateCA));
+            Directory.CreateDirectory(GetCertificatePath(MemberType.Revocation));
+            Directory.CreateDirectory(GetCertificatePath(MemberType.SelfSign));
+            Directory.CreateDirectory(GetCertificatePath(MemberType.NetworkPeer));
         }
 
         public void InitializeExistingCertificates()
         {
-            foreach (string fileName in Directory.GetFiles(Path.Combine(this.membershipServicesFolder, Crls)))
+            foreach (string fileName in Directory.GetFiles(GetCertificatePath(MemberType.Revocation)))
             {
                 this.revokedCertificateThumbprints.Add(Path.GetFileName(fileName));
             }
 
             // There will probably only be one certificate in this folder, but nevertheless, load it into the lookups.
-            foreach (string fileName in Directory.GetFiles(Path.Combine(this.membershipServicesFolder, SignCerts)))
+            foreach (string fileName in Directory.GetFiles(GetCertificatePath(MemberType.SelfSign)))
             {
                 try
                 {
@@ -215,7 +211,7 @@ namespace MembershipServices
                 }
             }
 
-            foreach (string fileName in Directory.GetFiles(Path.Combine(this.membershipServicesFolder, PeerCerts)))
+            foreach (string fileName in Directory.GetFiles(GetCertificatePath(MemberType.NetworkPeer)))
             {
                 try
                 {
@@ -245,32 +241,41 @@ namespace MembershipServices
             this.mapTransactionSigningPubKeyHash.TryAdd(MembershipServicesDirectory.ExtractCertificateExtension(certificate, CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid), certificate);
         }
 
-        private string GetCertificatePath(X509Certificate certificate, MemberType memberType)
+        public string GetCertificatePath(MemberType memberType)
         {
             string subFolder;
 
             switch (memberType)
             {
-                case MemberType.NetworkPeer:
-                    subFolder = Path.Combine(MembershipServicesRootFolder, PeerCerts);
-                    break;
                 case MemberType.Admin:
-                    subFolder = Path.Combine(MembershipServicesRootFolder, AdminCerts);
+                    subFolder = AdminCerts;
+                    break;
+                case MemberType.Revocation:
+                    subFolder = Crls;
+                    break;
+                case MemberType.NetworkPeer:
+                    subFolder = PeerCerts;
                     break;
                 case MemberType.IntermediateCA:
-                    subFolder = Path.Combine(MembershipServicesRootFolder, IntermediateCerts);
+                    subFolder = IntermediateCerts;
                     break;
                 case MemberType.RootCA:
-                    subFolder = Path.Combine(MembershipServicesRootFolder, CaCerts);
+                    subFolder = CaCerts;
                     break;
-                case MemberType.Self:
-                    subFolder = Path.Combine(MembershipServicesRootFolder, SignCerts);
+                case MemberType.SelfSign:
+                    subFolder = SignCerts;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(memberType), memberType, null);
             }
 
-            return Path.Combine(this.membershipServicesFolder, subFolder, $"{MembershipServicesDirectory.GetCertificateThumbprint(certificate)}");
+            return Path.Combine(this.rootFolder, subFolder);
+        }
+
+        public string GetCertificatePath(MemberType memberType, X509Certificate certificate)
+        {
+            var folder = GetCertificatePath(memberType);
+            return Path.Combine(folder, $"{MembershipServicesDirectory.GetCertificateThumbprint(certificate)}");
         }
     }
 }
