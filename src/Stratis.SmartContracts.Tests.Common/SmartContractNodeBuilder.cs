@@ -27,7 +27,6 @@ namespace Stratis.SmartContracts.Tests.Common
     {
         private int lastSystemChannelNodePort;
 
-
         // This does not have to be re-retrieved from the CA for every node.
         private X509Certificate authorityCertificate;
 
@@ -59,7 +58,7 @@ namespace Stratis.SmartContracts.Tests.Common
             string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
 
             string commonName = CaTestHelper.GenerateRandomString();
-            
+
             IServerAddressesFeature serverAddresses = server.ServerFeatures.Get<IServerAddressesFeature>();
             string caBaseAddress = serverAddresses.Addresses.First();
 
@@ -86,7 +85,7 @@ namespace Stratis.SmartContracts.Tests.Common
             if (willStartChannels)
                 configParameters.Add("channelprocesspath", "..\\..\\..\\..\\Stratis.TokenlessD\\");
 
-            CoreNode node = this.CreateNode(new TokenlessNodeRunner(dataFolder, network, this.TimeProvider, agent, debugChannels ? this :  null), "poa.conf", configParameters: configParameters);
+            CoreNode node = this.CreateNode(new TokenlessNodeRunner(dataFolder, network, this.TimeProvider, agent, debugChannels ? this : null), "poa.conf", configParameters: configParameters);
 
             // If not a federation member then generate a mnemonic.
             if (!configParameters.TryGetValue("mnemonic", out string mnemonic))
@@ -150,9 +149,11 @@ namespace Stratis.SmartContracts.Tests.Common
                 {
                     File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificateAuthorityInterface.ClientCertificateName), CaCertificatesManager.CreatePfx(x509, node.ClientCertificatePrivateKey, "test"));
 
+                    var localMsdConfiguration = new LocalMembershipServicesConfiguration(settings.DataDir, network);
+                    localMsdConfiguration.InitializeFolderStructure();
+
                     // Put certificate into applicable local MSD folder
-                    Directory.CreateDirectory(Path.Combine(settings.DataDir, LocalMembershipServicesConfiguration.SignCerts));
-                    var ownCertificatePath = Path.Combine(settings.DataDir, LocalMembershipServicesConfiguration.SignCerts, MembershipServicesDirectory.GetCertificateThumbprint(x509));
+                    var ownCertificatePath = Path.Combine(localMsdConfiguration.GetCertificatePath(MemberType.SelfSign, x509));
                     File.WriteAllBytes(ownCertificatePath, x509.GetEncoded());
                 }
 
@@ -163,7 +164,7 @@ namespace Stratis.SmartContracts.Tests.Common
         /// <summary>
         /// This creates a standard (normal) node on the <see cref="TokenlessNetwork"/>.
         /// </summary>
-        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, IWebHost server, string organisation = null, bool initialRun = true, List<string> permissions = null, 
+        public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, IWebHost server, string organisation = null, bool initialRun = true, List<string> permissions = null,
             string agent = "tokenless", bool debugChannels = false, NodeConfigParameters configParameters = null)
         {
             return CreateCoreNode(network, nodeIndex, server, agent, false, false, false, initialRun, organisation: organisation, permissions: permissions, debugChannels: debugChannels, configParameters: configParameters);
@@ -172,7 +173,7 @@ namespace Stratis.SmartContracts.Tests.Common
         /// <summary>
         /// This creates a standard (normal) node on the <see cref="TokenlessNetwork"/> that is also apart of other channels.
         /// </summary>
-        public CoreNode CreateTokenlessNodeWithChannels(TokenlessNetwork network, int nodeIndex, IWebHost server, bool initialRun = true, string organisation = null, 
+        public CoreNode CreateTokenlessNodeWithChannels(TokenlessNetwork network, int nodeIndex, IWebHost server, bool initialRun = true, string organisation = null,
             bool debugChannels = false, string agent = "tokenless", NodeConfigParameters configParameters = null)
         {
             return CreateCoreNode(network, nodeIndex, server, agent, false, false, true, initialRun, organisation: organisation, debugChannels: debugChannels, configParameters: configParameters);

@@ -138,7 +138,7 @@ namespace Stratis.SmartContracts.Tests.Common
             var caCertificatesManager = (CaCertificatesManager)server.Services.GetService(typeof(CaCertificatesManager));
 
             // Get a good cetificate.
-            var certs = caCertificatesManager.GetAllCertificates(new CredentialsAccessModel(1, CaTestHelper.AdminPassword, AccountAccessFlags.AccessAnyCertificate));
+            List<CertificateInfoModel> certs = caCertificatesManager.GetAllCertificates(new CredentialsAccessModel(1, CaTestHelper.AdminPassword, AccountAccessFlags.AccessAnyCertificate));
 
             var model = new CredentialsAccessWithModel<CredentialsModelWithThumbprintModel>(new CredentialsModelWithThumbprintModel()
             {
@@ -153,14 +153,13 @@ namespace Stratis.SmartContracts.Tests.Common
         public static void AddCertificatesToMembershipServices(ICollection<X509Certificate> certificates, string dataDir, Network network)
         {
             // TODO: A more elegant way to do this would be some kind of certificate registry in the test environment. But this approach does at least let us easily control which certificates are known to each node.
-            var peerCertificateFolder = Path.Combine(dataDir, network.RootFolderName, network.Name, LocalMembershipServicesConfiguration.MembershipServicesRootFolder, LocalMembershipServicesConfiguration.PeerCerts);
-
-            Directory.CreateDirectory(peerCertificateFolder);
+            var localMsdConfiguration = new LocalMembershipServicesConfiguration(Path.Combine(dataDir, network.RootFolderName, network.Name), network);
+            localMsdConfiguration.InitializeFolderStructure();
 
             foreach (X509Certificate certificate in certificates)
             {
-                string certificatePath = Path.Combine(peerCertificateFolder, MembershipServicesDirectory.GetCertificateThumbprint(certificate));
-                File.WriteAllBytes(certificatePath, certificate.GetEncoded());
+                string peerCertificateFileName = Path.Combine(localMsdConfiguration.GetCertificatePath(MemberType.NetworkPeer, certificate));
+                File.WriteAllBytes(peerCertificateFileName, certificate.GetEncoded());
             }
         }
 
