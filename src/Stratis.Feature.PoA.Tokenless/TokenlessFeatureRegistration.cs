@@ -82,6 +82,7 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<ReadWriteSetPolicyValidator>();
                         services.AddSingleton<IReadWriteSetTransactionSerializer, ReadWriteSetTransactionSerializer>();
                         services.AddSingleton<IReadWriteSetValidator, ReadWriteSetValidator>();
+                        services.AddSingleton<ChannelUpdateTransactionBuilder>();
 
                         // Private data.
                         services.AddSingleton<ITransientKeyValueStore, TransientKeyValueStore>();
