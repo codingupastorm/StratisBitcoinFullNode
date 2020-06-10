@@ -150,7 +150,8 @@ namespace MembershipServices.Cli
 
             Key privateKey = keyStoreManager.GetKey(keyStoreSettings.Password, TokenlessKeyStoreAccount.P2PCertificates);
 
-            LocalMembershipServicesConfiguration.InitializeFolderStructure(Path.Combine(options.DataDir, network.RootFolderName, network.Name));
+            var localMsdConfiguration = new LocalMembershipServicesConfiguration(Path.Combine(options.DataDir, network.RootFolderName, network.Name), network);
+            localMsdConfiguration.InitializeFolderStructure();
 
             PubKey transactionSigningPubKey = keyStoreManager.GetKey(keyStoreSettings.Password, TokenlessKeyStoreAccount.TransactionSigning).PubKey;
             PubKey blockSigningPubKey = keyStoreManager.GetKey(keyStoreSettings.Password, TokenlessKeyStoreAccount.BlockSigning).PubKey;
@@ -173,11 +174,8 @@ namespace MembershipServices.Cli
 
             var membershipServices = new MembershipServicesDirectory(nodeSettings, loggerFactory);
             membershipServices.Initialize();
-
-            membershipServices.AddLocalMember(clientCert, MemberType.Self);
-
-            // We need the certificate to be available here as well for now.
-            membershipServices.AddLocalMember(clientCert, MemberType.NetworkPeer);
+            membershipServices.AddLocalMember(clientCert, MemberType.SelfSign);
+            membershipServices.AddLocalMember(clientCert, MemberType.NetworkPeer); // We need the certificate to be available here as well for now.
 
             return 0;
         }
@@ -218,7 +216,7 @@ namespace MembershipServices.Cli
                     break;
                 case "Self":
                     // This should normally not be needed, as the generate verb makes the node's own certificate and adds it to its MSD
-                    memberType = MemberType.Self;
+                    memberType = MemberType.SelfSign;
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
