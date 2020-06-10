@@ -24,7 +24,6 @@ namespace Stratis.SmartContracts.Tests.Common
 {
     public sealed class ChannelNodeRunner : NodeRunner
     {
-
         private readonly IDateTimeProvider dateTimeProvider;
 
         public string[] Args { get; set; }
