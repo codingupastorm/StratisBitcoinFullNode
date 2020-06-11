@@ -6,6 +6,10 @@ using Stratis.Core.EventBus.CoreEvents;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.Networks;
+using System;
+using Stratis.Feature.PoA.Tokenless.AccessControl;
+using System.Collections.Generic;
+using System.Text.Json;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -51,6 +55,45 @@ namespace Stratis.Feature.PoA.Tokenless
         {
             // TODO: Do Disconnected too
             this.blockConnectedSubscription = this.signals.Subscribe<BlockConnected>(this.OnBlockConnected);
+
+            InitializeChannelDef();
+        }
+
+        private void InitializeChannelDef()
+        {
+            var channelNetwork = this.network as ChannelNetwork;
+
+            if (channelNetwork == null)
+                return;
+
+            ChannelDefinition channelDef = this.channelRepository.GetChannelDefinition(channelNetwork.Name);
+
+            if (channelDef == null)
+            {
+                var defaultChannelDef = new ChannelDefinition
+                {
+                    AccessList = new AccessControlList
+                    {
+                        Organisations = new List<string>(),
+                        Thumbprints = new List<string>()
+                    },
+                    Id = channelNetwork.Id,
+                    Name = channelNetwork.Name,
+                    NetworkJson = JsonSerializer.Serialize(channelNetwork)
+                };
+
+                if (channelNetwork.InitialAccessList?.Organisations != null)
+                {
+                    defaultChannelDef.AccessList.Organisations.AddRange(channelNetwork.InitialAccessList.Organisations);
+                }
+
+                if (channelNetwork.InitialAccessList?.Thumbprints != null)
+                {
+                    defaultChannelDef.AccessList.Thumbprints.AddRange(channelNetwork.InitialAccessList.Thumbprints);
+                }
+
+                this.channelRepository.SaveChannelDefinition(defaultChannelDef);
+            }
         }
 
         /// <inheritdoc/>

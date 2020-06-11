@@ -115,11 +115,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var allowedNodeChannel = allowedNodeParentChannelService.ChannelNodes.First();
                 var disallowedNodeChannel = disallowedNodeParentChannelService.ChannelNodes.First();
 
-                // TODO temporary workaround until we fix the issue with default channel defs not being saved
-                // Save the channel def on the allowedNodeChannel channel.
-                IChannelRepository channelRepository = allowedNodeChannel.FullNode.NodeService<IChannelRepository>();
-                channelRepository.SaveChannelDefinition(channelDef);
-
                 // Try to connect the nodes
                 // IMPORTANT: Must connect FROM otherNode TO parentNode to ensure the connection is inbound on the parent and the cert check is done.
                 TestHelper.ConnectNoCheck(disallowedNodeChannel, allowedNodeChannel);
