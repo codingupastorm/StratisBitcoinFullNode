@@ -58,6 +58,7 @@
     <ProjectReference Include="..\Stratis.SmartContracts.Networks\Stratis.SmartContracts.Networks.csproj" />
     <ProjectReference Include="..\Stratis.SmartContracts.Tests.Common\Stratis.SmartContracts.Tests.Common.csproj" />
     <ProjectReference Include="..\Stratis.SmartContracts.Tokenless\Stratis.SmartContracts.Tokenless.csproj" />
+    <ProjectReference Include="..\Stratis.TokenlessD\Stratis.TokenlessD.csproj" />
   </ItemGroup>
 
   <ItemGroup>
