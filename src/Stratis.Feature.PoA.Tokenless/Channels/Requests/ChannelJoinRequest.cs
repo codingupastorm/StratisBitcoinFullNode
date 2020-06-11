@@ -9,5 +9,11 @@ namespace Stratis.Feature.PoA.Tokenless.Channels.Requests
         [JsonPropertyName("network_json")]
         [Required]
         public string NetworkJson { get; set; }
+
+        public int? Port { get; set; }
+
+        public int? ApiPort { get; set; }
+
+        public int? SignalRPort { get; set; }
     }
 }

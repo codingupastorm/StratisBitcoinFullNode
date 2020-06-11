@@ -92,7 +92,6 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 lock (this.StartedChannelNodes)
                     this.StartedChannelNodes.Add(channelNodeProcess);
 
-                // TODO: Log channel name here?
                 this.logger.LogInformation($"Node started with Pid '{process.Id}'.");
                 return true;
             }
