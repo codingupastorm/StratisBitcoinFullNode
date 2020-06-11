@@ -71,9 +71,27 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 channelArgs = channelArgs.Concat(new[] { "-debug=1" }).ToArray();
             }
 
+            // Add project mode setting to channel configuration file.
+            if (this.channelSettings.ProjectMode)
+            {
+                this.logger.LogInformation($"Settnig channel daemon to project mode.");
+                channelArgs = channelArgs.Concat(new[] { "-projectmode=true" }).ToArray();
+            }
+
             CreateChannelConfigurationFile(channelRootFolder, channelArgs.Concat(new[] { "-ischannelnode=true", $"-channelparentpipename={channelNodeProcess.PipeName}" }).ToArray());
 
-            var startUpArgs = $"run --no-build -nowarn -conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
+            string startUpArgs;
+            if (this.channelSettings.ProjectMode)
+            {
+                startUpArgs = $"run --no-build -nowarn -conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
+                this.logger.LogInformation($"Startup arguments set to start daemon from project source.");
+            }
+            else
+            {
+                startUpArgs = $"-conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
+                this.logger.LogInformation($"Startup arguments set to start daemon in production mode.");
+            }
+
             this.logger.LogInformation($"Attempting to start process with args '{startUpArgs}'");
 
             Process process = channelNodeProcess.Process;

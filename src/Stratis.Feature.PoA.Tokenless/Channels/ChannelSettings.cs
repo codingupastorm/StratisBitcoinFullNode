@@ -10,6 +10,10 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         public readonly bool IsInfraNode;
         public readonly bool IsSystemChannelNode;
         public readonly string ProcessPath;
+
+        /// <summary>Will attempt to start the node from source else start the node from an executable dll.</summary>
+        public readonly bool ProjectMode;
+
         public readonly int SystemChannelApiPort;
 
         public ChannelSettings(NodeSettings nodeSettings)
@@ -20,6 +24,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.IsInfraNode = nodeSettings.ConfigReader.GetOrDefault<bool>("isinfranode", false);
             this.IsSystemChannelNode = nodeSettings.ConfigReader.GetOrDefault<bool>("issystemchannelnode", false);
             this.ProcessPath = nodeSettings.ConfigReader.GetOrDefault("channelprocesspath", "");
+            this.ProjectMode = nodeSettings.ConfigReader.GetOrDefault("projectmode", false);
             this.SystemChannelApiPort = nodeSettings.ConfigReader.GetOrDefault("systemchannelapiport", 0);
         }
 
@@ -31,6 +36,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.IsInfraNode = fileConfiguration.GetOrDefault<bool>("isinfranode", false);
             this.IsSystemChannelNode = fileConfiguration.GetOrDefault<bool>("issystemchannelnode", false);
             this.ProcessPath = fileConfiguration.GetOrDefault("channelprocesspath", "");
+            this.ProjectMode = fileConfiguration.GetOrDefault("projectmode", false);
         }
     }
 }

@@ -10,23 +10,23 @@ using Stratis.Feature.PoA.Tokenless.Channels;
 
 namespace Stratis.SmartContracts.Tests.Common
 {
-    public class TestChannelService : ChannelService
+    /// <summary>
+    /// This allows us to create nodes within the same process.
+    /// This is hacky. If you have ideas for how to better implement this then do so!
+    /// </summary>
+    public sealed class InProcessChannelService : ChannelService
     {
-        /// <summary>
-        /// This allows us to create nodes within the same process.
-        /// This is hacky. If you have ideas for how to better implement this then do so!
-        /// </summary>
-        public SmartContractNodeBuilder NodeBuilder { get; } 
+        public SmartContractNodeBuilder NodeBuilder { get; }
 
         public List<CoreNode> ChannelNodes { get; }
 
-        public TestChannelService(
+        public InProcessChannelService(
             ChannelSettings channelSettings,
             IDateTimeProvider dateTimeProvider,
             ILoggerFactory loggerFactory,
             NodeSettings nodeSettings,
             IChannelRepository channelRepository,
-            SmartContractNodeBuilder nodeBuilder) 
+            SmartContractNodeBuilder nodeBuilder)
             : base(channelSettings, dateTimeProvider, loggerFactory, nodeSettings, channelRepository)
         {
             this.ChannelNodes = new List<CoreNode>();
@@ -38,7 +38,7 @@ namespace Stratis.SmartContracts.Tests.Common
             // Nothing to do here
         }
 
-        protected override async Task<bool> StartChannelAsync(string channelRootFolder, params string[] channelArgs)
+        protected override Task<bool> StartChannelAsync(string channelRootFolder, params string[] channelArgs)
         {
             if (this.NodeBuilder == null)
             {
@@ -67,7 +67,7 @@ namespace Stratis.SmartContracts.Tests.Common
 
             this.ChannelNodes.Add(node);
 
-            return true;
+            return Task.FromResult(true);
         }
 
         public override void StopChannelNodes()
