@@ -77,8 +77,8 @@ namespace Stratis.Feature.PoA.Tokenless
                     // Get channel membership
                     ChannelDefinition channelDef = this.channelRepository.GetChannelDefinition(request.Name);
 
-                    // Channel def does not exist!
-                    if (channelDef == null)
+                    // Channel def updates a different channel.
+                    if (channelDef.Name != this.network.Name)
                     {
                         this.logger.LogDebug($"{transaction.GetHash()}' updates an unknown channel.");
                         continue;
