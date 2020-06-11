@@ -1,23 +1,51 @@
-﻿using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Hosting;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using CertificateAuthority.Tests.Common;
+using CertificateAuthority;
 using NBitcoin;
 using Stratis.Bitcoin.IntegrationTests.Common;
+using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
 using Stratis.Bitcoin.IntegrationTests.Common.TestNetworks;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Consensus.Rules;
 using Stratis.Core.Primitives;
-using Xunit;
 using Stratis.Feature.PoA.Tokenless.Networks;
-using Microsoft.AspNetCore.Hosting;
-using CertificateAuthority.Tests.Common;
-using Stratis.SmartContracts.Tests.Common;
-using System.Collections.Generic;
-using CertificateAuthority;
-using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Stratis.Features.PoA;
+using Stratis.Features.PoA.BasePoAFeatureConsensusRules;
+using Stratis.SmartContracts.Tests.Common;
+using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests
 {
+    /// <summary>This rule allows us to set up a block that fails when full validation is performed 
+    /// by simply providing an invalid signature.</summary>
+    public sealed class FullValidationSignatureRule : FullValidationConsensusRule
+    {
+        private readonly PoAIntegritySignatureRule integritySignatureRule;
+
+        public FullValidationSignatureRule() : base()
+        {
+            this.integritySignatureRule = new PoAIntegritySignatureRule();
+        }
+
+        public override void Initialize()
+        {
+            this.integritySignatureRule.Parent = this.Parent;
+            this.integritySignatureRule.Logger = this.Parent.LoggerFactory.CreateLogger(this.GetType().FullName);
+            this.integritySignatureRule.Initialize();
+        }
+
+        public override Task RunAsync(RuleContext context)
+        {
+            this.integritySignatureRule.Run(context);
+
+            return Task.CompletedTask;
+        }
+    }
+
     public class ConsensusManagerFailedReorgTests
     {
         private readonly TokenlessNetwork network;
@@ -30,7 +58,9 @@ namespace Stratis.Bitcoin.IntegrationTests
         [Fact]
         public async Task Reorg_FailsFV_Reconnect_OldChain_ConnectedAsync()
         {
-            var noValidationRulesNetwork = new TokenlessNetwork();
+            var network = new TokenlessNetwork();
+            var noValidationRulesNetwork = new TokenlessNetwork() { Name = "NoValidationRulesNetwork" };
+            noValidationRulesNetwork.Consensus.MaxReorgLength = 100;
 
             TestBase.GetTestRootFolder(out string testRootFolder);
 
@@ -41,15 +71,19 @@ namespace Stratis.Bitcoin.IntegrationTests
 
                 // Start + Initialize CA.
                 var client = TokenlessTestHelper.GetAdminClient(server);
-                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
-
-                var config = new NodeConfigParameters() { { "bantime", "120" } };
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode minerA = nodeBuilder.CreateTokenlessNode(this.network, 0, server, agent: "cmfr-1-minerA", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }, configParameters: config);
-                CoreNode minerB = nodeBuilder.CreateTokenlessNode(noValidationRulesNetwork, 1, server, agent: "cmfr-1-minerB", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }, configParameters: config);
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "cmfr-1-minerA", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission });
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(noValidationRulesNetwork, 1, server, agent: "cmfr-1-minerB", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).NoValidation();
 
-                minerB.NoValidation();
+                // We are only interested in failing a specific block.
+                var minerARules = network.Consensus.ConsensusRules;
+                minerARules.HeaderValidationRules.Clear();
+                minerARules.IntegrityValidationRules.Clear();
+                minerARules.PartialValidationRules.Clear();
+                minerARules.FullValidationRules.Clear();
+                minerARules.FullValidationRules.Add(typeof(FullValidationSignatureRule));
 
                 ChainedHeader minerBChainTip = null;
                 bool interceptorsEnabled = false;
@@ -104,7 +138,7 @@ namespace Stratis.Bitcoin.IntegrationTests
                     }
                 }
 
-                TokenlessTestHelper.ShareCertificatesAndStart(this.network, minerA, minerB);
+                TokenlessTestHelper.ShareCertificatesAndStart(network, minerA, minerB);
 
                 // Mine initial blocks.
                 minerA.MineBlocksAsync(10).GetAwaiter().GetResult();
@@ -134,18 +168,17 @@ namespace Stratis.Bitcoin.IntegrationTests
                 // Block 11,12,14,15 = valid
                 // Block 13 = invalid
                 minerB.MineBlocksAsync(5).GetAwaiter().GetResult();
-                ((minerB.FullNode.ChainIndexer.GetHeader(13).Block as Block).Header as PoABlockHeader).BlockSignature.Signature = new byte[] { 0 };
+                ((minerB.FullNode.ChainIndexer.GetHeader(13).Block as Block).Header as PoABlockHeader).BlockSignature = new BlockSignature();
                 minerBChainTip = minerB.FullNode.ConsensusManager().Tip;
                 Assert.Equal(15, minerBChainTip.Height);
 
                 TestHelper.EnableBlockPropagation(minerA, minerB);
 
+                minerB.MineBlocksAsync(1).GetAwaiter().GetResult();
+
                 // Wait until Miner A disconnected its own chain so that it can connect to
                 // Miner B's longer chain.
-                TestBase.WaitLoop(() => {
-                    minerB.MineBlocksAsync(1).GetAwaiter().GetResult();
-                    return minerA_Disconnected_ItsOwnChain_ToConnectTo_MinerBs_LongerChain;
-                });
+                TestBase.WaitLoop(() => minerA_Disconnected_ItsOwnChain_ToConnectTo_MinerBs_LongerChain);
 
                 // Wait until Miner A has connected Miner B's chain (but failed)
                 TestBase.WaitLoop(() => minerA_IsConnecting_To_MinerBChain);
