@@ -1,7 +1,9 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.SmartContracts.CLR.Serialization;
+using Stratis.SmartContracts.Core.AccessControl;
 using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.State;
 
@@ -58,7 +60,13 @@ namespace Stratis.SmartContracts.CLR.Local
 
             var placeholderPolicy = new EndorsementPolicy
             {
-                Organisation = (Organisation) "LocalExecutorOrgansation",
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        "LocalExecutorOrgansation"
+                    }
+                },
                 RequiredSignatures = EndorsementPolicy.DefaultRequiredSignatures
             };
 

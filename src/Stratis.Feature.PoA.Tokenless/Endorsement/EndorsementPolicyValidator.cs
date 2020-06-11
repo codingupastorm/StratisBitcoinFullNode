@@ -55,7 +55,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
             // This is currently the only possible policy type, but in the future if more are added we will need to
             // add a PolicyValidatorFactory that returns the correct policy for a particular EndorsementPolicy subclass.
-            var policyValidator = new MofNPolicyValidator(policy.ToDictionary());
+            var policyValidator = new EndorsementPolicySignatureValidator(policy);
 
             foreach (Endorsement endorsement in endorsements)
             {
