@@ -56,7 +56,7 @@ namespace Stratis.Feature.PoA.Tokenless
             // TODO: Do Disconnected too
             this.blockConnectedSubscription = this.signals.Subscribe<BlockConnected>(this.OnBlockConnected);
 
-            InitializeChannelDef();
+            //InitializeChannelDef();
         }
 
         private void InitializeChannelDef()
