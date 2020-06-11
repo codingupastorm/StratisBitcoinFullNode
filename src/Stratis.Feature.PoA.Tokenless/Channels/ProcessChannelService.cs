@@ -75,7 +75,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             // Add project mode setting to channel configuration file.
             if (this.channelSettings.ProjectMode)
             {
-                this.logger.LogInformation($"Settnig channel daemon to project mode.");
+                this.logger.LogInformation($"Setting channel daemon to project mode.");
                 channelArgs = channelArgs.Concat(new[] { "-projectmode=true" }).ToArray();
             }
 
