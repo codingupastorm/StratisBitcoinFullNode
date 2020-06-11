@@ -55,45 +55,39 @@ namespace Stratis.Feature.PoA.Tokenless
         {
             // TODO: Do Disconnected too
             this.blockConnectedSubscription = this.signals.Subscribe<BlockConnected>(this.OnBlockConnected);
-
-            //InitializeChannelDef();
         }
 
-        private void InitializeChannelDef()
+        private ChannelDefinition InitializeChannelDef()
         {
             var channelNetwork = this.network as ChannelNetwork;
 
             if (channelNetwork == null)
-                return;
+                return null;
 
-            ChannelDefinition channelDef = this.channelRepository.GetChannelDefinition(channelNetwork.Name);
-
-            if (channelDef == null)
+            var defaultChannelDef = new ChannelDefinition
             {
-                var defaultChannelDef = new ChannelDefinition
+                AccessList = new AccessControlList
                 {
-                    AccessList = new AccessControlList
-                    {
-                        Organisations = new List<string>(),
-                        Thumbprints = new List<string>()
-                    },
-                    Id = channelNetwork.Id,
-                    Name = channelNetwork.Name,
-                    NetworkJson = JsonSerializer.Serialize(channelNetwork)
-                };
+                    Organisations = new List<string>(),
+                    Thumbprints = new List<string>()
+                },
+                Id = channelNetwork.Id,
+                Name = channelNetwork.Name,
+                NetworkJson = JsonSerializer.Serialize(channelNetwork)
+            };
 
-                if (channelNetwork.InitialAccessList?.Organisations != null)
-                {
-                    defaultChannelDef.AccessList.Organisations.AddRange(channelNetwork.InitialAccessList.Organisations);
-                }
-
-                if (channelNetwork.InitialAccessList?.Thumbprints != null)
-                {
-                    defaultChannelDef.AccessList.Thumbprints.AddRange(channelNetwork.InitialAccessList.Thumbprints);
-                }
-
-                this.channelRepository.SaveChannelDefinition(defaultChannelDef);
+            // Make copies off the network object.
+            if (channelNetwork.InitialAccessList?.Organisations != null)
+            {
+                defaultChannelDef.AccessList.Organisations.AddRange(channelNetwork.InitialAccessList.Organisations);
             }
+
+            if (channelNetwork.InitialAccessList?.Thumbprints != null)
+            {
+                defaultChannelDef.AccessList.Thumbprints.AddRange(channelNetwork.InitialAccessList.Thumbprints);
+            }
+
+            return defaultChannelDef;
         }
 
         /// <inheritdoc/>
@@ -117,8 +111,8 @@ namespace Stratis.Feature.PoA.Tokenless
                 {
                     this.logger.LogDebug("Transaction '{0}' contains a request to update channel '{1}'.", transaction.GetHash(), request.Name);
 
-                    // Get channel membership
-                    ChannelDefinition channelDef = this.channelRepository.GetChannelDefinition(request.Name);
+                    // Get channel membership, or use the network default if not available.
+                    ChannelDefinition channelDef = this.channelRepository.GetChannelDefinition(request.Name) ?? InitializeChannelDef();
 
                     // Channel def updates a different channel.
                     if (channelDef.Name != this.network.Name)
