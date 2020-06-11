@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Stratis.Core.AsyncWork;
@@ -80,26 +81,26 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
             CreateChannelConfigurationFile(channelRootFolder, channelArgs.Concat(new[] { "-ischannelnode=true", $"-channelparentpipename={channelNodeProcess.PipeName}" }).ToArray());
 
-            string startUpArgs;
+            Process process = channelNodeProcess.Process;
+            process.StartInfo.WorkingDirectory = this.channelSettings.ProcessPath;
+
             if (this.channelSettings.ProjectMode)
             {
-                startUpArgs = $"run --no-build -nowarn -conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
+                process.StartInfo.Arguments = $"run --no-build -nowarn -conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
+                process.StartInfo.FileName = "dotnet";
                 this.logger.LogInformation($"Startup arguments set to start daemon from project source.");
             }
             else
             {
-                startUpArgs = $"-conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
+                process.StartInfo.Arguments = $"-conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
+                process.StartInfo.FileName = Assembly.GetExecutingAssembly().Location;
                 this.logger.LogInformation($"Startup arguments set to start daemon in production mode.");
             }
 
-            this.logger.LogInformation($"Attempting to start process with args '{startUpArgs}'");
-
-            Process process = channelNodeProcess.Process;
-            process.StartInfo.WorkingDirectory = this.channelSettings.ProcessPath;
-            process.StartInfo.FileName = "dotnet";
-            process.StartInfo.Arguments = startUpArgs;
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.CreateNoWindow = false;
+
+            this.logger.LogInformation($"Attempting to start process with args '{process.StartInfo.Arguments}'");
             process.Start();
 
             this.logger.LogInformation("Executing a delay to wait for the node to start.");
