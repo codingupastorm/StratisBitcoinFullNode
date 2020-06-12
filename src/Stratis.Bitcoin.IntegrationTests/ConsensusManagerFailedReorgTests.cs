@@ -399,33 +399,62 @@ namespace Stratis.Bitcoin.IntegrationTests
         [Fact]
         public async Task Reorg_FailsPartialValidation_ConnectedAsync()
         {
-            using (var builder = NodeBuilder.Create(this))
+            var network = new TokenlessNetwork();
+            var noValidationRulesNetwork = new TokenlessNetwork() { Name = "NoValidationRulesNetwork" };
+            noValidationRulesNetwork.Consensus.MaxReorgLength = 100;
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                var noValidationRulesNetwork = new BitcoinRegTestNoValidationRules();
+                server.Start();
 
-                var minerA = builder.CreateStratisPowNode(this.network, "cmfr-4-minerA").WithDummyWallet().WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
-                var minerB = builder.CreateStratisPowNode(noValidationRulesNetwork, "cmfr-4-minerB").NoValidation().WithDummyWallet().Start();
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
-                // Miner B syncs with Miner A
+                // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "cmfr-4-minerA", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission });
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(noValidationRulesNetwork, 1, server, agent: "cmfr-4-minerB", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).NoValidation();
+
+                // We are only interested in failing a specific block.
+                var minerARules = network.Consensus.ConsensusRules;
+                minerARules.HeaderValidationRules.Clear();
+                minerARules.IntegrityValidationRules.Clear();
+                minerARules.PartialValidationRules.Clear();
+                minerARules.FullValidationRules.Clear();
+                minerARules.FullValidationRules.Add(typeof(FullValidationSignatureRule));
+
+                TokenlessTestHelper.ShareCertificatesAndStart(network, minerA, minerB);
+
+                // MinerA mines 10 blocks.
+                minerA.MineBlocksAsync(10).GetAwaiter().GetResult();
+                TestBase.WaitLoop(() => minerA.FullNode.ConsensusManager().Tip.Height == 10);
+
+                // Miner B syncs with Miner A.
                 TestHelper.ConnectAndSync(minerB, minerA);
 
-                // Disable Miner A from sending blocks to Miner B
+                // Disable Miner A from sending blocks to Miner B.
                 TestHelper.DisableBlockPropagation(minerA, minerB);
 
-                // Miner A continues to mine to height 14
-                TestHelper.MineBlocks(minerA, 4);
+                // Miner A continues to mine to height 14.
+                minerA.MineBlocksAsync(4).GetAwaiter().GetResult();
                 TestBase.WaitLoop(() => minerA.FullNode.ConsensusManager().Tip.Height == 14);
 
-                // Miner B mines 5 more blocks:
-                // Block 6,7,9,10 = valid
-                // Block 8 = invalid
-                var minerBTip = await TestHelper.BuildBlocks.OnNode(minerB).Amount(5).Invalid(14, (coreNode, block) => BlockBuilder.InvalidDuplicateCoinbase(coreNode, block)).BuildAsync();
+                // MinerB mines 5 more blocks:
+                // Block 11,12,13,15 = valid
+                // Block 14 = invalid
+                minerB.MineBlocksAsync(5).GetAwaiter().GetResult();
+                ((minerB.FullNode.ChainIndexer.GetHeader(14).Block as Block).Header as PoABlockHeader).BlockSignature = new BlockSignature();
+                var minerBChainTip = minerB.FullNode.ConsensusManager().Tip;
+                Assert.Equal(15, minerBChainTip.Height);
 
                 // MinerA will disconnect MinerB
                 TestBase.WaitLoop(() => !TestHelper.IsNodeConnectedTo(minerA, minerB));
 
                 // Ensure Miner A and Miner B remains on their respective heights.
-                var badBlockOnMinerBChain = minerBTip.GetAncestor(14);
+                var badBlockOnMinerBChain = minerBChainTip.GetAncestor(14);
                 Assert.Null(minerA.FullNode.ConsensusManager().Tip.FindAncestorOrSelf(badBlockOnMinerBChain));
                 TestBase.WaitLoop(() => minerA.FullNode.ConsensusManager().Tip.Height == 14);
                 TestBase.WaitLoop(() => minerB.FullNode.ConsensusManager().Tip.Height == 15);
@@ -435,12 +464,38 @@ namespace Stratis.Bitcoin.IntegrationTests
         [Fact]
         public async Task Reorg_FailsPartialValidation_DisconnectedAsync()
         {
-            using (var builder = NodeBuilder.Create(this))
-            {
-                var noValidationRulesNetwork = new BitcoinRegTestNoValidationRules();
+            var network = new TokenlessNetwork();
+            var noValidationRulesNetwork = new TokenlessNetwork() { Name = "NoValidationRulesNetwork" };
+            noValidationRulesNetwork.Consensus.MaxReorgLength = 100;
 
-                var minerA = builder.CreateStratisPowNode(this.network, "cmfr-5-minerA").WithDummyWallet().WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
-                var minerB = builder.CreateStratisPowNode(noValidationRulesNetwork, "cmfr-5-minerB").NoValidation().WithDummyWallet().Start();
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "cmfr-5-minerA", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission });
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(noValidationRulesNetwork, 1, server, agent: "cmfr-5-minerB", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).NoValidation();
+
+                // We are only interested in failing a specific block.
+                var minerARules = network.Consensus.ConsensusRules;
+                minerARules.HeaderValidationRules.Clear();
+                minerARules.IntegrityValidationRules.Clear();
+                minerARules.PartialValidationRules.Clear();
+                minerARules.FullValidationRules.Clear();
+                minerARules.FullValidationRules.Add(typeof(FullValidationSignatureRule));
+
+                TokenlessTestHelper.ShareCertificatesAndStart(network, minerA, minerB);
+
+                // MinerA mines 10 blocks.
+                minerA.MineBlocksAsync(10).GetAwaiter().GetResult();
+                TestBase.WaitLoop(() => minerA.FullNode.ConsensusManager().Tip.Height == 10);
 
                 // Miner B syncs with Miner A
                 TestHelper.ConnectAndSync(minerB, minerA);
@@ -449,13 +504,16 @@ namespace Stratis.Bitcoin.IntegrationTests
                 TestHelper.Disconnect(minerB, minerA);
 
                 // Miner A continues to mine to height 14
-                TestHelper.MineBlocks(minerA, 4);
+                minerA.MineBlocksAsync(4).GetAwaiter().GetResult();
                 TestBase.WaitLoop(() => minerA.FullNode.ConsensusManager().Tip.Height == 14);
 
-                // Miner B mines 5 more blocks:
-                // Block 6,7,9,10 = valid
-                // Block 8 = invalid
-                var minerBTip = await TestHelper.BuildBlocks.OnNode(minerB).Amount(5).Invalid(14, (coreNode, block) => BlockBuilder.InvalidDuplicateCoinbase(coreNode, block)).BuildAsync();
+                // MinerB mines 5 more blocks:
+                // Block 11,12,13,15 = valid
+                // Block 14 = invalid
+                minerB.MineBlocksAsync(5).GetAwaiter().GetResult();
+                ((minerB.FullNode.ChainIndexer.GetHeader(14).Block as Block).Header as PoABlockHeader).BlockSignature = new BlockSignature();
+                var minerBChainTip = minerB.FullNode.ConsensusManager().Tip;
+                Assert.Equal(15, minerBChainTip.Height);
 
                 // Reconnect Miner A to Miner B.
                 TestHelper.ConnectNoCheck(minerA, minerB);
@@ -464,7 +522,7 @@ namespace Stratis.Bitcoin.IntegrationTests
                 TestBase.WaitLoop(() => !TestHelper.IsNodeConnectedTo(minerA, minerB));
 
                 // Ensure Miner A and Miner B remains on their respective heights.
-                var badBlockOnMinerBChain = minerBTip.GetAncestor(14);
+                var badBlockOnMinerBChain = minerBChainTip.GetAncestor(14);
                 Assert.Null(minerA.FullNode.ConsensusManager().Tip.FindAncestorOrSelf(badBlockOnMinerBChain));
                 TestBase.WaitLoop(() => minerA.FullNode.ConsensusManager().Tip.Height == 14);
                 TestBase.WaitLoop(() => minerB.FullNode.ConsensusManager().Tip.Height == 15);
@@ -487,16 +545,38 @@ namespace Stratis.Bitcoin.IntegrationTests
         [Fact]
         public async Task Reorg_FailsFV_ChainHasBlocksAndHeadersOnly_DisconnectedAsync()
         {
-            using (var builder = NodeBuilder.Create(this))
+            var network = new TokenlessNetwork();
+            var noValidationRulesNetwork = new TokenlessNetwork() { Name = "NoValidationRulesNetwork" };
+            noValidationRulesNetwork.Consensus.MaxReorgLength = 100;
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                var noValidationRulesNetwork = new BitcoinRegTestNoValidationRules();
+                server.Start();
 
-                var minerA = builder.CreateStratisPowNode(this.network, "cmfr-6-minerA").WithDummyWallet().Start();
-                var minerB = builder.CreateStratisPowNode(this.network, "cmfr-6-minerB").WithDummyWallet().Start();
-                var minerC = builder.CreateStratisPowNode(noValidationRulesNetwork, "cmfr-6-minerC").NoValidation().WithDummyWallet().Start();
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
-                // Mine 10 blocks with minerA. We cannot use a premade chain as it adversely affects the max tip age calculation, causing sporadic sync errors.
-                TestHelper.MineBlocks(minerA, 10);
+                // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "cmfr-6-minerA", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission });
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "cmfr-6-minerB", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission });
+                CoreNode minerC = nodeBuilder.CreateTokenlessNode(noValidationRulesNetwork, 2, server, agent: "cmfr-6-minerC", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).NoValidation();
+
+                // We are only interested in failing a specific block.
+                var minerARules = network.Consensus.ConsensusRules;
+                minerARules.HeaderValidationRules.Clear();
+                minerARules.IntegrityValidationRules.Clear();
+                minerARules.PartialValidationRules.Clear();
+                minerARules.FullValidationRules.Clear();
+                minerARules.FullValidationRules.Add(typeof(FullValidationSignatureRule));
+
+                TokenlessTestHelper.ShareCertificatesAndStart(network, minerA, minerB, minerC);
+
+                // MinerA mines 10 blocks.
+                minerA.MineBlocksAsync(10).GetAwaiter().GetResult();
                 TestBase.WaitLoop(() => minerA.FullNode.ConsensusManager().Tip.Height == 10);
 
                 // MinerB and MinerC syncs with MinerA
@@ -506,22 +586,25 @@ namespace Stratis.Bitcoin.IntegrationTests
                 TestHelper.Disconnect(minerA, minerC);
 
                 // MinerA continues to mine to height 14
-                TestHelper.MineBlocks(minerA, 4);
+                minerA.MineBlocksAsync(4).GetAwaiter().GetResult();
                 TestBase.WaitLoopMessage(() => { return (minerA.FullNode.ConsensusManager().Tip.Height == 14, minerA.FullNode.ConsensusManager().Tip.Height.ToString()); });
                 TestBase.WaitLoopMessage(() => { return (minerB.FullNode.ConsensusManager().Tip.Height == 14, minerB.FullNode.ConsensusManager().Tip.Height.ToString()); });
                 TestBase.WaitLoopMessage(() => { return (minerC.FullNode.ConsensusManager().Tip.Height == 10, minerC.FullNode.ConsensusManager().Tip.Height.ToString()); });
 
-                // MinerB continues to mine to block 13 without block propogation
+                // MinerB continues to mine to block 18 without block propogation
                 TestHelper.DisableBlockPropagation(minerB, minerA);
-                TestHelper.MineBlocks(minerB, 4);
+                minerB.MineBlocksAsync(4).GetAwaiter().GetResult();
                 TestBase.WaitLoop(() => TestHelper.IsNodeSyncedAtHeight(minerA, 14));
                 TestBase.WaitLoop(() => TestHelper.IsNodeSyncedAtHeight(minerB, 18));
                 TestBase.WaitLoop(() => TestHelper.IsNodeSyncedAtHeight(minerC, 10));
 
-                // MinerB mines 5 more blocks:
-                // Block 6,7,9,10 = valid
-                // Block 8 = invalid
-                await TestHelper.BuildBlocks.OnNode(minerC).Amount(5).Invalid(13, (coreNode, block) => BlockBuilder.InvalidCoinbaseReward(coreNode, block)).BuildAsync();
+                // MinerC mines 5 more blocks:
+                // Block 11,12,14,15 = valid
+                // Block 13 = invalid
+                minerC.MineBlocksAsync(5).GetAwaiter().GetResult();
+                ((minerC.FullNode.ChainIndexer.GetHeader(13).Block as Block).Header as PoABlockHeader).BlockSignature = new BlockSignature();
+                var minerCChainTip = minerC.FullNode.ConsensusManager().Tip;
+                Assert.Equal(15, minerCChainTip.Height);
 
                 // Reconnect MinerA to MinerC.
                 TestHelper.ConnectNoCheck(minerA, minerC);
