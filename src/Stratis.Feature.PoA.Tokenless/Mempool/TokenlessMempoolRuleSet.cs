@@ -17,7 +17,8 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool
                 typeof(CreateTokenlessMempoolEntryRule),
                 typeof(IsSmartContractWellFormedMempoolRule),
                 typeof(SenderInputMempoolRule),
-                typeof(ValidateEndorsementsMempoolRule)
+                typeof(ValidateEndorsementsMempoolRule),
+                typeof(IsChannelUpdateRequestWellFormed)
             };
         }
 

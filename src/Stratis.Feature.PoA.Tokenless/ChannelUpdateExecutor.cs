@@ -6,6 +6,10 @@ using Stratis.Core.EventBus.CoreEvents;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.Networks;
+using System;
+using Stratis.Feature.PoA.Tokenless.AccessControl;
+using System.Collections.Generic;
+using System.Text.Json;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -53,16 +57,42 @@ namespace Stratis.Feature.PoA.Tokenless
             this.blockConnectedSubscription = this.signals.Subscribe<BlockConnected>(this.OnBlockConnected);
         }
 
+        private ChannelDefinition InitializeChannelDef()
+        {
+            var channelNetwork = this.network as ChannelNetwork;
+
+            if (channelNetwork == null)
+                return null;
+
+            var defaultChannelDef = new ChannelDefinition
+            {
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>(),
+                    Thumbprints = new List<string>()
+                },
+                Id = channelNetwork.Id,
+                Name = channelNetwork.Name,
+                NetworkJson = JsonSerializer.Serialize(channelNetwork)
+            };
+
+            // Make copies off the network object.
+            if (channelNetwork.InitialAccessList?.Organisations != null)
+            {
+                defaultChannelDef.AccessList.Organisations.AddRange(channelNetwork.InitialAccessList.Organisations);
+            }
+
+            if (channelNetwork.InitialAccessList?.Thumbprints != null)
+            {
+                defaultChannelDef.AccessList.Thumbprints.AddRange(channelNetwork.InitialAccessList.Thumbprints);
+            }
+
+            return defaultChannelDef;
+        }
+
         /// <inheritdoc/>
         private void OnBlockConnected(BlockConnected blockConnectedEvent)
         {
-            // This rule is only applicable if this node is a system channel node.
-            if (!this.channelSettings.IsSystemChannelNode)
-            {
-                this.logger.LogDebug($"Only system channel nodes can process channel update requests.");
-                return;
-            }
-
             foreach (Transaction transaction in blockConnectedEvent.ConnectedBlock.Block.Transactions)
             {
                 // If the TxOut is null then this transaction does not contain any channel update execution code.
@@ -74,15 +104,18 @@ namespace Stratis.Feature.PoA.Tokenless
                 }
 
                 (ChannelUpdateRequest request, string message) = this.channelRequestSerializer.Deserialize<ChannelUpdateRequest>(txOut.ScriptPubKey);
+
+                // A mempool rule prevents this transaction from being accepted from nodes without the CaCertificatesManager.ChannelCreatePermission
+                // Therefore if we are here we are assure it's safe to execute
                 if (request != null)
                 {
                     this.logger.LogDebug("Transaction '{0}' contains a request to update channel '{1}'.", transaction.GetHash(), request.Name);
 
-                    // Get channel membership
-                    ChannelDefinition channelDef = this.channelRepository.GetChannelDefinition(request.Name);
+                    // Get channel membership, or use the network default if not available.
+                    ChannelDefinition channelDef = this.channelRepository.GetChannelDefinition(request.Name) ?? InitializeChannelDef();
 
-                    // Channel def does not exist!
-                    if (channelDef == null)
+                    // Channel def updates a different channel.
+                    if (channelDef.Name != this.network.Name)
                     {
                         this.logger.LogDebug($"{transaction.GetHash()}' updates an unknown channel.");
                         continue;
