@@ -28,11 +28,15 @@ namespace Stratis.TokenlessD
 
                 // TODO-TL: This needs to be moved someplace else.
                 var configReader = new TextFileConfiguration(args);
-                var configurationFile = configReader.GetOrDefault("conf", "");
                 var dataDir = configReader.GetOrDefault("datadir", "");
-                var configurationFilePath = Path.Combine(dataDir, configurationFile);
-                var fileConfig = new TextFileConfiguration(File.ReadAllText(configurationFilePath));
-                fileConfig.MergeInto(configReader);
+
+                var configurationFile = configReader.GetOrDefault("conf", "");
+                if (!string.IsNullOrEmpty(configurationFile))
+                {
+                    var configurationFilePath = Path.Combine(dataDir, configurationFile);
+                    var fileConfig = new TextFileConfiguration(File.ReadAllText(configurationFilePath));
+                    fileConfig.MergeInto(configReader);
+                }
 
                 NodeSettings nodeSettings = null;
 

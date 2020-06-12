@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO.Pipes;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Stratis.Core.AsyncWork;
@@ -93,8 +92,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             else
             {
                 process.StartInfo.Arguments = $"-conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
-                process.StartInfo.FileName = Assembly.GetExecutingAssembly().Location;
-                this.logger.LogInformation($"Startup arguments set to start daemon in production mode.");
+                process.StartInfo.FileName = Process.GetCurrentProcess().MainModule.FileName;
+                this.logger.LogInformation($"Startup arguments set to start daemon in production mode with '{process.StartInfo.FileName}'.");
             }
 
             process.StartInfo.UseShellExecute = false;
