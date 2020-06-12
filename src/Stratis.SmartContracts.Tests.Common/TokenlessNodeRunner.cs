@@ -77,7 +77,7 @@ namespace Stratis.SmartContracts.Tests.Common
                         feature.FeatureServices(services =>
                         {
                             services.AddSingleton<SmartContractNodeBuilder>(this.nodeBuilder);
-                            services.Replace(ServiceDescriptor.Singleton<IChannelService, TestChannelService>());
+                            services.Replace(ServiceDescriptor.Singleton<IChannelService, InProcessChannelService>());
                         });
                     }
                 });

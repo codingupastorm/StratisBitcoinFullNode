@@ -74,7 +74,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TestHelper.WaitForNodeToSync(infraNode, disallowedNodeParent);
                 TestHelper.WaitForNodeToSync(infraNode, channelNodeParent);
 
-                var infraNodeChannelService = infraNode.FullNode.NodeService<IChannelService>() as TestChannelService;
+                var infraNodeChannelService = infraNode.FullNode.NodeService<IChannelService>() as InProcessChannelService;
                 Assert.Single(infraNodeChannelService.ChannelNodes);
                 var infraNodeChannelNode = infraNodeChannelService.ChannelNodes.First();
 
@@ -95,7 +95,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     })
                     .GetAwaiter().GetResult();
 
-                var allowedNodeParentChannelService = channelNodeParent.FullNode.NodeService<IChannelService>() as TestChannelService;
+                var allowedNodeParentChannelService = channelNodeParent.FullNode.NodeService<IChannelService>() as InProcessChannelService;
                 Assert.Single(allowedNodeParentChannelService.ChannelNodes);
 
                 // Attempt to join the channel as the disallowed node.
@@ -109,7 +109,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     .GetAwaiter().GetResult();
 
                 // Expect a node to be created even if it can't connect to anyone.
-                var disallowedNodeParentChannelService = disallowedNodeParent.FullNode.NodeService<IChannelService>() as TestChannelService;
+                var disallowedNodeParentChannelService = disallowedNodeParent.FullNode.NodeService<IChannelService>() as InProcessChannelService;
                 Assert.Single(disallowedNodeParentChannelService.ChannelNodes);
 
                 var allowedNodeChannel = allowedNodeParentChannelService.ChannelNodes.First();
