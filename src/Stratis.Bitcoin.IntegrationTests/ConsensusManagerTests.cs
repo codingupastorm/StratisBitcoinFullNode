@@ -349,8 +349,6 @@ namespace Stratis.Bitcoin.IntegrationTests
                 Assert.True(TestHelper.IsNodeSyncedAtHeight(syncer, 4));
 
                 // Miner B continues to mine some invalid blocks to height 6 on a new and longer chain.
-                var dateTimeProvider = (EditableTimeProvider)minerB.FullNode.NodeService<IDateTimeProvider>();
-
                 minerB.MineBlocksAsync(4).GetAwaiter().GetResult();
 
                 // Confirm miner B at height 6.
