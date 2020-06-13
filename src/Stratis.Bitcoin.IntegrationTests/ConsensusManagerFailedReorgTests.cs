@@ -39,6 +39,28 @@ namespace Stratis.Bitcoin.IntegrationTests
             return Task.CompletedTask;
         }
     }
+    /// <summary>
+    /// This rule allows us to set up a block that fails when partial validation is performed 
+    /// by simply providing an empty signature.
+    /// </summary>
+    public sealed class PartialValidationSignatureRule : PartialValidationConsensusRule
+    {
+        public PartialValidationSignatureRule() : base()
+        {
+        }
+
+        public override Task RunAsync(RuleContext context)
+        {
+            if ((context.ValidationContext.BlockToValidate.Header as PoABlockHeader).BlockSignature.Signature.Length == 0)
+            {
+                this.Logger.LogTrace("(-)[INVALID_SIGNATURE]");
+                PoAConsensusErrors.InvalidBlockSignature.Throw();
+            }
+
+            return Task.CompletedTask;
+        }
+    }
+
 
     public class ConsensusManagerFailedReorgTests
     {
@@ -421,7 +443,7 @@ namespace Stratis.Bitcoin.IntegrationTests
                 minerARules.IntegrityValidationRules.Clear();
                 minerARules.PartialValidationRules.Clear();
                 minerARules.FullValidationRules.Clear();
-                minerARules.FullValidationRules.Add(typeof(FullValidationSignatureRule));
+                minerARules.PartialValidationRules.Add(typeof(PartialValidationSignatureRule));
 
                 TokenlessTestHelper.ShareCertificatesAndStart(network, minerA, minerB);
 
@@ -486,7 +508,7 @@ namespace Stratis.Bitcoin.IntegrationTests
                 minerARules.IntegrityValidationRules.Clear();
                 minerARules.PartialValidationRules.Clear();
                 minerARules.FullValidationRules.Clear();
-                minerARules.FullValidationRules.Add(typeof(FullValidationSignatureRule));
+                minerARules.PartialValidationRules.Add(typeof(PartialValidationSignatureRule));
 
                 TokenlessTestHelper.ShareCertificatesAndStart(network, minerA, minerB);
 
