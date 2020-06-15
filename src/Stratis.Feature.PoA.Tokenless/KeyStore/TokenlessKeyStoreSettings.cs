@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Stratis.Core.Configuration;
 using Stratis.Core.Utilities;
-using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
 
 namespace Stratis.Feature.PoA.Tokenless.KeyStore
 {
@@ -21,7 +20,8 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
 
         public string EncryptedSeed { get; set; }
 
-        public string Password { get; set; }
+        public string KeyStorePassword { get; set; }
+        public const string KeyStorePasswordKey = "keystorepassword";
 
         public string Mnemonic { get; set; }
 
@@ -66,7 +66,7 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
             this.AccountAddressIndex = config.GetOrDefault<int>("accountaddressindex", 0, this.logger);
             this.MiningAddressIndex = config.GetOrDefault<int>("miningaddressindex", 0, this.logger);
             this.CertificateAddressIndex = config.GetOrDefault<int>("certificateaddressindex", 0, this.logger);
-            this.Password = config.GetOrDefault<string>("password", null, this.logger);
+            this.KeyStorePassword = config.GetOrDefault<string>(KeyStorePasswordKey, null, this.logger);
             this.Mnemonic = config.GetOrDefault<string>("mnemonic", null, this.logger);
             this.RootPath = nodeSettings.DataFolder.RootPath;
 
@@ -119,11 +119,12 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
             NodeSettings defaults = NodeSettings.Default(network);
             var builder = new StringBuilder();
 
-            builder.AppendLine("-password=<string>              Provides a password when creating or using the wallet.");
-            builder.AppendLine("-mnemonic=<string>              Provides a mnemonic when creating the wallet.");
+            builder.AppendLine("-keystorepassword=<string>      The password when creating or using the key store .");
+            builder.AppendLine("-mnemonic=<string>              Provides a mnemonic when creating the key store.");
             builder.AppendLine("-accountaddressindex=<number>   The index (N) used for the transaction signing key at HD Path (m/44'/105'/0'/0/N) where N is a zero based key ID.");
             builder.AppendLine("-miningaddressindex=<number>    The index (N) used for the block signing key at HD Path (m/44'/105'/1'/0/N) where N is a zero based key ID.");
             builder.AppendLine("-certaddressindex=<number>      The index (N) used for the P2P certificate key at HD Path (m/44'/105'/2'/0/N) where N is a zero based key ID.");
+            builder.AppendLine();
             builder.AppendLine("----Certificate Details----");
             builder.AppendLine("-generatecertificate                            Requests a new certificate to be generated.");
             builder.AppendLine("-certificatename=<string>                       The user's name, as it should appear on the certificate request.");
@@ -152,6 +153,7 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
             builder.AppendLine("#miningaddressindex=0");
             builder.AppendLine("#The certificate address index.");
             builder.AppendLine("#certaddressindex=0");
+            builder.AppendLine();
             builder.AppendLine("#----Certificate Details----");
             builder.AppendLine("#Requests a new certificate to be generated.");
             builder.AppendLine("#generatecertificate=false");

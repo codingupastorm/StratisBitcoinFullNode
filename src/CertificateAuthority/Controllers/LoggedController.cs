@@ -8,7 +8,7 @@ namespace CertificateAuthority.Controllers
 {
     public class LoggedController : Controller
     {
-        private readonly string[] privateFields = new[] { "password", "mnemonic" };
+        private readonly string[] privateFields = new[] { Settings.KeyStorePasswordKey, "mnemonic" };
 
         private readonly Logger logger;
 
@@ -29,7 +29,7 @@ namespace CertificateAuthority.Controllers
         }
 
         /// <summary>
-        /// Serializes an object to a json string and removes the values of field names containing "password".
+        /// Serializes an object to a json string and removes the values of field names containing <see cref="Settings.KeyStorePasswordKey"/>.
         /// </summary>
         /// <param name="obj">The object to serialize.</param>
         /// <returns></returns>
