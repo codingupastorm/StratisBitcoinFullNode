@@ -71,17 +71,35 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 channelArgs = channelArgs.Concat(new[] { "-debug=1" }).ToArray();
             }
 
-            CreateChannelConfigurationFile(channelRootFolder, channelArgs.Concat(new[] { "-ischannelnode=true", $"-channelparentpipename={channelNodeProcess.PipeName}" }).ToArray());
+            // Add project mode setting to channel configuration file.
+            if (this.channelSettings.ProjectMode)
+            {
+                this.logger.LogInformation($"Setting channel daemon to project mode.");
+                channelArgs = channelArgs.Concat(new[] { "-projectmode=true" }).ToArray();
+            }
 
-            var startUpArgs = $"run --no-build -nowarn -conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
-            this.logger.LogInformation($"Attempting to start process with args '{startUpArgs}'");
+            CreateChannelConfigurationFile(channelRootFolder, channelArgs.Concat(new[] { "-ischannelnode=true", $"-channelparentpipename={channelNodeProcess.PipeName}" }).ToArray());
 
             Process process = channelNodeProcess.Process;
             process.StartInfo.WorkingDirectory = this.channelSettings.ProcessPath;
-            process.StartInfo.FileName = "dotnet";
-            process.StartInfo.Arguments = startUpArgs;
+
+            if (this.channelSettings.ProjectMode)
+            {
+                process.StartInfo.Arguments = $"run --no-build -nowarn -conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
+                process.StartInfo.FileName = "dotnet";
+                this.logger.LogInformation($"Startup arguments set to start daemon from project source.");
+            }
+            else
+            {
+                process.StartInfo.Arguments = $"-conf={ChannelConfigurationFileName} -datadir={channelRootFolder}";
+                process.StartInfo.FileName = Process.GetCurrentProcess().MainModule.FileName;
+                this.logger.LogInformation($"Startup arguments set to start daemon in production mode with '{process.StartInfo.FileName}'.");
+            }
+
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.CreateNoWindow = false;
+
+            this.logger.LogInformation($"Attempting to start process with args '{process.StartInfo.Arguments}'");
             process.Start();
 
             this.logger.LogInformation("Executing a delay to wait for the node to start.");

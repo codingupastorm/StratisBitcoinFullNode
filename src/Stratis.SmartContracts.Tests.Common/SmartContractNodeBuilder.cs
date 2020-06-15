@@ -83,7 +83,12 @@ namespace Stratis.SmartContracts.Tests.Common
                 configParameters.Add("issystemchannelnode", "True");
 
             if (willStartChannels)
+            {
                 configParameters.Add("channelprocesspath", "..\\..\\..\\..\\Stratis.TokenlessD\\");
+
+                // We need set this to true for all integration tests that start channel daemons as dotnet.exe is called differently.
+                configParameters.Add("projectmode", "True");
+            }
 
             CoreNode node = this.CreateNode(new TokenlessNodeRunner(dataFolder, network, this.TimeProvider, agent, debugChannels ? this : null), "poa.conf", configParameters: configParameters);
 
@@ -212,14 +217,16 @@ namespace Stratis.SmartContracts.Tests.Common
             var channelRootFolder = Path.Combine(parentNode.FullNode.Settings.DataDir, channelNetwork.RootFolderName, channelName);
             Directory.CreateDirectory(channelRootFolder);
 
-            var serializedNetworkFileName = $"{channelRootFolder}\\{channelName}_network.json";
+            var serializedNetworkFileName = Path.Combine(channelRootFolder, $"{channelName}_network.json");
             File.WriteAllText(serializedNetworkFileName, serializedJson);
 
             // Save the channel definition so that it can loaded on node start.
             IChannelRepository channelRepository = parentNode.FullNode.NodeService<IChannelRepository>();
             var channelDef = new ChannelDefinition()
             {
-                Id = nodeIndex, Name = channelName, AccessList = channelNetwork.InitialAccessList,
+                Id = nodeIndex,
+                Name = channelName,
+                AccessList = channelNetwork.InitialAccessList,
                 NetworkJson = serializedJson
             };
             channelRepository.SaveChannelDefinition(channelDef);

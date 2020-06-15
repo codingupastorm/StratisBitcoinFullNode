@@ -25,6 +25,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
 
             // IPartialValidationConsensusRules
             network.Consensus.ConsensusRules
+                .Register<CheckChannelUpdateRequestSenderHasPermission>()
                 .Register<TokenlessBlockSizeRule>()
                 .Register<IsSmartContractWellFormedPartialValidationRule>()
                 .Register<SenderInputPartialValidationRule>()
@@ -40,6 +41,7 @@ namespace Stratis.Feature.PoA.Tokenless.Consensus
         {
             network.Consensus.ConsensusRules = new ConsensusRules();
             network.Consensus.ConsensusRules.Register<CheckChannelCreationRequestSenderHasPermission>();
+            network.Consensus.ConsensusRules.Register<CheckChannelUpdateRequestSenderHasPermission>();
             network.Consensus.ConsensusRules.Register<ExecuteChannelCreationRequest>();
         }
     }

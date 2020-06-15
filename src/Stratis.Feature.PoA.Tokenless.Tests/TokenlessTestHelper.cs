@@ -86,6 +86,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                     yield return new CheckSenderCertificateIsNotRevoked(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.MembershipServices.Object, this.TokenlessSigner);
                 else if (ruleType == typeof(ValidateEndorsementsMempoolRule))
                     yield return new ValidateEndorsementsMempoolRule(this.EndorsementRule, this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory);
+                else if (ruleType == typeof(IsChannelUpdateRequestWellFormed))
+                    yield return new IsSmartContractWellFormedMempoolRule(this.Network, this.Mempool, this.MempoolSettings, this.ChainIndexer, this.LoggerFactory, this.CallDataSerializer);
                 else
                     throw new NotImplementedException($"No constructor is defined for '{ruleType.Name}'.");
             }

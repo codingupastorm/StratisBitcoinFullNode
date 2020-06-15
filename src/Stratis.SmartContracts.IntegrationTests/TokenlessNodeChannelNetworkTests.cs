@@ -427,7 +427,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, server, true);
                 infraNode.Start();
 
-                var channelService = infraNode.FullNode.NodeService<IChannelService>() as TestChannelService;
+                var channelService = infraNode.FullNode.NodeService<IChannelService>() as InProcessChannelService;
                 Assert.True(channelService.ChannelNodes.Count == 1);
             }
         }
@@ -466,7 +466,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 Thread.Sleep(10_000);
 
-                var channelService = node.FullNode.NodeService<IChannelService>() as TestChannelService;
+                var channelService = node.FullNode.NodeService<IChannelService>() as InProcessChannelService;
 
                 Assert.Equal(5, channelService.ChannelNodes.Count);
             }
@@ -523,10 +523,10 @@ namespace Stratis.SmartContracts.IntegrationTests
                     })
                     .GetAwaiter().GetResult();
 
-                var channelService1 = node1.FullNode.NodeService<IChannelService>() as TestChannelService;
+                var channelService1 = node1.FullNode.NodeService<IChannelService>() as InProcessChannelService;
                 Assert.Single(channelService1.ChannelNodes);
 
-                var channelService2 = node2.FullNode.NodeService<IChannelService>() as TestChannelService;
+                var channelService2 = node2.FullNode.NodeService<IChannelService>() as InProcessChannelService;
                 Assert.Single(channelService2.ChannelNodes);
 
                 var node1Channel = channelService1.ChannelNodes.First();
