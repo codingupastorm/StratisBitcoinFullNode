@@ -15,10 +15,10 @@ using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Stratis.Core.Configuration;
 using Stratis.Core.Utilities;
-using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;
+using Stratis.SmartContracts.Core.AccessControl;
 using Xunit;
 
 namespace Stratis.SmartContracts.Tests.Common

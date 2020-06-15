@@ -23,7 +23,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         {
             // TODO: Do we need to check somewhere that the signature is correct when from a thumbprint rather than organisation?
 
-            if (!this.policy..Organisations.Contains(org))
+            if (!this.policy.AccessList.Organisations.Contains(org))
                 return;
 
             // Don't add same signature twice
@@ -56,7 +56,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         {
             get
             {
-                return this.policyValidationState.Count >= this.numSignatures;
+                return this.policyValidationState.Count >= this.policy.RequiredSignatures;
             }
         }
     }

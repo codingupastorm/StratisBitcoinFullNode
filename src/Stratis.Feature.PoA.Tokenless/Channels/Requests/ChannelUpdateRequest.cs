@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using Stratis.Feature.PoA.Tokenless.AccessControl;
+using Stratis.SmartContracts.Core.AccessControl;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels.Requests
 {

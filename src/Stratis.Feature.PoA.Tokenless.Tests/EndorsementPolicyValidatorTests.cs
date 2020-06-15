@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using MembershipServices;
 using Moq;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
+using Stratis.SmartContracts.Core.AccessControl;
 using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
@@ -32,7 +34,13 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             // Create a policy with 2 required signatures
             var policy = new EndorsementPolicy
             {
-                Organisation = (Organisation)"TestOrgansation",
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        "TestOrganisation"
+                    }
+                },
                 RequiredSignatures = 2
             };
 
@@ -85,9 +93,9 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         private static void SetupSenders(Mock<IOrganisationLookup> organisationLookup, X509Certificate dummyCert, EndorsementPolicy policy)
         {
             organisationLookup.SetupSequence(o => o.FromCertificate(dummyCert))
-                .Returns((policy.Organisation, "test address"))
-                .Returns((policy.Organisation, "test address 2"))
-                .Returns((policy.Organisation, "test address 3"));
+                .Returns(((Organisation)policy.AccessList.Organisations.First(), "test address"))
+                .Returns(((Organisation)policy.AccessList.Organisations.First(), "test address 2"))
+                .Returns(((Organisation)policy.AccessList.Organisations.First(), "test address 3"));
         }
     }
 }

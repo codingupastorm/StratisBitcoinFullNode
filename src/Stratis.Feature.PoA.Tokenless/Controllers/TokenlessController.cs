@@ -33,6 +33,7 @@ using Stratis.SmartContracts.CLR.Decompilation;
 using Stratis.SmartContracts.CLR.Local;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.AccessControl;
 using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
@@ -141,7 +142,13 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                 // When sending off CREATE transactions, use this node's organisation and the default number of required sigs. Can be configable in future.
                 EndorsementPolicy policy = new EndorsementPolicy
                 {
-                    Organisation = (Organisation)this.membershipServices.ClientCertificate.GetOrganisation(),
+                    AccessList = new AccessControlList
+                    {
+                        Organisations = new List<string>
+                        {
+                            this.membershipServices.ClientCertificate.GetOrganisation()
+                        }
+                    },
                     RequiredSignatures = EndorsementPolicy.DefaultRequiredSignatures
                 };
 

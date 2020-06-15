@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,6 +18,7 @@ using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Controllers;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.Feature.PoA.Tokenless.Networks;
+using Stratis.SmartContracts.Core.AccessControl;
 using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
@@ -73,7 +74,13 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 EndorsementPolicy policy = new EndorsementPolicy
                 {
-                    Organisation = (Organisation)node1.ClientCertificate.ToCertificate().GetOrganisation(),
+                    AccessList = new AccessControlList
+                    {
+                        Organisations = new List<string>
+                        {
+                            node1.ClientCertificate.ToCertificate().GetOrganisation()
+                        }
+                    },
                     RequiredSignatures = 1
                 };
 
@@ -152,7 +159,13 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 EndorsementPolicy policy = new EndorsementPolicy
                 {
-                    Organisation = (Organisation)node1.ClientCertificate.ToCertificate().GetOrganisation(),
+                    AccessList = new AccessControlList
+                    {
+                        Organisations = new List<string>
+                        {
+                            node1.ClientCertificate.ToCertificate().GetOrganisation()
+                        }
+                    },
                     RequiredSignatures = 2
                 };
 
@@ -216,7 +229,13 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 EndorsementPolicy policy = new EndorsementPolicy
                 {
-                    Organisation = (Organisation)node1.ClientCertificate.ToCertificate().GetOrganisation(),
+                    AccessList = new AccessControlList
+                    {
+                        Organisations = new List<string>
+                        {
+                            (Organisation)node1.ClientCertificate.ToCertificate().GetOrganisation()
+                        }
+                    },
                     RequiredSignatures = 1
                 };
 
@@ -243,7 +262,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 EndorsementPolicy savedPolicy = stateRepo.GetPolicy(createReceipt.NewContractAddress);
 
-                Assert.Equal(policy.Organisation, savedPolicy.Organisation);
+                Assert.Equal(policy.AccessList.Organisations.First(), savedPolicy.AccessList.Organisations.First());
                 Assert.Equal(policy.RequiredSignatures, savedPolicy.RequiredSignatures);
 
                 Transaction callTransaction = TokenlessTestHelper.CreateContractCallTransaction(node1, createReceipt.NewContractAddress, node1.TransactionSigningPrivateKey, "StoreTransientData");
@@ -311,7 +330,13 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 EndorsementPolicy policy = new EndorsementPolicy
                 {
-                    Organisation = (Organisation)node1.ClientCertificate.ToCertificate().GetOrganisation(),
+                    AccessList = new AccessControlList
+                    {
+                        Organisations = new List<string>
+                        {
+                            node1.ClientCertificate.ToCertificate().GetOrganisation()
+                        }
+                    },
                     RequiredSignatures = 1
                 };
 

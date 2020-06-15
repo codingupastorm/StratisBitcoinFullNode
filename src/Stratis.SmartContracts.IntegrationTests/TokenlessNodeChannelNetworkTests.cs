@@ -29,6 +29,7 @@ using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.Api;
 using Stratis.Features.SmartContracts.Models;
 using Stratis.SmartContracts.CLR.Compilation;
+using Stratis.SmartContracts.Core.AccessControl;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;

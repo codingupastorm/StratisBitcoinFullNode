@@ -104,7 +104,13 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             // Basic policy that only requires 1 sig from organisation.
             var basicPolicy = new EndorsementPolicy
             {
-                Organisation = approvedOrganisation,
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        approvedOrganisation
+                    }
+                },
                 RequiredSignatures = 1
             };
 
@@ -151,11 +157,17 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var org2 = (Organisation)"Test2";
             var policy = new EndorsementPolicy
             {
-                Organisation = org,
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        org
+                    }
+                },
                 RequiredSignatures = 1
             };
 
-            var validator = new EndorsementPolicySignatureValidator(policy.ToDictionary());
+            var validator = new EndorsementPolicySignatureValidator(policy);
 
             validator.AddSignature(org2, "test");
 
@@ -173,11 +185,17 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var org = (Organisation)"Test";
             var policy = new EndorsementPolicy
             {
-                Organisation = org,
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        org
+                    }
+                },
                 RequiredSignatures = 2
             };
 
-            var validator = new EndorsementPolicySignatureValidator(policy.ToDictionary());
+            var validator = new EndorsementPolicySignatureValidator(policy);
 
             validator.AddSignature(org, "test");
 
@@ -195,10 +213,18 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             var org = (Organisation)"Test";
             var org2 = (Organisation)"Test2";
-            var policy = new Dictionary<Organisation, int>
+
+            var policy = new EndorsementPolicy
             {
-                { org, 2 },
-                { org2, 3 }
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        org,
+                        org2
+                    }
+                },
+                RequiredSignatures = 5
             };
 
             var validator = new EndorsementPolicySignatureValidator(policy);
@@ -223,9 +249,17 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             var org = (Organisation)"Test";
             var org2 = (Organisation)"Test2";
-            var policy = new Dictionary<Organisation, int>
+
+            var policy = new EndorsementPolicy
             {
-                { org, 2 },
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        org
+                    }
+                },
+                RequiredSignatures = 2
             };
 
             var validator = new EndorsementPolicySignatureValidator(policy);

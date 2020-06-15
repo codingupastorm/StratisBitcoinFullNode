@@ -12,11 +12,11 @@ using NBitcoin;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Configuration;
 using Stratis.Core.Utilities;
-using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.PoA;
+using Stratis.SmartContracts.Core.AccessControl;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels
 {

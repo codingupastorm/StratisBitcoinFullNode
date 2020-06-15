@@ -5,9 +5,9 @@ using NBitcoin;
 using Stratis.Bitcoin.Tests.Common.Logging;
 using Stratis.Core.Configuration;
 using Stratis.Core.Utilities;
-using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Networks;
+using Stratis.SmartContracts.Core.AccessControl;
 using Xunit;
 
 namespace Stratis.Feature.PoA.Tokenless.Tests.Channels

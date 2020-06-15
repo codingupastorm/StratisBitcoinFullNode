@@ -1,5 +1,5 @@
 ﻿using NBitcoin;
-using Stratis.Feature.PoA.Tokenless.AccessControl;
+using Stratis.SmartContracts.Core.AccessControl;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels
 {
