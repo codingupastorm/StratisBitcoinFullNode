@@ -55,14 +55,12 @@ namespace CertificateAuthority.Database
 
         private bool IsMinerCertificate(CertificateInfoModel certificate)
         {
-            const string MiningPermissionOid = "1.5.4";
-
             // It's not a miner if it does not have a block signing key.
             if ((certificate.BlockSigningPubKey?.Length ?? 0) == 0)
                 return false;
 
             // Verify the mining permission as well.
-            byte[] miningPermission = certificate.ToCertificate()?.GetExtensionValue(MiningPermissionOid)?.GetOctets();
+            byte[] miningPermission = certificate.ToCertificate()?.GetExtensionValue(CaCertificatesManager.MiningPermissionOid)?.GetOctets();
             if ((miningPermission?.Length ?? 0) != 3)
                 return false;
 
