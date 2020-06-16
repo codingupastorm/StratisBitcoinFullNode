@@ -15,11 +15,13 @@ using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Feature.PoA.Tokenless;
+using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Controllers;
 using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.SmartContracts.Core.AccessControl;
 using Stratis.SmartContracts.Core.Endorsement;
+using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
 using Stratis.SmartContracts.Core.Store;
@@ -292,8 +294,12 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // And that it was stored in the transient store on both nodes!
                 var lastBlock = node1.FullNode.BlockStore().GetBlock(node1.FullNode.ChainIndexer.Tip.HashBlock);
                 var rwsTransaction = lastBlock.Transactions[1];
-                Assert.NotNull(node1.FullNode.NodeService<ITransientStore>().Get(rwsTransaction.GetHash()));
-                Assert.NotNull(node2.FullNode.NodeService<ITransientStore>().Get(rwsTransaction.GetHash()));
+                var rwsSerializer = node1.FullNode.NodeService<IReadWriteSetTransactionSerializer>();
+                ReadWriteSet rws = rwsSerializer.GetReadWriteSet(rwsTransaction);
+
+
+                Assert.NotNull(node2.FullNode.NodeService<ITransientStore>().Get(rws.GetHash()).Data);
+                Assert.NotNull(node2.FullNode.NodeService<ITransientStore>().Get(rws.GetHash()).Data);
 
                 Thread.Sleep(2000);
 
