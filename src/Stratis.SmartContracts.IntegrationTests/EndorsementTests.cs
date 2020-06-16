@@ -310,7 +310,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
 
         [Fact]
-        public async Task PrivateDataDistributedToWholeAccessListAsync()
+        public async Task PrivateDataDistributedToMultipleOrganisationsAsync()
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
             IWebHostBuilder builder = CaTestHelper.CreateWebHostBuilder(testRootFolder);
@@ -412,12 +412,13 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // And that it was stored in the transient store on all nodes!
                 var lastBlock = node1.FullNode.BlockStore().GetBlock(node1.FullNode.ChainIndexer.Tip.HashBlock);
                 var rwsTransaction = lastBlock.Transactions[1];
+                var rwsSerializer = node1.FullNode.NodeService<IReadWriteSetTransactionSerializer>();
+                ReadWriteSet rws = rwsSerializer.GetReadWriteSet(rwsTransaction);
 
-                // TODO: This is broken. Probably broken for the other test as well. 
 
-                Assert.NotNull(node1.FullNode.NodeService<ITransientStore>().Get(rwsTransaction.GetHash()).Data);
-                Assert.NotNull(node2.FullNode.NodeService<ITransientStore>().Get(rwsTransaction.GetHash()).Data);
-                Assert.NotNull(node3.FullNode.NodeService<ITransientStore>().Get(rwsTransaction.GetHash()).Data);
+                Assert.NotNull(node2.FullNode.NodeService<ITransientStore>().Get(rws.GetHash()).Data);
+                Assert.NotNull(node2.FullNode.NodeService<ITransientStore>().Get(rws.GetHash()).Data);
+                Assert.NotNull(node3.FullNode.NodeService<ITransientStore>().Get(rws.GetHash()).Data);
 
                 Assert.NotNull(node1.FullNode.NodeService<IPrivateDataStore>()
                     .GetBytes(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("TransientPrivate")));
@@ -425,10 +426,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                     .GetBytes(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("TransientPrivate")));
                 Assert.NotNull(node3.FullNode.NodeService<IPrivateDataStore>()
                     .GetBytes(createReceipt.NewContractAddress, Encoding.UTF8.GetBytes("TransientPrivate")));
-
-                // This node doesn't have the data because he's not permitted to
-                Assert.Null(node3.FullNode.NodeService<IPrivateDataStore>().GetBytes(createReceipt.NewContractAddress,
-                    Encoding.UTF8.GetBytes("TransientPrivate")));
             }
         }
 
