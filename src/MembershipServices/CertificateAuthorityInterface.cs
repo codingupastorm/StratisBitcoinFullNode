@@ -23,9 +23,6 @@ namespace MembershipServices
         /// <summary>Name of client's .pfx certificate that is supposed to be found in node's folder.</summary>
         public const string ClientCertificateName = "ClientCertificate.pfx";
 
-        /// <summary>The password used to decrypt the PKCS#12 (.pfx) file containing the client certificate and private key.</summary>
-        public const string ClientCertificateConfigurationKey = "password";
-
         /// <summary>The account ID ('username') used by the node to query the CA.</summary>
         public const string CaAccountIdKey = "caaccountid";
 
@@ -40,11 +37,11 @@ namespace MembershipServices
 
         private readonly string caUrl;
 
-        private string caPassword;
+        private readonly string caPassword;
 
-        private int caAccountId;
+        private readonly int caAccountId;
 
-        private string clientCertificatePassword;
+        private string keyStorePassword;
 
         private readonly NodeSettings nodeSettings;
 
@@ -121,17 +118,17 @@ namespace MembershipServices
                 throw new CertificateConfigurationException($"Client certificate not located at '{clientCertPath}'. Make sure you place '{ClientCertificateName}' in the node's root directory.");
             }
 
-            this.clientCertificatePassword = this.configuration.GetOrDefault<string>(ClientCertificateConfigurationKey, null);
+            this.keyStorePassword = this.configuration.GetOrDefault<string>(Settings.KeyStorePasswordKey, null);
 
-            if (this.clientCertificatePassword == null)
+            if (this.keyStorePassword == null)
             {
                 this.logger.LogError("(-)[MISSING_PASSWORD]");
-                throw new AuthenticationException($"You have to provide a password for the client certificate! Use '{ClientCertificateConfigurationKey}' configuration key to provide a password.");
+                throw new AuthenticationException($"You have to provide a password for the client certificate! Use '{Settings.KeyStorePasswordKey}' configuration key to provide a password.");
             }
 
             try
             {
-                (clientCert, clientKey) = CaCertificatesManager.LoadPfx(File.ReadAllBytes(clientCertPath), this.clientCertificatePassword);
+                (clientCert, clientKey) = CaCertificatesManager.LoadPfx(File.ReadAllBytes(clientCertPath), this.keyStorePassword);
             }
             catch (IOException)
             {

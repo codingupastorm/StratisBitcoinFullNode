@@ -107,9 +107,8 @@ namespace Stratis.SmartContracts.Tests.Common
                 new string[] {
                     "-conf=poa.conf",
                     "-datadir=" + dataFolder,
-                    "-password=test",
+                    $"{TokenlessKeyStoreSettings.KeyStorePasswordKey}=test",
                     $"-mnemonic={ mnemonic }",
-                    "-certificatepassword=test",
                     "-certificatename=" + commonName,
                     "-certificateorganizationunit=IntegrationTests",
                     "-certificateorganization=Stratis",
@@ -121,7 +120,6 @@ namespace Stratis.SmartContracts.Tests.Common
                 {
                     "-conf=poa.conf",
                     "-datadir=" + dataFolder,
-                    "-certificatepassword=test"
                 };
 
             using (var settings = new NodeSettings(network, args: args))

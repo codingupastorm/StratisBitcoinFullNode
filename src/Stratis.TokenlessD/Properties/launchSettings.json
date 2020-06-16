@@ -26,15 +26,15 @@
     },
     "Stratis.TokenlessD Test 1": {
       "commandName": "Project",
-      "commandLineArgs": "-datadir=\"..\\..\\..\\..\\..\\TestScripts\\Data\\node1\" -port=36201 -apiport=30001 -password=test -capassword=4815162342 -caaccountid=1 -certificatepassword=test -mnemonic=\"lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom\" -iprangefiltering=0 -whitelist=0.0.0.0 -addnode=127.0.0.1:36202 -addnode=127.0.0.1:36203"
+      "commandLineArgs": "-datadir=\"..\\..\\..\\..\\..\\TestScripts\\Data\\node1\" -port=36201 -apiport=30001 -keystorepassword=test -capassword=4815162342 -caaccountid=1 -mnemonic=\"lava frown leave wedding virtual ghost sibling able mammal liar wide wisdom\" -iprangefiltering=0 -whitelist=0.0.0.0 -addnode=127.0.0.1:36202 -addnode=127.0.0.1:36203"
     },
     "Stratis.TokenlessD Test 2": {
       "commandName": "Project",
-      "commandLineArgs": "-datadir=\"..\\..\\..\\..\\..\\TestScripts\\Data\\node2\" -port=36202 -apiport=30002 -password=test -capassword=4815162342 -caaccountid=1 -certificatepassword=test -mnemonic=\"idle power swim wash diesel blouse photo among eager reward govern menu\" -iprangefiltering=0 -whitelist=0.0.0.0 -addnode=127.0.0.1:36201 -addnode=127.0.0.1:36203"
+      "commandLineArgs": "-datadir=\"..\\..\\..\\..\\..\\TestScripts\\Data\\node2\" -port=36202 -apiport=30002 -keystorepassword=test -capassword=4815162342 -caaccountid=1 -mnemonic=\"idle power swim wash diesel blouse photo among eager reward govern menu\" -iprangefiltering=0 -whitelist=0.0.0.0 -addnode=127.0.0.1:36201 -addnode=127.0.0.1:36203"
     },
     "Stratis.TokenlessD Test 3": {
       "commandName": "Project",
-      "commandLineArgs": "-datadir=\"..\\..\\..\\..\\..\\TestScripts\\Data\\node3\" -port=36203 -apiport=30003 -password=test -capassword=4815162342 -caaccountid=1 -certificatepassword=test -mnemonic=\"high neither night category fly wasp inner kitchen phone current skate hair\" -iprangefiltering=0 -whitelist=0.0.0.0 -addnode=127.0.0.1:36201 -addnode=127.0.0.1:36202"
+      "commandLineArgs": "-datadir=\"..\\..\\..\\..\\..\\TestScripts\\Data\\node3\" -port=36203 -apiport=30003 -keystorepassword=test -capassword=4815162342 -caaccountid=1 -mnemonic=\"high neither night category fly wasp inner kitchen phone current skate hair\" -iprangefiltering=0 -whitelist=0.0.0.0 -addnode=127.0.0.1:36201 -addnode=127.0.0.1:36202"
     }
   }
 }

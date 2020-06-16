@@ -47,15 +47,23 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         protected readonly IChannelRepository channelRepository;
         protected readonly ChannelSettings channelSettings;
         protected readonly IDateTimeProvider dateTimeProvider;
+        protected readonly TokenlessKeyStoreSettings keyStoreSettings;
         protected readonly ILogger logger;
         protected readonly NodeSettings nodeSettings;
         protected IAsyncLoop terminationLoop;
         protected readonly TokenlessNetwork tokenlessNetworkDefaults;
 
-        protected ChannelService(ChannelSettings channelSettings, IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, NodeSettings nodeSettings, IChannelRepository channelRepository)
+        protected ChannelService(
+            ChannelSettings channelSettings,
+            TokenlessKeyStoreSettings keyStoreSettings,
+            IDateTimeProvider dateTimeProvider,
+            ILoggerFactory loggerFactory,
+            NodeSettings nodeSettings,
+            IChannelRepository channelRepository)
         {
             this.channelSettings = channelSettings;
             this.dateTimeProvider = dateTimeProvider;
+            this.keyStoreSettings = keyStoreSettings;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.nodeSettings = nodeSettings;
             this.channelRepository = channelRepository;
@@ -280,13 +288,10 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             var configurationFilePath = Path.Combine(channelRootFolder, ChannelConfigurationFileName);
 
             var args = new StringBuilder();
-            args.AppendLine($"-certificatepassword=test");
-            args.AppendLine($"-password=test");
             args.AppendLine($"-{CertificateAuthorityInterface.CaBaseUrlKey}={CertificateAuthorityInterface.CaBaseUrl}");
             args.AppendLine($"-{CertificateAuthorityInterface.CaAccountIdKey}={Settings.AdminAccountId}");
             args.AppendLine($"-{CertificateAuthorityInterface.CaPasswordKey}={this.nodeSettings.ConfigReader.GetOrDefault(CertificateAuthorityInterface.CaPasswordKey, "")} ");
-            args.AppendLine($"-{CertificateAuthorityInterface.ClientCertificateConfigurationKey}=test");
-            args.AppendLine($"-agent{CertificateAuthorityInterface.ClientCertificateConfigurationKey}=test");
+            args.AppendLine($"-{Settings.KeyStorePasswordKey}={this.keyStoreSettings.KeyStorePassword}");
 
             // Append any channel specific arguments.
             foreach (var channelArg in channelArgs)
