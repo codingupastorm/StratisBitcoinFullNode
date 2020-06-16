@@ -77,7 +77,7 @@ namespace Stratis.Feature.PoA.Tokenless
                     return true;
                 }
 
-                await this.tokenlessBroadcaster.BroadcastToWholeOrganisationAsync(new RequestPrivateDataPayload(id))
+                await this.tokenlessBroadcaster.BroadcastToOrganisationAsync(new RequestPrivateDataPayload(id))
                     .ConfigureAwait(false);
 
                 Thread.Sleep(TimeBetweenQueries);
