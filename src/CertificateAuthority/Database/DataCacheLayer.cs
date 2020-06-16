@@ -62,7 +62,7 @@ namespace CertificateAuthority.Database
                 return false;
 
             // Verify the mining permission as well.
-            byte[] miningPermission = certificate.ToCertificate().GetExtensionValue(MiningPermissionOid)?.GetOctets();
+            byte[] miningPermission = certificate.ToCertificate()?.GetExtensionValue(MiningPermissionOid)?.GetOctets();
             if ((miningPermission?.Length ?? 0) != 3)
                 return false;
 
