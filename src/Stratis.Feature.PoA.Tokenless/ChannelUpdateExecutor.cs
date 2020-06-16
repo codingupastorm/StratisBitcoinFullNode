@@ -1,15 +1,14 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Collections.Generic;
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
-using Stratis.Core.Signals;
 using Stratis.Core.EventBus;
 using Stratis.Core.EventBus.CoreEvents;
+using Stratis.Core.Signals;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.Networks;
-using System;
-using Stratis.Feature.PoA.Tokenless.AccessControl;
-using System.Collections.Generic;
-using System.Text.Json;
+using Stratis.SmartContracts.Core.AccessControl;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
