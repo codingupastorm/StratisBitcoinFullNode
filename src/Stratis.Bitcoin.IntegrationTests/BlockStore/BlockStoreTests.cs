@@ -23,7 +23,6 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 {
     public class BlockStoreTests
     {
-        private static List<string> FederationPermissions = new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission };
         private readonly ILoggerFactory loggerFactory;
         private readonly Network network;
         private readonly RepositorySerializer repositorySerializer;
@@ -125,13 +124,13 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode nodeSync = nodeBuilder.CreateTokenlessNode(network, 0, server, permissions: FederationPermissions).Start();
+                CoreNode nodeSync = nodeBuilder.CreateTokenlessNode(network, 0, server, permissions: TokenlessTestHelper.FederationPermissions).Start();
                 int maxReorgLength = (int)Math.Min(10, nodeSync.FullNode.ChainBehaviorState.MaxReorgLength);
                 await nodeSync.MineBlocksAsync(maxReorgLength);
                 TestBase.WaitLoop(() => nodeSync.FullNode.GetBlockStoreTip().Height == maxReorgLength);
 
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 1, server, permissions: FederationPermissions).Start();
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: FederationPermissions).Start();
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 1, server, permissions: TokenlessTestHelper.FederationPermissions).Start();
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: TokenlessTestHelper.FederationPermissions).Start();
 
                 // Sync both nodes
                 TestHelper.ConnectAndSync(nodeSync, node1, node2);
@@ -183,8 +182,8 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
                 var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 1, server, permissions: FederationPermissions).Start();
-                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: FederationPermissions).Start();
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(network, 1, server, permissions: TokenlessTestHelper.FederationPermissions).Start();
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: TokenlessTestHelper.FederationPermissions).Start();
 
                 // Mine some blocks with node2
                 await node2.MineBlocksAsync(10);

@@ -26,7 +26,6 @@ namespace Stratis.Bitcoin.IntegrationTests
 {
     public class ConsensusManagerTests
     {
-        private static List<string> FederationPermissions = new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission };
         private readonly TokenlessNetwork network;
 
         public ConsensusManagerTests()
@@ -151,9 +150,9 @@ namespace Stratis.Bitcoin.IntegrationTests
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode minerA = nodeBuilder.CreateTokenlessNode(this.network, 0, server, agent: "cm-1-minerA", permissions: FederationPermissions);
-                CoreNode minerB = nodeBuilder.CreateTokenlessNode(this.network, 1, server, agent: "cm-1-minerB", permissions: FederationPermissions);
-                CoreNode syncer = nodeBuilder.CreateTokenlessNode(this.network, 2, server, agent: "cm-1-syncer", permissions: FederationPermissions);
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(this.network, 0, server, agent: "cm-1-minerA", permissions: TokenlessTestHelper.FederationPermissions);
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(this.network, 1, server, agent: "cm-1-minerB", permissions: TokenlessTestHelper.FederationPermissions);
+                CoreNode syncer = nodeBuilder.CreateTokenlessNode(this.network, 2, server, agent: "cm-1-syncer", permissions: TokenlessTestHelper.FederationPermissions);
 
                 TokenlessTestHelper.ShareCertificatesAndStart(this.network, minerA, minerB, syncer);
 
@@ -206,8 +205,8 @@ namespace Stratis.Bitcoin.IntegrationTests
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode minerA = nodeBuilder.CreateTokenlessNode(this.network, 0, server, agent: "cm-3-minerA", permissions: FederationPermissions);
-                CoreNode minerB = nodeBuilder.CreateTokenlessNode(this.network, 1, server, agent: "cm-3-minerB", permissions: FederationPermissions);
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(this.network, 0, server, agent: "cm-3-minerA", permissions: TokenlessTestHelper.FederationPermissions);
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(this.network, 1, server, agent: "cm-3-minerB", permissions: TokenlessTestHelper.FederationPermissions);
 
                 TokenlessTestHelper.ShareCertificatesAndStart(this.network, minerA, minerB);
 
@@ -257,9 +256,9 @@ namespace Stratis.Bitcoin.IntegrationTests
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode minerA = nodeBuilder.CreateTokenlessNode(this.network, 0, server, agent: "cm-4-minerA", permissions: FederationPermissions);
-                CoreNode minerB = nodeBuilder.CreateTokenlessNode(this.network, 1, server, agent: "cm-4-minerB", permissions: FederationPermissions);
-                CoreNode syncer = nodeBuilder.CreateTokenlessNode(this.network, 2, server, agent: "cm-4-syncer", permissions: FederationPermissions);
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(this.network, 0, server, agent: "cm-4-minerA", permissions: TokenlessTestHelper.FederationPermissions);
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(this.network, 1, server, agent: "cm-4-minerB", permissions: TokenlessTestHelper.FederationPermissions);
+                CoreNode syncer = nodeBuilder.CreateTokenlessNode(this.network, 2, server, agent: "cm-4-syncer", permissions: TokenlessTestHelper.FederationPermissions);
 
                 TokenlessTestHelper.ShareCertificatesAndStart(this.network, minerA, minerB, syncer);
 
@@ -326,9 +325,9 @@ namespace Stratis.Bitcoin.IntegrationTests
                 var config = new NodeConfigParameters { { "bantime", "120" } };
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode minerA = nodeBuilder.CreateTokenlessNode(this.network, 0, server, agent: "cm-5-minerA", permissions: FederationPermissions, configParameters: config);
-                CoreNode minerB = nodeBuilder.CreateTokenlessNode(this.network, 1, server, agent: "cm-5-minerB", permissions: FederationPermissions, configParameters: config);
-                CoreNode syncer = nodeBuilder.CreateTokenlessNode(syncerNetwork, 2, server, agent: "syncer", permissions: FederationPermissions, configParameters: config);
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(this.network, 0, server, agent: "cm-5-minerA", permissions: TokenlessTestHelper.FederationPermissions, configParameters: config);
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(this.network, 1, server, agent: "cm-5-minerB", permissions: TokenlessTestHelper.FederationPermissions, configParameters: config);
+                CoreNode syncer = nodeBuilder.CreateTokenlessNode(syncerNetwork, 2, server, agent: "syncer", permissions: TokenlessTestHelper.FederationPermissions, configParameters: config);
 
                 TokenlessTestHelper.ShareCertificatesAndStart(this.network, minerA, minerB, syncer);
 
@@ -387,9 +386,9 @@ namespace Stratis.Bitcoin.IntegrationTests
                 var config = new NodeConfigParameters { { "bantime", "120" } };
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode minerA = nodeBuilder.CreateTokenlessNode(this.network, 0, server, agent: "cm-6-minerA", permissions: FederationPermissions, configParameters: config);
-                CoreNode minerB = nodeBuilder.CreateTokenlessNode(this.network, 1, server, agent: "cm-6-minerB", permissions: FederationPermissions, configParameters: config);
-                CoreNode syncer = nodeBuilder.CreateTokenlessNode(syncerNetwork, 2, server, agent: "syncer", permissions: FederationPermissions, configParameters: config);
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(this.network, 0, server, agent: "cm-6-minerA", permissions: TokenlessTestHelper.FederationPermissions, configParameters: config);
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(this.network, 1, server, agent: "cm-6-minerB", permissions: TokenlessTestHelper.FederationPermissions, configParameters: config);
+                CoreNode syncer = nodeBuilder.CreateTokenlessNode(syncerNetwork, 2, server, agent: "syncer", permissions: TokenlessTestHelper.FederationPermissions, configParameters: config);
 
                 TokenlessTestHelper.ShareCertificatesAndStart(this.network, minerA, minerB, syncer);
 
@@ -436,9 +435,9 @@ namespace Stratis.Bitcoin.IntegrationTests
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode minerA = nodeBuilder.CreateTokenlessNode(this.network, 0, server, agent: "cm-7-minerA", permissions: FederationPermissions);
-                CoreNode minerB = nodeBuilder.CreateTokenlessNode(this.network, 1, server, agent: "cm-7-minerB", permissions: FederationPermissions);
-                CoreNode syncer = nodeBuilder.CreateTokenlessNode(this.network, 2, server, agent: "cm-7-syncer", permissions: FederationPermissions);
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(this.network, 0, server, agent: "cm-7-minerA", permissions: TokenlessTestHelper.FederationPermissions);
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(this.network, 1, server, agent: "cm-7-minerB", permissions: TokenlessTestHelper.FederationPermissions);
+                CoreNode syncer = nodeBuilder.CreateTokenlessNode(this.network, 2, server, agent: "cm-7-syncer", permissions: TokenlessTestHelper.FederationPermissions);
 
                 void flushCondition(IServiceCollection services)
                 {
@@ -507,8 +506,8 @@ namespace Stratis.Bitcoin.IntegrationTests
                 var config = new NodeConfigParameters { { "bantime", "120" } };
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode minerA = nodeBuilder.CreateTokenlessNode(this.network, 0, server, agent: "cm-8-minerA", permissions: FederationPermissions, configParameters: config);
-                CoreNode syncer = nodeBuilder.CreateTokenlessNode(syncerNetwork, 1, server, agent: "cm-8-syncer", permissions: FederationPermissions, configParameters: config);
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(this.network, 0, server, agent: "cm-8-minerA", permissions: TokenlessTestHelper.FederationPermissions, configParameters: config);
+                CoreNode syncer = nodeBuilder.CreateTokenlessNode(syncerNetwork, 1, server, agent: "cm-8-syncer", permissions: TokenlessTestHelper.FederationPermissions, configParameters: config);
 
                 TokenlessTestHelper.ShareCertificatesAndStart(this.network, minerA, syncer);
 
@@ -549,9 +548,9 @@ namespace Stratis.Bitcoin.IntegrationTests
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "cm-9-minerA", permissions: FederationPermissions);
-                CoreNode minerB = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "cm-9-minerB", permissions: FederationPermissions);
-                CoreNode syncer = nodeBuilder.CreateTokenlessNode(network, 2, server, agent: "cm-9-syncer", permissions: FederationPermissions);
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "cm-9-minerA", permissions: TokenlessTestHelper.FederationPermissions);
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "cm-9-minerB", permissions: TokenlessTestHelper.FederationPermissions);
+                CoreNode syncer = nodeBuilder.CreateTokenlessNode(network, 2, server, agent: "cm-9-syncer", permissions: TokenlessTestHelper.FederationPermissions);
 
                 TokenlessTestHelper.ShareCertificatesAndStart(network, minerA, minerB, syncer);
 
@@ -600,9 +599,9 @@ namespace Stratis.Bitcoin.IntegrationTests
                 var config = new NodeConfigParameters { { "bantime", "120" } };
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode minerA = nodeBuilder.CreateTokenlessNode(this.network, 0, server, agent: "minerA", permissions: FederationPermissions, configParameters: config);
-                CoreNode minerB = nodeBuilder.CreateTokenlessNode(this.network, 1, server, agent: "minerB", permissions: FederationPermissions, configParameters: config);
-                CoreNode minerC = nodeBuilder.CreateTokenlessNode(this.network, 2, server, agent: "minerC", permissions: FederationPermissions, configParameters: config);
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(this.network, 0, server, agent: "minerA", permissions: TokenlessTestHelper.FederationPermissions, configParameters: config);
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(this.network, 1, server, agent: "minerB", permissions: TokenlessTestHelper.FederationPermissions, configParameters: config);
+                CoreNode minerC = nodeBuilder.CreateTokenlessNode(this.network, 2, server, agent: "minerC", permissions: TokenlessTestHelper.FederationPermissions, configParameters: config);
 
                 TokenlessTestHelper.ShareCertificatesAndStart(this.network, minerA, minerB, minerC);
 

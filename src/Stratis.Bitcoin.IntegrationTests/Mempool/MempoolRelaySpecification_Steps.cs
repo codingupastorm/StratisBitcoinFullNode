@@ -21,7 +21,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
 {
     public partial class MempoolRelaySpecification
     {
-        private static List<string> FederationPermissions = new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission };
         private IWebHost server;
         private SmartContractNodeBuilder nodeBuilder;
         private CoreNode nodeA;
@@ -66,9 +65,9 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
 
         protected void nodeA_nodeB_and_nodeC()
         {
-            this.nodeA = this.nodeBuilder.CreateTokenlessNode(this.network, 0, this.server, permissions: FederationPermissions);
-            this.nodeB = this.nodeBuilder.CreateTokenlessNode(this.network, 1, this.server, permissions: FederationPermissions);
-            this.nodeC = this.nodeBuilder.CreateTokenlessNode(this.network, 2, this.server, permissions: FederationPermissions);
+            this.nodeA = this.nodeBuilder.CreateTokenlessNode(this.network, 0, this.server, permissions: TokenlessTestHelper.FederationPermissions);
+            this.nodeB = this.nodeBuilder.CreateTokenlessNode(this.network, 1, this.server, permissions: TokenlessTestHelper.FederationPermissions);
+            this.nodeC = this.nodeBuilder.CreateTokenlessNode(this.network, 2, this.server, permissions: TokenlessTestHelper.FederationPermissions);
 
             X509Certificate[] certificates = { this.nodeA.ClientCertificate.ToCertificate(), this.nodeB.ClientCertificate.ToCertificate(), this.nodeC.ClientCertificate.ToCertificate() };
 

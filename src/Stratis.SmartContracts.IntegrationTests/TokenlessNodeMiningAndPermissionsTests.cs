@@ -20,7 +20,6 @@ namespace Stratis.SmartContracts.IntegrationTests
 {
     public class TokenlessNodeMiningAndPermissionsTests
     {
-        private static List<string> FederationPermissions = new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission };
         private readonly TokenlessNetwork network;
 
         public TokenlessNodeMiningAndPermissionsTests()

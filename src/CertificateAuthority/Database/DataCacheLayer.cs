@@ -59,12 +59,9 @@ namespace CertificateAuthority.Database
             if ((certificate.BlockSigningPubKey?.Length ?? 0) == 0)
                 return false;
 
-            // Verify the mining permission as well.
-            byte[] miningPermission = certificate.ToCertificate()?.GetExtensionValue(CaCertificatesManager.MiningPermissionOid)?.GetOctets();
-            if ((miningPermission?.Length ?? 0) != 3)
-                return false;
+            var arr = CaCertificatesManager.ExtractCertificateExtension(certificate.ToCertificate(), CaCertificatesManager.MiningPermissionOid);
 
-            return miningPermission[0] == 4 /* octet string */ && miningPermission[1] == 1 /* length */ && miningPermission[2] == 1 /* true */;
+            return arr?.Length == 1 && arr[0] == 1;
         }
 
         public void Initialize()

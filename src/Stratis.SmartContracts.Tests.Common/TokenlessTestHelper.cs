@@ -32,6 +32,7 @@ namespace Stratis.SmartContracts.Tests.Common
     /// </summary>
     public static class TokenlessTestHelper
     {
+        public static readonly List<string> FederationPermissions = new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission };
         public static readonly TokenlessNetwork Network = new TokenlessNetwork();
 
         public static void WaitForNodeToSync(params CoreNode[] nodes)

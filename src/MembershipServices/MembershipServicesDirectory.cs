@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using CertificateAuthority;
+using Microsoft.EntityFrameworkCore.ValueGeneration.Internal;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Org.BouncyCastle.Asn1.X509;
@@ -235,42 +236,18 @@ namespace MembershipServices
         /// </summary>
         public static string GetCertificateTransactionSigningAddress(X509Certificate certificate, Network network)
         {
-            // TODO: This implementation is directly from CertificatesManager. Need to avoid the duplication.
+            var temp = ExtractCertificateExtension(certificate, CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid);
+            if (temp == null)
+                return null;
 
-            // TODO: Find a way of extracting this extension cleanly without a trip through X509Certificate2.
-            X509Certificate2 cert = CaCertificatesManager.ConvertCertificate(certificate, new SecureRandom());
+            var address = new BitcoinPubKeyAddress(new KeyId(temp), network);
 
-            foreach (X509Extension extension in cert.Extensions)
-            {
-                if (extension.Oid.Value == CaCertificatesManager.TransactionSigningPubKeyHashExtensionOid)
-                {
-                    var temp = extension.RawData.Skip(2).ToArray();
-
-                    var address = new BitcoinPubKeyAddress(new KeyId(temp), network);
-
-                    return address.ToString();
-                }
-            }
-
-            return null;
+            return address.ToString();
         }
 
         public static byte[] ExtractCertificateExtension(X509Certificate certificate, string oid)
         {
-            // TODO: Find a way of extracting this extension cleanly without a trip through X509Certificate2.
-            X509Certificate2 cert = CaCertificatesManager.ConvertCertificate(certificate, new SecureRandom());
-
-            foreach (X509Extension extension in cert.Extensions)
-            {
-                if (extension.Oid.Value == oid)
-                    // This is truly horrible, but it isn't clear how we can correctly go from the DER bytes in the extension, to a relevant BC class, to a string.
-                    // Perhaps we are meant to recursively evaluate the extension data as ASN.1 until we land up with raw data that can't be decoded further?
-                    // IMPORTANT: The two prefix bytes being removed consist of a type tag (e.g. `0x04` = octet string)
-                    // and a length byte. For lengths > 127 more than one byte is needed, which would break this code.
-                    return extension.RawData.Skip(2).ToArray();
-            }
-
-            return null;
+            return CaCertificatesManager.ExtractCertificateExtension(certificate, oid);
         }
 
         public byte[] ExtractCertificateExtensionFromOid(X509Certificate certificate, string oid)
@@ -281,21 +258,11 @@ namespace MembershipServices
 
         public static string ExtractCertificateExtensionString(X509Certificate certificate, string oid)
         {
-            X509Certificate2 cert = CaCertificatesManager.ConvertCertificate(certificate, new SecureRandom());
+            byte[] temp = ExtractCertificateExtension(certificate, oid);
+            if (temp == null)
+                return null;
 
-            foreach (X509Extension extension in cert.Extensions)
-            {
-                if (extension.Oid.Value == oid)
-                {
-                    // This is truly horrible, but it isn't clear how we can correctly go from the DER bytes in the extension, to a relevant BC class, to a string.
-                    // Perhaps we are meant to recursively evaluate the extension data as ASN.1 until we land up with raw data that can't be decoded further?
-                    var temp = extension.RawData.Skip(2).ToArray();
-
-                    return Encoding.UTF8.GetString(temp);
-                }
-            }
-
-            return null;
+            return Encoding.UTF8.GetString(temp);
         }
     }
 }

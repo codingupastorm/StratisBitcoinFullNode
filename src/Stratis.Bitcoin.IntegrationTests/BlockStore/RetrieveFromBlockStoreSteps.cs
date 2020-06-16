@@ -21,7 +21,6 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 {
     public partial class RetrieveFromBlockStoreSpecification : BddSpecification
     {
-        private static List<string> FederationPermissions = new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission };
         private IWebHost server;
         private SmartContractNodeBuilder builder;
         private CoreNode node;
@@ -70,12 +69,12 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 
         private void a_poa_node_running()
         {
-            this.node = this.builder.CreateTokenlessNode(this.network, 1, this.server, permissions: FederationPermissions).Start();
+            this.node = this.builder.CreateTokenlessNode(this.network, 1, this.server, permissions: TokenlessTestHelper.FederationPermissions).Start();
         }
 
         private void a_poa_node_to_transact_with()
         {
-            this.transactionNode = this.builder.CreateTokenlessNode(this.network, 2, this.server, permissions: FederationPermissions).Start();
+            this.transactionNode = this.builder.CreateTokenlessNode(this.network, 2, this.server, permissions: TokenlessTestHelper.FederationPermissions).Start();
 
             TestHelper.Connect(this.transactionNode, this.node);
             TestHelper.WaitForNodeToSync(this.node, this.transactionNode);
