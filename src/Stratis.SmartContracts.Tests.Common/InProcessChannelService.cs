@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using MembershipServices;
 using Microsoft.Extensions.Logging;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Core.Configuration;
@@ -22,14 +23,15 @@ namespace Stratis.SmartContracts.Tests.Common
         public List<CoreNode> ChannelNodes { get; }
 
         public InProcessChannelService(
-            ChannelSettings channelSettings,
-            TokenlessKeyStoreSettings keyStoreSettings,
-            IDateTimeProvider dateTimeProvider,
-            ILoggerFactory loggerFactory,
-            NodeSettings nodeSettings,
             IChannelRepository channelRepository,
+            ChannelSettings channelSettings,
+            IDateTimeProvider dateTimeProvider,
+            TokenlessKeyStoreSettings keyStoreSettings,
+            ILoggerFactory loggerFactory,
+            IMembershipServicesDirectory membershipServicesDirectory,
+            NodeSettings nodeSettings,
             SmartContractNodeBuilder nodeBuilder)
-            : base(channelSettings, keyStoreSettings, dateTimeProvider, loggerFactory, nodeSettings, channelRepository)
+            : base(channelRepository, channelSettings, dateTimeProvider, keyStoreSettings, loggerFactory, membershipServicesDirectory, nodeSettings: nodeSettings)
         {
             this.ChannelNodes = new List<CoreNode>();
             this.NodeBuilder = nodeBuilder;
