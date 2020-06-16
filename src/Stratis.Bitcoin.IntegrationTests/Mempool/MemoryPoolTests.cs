@@ -20,6 +20,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
 {
     public class MemoryPoolTests
     {
+        private static List<string> FederationPermissions = new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission };
         private readonly TokenlessNetwork network;
 
         public MemoryPoolTests()
@@ -41,7 +42,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
                
-                CoreNode stratisNodeSync = nodeBuilder.CreateTokenlessNode(this.network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+                CoreNode stratisNodeSync = nodeBuilder.CreateTokenlessNode(this.network, 0, server, permissions: FederationPermissions).Start();
 
                 Transaction tx = TokenlessTestHelper.CreateBasicOpReturnTransaction(stratisNodeSync);
 
@@ -65,7 +66,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
-                CoreNode stratisNodeSync = nodeBuilder.CreateTokenlessNode(this.network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+                CoreNode stratisNodeSync = nodeBuilder.CreateTokenlessNode(this.network, 0, server, permissions: FederationPermissions).Start();
 
                 var trxs = new List<Transaction>();
                 var rand = new Random();
@@ -101,9 +102,9 @@ namespace Stratis.Bitcoin.IntegrationTests.Mempool
                 var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
-                CoreNode stratisNodeSync = nodeBuilder.CreateTokenlessNode(this.network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
-                CoreNode stratisNode1 = nodeBuilder.CreateTokenlessNode(this.network, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission });
-                CoreNode stratisNode2 = nodeBuilder.CreateTokenlessNode(this.network, 2, server, permissions: new List<string>() { CaCertificatesManager.SendPermission });
+                CoreNode stratisNodeSync = nodeBuilder.CreateTokenlessNode(this.network, 0, server, permissions: FederationPermissions).Start();
+                CoreNode stratisNode1 = nodeBuilder.CreateTokenlessNode(this.network, 1, server, permissions: FederationPermissions);
+                CoreNode stratisNode2 = nodeBuilder.CreateTokenlessNode(this.network, 2, server, permissions: FederationPermissions);
 
                 var certificates = new List<X509Certificate>() { stratisNodeSync.ClientCertificate.ToCertificate()};
                 TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, stratisNode1.DataFolder, this.network);

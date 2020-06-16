@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
 using Microsoft.AspNetCore.Hosting;
@@ -14,13 +13,13 @@ using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;
 using System.Linq;
-using Stratis.Feature.PoA.Tokenless.KeyStore;
 using NBitcoin.PoA;
 
 namespace Stratis.Bitcoin.IntegrationTests
 {
     public class NodeSyncTests
     {
+        private static List<string> FederationPermissions = new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission };
         private readonly Network powNetwork;
 
         public NodeSyncTests()
@@ -57,9 +56,9 @@ namespace Stratis.Bitcoin.IntegrationTests
                 var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
-                CoreNode miner = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "ns-5-miner", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
-                CoreNode syncer = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "ns-5-syncer", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
-                CoreNode reorg = nodeBuilder.CreateTokenlessNode(network, 2, server, agent: "ns-5-reorg", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+                CoreNode miner = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "ns-5-miner", permissions: FederationPermissions).Start();
+                CoreNode syncer = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "ns-5-syncer", permissions: FederationPermissions).Start();
+                CoreNode reorg = nodeBuilder.CreateTokenlessNode(network, 2, server, agent: "ns-5-reorg", permissions: FederationPermissions).Start();
 
                 miner.MineBlocksAsync(1).GetAwaiter().GetResult();
 
@@ -128,10 +127,10 @@ namespace Stratis.Bitcoin.IntegrationTests
                 var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
-                CoreNode minerNode = nodeBuilder.CreateTokenlessNode(network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
-                CoreNode connectorNode = nodeBuilder.CreateTokenlessNode(network, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
-                CoreNode firstNode = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
-                CoreNode secondNode = nodeBuilder.CreateTokenlessNode(network, 3, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }, 
+                CoreNode minerNode = nodeBuilder.CreateTokenlessNode(network, 0, server, permissions: FederationPermissions).Start();
+                CoreNode connectorNode = nodeBuilder.CreateTokenlessNode(network, 1, server, permissions: FederationPermissions).Start();
+                CoreNode firstNode = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: FederationPermissions).Start();
+                CoreNode secondNode = nodeBuilder.CreateTokenlessNode(network, 3, server, permissions: FederationPermissions, 
                     configParameters: new NodeConfigParameters() { { "mnemonic", mnemonics[3].ToString() } }).Start();
 
                 TestHelper.Connect(minerNode, connectorNode);

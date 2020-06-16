@@ -20,6 +20,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 {
     public class TokenlessNodeMiningAndPermissionsTests
     {
+        private static List<string> FederationPermissions = new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission };
         private readonly TokenlessNetwork network;
 
         public TokenlessNodeMiningAndPermissionsTests()
@@ -80,7 +81,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission });
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server, permissions: FederationPermissions);
 
                 node1.Start();
 

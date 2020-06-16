@@ -64,11 +64,10 @@ namespace Stratis.Bitcoin.IntegrationTests
 
     public class ConsensusManagerFailedReorgTests
     {
-        private readonly TokenlessNetwork network;
+        private static List<string> FederationPermissions = new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission };
 
         public ConsensusManagerFailedReorgTests()
         {
-            this.network = new TokenlessNetwork();
         }
 
         [Fact]
@@ -90,8 +89,8 @@ namespace Stratis.Bitcoin.IntegrationTests
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "cmfr-1-minerA", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission });
-                CoreNode minerB = nodeBuilder.CreateTokenlessNode(noValidationRulesNetwork, 1, server, agent: "cmfr-1-minerB", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).NoValidation();
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "cmfr-1-minerA", permissions: FederationPermissions);
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(noValidationRulesNetwork, 1, server, agent: "cmfr-1-minerB", permissions: FederationPermissions).NoValidation();
 
                 // We are only interested in failing a specific block.
                 var minerARules = network.Consensus.ConsensusRules;
@@ -226,8 +225,8 @@ namespace Stratis.Bitcoin.IntegrationTests
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "cmfr-2-minerA", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission });
-                CoreNode minerB = nodeBuilder.CreateTokenlessNode(noValidationRulesNetwork, 1, server, agent: "cmfr-2-minerB", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).NoValidation();
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "cmfr-2-minerA", permissions: FederationPermissions);
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(noValidationRulesNetwork, 1, server, agent: "cmfr-2-minerB", permissions: FederationPermissions).NoValidation();
 
                 // We are only interested in failing a specific block.
                 var minerARules = network.Consensus.ConsensusRules;
@@ -355,9 +354,9 @@ namespace Stratis.Bitcoin.IntegrationTests
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "cmfr-3-minerA", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission });
-                CoreNode minerB = nodeBuilder.CreateTokenlessNode(noValidationRulesNetwork, 1, server, agent: "cmfr-3-minerB", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).NoValidation();
-                CoreNode syncer = nodeBuilder.CreateTokenlessNode(network, 2, server, agent: "cmfr-3-syncer", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission });
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "cmfr-3-minerA", permissions: FederationPermissions);
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(noValidationRulesNetwork, 1, server, agent: "cmfr-3-minerB", permissions: FederationPermissions).NoValidation();
+                CoreNode syncer = nodeBuilder.CreateTokenlessNode(network, 2, server, agent: "cmfr-3-syncer", permissions: FederationPermissions);
 
                 // We are only interested in failing a specific block.
                 var minerARules = network.Consensus.ConsensusRules;
@@ -434,8 +433,8 @@ namespace Stratis.Bitcoin.IntegrationTests
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "cmfr-4-minerA", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission });
-                CoreNode minerB = nodeBuilder.CreateTokenlessNode(noValidationRulesNetwork, 1, server, agent: "cmfr-4-minerB", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).NoValidation();
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "cmfr-4-minerA", permissions: FederationPermissions);
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(noValidationRulesNetwork, 1, server, agent: "cmfr-4-minerB", permissions: FederationPermissions).NoValidation();
 
                 // We are only interested in failing a specific block.
                 var minerARules = network.Consensus.ConsensusRules;
@@ -499,8 +498,8 @@ namespace Stratis.Bitcoin.IntegrationTests
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "cmfr-5-minerA", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission });
-                CoreNode minerB = nodeBuilder.CreateTokenlessNode(noValidationRulesNetwork, 1, server, agent: "cmfr-5-minerB", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).NoValidation();
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "cmfr-5-minerA", permissions: FederationPermissions);
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(noValidationRulesNetwork, 1, server, agent: "cmfr-5-minerB", permissions: FederationPermissions).NoValidation();
 
                 // We are only interested in failing a specific block.
                 var minerARules = network.Consensus.ConsensusRules;
@@ -580,9 +579,9 @@ namespace Stratis.Bitcoin.IntegrationTests
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "cmfr-6-minerA", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission });
-                CoreNode minerB = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "cmfr-6-minerB", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission });
-                CoreNode minerC = nodeBuilder.CreateTokenlessNode(noValidationRulesNetwork, 2, server, agent: "cmfr-6-minerC", permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).NoValidation();
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, agent: "cmfr-6-minerA", permissions: FederationPermissions);
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(network, 1, server, agent: "cmfr-6-minerB", permissions: FederationPermissions);
+                CoreNode minerC = nodeBuilder.CreateTokenlessNode(noValidationRulesNetwork, 2, server, agent: "cmfr-6-minerC", permissions: FederationPermissions).NoValidation();
 
                 // We are only interested in failing a specific block.
                 var minerARules = network.Consensus.ConsensusRules;
