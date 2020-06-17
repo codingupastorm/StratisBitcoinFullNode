@@ -30,6 +30,9 @@ namespace Stratis.Feature.PoA.Tokenless
         public bool OrganisationCanAccessPrivateData(Organisation organisation, ReadWriteSet readWriteSet)
         {
             // Check if we are meant to have the data. 
+
+            // TODO: Validate using the access list validation elsewhere.
+
             WriteItem write = readWriteSet.Writes.First(x => x.IsPrivateData);
             EndorsementPolicy policy = this.stateRepository.GetPolicy(write.ContractAddress);
 
@@ -38,7 +41,7 @@ namespace Stratis.Feature.PoA.Tokenless
                 return false;
             }
 
-            return policy.Organisation == organisation;
+            return policy.AccessList.Organisations.Contains(organisation);
         }
 
         public bool OrganisationCanAccessPrivateData(X509Certificate certificate, ReadWriteSet readWriteSet)

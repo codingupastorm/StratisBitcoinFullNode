@@ -22,7 +22,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
         private readonly IEndorsedTransactionBuilder endorsedTransactionBuilder;
         private readonly IEndorsementSignatureValidator signatureValidator;
-        private readonly IEndorsementPolicyValidator policyValidator;
+        private readonly IEndorsementValidator policyValidator;
 
         public enum EndorsementValidationErrorType
         {
@@ -33,7 +33,7 @@ namespace Stratis.Feature.PoA.Tokenless
             SignaturesInvalid
         }
 
-        public EndorsedContractTransactionValidationRule(IEndorsedTransactionBuilder endorsedTransactionBuilder, IEndorsementSignatureValidator signatureValidator, IEndorsementPolicyValidator policyValidator)
+        public EndorsedContractTransactionValidationRule(IEndorsedTransactionBuilder endorsedTransactionBuilder, IEndorsementSignatureValidator signatureValidator, IEndorsementValidator policyValidator)
         {
             this.endorsedTransactionBuilder = endorsedTransactionBuilder;
             this.signatureValidator = signatureValidator;

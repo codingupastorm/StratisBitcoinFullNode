@@ -1,82 +1,66 @@
-using System.Collections.Generic;
-using MembershipServices;
-using NBitcoin;
-using Org.BouncyCastle.X509;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Stratis.SmartContracts.Core.Endorsement;
-using Stratis.SmartContracts.Core.ReadWrite;
-using Stratis.SmartContracts.Core.State;
 
 namespace Stratis.Feature.PoA.Tokenless.Endorsement
 {
-    public interface IEndorsementPolicyValidator
-    {
-        bool Validate(ReadWriteSet rws, IEnumerable<Endorsement> endorsements);
-    }
-
     /// <summary>
-    /// Validates that an endorsement policy is satisfied for a transaction to an already-deployed contract.
+    /// Checks that an endorsement's policy is met. Doesn't check signatures.
     /// </summary>
-    public class EndorsementPolicyValidator : IEndorsementPolicyValidator
+    public class EndorsementPolicyValidator
     {
-        private readonly IMembershipServicesDirectory membershipServices;
-        private readonly IOrganisationLookup organisationLookup;
-        private readonly IStateRepositoryRoot stateRoot;
-        private readonly IEndorsementSignatureValidator signatureValidator;
+        private readonly EndorsementPolicy policy;
 
-        public EndorsementPolicyValidator(
-            IMembershipServicesDirectory membershipServices, 
-            IOrganisationLookup organisationLookup, 
-            IStateRepositoryRoot stateRoot,
-            IEndorsementSignatureValidator signatureValidator)
+        /// <summary>
+        ///  A list of signatures from individuals permitted by the access control list.
+        /// </summary>
+        private readonly HashSet<string> policyValidationState;
+
+        public EndorsementPolicyValidator(EndorsementPolicy policy)
         {
-            this.membershipServices = membershipServices;
-            this.organisationLookup = organisationLookup;
-            this.stateRoot = stateRoot;
-            this.signatureValidator = signatureValidator;
+            this.policy = policy;
+            this.policyValidationState = new HashSet<string>();
+        }
+
+        public void AddSignature(Organisation org, string address)
+        {
+            // TODO: Do we need to check somewhere that the signature is correct when from a thumbprint rather than organisation?
+
+            if (!this.policy.AccessList.Organisations.Contains(org))
+                return;
+
+            // Don't add same signature twice
+            if (ContainsSignature(address))
+                return;
+
+            this.policyValidationState.Add(address);
+        }
+
+        private bool ContainsSignature(string address)
+        {
+            return this.policyValidationState.Contains(address);
+        }
+
+        private int GetUniqueSignatureCount()
+        {
+            return this.policyValidationState.Count;
         }
 
         /// <summary>
-        /// Validates that the policy for this RWS is matched by the given endorsements.
+        /// Returns addresses that match the validation policy.
         /// </summary>
-        /// <param name="rws"></param>
-        /// <param name="endorsements"></param>
         /// <returns></returns>
-        public bool Validate(ReadWriteSet rws, IEnumerable<Endorsement> endorsements)
+        public IReadOnlyList<string> GetAddresses()
         {
-            // RWS has no reads/writes, should always be OK?
-            if (rws.ContractAddress == null)
-                return true;
+            return this.policyValidationState.ToList();
+        }
 
-            EndorsementPolicy policy = this.stateRoot.GetPolicy(rws.ContractAddress);
-
-            // No policy means no contract at this address, or some other error.
-            if (policy == null)
-                return false;
-
-            // This is currently the only possible policy type, but in the future if more are added we will need to
-            // add a PolicyValidatorFactory that returns the correct policy for a particular EndorsementPolicy subclass.
-            var policyValidator = new MofNPolicyValidator(policy.ToDictionary());
-
-            foreach (Endorsement endorsement in endorsements)
+        public bool Valid 
+        {
+            get
             {
-                var pubKey = new PubKey(endorsement.PubKey);
-
-                X509Certificate cert = this.membershipServices.GetCertificateForTransactionSigningPubKeyHash(pubKey.Hash.ToBytes());
-
-                if (cert != null)
-                {
-                    (Organisation organisation, string sender) = this.organisationLookup.FromCertificate(cert);
-                    
-                    // It's possible that we get an endorsement which contains some invalid signatures but still meets the policy.
-                    // Therefore we should only add valid signatures to the policy.
-                    if (this.signatureValidator.Validate(endorsement, rws.ToJsonEncodedBytes()))
-                    {
-                        policyValidator.AddSignature(organisation, sender);
-                    }
-                }
+                return this.policyValidationState.Count >= this.policy.RequiredSignatures;
             }
-
-            return policyValidator.Valid;
         }
     }
 }

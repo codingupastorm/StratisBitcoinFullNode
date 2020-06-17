@@ -57,7 +57,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             this.DateTimeProvider = Stratis.Core.Utilities.DateTimeProvider.Default;
             this.MempoolSettings = new MempoolSettings(this.NodeSettings) { MempoolExpiry = Features.MemoryPool.MempoolValidator.DefaultMempoolExpiry };
             this.TokenlessSigner = new TokenlessSigner(this.Network, new SenderRetriever());
-            this.EndorsementRule = new EndorsedContractTransactionValidationRule(Mock.Of<IEndorsedTransactionBuilder>(), Mock.Of<IEndorsementSignatureValidator>(), Mock.Of<IEndorsementPolicyValidator>());
+            this.EndorsementRule = new EndorsedContractTransactionValidationRule(Mock.Of<IEndorsedTransactionBuilder>(), Mock.Of<IEndorsementSignatureValidator>(), Mock.Of<IEndorsementValidator>());
 
             this.BlockPolicyEstimator = new BlockPolicyEstimator(this.MempoolSettings, this.LoggerFactory, this.NodeSettings);
             this.Mempool = new TokenlessMempool(this.BlockPolicyEstimator, this.LoggerFactory);

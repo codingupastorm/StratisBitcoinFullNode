@@ -721,6 +721,20 @@ namespace CertificateAuthority
             });
         }
 
+        public static byte[] ExtractCertificateExtension(X509Certificate certificate, string oid)
+        {
+            byte[] rawData = certificate?.GetExtensionValue(oid)?.GetOctets();
+
+            if (rawData == null || rawData.Length < 2 || rawData[0] != 4 /* octet string */ || (2 + rawData[1] /* length */) != rawData.Length)
+                return null;
+
+            byte[] res = new byte[rawData[1]];
+
+            Array.Copy(rawData, 2, res, 0, res.Length);
+
+            return res;
+        }
+
         private static AttributePkcs GetAttributes(string[] subjectAlternativeNames, Dictionary<string, byte[]> extensionData)
         {
             IList oids = new ArrayList();

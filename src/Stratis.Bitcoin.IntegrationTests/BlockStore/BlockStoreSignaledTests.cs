@@ -98,14 +98,14 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode nodeSync = builder.CreateTokenlessNode(network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }).Start();
+                CoreNode nodeSync = builder.CreateTokenlessNode(network, 0, server, permissions: TokenlessTestHelper.FederationPermissions).Start();
 
                 // Mine some blocks.
                 int maxReorgLength = (int)Math.Min(10, nodeSync.FullNode.ChainBehaviorState.MaxReorgLength);
                 nodeSync.MineBlocksAsync(maxReorgLength).GetAwaiter().GetResult();
                 TestBase.WaitLoop(() => nodeSync.FullNode.GetBlockStoreTip().Height == maxReorgLength);
 
-                CoreNode node1 = builder.CreateTokenlessNode(network, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission }).Start();
+                CoreNode node1 = builder.CreateTokenlessNode(network, 1, server, permissions: TokenlessTestHelper.FederationPermissions).Start();
 
                 // Change the second node's list of default behaviours include the test behaviour in it.
                 // We leave the other behaviors alone for this test because we want to see what messages the node gets under normal operation.

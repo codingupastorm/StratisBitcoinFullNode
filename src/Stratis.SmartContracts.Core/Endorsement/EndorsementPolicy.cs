@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 using Newtonsoft.Json;
+using Stratis.SmartContracts.Core.AccessControl;
 
 namespace Stratis.SmartContracts.Core.Endorsement
 {
@@ -8,24 +8,12 @@ namespace Stratis.SmartContracts.Core.Endorsement
     {
         public const int DefaultRequiredSignatures = 2;
 
-        public Organisation Organisation { get; set; }
+        public AccessControlList AccessList { get; set; }
 
         public int RequiredSignatures { get; set; }
 
         public EndorsementPolicy()
         {
-        }
-
-        public Dictionary<Organisation, int> ToDictionary()
-        {
-            // If no org is defined return an empty dictionary.
-            if (string.IsNullOrWhiteSpace(this.Organisation))
-                return new Dictionary<Organisation, int>();
-
-            return new Dictionary<Organisation, int>
-            {
-                { this.Organisation, this.RequiredSignatures }
-            };
         }
 
         #region Serialization
