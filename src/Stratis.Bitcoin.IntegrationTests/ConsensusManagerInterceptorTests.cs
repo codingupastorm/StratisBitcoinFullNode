@@ -42,9 +42,9 @@ namespace Stratis.Bitcoin.IntegrationTests
                 var config = new NodeConfigParameters() { { "bantime", "120" } };
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }, configParameters: config);
-                CoreNode minerB = nodeBuilder.CreateTokenlessNode(networkNoValidationRules, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }, configParameters: config);
-                CoreNode syncer = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: new List<string>() { CaCertificatesManager.SendPermission }, configParameters: config);
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, permissions: TokenlessTestHelper.FederationPermissions, configParameters: config);
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(networkNoValidationRules, 1, server, permissions: TokenlessTestHelper.FederationPermissions, configParameters: config);
+                CoreNode syncer = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: TokenlessTestHelper.FederationPermissions, configParameters: config);
 
                 bool minerADisconnectedFromSyncer = false;
 
@@ -135,9 +135,9 @@ namespace Stratis.Bitcoin.IntegrationTests
                 var config = new NodeConfigParameters() { { "bantime", "120" } };
 
                 // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
-                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }, configParameters: config);
-                CoreNode minerB = nodeBuilder.CreateTokenlessNode(network, 1, server, permissions: new List<string>() { CaCertificatesManager.SendPermission, CaCertificatesManager.MiningPermission }, configParameters: config);
-                CoreNode syncer = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: new List<string>() { CaCertificatesManager.SendPermission }, configParameters: config);
+                CoreNode minerA = nodeBuilder.CreateTokenlessNode(network, 0, server, permissions: TokenlessTestHelper.FederationPermissions, configParameters: config);
+                CoreNode minerB = nodeBuilder.CreateTokenlessNode(network, 1, server, permissions: TokenlessTestHelper.FederationPermissions, configParameters: config);
+                CoreNode syncer = nodeBuilder.CreateTokenlessNode(network, 2, server, permissions: TokenlessTestHelper.FederationPermissions, configParameters: config);
 
                 bool minerADisconnectedFromMinerB = false;
 

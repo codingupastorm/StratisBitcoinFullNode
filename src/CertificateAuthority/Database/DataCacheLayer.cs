@@ -53,6 +53,17 @@ namespace CertificateAuthority.Database
             return new CADbContext(this.settings);
         }
 
+        private bool IsMinerCertificate(CertificateInfoModel certificate)
+        {
+            // It's not a miner if it does not have a block signing key.
+            if ((certificate.BlockSigningPubKey?.Length ?? 0) == 0)
+                return false;
+
+            var arr = CaCertificatesManager.ExtractCertificateExtension(certificate.ToCertificate(), CaCertificatesManager.MiningPermissionOid);
+
+            return arr?.Length == 1 && arr[0] == 1;
+        }
+
         public void Initialize()
         {
             // Fill cache.
@@ -68,7 +79,7 @@ namespace CertificateAuthority.Database
 
                     if (certificate.Status == CertificateStatus.Revoked)
                         this.RevokedCertificates.Add(certificate.Thumbprint);
-                    else if ((certificate.BlockSigningPubKey?.Length ?? 0) != 0)
+                    else if (this.IsMinerCertificate(certificate))
                         this.PublicKeys.Add(Encoders.Hex.EncodeData(certificate.BlockSigningPubKey));
                 }
             }
@@ -83,7 +94,7 @@ namespace CertificateAuthority.Database
         public void AddNewCertificate(CertificateInfoModel certificate)
         {
             this.CertStatusesByThumbprint.Add(certificate.Thumbprint, certificate.Status);
-            if ((certificate.BlockSigningPubKey?.Length ?? 0) != 0)
+            if (this.IsMinerCertificate(certificate))
                 this.PublicKeys.Add(Encoders.Hex.EncodeData(certificate.BlockSigningPubKey));
 
             using (CADbContext dbContext = this.CreateContext())
