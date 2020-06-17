@@ -32,15 +32,15 @@ namespace Stratis.Feature.PoA.Tokenless
                 byte[] systemChannelPermission = MembershipServicesDirectory.ExtractCertificateExtension(certificate, CaCertificatesManager.SystemChannelPermissionOid);
                 if (systemChannelPermission == null || systemChannelPermission.Length != 1 || systemChannelPermission[0] != 1)
                     throw new OperationCanceledException($"The client does not have '{CaCertificatesManager.SystemChannelPermission}' permission.");
-
-                return;
             }
-
-            // If this is a created channel, check that the client is allowed to be on there.
-            if (this.network is ChannelNetwork channelNetwork)
+            else
             {
-                if (!this.channelAccessValidator.ValidateCertificateIsPermittedOnChannel(certificate, channelNetwork))
-                    throw new OperationCanceledException($"The client is not permitted on this channel.");
+                // If this is a created channel, check that the client is allowed to be on there.
+                if (this.network is ChannelNetwork channelNetwork)
+                {
+                    if (!this.channelAccessValidator.ValidateCertificateIsPermittedOnChannel(certificate, channelNetwork))
+                        throw new OperationCanceledException($"The client is not permitted on this channel.");
+                }
             }
         }
     }
