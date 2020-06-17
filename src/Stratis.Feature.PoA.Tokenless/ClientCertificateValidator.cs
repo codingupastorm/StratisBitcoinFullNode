@@ -26,21 +26,22 @@ namespace Stratis.Feature.PoA.Tokenless
         public void ConfirmCertificatePermittedOnChannel(X509Certificate certificate)
         {
             // If this is the system channel, check for the system channel permission
-            if (this.channelSettings?.IsSystemChannelNode ?? false)
+            if (this.channelSettings.IsSystemChannelNode)
             {
                 // If this is the system channel node then the client must have permission to connect.
                 byte[] systemChannelPermission = MembershipServicesDirectory.ExtractCertificateExtension(certificate, CaCertificatesManager.SystemChannelPermissionOid);
                 if (systemChannelPermission == null || systemChannelPermission.Length != 1 || systemChannelPermission[0] != 1)
                     throw new OperationCanceledException($"The client does not have '{CaCertificatesManager.SystemChannelPermission}' permission.");
             }
-
-            // If this is a created channel, check that the client is allowed to be on there.
-            if (this.network is ChannelNetwork channelNetwork)
+            else
             {
-                if (!this.channelAccessValidator.ValidateCertificateIsPermittedOnChannel(certificate, channelNetwork))
-                    throw new OperationCanceledException($"The client is not permitted on this channel.");
+                // If this is a created channel, check that the client is allowed to be on there.
+                if (this.network is ChannelNetwork channelNetwork)
+                {
+                    if (!this.channelAccessValidator.ValidateCertificateIsPermittedOnChannel(certificate, channelNetwork))
+                        throw new OperationCanceledException($"The client is not permitted on this channel.");
+                }
             }
-
         }
     }
 }
