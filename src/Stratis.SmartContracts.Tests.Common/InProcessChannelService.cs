@@ -7,6 +7,7 @@ using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Core.Configuration;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
 
 namespace Stratis.SmartContracts.Tests.Common
 {
@@ -22,12 +23,13 @@ namespace Stratis.SmartContracts.Tests.Common
 
         public InProcessChannelService(
             ChannelSettings channelSettings,
+            TokenlessKeyStoreSettings keyStoreSettings,
             IDateTimeProvider dateTimeProvider,
             ILoggerFactory loggerFactory,
             NodeSettings nodeSettings,
             IChannelRepository channelRepository,
             SmartContractNodeBuilder nodeBuilder)
-            : base(channelSettings, dateTimeProvider, loggerFactory, nodeSettings, channelRepository)
+            : base(channelSettings, keyStoreSettings, dateTimeProvider, loggerFactory, nodeSettings, channelRepository)
         {
             this.ChannelNodes = new List<CoreNode>();
             this.NodeBuilder = nodeBuilder;

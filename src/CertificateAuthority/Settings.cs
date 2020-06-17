@@ -26,6 +26,8 @@ namespace CertificateAuthority
         private const string SubFolderName = "CaMain";
         private const string ConfigFileName = "ca.conf";
 
+        public const string KeyStorePasswordKey = "keystorepassword";
+
         private string configurationFile;
 
         public string CertificateDirectory { get; private set; }

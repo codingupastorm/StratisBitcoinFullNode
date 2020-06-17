@@ -1,9 +1,9 @@
 ﻿using System.IO;
 using System.Runtime.CompilerServices;
 using NBitcoin;
-using Stratis.Core.Configuration;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Configuration;
 using Stratis.Features.PoA;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.PoA
@@ -37,7 +37,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.PoA
 
             var config = new NodeConfigParameters
             {
-                { "-certificatepassword", "password" },
                 { "-capassword", "4815162342" },
                 { "-caaccountid", "1" }
             };
@@ -71,7 +70,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.PoA
 
             var config = new NodeConfigParameters
             {
-                { "-certificatepassword", "password" },
                 { "-capassword", "4815162342" },
                 { "-caaccountid", "1" }
             };

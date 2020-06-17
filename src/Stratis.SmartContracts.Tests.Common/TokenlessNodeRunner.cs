@@ -4,16 +4,16 @@ using MembershipServices;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NBitcoin;
-using Stratis.Core;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
-using Stratis.Core.P2P;
+using Stratis.Core;
 using Stratis.Core.Base;
 using Stratis.Core.Builder;
 using Stratis.Core.Builder.Feature;
 using Stratis.Core.Configuration;
+using Stratis.Core.P2P;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless;
 using Stratis.Feature.PoA.Tokenless.Channels;
@@ -45,7 +45,7 @@ namespace Stratis.SmartContracts.Tests.Common
                 "-datadir=" + this.DataFolder,
                 $"-{CertificateAuthorityInterface.CaAccountIdKey}={Settings.AdminAccountId}",
                 $"-{CertificateAuthorityInterface.CaPasswordKey}={CaTestHelper.AdminPassword}",
-                $"-{CertificateAuthorityInterface.ClientCertificateConfigurationKey}=test"
+                $"-{Settings.KeyStorePasswordKey}=test"
             });
 
             IFullNodeBuilder builder = new FullNodeBuilder()

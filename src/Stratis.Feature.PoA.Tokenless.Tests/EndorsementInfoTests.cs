@@ -145,7 +145,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public void MofNPolicyValidator_Validates_No_Signature_Correctly()
         {
             var policy = new EndorsementPolicy();
-            var validator = new EndorsementPolicySignatureValidator(policy);
+            var validator = new EndorsementPolicyValidator(policy);
 
             Assert.True(validator.Valid);
         }
@@ -167,7 +167,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 RequiredSignatures = 1
             };
 
-            var validator = new EndorsementPolicySignatureValidator(policy);
+            var validator = new EndorsementPolicyValidator(policy);
 
             validator.AddSignature(org2, "test");
 
@@ -176,7 +176,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             validator.AddSignature(org, "test");
 
             Assert.True(validator.Valid);
-            Assert.Single(validator.GetValidAddresses());
+            Assert.Single(validator.GetAddresses());
         }
 
         [Fact]
@@ -195,7 +195,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 RequiredSignatures = 2
             };
 
-            var validator = new EndorsementPolicySignatureValidator(policy);
+            var validator = new EndorsementPolicyValidator(policy);
 
             validator.AddSignature(org, "test");
 
@@ -204,8 +204,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             validator.AddSignature(org, "test2");
 
             Assert.True(validator.Valid);
-            Assert.Equal("test", validator.GetValidAddresses()[0]);
-            Assert.Equal("test2", validator.GetValidAddresses()[1]);
+            Assert.Equal("test", validator.GetAddresses()[0]);
+            Assert.Equal("test2", validator.GetAddresses()[1]);
         }
 
         [Fact]
@@ -227,7 +227,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 RequiredSignatures = 5
             };
 
-            var validator = new EndorsementPolicySignatureValidator(policy);
+            var validator = new EndorsementPolicyValidator(policy);
 
             // Add org 1 signatures
             validator.AddSignature(org, "test");
@@ -262,7 +262,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
                 RequiredSignatures = 2
             };
 
-            var validator = new EndorsementPolicySignatureValidator(policy);
+            var validator = new EndorsementPolicyValidator(policy);
 
             // Add org 2 signatures - they don't contribute to the policy being valid
             validator.AddSignature(org2, "test2 2");
@@ -277,8 +277,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             Assert.True(validator.Valid);
 
             // Ensure only org 1 addresses are returned
-            Assert.Equal("test", validator.GetValidAddresses()[0]);
-            Assert.Equal("test 2", validator.GetValidAddresses()[1]);
+            Assert.Equal("test", validator.GetAddresses()[0]);
+            Assert.Equal("test 2", validator.GetAddresses()[1]);
         }
 
 

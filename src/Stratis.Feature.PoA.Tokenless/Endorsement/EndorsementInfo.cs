@@ -12,7 +12,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
     {
         private readonly IOrganisationLookup organisationLookup;
         private readonly IEndorsementSignatureValidator endorsementSignatureValidator;
-        private readonly EndorsementPolicySignatureValidator signatureValidator;
+        private readonly EndorsementPolicyValidator validator;
         private readonly Dictionary<string, SignedProposalResponse> signedProposals;
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
             this.organisationLookup = organisationLookup;
             this.Policy = policy;
             this.endorsementSignatureValidator = endorsementSignatureValidator;
-            this.signatureValidator = new EndorsementPolicySignatureValidator(this.Policy);
+            this.validator = new EndorsementPolicyValidator(this.Policy);
 
             // To prevent returning proposals that were signed correctly but do not match the policy,
             // we should keep track of signed proposals from all addresses and filter them by the
@@ -56,7 +56,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         public IReadOnlyList<SignedProposalResponse> GetValidProposalResponses()
         {
             // Returns signed proposal responses that match current proposals returned by addresses that meet the policy,
-            return this.signatureValidator.GetValidAddresses()
+            return this.validator.GetAddresses()
                 .Where(a => this.signedProposals.ContainsKey(a))
                 .Select(a => this.signedProposals[a])
                 .ToList();
@@ -64,7 +64,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
 
         private void AddSignature(Organisation org, string address)
         {
-            this.signatureValidator.AddSignature(org, address);
+            this.validator.AddSignature(org, address);
 
             if (this.Validate())
             {
@@ -78,7 +78,7 @@ namespace Stratis.Feature.PoA.Tokenless.Endorsement
         /// <returns></returns>
         public bool Validate()
         {
-            return this.signatureValidator.Valid;
+            return this.validator.Valid;
         }
     }
 }
