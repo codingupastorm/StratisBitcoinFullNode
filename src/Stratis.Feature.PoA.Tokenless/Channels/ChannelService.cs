@@ -49,17 +49,19 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         protected readonly IDateTimeProvider dateTimeProvider;
         protected readonly TokenlessKeyStoreSettings keyStoreSettings;
         protected readonly ILogger logger;
+        protected readonly IMembershipServicesDirectory membershipServicesDirectory;
         protected readonly NodeSettings nodeSettings;
         protected IAsyncLoop terminationLoop;
         protected readonly TokenlessNetwork tokenlessNetworkDefaults;
 
         protected ChannelService(
+            IChannelRepository channelRepository,
             ChannelSettings channelSettings,
-            TokenlessKeyStoreSettings keyStoreSettings,
             IDateTimeProvider dateTimeProvider,
+            TokenlessKeyStoreSettings keyStoreSettings,
             ILoggerFactory loggerFactory,
-            NodeSettings nodeSettings,
-            IChannelRepository channelRepository)
+            IMembershipServicesDirectory membershipServicesDirectory,
+            NodeSettings nodeSettings)
         {
             this.channelSettings = channelSettings;
             this.dateTimeProvider = dateTimeProvider;
@@ -67,6 +69,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.nodeSettings = nodeSettings;
             this.channelRepository = channelRepository;
+            this.membershipServicesDirectory = membershipServicesDirectory;
             this.tokenlessNetworkDefaults = new TokenlessNetwork();
         }
 
@@ -288,7 +291,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             var configurationFilePath = Path.Combine(channelRootFolder, ChannelConfigurationFileName);
 
             var args = new StringBuilder();
-            args.AppendLine($"-{CertificateAuthorityInterface.CaBaseUrlKey}={CertificateAuthorityInterface.CaBaseUrl}");
+            args.AppendLine($"-{CertificateAuthorityInterface.CaBaseUrlKey}={this.membershipServicesDirectory.CertificateAuthorityInterface.CaUrl}");
             args.AppendLine($"-{CertificateAuthorityInterface.CaAccountIdKey}={Settings.AdminAccountId}");
             args.AppendLine($"-{CertificateAuthorityInterface.CaPasswordKey}={this.nodeSettings.ConfigReader.GetOrDefault(CertificateAuthorityInterface.CaPasswordKey, "")} ");
             args.AppendLine($"-{Settings.KeyStorePasswordKey}={this.keyStoreSettings.KeyStorePassword}");
