@@ -1,6 +1,8 @@
-﻿using MembershipServices;
+﻿using System.Collections.Generic;
+using MembershipServices;
 using Moq;
 using NBitcoin;
+using Stratis.SmartContracts.Core.AccessControl;
 using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Stratis.SmartContracts.Core.State;
@@ -22,7 +24,13 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             sr.Setup(s => s.GetPolicy(addr))
                 .Returns(new EndorsementPolicy
                 {
-                    Organisation = org,
+                    AccessList = new AccessControlList
+                    {
+                        Organisations = new List<string>
+                        {
+                            org
+                        }
+                    },
                     RequiredSignatures = 1
                 });
 
@@ -47,7 +55,13 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             sr.Setup(s => s.GetPolicy(addr))
                 .Returns(new EndorsementPolicy
                 {
-                    Organisation = org,
+                    AccessList = new AccessControlList
+                    {
+                        Organisations = new List<string>
+                        {
+                            org
+                        }
+                    },
                     RequiredSignatures = 1
                 });
 

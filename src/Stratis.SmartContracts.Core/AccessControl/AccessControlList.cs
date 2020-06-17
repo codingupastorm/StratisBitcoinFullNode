@@ -2,7 +2,7 @@
 using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 
-namespace Stratis.Feature.PoA.Tokenless.AccessControl
+namespace Stratis.SmartContracts.Core.AccessControl
 {
     /// <summary>
     /// Determines who can access a resource.

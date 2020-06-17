@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text.Json;
 using System.Threading.Tasks;
 using CertificateAuthority.Tests.Common;
 using Flurl;
@@ -12,12 +11,11 @@ using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Core.P2P;
-using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.Api;
+using Stratis.SmartContracts.Core.AccessControl;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;
 

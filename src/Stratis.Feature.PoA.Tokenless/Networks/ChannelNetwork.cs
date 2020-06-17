@@ -2,10 +2,10 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using NBitcoin;
-using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Core.Serialization;
 using Stratis.Feature.PoA.Tokenless.Mempool;
+using Stratis.SmartContracts.Core.AccessControl;
 
 namespace Stratis.Feature.PoA.Tokenless.Networks
 {
