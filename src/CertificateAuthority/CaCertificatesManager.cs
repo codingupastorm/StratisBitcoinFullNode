@@ -725,7 +725,7 @@ namespace CertificateAuthority
         {
             byte[] rawData = certificate?.GetExtensionValue(oid)?.GetOctets();
 
-            if (rawData == null || rawData[0] != 4 /* octet string */)
+            if (rawData == null || rawData.Length < 2 || rawData[0] != 4 /* octet string */ || (2 + rawData[1] /* length */) != rawData.Length)
                 return null;
 
             byte[] res = new byte[rawData[1]];
