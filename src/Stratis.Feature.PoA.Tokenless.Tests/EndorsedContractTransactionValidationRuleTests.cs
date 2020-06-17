@@ -2,7 +2,6 @@
 using Moq;
 using NBitcoin;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
-using Stratis.Feature.PoA.Tokenless.Mempool.Rules;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Xunit;
@@ -13,13 +12,13 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
     {
         private readonly Mock<IEndorsedTransactionBuilder> builder;
         private readonly Mock<IEndorsementSignatureValidator> signatureValidator;
-        private readonly Mock<IEndorsementPolicyValidator> policyValidator;
+        private readonly Mock<IEndorsementValidator> policyValidator;
 
         public EndorsedContractTransactionValidationRuleTests()
         {
             this.builder = new Mock<IEndorsedTransactionBuilder>();
             this.signatureValidator = new Mock<IEndorsementSignatureValidator>();
-            this.policyValidator = new Mock<IEndorsementPolicyValidator>();
+            this.policyValidator = new Mock<IEndorsementValidator>();
         }
 
         [Fact]
