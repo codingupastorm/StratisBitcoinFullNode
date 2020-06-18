@@ -35,7 +35,7 @@ namespace MembershipServices
         /// <summary>The base url to be used to query the CA.</summary>
         public const string CaBaseUrlKey = "caurl";
 
-        private readonly string caUrl;
+        public readonly string CaUrl;
 
         private readonly string caPassword;
 
@@ -57,7 +57,7 @@ namespace MembershipServices
 
             this.logger = loggerFactory.CreateLogger(GetType().FullName);
 
-            this.caUrl = this.configuration.GetOrDefault(CaBaseUrlKey, CaBaseUrl);
+            this.CaUrl = this.configuration.GetOrDefault(CaBaseUrlKey, CaBaseUrl);
 
             this.caPassword = this.configuration.GetOrDefault<string>(CaPasswordKey, null);
 
@@ -80,7 +80,7 @@ namespace MembershipServices
         {
             var httpClient = new HttpClient();
 
-            return new CaClient(new Uri(this.caUrl), httpClient, this.caAccountId, this.caPassword);
+            return new CaClient(new Uri(this.CaUrl), httpClient, this.caAccountId, this.caPassword);
         }
 
         public List<PubKey> GetCertificatePublicKeys()
