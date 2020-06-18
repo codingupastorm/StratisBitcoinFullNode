@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CertificateAuthority;
 using MembershipServices;
 using Org.BouncyCastle.X509;
 using Stratis.Core.Connection;
 using Stratis.Core.P2P.Peer;
 using Stratis.Core.P2P.Protocol.Payloads;
 using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
+using Stratis.SmartContracts.Core.AccessControl;
 
 namespace Stratis.Feature.PoA.Tokenless
 {
@@ -21,7 +23,17 @@ namespace Stratis.Feature.PoA.Tokenless
         /// <summary>
         /// Broadcasts a message to every peer in a specific organisation. If no organisation is passed in then this node's organisation will be used.
         /// </summary>
-        Task BroadcastToWholeOrganisationAsync(Payload payload, string organisation = null);
+        Task BroadcastToOrganisationAsync(Payload payload, string organisation = null);
+
+        /// <summary>
+        /// Broadcasts a message to a peer identified by a thumbprint if they exist.
+        /// </summary>
+        Task BroadcastToThumbprintAsync(Payload payload, string thumbprint);
+
+        /// <summary>
+        /// Broadcasts a message to every peer identified by an AccessControlList.
+        /// </summary>
+        Task BroadcastToAccessControlListAsync(Payload payload, AccessControlList acl);
     }
 
     /// <summary>
@@ -58,7 +70,7 @@ namespace Stratis.Feature.PoA.Tokenless
         }
 
         /// <inheritdoc />
-        public async Task BroadcastToWholeOrganisationAsync(Payload payload, string organisation = null)
+        public async Task BroadcastToOrganisationAsync(Payload payload, string organisation = null)
         {
             if (organisation == null)
             {
@@ -68,6 +80,21 @@ namespace Stratis.Feature.PoA.Tokenless
             IEnumerable<(INetworkPeer Peer, X509Certificate Certificate)> peers = this.GetPeersForOrganisation(organisation);
 
             // TODO: Error handling. What if we don't have any peers in the same organisation?
+
+            Parallel.ForEach(peers.Select(x => x.Peer), async (INetworkPeer peer) => await SendMessageToPeerAsync(peer, payload));
+        }
+
+        public async Task BroadcastToThumbprintAsync(Payload payload, string thumbprint)
+        {
+            (INetworkPeer Peer, X509Certificate Certificate) peer = this.GetPeerByThumbprint(thumbprint);
+
+            if (peer.Peer != null)
+                await SendMessageToPeerAsync(peer.Peer, payload);
+        }
+
+        public async Task BroadcastToAccessControlListAsync(Payload payload, AccessControlList acl)
+        {
+            IEnumerable<(INetworkPeer Peer, X509Certificate Certificate)> peers = this.GetPeersForAccessList(acl);
 
             Parallel.ForEach(peers.Select(x => x.Peer), async (INetworkPeer peer) => await SendMessageToPeerAsync(peer, payload));
         }
@@ -84,9 +111,22 @@ namespace Stratis.Feature.PoA.Tokenless
             }
         }
 
+        private IEnumerable<(INetworkPeer Peer, X509Certificate Certificate)> GetPeersForAccessList(AccessControlList acl)
+        {
+            return this.PeersWithCerts.Where(x =>
+                acl.Thumbprints.Contains(CaCertificatesManager.GetThumbprint(x.Certificate))
+                || acl.Organisations.Contains(x.Certificate.GetOrganisation()));
+        }
+
         private IEnumerable<(INetworkPeer Peer, X509Certificate Certificate)> GetPeersForOrganisation(string organisation)
         {
             return this.PeersWithCerts.Where(x => x.Certificate.GetOrganisation() == organisation);
+        }
+
+        private (INetworkPeer Peer, X509Certificate Certificate) GetPeerByThumbprint(string thumbprint)
+        {
+            return this.PeersWithCerts.FirstOrDefault(x =>
+                CaCertificatesManager.GetThumbprint(x.Certificate) == thumbprint);
         }
     }
 }

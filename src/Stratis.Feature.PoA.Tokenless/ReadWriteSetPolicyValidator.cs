@@ -31,7 +31,7 @@ namespace Stratis.Feature.PoA.Tokenless
         {
             // Check if we are meant to have the data. 
 
-            // TODO: Validate using the access list validation elsewhere.
+            // TODO: Validate thumbprints too!
 
             WriteItem write = readWriteSet.Writes.First(x => x.IsPrivateData);
             EndorsementPolicy policy = this.stateRepository.GetPolicy(write.ContractAddress);
