@@ -50,7 +50,7 @@ namespace Stratis.Feature.PoA.Tokenless
             {
                 ReadWriteSet rws = ReadWriteSet.FromJsonEncodedBytes(entry.Data.ToBytes());
 
-                if (!this.rwsPolicyValidator.OrganisationCanAccessPrivateData(cert, rws))
+                if (!this.rwsPolicyValidator.CertificateCanAccessPrivateData(cert, rws))
                 {
                     return;
                 }
