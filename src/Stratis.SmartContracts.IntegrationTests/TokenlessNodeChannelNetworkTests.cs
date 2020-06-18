@@ -358,7 +358,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                     catch (Exception) { }
 
                     return false;
-                }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(2).TotalMilliseconds, waitTimeSeconds: 120);
+                }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(2).TotalMilliseconds, waitTimeSeconds: 240);
 
                 // Call the create channel API method on the system channel node.
                 var channelCreationRequest = new ChannelCreationRequest()
