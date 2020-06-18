@@ -24,7 +24,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var stateRoot = new Mock<IStateRepositoryRoot>();
             var signatureValidator = new Mock<IEndorsementSignatureValidator>();
 
-            var validator = new EndorsementPolicyValidator(membershipServices.Object, organisationLookup.Object, stateRoot.Object, signatureValidator.Object);
+            var validator = new EndorsementValidator(membershipServices.Object, organisationLookup.Object, stateRoot.Object, signatureValidator.Object);
 
             var rws = new ReadWriteSet();
             rws.Reads = new List<ReadItem>();

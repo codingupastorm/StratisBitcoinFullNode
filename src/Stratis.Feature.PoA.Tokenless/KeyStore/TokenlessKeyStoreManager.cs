@@ -147,26 +147,23 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
             {
                 this.logger.LogInformation($"Key store does not exist, creating...");
 
-                var strMnemonic = this.keyStoreSettings.Mnemonic;
-                var password = this.keyStoreSettings.Password;
-
-                if (password == null)
+                if (this.keyStoreSettings.KeyStorePassword == null)
                 {
-                    this.logger.LogError($"Run this daemon with a -password=<password> argument so that the wallet file ({KeyStoreFileName}) can be created.");
-                    this.logger.LogError($"If you are re-creating a wallet then also pass a -mnemonic=\"<mnemonic words>\" argument.");
+                    this.logger.LogError($"Run this daemon with a -keystorepassword=<password> argument so that the keystore file ({KeyStoreFileName}) can be created.");
+                    this.logger.LogError($"If you are re-creating a keystore then also pass a -mnemonic=\"<mnemonic words>\" argument.");
                     return false;
                 }
 
-                TokenlessKeyStore wallet;
-                Mnemonic mnemonic = (strMnemonic == null) ? null : new Mnemonic(strMnemonic);
+                TokenlessKeyStore keyStore;
+                Mnemonic mnemonic = (this.keyStoreSettings.Mnemonic == null) ? null : new Mnemonic(this.keyStoreSettings.Mnemonic);
 
-                (wallet, mnemonic) = this.CreateKeyStore(password, mnemonic);
+                (keyStore, mnemonic) = this.CreateKeyStore(this.keyStoreSettings.KeyStorePassword, mnemonic);
 
-                this.KeyStore = wallet;
+                this.KeyStore = keyStore;
 
-                this.logger.LogInformation($"The wallet file ({KeyStoreFileName}) has been created.");
-                this.logger.LogInformation($"Record the mnemonic ({mnemonic}) in a safe place.");
-                this.logger.LogInformation($"IMPORTANT: You will need the mnemonic to recover the wallet.");
+                this.logger.LogInformation($"The key store file '{KeyStoreFileName}' has been created.");
+                this.logger.LogInformation($"Record the mnemonic '{mnemonic}' in a safe place.");
+                this.logger.LogInformation($"IMPORTANT: You will need the mnemonic to recover the key store.");
 
                 // Only stop the node if this node is not a channel node.
                 if (!this.channelSettings.IsChannelNode)
@@ -195,7 +192,7 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
 
                 Guard.Assert(this.KeyStore != null);
 
-                Key key = this.GetKey(this.keyStoreSettings.Password, TokenlessKeyStoreAccount.BlockSigning);
+                Key key = this.GetKey(this.keyStoreSettings.KeyStorePassword, TokenlessKeyStoreAccount.BlockSigning);
                 var keyTool = new KeyTool(this.keyStoreSettings.RootPath);
                 keyTool.SavePrivateKey(key, KeyType.FederationKey);
 
@@ -224,7 +221,7 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
 
                 Guard.Assert(this.KeyStore != null);
 
-                Key key = this.GetKey(this.keyStoreSettings.Password, TokenlessKeyStoreAccount.TransactionSigning);
+                Key key = this.GetKey(this.keyStoreSettings.KeyStorePassword, TokenlessKeyStoreAccount.TransactionSigning);
                 var keyTool = new KeyTool(this.keyStoreSettings.RootPath);
                 keyTool.SavePrivateKey(key, KeyType.TransactionSigningKey);
 
@@ -240,7 +237,7 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
 
         private bool CheckPassword(string fileName)
         {
-            if (string.IsNullOrEmpty(this.keyStoreSettings.Password))
+            if (string.IsNullOrEmpty(this.keyStoreSettings.KeyStorePassword))
             {
                 this.logger.LogError($"Run this daemon with a -password=<password> argument so that the '{fileName}' file can be created.");
                 return false;

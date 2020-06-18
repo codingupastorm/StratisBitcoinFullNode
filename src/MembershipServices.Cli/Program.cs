@@ -59,8 +59,8 @@ namespace MembershipServices.Cli
             [Option("capassword", Required = true, HelpText = "The account password of the user requesting a certificate from the certificate authority.")]
             public string CaPassword { get; set; }
 
-            [Option("password", Required = true, HelpText = "The password for the node's keystore and client certificate.")]
-            public string Password { get; set; }
+            [Option("keystorepassword", Required = true, HelpText = "The password for the node's keystore and client certificate.")]
+            public string KeyStorePassword { get; set; }
 
             /// <summary>
             /// See <see cref="CaCertificatesManager.ValidPermissions"/> for the valid permission names.
@@ -104,8 +104,8 @@ namespace MembershipServices.Cli
             [Option("capassword", Required = true, HelpText = "The account password of the CA user.")]
             public string CaPassword { get; set; }
 
-            [Option("password", Required = true, HelpText = "The password for the node's keystore and client certificate.")]
-            public string Password { get; set; }
+            [Option("keystorepassword", Required = true, HelpText = "The password for the node's keystore and client certificate.")]
+            public string KeyStorePassword { get; set; }
         }
 
         static int RunHelp(HelpOptions options)
@@ -117,7 +117,7 @@ namespace MembershipServices.Cli
         {
             // TODO: Move this logic into a reusable method
             var network = new TokenlessNetwork();
-            var nodeSettings = new NodeSettings(network, args: new[] { $"-datadir={options.DataDir}", $"-password={options.Password}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" });
+            var nodeSettings = new NodeSettings(network, args: new[] { $"-datadir={options.DataDir}", $"-{Settings.KeyStorePasswordKey}={options.KeyStorePassword}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" });
             var loggerFactory = new LoggerFactory();
 
             var keyStoreSettings = new TokenlessKeyStoreSettings(nodeSettings);
@@ -148,13 +148,13 @@ namespace MembershipServices.Cli
 
             caClient = new CaClient(new Uri(options.CaUrl), new HttpClient(), int.Parse(options.CaAccountId), options.CaPassword);
 
-            Key privateKey = keyStoreManager.GetKey(keyStoreSettings.Password, TokenlessKeyStoreAccount.P2PCertificates);
+            Key privateKey = keyStoreManager.GetKey(keyStoreSettings.KeyStorePassword, TokenlessKeyStoreAccount.P2PCertificates);
 
             var localMsdConfiguration = new LocalMembershipServicesConfiguration(Path.Combine(options.DataDir, network.RootFolderName, network.Name), network);
             localMsdConfiguration.InitializeFolderStructure();
 
-            PubKey transactionSigningPubKey = keyStoreManager.GetKey(keyStoreSettings.Password, TokenlessKeyStoreAccount.TransactionSigning).PubKey;
-            PubKey blockSigningPubKey = keyStoreManager.GetKey(keyStoreSettings.Password, TokenlessKeyStoreAccount.BlockSigning).PubKey;
+            PubKey transactionSigningPubKey = keyStoreManager.GetKey(keyStoreSettings.KeyStorePassword, TokenlessKeyStoreAccount.TransactionSigning).PubKey;
+            PubKey blockSigningPubKey = keyStoreManager.GetKey(keyStoreSettings.KeyStorePassword, TokenlessKeyStoreAccount.BlockSigning).PubKey;
 
             PubKey pubKey = privateKey.PubKey;
             BitcoinPubKeyAddress address = pubKey.GetAddress(network);
@@ -170,7 +170,7 @@ namespace MembershipServices.Cli
             if (clientCert == null)
                 return -1;
 
-            File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificateAuthorityInterface.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCert, privateKey, keyStoreSettings.Password));
+            File.WriteAllBytes(Path.Combine(nodeSettings.DataFolder.RootPath, CertificateAuthorityInterface.ClientCertificateName), CaCertificatesManager.CreatePfx(clientCert, privateKey, keyStoreSettings.KeyStorePassword));
 
             var membershipServices = new MembershipServicesDirectory(nodeSettings, loggerFactory);
             membershipServices.Initialize();
@@ -242,7 +242,7 @@ namespace MembershipServices.Cli
         {
             // TODO: Move this logic into a reusable method
             var network = new TokenlessNetwork();
-            var nodeSettings = new NodeSettings(network, args: new[] { $"-datadir={options.DataDir}", $"-password={options.Password}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" });
+            var nodeSettings = new NodeSettings(network, args: new[] { $"-datadir={options.DataDir}", $"-password={options.KeyStorePassword}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" });
             var loggerFactory = new LoggerFactory();
 
             var membershipServices = new MembershipServicesDirectory(nodeSettings, loggerFactory);

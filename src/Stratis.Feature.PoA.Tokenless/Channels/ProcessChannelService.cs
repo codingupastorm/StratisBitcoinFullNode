@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Configuration;
 using Stratis.Core.Utilities;
+using Stratis.Feature.PoA.Tokenless.KeyStore;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels
 {
@@ -19,8 +20,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         /// <inheritdoc />
         public List<ChannelNodeProcess> StartedChannelNodes { get; }
 
-        public ProcessChannelService(ChannelSettings channelSettings, IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, NodeSettings nodeSettings, IChannelRepository channelRepository, INodeLifetime nodeLifetime, IAsyncProvider asyncProvider)
-            : base(channelSettings, dateTimeProvider, loggerFactory, nodeSettings, channelRepository)
+        public ProcessChannelService(ChannelSettings channelSettings, IDateTimeProvider dateTimeProvider, ILoggerFactory loggerFactory, NodeSettings nodeSettings, IChannelRepository channelRepository, INodeLifetime nodeLifetime, IAsyncProvider asyncProvider, TokenlessKeyStoreSettings keyStoreSettings)
+            : base(channelSettings, keyStoreSettings, dateTimeProvider, loggerFactory, nodeSettings, channelRepository)
         {
             this.nodeLifetime = nodeLifetime;
             this.asyncProvider = asyncProvider;

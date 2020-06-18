@@ -94,15 +94,9 @@ namespace Stratis.Feature.PoA.Tokenless
 
         public async Task BroadcastToAccessControlListAsync(Payload payload, AccessControlList acl)
         {
-            foreach (string organisation in acl.Organisations)
-            {
-                await BroadcastToOrganisationAsync(payload, organisation);
-            }
+            IEnumerable<(INetworkPeer Peer, X509Certificate Certificate)> peers = this.GetPeersForAccessList(acl);
 
-            foreach (string thumbprint in acl.Thumbprints)
-            {
-                await BroadcastToThumbprintAsync(payload, thumbprint);
-            }
+            Parallel.ForEach(peers.Select(x => x.Peer), async (INetworkPeer peer) => await SendMessageToPeerAsync(peer, payload));
         }
 
         private async Task SendMessageToPeerAsync(INetworkPeer peer, Payload payload)
@@ -115,6 +109,13 @@ namespace Stratis.Feature.PoA.Tokenless
             {
                 // This catch is a bit dirty but is copied from FederatedPegBroadcaster code.
             }
+        }
+
+        private IEnumerable<(INetworkPeer Peer, X509Certificate Certificate)> GetPeersForAccessList(AccessControlList acl)
+        {
+            return this.PeersWithCerts.Where(x =>
+                acl.Thumbprints.Contains(CaCertificatesManager.GetThumbprint(x.Certificate))
+                || acl.Organisations.Contains(x.Certificate.GetOrganisation()));
         }
 
         private IEnumerable<(INetworkPeer Peer, X509Certificate Certificate)> GetPeersForOrganisation(string organisation)

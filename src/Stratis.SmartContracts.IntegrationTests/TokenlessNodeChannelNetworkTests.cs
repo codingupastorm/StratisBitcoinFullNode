@@ -308,7 +308,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Task.Delay(500);
 
                 // Node should not be allowed to connect because it is disallowed.
-                Assert.False(addressManagers.Any(a => a.Peers.Any()));
+                Assert.DoesNotContain(addressManagers, a => a.Peers.Any());
             }
         }
 
@@ -410,8 +410,6 @@ namespace Stratis.SmartContracts.IntegrationTests
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 
-            Process channelNodeProcess = null;
-
             using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
             using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
             {
@@ -489,7 +487,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, tokenlessNetwork));
 
                 // Create both nodes.
-                CoreNode node1 = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server, debugChannels:true);
+                CoreNode node1 = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 0, server, debugChannels: true);
                 CoreNode node2 = nodeBuilder.CreateTokenlessNodeWithChannels(tokenlessNetwork, 1, server, debugChannels: true);
 
                 var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
@@ -570,13 +568,13 @@ namespace Stratis.SmartContracts.IntegrationTests
                 // Call a contract
                 var node2ChannelController = node2Channel.FullNode.NodeController<TokenlessController>();
 
-                var callResult = (JsonResult) node2ChannelController.BuildCallContractTransaction(new BuildCallContractTransactionModel
+                var callResult = (JsonResult)node2ChannelController.BuildCallContractTransaction(new BuildCallContractTransactionModel
                 {
                     Address = createResponse.NewContractAddress,
                     MethodName = "CallMe"
                 });
 
-                var callResponse = (BuildCallContractTransactionResponse) callResult.Value;
+                var callResponse = (BuildCallContractTransactionResponse)callResult.Value;
 
                 var callTxResponse = await node1ChannelController.SendTransactionAsync(new SendTransactionModel()
                 {
