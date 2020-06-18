@@ -85,7 +85,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
                 int channelNodeId = this.channelRepository.GetNextChannelId();
 
-                string channelRootFolder = PrepareChannelNodeForStartup(request.Name, channelNodeId, request.AccessList);
+                string channelRootFolder = PrepareChannelNodeForStartup(request.Name, request.Identifier, channelNodeId, request.AccessList);
 
                 bool started = await StartChannelAsync(channelRootFolder, $"-channelname={request.Name}");
                 if (!started)
@@ -112,7 +112,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             // Record channel membership (in normal node repo) and start up channel node.
             this.logger.LogInformation($"Joining and starting a node on channel '{network.Name}'.");
 
-            string channelRootFolder = PrepareChannelNodeForStartup(network.Name, network.Id, network.InitialAccessList, network);
+            string channelRootFolder = PrepareChannelNodeForStartup(network.Name, null, network.Id, network.InitialAccessList, network);
 
             bool started = await StartChannelAsync(channelRootFolder, $"-channelname={network.Name}");
             if (!started)
@@ -136,7 +136,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
                     int channelNodeId = channel.Id;
 
-                    string channelRootFolder = PrepareChannelNodeForStartup(channel.Name, channelNodeId, channel.AccessList);
+                    string channelRootFolder = PrepareChannelNodeForStartup(channel.Name, null, channelNodeId, channel.AccessList);
 
                     bool started = await StartChannelAsync(channelRootFolder, $"-channelname={channel.Name}");
                     if (!started)
@@ -186,10 +186,10 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         /// <param name="organisation">The organisation the channel belongs to.</param>
         /// <param name="network">If this is from join channel request, the network will be provided.</param>
         /// <returns>The channel's network root folder.</returns>
-        private string PrepareChannelNodeForStartup(string channelName, int channelId, AccessControlList accessList, ChannelNetwork network = null)
+        private string PrepareChannelNodeForStartup(string channelName, string channelIdentifier, int channelId, AccessControlList accessList, ChannelNetwork network = null)
         {
             // Write the serialized version of the network to disk.
-            string channelRootFolder = WriteChannelNetworkJson(channelName, channelId, accessList, network);
+            string channelRootFolder = WriteChannelNetworkJson(channelName, channelIdentifier, channelId, accessList, network);
 
             // Copy the parent node's authority and client certificate to the channel node's root.
             CopyCertificatesToChannelRoot(channelRootFolder);
@@ -203,7 +203,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         /// <summary>Write the serialized network to disk.</summary>
         /// <param name="channelName">The name of the channel.</param>
         /// <returns>The channel's root folder path.</returns>
-        private string WriteChannelNetworkJson(string channelName, int channelId, AccessControlList accessList, ChannelNetwork channelNetwork = null)
+        private string WriteChannelNetworkJson(string channelName, string channelIdentifier, int channelId, AccessControlList accessList, ChannelNetwork channelNetwork = null)
         {
             // If the network json already exist, do nothing.
             var rootFolderName = Path.Combine(this.nodeSettings.DataFolder.RootPath, "channels", channelName.ToLowerInvariant());
@@ -213,7 +213,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
             if (channelNetwork == null)
             {
-                channelNetwork = SystemChannelNetwork.CreateChannelNetwork(channelName.ToLowerInvariant(), rootFolderName, this.dateTimeProvider.GetAdjustedTimeAsUnixTimestamp());
+                channelNetwork = SystemChannelNetwork.CreateChannelNetwork(channelName.ToLowerInvariant(), channelIdentifier, rootFolderName, this.dateTimeProvider.GetAdjustedTimeAsUnixTimestamp());
                 channelNetwork.Id = channelId;
                 channelNetwork.InitialAccessList = accessList;
                 channelNetwork.DefaultAPIPort = this.GetDefaultAPIPort(channelId);

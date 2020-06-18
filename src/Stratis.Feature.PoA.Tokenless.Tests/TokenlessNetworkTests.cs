@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System;
+using System.Text;
+using System.Text.Json;
 using NBitcoin.PoA;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Networks;
@@ -11,7 +13,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         [Fact]
         public void CanSerializeAndDeserializeNetwork()
         {
-            ChannelNetwork channelNetwork = SystemChannelNetwork.CreateChannelNetwork("Test", "TestFolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
+            ChannelNetwork channelNetwork = SystemChannelNetwork.CreateChannelNetwork("Marketing", "mrkt", "TestFolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
 
             var serialized = JsonSerializer.Serialize(channelNetwork);
             ChannelNetwork deserialized = JsonSerializer.Deserialize<ChannelNetwork>(serialized);
@@ -51,7 +53,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             Assert.Equal(channelNetwork.DefaultMaxOutboundConnections, deserialized.DefaultMaxOutboundConnections);
             Assert.Equal(channelNetwork.DefaultPort, deserialized.DefaultPort);
             Assert.Equal(channelNetwork.DefaultSignalRPort, deserialized.DefaultSignalRPort);
-            Assert.Equal(channelNetwork.Magic, deserialized.Magic);
+            Assert.Equal(channelNetwork.Magic, BitConverter.ToUInt32(Encoding.ASCII.GetBytes("mrkt")));
             Assert.Equal(channelNetwork.MaxTimeOffsetSeconds, deserialized.MaxTimeOffsetSeconds);
             Assert.Equal(channelNetwork.MaxTipAge, deserialized.MaxTipAge);
             Assert.Equal(channelNetwork.Name, deserialized.Name);

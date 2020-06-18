@@ -21,7 +21,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
         [Fact]
         public void CanPersistAndReadBackChannelDefinitions()
         {
-            ChannelNetwork salesChannelNetwork = SystemChannelNetwork.CreateChannelNetwork("sales", "salesfolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
+            ChannelNetwork salesChannelNetwork = SystemChannelNetwork.CreateChannelNetwork("sales", "sals", "salesfolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
             salesChannelNetwork.Id = 2;
             salesChannelNetwork.InitialAccessList = new AccessControlList
             {
@@ -35,7 +35,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests.Channels
             salesChannelNetwork.DefaultSignalRPort = 3;
             var salesNetworkJson = JsonSerializer.Serialize(salesChannelNetwork);
 
-            ChannelNetwork marketingChannelNetwork = SystemChannelNetwork.CreateChannelNetwork("marketing", "marketingfolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
+            ChannelNetwork marketingChannelNetwork = SystemChannelNetwork.CreateChannelNetwork("marketing", "mrkt", "marketingfolder", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
             marketingChannelNetwork.Id = 3;
             marketingChannelNetwork.InitialAccessList = new AccessControlList
             {

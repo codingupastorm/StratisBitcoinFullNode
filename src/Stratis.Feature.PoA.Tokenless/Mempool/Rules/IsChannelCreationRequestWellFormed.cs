@@ -67,6 +67,14 @@ namespace Stratis.Feature.PoA.Tokenless.Mempool.Rules
                 context.State.Fail(new MempoolError(MempoolErrors.RejectMalformed, "channel-creation-request-malformed"), errorMessage).Throw();
             }
 
+            (bool valid, string validationMessage) = channelCreationRequest.IsValid;
+            if (!valid)
+            {
+                var errorMessage = $"Transaction '{transaction.GetHash()}' contained a channel creation request which is not valid: {validationMessage}";
+                this.logger.LogDebug(errorMessage);
+                context.State.Fail(new MempoolError(MempoolErrors.RejectMalformed, "channel-creation-request-malformed"), errorMessage).Throw();
+            }
+
             // We need to check that the transaction is in the correct format (can we get the sender?)
             // and verify that the sender given is indeed the one who signed the transaction.
             GetSenderResult getSenderAndVerifyResult = this.tokenlessSigner.GetSenderAndVerify(transaction);

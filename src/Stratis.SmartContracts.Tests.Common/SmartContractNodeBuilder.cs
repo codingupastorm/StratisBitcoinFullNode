@@ -206,7 +206,7 @@ namespace Stratis.SmartContracts.Tests.Common
             }
 
             // Serialize the channel network and write the json to disk.
-            ChannelNetwork channelNetwork = SystemChannelNetwork.CreateChannelNetwork(channelName, "channels", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
+            ChannelNetwork channelNetwork = SystemChannelNetwork.CreateChannelNetwork(channelName, channelName.Substring(0, 4), "channels", DateTimeProvider.Default.GetAdjustedTimeAsUnixTimestamp());
             channelNetwork.Id = nodeIndex;
             channelNetwork.InitialAccessList = acl;
             channelNetwork.DefaultAPIPort += nodeIndex;
