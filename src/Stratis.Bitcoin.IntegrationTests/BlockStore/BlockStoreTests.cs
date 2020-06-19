@@ -83,7 +83,7 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
                 Assert.Null(deleted);
             }
         }
-
+/*
         [Fact(Skip = "Investigate PeerConnector shutdown timeout issue")]
         public void BlockStoreCanRecoverOnStartup()
         {
@@ -106,7 +106,7 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
                 Assert.Equal(newNodeInstance.FullNode.ChainIndexer.Tip.HashBlock, newNodeInstance.FullNode.GetBlockStoreTip().HashBlock);
             }
         }
-
+*/
         [Fact]
         public async Task BlockStoreCanReorgAsync()
         {
