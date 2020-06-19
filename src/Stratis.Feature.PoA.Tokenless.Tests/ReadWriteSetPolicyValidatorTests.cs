@@ -40,7 +40,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             
             var validator = new ReadWriteSetPolicyValidator(Mock.Of<IMembershipServicesDirectory>(), sr.Object);
             
-            Assert.True(validator.OrganisationCanAccessPrivateData(org, rwsBuilder.GetReadWriteSet()));
+            Assert.True(validator.OrganisationAndThumbprintCanAccessPrivateData(org, "", rwsBuilder.GetReadWriteSet()));
         }
 
         [Fact]
@@ -71,7 +71,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var validator = new ReadWriteSetPolicyValidator(Mock.Of<IMembershipServicesDirectory>(), sr.Object);
 
-            Assert.False(validator.OrganisationCanAccessPrivateData(disallowedOrg, rwsBuilder.GetReadWriteSet()));
+            Assert.False(validator.OrganisationAndThumbprintCanAccessPrivateData(disallowedOrg, "", rwsBuilder.GetReadWriteSet()));
         }
 
         [Fact]
@@ -91,7 +91,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
 
             var validator = new ReadWriteSetPolicyValidator(Mock.Of<IMembershipServicesDirectory>(), sr.Object);
 
-            Assert.False(validator.OrganisationCanAccessPrivateData(org, rwsBuilder.GetReadWriteSet()));
+            Assert.False(validator.OrganisationAndThumbprintCanAccessPrivateData(org, "", rwsBuilder.GetReadWriteSet()));
         }
     }
 }
