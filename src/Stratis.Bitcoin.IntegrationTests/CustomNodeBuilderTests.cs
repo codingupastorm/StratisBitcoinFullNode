@@ -12,7 +12,6 @@ using Stratis.Features.BlockStore;
 using Stratis.Features.Consensus;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.Miner;
-using Stratis.Features.SQLiteWalletRepository;
 using Stratis.Features.Wallet;
 using Xunit;
 
@@ -27,6 +26,7 @@ namespace Stratis.Bitcoin.IntegrationTests
             this.network = new BitcoinRegTest();
         }
 
+        /*
         [Fact(Skip = "Investigate PeerConnector shutdown timeout issue")]
         public void CanUnderstandUnknownParams()
         {
@@ -55,7 +55,7 @@ namespace Stratis.Bitcoin.IntegrationTests
                 coreNode.ConfigParameters["some_new_unknown_param"].Should().Be("with a value");
             }
         }
-
+        
         [Fact(Skip = "Investigate PeerConnector shutdown timeout issue")]
         public void CanUseCustomConfigFileFromParams()
         {
@@ -86,5 +86,6 @@ namespace Stratis.Bitcoin.IntegrationTests
                 File.Exists(Path.Combine(coreNode.DataFolder, specialConf)).Should().BeTrue();
             }
         }
+        */
     }
 }
