@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.Json.Serialization;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -32,21 +32,10 @@ namespace Stratis.Feature.PoA.Tokenless.Networks
 
         public TokenlessNetwork()
         {
-            // The message start string is designed to be unlikely to occur in normal data.
-            // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
-            // a large 4-byte int at any alignment.
-
-            // TODO-TL: Change/update.
-            var messageStart = new byte[4];
-            messageStart[0] = 0x76;
-            messageStart[1] = 0x36;
-            messageStart[2] = 0x23;
-            messageStart[3] = 0x06;
-
             this.Name = "TokenlessMain";
             this.NetworkType = NetworkType.Mainnet;
-            this.Magic = BitConverter.ToUInt32(messageStart, 0);
-            this.DefaultPort = 16438;
+            this.Magic = BitConverter.ToUInt32(Encoding.ASCII.GetBytes("dltc"));
+            this.DefaultPort = 16000;
             this.DefaultMaxOutboundConnections = 16;
             this.DefaultMaxInboundConnections = 109;
             this.DefaultEnableIpRangeFiltering = false;

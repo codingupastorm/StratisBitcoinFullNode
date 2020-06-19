@@ -37,7 +37,7 @@ namespace Stratis.Feature.PoA.Tokenless.Networks
             this.Name = "SystemChannel";
             this.NetworkType = NetworkType.Mainnet;
             this.Magic = BitConverter.ToUInt32(Encoding.ASCII.GetBytes("sysc"));
-            this.DefaultPort = 16438;
+            this.DefaultPort = 16001;
             this.DefaultMaxOutboundConnections = 16;
             this.DefaultMaxInboundConnections = 109;
             this.DefaultEnableIpRangeFiltering = false;

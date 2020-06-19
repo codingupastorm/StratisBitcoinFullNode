@@ -168,6 +168,9 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 if (this.channelSettings.SystemChannelApiPort != 0)
                     args = args.Concat(new string[] { $"-apiport={this.channelSettings.SystemChannelApiPort}" }).ToArray();
 
+                if (this.channelSettings.SystemChannelProtocolPort != 0)
+                    args = args.Concat(new string[] { $"-port={this.channelSettings.SystemChannelProtocolPort}" }).ToArray();
+
                 bool started = await StartChannelAsync(channelRootFolder, args);
                 if (!started)
                     throw new ChannelServiceException($"Failed to start system channel node as the process exited early.");

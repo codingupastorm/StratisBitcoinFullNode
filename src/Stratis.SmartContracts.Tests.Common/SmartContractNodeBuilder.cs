@@ -25,7 +25,8 @@ namespace Stratis.SmartContracts.Tests.Common
 {
     public class SmartContractNodeBuilder : NodeBuilder
     {
-        private int lastSystemChannelNodePort;
+        private int lastSystemChannelApiPort;
+        private int lastSystemChannelProtocolPort;
 
         // This does not have to be re-retrieved from the CA for every node.
         private X509Certificate authorityCertificate;
@@ -35,7 +36,9 @@ namespace Stratis.SmartContracts.Tests.Common
         public SmartContractNodeBuilder(string rootFolder) : base(rootFolder)
         {
             // We have to override them so that the channel daemons can use 30002 and up.
-            this.lastSystemChannelNodePort = new SystemChannelNetwork().DefaultAPIPort + 100;
+            var systemChannelNetwork = new SystemChannelNetwork();
+            this.lastSystemChannelApiPort = systemChannelNetwork.DefaultAPIPort + 1;
+            this.lastSystemChannelProtocolPort = systemChannelNetwork.DefaultPort + 1;
 
             this.TimeProvider = new EditableTimeProvider();
         }
@@ -50,6 +53,7 @@ namespace Stratis.SmartContracts.Tests.Common
             bool willStartChannels,
             bool initialRun,
             int? apiPortOverride = null,
+            int? protocolPortOverride = null,
             string organisation = null,
             List<string> permissions = null,
             bool debugChannels = false,
@@ -77,6 +81,9 @@ namespace Stratis.SmartContracts.Tests.Common
 
                 if (apiPortOverride != null)
                     configParameters.Add("systemchannelapiport", apiPortOverride.ToString());
+
+                if (protocolPortOverride != null)
+                    configParameters.Add("systemchannelprotocolport", protocolPortOverride.ToString());
             }
 
             if (isSystemNode)
@@ -187,8 +194,9 @@ namespace Stratis.SmartContracts.Tests.Common
         /// </summary>
         public CoreNode CreateInfraNode(TokenlessNetwork network, int nodeIndex, IWebHost server, bool debugChannels = false)
         {
-            CoreNode node = CreateCoreNode(network, nodeIndex, server, "infra", true, false, true, true, this.lastSystemChannelNodePort, debugChannels: debugChannels);
-            this.lastSystemChannelNodePort += 1;
+            CoreNode node = CreateCoreNode(network, nodeIndex, server, "infra", true, false, true, true, this.lastSystemChannelApiPort, this.lastSystemChannelProtocolPort, debugChannels: debugChannels);
+            this.lastSystemChannelApiPort += 1;
+            this.lastSystemChannelProtocolPort += 1;
             return node;
         }
 
