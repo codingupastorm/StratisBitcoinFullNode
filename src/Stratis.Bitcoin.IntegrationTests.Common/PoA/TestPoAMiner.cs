@@ -39,11 +39,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.PoA
             PoABlockHeaderValidator poaHeaderValidator,
             IFederationManager federationManager,
             IIntegrityValidator integrityValidator,
-            IMiningKeyProvider miningKeyProvider,
             INodeStats nodeStats,
             VotingManager votingManager,
             IMinerSettings poAMinerSettings,
-            IAsyncProvider asyncProvider) : base(consensusManager, dateTimeProvider, network, nodeLifetime, loggerFactory, ibdState, blockDefinition, slotsManager,
+            IAsyncProvider asyncProvider,
+            IMiningKeyProvider miningKeyProvider = null) : base(consensusManager, dateTimeProvider, network, nodeLifetime, loggerFactory, ibdState, blockDefinition, slotsManager,
                 connectionManager, poaHeaderValidator, federationManager, integrityValidator, miningKeyProvider, nodeStats, votingManager, poAMinerSettings, asyncProvider)
         {
             this.cancellation = new CancellationTokenSource();

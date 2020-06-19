@@ -330,7 +330,7 @@ namespace Stratis.Features.PoA
         /// <returns>In this case an empty <see cref="Script"/> will be returned.</returns>
         protected Script GetScriptPubKeyFromWallet()
         {
-            return this.miningKeyProvider.GetScriptPubKeyFromWallet();
+            return this.miningKeyProvider?.GetScriptPubKeyFromWallet();
         }
 
         /// <summary>Adds OP_RETURN output to a coinbase transaction which contains encoded voting data.</summary>
