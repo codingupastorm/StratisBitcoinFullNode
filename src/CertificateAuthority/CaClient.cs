@@ -63,13 +63,13 @@ namespace CertificateAuthority
 
         public CertificateInfoModel GetCaCertificate()
         {
-            var credentialsModel = new CredentialsModel()
-            {
-                AccountId = this.accountId,
-                Password = this.password
-            };
+            HttpResponseMessage response = this.httpClient.GetAsync($"{this.baseApiUrl}{GetCaCertificateEndpoint}").GetAwaiter().GetResult();
 
-            return this.RequestFromCA<CertificateInfoModel>(GetCaCertificateEndpoint, credentialsModel);
+            string responseString = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+            CertificateInfoModel caCertificateModel = JsonConvert.DeserializeObject<CertificateInfoModel>(responseString);
+
+            return caCertificateModel;
         }
 
         public int CreateAccount(string name, string organizationUnit, string organization, string locality, string stateOrProvince, string emailAddress, string country, string[] requestedPermissions = null)

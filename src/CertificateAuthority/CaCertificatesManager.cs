@@ -572,7 +572,7 @@ namespace CertificateAuthority
             return convertedCertificate;
         }
 
-        public CertificateInfoModel GetCaCertificate(CredentialsAccessModel accessModelInfo)
+        public CertificateInfoModel GetCaCertificate()
         {
             if (this.caCertificate == null)
                 return null;
@@ -581,7 +581,8 @@ namespace CertificateAuthority
             {
                 // TODO: Technically there is an address associated with the CA's pubkey, should we use it?
                 Address = "",
-                TransactionSigningPubKeyHash = null,
+                TransactionSigningPubKeyHash = new byte[] {},
+                BlockSigningPubKey = new byte[] { },
                 CertificateContentDer = this.caCertificate.GetEncoded(),
                 Id = 0,
                 AccountId = 0,

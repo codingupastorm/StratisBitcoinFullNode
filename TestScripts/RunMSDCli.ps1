@@ -17,6 +17,13 @@ $organizationUnit = "TestScripts"
 $locality = "London"
 $state = "London"
 
+# Copy CA certificate
+
+cd $path_to_msd
+Write-Host "Running MerbershipServices.Cli to get CA certificate..." -foregroundcolor "magenta"
+start-process cmd -ArgumentList "/k color 0E && dotnet run getcacert --datadir=""$msd_root"""
+timeout $long_interval_time
+
 # Create CA account
 
 $params = @{ "commonName" = "node$node"; "newAccountPasswordHash" = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08"; "requestedAccountAccess" = 255; "organizationUnit" = $organizationUnit; "organization" = $organization; "locality" = $locality; "stateOrProvince" = $state; "emailAddress" = "node$node@example.com"; "country" = "UK"; "requestedPermissions" = @(@{"name" = "Send"}, @{"name" = "CallContract"}, @{"name" = "CreateContract"}) }
@@ -35,11 +42,9 @@ $params = @{ "accountId" = $admin_account_id; "password" = $admin_password; "tar
 Write-Host ($params|ConvertTo-Json)
 Invoke-WebRequest -Uri https://localhost:5001/api/accounts/approve -Method post -Body ($params|ConvertTo-Json) -ContentType "application/json"
 
-Copy-Item $root_datadir\ca\CaMain\CaCertificate.crt -Destination $msd_root\tokenless\TokenlessMain\CaCertificate.crt
-
 cd $path_to_msd
 Write-Host "Running MerbershipServices.Cli..." -foregroundcolor "magenta"
-start-process cmd -ArgumentList "/k color 0E && dotnet run generate --datadir=""$msd_root"" --caaccountid=$ca_account --commonname=node$node --organization=$organization --organizationunit=$organizationUnit --locality=$locality --stateorprovince=$state --emailaddress=test@example.com --country=UK --capassword=test --password=test --requestedpermissions Send CallContract CreateContract"
+start-process cmd -ArgumentList "/k color 0E && dotnet run generate --datadir=""$msd_root"" --caaccountid=$ca_account --commonname=node$node --organization=$organization --organizationunit=$organizationUnit --locality=$locality --stateorprovince=$state --emailaddress=test@example.com --country=UK --capassword=test --keystorepassword=test --requestedpermissions Send CallContract CreateContract"
 timeout $long_interval_time
 
 Write-Host "Completed..." -foregroundcolor "magenta"

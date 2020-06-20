@@ -274,8 +274,10 @@ namespace MembershipServices
 
         public string GetCertificatePath(MemberType memberType, X509Certificate certificate)
         {
-            var folder = GetCertificatePath(memberType);
-            return Path.Combine(folder, $"{MembershipServicesDirectory.GetCertificateThumbprint(certificate)}");
+            string folder = GetCertificatePath(memberType);
+            string fileName = memberType == MemberType.RootCA ? CertificateAuthorityInterface.AuthorityCertificateName : $"{MembershipServicesDirectory.GetCertificateThumbprint(certificate)}";
+
+            return Path.Combine(folder, fileName);
         }
     }
 }

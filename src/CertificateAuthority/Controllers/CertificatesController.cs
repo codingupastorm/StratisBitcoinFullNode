@@ -78,17 +78,15 @@ namespace CertificateAuthority.Controllers
             });
         }
 
-        [HttpPost("get_ca_certificate")]
+        [HttpGet("get_ca_certificate")]
         [ProducesResponseType(typeof(CertificateInfoModel), 200)]
-        public IActionResult GetCaCertificate([FromBody]CredentialsModel model)
+        public IActionResult GetCaCertificate()
         {
-            this.LogEntry(model);
-
-            var data = new CredentialsAccessModel(model.AccountId, model.Password, AccountAccessFlags.AccessAnyCertificate);
+            this.LogEntry();
 
             return ExecuteCaMethod(() =>
             {
-                CertificateInfoModel certificateInfo = this.caCertificateManager.GetCaCertificate(data);
+                CertificateInfoModel certificateInfo = this.caCertificateManager.GetCaCertificate();
 
                 if (certificateInfo == null)
                     return this.LogErrorExit(StatusCode(StatusCodes.Status404NotFound));
