@@ -49,7 +49,7 @@ namespace MembershipServices
 
         private readonly TextFileConfiguration configuration;
 
-        public CertificateAuthorityInterface(NodeSettings nodeSettings, ILoggerFactory loggerFactory)
+        public CertificateAuthorityInterface(NodeSettings nodeSettings, ILoggerFactory loggerFactory, bool ignoreCredentials)
         {
             this.nodeSettings = nodeSettings;
 
@@ -61,7 +61,7 @@ namespace MembershipServices
 
             this.caPassword = this.configuration.GetOrDefault<string>(CaPasswordKey, null);
 
-            if (this.caPassword == null)
+            if (this.caPassword == null && !ignoreCredentials)
             {
                 this.logger.LogTrace("(-)[NO_PASSWORD]");
                 throw new CertificateConfigurationException($"You have to provide a password for the node's certificate authority account! Use '{CaPasswordKey}' configuration key to provide a password.");
@@ -69,7 +69,7 @@ namespace MembershipServices
 
             this.caAccountId = this.configuration.GetOrDefault<int>(CaAccountIdKey, 0);
 
-            if (this.caAccountId == 0)
+            if (this.caAccountId == 0 && !ignoreCredentials)
             {
                 this.logger.LogTrace("(-)[NO_ACCOUNT_ID]");
                 throw new CertificateConfigurationException($"You have to provide an account ID for the node's certificate authority account! Use '{CaAccountIdKey}' configuration key to provide an account id.");
@@ -91,8 +91,7 @@ namespace MembershipServices
 
         public X509Certificate LoadAuthorityCertificate()
         {
-            // TODO: This file should actually be in the CaCerts folder, adjust the test helper accordingly and amend
-            string acPath = Path.Combine(this.nodeSettings.DataFolder.RootPath, AuthorityCertificateName);
+            string acPath = Path.Combine(this.nodeSettings.DataFolder.RootPath, "msd", "cacerts", AuthorityCertificateName);
 
             if (!File.Exists(acPath))
             {

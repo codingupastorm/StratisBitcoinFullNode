@@ -70,6 +70,8 @@ namespace MembershipServices
         // As channels do not really exist yet, the identifier format is yet to be defined.
         private readonly Dictionary<string, ChannelMembershipServicesConfiguration> channelMembershipServices;
 
+        private bool getCa;
+
         public MembershipServicesDirectory(NodeSettings nodeSettings, ILoggerFactory loggerFactory)
         {
             this.nodeSettings = nodeSettings;
@@ -92,6 +94,8 @@ namespace MembershipServices
             // TODO: This is a dirty assumption to make - is there a cleaner way?
             bool isChannelNode = this.configuration.GetOrDefault<bool>("ischannelnode", false);
 
+            this.getCa = this.configuration.GetOrDefault<bool>("getca", false);
+
             string msDirectory = isChannelNode
                 ? Directory.GetParent(Directory.GetParent(this.nodeSettings.DataDir).FullName).FullName
                 : this.nodeSettings.DataDir;
@@ -103,13 +107,22 @@ namespace MembershipServices
 
             this.channelMembershipServices = new Dictionary<string, ChannelMembershipServicesConfiguration>();
 
-            this.CertificateAuthorityInterface = new CertificateAuthorityInterface(this.nodeSettings, loggerFactory);
+            this.CertificateAuthorityInterface = new CertificateAuthorityInterface(this.nodeSettings, loggerFactory, this.getCa);
 
-            this.AuthorityCertificate = this.CertificateAuthorityInterface.LoadAuthorityCertificate();
+            // If we are running the CLI utility to get the CA certificate, we don't want to error out when we can't find it.
+            if (!this.getCa)
+                this.AuthorityCertificate = this.CertificateAuthorityInterface.LoadAuthorityCertificate();
         }
 
         public void Initialize()
         {
+            // We attempt to set up the folder structure regardless of whether it has been done already.
+            this.localMembershipServicesConfiguration.InitializeFolderStructure();
+
+            if (this.getCa)
+                return;
+
+            // TODO: Should store client certificate in the appropriate MSD subfolder
             (this.ClientCertificate, this.ClientCertificatePrivateKey) = this.CertificateAuthorityInterface.LoadClientCertificate(this.AuthorityCertificate);
 
             if (this.ClientCertificate == null)
@@ -119,8 +132,6 @@ namespace MembershipServices
                 throw new CertificateConfigurationException($"Please generate the node's certificate with the MembershipServices.Cli utility.");
             }
 
-            // We attempt to set up the folder structure regardless of whether it has been done already.
-            this.localMembershipServicesConfiguration.InitializeFolderStructure();
             this.localMembershipServicesConfiguration.InitializeExistingCertificates();
 
             bool revoked = this.IsCertificateRevoked(CaCertificatesManager.GetThumbprint(this.ClientCertificate));

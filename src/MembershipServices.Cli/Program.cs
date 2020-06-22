@@ -23,6 +23,16 @@ namespace MembershipServices.Cli
         {
         }
 
+        [Verb("getcacert", HelpText = "Retrieve the certificate authority certificate from the CA and store it in the MSD.")]
+        class GetCaCertOptions
+        {
+            [Option("datadir", Required = true, HelpText = "The location of the underlying node's root folder.")]
+            public string DataDir { get; set; }
+
+            [Option("caurl", Required = false, Default = "https://localhost:5001", HelpText = "The URL of the certificate authority.")]
+            public string CaUrl { get; set; }
+        }
+
         [Verb("generate", HelpText = "Generate node certificate and any requisite key material.")]
         class GenerateOptions
         {
@@ -82,6 +92,9 @@ namespace MembershipServices.Cli
         [Verb("extend", HelpText = "Extend existing network.")]
         class ExtendOptions
         {
+            [Option("datadir", Required = true, HelpText = "The location of the underlying node's root folder.")]
+            public string DataDir { get; set; }
+
             [Option("certificatepath", Required = true, HelpText = "The path to the certificate file that needs to be added to the network.")]
             public string CertificatePath { get; set; }
 
@@ -113,9 +126,19 @@ namespace MembershipServices.Cli
             return 0;
         }
 
+        static int RunGetCaCert(GetCaCertOptions options)
+        {
+            var membershipServices = GetMsd(new[] { $"-datadir={options.DataDir}", $"-getca=1" });
+
+            var caClient = new CaClient(new Uri(options.CaUrl), new HttpClient());
+
+            membershipServices.AddLocalMember(caClient.GetCaCertificate().ToCertificate(), MemberType.RootCA);
+            
+            return 0;
+        }
+
         static int RunGenerate(GenerateOptions options)
         {
-            // TODO: Move this logic into a reusable method
             var network = new TokenlessNetwork();
             var nodeSettings = new NodeSettings(network, args: new[] { $"-datadir={options.DataDir}", $"-{Settings.KeyStorePasswordKey}={options.KeyStorePassword}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" });
             var loggerFactory = new LoggerFactory();
@@ -192,12 +215,7 @@ namespace MembershipServices.Cli
 
         static int RunExtend(ExtendOptions options)
         {
-            var network = new TokenlessNetwork();
-            var nodeSettings = new NodeSettings(network);
-            var loggerFactory = new LoggerFactory();
-
-            var membershipServices = new MembershipServicesDirectory(nodeSettings, loggerFactory);
-            membershipServices.Initialize();
+            var membershipServices = GetMsd(new[] { $"-datadir={options.DataDir}" });
 
             MemberType memberType;
             switch (options.Type)
@@ -240,13 +258,7 @@ namespace MembershipServices.Cli
 
         static int RunSync(SyncOptions options)
         {
-            // TODO: Move this logic into a reusable method
-            var network = new TokenlessNetwork();
-            var nodeSettings = new NodeSettings(network, args: new[] { $"-datadir={options.DataDir}", $"-password={options.KeyStorePassword}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" });
-            var loggerFactory = new LoggerFactory();
-
-            var membershipServices = new MembershipServicesDirectory(nodeSettings, loggerFactory);
-            membershipServices.Initialize();
+            var membershipServices = GetMsd(new[] { $"-datadir={options.DataDir}", $"-password={options.KeyStorePassword}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" });
 
             var caClient = new CaClient(new Uri(options.CaUrl), new HttpClient(), int.Parse(options.CaAccountId), options.CaPassword);
 
@@ -263,12 +275,26 @@ namespace MembershipServices.Cli
             return 0;
         }
 
+        static MembershipServicesDirectory GetMsd(string[] settings)
+        {
+            var network = new TokenlessNetwork();
+            var nodeSettings = new NodeSettings(network, args: settings);
+            var loggerFactory = new LoggerFactory();
+
+            var membershipServices = new MembershipServicesDirectory(nodeSettings, loggerFactory);
+            
+            membershipServices.Initialize();
+
+            return membershipServices;
+        }
+
         public static void Main(string[] args)
         {
             // https://hyperledger-fabric.readthedocs.io/en/release-2.0/commands/cryptogen.html
-            Parser.Default.ParseArguments<HelpOptions, GenerateOptions, ShowTemplateOptions, VersionOptions, ExtendOptions, SyncOptions>(args)
+            Parser.Default.ParseArguments<HelpOptions, GetCaCertOptions, GenerateOptions, ShowTemplateOptions, VersionOptions, ExtendOptions, SyncOptions>(args)
                 .MapResult(
                     (HelpOptions opts) => RunHelp(opts),
+                    (GetCaCertOptions opts) => RunGetCaCert(opts),
                     (GenerateOptions opts) => RunGenerate(opts),
                     (ShowTemplateOptions opts) => RunShowTemplate(opts),
                     (VersionOptions opts) => RunVersion(opts),

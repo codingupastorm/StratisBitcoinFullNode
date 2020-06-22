@@ -263,10 +263,13 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
         private void CopyCertificatesToChannelRoot(string channelRootFolder)
         {
+            var tempMsd = new LocalMembershipServicesConfiguration(channelRootFolder, this.tokenlessNetworkDefaults);
+            tempMsd.InitializeFolderStructure();
+
             // If the certificates already exist, do nothing.
-            var authorityCertificatePath = Path.Combine(channelRootFolder, CertificateAuthorityInterface.AuthorityCertificateName);
+            var authorityCertificatePath = Path.Combine(channelRootFolder, "msd", "cacerts", CertificateAuthorityInterface.AuthorityCertificateName);
             if (!File.Exists(authorityCertificatePath))
-                File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificateAuthorityInterface.AuthorityCertificateName), authorityCertificatePath);
+                File.Copy(Path.Combine(this.nodeSettings.DataDir, "msd", "cacerts", CertificateAuthorityInterface.AuthorityCertificateName), authorityCertificatePath);
 
             // If the certificates already exist, do nothing.
             var clientCertificatePath = Path.Combine(channelRootFolder, CertificateAuthorityInterface.ClientCertificateName);

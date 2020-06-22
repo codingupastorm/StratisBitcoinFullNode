@@ -136,7 +136,10 @@ namespace Stratis.SmartContracts.Tests.Common
                 if (this.authorityCertificate == null)
                     this.authorityCertificate = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
 
-                File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificateAuthorityInterface.AuthorityCertificateName), this.authorityCertificate.GetEncoded());
+                var localMsdConfiguration = new LocalMembershipServicesConfiguration(settings.DataDir, network);
+                localMsdConfiguration.InitializeFolderStructure();
+
+                File.WriteAllBytes(Path.Combine(dataFolderRootPath, "msd", "cacerts", CertificateAuthorityInterface.AuthorityCertificateName), this.authorityCertificate.GetEncoded());
 
                 TokenlessKeyStoreManager keyStoreManager = InitializeNodeKeyStore(node, network, settings);
 
@@ -158,9 +161,6 @@ namespace Stratis.SmartContracts.Tests.Common
                 if (this.authorityCertificate != null && node.ClientCertificate != null)
                 {
                     File.WriteAllBytes(Path.Combine(dataFolderRootPath, CertificateAuthorityInterface.ClientCertificateName), CaCertificatesManager.CreatePfx(x509, node.ClientCertificatePrivateKey, "test"));
-
-                    var localMsdConfiguration = new LocalMembershipServicesConfiguration(settings.DataDir, network);
-                    localMsdConfiguration.InitializeFolderStructure();
 
                     // Put certificate into applicable local MSD folder
                     var ownCertificatePath = Path.Combine(localMsdConfiguration.GetCertificatePath(MemberType.SelfSign, x509));

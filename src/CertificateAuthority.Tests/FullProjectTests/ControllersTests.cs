@@ -63,10 +63,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
             // Only the admin user exists initially.
             Assert.Single(CaTestHelper.GetValue<List<AccountModel>>(this.accountsController.ListAll(this.adminCredentials)));
 
-            AccountAccessFlags credentials1Access = AccountAccessFlags.AccessAccountInfo | AccountAccessFlags.BasicAccess | AccountAccessFlags.IssueCertificates | AccountAccessFlags.RevokeCertificates | AccountAccessFlags.AccessAnyCertificate;
-            CredentialsModel credentials1 = CaTestHelper.CreateAccount(this.server.Host, credentials1Access);
-
-            CertificateInfoModel caCertModel = CaTestHelper.GetValue<CertificateInfoModel>(this.certificatesController.GetCaCertificate(credentials1));
+            CertificateInfoModel caCertModel = CaTestHelper.GetValue<CertificateInfoModel>(this.certificatesController.GetCaCertificate());
 
             var certParser = new X509CertificateParser();
 
