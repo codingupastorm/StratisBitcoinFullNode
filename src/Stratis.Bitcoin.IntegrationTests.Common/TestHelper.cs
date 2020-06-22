@@ -3,20 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
-using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Consensus;
 using Stratis.Core.P2P.Peer;
-using Stratis.Core.Utilities;
 using Stratis.Core.Utilities.Extensions;
 using Stratis.Features.BlockStore;
-using Stratis.Features.Miner;
-using Stratis.Features.Miner.Interfaces;
-using Stratis.Features.Wallet;
-using Stratis.Features.Wallet.Controllers;
-using Stratis.Features.Wallet.Models;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common
 {
@@ -144,48 +137,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common
         {
             nodes.ToList().ForEach(node => TestBase.WaitLoop(() => IsNodeSynced(node)));
             nodes.Skip(1).ToList().ForEach(node => TestBase.WaitLoop(() => AreNodesSynced(nodes.First(), node, true)));
-        }
-
-        public static (HdAddress AddressUsed, List<uint256> BlockHashes) MineBlocks(CoreNode node, int numberOfBlocks, bool syncNode = true, string walletName = "mywallet", string walletPassword = "password", string accountName = "account 0", string miningAddress = null)
-        {
-            Guard.NotNull(node, nameof(node));
-
-            if (numberOfBlocks == 0)
-                throw new ArgumentOutOfRangeException(nameof(numberOfBlocks), "Number of blocks must be greater than zero.");
-
-            SetMinerSecret(node, walletName, walletPassword, accountName, miningAddress);
-
-            var script = new ReserveScript { ReserveFullNodeScript = node.MinerSecret.ScriptPubKey };
-            var blockHashes = node.FullNode.Services.ServiceProvider.GetService<IPowMining>().GenerateBlocks(script, (ulong)numberOfBlocks, uint.MaxValue);
-
-            if (syncNode)
-                TestBase.WaitLoop(() => IsNodeSynced(node));
-
-            return (node.MinerHDAddress, blockHashes);
-        }
-
-        public static void SetMinerSecret(CoreNode coreNode, string walletName = "mywallet", string walletPassword = "password", string accountName = "account 0", string miningAddress = null)
-        {
-            if (coreNode.MinerSecret == null)
-            {
-                Wallet wallet = coreNode.FullNode.WalletManager().GetWallet(walletName);
-                HdAccount account = wallet.GetAccount(accountName);
-
-                HdAddress address;
-                if (!string.IsNullOrEmpty(miningAddress))
-                {
-                    address = account.ExternalAddresses.Concat(account.InternalAddresses).Single(add => add.Address == miningAddress);
-                }
-                else
-                {
-                    address = account.GetFirstUnusedReceivingAddress();
-                }
-
-                coreNode.MinerHDAddress = address;
-
-                Key extendedPrivateKey = wallet.GetExtendedPrivateKeyForAddress(walletPassword, address).PrivateKey;
-                coreNode.SetMinerSecret(new BitcoinSecret(extendedPrivateKey, coreNode.FullNode.Network));
-            }
         }
 
         /// <summary>
@@ -317,25 +268,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common
             }
         }
 
-        public static TransactionBuildContext CreateTransactionBuildContext(
-            Network network,
-            string sendingWalletName,
-            string sendingAccountName,
-            string sendingPassword,
-            ICollection<Recipient> recipients,
-            FeeType feeType,
-            int minConfirmations)
-        {
-            return new TransactionBuildContext(network)
-            {
-                AccountReference = new WalletAccountReference(sendingWalletName, sendingAccountName),
-                MinConfirmations = minConfirmations,
-                FeeType = feeType,
-                WalletPassword = sendingPassword,
-                Recipients = recipients.ToList()
-            };
-        }
-
         /// <summary>
         /// Connects a node to another and waits for the operation to complete.
         /// </summary>
@@ -440,49 +372,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common
 
             // The peer might be connected via an inbound connection.
             return isConnectedToNode.FullNode.ConnectionManager.ConnectedPeers.Any(p => p.PeerEndPoint.Match(thisNode.Endpoint));
-        }
-
-        /// <summary>
-        /// A helper that constructs valid and various types of invalid blocks manually.
-        /// </summary>
-        public static BlockBuilder BuildBlocks { get { return new BlockBuilder(); } }
-
-        private const string Password = "password";
-        private const string Name = "mywallet";
-        private const string AccountName = "account 0";
-
-        public static bool CheckWalletBalance(CoreNode node, Money amount)
-        {
-            var total = node.FullNode.WalletManager().GetSpendableTransactionsInWallet(Name).Sum(s => s.Transaction.Amount);
-            return total == amount;
-        }
-
-        public static void SendCoins(CoreNode sender, CoreNode receiver, Money amount, int? confirmations = null)
-        {
-            var receivingAddress = receiver.FullNode.WalletManager().GetUnusedAddress(new WalletAccountReference(Name, AccountName));
-
-            var context = CreateContext(sender.FullNode.Network, new WalletAccountReference(Name, AccountName), Password, receivingAddress.ScriptPubKey, amount, FeeType.Medium, (int)sender.FullNode.Network.Consensus.ConsensusMiningReward.CoinbaseMaturity);
-
-            var transaction = sender.FullNode.WalletTransactionHandler().BuildTransaction(context);
-
-            sender.FullNode.NodeController<WalletController>().SendTransaction(new SendTransactionRequest(transaction.ToHex()));
-
-            TestBase.WaitLoop(() => receiver.FullNode.MempoolManager().GetMempoolAsync().GetAwaiter().GetResult().Count > 0);
-            TestBase.WaitLoop(() => receiver.FullNode.WalletManager().GetSpendableTransactionsInWallet(Name).Any());
-
-            TestBase.WaitLoop(() => CheckWalletBalance(receiver, amount));
-        }
-
-        private static TransactionBuildContext CreateContext(Network network, WalletAccountReference accountReference, string password, Script destinationScript, Money amount, FeeType feeType, int minConfirmations)
-        {
-            return new TransactionBuildContext(network)
-            {
-                AccountReference = accountReference,
-                MinConfirmations = minConfirmations,
-                FeeType = feeType,
-                WalletPassword = password,
-                Recipients = new[] { new Recipient { Amount = amount, ScriptPubKey = destinationScript } }.ToList()
-            };
         }
     }
 }

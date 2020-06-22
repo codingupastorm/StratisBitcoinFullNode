@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NBitcoin;
-using Stratis.Bitcoin.Tests.Wallet.Common;
+using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core.Base;
 using Stratis.Core.Controllers.Models;
 using Stratis.Core.Interfaces;
@@ -162,7 +162,7 @@ namespace Stratis.Bitcoin.Features.BlockStore.Tests
             var store = new Mock<IBlockStore>();
             var chainState = new Mock<IChainState>();
 
-            ChainIndexer chainIndexer = WalletTestsHelpers.GenerateChainWithHeight(3, this.stratisTest);
+            ChainIndexer chainIndexer = TestBase.GenerateChainWithHeight(3, this.stratisTest);
 
             logger.Setup(l => l.CreateLogger(It.IsAny<string>())).Returns(Mock.Of<ILogger>);
 
