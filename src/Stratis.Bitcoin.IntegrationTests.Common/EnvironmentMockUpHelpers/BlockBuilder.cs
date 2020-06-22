@@ -23,8 +23,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         {
             this.coreNode = coreNode;
 
-            TestHelper.SetMinerSecret(this.coreNode);
-
             return this;
         }
 

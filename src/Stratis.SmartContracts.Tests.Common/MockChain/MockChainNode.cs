@@ -13,7 +13,6 @@ using Stratis.Features.SmartContracts;
 using Stratis.Features.SmartContracts.Models;
 using Stratis.Features.SmartContracts.ReflectionExecutor.Consensus.Rules;
 using Stratis.Features.SmartContracts.ReflectionExecutor.Controllers;
-using Stratis.Features.Wallet;
 using Stratis.SmartContracts.CLR;
 using Stratis.SmartContracts.CLR.Local;
 using Stratis.SmartContracts.Core;
@@ -47,68 +46,16 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
         /// </summary>
         public CoreNode CoreNode { get; }
 
-        /// <summary>
-        /// The address that all new coins are mined to.
-        /// </summary>
-        public HdAddress MinerAddress { get; }
-
-        /// <summary>
-        /// The transactions available to be spent from this node's wallet.
-        /// </summary>
-        public IEnumerable<UnspentOutputReference> SpendableTransactions
-        {
-            get
-            {
-                return this.CoreNode.FullNode.WalletManager().GetSpendableTransactionsInWallet(this.WalletName);
-            }
-        }
-
-        /// <summary>
-        /// The balance currently available to be spent by this node's wallet.
-        /// </summary>
-        public Money WalletSpendableBalance
-        {
-            get
-            {
-                return this.SpendableTransactions.Sum(s => s.Transaction.Amount);
-            }
-        }
-
         public MockChainNode(CoreNode coreNode, IMockChain chain, Mnemonic mnemonic = null)
         {
             this.CoreNode = coreNode;
             this.chain = chain;
-
-            // Set up address and mining
-            (Wallet wallet, _) = this.CoreNode.FullNode.WalletManager().CreateWallet(this.Password, this.WalletName, this.Passphrase, mnemonic);
-            HdAccount account = wallet.GetAccount(this.AccountName);
-            this.MinerAddress = account.GetFirstUnusedReceivingAddress();
-
-            Key key = wallet.GetExtendedPrivateKeyForAddress(this.Password, this.MinerAddress).PrivateKey;
-            this.CoreNode.SetMinerSecret(new BitcoinSecret(key, this.CoreNode.FullNode.Network));
 
             // Set up services for later
             //this.smartContractWalletController = this.CoreNode.FullNode.NodeController<SmartContractWalletController>();
             this.smartContractsController = this.CoreNode.FullNode.NodeController<SmartContractsController>();
             this.stateRoot = this.CoreNode.FullNode.NodeService<IStateRepositoryRoot>();
             this.blockStore = this.CoreNode.FullNode.NodeService<IBlockStore>();
-        }
-
-        /// <summary>
-        /// Mine the given number of blocks. The block reward will go to this node's MinerAddress.
-        /// </summary>
-        public void MineBlocks(int amountOfBlocks)
-        {
-            TestHelper.MineBlocks(this.CoreNode, amountOfBlocks);
-            this.chain.WaitForAllNodesToSync();
-        }
-
-        /// <summary>
-        /// Get an unused address that can be used to send funds to this node.
-        /// </summary>
-        public HdAddress GetUnusedAddress()
-        {
-            return this.CoreNode.FullNode.WalletManager().GetUnusedAddress(new WalletAccountReference(this.WalletName, this.AccountName));
         }
 
         /// <summary>
@@ -135,7 +82,7 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
                 GasPrice = gasPrice,
                 Parameters = parameters,
                 Password = this.Password,
-                Sender = sender ?? this.MinerAddress.Address,
+                Sender = sender,
                 WalletName = this.WalletName,
                 Outpoints = outpoints
             };
@@ -190,7 +137,7 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
                 MethodName = methodName,
                 Parameters = parameters,
                 Password = this.Password,
-                Sender = sender ?? this.MinerAddress.Address,
+                Sender = sender,
                 WalletName = this.WalletName,
                 Outpoints = outpoints
             };
@@ -215,7 +162,7 @@ namespace Stratis.SmartContracts.Tests.Common.MockChain
                 ContractAddress = contractAddress,
                 MethodName = methodName,
                 Parameters = parameters,
-                Sender = sender ?? this.MinerAddress.Address
+                Sender = sender
             };
             JsonResult response = (JsonResult)this.smartContractsController.LocalCallSmartContractTransaction(request);
             return (ILocalExecutionResult)response.Value;

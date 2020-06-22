@@ -7,23 +7,11 @@ using Stratis.Core.Base;
 using Stratis.Core.Consensus;
 using Stratis.Core.Interfaces;
 using Stratis.Features.MemoryPool;
-using Stratis.Features.Wallet;
-using Stratis.Features.Wallet.Interfaces;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common
 {
     public static class FullNodeExtensions
     {
-        public static WalletManager WalletManager(this FullNode fullNode)
-        {
-            return fullNode.NodeService<IWalletManager>() as WalletManager;
-        }
-
-        public static WalletTransactionHandler WalletTransactionHandler(this FullNode fullNode)
-        {
-            return fullNode.NodeService<IWalletTransactionHandler>() as WalletTransactionHandler;
-        }
-
         public static IConsensusManager ConsensusManager(this FullNode fullNode)
         {
             return fullNode.NodeService<IConsensusManager>() as IConsensusManager;
@@ -47,14 +35,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common
         public static ChainedHeader GetBlockStoreTip(this FullNode fullNode)
         {
             return fullNode.NodeService<IChainState>().BlockStoreTip;
-        }
-
-        public static HdAddress GetUnusedAddress(this WalletManager walletManager)
-        {
-            var wallet = walletManager.Wallets.First();
-            var walletAccount = wallet.AccountsRoot.First().Accounts.First();
-            var walletAccountReference = new WalletAccountReference(wallet.Name, walletAccount.Name);
-            return walletManager.GetUnusedAddress(walletAccountReference);
         }
 
         /// <summary>

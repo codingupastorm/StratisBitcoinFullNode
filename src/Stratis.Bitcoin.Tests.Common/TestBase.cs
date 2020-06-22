@@ -109,6 +109,27 @@ namespace Stratis.Bitcoin.Tests.Common
             }
         }
 
+        public static ChainIndexer GenerateChainWithHeight(int blockAmount, Network network)
+        {
+            var chain = new ChainIndexer(network);
+            uint nonce = RandomUtils.GetUInt32();
+            uint256 prevBlockHash = chain.Genesis.HashBlock;
+            for (int i = 0; i < blockAmount; i++)
+            {
+                Block block = network.Consensus.ConsensusFactory.CreateBlock();
+                block.AddTransaction(network.CreateTransaction());
+                block.UpdateMerkleRoot();
+                block.Header.BlockTime = new DateTimeOffset(new DateTime(2017, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddDays(i));
+                block.Header.HashPrevBlock = prevBlockHash;
+                block.Header.Nonce = nonce;
+                chain.SetTip(block.Header);
+                chain.Tip.Block = block;
+                prevBlockHash = block.GetHash();
+            }
+
+            return chain;
+        }
+
         public List<Block> CreateBlocks(int amount, bool bigBlocks = false)
         {
             var blocks = new List<Block>();

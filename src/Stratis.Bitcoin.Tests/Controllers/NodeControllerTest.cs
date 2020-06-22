@@ -9,7 +9,6 @@ using Moq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Stratis.Bitcoin.Tests.Common.Logging;
-using Stratis.Bitcoin.Tests.Wallet.Common;
 using Stratis.Core;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Base;
@@ -50,7 +49,7 @@ namespace Stratis.Bitcoin.Tests.Controllers
         {
             this.network = new BitcoinTest();
 
-            this.chainIndexer = WalletTestsHelpers.GenerateChainWithHeight(3, this.network);
+            this.chainIndexer = GenerateChainWithHeight(3, this.network);
             this.chainState = new Mock<IChainState>();
             this.connectionManager = new Mock<IConnectionManager>();
             this.connectionManager.Setup(c => c.Network).Returns(this.network);

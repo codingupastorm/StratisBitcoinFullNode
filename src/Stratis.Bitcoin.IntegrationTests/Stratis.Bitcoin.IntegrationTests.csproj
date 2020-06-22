@@ -45,7 +45,6 @@
     <ProjectReference Include="..\Stratis.Features.Miner\Stratis.Features.Miner.csproj" />
     <ProjectReference Include="..\Stratis.Features.Notifications\Stratis.Features.Notifications.csproj" />
     <ProjectReference Include="..\Stratis.Features.SmartContracts\Stratis.Features.SmartContracts.csproj" />
-    <ProjectReference Include="..\Stratis.Features.Wallet\Stratis.Features.Wallet.csproj" />
     <ProjectReference Include="..\Stratis.Bitcoin.IntegrationTests.Common\Stratis.Bitcoin.IntegrationTests.Common.csproj" />
     <ProjectReference Include="..\Stratis.Bitcoin.Tests.Common\Stratis.Bitcoin.Tests.Common.csproj" />
     <ProjectReference Include="..\Stratis.SmartContracts.Core\Stratis.SmartContracts.Core.csproj" />

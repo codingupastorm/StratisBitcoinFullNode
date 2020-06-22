@@ -1,19 +1,5 @@
-﻿using System;
-using System.IO;
-using FluentAssertions;
-using NBitcoin;
-using NBitcoin.Protocol;
-using Stratis.Core.Builder;
-using Stratis.Features.Api;
-using Stratis.Bitcoin.IntegrationTests.Common;
-using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+﻿using NBitcoin;
 using Stratis.Core.Networks;
-using Stratis.Features.BlockStore;
-using Stratis.Features.Consensus;
-using Stratis.Features.MemoryPool;
-using Stratis.Features.Miner;
-using Stratis.Features.Wallet;
-using Xunit;
 
 namespace Stratis.Bitcoin.IntegrationTests
 {

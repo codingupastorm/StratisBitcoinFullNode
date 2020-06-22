@@ -27,8 +27,6 @@ using Stratis.Core.P2P.Protocol.Payloads;
 using Stratis.Core.Primitives;
 using Stratis.Core.Signals;
 using Stratis.Core.Utilities;
-using Stratis.Features.Wallet;
-using Stratis.Features.Wallet.Interfaces;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 {
@@ -43,7 +41,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         public BitcoinSecret MinerSecret { get; private set; }
 
-        public HdAddress MinerHDAddress { get; internal set; }
         public int ProtocolPort => int.Parse(this.ConfigParameters["port"]);
 
         /// <summary>Location of the data directory for the node.</summary>
@@ -178,33 +175,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             return this;
         }
 
-        /// <summary>
-        /// This does not create a physical wallet but only sets the miner secret on the node.
-        /// </summary>
-        /// <returns>This node.</returns>
-        public CoreNode WithDummyWallet()
-        {
-            this.builderWithDummyWallet = true;
-            this.builderWithWallet = false;
-            return this;
-        }
-
-        public CoreNode WithReadyBlockchainData(string readyDataName)
-        {
-            // Extract the zipped blockchain data to the node's DataFolder.
-            ZipFile.ExtractToDirectory(Path.GetFullPath(readyDataName), this.DataFolder, true);
-
-            // Import whole wallets to DB.
-            this.startActions.Add(() =>
-            {
-                var walletManager = ((WalletManager)this.FullNode?.NodeService<IWalletManager>(true));
-                if (walletManager != null)
-                    walletManager.ExcludeTransactionsFromWalletImports = false;
-            });
-
-            return this;
-        }
-
         public INetworkPeer CreateNetworkPeerClient()
         {
             ConnectionManagerSettings connectionManagerSettings = this.runner.FullNode.ConnectionManager.ConnectionSettings;
@@ -304,18 +274,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             TestBase.WaitLoop(() => this.runner.FullNode.State == FullNodeState.Started,
                 cancellationToken: new CancellationTokenSource(timeToNodeStart).Token,
                 failureReason: $"Failed to achieve state = started within {timeToNodeStart}");
-
-            if (this.builderWithDummyWallet)
-                this.SetMinerSecret(new BitcoinSecret(new Key(), this.FullNode.Network));
-
-            if (this.builderWithWallet)
-            {
-                (_, this.Mnemonic) = this.FullNode.WalletManager().CreateWallet(
-                    this.builderWalletPassword,
-                    this.builderWalletName,
-                    this.builderWalletPassphrase,
-                    string.IsNullOrEmpty(this.builderWalletMnemonic) ? null : new Mnemonic(this.builderWalletMnemonic));
-            }
         }
 
         /// <summary>
