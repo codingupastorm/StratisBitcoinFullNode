@@ -37,7 +37,9 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         internal readonly NodeRunner runner;
 
         public int ApiPort => int.Parse(this.ConfigParameters["apiport"]);
+
         public int SystemChannelApiPort => int.Parse(this.ConfigParameters["systemchannelapiport"]);
+        public int SystemChannelProtocolApiPort => int.Parse(this.ConfigParameters["systemchannelprotocolport"]);
 
         public BitcoinSecret MinerSecret { get; private set; }
 

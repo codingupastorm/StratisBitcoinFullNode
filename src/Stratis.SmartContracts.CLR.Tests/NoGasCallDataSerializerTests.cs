@@ -1,8 +1,10 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using CSharpFunctionalExtensions;
 using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core;
+using Stratis.SmartContracts.Core.AccessControl;
 using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Networks;
 using Stratis.SmartContracts.RuntimeObserver;
@@ -39,7 +41,13 @@ namespace Stratis.SmartContracts.CLR.Tests
 
             EndorsementPolicy policy = new EndorsementPolicy
             {
-                Organisation = (Organisation) "TestOrganisation",
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        "TestOrganisation"
+                    }
+                },
                 RequiredSignatures = 3
             };
 
@@ -53,7 +61,7 @@ namespace Stratis.SmartContracts.CLR.Tests
             Assert.Equal<byte[]>(contractExecutionCode, callData.ContractExecutionCode);
             Assert.Equal((Gas)NoGasCallDataSerializer.GasPriceToSet, callData.GasPrice);
             Assert.Equal((Gas)NoGasCallDataSerializer.GasLimitToSet, callData.GasLimit);
-            Assert.Equal(policy.Organisation, callData.EndorsementPolicy.Organisation);
+            Assert.Equal(policy.AccessList.Organisations.First(), callData.EndorsementPolicy.AccessList.Organisations.First());
             Assert.Equal(policy.RequiredSignatures, callData.EndorsementPolicy.RequiredSignatures);
         }
 

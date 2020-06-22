@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using CertificateAuthority;
 using MembershipServices;
 using Org.BouncyCastle.X509;
 using Stratis.SmartContracts.Core.Endorsement;
@@ -24,12 +25,13 @@ namespace Stratis.Feature.PoA.Tokenless
 
         public bool ClientCanAccessPrivateData(ReadWriteSet readWriteSet)
         {
-            return this.OrganisationCanAccessPrivateData((Organisation)this.membershipServices.ClientCertificate.GetOrganisation(), readWriteSet);
+            return CertificateCanAccessPrivateData(this.membershipServices.ClientCertificate, readWriteSet);
         }
 
-        public bool OrganisationCanAccessPrivateData(Organisation organisation, ReadWriteSet readWriteSet)
+        public bool OrganisationAndThumbprintCanAccessPrivateData(Organisation organisation, string thumbprint, ReadWriteSet readWriteSet)
         {
             // Check if we are meant to have the data. 
+
             WriteItem write = readWriteSet.Writes.First(x => x.IsPrivateData);
             EndorsementPolicy policy = this.stateRepository.GetPolicy(write.ContractAddress);
 
@@ -38,12 +40,16 @@ namespace Stratis.Feature.PoA.Tokenless
                 return false;
             }
 
-            return policy.Organisation == organisation;
+            return policy.AccessList.Organisations.Contains(organisation)
+                || policy.AccessList.Thumbprints.Contains(thumbprint);
         }
 
-        public bool OrganisationCanAccessPrivateData(X509Certificate certificate, ReadWriteSet readWriteSet)
+        public bool CertificateCanAccessPrivateData(X509Certificate certificate, ReadWriteSet readWriteSet)
         {
-            return this.OrganisationCanAccessPrivateData((Organisation)certificate.GetOrganisation(), readWriteSet);
+            Organisation organisation = (Organisation) certificate.GetOrganisation();
+            string thumbprint = CaCertificatesManager.GetThumbprint(certificate);
+
+            return this.OrganisationAndThumbprintCanAccessPrivateData(organisation, thumbprint, readWriteSet);
         }
     }
 }

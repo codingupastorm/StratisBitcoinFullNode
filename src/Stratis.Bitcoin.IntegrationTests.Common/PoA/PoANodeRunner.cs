@@ -7,8 +7,6 @@ using Stratis.Features.Api;
 using Stratis.Features.BlockStore;
 using Stratis.Features.MemoryPool;
 using Stratis.Features.PoA;
-//using Stratis.Features.SQLiteWalletRepository;
-//using Stratis.Features.Wallet;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.PoA
 {
@@ -32,8 +30,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.PoA
                 .UseBlockStore()
                 .UsePoAConsensus(this.Network)
                 .UseMempool()
-                //.UseWallet()
-                //.AddSQLiteWalletRepository()
                 .UseApi()
                 .MockIBD()
                 .UseTestChainedHeaderTree()

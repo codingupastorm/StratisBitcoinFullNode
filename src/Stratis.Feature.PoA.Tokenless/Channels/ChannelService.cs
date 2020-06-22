@@ -12,11 +12,11 @@ using NBitcoin;
 using Stratis.Core.AsyncWork;
 using Stratis.Core.Configuration;
 using Stratis.Core.Utilities;
-using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.PoA;
+using Stratis.SmartContracts.Core.AccessControl;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels
 {
@@ -49,17 +49,19 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         protected readonly IDateTimeProvider dateTimeProvider;
         protected readonly TokenlessKeyStoreSettings keyStoreSettings;
         protected readonly ILogger logger;
+        protected readonly IMembershipServicesDirectory membershipServicesDirectory;
         protected readonly NodeSettings nodeSettings;
         protected IAsyncLoop terminationLoop;
         protected readonly TokenlessNetwork tokenlessNetworkDefaults;
 
         protected ChannelService(
+            IChannelRepository channelRepository,
             ChannelSettings channelSettings,
-            TokenlessKeyStoreSettings keyStoreSettings,
             IDateTimeProvider dateTimeProvider,
+            TokenlessKeyStoreSettings keyStoreSettings,
             ILoggerFactory loggerFactory,
-            NodeSettings nodeSettings,
-            IChannelRepository channelRepository)
+            IMembershipServicesDirectory membershipServicesDirectory,
+            NodeSettings nodeSettings)
         {
             this.channelSettings = channelSettings;
             this.dateTimeProvider = dateTimeProvider;
@@ -67,6 +69,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
             this.nodeSettings = nodeSettings;
             this.channelRepository = channelRepository;
+            this.membershipServicesDirectory = membershipServicesDirectory;
             this.tokenlessNetworkDefaults = new TokenlessNetwork();
         }
 
@@ -82,7 +85,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
                 int channelNodeId = this.channelRepository.GetNextChannelId();
 
-                string channelRootFolder = PrepareChannelNodeForStartup(request.Name, channelNodeId, request.AccessList);
+                string channelRootFolder = PrepareChannelNodeForStartup(request.Name, request.Identifier, channelNodeId, request.AccessList);
 
                 bool started = await StartChannelAsync(channelRootFolder, $"-channelname={request.Name}");
                 if (!started)
@@ -109,7 +112,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             // Record channel membership (in normal node repo) and start up channel node.
             this.logger.LogInformation($"Joining and starting a node on channel '{network.Name}'.");
 
-            string channelRootFolder = PrepareChannelNodeForStartup(network.Name, network.Id, network.InitialAccessList, network);
+            string channelRootFolder = PrepareChannelNodeForStartup(network.Name, null, network.Id, network.InitialAccessList, network);
 
             bool started = await StartChannelAsync(channelRootFolder, $"-channelname={network.Name}");
             if (!started)
@@ -133,7 +136,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
                     int channelNodeId = channel.Id;
 
-                    string channelRootFolder = PrepareChannelNodeForStartup(channel.Name, channelNodeId, channel.AccessList);
+                    string channelRootFolder = PrepareChannelNodeForStartup(channel.Name, null, channelNodeId, channel.AccessList);
 
                     bool started = await StartChannelAsync(channelRootFolder, $"-channelname={channel.Name}");
                     if (!started)
@@ -165,6 +168,9 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 if (this.channelSettings.SystemChannelApiPort != 0)
                     args = args.Concat(new string[] { $"-apiport={this.channelSettings.SystemChannelApiPort}" }).ToArray();
 
+                if (this.channelSettings.SystemChannelProtocolPort != 0)
+                    args = args.Concat(new string[] { $"-port={this.channelSettings.SystemChannelProtocolPort}" }).ToArray();
+
                 bool started = await StartChannelAsync(channelRootFolder, args);
                 if (!started)
                     throw new ChannelServiceException($"Failed to start system channel node as the process exited early.");
@@ -183,10 +189,10 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         /// <param name="organisation">The organisation the channel belongs to.</param>
         /// <param name="network">If this is from join channel request, the network will be provided.</param>
         /// <returns>The channel's network root folder.</returns>
-        private string PrepareChannelNodeForStartup(string channelName, int channelId, AccessControlList accessList, ChannelNetwork network = null)
+        private string PrepareChannelNodeForStartup(string channelName, string channelIdentifier, int channelId, AccessControlList accessList, ChannelNetwork network = null)
         {
             // Write the serialized version of the network to disk.
-            string channelRootFolder = WriteChannelNetworkJson(channelName, channelId, accessList, network);
+            string channelRootFolder = WriteChannelNetworkJson(channelName, channelIdentifier, channelId, accessList, network);
 
             // Copy the parent node's authority and client certificate to the channel node's root.
             CopyCertificatesToChannelRoot(channelRootFolder);
@@ -200,7 +206,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         /// <summary>Write the serialized network to disk.</summary>
         /// <param name="channelName">The name of the channel.</param>
         /// <returns>The channel's root folder path.</returns>
-        private string WriteChannelNetworkJson(string channelName, int channelId, AccessControlList accessList, ChannelNetwork channelNetwork = null)
+        private string WriteChannelNetworkJson(string channelName, string channelIdentifier, int channelId, AccessControlList accessList, ChannelNetwork channelNetwork = null)
         {
             // If the network json already exist, do nothing.
             var rootFolderName = Path.Combine(this.nodeSettings.DataFolder.RootPath, "channels", channelName.ToLowerInvariant());
@@ -210,7 +216,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
             if (channelNetwork == null)
             {
-                channelNetwork = SystemChannelNetwork.CreateChannelNetwork(channelName.ToLowerInvariant(), rootFolderName, this.dateTimeProvider.GetAdjustedTimeAsUnixTimestamp());
+                channelNetwork = SystemChannelNetwork.CreateChannelNetwork(channelName.ToLowerInvariant(), channelIdentifier, rootFolderName, this.dateTimeProvider.GetAdjustedTimeAsUnixTimestamp());
                 channelNetwork.Id = channelId;
                 channelNetwork.InitialAccessList = accessList;
                 channelNetwork.DefaultAPIPort = this.GetDefaultAPIPort(channelId);
@@ -257,10 +263,13 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
         private void CopyCertificatesToChannelRoot(string channelRootFolder)
         {
+            var tempMsd = new LocalMembershipServicesConfiguration(channelRootFolder, this.tokenlessNetworkDefaults);
+            tempMsd.InitializeFolderStructure();
+
             // If the certificates already exist, do nothing.
-            var authorityCertificatePath = Path.Combine(channelRootFolder, CertificateAuthorityInterface.AuthorityCertificateName);
+            var authorityCertificatePath = Path.Combine(channelRootFolder, "msd", "cacerts", CertificateAuthorityInterface.AuthorityCertificateName);
             if (!File.Exists(authorityCertificatePath))
-                File.Copy(Path.Combine(this.nodeSettings.DataDir, CertificateAuthorityInterface.AuthorityCertificateName), authorityCertificatePath);
+                File.Copy(Path.Combine(this.nodeSettings.DataDir, "msd", "cacerts", CertificateAuthorityInterface.AuthorityCertificateName), authorityCertificatePath);
 
             // If the certificates already exist, do nothing.
             var clientCertificatePath = Path.Combine(channelRootFolder, CertificateAuthorityInterface.ClientCertificateName);
@@ -288,7 +297,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             var configurationFilePath = Path.Combine(channelRootFolder, ChannelConfigurationFileName);
 
             var args = new StringBuilder();
-            args.AppendLine($"-{CertificateAuthorityInterface.CaBaseUrlKey}={CertificateAuthorityInterface.CaBaseUrl}");
+            args.AppendLine($"-{CertificateAuthorityInterface.CaBaseUrlKey}={this.membershipServicesDirectory.CertificateAuthorityInterface.CaUrl}");
             args.AppendLine($"-{CertificateAuthorityInterface.CaAccountIdKey}={Settings.AdminAccountId}");
             args.AppendLine($"-{CertificateAuthorityInterface.CaPasswordKey}={this.nodeSettings.ConfigReader.GetOrDefault(CertificateAuthorityInterface.CaPasswordKey, "")} ");
             args.AppendLine($"-{Settings.KeyStorePasswordKey}={this.keyStoreSettings.KeyStorePassword}");

@@ -6,7 +6,7 @@ using Moq;
 using NBitcoin;
 using Org.BouncyCastle.X509;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
-using Stratis.Feature.PoA.Tokenless.Networks;
+using Stratis.SmartContracts.Core.AccessControl;
 using Stratis.SmartContracts.Core.Endorsement;
 using Stratis.SmartContracts.Core.ReadWrite;
 using Xunit;
@@ -44,7 +44,13 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             // Basic policy that only requires 1 sig from organisation.
             var basicPolicy = new EndorsementPolicy
             {
-                Organisation = organisation,
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        organisation
+                    }
+                },
                 RequiredSignatures = 1
             };
 
@@ -98,7 +104,13 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             // Basic policy that only requires 1 sig from organisation.
             var basicPolicy = new EndorsementPolicy
             {
-                Organisation = approvedOrganisation,
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        approvedOrganisation
+                    }
+                },
                 RequiredSignatures = 1
             };
 
@@ -133,7 +145,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         public void MofNPolicyValidator_Validates_No_Signature_Correctly()
         {
             var policy = new EndorsementPolicy();
-            var validator = new MofNPolicyValidator(policy.ToDictionary());
+            var validator = new EndorsementPolicyValidator(policy);
 
             Assert.True(validator.Valid);
         }
@@ -145,11 +157,17 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var org2 = (Organisation)"Test2";
             var policy = new EndorsementPolicy
             {
-                Organisation = org,
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        org
+                    }
+                },
                 RequiredSignatures = 1
             };
 
-            var validator = new MofNPolicyValidator(policy.ToDictionary());
+            var validator = new EndorsementPolicyValidator(policy);
 
             validator.AddSignature(org2, "test");
 
@@ -158,7 +176,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             validator.AddSignature(org, "test");
 
             Assert.True(validator.Valid);
-            Assert.Single(validator.GetValidAddresses());
+            Assert.Single(validator.GetAddresses());
         }
 
         [Fact]
@@ -167,11 +185,17 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             var org = (Organisation)"Test";
             var policy = new EndorsementPolicy
             {
-                Organisation = org,
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        org
+                    }
+                },
                 RequiredSignatures = 2
             };
 
-            var validator = new MofNPolicyValidator(policy.ToDictionary());
+            var validator = new EndorsementPolicyValidator(policy);
 
             validator.AddSignature(org, "test");
 
@@ -180,8 +204,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             validator.AddSignature(org, "test2");
 
             Assert.True(validator.Valid);
-            Assert.Equal("test", validator.GetValidAddresses()[0]);
-            Assert.Equal("test2", validator.GetValidAddresses()[1]);
+            Assert.Equal("test", validator.GetAddresses()[0]);
+            Assert.Equal("test2", validator.GetAddresses()[1]);
         }
 
         [Fact]
@@ -189,13 +213,21 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             var org = (Organisation)"Test";
             var org2 = (Organisation)"Test2";
-            var policy = new Dictionary<Organisation, int>
+
+            var policy = new EndorsementPolicy
             {
-                { org, 2 },
-                { org2, 3 }
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        org,
+                        org2
+                    }
+                },
+                RequiredSignatures = 5
             };
 
-            var validator = new MofNPolicyValidator(policy);
+            var validator = new EndorsementPolicyValidator(policy);
 
             // Add org 1 signatures
             validator.AddSignature(org, "test");
@@ -217,12 +249,20 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             var org = (Organisation)"Test";
             var org2 = (Organisation)"Test2";
-            var policy = new Dictionary<Organisation, int>
+
+            var policy = new EndorsementPolicy
             {
-                { org, 2 },
+                AccessList = new AccessControlList
+                {
+                    Organisations = new List<string>
+                    {
+                        org
+                    }
+                },
+                RequiredSignatures = 2
             };
 
-            var validator = new MofNPolicyValidator(policy);
+            var validator = new EndorsementPolicyValidator(policy);
 
             // Add org 2 signatures - they don't contribute to the policy being valid
             validator.AddSignature(org2, "test2 2");
@@ -237,8 +277,8 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
             Assert.True(validator.Valid);
 
             // Ensure only org 1 addresses are returned
-            Assert.Equal("test", validator.GetValidAddresses()[0]);
-            Assert.Equal("test 2", validator.GetValidAddresses()[1]);
+            Assert.Equal("test", validator.GetAddresses()[0]);
+            Assert.Equal("test 2", validator.GetAddresses()[1]);
         }
 
 

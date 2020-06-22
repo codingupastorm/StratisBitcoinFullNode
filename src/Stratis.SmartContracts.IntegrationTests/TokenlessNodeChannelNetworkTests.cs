@@ -20,7 +20,6 @@ using Stratis.Bitcoin.Tests.Common;
 using Stratis.Core;
 using Stratis.Core.Controllers.Models;
 using Stratis.Core.P2P;
-using Stratis.Feature.PoA.Tokenless.AccessControl;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.Controllers;
@@ -29,6 +28,7 @@ using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.Api;
 using Stratis.Features.SmartContracts.Models;
 using Stratis.SmartContracts.CLR.Compilation;
+using Stratis.SmartContracts.Core.AccessControl;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;
@@ -110,7 +110,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 nodeBuilder.CreateChannel(parentNode, "marketing", 2);
                 nodeBuilder.CreateChannel(parentNode, "sales", 3);
                 nodeBuilder.CreateChannel(parentNode, "legal", 4);
-                nodeBuilder.CreateChannel(parentNode, "it", 5);
+                nodeBuilder.CreateChannel(parentNode, "itec", 5);
                 nodeBuilder.CreateChannel(parentNode, "humanresources", 6);
 
                 // Re-start the parent node as to load and start the channels it belongs to.
@@ -186,7 +186,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 string updatedNetworkJson = JsonSerializer.Serialize(channelNetwork);
 
                 // Join the channel.
-                var response = $"{(new ApiSettings(otherNode.FullNode.Settings)).ApiUri}"
+                var response = $"{new ApiSettings(otherNode.FullNode.Settings).ApiUri}"
                     .AppendPathSegment("api/channels/join")
                     .PostJsonAsync(new ChannelJoinRequest()
                     {
@@ -339,10 +339,10 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TokenlessTestHelper.AddCertificatesToMembershipServices(new List<X509Certificate>() { infraNode2.ClientCertificate.ToCertificate() }, infraNode2.DataFolder, network);
                 infraNode2.Start();
 
-                // Connect the existing node to it.
+                // Attempt to connect the 2 system channel nodes.
                 await $"http://localhost:{infraNode1.SystemChannelApiPort}/api"
                     .AppendPathSegment("connectionmanager/addnode")
-                    .SetQueryParam("endpoint", $"127.0.0.1:{infraNode2.ProtocolPort}")
+                    .SetQueryParam("endpoint", $"127.0.0.1:{infraNode2.SystemChannelProtocolApiPort}")
                     .SetQueryParam("command", "add").GetAsync();
 
                 // Wait until the first system channel node's tip has advanced beyond bootstrap mode.
@@ -357,11 +357,12 @@ namespace Stratis.SmartContracts.IntegrationTests
                     catch (Exception) { }
 
                     return false;
-                }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(2).TotalMilliseconds, waitTimeSeconds: 120);
+                }, retryDelayInMiliseconds: (int)TimeSpan.FromSeconds(2).TotalMilliseconds, waitTimeSeconds: 240);
 
                 // Call the create channel API method on the system channel node.
                 var channelCreationRequest = new ChannelCreationRequest()
                 {
+                    Identifier = "sals",
                     Name = "Sales",
                     AccessList = new AccessControlList
                     {
@@ -420,7 +421,6 @@ namespace Stratis.SmartContracts.IntegrationTests
                 var client = TokenlessTestHelper.GetAdminClient(server);
                 Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
 
-                //CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, server, true);
                 CoreNode infraNode = nodeBuilder.CreateInfraNode(network, 0, server, true);
                 infraNode.Start();
 
@@ -455,7 +455,7 @@ namespace Stratis.SmartContracts.IntegrationTests
                 nodeBuilder.CreateChannel(node, "marketing", 2);
                 nodeBuilder.CreateChannel(node, "sales", 3);
                 nodeBuilder.CreateChannel(node, "legal", 4);
-                nodeBuilder.CreateChannel(node, "it", 5);
+                nodeBuilder.CreateChannel(node, "itec", 5);
                 nodeBuilder.CreateChannel(node, "humanresources", 6);
 
                 // Re-start the parent node as to load and start the channels it belongs to.

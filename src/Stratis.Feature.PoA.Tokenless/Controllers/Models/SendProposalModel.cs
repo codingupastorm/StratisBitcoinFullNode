@@ -7,9 +7,6 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers.Models
         [Required]
         public string TransactionHex { get; set; }
 
-        [Required]
-        public string Organisation { get; set; }
-
         public string TransientDataHex { get; set; }
     }
 }

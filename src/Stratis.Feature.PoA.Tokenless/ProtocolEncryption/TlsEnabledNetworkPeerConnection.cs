@@ -88,7 +88,7 @@ namespace Stratis.Feature.PoA.Tokenless.ProtocolEncryption
             if (!CaCertificatesManager.ValidateCertificateChain(this.membershipServices.AuthorityCertificate, this.peerCertificate))
                 return null;
 
-            if (this.isServer && this.clientCertificateValidator != null)
+            if (this.clientCertificateValidator != null)
             {
                 this.clientCertificateValidator.ConfirmCertificatePermittedOnChannel(receivedCert);
             }

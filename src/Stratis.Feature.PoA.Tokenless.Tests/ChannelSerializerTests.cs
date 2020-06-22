@@ -12,6 +12,7 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         {
             var request = new ChannelCreationRequest()
             {
+                Identifier = "test",
                 Name = "test"
             };
 
