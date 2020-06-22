@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.Json.Serialization;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -32,22 +33,11 @@ namespace Stratis.Feature.PoA.Tokenless.Networks
 
         public SystemChannelNetwork()
         {
-            // The message start string is designed to be unlikely to occur in normal data.
-            // The characters are rarely used upper ASCII, not valid as UTF-8, and produce
-            // a large 4-byte int at any alignment.
-
-            // TODO-TL: Change/update.
-            var messageStart = new byte[4];
-            messageStart[0] = 0x76;
-            messageStart[1] = 0x36;
-            messageStart[2] = 0x23;
-            messageStart[3] = 0x06;
-
             this.Id = 1;
             this.Name = "SystemChannel";
             this.NetworkType = NetworkType.Mainnet;
-            this.Magic = BitConverter.ToUInt32(messageStart, 0);
-            this.DefaultPort = 16438;
+            this.Magic = BitConverter.ToUInt32(Encoding.ASCII.GetBytes("sysc"));
+            this.DefaultPort = 16001;
             this.DefaultMaxOutboundConnections = 16;
             this.DefaultMaxInboundConnections = 109;
             this.DefaultEnableIpRangeFiltering = false;
@@ -121,7 +111,7 @@ namespace Stratis.Feature.PoA.Tokenless.Networks
             TokenlessMempoolRuleSet.CreateForSystemChannel(this);
         }
 
-        public static ChannelNetwork CreateChannelNetwork(string name, string rootFolderName, long genesisTime)
+        public static ChannelNetwork CreateChannelNetwork(string name, string channelIdentifier, string rootFolderName, long genesisTime)
         {
             var systemChannelNetwork = new SystemChannelNetwork();
             Block genesisBlock = systemChannelNetwork.CreateGenesisBlock((TokenlessConsensusFactory)systemChannelNetwork.Consensus.ConsensusFactory, (uint)genesisTime, 0, 0, 0, name);
@@ -137,7 +127,7 @@ namespace Stratis.Feature.PoA.Tokenless.Networks
                 DefaultMaxOutboundConnections = systemChannelNetwork.DefaultMaxOutboundConnections,
                 DefaultPort = systemChannelNetwork.DefaultPort,
                 DefaultSignalRPort = systemChannelNetwork.DefaultSignalRPort,
-                Magic = systemChannelNetwork.Magic,
+                Magic = BitConverter.ToUInt32(Encoding.ASCII.GetBytes(channelIdentifier)),
                 MaxTimeOffsetSeconds = systemChannelNetwork.MaxTimeOffsetSeconds,
                 MaxTipAge = systemChannelNetwork.MaxTipAge,
                 Name = name,

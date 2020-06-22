@@ -1,9 +1,8 @@
 ﻿using System.Linq;
 using System.Text;
-using MembershipServices;
 using NBitcoin;
-using Stratis.Core.Configuration;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Configuration;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
@@ -21,7 +20,6 @@ namespace Stratis.Feature.PoA.Tokenless.Tests
         private static readonly ReadWriteSetKey Key2 = new ReadWriteSetKey(uint160.One, Encoding.UTF8.GetBytes("key2"));
         private static readonly ReadWriteSetKey Key3 = new ReadWriteSetKey(uint160.One, Encoding.UTF8.GetBytes("key3"));
         private static readonly ReadWriteSetKey Key4 = new ReadWriteSetKey(uint160.One, Encoding.UTF8.GetBytes("key4"));
-        private static readonly ReadWriteSetKey Key1DifferentReference = new ReadWriteSetKey(uint160.One, Encoding.UTF8.GetBytes("key1"));
         private const string Version1 = "1.1";
         private const string Version2 = "1.2";
         private static byte[] Value1 = new byte[] { 0, 1, 2, 3 };
