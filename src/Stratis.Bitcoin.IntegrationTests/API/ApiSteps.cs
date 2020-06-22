@@ -120,7 +120,6 @@ namespace Stratis.Bitcoin.IntegrationTests.API
             // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
             this.stratisApiNode = this.nodeBuilder.CreateTokenlessNode(this.network, 0, this.server).Start();
 
-            //this.firstStratisPowApiNode = this.powNodeBuilder.CreateStratisPowNode(this.powNetwork).WithDummyWallet().Start();
             this.stratisApiNode.Mnemonic = this.stratisApiNode.Mnemonic;
 
             this.apiUri = this.stratisApiNode.FullNode.NodeService<ApiSettings>().ApiUri;

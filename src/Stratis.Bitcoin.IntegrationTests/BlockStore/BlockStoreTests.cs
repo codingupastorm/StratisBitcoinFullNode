@@ -84,29 +84,6 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
             }
         }
 
-        [Fact(Skip = "Investigate PeerConnector shutdown timeout issue")]
-        public void BlockStoreCanRecoverOnStartup()
-        {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                CoreNode stratisNodeSync = builder.CreateStratisPowNode(this.network, "bs-2-stratisNodeSync").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
-
-                // Set the tip of the best chain to some blocks in the past.
-                stratisNodeSync.FullNode.ChainIndexer.SetTip(stratisNodeSync.FullNode.ChainIndexer.GetHeader(stratisNodeSync.FullNode.ChainIndexer.Height - 5));
-
-                // Stop the node to persist the chain with the reset tip.
-                stratisNodeSync.FullNode.Dispose();
-
-                CoreNode newNodeInstance = builder.CloneStratisNode(stratisNodeSync);
-
-                // Start the node, this should hit the block store recover code.
-                newNodeInstance.Start();
-
-                // Check that the store recovered to be the same as the best chain.
-                Assert.Equal(newNodeInstance.FullNode.ChainIndexer.Tip.HashBlock, newNodeInstance.FullNode.GetBlockStoreTip().HashBlock);
-            }
-        }
-
         [Fact]
         public async Task BlockStoreCanReorgAsync()
         {

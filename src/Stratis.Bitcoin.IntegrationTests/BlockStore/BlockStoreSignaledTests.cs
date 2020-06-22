@@ -1,28 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using CertificateAuthority;
-using CertificateAuthority.Tests.Common;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
+using CertificateAuthority.Tests.Common;
 using NBitcoin;
-using Stratis.Core.Connection;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
-using Stratis.Bitcoin.IntegrationTests.Common.ReadyData;
-using Stratis.Core.Networks;
+using Stratis.Bitcoin.IntegrationTests.Common.PoA;
+using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.AsyncWork;
+using Stratis.Core.Connection;
 using Stratis.Core.P2P.Peer;
 using Stratis.Core.P2P.Protocol;
 using Stratis.Core.P2P.Protocol.Behaviors;
 using Stratis.Core.P2P.Protocol.Payloads;
-using Stratis.Bitcoin.Tests.Common;
-using Stratis.Core.AsyncWork;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.BlockStore;
+using Stratis.Features.PoA.Payloads;
 using Stratis.SmartContracts.Tests.Common;
 using Xunit;
-using Stratis.Bitcoin.IntegrationTests.Common.PoA;
-using Stratis.Features.PoA.Payloads;
 
 namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 {
@@ -72,13 +69,10 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
     public class BlockStoreSignaledTests
     {
         protected readonly ILoggerFactory loggerFactory;
-        private readonly Network network;
 
         public BlockStoreSignaledTests()
         {
             this.loggerFactory = new LoggerFactory();
-
-            this.network = new BitcoinRegTest();
         }
 
         [Fact]
@@ -130,8 +124,8 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
                             advertised.Add(header.GetHash());
                 }
 
-                foreach (ChainedHeader chainedHeader in nodeSync.FullNode.ChainIndexer.EnumerateToTip(this.network.GenesisHash))
-                    if ((!advertised.Contains(chainedHeader.HashBlock)) && (!(chainedHeader.HashBlock == this.network.GenesisHash)))
+                foreach (ChainedHeader chainedHeader in nodeSync.FullNode.ChainIndexer.EnumerateToTip(network.GenesisHash))
+                    if ((!advertised.Contains(chainedHeader.HashBlock)) && (!(chainedHeader.HashBlock == network.GenesisHash)))
                         throw new Exception($"An expected block was not advertised to peer: {chainedHeader.HashBlock}");
 
                 // Check current state of announce queue
@@ -150,13 +144,26 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
         [Fact]
         public void BlockStoreSignaledTests_Scenario2()
         {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
-            {
-                CoreNode stratisNodeSync = builder.CreateStratisPowNode(this.network, "bss-2-stratisNodeSync").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
+            var network = new TokenlessNetwork();
 
-                CoreNode stratisNode1 = builder.CreateStratisPowNode(this.network, "bss-2-stratisNode1").Start();
-                CoreNode stratisNode2 = builder.CreateStratisPowNode(this.network, "bss-2-stratisNode2").Start();
-                CoreNode stratisNode3 = builder.CreateStratisPowNode(this.network, "bss-2-stratisNode3").Start();
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var builder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CoreNode stratisNodeSync = builder.CreateTokenlessNode(network, 0, server, agent: "bss-2-stratisNodesync", permissions: TokenlessTestHelper.FederationPermissions);
+                CoreNode stratisNode1 = builder.CreateTokenlessNode(network, 1, server, agent: "bss-2-stratisNode1", permissions: TokenlessTestHelper.FederationPermissions);
+                CoreNode stratisNode2 = builder.CreateTokenlessNode(network, 2, server, agent: "bss-2-stratisNode2", permissions: TokenlessTestHelper.FederationPermissions);
+                CoreNode stratisNode3 = builder.CreateTokenlessNode(network, 3, server, agent: "bss-2-stratisNode3", permissions: TokenlessTestHelper.FederationPermissions);
+
+                TokenlessTestHelper.ShareCertificatesAndStart(network, stratisNodeSync, stratisNode1, stratisNode2, stratisNode3);
 
                 // Change the other nodes' lists of default behaviours include the test behaviour in it.
                 // We leave the other behaviors alone for this test because we want to see what messages the node gets under normal operation.
@@ -191,30 +198,30 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
 
                 HashSet<uint256> advertised = new HashSet<uint256>();
 
-                // Check to see that all blocks got advertised to node1 via the "headers" payload.
-                foreach (IncomingMessage message in testBehavior1.receivedMessageTracker["headers"])
+                // Check to see that all blocks got advertised to node1 via the "poahdr" payload.
+                foreach (IncomingMessage message in testBehavior1.receivedMessageTracker["poahdr"])
                 {
                     if (message.Message.Payload is HeadersPayload)
                         foreach (BlockHeader header in ((HeadersPayload)message.Message.Payload).Headers)
                             advertised.Add(header.GetHash());
                 }
 
-                foreach (ChainedHeader chainedHeader in stratisNodeSync.FullNode.ChainIndexer.EnumerateToTip(this.network.GenesisHash))
-                    if ((!advertised.Contains(chainedHeader.HashBlock)) && (!(chainedHeader.HashBlock == this.network.GenesisHash)))
+                foreach (ChainedHeader chainedHeader in stratisNodeSync.FullNode.ChainIndexer.EnumerateToTip(network.GenesisHash))
+                    if ((!advertised.Contains(chainedHeader.HashBlock)) && (!(chainedHeader.HashBlock == network.GenesisHash)))
                         throw new Exception($"An expected block was not advertised to peer 1: {chainedHeader.HashBlock}");
 
                 advertised.Clear();
 
-                // Check to see that all blocks got advertised to node1 via the "headers" payload.
-                foreach (IncomingMessage message in testBehavior2.receivedMessageTracker["headers"])
+                // Check to see that all blocks got advertised to node1 via the "poahdr" payload.
+                foreach (IncomingMessage message in testBehavior2.receivedMessageTracker["poahdr"])
                 {
                     if (message.Message.Payload is HeadersPayload)
                         foreach (BlockHeader header in ((HeadersPayload)message.Message.Payload).Headers)
                             advertised.Add(header.GetHash());
                 }
 
-                foreach (ChainedHeader chainedHeader in stratisNodeSync.FullNode.ChainIndexer.EnumerateToTip(this.network.GenesisHash))
-                    if ((!advertised.Contains(chainedHeader.HashBlock)) && (!(chainedHeader.HashBlock == this.network.GenesisHash)))
+                foreach (ChainedHeader chainedHeader in stratisNodeSync.FullNode.ChainIndexer.EnumerateToTip(network.GenesisHash))
+                    if ((!advertised.Contains(chainedHeader.HashBlock)) && (!(chainedHeader.HashBlock == network.GenesisHash)))
                         throw new Exception($"An expected block was not advertised to peer 2: {chainedHeader.HashBlock}");
 
                 // Check current state of announce queue.
@@ -231,9 +238,22 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
         [Fact]
         public void QueueEmpties_WithNoPeersConnected()
         {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            var network = new TokenlessNetwork();
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var builder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                CoreNode stratisNodeSync = builder.CreateStratisPowNode(this.network, "bss-3-stratisNodeSync").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CoreNode stratisNodeSync = builder.CreateTokenlessNode(network, 0, server, agent: "bss-3-stratisNodesync", permissions: TokenlessTestHelper.FederationPermissions).Start();
+
                 BlockStoreSignaled blockStoreSignaled = stratisNodeSync.FullNode.NodeService<BlockStoreSignaled>();
 
                 AsyncQueue<ChainedHeader> blocksToAnnounce = (AsyncQueue<ChainedHeader>)blockStoreSignaled.GetMemberValue("blocksToAnnounce");
@@ -249,15 +269,34 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
         [Fact]
         public void MustNotAnnounceABlock_WhenNotInBestChain()
         {
-            using (NodeBuilder builder = NodeBuilder.Create(this))
+            var network = new TokenlessNetwork();
+
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (var builder = SmartContractNodeBuilder.Create(testRootFolder))
             {
-                CoreNode stratisNodeSync = builder.CreateStratisPowNode(this.network, "bss-2-stratisNodeSync").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Miner).Start();
-                CoreNode stratisNode1 = builder.CreateStratisPowNode(this.network, "bss-2-stratisNode1").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10Listener).Start();
-                CoreNode stratisNode2 = builder.CreateStratisPowNode(this.network, "bss-2-stratisNode2").WithReadyBlockchainData(ReadyBlockchain.BitcoinRegTest10NoWallet).Start();
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, network));
+
+                // Create a Tokenless node with the Authority Certificate and 1 client certificate in their NodeData folder.
+                CoreNode stratisNodeSync = builder.CreateTokenlessNode(network, 0, server, agent: "bss-2-stratisNodesync", permissions: TokenlessTestHelper.FederationPermissions);
+                CoreNode stratisNode1 = builder.CreateTokenlessNode(network, 1, server, agent: "bss-2-stratisNode1", permissions: TokenlessTestHelper.FederationPermissions);
+                CoreNode stratisNode2 = builder.CreateTokenlessNode(network, 2, server, agent: "bss-2-stratisNode2", permissions: TokenlessTestHelper.FederationPermissions);
+
+                TokenlessTestHelper.ShareCertificatesAndStart(network, stratisNodeSync, stratisNode1, stratisNode2);
+
+                stratisNodeSync.MineBlocksAsync(1).GetAwaiter().GetResult();
+
+                TestHelper.ConnectAndSync(stratisNodeSync, stratisNode1, stratisNode2);
+                TestHelper.DisconnectAll(stratisNodeSync, stratisNode1, stratisNode2);
 
                 // Store block 1 of chain0 for later usage
                 ChainedHeader firstBlock = null;
-                foreach (ChainedHeader chainedHeader in stratisNodeSync.FullNode.ChainIndexer.EnumerateToTip(this.network.GenesisHash))
+                foreach (ChainedHeader chainedHeader in stratisNodeSync.FullNode.ChainIndexer.EnumerateToTip(network.GenesisHash))
                 {
                     if (chainedHeader.Height == 1)
                     {
@@ -268,7 +307,7 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
                 Assert.NotNull(firstBlock);
 
                 // Mine longer chain1 using node1
-                TestHelper.MineBlocks(stratisNode1, 15);
+                stratisNode1.MineBlocksAsync(15).GetAwaiter().GetResult();
 
                 IConnectionManager node1ConnectionManager = stratisNode1.FullNode.NodeService<IConnectionManager>();
                 node1ConnectionManager.Parameters.TemplateBehaviors.Add(new TestBehavior());
@@ -305,7 +344,7 @@ namespace Stratis.Bitcoin.IntegrationTests.BlockStore
                 TestBase.WaitLoop(() => node1QueueItems.Count == 0);
 
                 // Check that node2 does not have block 1 in test behaviour advertised list
-                foreach (IncomingMessage message in testBehavior2.receivedMessageTracker["headers"])
+                foreach (IncomingMessage message in testBehavior2.receivedMessageTracker["poahdr"])
                 {
                     if (message.Message.Payload is HeadersPayload)
                     {

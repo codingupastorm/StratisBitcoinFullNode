@@ -9,13 +9,6 @@ using NLog;
 using Stratis.Core.Builder;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.Tests.Common;
-using Stratis.Features.Api;
-using Stratis.Features.BlockStore;
-using Stratis.Features.Consensus;
-using Stratis.Features.MemoryPool;
-using Stratis.Features.Miner;
-using Stratis.Features.SQLiteWalletRepository;
-using Stratis.Features.Wallet;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 {
@@ -63,61 +56,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         {
             var node = new CoreNode(runner, configParameters, configFile);
             this.Nodes.Add(node);
-            return node;
-        }
-
-        /// <summary>
-        /// Creates a Stratis Proof-of-Work node.
-        /// <para>
-        /// <see cref="P2P.PeerDiscovery"/> and <see cref="P2P.PeerConnectorDiscovery"/> are disabled by default.
-        /// </para>
-        /// </summary>
-        /// <param name="network">The network the node will run on.</param>
-        /// <param name="agent">Overrides the node's agent prefix.</param>
-        /// <param name="configParameters">Adds to the nodes configuration parameters.</param>
-        /// <returns>The constructed PoW node.</returns>
-        public CoreNode CreateStratisPowNode(Network network, string agent = null, NodeConfigParameters configParameters = null)
-        {
-            return CreateNode(new StratisBitcoinPowRunner(this.GetNextDataFolderName(), network, agent), configParameters: configParameters);
-        }
-
-        public CoreNode CreateStratisCustomPowNode(Network network, NodeConfigParameters configParameters)
-        {
-            var callback = new Action<IFullNodeBuilder>(builder => builder
-               .UseBlockStore()
-               .UsePowConsensus()
-               .UseMempool()
-               .AddMining()
-               .UseWallet()
-               .AddSQLiteWalletRepository()
-               .UseApi()
-               .UseTestChainedHeaderTree()
-               .MockIBD());
-
-            return CreateCustomNode(callback, network, ProtocolVersion.PROTOCOL_VERSION, configParameters: configParameters);
-        }
-
-        /// <summary>
-        /// Creates a Stratis Proof-of-Stake node.
-        /// <para>
-        /// <see cref="P2P.PeerDiscovery"/> and <see cref="P2P.PeerConnectorDiscovery"/> are disabled by default.
-        /// </para>
-        /// </summary>
-        /// <param name="network">The network the node will run on.</param>
-        /// <param name="agent">Overrides the node's agent prefix.</param>
-        /// <param name="configParameters">Adds to the nodes configuration parameters.</param>
-        /// <param name="isGateway">Whether the node is a Proven Headers gateway node.</param>
-        /// <returns>The constructed PoS node.</returns>
-        public CoreNode CreateStratisPosNode(Network network, string agent = "StratisBitcoin", NodeConfigParameters configParameters = null, bool isGateway = false)
-        {
-            return CreateNode(new StratisBitcoinPosRunner(this.GetNextDataFolderName(), network, agent, isGateway), "stratis.conf", configParameters: configParameters);
-        }
-
-        public CoreNode CloneStratisNode(CoreNode cloneNode, string agent = "StratisBitcoin")
-        {
-            var node = new CoreNode(new StratisBitcoinPowRunner(cloneNode.FullNode.Settings.DataFolder.RootPath, cloneNode.FullNode.Network, agent), this.ConfigParameters, "bitcoin.conf");
-            this.Nodes.Add(node);
-            this.Nodes.Remove(cloneNode);
             return node;
         }
 
