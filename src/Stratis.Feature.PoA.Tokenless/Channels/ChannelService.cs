@@ -165,6 +165,10 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 CopyKeyStoreToChannelRoot(channelRootFolder);
 
                 var args = new string[] { "-bootstrap=1", $"-channelname={SystemChannelName}", "-issystemchannelnode=true" };
+
+                if (!string.IsNullOrEmpty(this.channelSettings.SystemChannelApiUri))
+                    args = args.Concat(new string[] { $"-apiuri={this.channelSettings.SystemChannelApiUri}" }).ToArray();
+
                 if (this.channelSettings.SystemChannelApiPort != 0)
                     args = args.Concat(new string[] { $"-apiport={this.channelSettings.SystemChannelApiPort}" }).ToArray();
 
