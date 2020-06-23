@@ -15,7 +15,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Stratis.Core\Stratis.Core.csproj" />
-    <ProjectReference Include="..\Stratis.Features.Miner\Stratis.Features.Miner.csproj" />
   </ItemGroup>
 
 </Project>
