@@ -81,8 +81,6 @@ namespace Stratis.Core.Connection
         /// <summary>Maintains a list of connected peers and ensures their proper disposal.</summary>
         private readonly NetworkPeerDisposer networkPeerDisposer;
 
-        private readonly IVersionProvider versionProvider;
-
         private readonly IAsyncProvider asyncProvider;
 
         private IConsensusManager consensusManager;
@@ -127,7 +125,6 @@ namespace Stratis.Core.Connection
             this.Parameters = parameters;
             this.Parameters.ConnectCancellation = this.nodeLifetime.ApplicationStopping;
             this.selfEndpointTracker = selfEndpointTracker;
-            this.versionProvider = versionProvider;
             this.ipRangeFilteringEndpointExclusions = new List<IPEndPoint>();
             this.connectedPeersQueue = asyncProvider.CreateAndRunAsyncDelegateDequeuer<INetworkPeer>($"{nameof(ConnectionManager)}-{nameof(this.connectedPeersQueue)}", this.OnPeerAdded);
             this.disconnectedPerfCounter = new PerformanceCounter();

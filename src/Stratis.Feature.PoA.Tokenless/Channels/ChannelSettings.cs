@@ -15,6 +15,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         public readonly bool ProjectMode;
 
         public readonly int SystemChannelApiPort;
+        public readonly string SystemChannelApiUri;
         public readonly int SystemChannelProtocolPort;
 
         public ChannelSettings(NodeSettings nodeSettings)
@@ -26,6 +27,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.IsSystemChannelNode = nodeSettings.ConfigReader.GetOrDefault<bool>("issystemchannelnode", false);
             this.ProcessPath = nodeSettings.ConfigReader.GetOrDefault("channelprocesspath", "");
             this.ProjectMode = nodeSettings.ConfigReader.GetOrDefault("projectmode", false);
+            this.SystemChannelApiUri = nodeSettings.ConfigReader.GetOrDefault("systemchannelapiuri", (string)null);
             this.SystemChannelApiPort = nodeSettings.ConfigReader.GetOrDefault("systemchannelapiport", 0);
             this.SystemChannelProtocolPort = nodeSettings.ConfigReader.GetOrDefault("systemchannelprotocolport", 0);
         }
@@ -39,6 +41,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.IsSystemChannelNode = fileConfiguration.GetOrDefault<bool>("issystemchannelnode", false);
             this.ProcessPath = fileConfiguration.GetOrDefault("channelprocesspath", "");
             this.ProjectMode = fileConfiguration.GetOrDefault("projectmode", false);
+            this.SystemChannelApiUri = fileConfiguration.GetOrDefault("systemchannelapiuri", (string)null);
             this.SystemChannelProtocolPort = fileConfiguration.GetOrDefault("systemchannelprotocolport", 0);
         }
     }
