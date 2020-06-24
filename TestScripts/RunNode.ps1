@@ -38,8 +38,11 @@ $msd_root = "$root_datadir\node$node"
 New-Item -ItemType directory -Force -Path $node_root
 New-Item -ItemType directory -Force -Path $node_root\tokenless
 New-Item -ItemType directory -Force -Path $node_root\tokenless\TokenlessMain
+New-Item -ItemType directory -Force -Path $node_root\tokenless\TokenlessMain\msd
+New-Item -ItemType directory -Force -Path $node_root\tokenless\TokenlessMain\msd\cacerts
 
 Copy-Item $root_datadir\ca\CaMain\CaCertificate.crt -Destination $node_root\tokenless\TokenlessMain\CaCertificate.crt
+Copy-Item $root_datadir\ca\CaMain\CaCertificate.crt -Destination $node_root\tokenless\TokenlessMain\msd\cacerts\CaCertificate.crt
 Copy-Item $path_to_tokenlessdll\*.* -Destination $node_root
 
 cd $node_root
@@ -78,7 +81,7 @@ if ($create_account -eq 1)
 # Create own certificate via the MSD CLI tool
 cd $path_to_msd
 Write-Host "Running MerbershipServices.Cli..." -foregroundcolor "magenta"
-start-process cmd -ArgumentList "/k color 0E && dotnet run generate --datadir=""$msd_root"" --caaccountid=$ca_account --commonname=node$node --organization=$organization --organizationunit=$organizationUnit --locality=$locality --stateorprovince=$state --emailaddress=test@example.com --country=UK --capassword=test --password=test --requestedpermissions Mine Send CallContract CreateContract"
+start-process cmd -ArgumentList "/k color 0E && dotnet run generate --datadir=""$msd_root"" --caaccountid=$ca_account --commonname=node$node --organization=$organization --organizationunit=$organizationUnit --locality=$locality --stateorprovince=$state --emailaddress=test@example.com --country=UK --capassword=test --keystorepassword=test --requestedpermissions Mine Send CallContract CreateContract"
 timeout $long_interval_time
 
 Copy-Item $root_datadir\ca\CaMain\CaCertificate.crt -Destination $node_root\tokenless\TokenlessMain\CaCertificate.crt
@@ -86,4 +89,4 @@ Copy-Item $root_datadir\ca\CaMain\CaCertificate.crt -Destination $node_root\toke
 cd $node_root
 
 # Run
-start-process cmd -ArgumentList "/k color 0E $initial && dotnet $daemon_file -bootstrap=$bootstrap -datadir=""$node_root"" -port=$port -apiport=$api_port -capassword=$ca_password -caaccountid=$ca_account -certificatepassword=test -iprangefiltering=0 -whitelist=0.0.0.0 -addnode=127.0.0.1:36201 -addnode=127.0.0.1:36202 -addnode=127.0.0.1:36203"
+start-process cmd -ArgumentList "/k color 0E $initial && dotnet $daemon_file -bootstrap=$bootstrap -datadir=""$node_root"" -port=$port -apiport=$api_port -capassword=$ca_password -caaccountid=$ca_account -keystorepassword=test -iprangefiltering=0 -whitelist=0.0.0.0 -addnode=127.0.0.1:36201 -addnode=127.0.0.1:36202 -addnode=127.0.0.1:36203"
