@@ -25,6 +25,39 @@ namespace Stratis.SmartContracts.IntegrationTests
             this.mockChain = fixture.Chain;
         }
 
+        [Fact]
+        public void TestApi()
+        {
+            var node1 = this.mockChain.Nodes[0];
+            var node2 = this.mockChain.Nodes[1];
+            var node3 = this.mockChain.Nodes[2];
+
+            ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/StandardToken.cs");
+            Assert.True(compilationResult.Success);
+            BuildCreateContractTransactionResponse response = node1.SendCreateContractTransaction(compilationResult.Compilation, 0, gasLimit: SmartContractFormatLogic.GasLimitMaximum,
+                parameters: new string[]
+                {
+                    "7#100000"
+                });
+
+            this.mockChain.WaitAllMempoolCount(1);
+            this.mockChain.MineBlocks(1);
+
+            var receipt = node1.GetReceipt(response.TransactionId.ToString());
+            Assert.True(receipt.Success);
+
+            string contractAddress = receipt.NewContractAddress;
+            string sender = node1.MinerAddress.Address;
+            int apiPort = node1.CoreNode.ApiPort;
+
+            while (true)
+            {
+                Thread.Sleep(10_000);
+                this.mockChain.MineBlocks(1);
+                IList<ReceiptResponse> receipts = node1.GetReceipts(contractAddress, "TransferLog");
+            }
+        }
+
         [Fact(Skip = "Stress test, doesn't need to be run every time.")]
         public void MaximumCreateTransactionsInABlock()
         {

@@ -3,6 +3,7 @@ using Stratis.Bitcoin;
 using Stratis.Bitcoin.Base;
 using Stratis.Bitcoin.Builder;
 using Stratis.Bitcoin.Configuration;
+using Stratis.Bitcoin.Features.Api;
 using Stratis.Bitcoin.Features.BlockStore;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.PoA.IntegrationTests.Common;
@@ -45,6 +46,7 @@ namespace Stratis.SmartContracts.Tests.Common
                             .UseSmartContractPoAConsensus()
                             .UseSmartContractPoAMining()
                             .UseSmartContractWallet()
+                            .UseApi()
                             .ReplaceTimeProvider(this.timeProvider)
                             .MockIBD()
                             .AddFastMiningCapability();
