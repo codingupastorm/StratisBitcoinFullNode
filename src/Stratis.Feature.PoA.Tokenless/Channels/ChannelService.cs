@@ -172,6 +172,9 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                 if (this.channelSettings.SystemChannelApiPort != 0)
                     args = args.Concat(new string[] { $"-apiport={this.channelSettings.SystemChannelApiPort}" }).ToArray();
 
+                if (!string.IsNullOrEmpty(this.channelSettings.SystemChannelProtocolUri))
+                    args = args.Concat(new string[] { $"-bind={this.channelSettings.SystemChannelProtocolUri}" }).ToArray();
+
                 if (this.channelSettings.SystemChannelProtocolPort != 0)
                     args = args.Concat(new string[] { $"-port={this.channelSettings.SystemChannelProtocolPort}" }).ToArray();
 

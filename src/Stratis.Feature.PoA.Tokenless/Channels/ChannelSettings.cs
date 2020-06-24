@@ -14,9 +14,17 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         /// <summary>Will attempt to start the node from source else start the node from an executable dll.</summary>
         public readonly bool ProjectMode;
 
+        /// <summary>Bind the system channel api to different port.</summary>
         public readonly int SystemChannelApiPort;
+
+        /// <summary>Bind the system channel api to different address.</summary>
         public readonly string SystemChannelApiUri;
+
+        /// <summary>Bind the system channel to listen on a different port.</summary>
         public readonly int SystemChannelProtocolPort;
+
+        /// <summary>Bind the system channel to listen on a different address.</summary>
+        public readonly string SystemChannelProtocolUri;
 
         public ChannelSettings(NodeSettings nodeSettings)
         {
@@ -29,6 +37,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.ProjectMode = nodeSettings.ConfigReader.GetOrDefault("projectmode", false);
             this.SystemChannelApiUri = nodeSettings.ConfigReader.GetOrDefault("systemchannelapiuri", (string)null);
             this.SystemChannelApiPort = nodeSettings.ConfigReader.GetOrDefault("systemchannelapiport", 0);
+            this.SystemChannelProtocolUri = nodeSettings.ConfigReader.GetOrDefault("systemchannelprotocoluri", (string)null);
             this.SystemChannelProtocolPort = nodeSettings.ConfigReader.GetOrDefault("systemchannelprotocolport", 0);
         }
 
@@ -42,6 +51,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.ProcessPath = fileConfiguration.GetOrDefault("channelprocesspath", "");
             this.ProjectMode = fileConfiguration.GetOrDefault("projectmode", false);
             this.SystemChannelApiUri = fileConfiguration.GetOrDefault("systemchannelapiuri", (string)null);
+            this.SystemChannelProtocolUri = fileConfiguration.GetOrDefault("systemchannelprotocoluri", (string)null);
             this.SystemChannelProtocolPort = fileConfiguration.GetOrDefault("systemchannelprotocolport", 0);
         }
     }
