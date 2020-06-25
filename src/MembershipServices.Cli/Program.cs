@@ -77,6 +77,9 @@ namespace MembershipServices.Cli
             /// </summary>
             [Option("requestedpermissions", Required = true, HelpText = "The set of permissions being requested by this node.")]
             public IEnumerable<string> RequestedPermissions { get; set; }
+
+            [Option("mnemonic", Required = false, Default = null, HelpText = "The mnemonic to derive the public key from.")]
+            public string Mnemonic { get; set; }
         }
 
         [Verb("showtemplate", HelpText = "Show the default configuration template.")]
@@ -140,7 +143,7 @@ namespace MembershipServices.Cli
         static int RunGenerate(GenerateOptions options)
         {
             var network = new TokenlessNetwork();
-            var nodeSettings = new NodeSettings(network, args: new[] { $"-datadir={options.DataDir}", $"-{Settings.KeyStorePasswordKey}={options.KeyStorePassword}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" });
+            var nodeSettings = new NodeSettings(network, args: new[] { $"-datadir={options.DataDir}", $"-mnemonic={options.Mnemonic}", $"{Settings.KeyStorePasswordKey}={options.KeyStorePassword}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" });
             var loggerFactory = new LoggerFactory();
 
             var keyStoreSettings = new TokenlessKeyStoreSettings(nodeSettings);
