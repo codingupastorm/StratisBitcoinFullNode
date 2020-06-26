@@ -6,6 +6,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
     {
         public readonly string ChannelParentPipeName;
         public readonly string ChannelName;
+        public readonly string InfraNodeApiUri;
+        public readonly int InfraNodeApiPort;
         public readonly bool IsChannelNode;
         public readonly bool IsInfraNode;
         public readonly bool IsSystemChannelNode;
@@ -30,6 +32,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         {
             this.ChannelParentPipeName = nodeSettings.ConfigReader.GetOrDefault("channelparentpipename", (string)null);
             this.ChannelName = nodeSettings.ConfigReader.GetOrDefault("channelname", "");
+            this.InfraNodeApiUri = nodeSettings.ConfigReader.GetOrDefault("infranodeapiuri", (string)null);
+            this.InfraNodeApiPort = nodeSettings.ConfigReader.GetOrDefault("infranodeapiport", 0);
             this.IsChannelNode = nodeSettings.ConfigReader.GetOrDefault<bool>("ischannelnode", false);
             this.IsInfraNode = nodeSettings.ConfigReader.GetOrDefault<bool>("isinfranode", false);
             this.IsSystemChannelNode = nodeSettings.ConfigReader.GetOrDefault<bool>("issystemchannelnode", false);
@@ -45,6 +49,10 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         {
             this.ChannelParentPipeName = fileConfiguration.GetOrDefault("channelparentpipename", (string)null);
             this.ChannelName = fileConfiguration.GetOrDefault("channelname", "");
+            this.ChannelParentPipeName = fileConfiguration.GetOrDefault("channelparentpipename", (string)null);
+            this.ChannelParentPipeName = fileConfiguration.GetOrDefault("channelparentpipename", (string)null);
+            this.InfraNodeApiUri = fileConfiguration.GetOrDefault("infranodeapiuri", (string)null);
+            this.InfraNodeApiPort = fileConfiguration.GetOrDefault("infranodeapiport", 0);
             this.IsChannelNode = fileConfiguration.GetOrDefault<bool>("ischannelnode", false);
             this.IsInfraNode = fileConfiguration.GetOrDefault<bool>("isinfranode", false);
             this.IsSystemChannelNode = fileConfiguration.GetOrDefault<bool>("issystemchannelnode", false);

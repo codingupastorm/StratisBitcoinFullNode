@@ -20,6 +20,7 @@ using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Mempool;
 using Stratis.Feature.PoA.Tokenless.Mining;
 using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
+using Stratis.Feature.Tokenless.Channels;
 using Stratis.Features.Consensus;
 using Stratis.Features.Consensus.CoinViews;
 using Stratis.Features.MemoryPool;
@@ -56,6 +57,7 @@ namespace Stratis.Feature.PoA.Tokenless
                         services.AddSingleton<IChannelUpdateExecutor, ChannelUpdateExecutor>();
                         services.AddSingleton<ChannelSettings>();
                         services.AddSingleton<IChannelAccessValidator, ChannelAccessValidator>();
+                        services.AddSingleton<ISystemChannelAddressRetriever, SystemChannelAddressRetriever>();
 
                         // Mempool
                         services.Replace(ServiceDescriptor.Singleton<ITxMempool, TokenlessMempool>());

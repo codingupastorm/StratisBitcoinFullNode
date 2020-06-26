@@ -41,7 +41,7 @@ namespace Stratis.Core.Controllers
         /// <inheritdoc />
         public string EndpointUrl => this.endpointUrl;
 
-        public RestApiClientBase(ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory, int port, string controllerName, string url)
+        public RestApiClientBase(ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory, string url, int port, string controllerName)
         {
             this.httpClientFactory = httpClientFactory;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
