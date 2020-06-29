@@ -6,9 +6,9 @@ using System.Runtime.CompilerServices;
 using NBitcoin;
 using NBitcoin.Protocol;
 using NLog;
-using Stratis.Core.Builder;
 using Stratis.Bitcoin.IntegrationTests.Common.Runners;
 using Stratis.Bitcoin.Tests.Common;
+using Stratis.Core.Builder;
 
 namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 {
@@ -40,16 +40,12 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             return CreateNodeBuilder(testFolderPath);
         }
 
-        /// <summary>
-        /// Creates a node builder instance and disable logs.
-        /// To enable logs please refer to the <see cref="WithLogsEnabled"/> method.
-        /// </summary>
+        /// <summary> Creates a node builder.</summary>
         /// <param name="testFolderPath">The test folder path.</param>
         /// <returns>A <see cref="NodeBuilder"/> instance with logs disabled.</returns>
         private static NodeBuilder CreateNodeBuilder(string testFolderPath)
         {
-            return new NodeBuilder(testFolderPath)
-                .WithLogsDisabled();
+            return new NodeBuilder(testFolderPath).WithLogsDisabled();
         }
 
         protected CoreNode CreateNode(NodeRunner runner, string configFile = "bitcoin.conf", NodeConfigParameters configParameters = null)

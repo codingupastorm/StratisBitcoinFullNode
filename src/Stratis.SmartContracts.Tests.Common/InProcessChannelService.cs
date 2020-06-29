@@ -9,6 +9,7 @@ using Stratis.Core.Configuration;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Features.Api;
 
 namespace Stratis.SmartContracts.Tests.Common
 {
@@ -23,6 +24,7 @@ namespace Stratis.SmartContracts.Tests.Common
         public List<CoreNode> ChannelNodes { get; }
 
         public InProcessChannelService(
+            ApiSettings apiSettings,
             IChannelRepository channelRepository,
             ChannelSettings channelSettings,
             IDateTimeProvider dateTimeProvider,
@@ -31,7 +33,7 @@ namespace Stratis.SmartContracts.Tests.Common
             IMembershipServicesDirectory membershipServicesDirectory,
             NodeSettings nodeSettings,
             SmartContractNodeBuilder nodeBuilder)
-            : base(channelRepository, channelSettings, dateTimeProvider, keyStoreSettings, loggerFactory, membershipServicesDirectory, nodeSettings: nodeSettings)
+            : base(apiSettings, channelRepository, channelSettings, dateTimeProvider, keyStoreSettings, loggerFactory, membershipServicesDirectory, nodeSettings: nodeSettings)
         {
             this.ChannelNodes = new List<CoreNode>();
             this.NodeBuilder = nodeBuilder;

@@ -15,6 +15,7 @@ using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
 using Stratis.Feature.PoA.Tokenless.Networks;
+using Stratis.Features.Api;
 using Stratis.Features.PoA;
 using Stratis.SmartContracts.Core.AccessControl;
 
@@ -44,6 +45,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
         protected const string ChannelConfigurationFileName = "channel.conf";
 
+        private readonly ApiSettings apiSettings;
         protected readonly IChannelRepository channelRepository;
         protected readonly ChannelSettings channelSettings;
         protected readonly IDateTimeProvider dateTimeProvider;
@@ -55,6 +57,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         protected readonly TokenlessNetwork tokenlessNetworkDefaults;
 
         protected ChannelService(
+            ApiSettings apiSettings,
             IChannelRepository channelRepository,
             ChannelSettings channelSettings,
             IDateTimeProvider dateTimeProvider,
@@ -63,6 +66,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             IMembershipServicesDirectory membershipServicesDirectory,
             NodeSettings nodeSettings)
         {
+            this.apiSettings = apiSettings;
             this.channelSettings = channelSettings;
             this.dateTimeProvider = dateTimeProvider;
             this.keyStoreSettings = keyStoreSettings;
@@ -177,6 +181,10 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
                 if (this.channelSettings.SystemChannelProtocolPort != 0)
                     args = args.Concat(new string[] { $"-port={this.channelSettings.SystemChannelProtocolPort}" }).ToArray();
+
+                // Pass the infra node's Api Uri to the system channel
+                args = args.Concat(new string[] { $"-infrodeapiuri={this.apiSettings.ApiUri}" }).ToArray();
+                args = args.Concat(new string[] { $"-infrodeapiuri={this.apiSettings.ApiPort}" }).ToArray();
 
                 bool started = await StartChannelAsync(channelRootFolder, args);
                 if (!started)

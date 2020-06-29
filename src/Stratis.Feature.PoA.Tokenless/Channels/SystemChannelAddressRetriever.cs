@@ -63,6 +63,12 @@ namespace Stratis.Feature.Tokenless.Channels
                 return;
             }
 
+            if (string.IsNullOrEmpty(this.channelSettings.InfraNodeApiUri) || this.channelSettings.InfraNodeApiPort == 0)
+            {
+                this.logger.LogDebug($"{nameof(SystemChannelAddressRetriever)} will not start as the infranode's URI or port number is null or invalid.");
+                return;
+            }
+
             this.retrieveSystemChannelNodesLoop = this.asyncProvider.CreateAndRunAsyncLoop(nameof(this.RetrieveSystemChannelNodeAddressesAsync), async token =>
             {
                 await this.RetrieveSystemChannelNodeAddressesAsync();

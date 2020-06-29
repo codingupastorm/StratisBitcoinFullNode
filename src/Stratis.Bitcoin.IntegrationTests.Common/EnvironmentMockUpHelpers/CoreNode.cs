@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,7 +32,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
     {
         private readonly object lockObject = new object();
         private readonly ILoggerFactory loggerFactory;
-        internal readonly NodeRunner runner;
+        public readonly NodeRunner Runner;
 
         public int ApiPort => int.Parse(this.ConfigParameters["apiport"]);
 
@@ -46,7 +44,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         public int ProtocolPort => int.Parse(this.ConfigParameters["port"]);
 
         /// <summary>Location of the data directory for the node.</summary>
-        public string DataFolder => this.runner.DataFolder;
+        public string DataFolder => this.Runner.DataFolder;
 
         public IPEndPoint Endpoint => new IPEndPoint(IPAddress.Parse("127.0.0.1"), this.ProtocolPort);
 
@@ -60,7 +58,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         public CertificateInfoModel ClientCertificate { get; set; }
 
-        public FullNode FullNode => this.runner.FullNode;
+        public FullNode FullNode => this.Runner.FullNode;
 
         public CoreNodeState State { get; private set; }
 
@@ -68,18 +66,9 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         private bool builderEnablePeerDiscovery;
         private bool builderNoValidation;
         private bool builderOverrideDateTimeProvider;
-        private bool builderWithDummyWallet;
-        private bool builderWithWallet;
-        private string builderWalletName;
-        private string builderWalletPassword;
-        private string builderWalletPassphrase;
-        private string builderWalletMnemonic;
 
         private SubscriptionToken blockConnectedSubscription;
         private SubscriptionToken blockDisconnectedSubscription;
-
-        List<Action> startActions = new List<Action>();
-        List<Action> runActions = new List<Action>();
 
         public X509Certificate AuthorityCertificate { get; set; }
         public Key ClientCertificatePrivateKey { get; set; }
@@ -87,24 +76,28 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         public CoreNode(NodeRunner runner, NodeConfigParameters configParameters, string configfile)
         {
-            this.runner = runner;
+            this.Runner = runner;
 
             this.State = CoreNodeState.Stopped;
-            this.ConfigFilePath = Path.Combine(this.runner.DataFolder, configfile);
+            this.ConfigFilePath = Path.Combine(this.Runner.DataFolder, configfile);
 
             this.ConfigParameters = new NodeConfigParameters();
             if (configParameters != null)
                 this.ConfigParameters.Import(configParameters);
 
-            // Set the various ports.
-            var randomFoundPorts = new int[2];
-            IpHelper.FindPorts(randomFoundPorts);
-            this.ConfigParameters.SetDefaultValueIfUndefined("port", randomFoundPorts[0].ToString());
-            this.ConfigParameters.SetDefaultValueIfUndefined("apiport", randomFoundPorts[1].ToString());
+            ConfigurePorts();
 
             this.loggerFactory = new ExtendedLoggerFactory();
 
             CreateConfigFile(this.ConfigParameters);
+        }
+
+        public void ConfigurePorts()
+        {
+            var randomFoundPorts = new int[2];
+            IpHelper.FindPorts(randomFoundPorts);
+            this.ConfigParameters.SetDefaultValueIfUndefined("port", randomFoundPorts[0].ToString());
+            this.ConfigParameters.SetDefaultValueIfUndefined("apiport", randomFoundPorts[1].ToString());
         }
 
         public CoreNode NoValidation()
@@ -173,13 +166,13 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         /// <returns>This node.</returns>
         public CoreNode OverrideService(Action<IServiceCollection> serviceToOverride)
         {
-            this.runner.ServiceToOverride = serviceToOverride;
+            this.Runner.ServiceToOverride = serviceToOverride;
             return this;
         }
 
         public INetworkPeer CreateNetworkPeerClient()
         {
-            ConnectionManagerSettings connectionManagerSettings = this.runner.FullNode.ConnectionManager.ConnectionSettings;
+            ConnectionManagerSettings connectionManagerSettings = this.Runner.FullNode.ConnectionManager.ConnectionSettings;
 
             var selfEndPointTracker = new SelfEndpointTracker(this.loggerFactory, connectionManagerSettings);
 
@@ -191,7 +184,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
             var peerAddressManager = new Mock<IPeerAddressManager>().Object;
 
-            var networkPeerFactory = new NetworkPeerFactory(this.runner.Network,
+            var networkPeerFactory = new NetworkPeerFactory(this.Runner.Network,
                 DateTimeProvider.Default,
                 this.loggerFactory,
                 new PayloadProvider().DiscoverPayloads(),
@@ -206,30 +199,27 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
         private IAsyncProvider GetOrCreateAsyncProvider()
         {
-            if (this.runner.FullNode == null)
+            if (this.Runner.FullNode == null)
                 return new AsyncProvider(this.loggerFactory, new Signals(this.loggerFactory, null), new NodeLifetime());
             else
-                return this.runner.FullNode.NodeService<IAsyncProvider>();
+                return this.Runner.FullNode.NodeService<IAsyncProvider>();
         }
 
         public CoreNode Start(Action startAction = null)
         {
             lock (this.lockObject)
             {
-                this.runner.AlwaysFlushBlocks = this.builderAlwaysFlushBlocks;
-                this.runner.EnablePeerDiscovery = this.builderEnablePeerDiscovery;
-                this.runner.OverrideDateTimeProvider = this.builderOverrideDateTimeProvider;
+                this.Runner.AlwaysFlushBlocks = this.builderAlwaysFlushBlocks;
+                this.Runner.EnablePeerDiscovery = this.builderEnablePeerDiscovery;
+                this.Runner.OverrideDateTimeProvider = this.builderOverrideDateTimeProvider;
 
                 if (this.builderNoValidation)
                     this.DisableValidation();
 
-                this.runner.BuildNode();
+                this.Runner.BuildNode();
 
                 startAction?.Invoke();
-                foreach (Action action in this.startActions)
-                    action.Invoke();
-
-                this.runner.Start();
+                this.Runner.Start();
                 this.State = CoreNodeState.Starting;
             }
 
@@ -237,15 +227,12 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
             this.State = CoreNodeState.Running;
 
-            foreach (Action runAction in this.runActions)
-                runAction.Invoke();
-
             return this;
         }
 
         private void CreateConfigFile(NodeConfigParameters configParameters = null)
         {
-            Directory.CreateDirectory(this.runner.DataFolder);
+            Directory.CreateDirectory(this.Runner.DataFolder);
 
             configParameters = configParameters ?? new NodeConfigParameters();
             configParameters.SetDefaultValueIfUndefined("regtest", "1");
@@ -269,11 +256,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             var timeToNodeInit = TimeSpan.FromMinutes(1);
             var timeToNodeStart = TimeSpan.FromMinutes(1);
 
-            TestBase.WaitLoop(() => this.runner.FullNode != null,
+            TestBase.WaitLoop(() => this.Runner.FullNode != null,
                 cancellationToken: new CancellationTokenSource(timeToNodeInit).Token,
                 failureReason: $"Failed to assign instance of FullNode within {timeToNodeInit}");
 
-            TestBase.WaitLoop(() => this.runner.FullNode.State == FullNodeState.Started,
+            TestBase.WaitLoop(() => this.Runner.FullNode.State == FullNodeState.Started,
                 cancellationToken: new CancellationTokenSource(timeToNodeStart).Token,
                 failureReason: $"Failed to achieve state = started within {timeToNodeStart}");
         }
@@ -283,10 +270,10 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         /// </summary>
         public void DisableValidation()
         {
-            this.runner.Network.Consensus.ConsensusRules.FullValidationRules.Clear();
-            this.runner.Network.Consensus.ConsensusRules.HeaderValidationRules.Clear();
-            this.runner.Network.Consensus.ConsensusRules.IntegrityValidationRules.Clear();
-            this.runner.Network.Consensus.ConsensusRules.PartialValidationRules.Clear();
+            this.Runner.Network.Consensus.ConsensusRules.FullValidationRules.Clear();
+            this.Runner.Network.Consensus.ConsensusRules.HeaderValidationRules.Clear();
+            this.Runner.Network.Consensus.ConsensusRules.IntegrityValidationRules.Clear();
+            this.Runner.Network.Consensus.ConsensusRules.PartialValidationRules.Clear();
         }
 
         public void Broadcast(Transaction transaction)
@@ -332,11 +319,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         {
             lock (this.lockObject)
             {
-                this.runner.Stop();
+                this.Runner.Stop();
 
-                if (!this.runner.IsDisposed)
+                if (!this.Runner.IsDisposed)
                 {
-                    throw new Exception($"Problem disposing of a node of type {this.runner.GetType()}.");
+                    throw new Exception($"Problem disposing of a node of type {this.Runner.GetType()}.");
                 }
 
                 this.State = CoreNodeState.Killed;

@@ -9,6 +9,7 @@
     <ProjectReference Include="..\MembershipServices\MembershipServices.csproj" />
     <ProjectReference Include="..\NBitcoin\NBitcoin.csproj" />
     <ProjectReference Include="..\Stratis.Core\Stratis.Core.csproj" />
+    <ProjectReference Include="..\Stratis.Features.Api\Stratis.Features.Api.csproj" />
     <ProjectReference Include="..\Stratis.Features.PoA\Stratis.Features.PoA.csproj" />
     <ProjectReference Include="..\Stratis.Features.SmartContracts\Stratis.Features.SmartContracts.csproj" />
     <ProjectReference Include="..\Stratis.SmartContracts.CLR\Stratis.SmartContracts.CLR.csproj" />
