@@ -104,7 +104,7 @@ namespace Stratis.Core.P2P
         {
             if (!endPoint.Address.IsRoutable(true))
             {
-                this.logger.LogTrace("(-)[PEER_NOT_ADDED_ISROUTABLE]:{0}", endPoint);
+                this.logger.LogDebug("(-)[PEER_NOT_ADDED_ISROUTABLE]:{0}", endPoint);
                 return null;
             }
 
@@ -114,11 +114,11 @@ namespace Stratis.Core.P2P
             var added = this.peerInfoByPeerAddress.TryAdd(ipv6EndPoint, peerToAdd);
             if (added)
             {
-                this.logger.LogTrace("(-)[PEER_ADDED]:{0}", endPoint);
+                this.logger.LogDebug("(-)[PEER_ADDED]:{0}", endPoint);
                 return peerToAdd;
             }
 
-            this.logger.LogTrace("(-)[PEER_NOT_ADDED_ALREADY_EXISTS]:{0}", endPoint);
+            this.logger.LogDebug("(-)[PEER_NOT_ADDED_ALREADY_EXISTS]:{0}", endPoint);
             return null;
         }
 

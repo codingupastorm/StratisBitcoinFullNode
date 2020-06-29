@@ -96,7 +96,6 @@ namespace Stratis.SmartContracts.Tests.Common
 
             string[] args = initialRun ?
                 new string[] {
-                    "-conf=poa.conf",
                     "-datadir=" + node.DataFolder,
                     $"{TokenlessKeyStoreSettings.KeyStorePasswordKey}=test",
                     $"-mnemonic={ mnemonic }",
@@ -109,7 +108,6 @@ namespace Stratis.SmartContracts.Tests.Common
                     "-certificatecountry=UK"
                 } : new string[]
                 {
-                    "-conf=poa.conf",
                     "-datadir=" + node.DataFolder,
                 };
 

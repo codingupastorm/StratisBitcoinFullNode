@@ -156,6 +156,8 @@ namespace Stratis.Core.Controllers
                 return null;
             }
 
+            this.logger.LogDebug($"{successJson}");
+
             TResponse responseModel = JsonConvert.DeserializeObject<TResponse>(successJson);
 
             this.logger.LogDebug("(-)[SUCCESS]");

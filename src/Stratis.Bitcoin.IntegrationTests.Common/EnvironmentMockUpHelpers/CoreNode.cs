@@ -37,7 +37,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         public int ApiPort => int.Parse(this.ConfigParameters["apiport"]);
 
         public int SystemChannelApiPort => int.Parse(this.ConfigParameters["systemchannelapiport"]);
-        public int SystemChannelProtocolApiPort => int.Parse(this.ConfigParameters["systemchannelprotocolport"]);
+        public int SystemChannelProtocolPort => int.Parse(this.ConfigParameters["systemchannelprotocolport"]);
 
         public BitcoinSecret MinerSecret { get; private set; }
 
@@ -88,8 +88,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             ConfigurePorts();
 
             this.loggerFactory = new ExtendedLoggerFactory();
-
-            CreateConfigFile(this.ConfigParameters);
         }
 
         public void ConfigurePorts()
@@ -209,6 +207,8 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         {
             lock (this.lockObject)
             {
+                CreateConfigFile(this.ConfigParameters);
+
                 this.Runner.AlwaysFlushBlocks = this.builderAlwaysFlushBlocks;
                 this.Runner.EnablePeerDiscovery = this.builderEnablePeerDiscovery;
                 this.Runner.OverrideDateTimeProvider = this.builderOverrideDateTimeProvider;
@@ -338,6 +338,11 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         public ChainedHeader GetTip()
         {
             return this.FullNode.NodeService<IConsensusManager>().Tip;
+        }
+
+        public void AddSystemChannelNode(Uri uri)
+        {
+            this.ConfigParameters.Add("systemchannelnode", uri.ToString());
         }
     }
 }

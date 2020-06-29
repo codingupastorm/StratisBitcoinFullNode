@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using Stratis.Core.Configuration;
@@ -77,7 +78,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
 
         private void AddSystemChannelNodes(TextFileConfiguration configuration)
         {
-            foreach (IPEndPoint systemChannelNode in configuration.GetAll("systemchannelnode").Select(c => IPEndPoint.Parse(c)))
+            IEnumerable<Uri> uris = configuration.GetAll("systemchannelnode").Select(c => new Uri(c));
+            foreach (IPEndPoint systemChannelNode in uris.Select(u => new IPEndPoint(IPAddress.Parse(u.Host), u.Port)))
                 this.SystemChannelNodeAddresses.Add(systemChannelNode);
         }
     }

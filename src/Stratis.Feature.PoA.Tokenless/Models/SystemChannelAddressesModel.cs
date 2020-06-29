@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Text.Json.Serialization;
 
 namespace Stratis.Feature.PoA.Tokenless.Models
 {
@@ -12,6 +13,7 @@ namespace Stratis.Feature.PoA.Tokenless.Models
         /// <summary>
         /// A list of known system channel nodes on the network.
         /// </summary>
+        [JsonPropertyName("addresses")]
         public List<string> Addresses { get; set; }
     }
 }

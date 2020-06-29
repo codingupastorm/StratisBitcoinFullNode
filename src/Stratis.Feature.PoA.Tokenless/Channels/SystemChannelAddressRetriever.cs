@@ -89,6 +89,8 @@ namespace Stratis.Feature.Tokenless.Channels
             var infraNodeClient = new InfraNodeApiClient(this.loggerFactory, this.httpClientFactory, new Uri(this.channelSettings.InfraNodeApiUri), "channels");
             SystemChannelAddressesModel systemChannelAddresses = await infraNodeClient.SendGetRequestAsync<SystemChannelAddressesModel>("systemchanneladdresses", cancellation: connectTokenSource.Token);
 
+            this.logger.LogDebug($"'{systemChannelAddresses.Addresses.Count}' system channel nodes addresses retrieved");
+
             foreach (var address in systemChannelAddresses.Addresses)
             {
                 this.connectionManager.AddNodeAddress(IPEndPoint.Parse(address));
