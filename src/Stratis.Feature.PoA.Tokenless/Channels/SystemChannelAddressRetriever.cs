@@ -63,7 +63,7 @@ namespace Stratis.Feature.Tokenless.Channels
                 return;
             }
 
-            if (string.IsNullOrEmpty(this.channelSettings.InfraNodeApiUri) || this.channelSettings.InfraNodeApiPort == 0)
+            if (string.IsNullOrEmpty(this.channelSettings.InfraNodeApiUri))
             {
                 this.logger.LogDebug($"{nameof(SystemChannelAddressRetriever)} will not start as the infranode's URI or port number is null or invalid.");
                 return;
@@ -84,9 +84,9 @@ namespace Stratis.Feature.Tokenless.Channels
         {
             using var connectTokenSource = CancellationTokenSource.CreateLinkedTokenSource(this.nodeLifetime.ApplicationStopping);
 
-            this.logger.LogDebug("Attempting to retrieve system channel node addresses from : '{0}:{1}'", this.channelSettings.InfraNodeApiUri, this.channelSettings.InfraNodeApiPort);
+            this.logger.LogDebug("Attempting to retrieve system channel node addresses from : '{0}'", this.channelSettings.InfraNodeApiUri);
 
-            var infraNodeClient = new InfraNodeApiClient(this.loggerFactory, this.httpClientFactory, this.channelSettings.InfraNodeApiUri, this.channelSettings.InfraNodeApiPort, "tokenless");
+            var infraNodeClient = new InfraNodeApiClient(this.loggerFactory, this.httpClientFactory, new Uri(this.channelSettings.InfraNodeApiUri), "channels");
             SystemChannelAddressesModel systemChannelAddresses = await infraNodeClient.SendGetRequestAsync<SystemChannelAddressesModel>("systemchanneladdresses", cancellation: connectTokenSource.Token);
 
             foreach (var address in systemChannelAddresses.Addresses)

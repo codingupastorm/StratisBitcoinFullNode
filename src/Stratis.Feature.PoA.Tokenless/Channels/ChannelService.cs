@@ -183,8 +183,7 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
                     args = args.Concat(new string[] { $"-port={this.channelSettings.SystemChannelProtocolPort}" }).ToArray();
 
                 // Pass the infra node's Api Uri to the system channel
-                args = args.Concat(new string[] { $"-infrodeapiuri={this.apiSettings.ApiUri}" }).ToArray();
-                args = args.Concat(new string[] { $"-infrodeapiuri={this.apiSettings.ApiPort}" }).ToArray();
+                args = args.Concat(new string[] { $"-infranodeapiuri={this.apiSettings.ApiUri.ToString()}" }).ToArray();
 
                 bool started = await StartChannelAsync(channelRootFolder, args);
                 if (!started)

@@ -199,7 +199,7 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
         {
             var model = new SystemChannelAddressesModel();
 
-            if (this.channelSettings.IsSystemChannelNode)
+            if (this.channelSettings.IsInfraNode)
             {
                 model.Addresses.AddRange(this.channelSettings.SystemChannelNodeAddresses.Select(s => s.ToString()));
                 this.logger.LogDebug($"'{model.Addresses.Count}' system channel addresses retrieved.");
