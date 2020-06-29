@@ -9,6 +9,9 @@ namespace Stratis.Feature.PoA.Tokenless.Models
             this.Addresses = new List<string>();
         }
 
+        /// <summary>
+        /// A list of known system channel nodes on the network.
+        /// </summary>
         public List<string> Addresses { get; set; }
     }
 }

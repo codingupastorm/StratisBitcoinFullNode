@@ -19,7 +19,7 @@ namespace Stratis.Feature.Tokenless.Channels
     public interface ISystemChannelAddressRetriever : IDisposable
     {
         /// <summary>
-        /// Starts the async loop which retrieves system channel addressess from the infra node.
+        /// Starts the async loop which retrieves system channel addresses from the infra node.
         /// </summary>
         void Retrieve();
     }
@@ -27,7 +27,6 @@ namespace Stratis.Feature.Tokenless.Channels
     /// <inheritdoc/>
     public sealed class SystemChannelAddressRetriever : ISystemChannelAddressRetriever
     {
-        private IAsyncLoop retrieveSystemChannelNodesLoop;
         private readonly IAsyncProvider asyncProvider;
         private readonly IConnectionManager connectionManager;
         private readonly ChannelSettings channelSettings;
@@ -35,6 +34,7 @@ namespace Stratis.Feature.Tokenless.Channels
         private readonly ILogger logger;
         private readonly ILoggerFactory loggerFactory;
         private readonly INodeLifetime nodeLifetime;
+        private IAsyncLoop retrieveSystemChannelNodesLoop;
 
         public SystemChannelAddressRetriever(
             IAsyncProvider asyncProvider,
@@ -49,13 +49,20 @@ namespace Stratis.Feature.Tokenless.Channels
             this.connectionManager = connectionManager;
             this.httpClientFactory = httpClientFactory;
             this.loggerFactory = loggerFactory;
-            this.logger = this.loggerFactory.CreateLogger(this.GetType().FullName);
             this.nodeLifetime = nodeLifetime;
+
+            this.logger = this.loggerFactory.CreateLogger(this.GetType().FullName);
         }
 
         /// <inheritdoc/>
         public void Retrieve()
         {
+            if (!this.channelSettings.IsSystemChannelNode)
+            {
+                this.logger.LogDebug($"{nameof(SystemChannelAddressRetriever)} will not start as this is not a system channel node.");
+                return;
+            }
+
             this.retrieveSystemChannelNodesLoop = this.asyncProvider.CreateAndRunAsyncLoop(nameof(this.RetrieveSystemChannelNodeAddressesAsync), async token =>
             {
                 await this.RetrieveSystemChannelNodeAddressesAsync();

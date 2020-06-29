@@ -1,4 +1,7 @@
-﻿using Stratis.Core.Configuration;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using Stratis.Core.Configuration;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels
 {
@@ -28,6 +31,14 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         /// <summary>Bind the system channel to listen on a different address.</summary>
         public readonly string SystemChannelProtocolUri;
 
+        /// <summary>List of all system channel nodes known to the network.</summary>
+        public readonly HashSet<IPEndPoint> SystemChannelNodeAddresses;
+
+        public ChannelSettings()
+        {
+            this.SystemChannelNodeAddresses = new HashSet<IPEndPoint>();
+        }
+
         public ChannelSettings(NodeSettings nodeSettings)
         {
             this.ChannelParentPipeName = nodeSettings.ConfigReader.GetOrDefault("channelparentpipename", (string)null);
@@ -43,6 +54,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.SystemChannelApiPort = nodeSettings.ConfigReader.GetOrDefault("systemchannelapiport", 0);
             this.SystemChannelProtocolUri = nodeSettings.ConfigReader.GetOrDefault("systemchannelprotocoluri", (string)null);
             this.SystemChannelProtocolPort = nodeSettings.ConfigReader.GetOrDefault("systemchannelprotocolport", 0);
+
+            AddSystemChannelNodes(nodeSettings.ConfigReader);
         }
 
         public ChannelSettings(TextFileConfiguration fileConfiguration)
@@ -61,6 +74,14 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
             this.SystemChannelApiUri = fileConfiguration.GetOrDefault("systemchannelapiuri", (string)null);
             this.SystemChannelProtocolUri = fileConfiguration.GetOrDefault("systemchannelprotocoluri", (string)null);
             this.SystemChannelProtocolPort = fileConfiguration.GetOrDefault("systemchannelprotocolport", 0);
+
+            AddSystemChannelNodes(fileConfiguration);
+        }
+
+        private void AddSystemChannelNodes(TextFileConfiguration configuration)
+        {
+            foreach (IPEndPoint systemChannelNode in configuration.GetAll("systemchannelnode").Select(c => IPEndPoint.Parse(c)))
+                this.SystemChannelNodeAddresses.Add(systemChannelNode);
         }
     }
 }

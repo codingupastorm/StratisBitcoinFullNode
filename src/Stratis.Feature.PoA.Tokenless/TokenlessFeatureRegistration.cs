@@ -94,6 +94,9 @@ namespace Stratis.Feature.PoA.Tokenless
 
                         // In place of wallet.
                         services.AddSingleton<IBroadcasterManager, FullNodeBroadcasterManager>();
+
+                        // Add HttpClientFactory to DI.
+                        services.AddHttpClient();
                     });
             });
 
