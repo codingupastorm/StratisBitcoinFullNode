@@ -12,8 +12,8 @@ namespace CertificateAuthority
 {
     public class HDWalletAddressSpace
     {
-        private string mnemonicWords;
-        private string password;
+        private readonly string mnemonicWords;
+        private readonly string password;
 
         public HDWalletAddressSpace(string mnemonicWords, string password)
         {
@@ -24,8 +24,8 @@ namespace CertificateAuthority
         public ExtKey GetKey(string hdPath)
         {
             // Derive HD wallet seed
-            var mnemonic = new Mnemonic(mnemonicWords);
-            ExtKey extendedKey = mnemonic.DeriveExtKey(password);
+            var mnemonic = new Mnemonic(this.mnemonicWords);
+            ExtKey extendedKey = mnemonic.DeriveExtKey(this.password);
             byte[] chainCode = extendedKey.ChainCode;
 
             var seedExtKey = new ExtKey(extendedKey.PrivateKey, chainCode);

@@ -100,6 +100,9 @@ namespace Stratis.Feature.PoA.Tokenless.KeyStore
 
                 case TokenlessKeyStoreAccount.P2PCertificates:
                     return this.keyStoreSettings.CertificateAddressIndex;
+
+                default:
+                    break;
             }
 
             throw new InvalidOperationException("Undefined operation.");

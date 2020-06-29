@@ -30,7 +30,7 @@ namespace CertificateAuthority.Tests.FullProjectTests
         [Fact]
         public void ActualCAStarts()
         {
-            var task = Task.Run(() => { Program.Main(new string[0]); });
+            var task = Task.Run(() => { Program.Main(Array.Empty<string>()); });
 
             Thread.Sleep(5000);
 
@@ -278,13 +278,13 @@ namespace CertificateAuthority.Tests.FullProjectTests
             var client1 = new CaClient(server.BaseAddress, server.CreateClient(), id1, "test");
 
             CertificateInfoModel cert1 = IssueCertificate(client1, pubKey1, address1, privateKey1);
-            var cert1X509 = TestCertificate(adminClient, cert1, pubKey1, address1);
+            X509Certificate cert1X509 = TestCertificate(adminClient, cert1, pubKey1, address1);
             Assert.Contains(createAccountModel.Organization, cert1X509.Subject);
             
             var client2 = new CaClient(server.BaseAddress, server.CreateClient(), id2, "test");
 
             CertificateInfoModel cert2 = IssueCertificate(client2, pubKey2, address2, privateKey2);
-            var cert2X509 = TestCertificate(adminClient, cert2, pubKey2, address2);
+            X509Certificate cert2X509 = TestCertificate(adminClient, cert2, pubKey2, address2);
             Assert.Contains(createAccountModel2.Organization, cert2X509.Subject);
 
             server.Dispose();

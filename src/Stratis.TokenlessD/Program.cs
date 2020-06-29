@@ -20,7 +20,12 @@ namespace Stratis.TokenlessD
 {
     public class Program
     {
-        public static async Task Main(string[] args)
+        public static void Main(string[] args)
+        {
+            Program.MainAsync(args).GetAwaiter().GetResult();
+        }
+
+        public static async Task MainAsync(string[] args)
         {
             try
             {

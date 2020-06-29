@@ -189,7 +189,7 @@ namespace CertificateAuthority.Controllers
                 Pkcs10CertificationRequestDelaySigned unsignedCsr = CaCertificatesManager.CreatedUnsignedCertificateSigningRequest(subjectName, publicKey, subjectAlternativeNames, extensionData);
 
                 // Important workaround - fill in a dummy signature so that when the CSR is reconstituted on the far side, the decoding does not fail with DerNull errors.
-                unsignedCsr.SignRequest(new byte[] { });
+                unsignedCsr.SignRequest(Array.Empty<byte>());
 
                 var csrModel = new CertificateSigningRequestModel(unsignedCsr);
 

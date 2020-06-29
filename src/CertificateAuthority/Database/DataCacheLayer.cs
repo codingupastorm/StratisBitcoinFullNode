@@ -415,7 +415,7 @@ namespace CertificateAuthority.Database
         public TResult ExecuteQuery<TAccessModel, TResult>(TAccessModel accessWithModel, Func<CADbContext, TResult> action) where TAccessModel : CredentialsAccessModel
         {
             CADbContext dbContext = this.CreateContext();
-            this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel account);
+            this.VerifyCredentialsAndAccessLevel(accessWithModel, dbContext, out AccountModel _);
             return action(dbContext);
         }
 

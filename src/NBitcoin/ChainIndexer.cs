@@ -85,7 +85,7 @@ namespace NBitcoin
         public ChainedHeader FindFork(IEnumerable<uint256> hashes)
         {
             if (hashes == null)
-                throw new ArgumentNullException("hashes");
+                throw new ArgumentNullException(nameof(hashes));
 
             // Find the first block the caller has in the main chain.
             foreach (uint256 hash in hashes)
@@ -106,7 +106,7 @@ namespace NBitcoin
         public ChainedHeader FindFork(BlockLocator locator)
         {
             if (locator == null)
-                throw new ArgumentNullException("locator");
+                throw new ArgumentNullException(nameof(locator));
 
             return this.FindFork(locator.Blocks);
         }
@@ -134,7 +134,7 @@ namespace NBitcoin
         public IEnumerable<ChainedHeader> EnumerateToTip(ChainedHeader block)
         {
             if (block == null)
-                throw new ArgumentNullException("block");
+                throw new ArgumentNullException(nameof(block));
 
             return this.EnumerateToTip(block.HashBlock);
         }

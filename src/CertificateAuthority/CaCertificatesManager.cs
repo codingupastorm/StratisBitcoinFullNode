@@ -183,7 +183,7 @@ namespace CertificateAuthority
         /// </summary>
         public CertificateInfoModel IssueCertificate(CredentialsAccessWithModel<IssueCertificateFromRequestModel> model)
         {
-            this.repository.VerifyCredentialsAndAccessLevel(model, out AccountModel requester);
+            this.repository.VerifyCredentialsAndAccessLevel(model, out AccountModel _);
 
             if (model.Model.CertificateRequestFile.Length == 0)
                 throw new Exception("Empty file!");
@@ -239,7 +239,7 @@ namespace CertificateAuthority
 
             AccountInfo accountInfo = this.repository.GetAccountInfoById(cred);
 
-            X509Certificate certificateFromReq = IssueCertificateFromRequest(certRequest, accountInfo, this.caCertificate, this.caKey, subjectName, new string[0], new[] { KeyPurposeID.AnyExtendedKeyUsage });
+            X509Certificate certificateFromReq = IssueCertificateFromRequest(certRequest, accountInfo, this.caCertificate, this.caKey, subjectName, Array.Empty<string>(), new[] { KeyPurposeID.AnyExtendedKeyUsage });
             Asn1Set attributes = certRequest.GetCertificationRequestInfo().Attributes;
 
             // TODO: This should come from the transaction signing pubkeyhash. Presently the address could be different to the pubkey hash, which is nonsensical.
@@ -565,7 +565,7 @@ namespace CertificateAuthority
             X509Certificate2 convertedCertificate;
             using (var stream = new MemoryStream())
             {
-                store.Save(stream, new char[0], random);
+                store.Save(stream, Array.Empty<char>(), random);
                 convertedCertificate = new X509Certificate2(stream.ToArray());
             }
 
@@ -581,8 +581,8 @@ namespace CertificateAuthority
             {
                 // TODO: Technically there is an address associated with the CA's pubkey, should we use it?
                 Address = "",
-                TransactionSigningPubKeyHash = new byte[] {},
-                BlockSigningPubKey = new byte[] { },
+                TransactionSigningPubKeyHash = Array.Empty<byte>(),
+                BlockSigningPubKey = Array.Empty<byte>(),
                 CertificateContentDer = this.caCertificate.GetEncoded(),
                 Id = 0,
                 AccountId = 0,

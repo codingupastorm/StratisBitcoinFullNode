@@ -23,8 +23,14 @@ namespace Stratis.Features.SmartContracts.ReflectionExecutor.Controllers
         private readonly IStateRepositoryRoot stateRepository;
         private readonly Network network;
         private readonly SwaggerGeneratorOptions options;
-        // private readonly JsonSerializer swaggerSerializer;
 
+        /// <summary>
+        /// The class constructor.
+        /// </summary>
+        /// <param name="loader">A loader for loading assemblies from bytecode.</param>
+        /// <param name="options">The swagger generator options.</param>
+        /// <param name="stateRepository">The state repository.</param>
+        /// <param name="network">The network.</param>
         public ContractSwaggerController(
             ILoader loader,
             IOptions<SwaggerGeneratorOptions> options,
@@ -41,7 +47,7 @@ namespace Stratis.Features.SmartContracts.ReflectionExecutor.Controllers
         /// Dynamically generates a swagger document for the contract at the given address.
         /// </summary>
         /// <param name="address">The contract's address.</param>
-        /// <returns>A <see cref="SwaggerDocument"/> model.</returns>
+        /// <returns>A json serialized <see cref="OpenApiDocument"/> model.</returns>
         /// <exception cref="Exception"></exception>
         [Route("{address}")]
         [HttpGet]
