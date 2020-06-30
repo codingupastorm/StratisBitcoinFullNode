@@ -12,6 +12,7 @@ using Flurl.Http;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Org.BouncyCastle.X509;
+using Stratis.Bitcoin.IntegrationTests;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
@@ -331,8 +332,8 @@ namespace Stratis.SmartContracts.IntegrationTests
                 CoreNode infraNode2 = nodeBuilder.CreateInfraNode(network, 1, server);
 
                 // Add system channel node addresses to thje infra node's known lists.
-                infraNode1.AddSystemChannelNode(new Uri($"http://127.0.0.1:{infraNode2.SystemChannelProtocolPort}"));
-                infraNode2.AddSystemChannelNode(new Uri($"http://127.0.0.1:{infraNode1.SystemChannelProtocolPort}"));
+                infraNode1.AppendToConfig("systemchannelnode", new Uri($"http://127.0.0.1:{infraNode2.SystemChannelProtocolPort}").ToString());
+                infraNode2.AppendToConfig("systemchannelnode", new Uri($"http://127.0.0.1:{infraNode1.SystemChannelProtocolPort}").ToString());
 
                 // Start the infra nodes.
                 infraNode1.Start();

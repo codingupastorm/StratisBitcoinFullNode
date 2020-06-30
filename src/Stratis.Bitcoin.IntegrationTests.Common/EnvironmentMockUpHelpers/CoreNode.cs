@@ -209,6 +209,8 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
             {
                 CreateConfigFile(this.ConfigParameters);
 
+                startAction?.Invoke();
+
                 this.Runner.AlwaysFlushBlocks = this.builderAlwaysFlushBlocks;
                 this.Runner.EnablePeerDiscovery = this.builderEnablePeerDiscovery;
                 this.Runner.OverrideDateTimeProvider = this.builderOverrideDateTimeProvider;
@@ -218,7 +220,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
 
                 this.Runner.BuildNode();
 
-                startAction?.Invoke();
                 this.Runner.Start();
                 this.State = CoreNodeState.Starting;
             }
@@ -338,11 +339,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         public ChainedHeader GetTip()
         {
             return this.FullNode.NodeService<IConsensusManager>().Tip;
-        }
-
-        public void AddSystemChannelNode(Uri uri)
-        {
-            this.ConfigParameters.Add("systemchannelnode", uri.ToString());
         }
     }
 }
