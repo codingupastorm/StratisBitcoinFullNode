@@ -19,7 +19,6 @@ using Stratis.Feature.PoA.Tokenless.Controllers.Models;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
-using Stratis.Feature.PoA.Tokenless.Models;
 using Stratis.Feature.PoA.Tokenless.Payloads;
 using Stratis.Features.MemoryPool.Broadcasting;
 using Stratis.Features.SmartContracts;
@@ -545,15 +544,6 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                 return this.Json(ErrorHelpers.BuildErrorResponse(HttpStatusCode.InternalServerError, e.Message,
                     "Error deserializing method parameters"));
             }
-        }
-
-        [Route("systemchanneladdresses")]
-        [HttpGet]
-        public IActionResult RetrieveSystemChannelAddresses()
-        {
-            var model = new SystemChannelAddressesModel();
-            // TODO: Add addresses.
-            return this.Json(model);
         }
 
         /// <summary>
