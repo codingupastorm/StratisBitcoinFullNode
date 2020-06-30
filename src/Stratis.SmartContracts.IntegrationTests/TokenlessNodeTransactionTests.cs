@@ -608,7 +608,7 @@ namespace Stratis.SmartContracts.IntegrationTests
 
 
         [Fact]
-        public async Task CanSaveSingleCharString()
+        public async Task CanSaveSingleCharStringAsync()
         {
             TestBase.GetTestRootFolder(out string testRootFolder);
 

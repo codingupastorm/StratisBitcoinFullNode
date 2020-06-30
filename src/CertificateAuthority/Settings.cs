@@ -51,7 +51,7 @@ namespace CertificateAuthority
 
         public void Initialize(string[] commandLineArgs)
         {
-            var commandLineArgsConfiguration = new TextFileConfiguration(commandLineArgs ?? new string[] { });
+            var commandLineArgsConfiguration = new TextFileConfiguration(commandLineArgs ?? Array.Empty<string>());
 
             this.configurationFile = commandLineArgsConfiguration.GetOrDefault<string>("conf", null)?.NormalizeDirectorySeparator();
             Console.WriteLine($"{nameof(this.configurationFile)}: {this.configurationFile}");
