@@ -112,18 +112,23 @@ namespace Stratis.Features.Consensus.Rules
         {
         }
 
-        public override void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            this.prefetcher.Dispose();
-
-            var cache = this.UtxoSet as CachedCoinView;
-            if (cache != null)
+            if (disposing)
             {
-                this.logger.LogInformation("Flushing Cache CoinView.");
-                cache.Flush();
+                this.prefetcher.Dispose();
+
+                var cache = this.UtxoSet as CachedCoinView;
+                if (cache != null)
+                {
+                    this.logger.LogInformation("Flushing Cache CoinView.");
+                    cache.Flush();
+                }
+
+                ((DBCoinView)((CachedCoinView)this.UtxoSet).Inner).Dispose();
             }
 
-            ((DBCoinView)((CachedCoinView)this.UtxoSet).Inner).Dispose();
+            base.Dispose(disposing);
         }
     }
 }

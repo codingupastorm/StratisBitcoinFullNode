@@ -16,25 +16,25 @@ namespace Stratis.Core.P2P.Protocol.Behaviors
     public class EnforcePeerVersionCheckBehavior : NetworkPeerBehavior
     {
         /// <summary>An indexer that provides methods to query the best chain (the chain that is validated by the full consensus rules)</summary>
-        protected readonly ChainIndexer ChainIndexer;
+        private readonly ChainIndexer chainIndexer;
 
         /// <summary>User defined node settings.</summary>
-        protected readonly NodeSettings NodeSettings;
+        private readonly NodeSettings nodeSettings;
 
         /// <summary>Specification of the network the node runs on - regtest/testnet/mainnet.</summary>
-        protected readonly Network Network;
+        private readonly Network network;
 
         /// <summary>Logger factory used while cloning the object.</summary>
-        protected readonly ILoggerFactory LoggerFactory;
+        private readonly ILoggerFactory loggerFactory;
 
         /// <summary>Instance logger.</summary>
-        protected readonly ILogger Logger;
+        private readonly ILogger logger;
 
         /// <summary>
         /// Set to <c>true</c> if the attached peer callbacks have been registered and they should be unregistered,
         /// <c>false</c> if the callbacks are not registered.
         /// </summary>
-        protected bool CallbacksRegistered;
+        private bool callbacksRegistered;
 
         /// <summary>
         /// Initializes an instance of the object for outbound network peers.
@@ -48,35 +48,35 @@ namespace Stratis.Core.P2P.Protocol.Behaviors
             Network network,
             ILoggerFactory loggerFactory)
         {
-            this.ChainIndexer = chainIndexer;
-            this.NodeSettings = nodeSettings;
-            this.Network = network;
-            this.LoggerFactory = loggerFactory;
-            this.Logger = loggerFactory.CreateLogger(this.GetType().FullName, $"[{this.GetHashCode():x}] ");
+            this.chainIndexer = chainIndexer;
+            this.nodeSettings = nodeSettings;
+            this.network = network;
+            this.loggerFactory = loggerFactory;
+            this.logger = loggerFactory.CreateLogger(this.GetType().FullName, $"[{this.GetHashCode():x}] ");
         }
 
         [NoTrace]
         protected Task OnMessageReceivedAsync(INetworkPeer peer, IncomingMessage message)
         {
-            int enforceMinProtocolVersionAtBlockHeight = this.Network.Consensus.Options.EnforceMinProtocolVersionAtBlockHeight;
+            int enforceMinProtocolVersionAtBlockHeight = this.network.Consensus.Options.EnforceMinProtocolVersionAtBlockHeight;
             bool enforcementEnabled = enforceMinProtocolVersionAtBlockHeight > 0;
-            bool enforcementApplied = this.NodeSettings.MinProtocolVersion >= this.Network.Consensus.Options.EnforcedMinProtocolVersion;
+            bool enforcementApplied = this.nodeSettings.MinProtocolVersion >= this.network.Consensus.Options.EnforcedMinProtocolVersion;
 
-            bool enforcementHeightReached = this.ChainIndexer.Height >= enforceMinProtocolVersionAtBlockHeight;
+            bool enforcementHeightReached = this.chainIndexer.Height >= enforceMinProtocolVersionAtBlockHeight;
             if (enforcementEnabled && !enforcementApplied && enforcementHeightReached)
             {
-                this.Logger.LogDebug("Changing the minumum supported protocol version from {0} to {1}.", this.NodeSettings.MinProtocolVersion, this.Network.Consensus.Options.EnforcedMinProtocolVersion);
-                this.NodeSettings.MinProtocolVersion = this.Network.Consensus.Options.EnforcedMinProtocolVersion;
+                this.logger.LogDebug("Changing the minumum supported protocol version from {0} to {1}.", this.nodeSettings.MinProtocolVersion, this.network.Consensus.Options.EnforcedMinProtocolVersion);
+                this.nodeSettings.MinProtocolVersion = this.network.Consensus.Options.EnforcedMinProtocolVersion;
             }
 
             // The statement below will close connections in case the this.NodeSettings.MinProtocolVersion has changed during node execution.
-            if (peer?.PeerVersion?.Version != null && peer.PeerVersion.Version < this.NodeSettings.MinProtocolVersion)
+            if (peer?.PeerVersion?.Version != null && peer.PeerVersion.Version < this.nodeSettings.MinProtocolVersion)
             {
-                this.Logger.LogError("Unsupported client version, dropping connection.");
+                this.logger.LogError("Unsupported client version, dropping connection.");
                 this.AttachedPeer.Disconnect("Peer is using unsupported client version");
             }
 
-            this.Logger.LogTrace("(-)");
+            this.logger.LogTrace("(-)");
             return Task.CompletedTask;
         }
 
@@ -84,13 +84,13 @@ namespace Stratis.Core.P2P.Protocol.Behaviors
         protected override void AttachCore()
         {
             this.AttachedPeer.MessageReceived.Register(this.OnMessageReceivedAsync);
-            this.CallbacksRegistered = true;
+            this.callbacksRegistered = true;
         }
 
         [NoTrace]
         protected override void DetachCore()
         {
-            if (this.CallbacksRegistered)
+            if (this.callbacksRegistered)
             {
                 this.AttachedPeer.MessageReceived.Unregister(this.OnMessageReceivedAsync);
             }
@@ -99,7 +99,7 @@ namespace Stratis.Core.P2P.Protocol.Behaviors
         [NoTrace]
         public override object Clone()
         {
-            return new EnforcePeerVersionCheckBehavior(this.ChainIndexer, this.NodeSettings, this.Network, this.LoggerFactory);
+            return new EnforcePeerVersionCheckBehavior(this.chainIndexer, this.nodeSettings, this.network, this.loggerFactory);
         }
     }
 }

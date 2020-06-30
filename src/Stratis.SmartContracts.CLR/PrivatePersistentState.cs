@@ -43,6 +43,7 @@ namespace Stratis.SmartContracts.CLR
 
         public byte[] GetBytes(byte[] key)
         {
+            // TODO: Some redundant code here or an issue to resolve.
             throw new NotImplementedException("This is not getting private data from the correct place.");
             byte[] bytes = this.persistenceStrategy.FetchBytes(this.contractAddress, key);
 

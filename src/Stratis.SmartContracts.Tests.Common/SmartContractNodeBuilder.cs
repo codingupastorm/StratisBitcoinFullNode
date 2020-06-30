@@ -289,7 +289,7 @@ namespace Stratis.SmartContracts.Tests.Common
             return (certificateInfo.ToCertificate(), certificateInfo);
         }
 
-        public static SmartContractNodeBuilder Create(string testRootFolder)
+        public new static SmartContractNodeBuilder Create(string testRootFolder)
         {
             string testFolderPath = Path.Combine(testRootFolder, "node");
             var builder = new SmartContractNodeBuilder(testFolderPath);

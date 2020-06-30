@@ -90,7 +90,6 @@ namespace Stratis.Core.Consensus.PerformanceCounters.Rules
     internal class RulePerformance : RuleItem
     {
         public int CalledTimes;
-
         public long ExecutionTimesTicks;
 
         public RulePerformance(RuleItem rule)
