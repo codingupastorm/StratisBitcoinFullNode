@@ -18,6 +18,7 @@ namespace Stratis.Bitcoin.IntegrationTests.PoA
             var network = new TestPoANetwork();
             PoANodeBuilder builder = PoANodeBuilder.CreatePoANodeBuilder(this);
             PoANodeBuilder builder2 = PoANodeBuilder.CreatePoANodeBuilder(this);
+
             CoreNode node1 = builder.CreatePoANode(network, network.FederationKey1).Start();
             CoreNode node2 = builder2.CreatePoANode(network, network.FederationKey2).Start();
 

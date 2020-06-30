@@ -57,7 +57,7 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.PoA
             string dataFolder = this.GetNextDataFolderName();
             CoreNode node = this.CreateNode(new PoANodeRunner(dataFolder, network, this.TimeProvider), "poa.conf");
 
-            var settings = new NodeSettings(network, args: new string[] { "-conf=poa.conf", "-datadir=" + dataFolder });
+            var settings = new NodeSettings(network, args: new string[] { "-datadir=" + dataFolder });
             var tool = new KeyTool(settings.DataFolder);
             tool.SavePrivateKey(key, KeyType.FederationKey);
 
