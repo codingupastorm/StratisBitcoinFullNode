@@ -25,10 +25,6 @@ namespace Stratis.Core.Controllers
         private readonly IHttpClientFactory httpClientFactory;
 
         private readonly ILogger logger;
-
-        /// <summary>URL of API endpoint.</summary>
-        private readonly string endpointUrl;
-
         public const int RetryCount = 3;
 
         /// <summary>Delay between retries.</summary>
@@ -39,14 +35,12 @@ namespace Stratis.Core.Controllers
         private readonly RetryPolicy policy;
 
         /// <inheritdoc />
-        public string EndpointUrl => this.endpointUrl;
+        public string EndpointUrl { get; }
 
-        public RestApiClientBase(ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory, int port, string controllerName, string url)
+        private RestApiClientBase(IHttpClientFactory httpClientFactory, ILoggerFactory loggerFactory)
         {
             this.httpClientFactory = httpClientFactory;
             this.logger = loggerFactory.CreateLogger(this.GetType().FullName);
-
-            this.endpointUrl = $"{url}:{port}/api/{controllerName}";
 
             this.policy = Policy.Handle<HttpRequestException>().WaitAndRetryAsync(retryCount: RetryCount, sleepDurationProvider:
                 attemptNumber =>
@@ -61,11 +55,25 @@ namespace Stratis.Core.Controllers
                 }, onRetry: this.OnRetry);
         }
 
+        public RestApiClientBase(ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory, Uri uri, string controllerName)
+            : this(httpClientFactory, loggerFactory)
+        {
+            this.EndpointUrl = new Uri(uri, new Uri($"/api/{controllerName}", UriKind.Relative)).ToString();
+            this.logger.LogDebug($"{nameof(this.EndpointUrl)} set to {this.EndpointUrl}");
+        }
+
+        public RestApiClientBase(ILoggerFactory loggerFactory, IHttpClientFactory httpClientFactory, string url, int port, string controllerName)
+            : this(httpClientFactory, loggerFactory)
+        {
+            this.EndpointUrl = $"{url}:{port}/api/{controllerName}";
+            this.logger.LogDebug($"{nameof(this.EndpointUrl)} set to {this.EndpointUrl}");
+        }
+
         protected async Task<HttpResponseMessage> SendPostRequestAsync<TModel>(TModel requestModel, string apiMethodName, CancellationToken cancellation) where TModel : class
         {
             Guard.NotNull(requestModel, nameof(requestModel));
 
-            var publicationUri = new Uri($"{this.endpointUrl}/{apiMethodName}");
+            var publicationUri = new Uri($"{this.EndpointUrl}/{apiMethodName}");
 
             HttpResponseMessage response = null;
 
@@ -112,8 +120,7 @@ namespace Stratis.Core.Controllers
             return await this.ParseHttpResponseMessageAsync<TResponse>(response).ConfigureAwait(false);
         }
 
-        public async Task<TResponse> SendGetRequestAsync<TResponse>(string apiMethodName, string arguments = null,
-            CancellationToken cancellation = default(CancellationToken)) where TResponse : class
+        public async Task<TResponse> SendGetRequestAsync<TResponse>(string apiMethodName, string arguments = null, CancellationToken cancellation = default) where TResponse : class
         {
             HttpResponseMessage response = await this.SendGetRequestAsync(apiMethodName, arguments, cancellation).ConfigureAwait(false);
 
@@ -124,19 +131,19 @@ namespace Stratis.Core.Controllers
         {
             if (httpResponse == null)
             {
-                this.logger.LogTrace("(-)[NO_RESPONSE]:null");
+                this.logger.LogDebug("(-)[NO_RESPONSE]:null");
                 return null;
             }
 
             if (!httpResponse.IsSuccessStatusCode)
             {
-                this.logger.LogTrace("(-)[NOT_SUCCESS_CODE]:null");
+                this.logger.LogDebug("(-)[NOT_SUCCESS_CODE]:null");
                 return null;
             }
 
             if (httpResponse.Content == null)
             {
-                this.logger.LogTrace("(-)[NO_CONTENT]:null");
+                this.logger.LogDebug("(-)[NO_CONTENT]:null");
                 return null;
             }
 
@@ -145,20 +152,22 @@ namespace Stratis.Core.Controllers
 
             if (successJson == null)
             {
-                this.logger.LogTrace("(-)[JSON_PARSING_FAILURE]:null");
+                this.logger.LogDebug("(-)[JSON_PARSING_FAILURE]:null");
                 return null;
             }
 
+            this.logger.LogDebug($"{successJson}");
+
             TResponse responseModel = JsonConvert.DeserializeObject<TResponse>(successJson);
 
-            this.logger.LogTrace("(-)[SUCCESS]");
+            this.logger.LogDebug("(-)[SUCCESS]");
             return responseModel;
         }
 
         protected async Task<HttpResponseMessage> SendGetRequestAsync(string apiMethodName, string arguments = null,
-            CancellationToken cancellation = default(CancellationToken))
+            CancellationToken cancellation = default)
         {
-            string url = $"{this.endpointUrl}/{apiMethodName}";
+            string url = $"{this.EndpointUrl}/{apiMethodName}";
 
             if (!string.IsNullOrEmpty(arguments))
             {
@@ -176,12 +185,12 @@ namespace Stratis.Core.Controllers
                     // Retry the following call according to the policy.
                     await this.policy.ExecuteAsync(async token =>
                     {
-                        this.logger.LogDebug("Sending request to Url '{1}'.", url);
+                        this.logger.LogDebug($"Sending request to '{url}'.");
 
                         response = await client.GetAsync(url, cancellation).ConfigureAwait(false);
 
                         if (response != null)
-                            this.logger.LogDebug("Response received: {0}", response);
+                            this.logger.LogDebug($"Response received: {response}");
                     }, cancellation);
                 }
                 catch (OperationCanceledException)

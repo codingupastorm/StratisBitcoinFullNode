@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Net;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -14,6 +15,7 @@ using Stratis.Feature.PoA.Tokenless.Channels.Requests;
 using Stratis.Feature.PoA.Tokenless.Consensus;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Feature.PoA.Tokenless.Models;
 using Stratis.Feature.PoA.Tokenless.Networks;
 using Stratis.Features.MemoryPool.Broadcasting;
 
@@ -24,32 +26,34 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
     [Route("api/[controller]")]
     public sealed class ChannelsController : Controller
     {
+        private readonly IBroadcasterManager broadcasterManager;
         private readonly ICertificatePermissionsChecker certificatePermissionsChecker;
         private readonly IChannelRepository channelRepository;
+        private readonly IChannelService channelService;
+        private readonly ChannelSettings channelSettings;
         private readonly ICoreComponent coreComponent;
-        private readonly IBroadcasterManager broadcasterManager;
         private readonly ITokenlessKeyStoreManager tokenlessKeyStoreManager;
         private readonly ITokenlessSigner tokenlessSigner;
-        private readonly IChannelService channelService;
         private readonly ILogger logger;
 
         public ChannelsController(
-            ICertificatePermissionsChecker certificatePermissionsChecker,
             IBroadcasterManager broadcasterManager,
+            ICertificatePermissionsChecker certificatePermissionsChecker,
             IChannelRepository channelRepository,
-            ITokenlessKeyStoreManager tokenlessKeyStoreManager,
-            ITokenlessSigner tokenlessSigner,
+            IChannelService channelService,
+            ChannelSettings channelSettings,
             ICoreComponent coreComponent,
-            IChannelService channelService
-            )
+            ITokenlessKeyStoreManager tokenlessKeyStoreManager,
+            ITokenlessSigner tokenlessSigner)
         {
-            this.certificatePermissionsChecker = certificatePermissionsChecker;
             this.broadcasterManager = broadcasterManager;
+            this.certificatePermissionsChecker = certificatePermissionsChecker;
             this.channelRepository = channelRepository;
+            this.channelService = channelService;
+            this.channelSettings = channelSettings;
             this.coreComponent = coreComponent;
             this.tokenlessKeyStoreManager = tokenlessKeyStoreManager;
             this.tokenlessSigner = tokenlessSigner;
-            this.channelService = channelService;
             this.logger = coreComponent.LoggerFactory.CreateLogger(this.GetType());
         }
 
@@ -173,9 +177,9 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
                 {
                     network.DefaultSignalRPort = request.SignalRPort.Value;
                 }
+
                 // Note that we don't check if we are allowed to join the network.
                 // The network's AccessControlList may have changed from what it was in the initial json, to allow us to join.
-
                 this.logger.LogInformation($"Request to join channel '{network.Name}' received.");
 
                 await this.channelService.JoinChannelAsync(network);
@@ -189,6 +193,19 @@ namespace Stratis.Feature.PoA.Tokenless.Controllers
             }
         }
 
+        [Route("systemchanneladdresses")]
+        [HttpGet]
+        public IActionResult RetrieveSystemChannelAddresses()
+        {
+            var model = new SystemChannelAddressesModel();
 
+            if (this.channelSettings.IsInfraNode)
+            {
+                model.Addresses.AddRange(this.channelSettings.SystemChannelNodeAddresses.Select(s => s.ToString()));
+                this.logger.LogDebug($"'{model.Addresses.Count}' system channel addresses retrieved.");
+            }
+
+            return this.Json(model);
+        }
     }
 }

@@ -486,11 +486,13 @@ namespace Stratis.Core.Connection
                 this.ConnectionSettings.AddAddNode(ipEndpoint);
                 IPeerConnector addNodeConnector = this.PeerConnectors.FirstOrDefault(pc => pc is PeerConnectorAddNode);
 
+                this.logger.LogDebug($"'{ipEndpoint}' added to add node collection.");
+
                 if (addNodeConnector != null)
                     addNodeConnector.MaxOutboundConnections++;
             }
             else
-                this.logger.LogDebug("The endpoint already exists in the add node collection.");
+                this.logger.LogDebug($"'{ipEndpoint}' already exists in the add node collection.");
         }
 
         /// <summary>

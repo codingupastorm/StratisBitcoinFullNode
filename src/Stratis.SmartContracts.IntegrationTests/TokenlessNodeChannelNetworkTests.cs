@@ -11,8 +11,8 @@ using Flurl;
 using Flurl.Http;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using NBitcoin;
 using Org.BouncyCastle.X509;
+using Stratis.Bitcoin.IntegrationTests;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
@@ -329,21 +329,22 @@ namespace Stratis.SmartContracts.IntegrationTests
 
                 // Create and start the main "infra" tokenless node which will internally start the "system channel node".
                 CoreNode infraNode1 = nodeBuilder.CreateInfraNode(network, 0, server);
-                infraNode1.Start();
-
-                var channelService = infraNode1.FullNode.NodeService<IChannelService>() as ProcessChannelService;
-                Assert.True(channelService.StartedChannelNodes.Count == 1);
-
-                // Create second system node.
                 CoreNode infraNode2 = nodeBuilder.CreateInfraNode(network, 1, server);
+
+                // Add system channel node addresses to thje infra node's known lists.
+                infraNode1.AppendToConfig("systemchannelnode", new Uri($"http://127.0.0.1:{infraNode2.SystemChannelProtocolPort}").ToString());
+                infraNode2.AppendToConfig("systemchannelnode", new Uri($"http://127.0.0.1:{infraNode1.SystemChannelProtocolPort}").ToString());
+
+                // Start the infra nodes.
+                infraNode1.Start();
                 TokenlessTestHelper.AddCertificatesToMembershipServices(new List<X509Certificate>() { infraNode2.ClientCertificate.ToCertificate() }, infraNode2.DataFolder, network);
                 infraNode2.Start();
 
-                // Attempt to connect the 2 system channel nodes.
-                await $"http://localhost:{infraNode1.SystemChannelApiPort}/api"
-                    .AppendPathSegment("connectionmanager/addnode")
-                    .SetQueryParam("endpoint", $"127.0.0.1:{infraNode2.SystemChannelProtocolApiPort}")
-                    .SetQueryParam("command", "add").GetAsync();
+                // Ensure the system channels started.
+                var channelService = infraNode1.FullNode.NodeService<IChannelService>() as ProcessChannelService;
+                Assert.True(channelService.StartedChannelNodes.Count == 1);
+                channelService = infraNode2.FullNode.NodeService<IChannelService>() as ProcessChannelService;
+                Assert.True(channelService.StartedChannelNodes.Count == 1);
 
                 // Wait until the first system channel node's tip has advanced beyond bootstrap mode.
                 // This proves that the system channel nodes connected.

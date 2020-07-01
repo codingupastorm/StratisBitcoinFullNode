@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using CertificateAuthority;
 using CertificateAuthority.Tests.Common;
 using Microsoft.AspNetCore.Hosting;
 using Org.BouncyCastle.X509;
-using Stratis.Bitcoin.IntegrationTests;
 using Stratis.Bitcoin.IntegrationTests.Common;
 using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 using Stratis.Bitcoin.IntegrationTests.Common.PoA;
@@ -52,13 +51,19 @@ namespace Stratis.SmartContracts.IntegrationTests
                 TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node1.DataFolder, this.network);
                 TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node2.DataFolder, this.network);
 
-                node1.AppendToConfig($"addnode=127.0.0.1:{node2.ProtocolPort}");
-                node1.AppendToConfig($"addnode=127.0.0.1:{node2.ProtocolPort}");
+                void appendToConfig()
+                {
+                    using (StreamWriter sw = File.AppendText(node1.ConfigFilePath))
+                    {
+                        sw.WriteLine($"addnode=127.0.0.1:{node2.ProtocolPort}");
+                        sw.WriteLine($"addnode=127.0.0.1:{node2.ProtocolPort}");
+                    }
+                }
 
-                node1.Start();
+                node1.Start(appendToConfig);
                 node2.Start();
 
-                Thread.Sleep(5000);
+                TestBase.WaitLoop(() => { return node1.FullNode.ConnectionManager.ConnectedPeers.Count() > 0; });
 
                 Assert.Single(node1.FullNode.ConnectionManager.ConnectedPeers);
                 Assert.Single(node2.FullNode.ConnectionManager.ConnectedPeers);

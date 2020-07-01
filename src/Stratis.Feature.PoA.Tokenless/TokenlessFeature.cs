@@ -18,6 +18,7 @@ using Stratis.Feature.PoA.Tokenless.Channels;
 using Stratis.Feature.PoA.Tokenless.Core;
 using Stratis.Feature.PoA.Tokenless.Endorsement;
 using Stratis.Feature.PoA.Tokenless.ProtocolEncryption;
+using Stratis.Feature.Tokenless.Channels;
 using Stratis.Features.BlockStore;
 using Stratis.Features.PoA;
 using Stratis.Features.PoA.Behaviors;
@@ -47,6 +48,7 @@ namespace Stratis.Feature.PoA.Tokenless
         private readonly IChannelCreationExecutor channelCreationExecutor;
         private readonly IChannelUpdateExecutor channelUpdateExecutor;
         private readonly ReadWriteSetPolicyValidator rwsPolicyValidator;
+        private readonly ISystemChannelAddressRetriever systemChannelAddressRetriever;
 
         public TokenlessFeature(
             ChannelSettings channelSettings,
@@ -66,7 +68,8 @@ namespace Stratis.Feature.PoA.Tokenless
             IChannelService channelService,
             IChannelCreationExecutor channelCreationExecutor,
             IChannelUpdateExecutor channelUpdateExecutor,
-            ReadWriteSetPolicyValidator rwsPolicyValidator)
+            ReadWriteSetPolicyValidator rwsPolicyValidator,
+            ISystemChannelAddressRetriever systemChannelAddressRetriever)
         {
             this.channelSettings = channelSettings;
             this.certificatePermissionsChecker = certificatePermissionsChecker;
@@ -86,6 +89,7 @@ namespace Stratis.Feature.PoA.Tokenless
 
             this.channelCreationExecutor = channelCreationExecutor;
             this.channelUpdateExecutor = channelUpdateExecutor;
+            this.systemChannelAddressRetriever = systemChannelAddressRetriever;
 
             // TODO-TL: Is there a better place to do this?
             storeSettings.TxIndex = true;
@@ -144,11 +148,14 @@ namespace Stratis.Feature.PoA.Tokenless
 
             // If this node is a infra node, then start a system channel node daemon with the serialized version of the network.
             if (this.channelSettings.IsInfraNode)
+            {
                 await this.channelService.StartSystemChannelNodeAsync();
+            }
 
             if (this.channelSettings.IsSystemChannelNode)
             {
                 this.channelCreationExecutor.Initialize();
+                this.systemChannelAddressRetriever.Retrieve();
             }
 
             this.channelUpdateExecutor.Initialize();

@@ -48,46 +48,17 @@ namespace Stratis.SmartContracts.Tests.Common
             int nodeIndex,
             IWebHost server,
             string agent,
-            bool isInfraNode,
-            bool isSystemNode,
             bool willStartChannels,
             bool initialRun,
-            int? apiPortOverride = null,
-            int? protocolPortOverride = null,
             string organisation = null,
             List<string> permissions = null,
             bool debugChannels = false,
             NodeConfigParameters configParameters = null)
         {
-            string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
-
-            string commonName = CaTestHelper.GenerateRandomString();
-
-            IServerAddressesFeature serverAddresses = server.ServerFeatures.Get<IServerAddressesFeature>();
-            string caBaseAddress = serverAddresses.Addresses.First();
-
             if (configParameters == null)
                 configParameters = new NodeConfigParameters();
 
-            if (!configParameters.ContainsKey("caurl"))
-                configParameters.Add("caurl", caBaseAddress);
-
-            if (!configParameters.ContainsKey("debug"))
-                configParameters.Add("debug", "1");
-
-            if (isInfraNode)
-            {
-                configParameters.Add("isinfranode", "True");
-
-                if (apiPortOverride != null)
-                    configParameters.Add("systemchannelapiport", apiPortOverride.ToString());
-
-                if (protocolPortOverride != null)
-                    configParameters.Add("systemchannelprotocolport", protocolPortOverride.ToString());
-            }
-
-            if (isSystemNode)
-                configParameters.Add("issystemchannelnode", "True");
+            ConfigureDebugAndCaBaseUrl(server, configParameters);
 
             if (willStartChannels)
             {
@@ -97,23 +68,35 @@ namespace Stratis.SmartContracts.Tests.Common
                 configParameters.Add("projectmode", "True");
             }
 
-            CoreNode node = this.CreateNode(new TokenlessNodeRunner(dataFolder, network, this.TimeProvider, agent, debugChannels ? this : null), "poa.conf", configParameters: configParameters);
+            string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
+            var runner = new TokenlessNodeRunner(dataFolder, network, this.TimeProvider, agent, debugChannels ? this : null);
+            CoreNode node = this.CreateNode(runner, "poa.conf", configParameters: configParameters);
+
+            ConfigureCertificateAuthority(node, nodeIndex, server, organisation, permissions, initialRun);
+
+            return node;
+        }
+
+        private void ConfigureCertificateAuthority(CoreNode node, int nodeIndex, IWebHost server, string organisation = null, List<string> permissions = null, bool initialRun = true)
+        {
+            string commonName = CaTestHelper.GenerateRandomString();
 
             // If not a federation member then generate a mnemonic.
-            if (!configParameters.TryGetValue("mnemonic", out string mnemonic))
+            if (!node.ConfigParameters.TryGetValue("mnemonic", out string mnemonic))
             {
                 mnemonic = (nodeIndex < TokenlessNetwork.Mnemonics.Length
                     ? TokenlessNetwork.Mnemonics[nodeIndex]
                     : new Mnemonic(Wordlist.English, WordCount.Twelve)).ToString();
             }
 
-            if (nodeIndex < network.FederationKeys.Length)
-                Guard.Equals(network.FederationKeys[nodeIndex], TokenlessNetwork.FederationKeyFromMnemonic(new Mnemonic(mnemonic)).PubKey);
+            var tokenlessNetwork = node.Runner.Network as TokenlessNetwork;
+
+            if (nodeIndex < tokenlessNetwork.FederationKeys.Length)
+                Guard.Equals(tokenlessNetwork.FederationKeys[nodeIndex], TokenlessNetwork.FederationKeyFromMnemonic(new Mnemonic(mnemonic)).PubKey);
 
             string[] args = initialRun ?
                 new string[] {
-                    "-conf=poa.conf",
-                    "-datadir=" + dataFolder,
+                    "-datadir=" + node.DataFolder,
                     $"{TokenlessKeyStoreSettings.KeyStorePasswordKey}=test",
                     $"-mnemonic={ mnemonic }",
                     "-certificatename=" + commonName,
@@ -125,29 +108,28 @@ namespace Stratis.SmartContracts.Tests.Common
                     "-certificatecountry=UK"
                 } : new string[]
                 {
-                    "-conf=poa.conf",
-                    "-datadir=" + dataFolder,
+                    "-datadir=" + node.DataFolder,
                 };
 
-            using (var settings = new NodeSettings(network, args: args))
+            using (var settings = new NodeSettings(tokenlessNetwork, args: args))
             {
-                var dataFolderRootPath = Path.Combine(dataFolder, network.RootFolderName, network.Name);
+                var dataFolderRootPath = Path.Combine(node.DataFolder, tokenlessNetwork.RootFolderName, tokenlessNetwork.Name);
 
                 if (this.authorityCertificate == null)
                     this.authorityCertificate = TokenlessTestHelper.GetCertificateFromInitializedCAServer(server);
 
-                var localMsdConfiguration = new LocalMembershipServicesConfiguration(settings.DataDir, network);
+                var localMsdConfiguration = new LocalMembershipServicesConfiguration(settings.DataDir, tokenlessNetwork);
                 localMsdConfiguration.InitializeFolderStructure();
 
                 File.WriteAllBytes(Path.Combine(dataFolderRootPath, "msd", "cacerts", CertificateAuthorityInterface.AuthorityCertificateName), this.authorityCertificate.GetEncoded());
 
-                TokenlessKeyStoreManager keyStoreManager = InitializeNodeKeyStore(node, network, settings);
+                TokenlessKeyStoreManager keyStoreManager = InitializeNodeKeyStore(node, tokenlessNetwork, settings);
 
-                BitcoinPubKeyAddress address = node.ClientCertificatePrivateKey.PubKey.GetAddress(network);
+                BitcoinPubKeyAddress address = node.ClientCertificatePrivateKey.PubKey.GetAddress(tokenlessNetwork);
                 Key miningKey = keyStoreManager.GetKey("test", TokenlessKeyStoreAccount.BlockSigning);
 
                 if (!initialRun)
-                    return node;
+                    return;
 
                 node.AuthorityCertificate = this.authorityCertificate;
 
@@ -166,8 +148,6 @@ namespace Stratis.SmartContracts.Tests.Common
                     var ownCertificatePath = Path.Combine(localMsdConfiguration.GetCertificatePath(MemberType.SelfSign, x509));
                     File.WriteAllBytes(ownCertificatePath, x509.GetEncoded());
                 }
-
-                return node;
             }
         }
 
@@ -177,7 +157,7 @@ namespace Stratis.SmartContracts.Tests.Common
         public CoreNode CreateTokenlessNode(TokenlessNetwork network, int nodeIndex, IWebHost server, string organisation = null, bool initialRun = true, List<string> permissions = null,
             string agent = "tokenless", bool debugChannels = false, NodeConfigParameters configParameters = null)
         {
-            return CreateCoreNode(network, nodeIndex, server, agent, false, false, false, initialRun, organisation: organisation, permissions: permissions, debugChannels: debugChannels, configParameters: configParameters);
+            return CreateCoreNode(network, nodeIndex, server, agent, false, initialRun, organisation: organisation, permissions: permissions, debugChannels: debugChannels, configParameters: configParameters);
         }
 
         /// <summary>
@@ -186,7 +166,7 @@ namespace Stratis.SmartContracts.Tests.Common
         public CoreNode CreateTokenlessNodeWithChannels(TokenlessNetwork network, int nodeIndex, IWebHost server, bool initialRun = true, string organisation = null,
             bool debugChannels = false, string agent = "tokenless", NodeConfigParameters configParameters = null)
         {
-            return CreateCoreNode(network, nodeIndex, server, agent, false, false, true, initialRun, organisation: organisation, debugChannels: debugChannels, configParameters: configParameters);
+            return CreateCoreNode(network, nodeIndex, server, agent, true, initialRun, organisation: organisation, debugChannels: debugChannels, configParameters: configParameters);
         }
 
         /// <summary>
@@ -194,10 +174,39 @@ namespace Stratis.SmartContracts.Tests.Common
         /// </summary>
         public CoreNode CreateInfraNode(TokenlessNetwork network, int nodeIndex, IWebHost server, bool debugChannels = false)
         {
-            CoreNode node = CreateCoreNode(network, nodeIndex, server, "infra", true, false, true, true, this.lastSystemChannelApiPort, this.lastSystemChannelProtocolPort, debugChannels: debugChannels);
+            var configParameters = new NodeConfigParameters();
+
+            ConfigureDebugAndCaBaseUrl(server, configParameters);
+
+            // This is a infra node.
+            configParameters.Add("isinfranode", "True");
+
+            // Add the system channel api uri and port overrides.
             this.lastSystemChannelApiPort += 1;
             this.lastSystemChannelProtocolPort += 1;
+            configParameters.Add("systemchannelapiport", this.lastSystemChannelApiPort.ToString());
+            configParameters.Add("systemchannelprotocolport", this.lastSystemChannelProtocolPort.ToString());
+
+            // Set the project path for the channel daemon.
+            configParameters.Add("channelprocesspath", "..\\..\\..\\..\\Stratis.TokenlessD\\");
+
+            // Set this true for all integration tests that start channel daemons as dotnet.exe is called differently.
+            configParameters.Add("projectmode", "True");
+
+            string dataFolder = this.GetNextDataFolderName(nodeIndex: nodeIndex);
+            var runner = new TokenlessNodeRunner(dataFolder, network, this.TimeProvider, "infra", debugChannels ? this : null);
+            CoreNode node = this.CreateNode(runner, "poa.conf", configParameters);
+
+            ConfigureCertificateAuthority(node, nodeIndex, server);
+
             return node;
+        }
+
+        private static void ConfigureDebugAndCaBaseUrl(IWebHost server, NodeConfigParameters configParameters)
+        {
+            string caBaseAddress = server.ServerFeatures.Get<IServerAddressesFeature>().Addresses.First();
+            configParameters.SetDefaultValueIfUndefined("caurl", caBaseAddress);
+            configParameters.SetDefaultValueIfUndefined("debug", "1");
         }
 
         public ChannelDefinition CreateChannel(CoreNode parentNode, string channelName, int nodeIndex, AccessControlList acl = null)

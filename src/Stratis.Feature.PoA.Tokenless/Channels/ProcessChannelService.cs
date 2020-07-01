@@ -10,6 +10,7 @@ using Stratis.Core.AsyncWork;
 using Stratis.Core.Configuration;
 using Stratis.Core.Utilities;
 using Stratis.Feature.PoA.Tokenless.KeyStore;
+using Stratis.Features.Api;
 
 namespace Stratis.Feature.PoA.Tokenless.Channels
 {
@@ -21,8 +22,8 @@ namespace Stratis.Feature.PoA.Tokenless.Channels
         /// <inheritdoc />
         public List<ChannelNodeProcess> StartedChannelNodes { get; }
 
-        public ProcessChannelService(IAsyncProvider asyncProvider, IChannelRepository channelRepository, ChannelSettings channelSettings, IDateTimeProvider dateTimeProvider, TokenlessKeyStoreSettings keyStoreSettings, ILoggerFactory loggerFactory, IMembershipServicesDirectory membershipServicesDirectory, NodeSettings nodeSettings, INodeLifetime nodeLifetime)
-            : base(channelRepository, channelSettings, dateTimeProvider, keyStoreSettings, loggerFactory, membershipServicesDirectory, nodeSettings: nodeSettings)
+        public ProcessChannelService(IAsyncProvider asyncProvider, ApiSettings apiSettings, IChannelRepository channelRepository, ChannelSettings channelSettings, IDateTimeProvider dateTimeProvider, TokenlessKeyStoreSettings keyStoreSettings, ILoggerFactory loggerFactory, IMembershipServicesDirectory membershipServicesDirectory, NodeSettings nodeSettings, INodeLifetime nodeLifetime)
+            : base(apiSettings, channelRepository, channelSettings, dateTimeProvider, keyStoreSettings, loggerFactory, membershipServicesDirectory, nodeSettings: nodeSettings)
         {
             this.nodeLifetime = nodeLifetime;
             this.asyncProvider = asyncProvider;

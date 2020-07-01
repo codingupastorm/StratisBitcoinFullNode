@@ -1,30 +1,12 @@
-﻿using System.IO;
-using System.Linq;
-using NBitcoin;
-using Stratis.Core.Consensus;
-using Stratis.Core.Consensus.Rules;
-using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
+﻿using Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers;
 
 namespace Stratis.Bitcoin.IntegrationTests
 {
     public static class CoreNodeExtensions
     {
-        public static void AppendToConfig(this CoreNode node, string configKeyValueItem)
+        public static void AppendToConfig(this CoreNode node, string key, string item)
         {
-            using (StreamWriter sw = File.AppendText(node.ConfigFilePath))
-            {
-                sw.WriteLine(configKeyValueItem);
-            }
+            node.ConfigParameters.Add(key, item);
         }
-
-        public static Money GetProofOfWorkRewardForMinedBlocks(this CoreNode node, int numberOfBlocks)
-        {
-            var coinviewRule = node.FullNode.NodeService<IConsensusRuleEngine>().GetRule<CoinViewRule>();
-
-            int startBlock = node.FullNode.ChainIndexer.Height - numberOfBlocks + 1;
-
-            return Enumerable.Range(startBlock, numberOfBlocks)
-                .Sum(p => coinviewRule.GetProofOfWorkReward(p));
-        }       
     }
 }
