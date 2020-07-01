@@ -29,7 +29,6 @@ using Stratis.SmartContracts.CLR.Serialization;
 using Stratis.SmartContracts.Core;
 using Stratis.SmartContracts.Core.Receipts;
 using Stratis.SmartContracts.Core.State;
-using Block = NBitcoin.Block;
 
 namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
 {
@@ -90,112 +89,6 @@ namespace Stratis.Bitcoin.Features.SmartContracts.ReflectionExecutor.Controllers
             this.smartContractTransactionService = smartContractTransactionService;
             this.connectionManager = connectionManager;
             this.coinDb = coinDb;
-        }
-
-        //    return Json(ret);
-        //}
-
-        //private GetSenderResult GetAddressFromScript(Script script)
-        //{
-        //    // Borrowed from SenderRetreiver
-        //    PubKey payToPubKey = PayToPubkeyTemplate.Instance.ExtractScriptPubKeyParameters(script);
-
-        //    if (payToPubKey != null)
-        //    {
-        //        var address = new uint160(payToPubKey.Hash.ToBytes());
-        //        return GetSenderResult.CreateSuccess(address);
-        //    }
-
-        //    if (PayToPubkeyHashTemplate.Instance.CheckScriptPubKey(script))
-        //    {
-        //        var address = new uint160(PayToPubkeyHashTemplate.Instance.ExtractScriptPubKeyParameters(script).ToBytes());
-        //        return GetSenderResult.CreateSuccess(address);
-        //    }
-        //    return GetSenderResult.CreateFailure("Addresses can only be retrieved from Pay to Pub Key or Pay to Pub Key Hash");
-        //}
-
-        private HashSet<OutPoint> allUnspentOutputs;
-        private Dictionary<uint256, Transaction> transactions;
-
-        [Route("get-balances")]
-        [HttpGet]
-        public IActionResult GetBalances(int blockHeight)
-        {
-            const decimal amountToCheck = 100m;
-            Money thresholdBalance = Money.Coins(amountToCheck);
-
-            this.allUnspentOutputs = new HashSet<OutPoint>();
-            this.transactions = new Dictionary<uint256, Transaction>();
-            const int batchSize = 1000;
-            IEnumerable<ChainedHeader> allBlockHeaders = this.chainIndexer.EnumerateToTip(this.chainIndexer.Genesis);
-
-            int totalBlocksCounted = 0;
-
-            for (int i = 0; i < 10_000; i++) // Upper bound is irrelevant here - will exit via break.
-            {
-                List<ChainedHeader> headers = allBlockHeaders.Skip(i * batchSize).Take(batchSize).ToList();
-
-                List<Block> blocks = this.blockStore.GetBlocks(headers.Select(x => x.HashBlock).ToList());
-
-                foreach (Block block in blocks)
-                {
-                    this.AdjustCoinviewForBlock(block);
-                    totalBlocksCounted += 1;
-
-                    // We have reached the blockheight asked for
-                    if (totalBlocksCounted >= blockHeight)
-                        break;
-                }
-
-                // We have seen every block up to the tip or our blockheight
-                if (headers.Count < batchSize || totalBlocksCounted >= blockHeight)
-                    break;
-            }
-
-            IEnumerable<TxOut> txOuts = this.allUnspentOutputs.Select(x => this.transactions[x.Hash].Outputs[x.N]);
-            IEnumerable<IGrouping<Script, TxOut>> groupedTxOuts = txOuts.GroupBy(x => x.ScriptPubKey);
-
-            List<IGrouping<Script,TxOut>> thresholdAccounts = new List<IGrouping<Script, TxOut>>();
-
-            foreach (IGrouping<Script, TxOut> grouping in groupedTxOuts)
-            {
-                if (grouping.Sum(x => x.Value) >= thresholdBalance)
-                {
-                    thresholdAccounts.Add(grouping);
-                }
-            }
-
-            throw new NotImplementedException();
-        }
-
-        private void AdjustCoinviewForBlock(Block block)
-        {
-            foreach (var tx in block.Transactions)
-            {
-                // Add outputs 
-                for (int i = 0; i < tx.Outputs.Count; i++)
-                {
-                    TxOut output = tx.Outputs[i];
-
-                    if (output.Value > 0)
-                    {
-                        this.allUnspentOutputs.Add(new OutPoint(tx, i));
-                        this.transactions[tx.GetHash()] = tx;
-                    }
-                }
-
-                // Spend inputs
-                if (!tx.IsCoinBase)
-                {
-                    foreach (TxIn txIn in tx.Inputs)
-                    {
-                        if (!this.allUnspentOutputs.Remove(txIn.PrevOut))
-                        {
-                            throw new Exception("Couldn't find output to spend.");
-                        }
-                    }
-                }
-            }
         }
 
         /// <summary>
