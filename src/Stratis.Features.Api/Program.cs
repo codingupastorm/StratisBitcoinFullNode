@@ -82,7 +82,7 @@ namespace Stratis.Features.Api
 
         private static X509Certificate2 GetHttpsCertificate(string certificateFilePath, ICertificateStore store)
         {
-            if (store.TryGet(certificateFilePath, out var certificate))
+            if (store.TryGet(certificateFilePath, out X509Certificate2 certificate))
                 return certificate;
 
             throw new FileLoadException($"Failed to load certificate from path {certificateFilePath}");

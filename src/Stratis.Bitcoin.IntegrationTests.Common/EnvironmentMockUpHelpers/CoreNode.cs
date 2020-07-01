@@ -68,12 +68,6 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         private bool builderEnablePeerDiscovery;
         private bool builderNoValidation;
         private bool builderOverrideDateTimeProvider;
-        private bool builderWithDummyWallet;
-        private bool builderWithWallet;
-        private string builderWalletName;
-        private string builderWalletPassword;
-        private string builderWalletPassphrase;
-        private string builderWalletMnemonic;
 
         private SubscriptionToken blockConnectedSubscription;
         private SubscriptionToken blockDisconnectedSubscription;

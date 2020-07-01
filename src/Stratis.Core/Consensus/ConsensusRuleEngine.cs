@@ -106,8 +106,15 @@ namespace Stratis.Core.Consensus
         }
 
         /// <inheritdoc />
-        public virtual void Dispose()
+        public void Dispose()
         {
+            this.Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+                GC.SuppressFinalize(this);
         }
 
         /// TODO: this method needs to be deleted once all rules use dependency injection

@@ -1462,7 +1462,16 @@ namespace Stratis.Core.Consensus
         /// <inheritdoc />
         public void Dispose()
         {
-            this.reorgLock.Dispose();
+            this.Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                GC.SuppressFinalize(this);
+                this.reorgLock.Dispose();
+            }
         }
     }
 }
