@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Stratis.Core;
+using Stratis.Core.Configuration;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
@@ -32,7 +33,9 @@ namespace Stratis.Features.Api
 
             this.Configuration = builder.Build();
 
-            string serviceRoutePrefix = (this.Configuration.GetValue<string>("ServiceRoutePrefix") ?? string.Empty).Trim('/');
+            NodeSettings nodeSettings = fullNode.NodeService<NodeSettings>();
+
+            string serviceRoutePrefix = nodeSettings.ConfigReader.GetOrDefault("rootPath", string.Empty).Trim('/');
             this._swaggerRoutePrefix = string.IsNullOrEmpty(serviceRoutePrefix) ? string.Empty : serviceRoutePrefix + "/";
             this._controllerRoutePrefix = serviceRoutePrefix;
         }
