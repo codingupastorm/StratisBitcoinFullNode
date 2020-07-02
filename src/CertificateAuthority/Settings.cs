@@ -49,6 +49,8 @@ namespace CertificateAuthority
 
         public string ServerUrls { get; private set; }
 
+        public string ServiceRoutePrefix { get; private set; }
+
         public void Initialize(string[] commandLineArgs)
         {
             var commandLineArgsConfiguration = new TextFileConfiguration(commandLineArgs ?? Array.Empty<string>());
@@ -121,6 +123,8 @@ namespace CertificateAuthority
             this.CaSubjectNameCommonName = configFileArgs.GetOrDefault<string>("cacommonname", "DLT Root Certificate");
 
             this.CaSubjectNameOrganizationUnit = configFileArgs.GetOrDefault<string>("caorganizationunit", "Administration");
+
+            this.ServiceRoutePrefix = configFileArgs.GetOrDefault<string>("rootPath", string.Empty).Trim('/');
 
             // If serverUrls is not set from command line, check the .conf file.
             if (string.IsNullOrEmpty(this.ServerUrls))
