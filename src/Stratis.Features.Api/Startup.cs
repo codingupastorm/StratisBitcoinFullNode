@@ -1,13 +1,16 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.AspNetCore.Mvc.Versioning;
+using Microsoft.AspNetCore.Rewrite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Stratis.Core;
+using Stratis.Core.Configuration;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
@@ -15,6 +18,9 @@ namespace Stratis.Features.Api
 {
     public class Startup
     {
+        private readonly string _swaggerRoutePrefix;
+        private readonly string _controllerRoutePrefix;
+
         public Startup(IWebHostEnvironment env, IFullNode fullNode)
         {
             this.fullNode = fullNode;
@@ -26,6 +32,12 @@ namespace Stratis.Features.Api
                 .AddEnvironmentVariables();
 
             this.Configuration = builder.Build();
+
+            NodeSettings nodeSettings = fullNode.NodeService<NodeSettings>();
+
+            string serviceRoutePrefix = nodeSettings.ConfigReader.GetOrDefault("rootPath", string.Empty).Trim('/');
+            this._swaggerRoutePrefix = string.IsNullOrEmpty(serviceRoutePrefix) ? string.Empty : serviceRoutePrefix + "/";
+            this._controllerRoutePrefix = serviceRoutePrefix;
         }
 
         private readonly IFullNode fullNode;
@@ -78,6 +90,9 @@ namespace Stratis.Features.Api
                     {
                         options.Filters.Add(typeof(KeepaliveActionFilter));
                     }
+
+                    options.EnableEndpointRouting = true;
+                    options.UseCentralRoutePrefix(new RouteAttribute(this._controllerRoutePrefix));
                 })
                 // add serializers for NBitcoin objects
                 .AddNewtonsoftJson(options => Core.Utilities.JsonConverters.Serializer.RegisterFrontConverters(options.SerializerSettings))
@@ -109,9 +124,11 @@ namespace Stratis.Features.Api
             services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
 
             // Register the Swagger generator. This will use the options we injected just above.
-            services.AddSwaggerGen(c =>
+            services.AddSwaggerGen(setupActions =>
             {
-                c.SwaggerDoc("contracts", new OpenApiInfo { Title = "Contract API", Version = "1" });
+                setupActions.SwaggerDoc("contracts", new OpenApiInfo { Title = "Contract API", Version = "1" });
+
+                setupActions.DocumentFilter<PathPrefixInsertDocumentFilter>(this._controllerRoutePrefix.Trim('/'));
             });
 
             // Hack to be able to access and modify the options object configured here in the dynamic swagger controller.
@@ -134,8 +151,13 @@ namespace Stratis.Features.Api
                 endpoints.MapControllers();
             });
 
+            // Redirect root to swagger page
+            var option = new RewriteOptions();
+            option.AddRedirect("^$", $"/{this._swaggerRoutePrefix}swagger/index.html");
+            app.UseRewriter(option);
+
             // Enable middleware to serve generated Swagger as a JSON endpoint.
-            app.UseSwagger();
+            app.UseSwagger(c => { c.RouteTemplate = $"{this._swaggerRoutePrefix}swagger/{{documentName}}/swagger.json"; });
 
             // Enable middleware to serve swagger-ui (HTML, JS, CSS etc.)
             app.UseSwaggerUI(c =>
@@ -145,7 +167,8 @@ namespace Stratis.Features.Api
                 // Build a swagger endpoint for each discovered API version
                 foreach (ApiVersionDescription description in provider.ApiVersionDescriptions)
                 {
-                    c.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
+                    c.SwaggerEndpoint($"/{this._swaggerRoutePrefix}swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant());
+                    c.RoutePrefix = $"{this._swaggerRoutePrefix}swagger";
                 }
 
                 // Hack to be able to access and modify the options object configured here in the dynamic swagger controller.
