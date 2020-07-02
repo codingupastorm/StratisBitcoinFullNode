@@ -9,7 +9,7 @@ namespace CertificateAuthority.Tests.Common
 {
     public class TestOnlyStartup : Startup
     {
-        public TestOnlyStartup(IConfiguration configuration) : base(configuration)
+        public TestOnlyStartup(IConfiguration configuration) : base(configuration,  null)
         {
             configuration["conf"] = "ca.conf";
             configuration["datadir"] = GetTestDirectoryPath(this);

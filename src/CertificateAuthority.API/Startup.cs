@@ -18,11 +18,11 @@ namespace CertificateAuthority.API
 
         public readonly IConfiguration Configuration;
 
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, Settings settings)
         {
             this.Configuration = configuration;
 
-            string serviceRoutePrefix = (this.Configuration.GetValue<string>("ServiceRoutePrefix") ?? string.Empty).Trim('/');
+            string serviceRoutePrefix = settings?.ServiceRoutePrefix ?? string.Empty;
             this._swaggerRoutePrefix = string.IsNullOrEmpty(serviceRoutePrefix) ? string.Empty : serviceRoutePrefix + "/";
             this._controllerRoutePrefix = serviceRoutePrefix;
         }
