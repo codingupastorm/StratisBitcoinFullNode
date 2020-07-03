@@ -144,8 +144,11 @@ namespace MembershipServices.Cli
         {
             var network = new TokenlessNetwork();
             var args = new List<string>() { $"-datadir={options.DataDir}", $"{Settings.KeyStorePasswordKey}={options.KeyStorePassword}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" };
+
+            // Only pass optional options if provided so that the config file can still provide them.
             if (options.Mnemonic != null)
                 args.Add($"-mnemonic={options.Mnemonic}");
+
             var nodeSettings = new NodeSettings(network, args: args.ToArray());
             var loggerFactory = new LoggerFactory();
 
