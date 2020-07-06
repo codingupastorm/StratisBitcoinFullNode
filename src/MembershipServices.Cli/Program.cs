@@ -143,7 +143,13 @@ namespace MembershipServices.Cli
         static int RunGenerate(GenerateOptions options)
         {
             var network = new TokenlessNetwork();
-            var nodeSettings = new NodeSettings(network, args: new[] { $"-datadir={options.DataDir}", $"-mnemonic={options.Mnemonic}", $"{Settings.KeyStorePasswordKey}={options.KeyStorePassword}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" });
+            var args = new List<string>() { $"-datadir={options.DataDir}", $"{Settings.KeyStorePasswordKey}={options.KeyStorePassword}", $"-caaccountid={options.CaAccountId}", $"-capassword={options.CaPassword}" };
+
+            // Only pass optional options if provided so that the config file can still provide them.
+            if (options.Mnemonic != null)
+                args.Add($"-mnemonic={options.Mnemonic}");
+
+            var nodeSettings = new NodeSettings(network, args: args.ToArray());
             var loggerFactory = new LoggerFactory();
 
             var keyStoreSettings = new TokenlessKeyStoreSettings(nodeSettings);
