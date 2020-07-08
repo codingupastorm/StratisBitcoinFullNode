@@ -406,6 +406,93 @@ namespace Stratis.SmartContracts.IntegrationTests
         }
 
         [Fact]
+        public async Task TokenlessNodesCreateAndCallTokenAsync()
+        {
+            TestBase.GetTestRootFolder(out string testRootFolder);
+
+            using (IWebHost server = CaTestHelper.CreateWebHostBuilder(testRootFolder).Build())
+            using (SmartContractNodeBuilder nodeBuilder = SmartContractNodeBuilder.Create(testRootFolder))
+            {
+                server.Start();
+
+                // Start + Initialize CA.
+                var client = TokenlessTestHelper.GetAdminClient(server);
+                Assert.True(client.InitializeCertificateAuthority(CaTestHelper.CaMnemonic, CaTestHelper.CaMnemonicPassword, this.network));
+
+                CoreNode node1 = nodeBuilder.CreateTokenlessNode(this.network, 0, server);
+                CoreNode node2 = nodeBuilder.CreateTokenlessNode(this.network, 1, server);
+
+                var certificates = new List<X509Certificate>() { node1.ClientCertificate.ToCertificate(), node2.ClientCertificate.ToCertificate() };
+
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node1.DataFolder, this.network);
+                TokenlessTestHelper.AddCertificatesToMembershipServices(certificates, node2.DataFolder, this.network);
+
+                node1.Start();
+                node2.Start();
+
+                TestHelper.Connect(node1, node2);
+
+                // Broadcast from node1, check state of node2.
+                var node1Controller = node1.FullNode.NodeController<TokenlessController>();
+                var receiptRepository = node2.FullNode.NodeService<IReceiptRepository>();
+
+                ContractCompilationResult compilationResult = ContractCompiler.CompileFile("SmartContracts/StandardToken.cs");
+
+                var createModel = new BuildCreateContractTransactionModel()
+                {
+                    ContractCode = compilationResult.Compilation,
+                    Parameters = new string[]
+                    {
+                        "7#100"
+                    }
+                };
+
+                var createResult = (JsonResult)node1Controller.BuildCreateContractTransaction(createModel);
+                var createResponse = (BuildCreateContractTransactionResponse)createResult.Value;
+
+                await node1Controller.SendTransactionAsync(new SendTransactionModel()
+                {
+                    TransactionHex = createResponse.Hex
+                });
+
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                await node1.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+
+                Receipt createReceipt = receiptRepository.Retrieve(createResponse.TransactionId);
+                Assert.True(createReceipt.Success);
+
+                string receivingAccount = new Key().PubKey.GetAddress(node1.FullNode.Network).ToString();
+
+                var callModel = new BuildCallContractTransactionModel()
+                {
+                    Address = createReceipt.NewContractAddress.ToBase58Address(this.network),
+                    MethodName = "TransferTo",
+                    Parameters = new string[]
+                    {
+                        $"9#{receivingAccount}",
+                        "7#50"
+                    }
+                };
+
+                var callResult = (JsonResult)node1Controller.BuildCallContractTransaction(callModel);
+                var callResponse = (BuildCallContractTransactionResponse)callResult.Value;
+
+                await node1Controller.SendTransactionAsync(new SendTransactionModel()
+                {
+                    TransactionHex = callResponse.Hex
+                });
+
+                TestBase.WaitLoop(() => node2.FullNode.MempoolManager().GetMempoolAsync().Result.Count > 0);
+                await node1.MineBlocksAsync(1);
+                TokenlessTestHelper.WaitForNodeToSync(node1, node2);
+
+                Receipt callReceipt = receiptRepository.Retrieve(callResponse.TransactionId);
+                Assert.True(callReceipt.Success);
+            }
+        }
+
+        [Fact]
         public async Task TokenlessNodesKickAMinerBasedOnCAAsync()
         {
             TestBase.GetTestRootFolder(out string testRootFolder);

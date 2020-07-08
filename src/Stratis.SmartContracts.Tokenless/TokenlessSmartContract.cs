@@ -17,7 +17,7 @@ namespace Stratis.SmartContracts.Tokenless
         /// <summary>
         /// Details about the current transaction that has been sent.
         /// </summary>
-        public ITokenlessMessage Message { get; }
+        public ITokenlessMessage Message => new TokenlessMessage(this.state.Message);
 
         /// <summary>
         ///  Provides functionality for the saving and retrieval of objects inside smart contracts.
@@ -42,7 +42,6 @@ namespace Stratis.SmartContracts.Tokenless
         {
             CultureInfo.CurrentCulture = new CultureInfo("en-US");
             this.state = state;
-            this.Message = new TokenlessMessage(state.Message);
         }
 
         /// <summary>

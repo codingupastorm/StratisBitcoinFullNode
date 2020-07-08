@@ -62,6 +62,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="SmartContracts\StandardToken.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
     <Compile Update="SmartContracts\StoreSingleChar.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Compile>

@@ -1,6 +1,6 @@
 ﻿namespace Stratis.SmartContracts.Tokenless
 {
-    public class TokenlessMessage : ITokenlessMessage
+    public struct TokenlessMessage : ITokenlessMessage
     {
         public Address ContractAddress { get; }
         public Address Sender { get; }

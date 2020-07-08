@@ -316,8 +316,10 @@ namespace Stratis.Feature.PoA.Tokenless.Mining
                 result.Return?.ToString(),
                 result.ErrorMessage,
                 deserializedCallData.Value.GasPrice,
-                transactionContext.TxOutValue,
-                result.ReadWriteSet.GetReadWriteSet().ToJson(),
+                transactionContext.TxOutValue, 
+                result.Revert
+                    ?  null
+                    : result.ReadWriteSet.GetReadWriteSet().ToJson(),
                 deserializedCallData.Value.IsCreateContract ? null : deserializedCallData.Value.MethodName,
                  (ulong)this.height);
 
